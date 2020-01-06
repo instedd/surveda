@@ -1,11 +1,15 @@
-defmodule Ask.BrokerTest do
-  use Ask.ModelCase
-  use Ask.DummySteps
+defmodule Ask.Runtime.RetriesHistogramTest do
+  import Ecto
+  import Ecto.Changeset
+  import Ecto.Query
+  import Ask.Factory
+  use Ask.ConnCase
   use Timex
+  use Ask.DummySteps
   use Ask.MockTime
   use Ask.TestHelpers
-  alias Ask.Runtime.{Broker, Flow, ReplyHelper, ChannelStatusServer}
-  alias Ask.{Repo, Survey, Respondent, RetryStat}
+  alias Ask.Runtime.{Broker, Flow, ReplyHelper, ChannelStatusServer, VerboiceChannel}
+  alias Ask.{Repo, Survey, Respondent, RetryStat, SystemTime}
   require Ask.Runtime.ReplyHelper
 
   setup do
@@ -171,66 +175,77 @@ defmodule Ask.BrokerTest do
   end
 
   @tag :time_mock
-  test "IVR mode with no user interaction" do
+  test "IVR mode with no user interaction", %{conn: conn} do
     [survey, _group, _test_channel, respondent, _phone_number] = create_running_survey_with_channel_and_respondent(@dummy_steps, "ivr")
     survey = survey |> Survey.changeset(%{ivr_retry_configuration: "2h"}) |> Repo.update!
-    sequence_mode = ["ivr"]
-    expected_histogram_flow = [%{delay: 0, type: "ivr"}, %{delay: 2, label: "2h", type: "ivr"}]
 
-    {:ok, now, _} = DateTime.from_iso8601("2019-12-23T09:00:00Z")
-    mock_time(now)
+    expected_histogram = fn actives -> %{actives: actives, flow: [%{delay: 0, type: "ivr"}, %{delay: 2, label: "2h", type: "ivr"}]} end
+    assert_histogram = fn (histogram, message) -> assert_histogram(survey, ["ivr"], histogram, message) end
+    call_failed = fn () -> call_failed(conn, respondent.id) end
 
-    stats = RetryStat.stats(%{survey_id: survey.id})
-    assert %{actives: [], flow: expected_histogram_flow} == Ask.RetriesHistogram.mode_sequence_histogram(survey, stats, sequence_mode, now), "the histogram should be empty"
+    set_current_time("2019-12-23T09:00:00Z")
+
+    expected_histogram.([])
+    |> assert_histogram.("the histogram should be empty")
 
     # 1st poll, activate the respondent
-    Broker.handle_info(:poll, nil)
+    broker_poll()
 
-    assert %{actives: [%{hour: 0, respondents: 1}], flow: expected_histogram_flow} == Ask.RetriesHistogram.mode_sequence_histogram(survey, RetryStat.stats(%{survey_id: survey.id}), sequence_mode, now), "the respondent isn't in the 1st column"
+    expected_histogram.([%{hour: 0, respondents: 1}])
+    |> assert_histogram.("the respondent should be in the 1st column")
 
-    respondent = Repo.get!(Respondent, respondent.id)
-    # The respondent is no longer active
-    Ask.Runtime.RetriesHistogram.respondent_no_longer_active(respondent)
+    # The call fails so the respondent is no longer active
+    call_failed.()
 
-    stats = RetryStat.stats(%{survey_id: survey.id})
-    assert %{actives: [%{hour: 0, respondents: 1}], flow: expected_histogram_flow} == Ask.RetriesHistogram.mode_sequence_histogram(survey, stats, sequence_mode, now), "the respondent should be still in the 1st column"
-
-    # An hour passed
-    {:ok, now, _} = DateTime.from_iso8601("2019-12-23T10:00:00Z")
-    mock_time(now)
-
-    stats = RetryStat.stats(%{survey_id: survey.id})
-    assert %{actives: [%{hour: 1, respondents: 1}], flow: expected_histogram_flow} == Ask.RetriesHistogram.mode_sequence_histogram(survey, stats, sequence_mode, now), "the respondent should be in the 2nd column"
+    # The respondent should be still in the first column since
+    # ended calls remains in the active column until time passes
+    expected_histogram.([%{hour: 0, respondents: 1}])
+    |> assert_histogram.("the respondent should be still in the 1st column")
 
     # An hour passed
-    {:ok, now, _} = DateTime.from_iso8601("2019-12-23T11:00:00Z")
-    mock_time(now)
+    time_passes(hours: 1)
 
-    stats = RetryStat.stats(%{survey_id: survey.id})
-    assert %{actives: [%{hour: 1, respondents: 1}], flow: expected_histogram_flow} == Ask.RetriesHistogram.mode_sequence_histogram(survey, stats, sequence_mode, now), "the respondent should be still in the 2nd column"
+    expected_histogram.([%{hour: 1, respondents: 1}])
+    |> assert_histogram.("the respondent should be in the 2nd column")
+
+    # An hour passed
+    time_passes(hours: 1)
+
+    expected_histogram.([%{hour: 1, respondents: 1}])
+    |> assert_histogram.("the respondent should be still in the 2nd column")
 
     # 2nd poll, retry the respondent
-    Broker.handle_info(:poll, nil)
+    broker_poll()
 
-    stats = RetryStat.stats(%{survey_id: survey.id})
-    assert %{actives: [%{hour: 2, respondents: 1}], flow: expected_histogram_flow} == Ask.RetriesHistogram.mode_sequence_histogram(survey, stats, sequence_mode, now), "the respondent should be in the 3rd column"
+    expected_histogram.([%{hour: 2, respondents: 1}])
+    |> assert_histogram.("the respondent should be in the 3rd column")
 
-    respondent = Repo.get!(Respondent, respondent.id)
-    # The respondent is no longer active
-    Ask.Runtime.RetriesHistogram.respondent_no_longer_active(respondent)
+    # The call fails so the respondent is no longer active
+    call_failed.()
 
-    stats = RetryStat.stats(%{survey_id: survey.id})
-    assert %{actives: [%{hour: 2, respondents: 1}], flow: expected_histogram_flow} == Ask.RetriesHistogram.mode_sequence_histogram(survey, stats, sequence_mode, now), "the respondent should be still in the 3rd column"
-
-    # An hour passed
-    {:ok, now, _} = DateTime.from_iso8601("2019-12-23T12:00:00Z")
-    mock_time(now)
-
-    # 3rd poll, stall the respondent
-    Broker.handle_info(:poll, nil)
-
-    stats = RetryStat.stats(%{survey_id: survey.id})
-    assert %{actives: [], flow: expected_histogram_flow} == Ask.RetriesHistogram.mode_sequence_histogram(survey, stats, sequence_mode, now), "the histogram should be empty"
+    # As the respondent had no more retries left, the histogram should be empty
+    expected_histogram.([])
+    |> assert_histogram.("the histogram should be empty")
   end
+
+  defp assert_histogram(survey, sequence_mode, histogram, message) do
+    stats = RetryStat.stats(%{survey_id: survey.id})
+    assert histogram == Ask.RetriesHistogram.mode_sequence_histogram(survey, stats, sequence_mode, SystemTime.time.now), message
+  end
+
+  defp set_current_time(time) do
+    {:ok, now, _} = DateTime.from_iso8601(time)
+    mock_time(now)
+  end
+
+  defp time_passes(diff), do:
+    SystemTime.time.now
+    |> Timex.shift(diff)
+    |> mock_time
+
+  defp broker_poll(), do: Broker.handle_info(:poll, nil)
+
+  defp call_failed(conn, respondent_id), do:
+    VerboiceChannel.callback(conn, %{"path" => ["status", respondent_id, "token"], "CallStatus" => "failed", "CallDuration" => "10", "CallStatusReason" => "some random reason", "CallStatusCode" => "42"})
 
 end

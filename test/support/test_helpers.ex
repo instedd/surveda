@@ -1,6 +1,8 @@
 defmodule Ask.TestHelpers do
   defmacro __using__(_) do
     quote do
+      use Ask.DummySteps
+
       def create_project_for_user(user, options \\ []) do
         level = options[:level] || "owner"
         archived = options[:archived] || false
