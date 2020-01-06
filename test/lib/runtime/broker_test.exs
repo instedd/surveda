@@ -760,6 +760,7 @@ defmodule Ask.BrokerTest do
   defp mock_time(time) do
     Ask.TimeMock
     |> stub(:now, fn () -> time end)
+    time
   end
 
   test "respondent answers after stalled with active survey" do
@@ -2246,7 +2247,10 @@ defmodule Ask.BrokerTest do
     assert Survey.completed?(survey)
   end
 
+  @tag :time_mock
+  setup :set_mox_global
   test "respondent flow via sms" do
+    now = Timex.now |> mock_time
     [survey, _group, test_channel, respondent, phone_number] = create_running_survey_with_channel_and_respondent()
 
     {:ok, logger} = SurveyLogger.start_link
@@ -2264,7 +2268,6 @@ defmodule Ask.BrokerTest do
 
     Broker.delivery_confirm(respondent, "Do you smoke?")
 
-    now = Timex.now
 
     reply = Broker.sync_step(respondent, Flow.Message.reply("Yes"), nil, now)
     assert {:reply, ReplyHelper.simple("Do you exercise", "Do you exercise? Reply 1 for YES, 2 for NO")} = reply
@@ -2276,10 +2279,11 @@ defmodule Ask.BrokerTest do
 
     hours_passed = 3
 
-    hours_after = now
+    now = now
       |> Timex.shift(hours: hours_passed)
+      |> mock_time
 
-    reply = Broker.sync_step(respondent, Flow.Message.reply("Yes"), nil, hours_after)
+    reply = Broker.sync_step(respondent, Flow.Message.reply("Yes"), nil, now)
     assert {:reply, ReplyHelper.simple("Which is the second perfect number?", "Which is the second perfect number??")} = reply
 
     # Every sent SMS resets the timeout
@@ -2300,7 +2304,6 @@ defmodule Ask.BrokerTest do
     reply = Broker.sync_step(respondent, Flow.Message.reply("11"))
     assert {:end, {:reply, ReplyHelper.simple("Thank you", "Thanks for completing this survey")}} = reply
 
-    now = Timex.now
     interval = Interval.new(from: Timex.shift(now, seconds: -5), until: Timex.shift(now, seconds: 5), step: [seconds: 1])
 
     respondent = Repo.get(Respondent, respondent.id)
