@@ -165,48 +165,42 @@ defmodule Ask.RetryStatTest do
     assert 0 == %{survey_id: survey.id} |> RetryStat.stats() |> RetryStat.count(filter)
   end
 
-  test "errors when the survey doesn't exists" do
-    {:error, changeset} = RetryStat.add(@valid_attrs)
+  test "errors adding when the survey doesn't exists" do
+    {:error, changeset} = RetryStat.add(Map.delete(@valid_attrs, :count))
     assert changeset.errors == [survey_id: {"does not exist", []}]
   end
 
-  test "errors when a required field is missing in filter" do
-    %{retry_time: valid_retry_time, ivr_active: valid_ivr_active, survey_id: valid_survey_id, mode: valid_mode, attempt: valid_attempt} = @valid_attrs
+  test "errors adding when a required field is missing" do
     survey = insert(:survey)
-    valid_filter = Map.delete(@valid_attrs, :count) |> Map.put(:survey_id, survey.id)
+    valid_attrs = Map.delete(@valid_attrs, :count) |> Map.put(:survey_id, survey.id)
 
-    assert_valid_filter(valid_filter)
-
-    # filter by survey doesn't apply in count
-    assert_invalid_filter(%{attempt: valid_attempt, mode: valid_mode, retry_time: valid_retry_time, ivr_active: valid_ivr_active, survey_id: nil}, valid_filter, expected_count: 1)
-    assert_invalid_filter(%{attempt: valid_attempt, mode: valid_mode, retry_time: valid_retry_time, ivr_active: valid_ivr_active}, valid_filter, expected_count: 1)
-
-    assert_invalid_filter(%{attempt: valid_attempt, mode: nil, retry_time: valid_retry_time, ivr_active: valid_ivr_active, survey_id: valid_survey_id}, valid_filter)
-    assert_invalid_filter(%{attempt: valid_attempt, retry_time: valid_retry_time, ivr_active: valid_ivr_active, survey_id: valid_survey_id}, valid_filter)
-
-    assert_invalid_filter(%{attempt: nil, mode: valid_mode, retry_time: valid_retry_time, ivr_active: valid_ivr_active, survey_id: valid_survey_id}, valid_filter)
-    assert_invalid_filter(%{mode: valid_mode, retry_time: valid_retry_time, ivr_active: valid_ivr_active, survey_id: valid_survey_id}, valid_filter)
-
-    assert_invalid_filter(%{attempt: valid_attempt, mode: valid_mode, retry_time: valid_retry_time, ivr_active: nil, survey_id: valid_survey_id}, valid_filter)
-    assert_invalid_filter(%{attempt: valid_attempt, mode: valid_mode, retry_time: valid_retry_time, survey_id: valid_survey_id}, valid_filter)
-
-    assert_invalid_filter(%{attempt: valid_attempt, mode: valid_mode, retry_time: nil, ivr_active: valid_ivr_active, survey_id: valid_survey_id}, valid_filter)
-    assert_invalid_filter(%{attempt: valid_attempt, mode: valid_mode, ivr_active: valid_ivr_active, survey_id: valid_survey_id}, valid_filter)
+    {:ok, _} = RetryStat.add(valid_attrs)
+    {:error, _} = RetryStat.add(Map.delete(valid_attrs, :survey_id))
+    {:error, _} = RetryStat.add(Map.delete(valid_attrs, :mode))
+    {:error, _} = RetryStat.add(Map.delete(valid_attrs, :attempt))
+    {:error, _} = RetryStat.add(Map.delete(valid_attrs, :retry_time))
+    {:error, _} = RetryStat.add(Map.delete(valid_attrs, :ivr_active))
   end
 
-  defp assert_invalid_filter(filter, valid_filter, options \\ []) do
-    {:error, _} = RetryStat.add(filter)
-    {:ok, %{id: id}} = RetryStat.add(valid_filter)
-    {:error, _} = RetryStat.transition(id, filter)
-    assert Keyword.get(options, :expected_count, 0) == RetryStat.count(RetryStat.stats(valid_filter), filter)
-    assert {:ok} == RetryStat.subtract(id)
+  test "returns no stats when the survey doesn't exists" do
+    %{survey_id: valid_survey_id} = @valid_attrs
+    assert RetryStat.stats(%{survey_id: valid_survey_id}) == []
   end
 
-  defp assert_valid_filter(filter) do
-    {:ok, %{id: id}} = RetryStat.add(filter)
-    assert 1 == RetryStat.count(RetryStat.stats(filter), filter)
-    {:ok, _} = RetryStat.transition(id, filter)
-    assert {:ok} == RetryStat.subtract(id)
+  test "doesn't count when a required field is missing" do
+    survey = insert(:survey)
+    valid_attrs = Map.delete(@valid_attrs, :count) |> Map.put(:survey_id, survey.id)
+
+    {:ok, _} = RetryStat.add(valid_attrs)
+
+    stats = RetryStat.stats(%{survey_id: survey.id})
+    valid_count_attrs = %{attempt: valid_attrs.attempt, mode: valid_attrs.mode, retry_time: valid_attrs.retry_time, ivr_active: valid_attrs.ivr_active}
+
+    assert RetryStat.count(stats, valid_count_attrs) == 1
+    assert RetryStat.count(stats, Map.delete(valid_count_attrs, :retry_time)) == 1
+    assert RetryStat.count(stats, Map.delete(valid_count_attrs, :ivr_active)) == 1
+    assert RetryStat.count(stats, Map.delete(valid_count_attrs, :mode)) == 0
+    assert RetryStat.count(stats, Map.delete(valid_count_attrs, :attempt)) == 0
   end
 
   test "increases stat concurrently" do

@@ -73,11 +73,8 @@ defmodule Ask.RetryStat do
     end
   end
 
-  defp is_valid_count_filter(%{attempt: attempt, mode: mode}), do:
-    RetryStat.count_changeset(%RetryStat{}, %{
-      attempt: attempt,
-      mode: mode
-    }).valid?
+  defp is_valid_count_filter(filter), do:
+    RetryStat.count_changeset(%RetryStat{}, filter).valid?
 
   defp add_changeset(%{attempt: attempt, mode: mode, retry_time: retry_time, ivr_active: ivr_active, survey_id: survey_id}), do:
     RetryStat.changeset(%RetryStat{}, %{
