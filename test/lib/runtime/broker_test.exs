@@ -3,6 +3,7 @@ defmodule Ask.BrokerTest do
   use Ask.DummySteps
   use Timex
   use Ask.MockTime
+  use Ask.TestHelpers
   alias Ask.Runtime.{Broker, Flow, SurveyLogger, ReplyHelper, ChannelStatusServer}
   alias Ask.{Repo, Survey, Respondent, RespondentDispositionHistory, TestChannel, QuotaBucket, Questionnaire, RespondentGroupChannel, SurveyLogEntry, Schedule, StepBuilder, RetryStat}
   alias Ask.Router.Helpers, as: Routes
@@ -435,228 +436,6 @@ defmodule Ask.BrokerTest do
     assert survey.state == "running"
   end
 
-  @tag :time_mock
-  describe "retries histogram" do
-    test "SMS mode with user interactions and retries histogram output" do
-      [survey, _group, test_channel, _respondent, phone_number] = create_running_survey_with_channel_and_respondent()
-      survey = survey |> Survey.changeset(%{sms_retry_configuration: "2h", fallback_delay: "3h"}) |> Repo.update!
-      sequence_mode = ["sms"]
-      expected_histogram_flow = [%{delay: 0, type: "sms"}, %{delay: 2, label: "2h", type: "sms"}, %{delay: 3, label: "3h", type: "end"}]
-
-      {:ok, now, _} = DateTime.from_iso8601("2019-12-23T09:00:00Z")
-      mock_time(now)
-
-      stats = RetryStat.stats(%{survey_id: survey.id})
-      assert %{actives: [], flow: expected_histogram_flow} == Ask.RetriesHistogram.mode_sequence_histogram(survey, stats, sequence_mode, now)
-
-      # First poll, activate the respondent
-      Broker.handle_info(:poll, nil)
-      assert_received [:setup, ^test_channel, respondent = %Respondent{sanitized_phone_number: ^phone_number}, token]
-      assert_received [:ask, ^test_channel, ^respondent, ^token, ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO")]
-
-      # The respondent should be in the first column
-      stats = RetryStat.stats(%{survey_id: survey.id})
-      assert %{actives: [%{hour: 0, respondents: 1}], flow: expected_histogram_flow} == Ask.RetriesHistogram.mode_sequence_histogram(survey, stats, sequence_mode, now)
-
-      respondent = Repo.get!(Respondent, respondent.id)
-
-      # set expectations
-      {:ok, expected_timeout, _} = DateTime.from_iso8601("2019-12-23T11:00:00Z")
-      expected_retry_time = "2019122311"
-      expected_attempts = 1
-
-      # Since the respondent was queued, there must be a RetryStat
-      assert 1 == stats |> RetryStat.count(%{attempt: 1, retry_time: expected_retry_time, ivr_active: false, mode: sequence_mode})
-      assert "queued" == respondent.disposition
-      assert expected_attempts == respondent.stats.attempts["sms"]
-      assert expected_timeout == respondent.timeout_at
-
-      # An hour passed
-      {:ok, now, _} = DateTime.from_iso8601("2019-12-23T10:00:00Z")
-      mock_time(now)
-
-      # The respondent should be in the 2nd column
-      stats = RetryStat.stats(%{survey_id: survey.id})
-      assert %{actives: [%{hour: 1, respondents: 1}], flow: expected_histogram_flow} == Ask.RetriesHistogram.mode_sequence_histogram(survey, stats, sequence_mode, now)
-
-      # respondent responses the first question
-      reply = Broker.sync_step(respondent, Flow.Message.reply("Yes"), "sms")
-      # broker sends second question
-      assert {:reply, ReplyHelper.simple("Do you exercise", "Do you exercise? Reply 1 for YES, 2 for NO")} = reply
-
-      # the respondent should return to the first column
-      stats = RetryStat.stats(%{survey_id: survey.id})
-      assert %{actives: [%{hour: 0, respondents: 1}], flow: expected_histogram_flow} == Ask.RetriesHistogram.mode_sequence_histogram(survey, stats, sequence_mode, now)
-
-      # set expectations
-      past_retry_time = expected_retry_time
-      expected_retry_time = "2019122312"
-      {:ok, expected_timeout, _} = DateTime.from_iso8601("2019-12-23T12:00:00Z")
-
-      respondent = Repo.get!(Respondent, respondent.id)
-
-      # Since the respondent was re-contacted, the RetryStat must be updated
-      assert "started" == respondent.disposition
-      assert expected_attempts == respondent.stats.attempts["sms"]
-      assert expected_timeout == respondent.timeout_at
-
-      assert 0 == stats |> RetryStat.count(%{attempt: expected_attempts, retry_time: past_retry_time, ivr_active: false, mode: sequence_mode})
-      assert 1 == stats |> RetryStat.count(%{attempt: expected_attempts, retry_time: expected_retry_time, ivr_active: false, mode: sequence_mode})
-
-      # Two hour passed
-      {:ok, now, _} = DateTime.from_iso8601("2019-12-23T12:00:00Z")
-      mock_time(now)
-
-      # The respondent should be in the 2nd column again
-      stats = RetryStat.stats(%{survey_id: survey.id})
-      assert %{actives: [%{hour: 1, respondents: 1}], flow: expected_histogram_flow} == Ask.RetriesHistogram.mode_sequence_histogram(survey, stats, sequence_mode, now)
-
-      # Second poll, it should retry the second question
-      Broker.handle_info(:poll, nil)
-      refute_received [:setup, _, _, _, _]
-      assert_received [:ask, ^test_channel, %Respondent{sanitized_phone_number: ^phone_number}, _token, ReplyHelper.simple("Do you exercise", "Do you exercise? Reply 1 for YES, 2 for NO")]
-
-      # The respondent should be in the 3rd column
-      stats = RetryStat.stats(%{survey_id: survey.id})
-      assert %{actives: [%{hour: 2, respondents: 1}], flow: expected_histogram_flow} == Ask.RetriesHistogram.mode_sequence_histogram(survey, stats, sequence_mode, now)
-
-      # set expectations
-      past_retry_time = expected_retry_time
-      expected_retry_time = "2019122315"
-      {:ok, expected_timeout, _} = DateTime.from_iso8601("2019-12-23T15:00:00Z")
-      past_attempts = expected_attempts
-      expected_attempts = 2
-
-      # Respondent should have been moved from first attempt to second attempt in RetryStat
-      respondent = Repo.get!(Respondent, respondent.id)
-      assert expected_attempts == respondent.stats.attempts["sms"]
-      assert expected_timeout == respondent.timeout_at
-      assert 0 == stats |> RetryStat.count(%{attempt: past_attempts, retry_time: past_retry_time, ivr_active: false, mode: sequence_mode})
-      assert 1 == stats |> RetryStat.count(%{attempt: expected_attempts, retry_time: expected_retry_time, ivr_active: false, mode: sequence_mode})
-
-      # An hour passed
-      {:ok, now, _} = DateTime.from_iso8601("2019-12-23T13:00:00Z")
-      mock_time(now)
-
-      # The respondent should be in the 4th column
-      stats = RetryStat.stats(%{survey_id: survey.id})
-      assert %{actives: [%{hour: 3, respondents: 1}], flow: expected_histogram_flow} == Ask.RetriesHistogram.mode_sequence_histogram(survey, stats, sequence_mode, now)
-
-      # respondent responses the first question
-      reply = Broker.sync_step(respondent, Flow.Message.reply("Yes"), "sms")
-      # broker sends third question
-      assert {:reply, ReplyHelper.simple("Which is the second perfect number?", "Which is the second perfect number??")} = reply
-
-      # The respondent should return to the 3rd column
-      stats = RetryStat.stats(%{survey_id: survey.id})
-      assert %{actives: [%{hour: 2, respondents: 1}], flow: expected_histogram_flow} == Ask.RetriesHistogram.mode_sequence_histogram(survey, stats, sequence_mode, now)
-
-      # set expectations
-      past_retry_time = expected_retry_time
-      expected_retry_time = "2019122316"
-      {:ok, expected_timeout, _} = DateTime.from_iso8601("2019-12-23T16:00:00Z")
-
-      respondent = Repo.get!(Respondent, respondent.id)
-
-      # Since the respondent was re-contacted, the RetryStat must be updated
-      assert "started" == respondent.disposition
-      assert expected_attempts == respondent.stats.attempts["sms"]
-      assert expected_timeout == respondent.timeout_at
-
-      assert 0 == stats |> RetryStat.count(%{attempt: expected_attempts, retry_time: past_retry_time, ivr_active: false, mode: sequence_mode})
-      assert 1 == stats |> RetryStat.count(%{attempt: expected_attempts, retry_time: expected_retry_time, ivr_active: false, mode: sequence_mode})
-
-      # Three hour passed
-      {:ok, now, _} = DateTime.from_iso8601("2019-12-23T16:00:00Z")
-      mock_time(now)
-
-      # The respondent should be in the 6th column
-      stats = RetryStat.stats(%{survey_id: survey.id})
-      assert %{actives: [%{hour: 5, respondents: 1}], flow: expected_histogram_flow} == Ask.RetriesHistogram.mode_sequence_histogram(survey, stats, sequence_mode, now)
-
-      # Third poll, it should stall the respondent
-      Broker.handle_info(:poll, nil)
-      refute_received [:setup, _, _, _, _]
-      refute_received [:ask, _, _, _]
-
-      # Respondent should have been stalled and removed from the Histogram
-      stats = RetryStat.stats(%{survey_id: survey.id})
-
-      assert [] == stats
-      assert 0 == stats |> RetryStat.count(%{attempt: expected_attempts, retry_time: expected_retry_time, ivr_active: false, mode: sequence_mode})
-      assert %{actives: [], flow: expected_histogram_flow} == Ask.RetriesHistogram.mode_sequence_histogram(survey, stats, sequence_mode, now)
-
-      respondent = Repo.get!(Respondent, respondent.id)
-
-      assert "stalled" == respondent.state
-      assert expected_attempts == respondent.stats.attempts["sms"]
-      refute respondent.timeout_at
-    end
-
-    @tag :time_mock
-    test "IVR mode with no user interaction" do
-      [survey, _group, _test_channel, respondent, _phone_number] = create_running_survey_with_channel_and_respondent(@dummy_steps, "ivr")
-      survey = survey |> Survey.changeset(%{ivr_retry_configuration: "2h"}) |> Repo.update!
-      sequence_mode = ["ivr"]
-      expected_histogram_flow = [%{delay: 0, type: "ivr"}, %{delay: 2, label: "2h", type: "ivr"}]
-
-      {:ok, now, _} = DateTime.from_iso8601("2019-12-23T09:00:00Z")
-      mock_time(now)
-
-      stats = RetryStat.stats(%{survey_id: survey.id})
-      assert %{actives: [], flow: expected_histogram_flow} == Ask.RetriesHistogram.mode_sequence_histogram(survey, stats, sequence_mode, now), "the histogram should be empty"
-
-      # 1st poll, activate the respondent
-      Broker.handle_info(:poll, nil)
-
-      assert %{actives: [%{hour: 0, respondents: 1}], flow: expected_histogram_flow} == Ask.RetriesHistogram.mode_sequence_histogram(survey, RetryStat.stats(%{survey_id: survey.id}), sequence_mode, now), "the respondent isn't in the 1st column"
-
-      respondent = Repo.get!(Respondent, respondent.id)
-      # The respondent is no longer active
-      Ask.Runtime.RetriesHistogram.respondent_no_longer_active(respondent)
-
-      stats = RetryStat.stats(%{survey_id: survey.id})
-      assert %{actives: [%{hour: 0, respondents: 1}], flow: expected_histogram_flow} == Ask.RetriesHistogram.mode_sequence_histogram(survey, stats, sequence_mode, now), "the respondent should be still in the 1st column"
-
-      # An hour passed
-      {:ok, now, _} = DateTime.from_iso8601("2019-12-23T10:00:00Z")
-      mock_time(now)
-
-      stats = RetryStat.stats(%{survey_id: survey.id})
-      assert %{actives: [%{hour: 1, respondents: 1}], flow: expected_histogram_flow} == Ask.RetriesHistogram.mode_sequence_histogram(survey, stats, sequence_mode, now), "the respondent should be in the 2nd column"
-
-      # An hour passed
-      {:ok, now, _} = DateTime.from_iso8601("2019-12-23T11:00:00Z")
-      mock_time(now)
-
-      stats = RetryStat.stats(%{survey_id: survey.id})
-      assert %{actives: [%{hour: 1, respondents: 1}], flow: expected_histogram_flow} == Ask.RetriesHistogram.mode_sequence_histogram(survey, stats, sequence_mode, now), "the respondent should be still in the 2nd column"
-
-      # 2nd poll, retry the respondent
-      Broker.handle_info(:poll, nil)
-
-      stats = RetryStat.stats(%{survey_id: survey.id})
-      assert %{actives: [%{hour: 2, respondents: 1}], flow: expected_histogram_flow} == Ask.RetriesHistogram.mode_sequence_histogram(survey, stats, sequence_mode, now), "the respondent should be in the 3rd column"
-
-      respondent = Repo.get!(Respondent, respondent.id)
-      # The respondent is no longer active
-      Ask.Runtime.RetriesHistogram.respondent_no_longer_active(respondent)
-
-      stats = RetryStat.stats(%{survey_id: survey.id})
-      assert %{actives: [%{hour: 2, respondents: 1}], flow: expected_histogram_flow} == Ask.RetriesHistogram.mode_sequence_histogram(survey, stats, sequence_mode, now), "the respondent should be still in the 3rd column"
-
-      # An hour passed
-      {:ok, now, _} = DateTime.from_iso8601("2019-12-23T12:00:00Z")
-      mock_time(now)
-
-      # 3rd poll, stall the respondent
-      Broker.handle_info(:poll, nil)
-
-      stats = RetryStat.stats(%{survey_id: survey.id})
-      assert %{actives: [], flow: expected_histogram_flow} == Ask.RetriesHistogram.mode_sequence_histogram(survey, stats, sequence_mode, now), "the histogram should be empty"
-    end
-  end
-
   test "retry respondent (mobileweb mode)" do
     [survey, _group, test_channel, respondent, phone_number] = create_running_survey_with_channel_and_respondent(@mobileweb_dummy_steps, "mobileweb")
     survey |> Survey.changeset(%{mobileweb_retry_configuration: "10m"}) |> Repo.update
@@ -755,12 +534,6 @@ defmodule Ask.BrokerTest do
     refute respondent.timeout_at
     survey = Repo.get(Survey, survey.id)
     assert survey.state == "running"
-  end
-
-  defp mock_time(time) do
-    Ask.TimeMock
-    |> stub(:now, fn () -> time end)
-    time
   end
 
   test "respondent answers after stalled with active survey" do
@@ -4187,27 +3960,6 @@ defmodule Ask.BrokerTest do
 
     :ok = broker |> GenServer.stop
     :ok = channel_status_server |> GenServer.stop
-  end
-
-  defp create_running_survey_with_channel_and_respondent(steps \\ @dummy_steps, mode \\ "sms", schedule \\ Schedule.always(), fallback_delay \\ "10m") do
-    test_channel = TestChannel.new(false, mode == "sms")
-
-    channel_type = case mode do
-      "mobileweb" -> "sms"
-      _ -> mode
-    end
-
-    channel = insert(:channel, settings: test_channel |> TestChannel.settings, type: channel_type)
-    quiz = insert(:questionnaire, steps: steps, quota_completed_steps: nil)
-    survey = insert(:survey, %{schedule: schedule, state: "running", questionnaires: [quiz], mode: [[mode]], fallback_delay: fallback_delay})
-    group = insert(:respondent_group, survey: survey, respondents_count: 1) |> Repo.preload(:channels)
-
-    RespondentGroupChannel.changeset(%RespondentGroupChannel{}, %{respondent_group_id: group.id, channel_id: channel.id, mode: mode}) |> Repo.insert
-
-    respondent = insert(:respondent, survey: survey, respondent_group: group)
-    phone_number = respondent.sanitized_phone_number
-
-    [survey, group, test_channel, respondent, phone_number]
   end
 
   def create_several_respondents(survey, group, n) when n <= 1 do
