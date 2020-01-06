@@ -230,7 +230,8 @@ defmodule Ask.Runtime.Session do
         {:ok, session, %Reply{}, current_timeout(session)}
 
       Channel.message_expired?(runtime_channel, channel_state) ->
-        session = retry(session, runtime_channel)
+        # do not retry since the respondent was never contacted, thus the retries should not be consumed
+        session = contact_respondent(session, runtime_channel)
 
         next_available_date_time = session.schedule |> Schedule.next_available_date_time
 

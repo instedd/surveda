@@ -482,7 +482,8 @@ defmodule Ask.SessionTest do
     assert 1 == respondent.stats |> Stats.attempts(:ivr)
     assert_receive [:setup, ^test_channel, ^respondent, ^token]
 
-    assert {:ok, %Session{token: token, respondent: respondent}, %Reply{}, 10} = Session.timeout(session)
+
+    assert {:ok, %Session{token: token, respondent: respondent} , %Reply{}, 10} = Session.timeout(session)
     assert 1 == respondent.stats |> Stats.attempts(:ivr)
     assert_receive [:setup, ^test_channel, ^respondent, ^token]
   end
