@@ -26,6 +26,7 @@ defmodule Ask.RetryStat do
     |> cast(attrs, [:mode, :attempt, :retry_time, :ivr_active, :count, :survey_id])
     |> validate_required([:mode, :attempt, :retry_time, :ivr_active, :count, :survey_id])
     |> validate_retry_time()
+    |> foreign_key_constraint(:survey_id)
     |> unique_constraint(:retry_stats_mode_attempt_retry_time_survey_id_index)
   end
 

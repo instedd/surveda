@@ -165,6 +165,11 @@ defmodule Ask.RetryStatTest do
     assert 0 == %{survey_id: survey.id} |> RetryStat.stats() |> RetryStat.count(filter)
   end
 
+  test "errors when the survey doesn't exists" do
+    {:error, changeset} = RetryStat.add(@valid_attrs)
+    assert changeset.errors == [survey_id: {"does not exist", []}]
+  end
+
   test "errors when a required field is missing in filter" do
     %{retry_time: valid_retry_time, ivr_active: valid_ivr_active, survey_id: valid_survey_id, mode: valid_mode, attempt: valid_attempt} = @valid_attrs
     survey = insert(:survey)
