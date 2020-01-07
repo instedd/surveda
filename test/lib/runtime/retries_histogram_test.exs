@@ -11,13 +11,132 @@ defmodule Ask.Runtime.RetriesHistogramTest do
   alias Ask.Runtime.{Broker, Flow, ChannelStatusServer, VerboiceChannel}
   alias Ask.{Repo, Survey, Respondent, RetryStat, SystemTime}
   require Ask.Runtime.ReplyHelper
+  @moduletag :time_mock
 
   setup do
-    {:ok, channel_status_server} = ChannelStatusServer.start_link
-    {:ok, channel_status_server: channel_status_server}
+    {:ok, _} = ChannelStatusServer.start_link
+    :ok
   end
 
-  @tag :time_mock
+  describe "Simple IVR" do
+    setup [:ivr_2h_ivr]
+
+    test "no user interaction", %{expected_histogram: expected_histogram, assert_histogram: assert_histogram,
+    call_failed: call_failed, histogram_hour: histogram_hour} do
+      set_current_time("2019-12-23T09:00:00Z")
+
+      expected_histogram.([])
+      |> assert_histogram.("the histogram should be empty")
+
+      # 1st poll, activate the respondent
+      broker_poll()
+
+      expected_histogram.([%{hour: 0, respondents: 1}])
+      |> assert_histogram.("the respondent should be in the 1st column")
+
+      # The call fails so the respondent is no longer active
+      call_failed.()
+
+      # An hour passed
+      time_passes(hours: 1)
+
+      expected_histogram.([%{hour: histogram_hour.(%{attempt: 1, hours_after: 1}), respondents: 1}])
+      |> assert_histogram.("the respondent should be in the 2nd column")
+
+      # An hour passed
+      time_passes(hours: 1)
+
+      # 2nd poll, retry the respondent
+      broker_poll()
+
+      expected_histogram.([%{hour: histogram_hour.(%{attempt: 1, hours_after: 2}), respondents: 1}])
+      |> assert_histogram.("the respondent should be in the 3rd column")
+
+      # The call fails so the respondent is no longer active
+      call_failed.()
+
+      # As the respondent had no more retries left, the histogram should be empty
+      expected_histogram.([])
+      |> assert_histogram.("the histogram should be empty")
+    end
+
+    test "ended call remains in the active column until time passes", %{expected_histogram: expected_histogram, assert_histogram: assert_histogram,
+    call_failed: call_failed, histogram_hour: histogram_hour} do
+      set_current_time("2019-12-23T09:00:00Z")
+
+      # 1st poll, activate the respondent
+      broker_poll()
+
+      expected_histogram.([%{hour: 0, respondents: 1}])
+      |> assert_histogram.("the respondent should be in the 1st column")
+
+      # The call fails so the respondent is no longer active
+      call_failed.()
+
+      # The respondent should be still in the first column since
+      expected_histogram.([%{hour: 0, respondents: 1}])
+      |> assert_histogram.("the respondent should be still in the 1st column")
+
+      # An hour passed
+      time_passes(hours: 1)
+
+      expected_histogram.([%{hour: histogram_hour.(%{attempt: 1, hours_after: 1}), respondents: 1}])
+      |> assert_histogram.("the respondent should now be in the 2nd column")
+    end
+
+    test "respondent remains active until the call fails", %{expected_histogram: expected_histogram, assert_histogram: assert_histogram,
+    call_failed: call_failed, histogram_hour: histogram_hour} do
+      set_current_time("2019-12-23T09:00:00Z")
+
+      # 1st poll, activate the respondent
+      broker_poll()
+
+      # Several hours passed
+      time_passes(hours: 10)
+
+      expected_histogram.([%{hour: 0, respondents: 1}])
+      |> assert_histogram.("the respondent should be in the 1st column")
+
+      # The call fails so the respondent is no longer active
+      call_failed.()
+
+      # An hour passed
+      time_passes(hours: 1)
+
+      expected_histogram.([%{hour: histogram_hour.(%{attempt: 1, hours_after: 1}), respondents: 1}])
+      |> assert_histogram.("the respondent should be in the first attempt - first hour column")
+    end
+
+    test "respondent stays in the last inactive column of its current attempt until they are retried", %{expected_histogram: expected_histogram, assert_histogram: assert_histogram,
+    call_failed: call_failed, histogram_hour: histogram_hour} do
+      set_current_time("2019-12-23T09:00:00Z")
+
+      # 1st poll, activate the respondent
+      broker_poll()
+
+      # The call fails so the respondent is no longer active
+      call_failed.()
+
+      # An hour passed
+      time_passes(hours: 1)
+
+      expected_histogram.([%{hour: histogram_hour.(%{attempt: 1, hours_after: 1}), respondents: 1}])
+      |> assert_histogram.("the respondent should be in the first attempt - first hour column")
+
+      # Several hours passed
+      time_passes(hours: 10)
+
+      expected_histogram.([%{hour: histogram_hour.(%{attempt: 1, hours_after: 1}), respondents: 1}])
+      |> assert_histogram.("the respondent should be still in the first attempt - first hour column")
+
+      # 2nd poll, retry the respondent
+      broker_poll()
+
+      expected_histogram.([%{hour: histogram_hour.(%{attempt: 2}), respondents: 1}])
+      |> assert_histogram.("The respondent should be in the second attempt active column")
+    end
+  end
+
   test "SMS mode with user interactions and stalled-respondent ending" do
     [survey, _group, _test_channel, respondent, _phone_number] = create_running_survey_with_channel_and_respondent()
     survey = survey |> Survey.changeset(%{sms_retry_configuration: "2h", fallback_delay: "3h"}) |> Repo.update!
@@ -80,131 +199,6 @@ defmodule Ask.Runtime.RetriesHistogramTest do
     |> assert_histogram.("Respondent should have been stalled and removed from the Histogram")
   end
 
-  @tag :time_mock
-  test "IVR mode with no user interaction" do
-    %{expected_histogram: expected_histogram, assert_histogram: assert_histogram,
-      call_failed: call_failed, histogram_hour: histogram_hour} = initialize_simple_ivr()
-
-    set_current_time("2019-12-23T09:00:00Z")
-
-    expected_histogram.([])
-    |> assert_histogram.("the histogram should be empty")
-
-    # 1st poll, activate the respondent
-    broker_poll()
-
-    expected_histogram.([%{hour: 0, respondents: 1}])
-    |> assert_histogram.("the respondent should be in the 1st column")
-
-    # The call fails so the respondent is no longer active
-    call_failed.()
-
-    # An hour passed
-    time_passes(hours: 1)
-
-    expected_histogram.([%{hour: histogram_hour.(%{attempt: 1, hours_after: 1}), respondents: 1}])
-    |> assert_histogram.("the respondent should be in the 2nd column")
-
-    # An hour passed
-    time_passes(hours: 1)
-
-    # 2nd poll, retry the respondent
-    broker_poll()
-
-    expected_histogram.([%{hour: histogram_hour.(%{attempt: 1, hours_after: 2}), respondents: 1}])
-    |> assert_histogram.("the respondent should be in the 3rd column")
-
-    # The call fails so the respondent is no longer active
-    call_failed.()
-
-    # As the respondent had no more retries left, the histogram should be empty
-    expected_histogram.([])
-    |> assert_histogram.("the histogram should be empty")
-  end
-
-  @tag :time_mock
-  test "ended call remains in the active column until time passes" do
-    %{expected_histogram: expected_histogram, assert_histogram: assert_histogram, call_failed: call_failed} = initialize_simple_ivr()
-
-    set_current_time("2019-12-23T09:00:00Z")
-
-    # 1st poll, activate the respondent
-    broker_poll()
-
-    expected_histogram.([%{hour: 0, respondents: 1}])
-    |> assert_histogram.("the respondent should be in the 1st column")
-
-    # The call fails so the respondent is no longer active
-    call_failed.()
-
-    # The respondent should be still in the first column since
-    expected_histogram.([%{hour: 0, respondents: 1}])
-    |> assert_histogram.("the respondent should be still in the 1st column")
-
-    # An hour passed
-    time_passes(hours: 1)
-
-    expected_histogram.([%{hour: 1, respondents: 1}])
-    |> assert_histogram.("the respondent should now be in the 2nd column")
-  end
-
-  @tag :time_mock
-  test "respondent remains active until the call fails" do
-    %{expected_histogram: expected_histogram, assert_histogram: assert_histogram, call_failed: call_failed} = initialize_simple_ivr()
-
-    set_current_time("2019-12-23T09:00:00Z")
-
-    # 1st poll, activate the respondent
-    broker_poll()
-
-    # Several hours passed
-    time_passes(hours: 10)
-
-    expected_histogram.([%{hour: 0, respondents: 1}])
-    |> assert_histogram.("the respondent should be in the 1st column")
-
-    # The call fails so the respondent is no longer active
-    call_failed.()
-
-    # An hour passed
-    time_passes(hours: 1)
-
-    expected_histogram.([%{hour: 1, respondents: 1}])
-    |> assert_histogram.("the respondent should be in the 2nd column")
-  end
-
-  @tag :time_mock
-  test "respondent stays in the last inactive column of its current attempt until they are retried" do
-    %{expected_histogram: expected_histogram, assert_histogram: assert_histogram, call_failed: call_failed} = initialize_simple_ivr()
-
-    set_current_time("2019-12-23T09:00:00Z")
-
-    # 1st poll, activate the respondent
-    broker_poll()
-
-    # The call fails so the respondent is no longer active
-    call_failed.()
-
-    # An hour passed
-    time_passes(hours: 1)
-
-    expected_histogram.([%{hour: 1, respondents: 1}])
-    |> assert_histogram.("the respondent should be in the 2nd column")
-
-    # Several hours passed
-    time_passes(hours: 10)
-
-    expected_histogram.([%{hour: 1, respondents: 1}])
-    |> assert_histogram.("the respondent should be still in the 2nd column")
-
-    # 2nd poll, retry the respondent
-    broker_poll()
-
-    expected_histogram.([%{hour: 2, respondents: 1}])
-    |> assert_histogram.("the respondent should now be in the 3rd column")
-  end
-
-  @tag :time_mock
   test "Mobileweb mode with no user interaction" do
     [survey, _group, _test_channel, _respondent, _phone_number] = create_running_survey_with_channel_and_respondent(@dummy_steps, "mobileweb")
     survey = survey |> Survey.changeset(%{ivr_retry_configuration: "2h", fallback_delay: "3h"}) |> Repo.update!
@@ -279,14 +273,14 @@ defmodule Ask.Runtime.RetriesHistogramTest do
     %{survey: survey, respondent: respondent}
   end
 
-  defp initialize_simple_ivr() do
+  defp ivr_2h_ivr(_context) do
     %{survey: survey, respondent: respondent} = initialize_survey("ivr", %{ivr_retry_configuration: "2h"})
     %{histogram_flow: expected_histogram_flow, histogram_hour: histogram_hour} = configure_retries_and_fallback("ivr", [2])
     expected_histogram = fn actives -> %{actives: actives, flow: expected_histogram_flow} end
     assert_histogram = fn (histogram, message) -> assert_histogram(survey, ["ivr"], histogram, message) end
     call_failed = fn () -> call_failed(build_conn(), respondent.id) end
 
-    %{survey: survey, respondent: respondent, expected_histogram: expected_histogram, assert_histogram: assert_histogram, call_failed: call_failed, histogram_hour: histogram_hour}
+    {:ok, survey: survey, respondent: respondent, expected_histogram: expected_histogram, assert_histogram: assert_histogram, call_failed: call_failed, histogram_hour: histogram_hour}
   end
 
   defp call_failed(conn, respondent_id), do:
