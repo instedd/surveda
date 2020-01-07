@@ -177,6 +177,7 @@ defmodule Ask.QuestionnaireController do
     audio_ids = collect_steps_audio_ids(questionnaire.steps, [])
     audio_ids = collect_steps_audio_ids(questionnaire.quota_completed_steps, audio_ids)
     audio_ids = collect_prompt_audio_ids(questionnaire.settings["error_message"], audio_ids)
+    #for each audio: charges it in memory and then streams it.
     audio_resource = Stream.resource(
       fn -> audio_ids end,
       fn audio_ids ->
@@ -200,6 +201,7 @@ defmodule Ask.QuestionnaireController do
           "duration" => audio.duration,
         }
       end)
+      #Zstream needs to recieve audio.data as enumerable in order to work, otherwise it throws Protocol.undefined error.
       Zstream.entry("audios/" <> audio.filename, [audio.data])
     end)
 
@@ -219,6 +221,10 @@ defmodule Ask.QuestionnaireController do
     end)
 
     zip_entries = Stream.concat(audio_entries, json_entry)
+    #since audio binary data is created as list for Zstream
+    #flatten is needed to allow the data to be sent in chunks
+    #otherwise the connection sends the whole list as a chunk
+    #and times out.
     zip_file = Zstream.zip(zip_entries)
                |> Stream.flat_map(
                     fn element ->
