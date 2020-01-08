@@ -194,7 +194,7 @@ defmodule Ask.Runtime.Broker do
 
   defp set_stalled_respondents_as_failed(survey) do
     from(r in assoc(survey, :respondents), where: r.state == "stalled")
-    |> Repo.update_all(set: [state: "failed", session: nil, timeout_at: nil, retry_stat_id: nil])
+    |> Repo.update_all(set: [state: "failed", session: nil, timeout_at: nil])
   end
 
   defp start_some(survey, count) do
@@ -310,8 +310,8 @@ defmodule Ask.Runtime.Broker do
   def sync_step(respondent, reply, mode \\ nil, now \\ SystemTime.time.now) do
     session = respondent.session |> Session.load
     session_mode = session_mode(respondent, session, mode)
-    sync_step_internal(session, reply, session_mode, now)
-     |> handle_next_action(respondent.id)
+    next_action = sync_step_internal(session, reply, session_mode, now)
+    handle_next_action(next_action, respondent.id)
   end
 
   defp handle_next_action(next_action, respondent_id) do
@@ -503,13 +503,13 @@ defmodule Ask.Runtime.Broker do
 
   defp update_respondent(%Respondent{} = respondent, {:stalled, session}) do
     respondent
-    |> Respondent.changeset(%{state: "stalled", session: Session.dump(session), timeout_at: nil, retry_stat_id: nil})
+    |> Respondent.changeset(%{state: "stalled", session: Session.dump(session), timeout_at: nil})
     |> Repo.update!
   end
 
   defp update_respondent(%Respondent{} = respondent, :rejected) do
     respondent
-    |> Respondent.changeset(%{state: "rejected", session: nil, timeout_at: nil, retry_stat_id: nil})
+    |> Respondent.changeset(%{state: "rejected", session: nil, timeout_at: nil})
     |> Repo.update!
   end
 
@@ -529,7 +529,7 @@ defmodule Ask.Runtime.Broker do
     Session.log_disposition_changed(respondent, session.current_mode.channel, mode, old_disposition, new_disposition)
 
     respondent
-    |> Respondent.changeset(%{state: "failed", session: nil, timeout_at: nil, disposition: new_disposition, retry_stat_id: nil})
+    |> Respondent.changeset(%{state: "failed", session: nil, timeout_at: nil, disposition: new_disposition})
     |> Repo.update!
     |> RespondentDispositionHistory.create(old_disposition, mode)
   end
@@ -582,7 +582,7 @@ defmodule Ask.Runtime.Broker do
     end
 
     respondent
-    |> Respondent.changeset(%{state: "completed", disposition: new_disposition, session: nil, completed_at: SystemTime.time.now, timeout_at: nil, retry_stat_id: nil})
+    |> Respondent.changeset(%{state: "completed", disposition: new_disposition, session: nil, completed_at: SystemTime.time.now, timeout_at: nil})
     |> Repo.update!
     |> RespondentDispositionHistory.create(old_disposition, mode)
     |> update_quota_bucket(old_disposition, respondent.session["count_partial_results"])
