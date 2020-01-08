@@ -40,13 +40,11 @@ defmodule Ask.Runtime.RetriesHistogramTest do
       # The call fails so the respondent is no longer active
       call_failed.()
 
-      # An hour passed
       time_passes(hours: 1)
 
       expected_histogram.([%{hour: histogram_hour.(%{attempt: 1, hours_after: 1}), respondents: 1}])
       |> assert_histogram.("the respondent should be in the 2nd column")
 
-      # An hour passed
       time_passes(hours: 1)
 
       # 2nd poll, retry the respondent
@@ -76,15 +74,13 @@ defmodule Ask.Runtime.RetriesHistogramTest do
       # The call fails so the respondent is no longer active
       call_failed.()
 
-      # The respondent should be still in the first column since
       expected_histogram.([%{hour: 0, respondents: 1}])
-      |> assert_histogram.("the respondent should be still in the 1st column")
+      |> assert_histogram.("the respondent should be still in the 1st column until an hour passes")
 
-      # An hour passed
       time_passes(hours: 1)
 
       expected_histogram.([%{hour: histogram_hour.(%{attempt: 1, hours_after: 1}), respondents: 1}])
-      |> assert_histogram.("the respondent should now be in the 2nd column")
+      |> assert_histogram.("the respondent should now be in the first attempt - first hour column")
     end
 
     test "respondent remains active until the call fails", %{expected_histogram: expected_histogram, assert_histogram: assert_histogram,
@@ -94,7 +90,6 @@ defmodule Ask.Runtime.RetriesHistogramTest do
       # 1st poll, activate the respondent
       broker_poll()
 
-      # Several hours passed
       time_passes(hours: 10)
 
       expected_histogram.([%{hour: 0, respondents: 1}])
@@ -103,7 +98,6 @@ defmodule Ask.Runtime.RetriesHistogramTest do
       # The call fails so the respondent is no longer active
       call_failed.()
 
-      # An hour passed
       time_passes(hours: 1)
 
       expected_histogram.([%{hour: histogram_hour.(%{attempt: 1, hours_after: 1}), respondents: 1}])
@@ -120,13 +114,11 @@ defmodule Ask.Runtime.RetriesHistogramTest do
       # The call fails so the respondent is no longer active
       call_failed.()
 
-      # An hour passed
       time_passes(hours: 1)
 
       expected_histogram.([%{hour: histogram_hour.(%{attempt: 1, hours_after: 1}), respondents: 1}])
       |> assert_histogram.("the respondent should be in the first attempt - first hour column")
 
-      # Several hours passed
       time_passes(hours: 10)
 
       expected_histogram.([%{hour: histogram_hour.(%{attempt: 1, hours_after: 1}), respondents: 1}])
@@ -180,7 +172,6 @@ defmodule Ask.Runtime.RetriesHistogramTest do
 
       time_passes(hours: 1)
 
-      # The respondent should be in the 4th column
       expected_histogram.([%{hour: histogram_hour.(%{attempt: 2, hours_after: 1}), respondents: 1}])
       |> assert_histogram.("the respondent should be in the the second attempt - first hour column")
 
@@ -190,8 +181,12 @@ defmodule Ask.Runtime.RetriesHistogramTest do
       expected_histogram.([%{hour: histogram_hour.(%{attempt: 2}), respondents: 1}])
       |> assert_histogram.("the respondent should return to the second attempt active column")
 
-      # Three hour passed (fallback-delay)
-      time_passes(hours: 3)
+      time_passes(hours: 2)
+
+      expected_histogram.([%{hour: histogram_hour.(%{attempt: 2, hours_after: 2}), respondents: 1}])
+      |> assert_histogram.("the respondent should be in the second attempt - first hour column again")
+
+      time_passes(hours: 1)
 
       # Third poll, it should stall the respondent
       broker_poll()
@@ -204,12 +199,12 @@ defmodule Ask.Runtime.RetriesHistogramTest do
 
   describe "Mobileweb -> 2h -> Mobileweb -> 3h" do
     setup context do
-      config = %{}
+      config = %{survey_retry_config: %{mobileweb_retry_configuration: "2h", fallback_delay: "3h"}, retries: [2], fallback_delay: 3}
       init_mobileweb(config, context)
     end
 
-    @tag :skip
-    test "no user interaction", %{expected_histogram: expected_histogram, assert_histogram: assert_histogram} do
+    test "no user interaction", %{expected_histogram: expected_histogram, assert_histogram: assert_histogram,
+      histogram_hour: histogram_hour} do
       set_current_time("2019-12-23T09:00:00Z")
 
       expected_histogram.([])
@@ -221,28 +216,24 @@ defmodule Ask.Runtime.RetriesHistogramTest do
       expected_histogram.([%{hour: 0, respondents: 1}])
       |> assert_histogram.("the respondent should be in the 1st column")
 
-      # An hour passed
       time_passes(hours: 1)
 
-      expected_histogram.([%{hour: 1, respondents: 1}])
-      |> assert_histogram.("the respondent should be in the 2nd column")
+      expected_histogram.([%{hour: histogram_hour.(%{attempt: 1, hours_after: 1}), respondents: 1}])
+      |> assert_histogram.("the respondent should be in the first attempt - first hour column")
 
-      # An hour passed
       time_passes(hours: 1)
 
       # 2nd poll, retry the respondent
       broker_poll()
 
-      expected_histogram.([%{hour: 2, respondents: 1}])
-      |> assert_histogram.("the respondent should be in the 3rd column")
+      expected_histogram.([%{hour: histogram_hour.(%{attempt: 2}), respondents: 1}])
+      |> assert_histogram.("the respondent should be in the the second attempt active column")
 
-      # An hour passed
-      time_passes(hours: 1)
+      time_passes(hours: 2)
 
-      expected_histogram.([%{hour: 3, respondents: 1}])
-      |> assert_histogram.("the respondent should be in the 4th column")
+      expected_histogram.([%{hour: histogram_hour.(%{attempt: 2, hours_after: 2}), respondents: 1}])
+      |> assert_histogram.("the respondent should be in the second attempt - second hour column")
 
-      # An hour passed
       time_passes(hours: 1)
 
       # 3rd and last poll
@@ -255,9 +246,10 @@ defmodule Ask.Runtime.RetriesHistogramTest do
     end
   end
 
-  defp assert_histogram(survey, sequence_mode, histogram, message) do
+  defp assert_histogram(survey, sequence_mode, expected_histogram, message) do
     stats = RetryStat.stats(%{survey_id: survey.id})
-    assert histogram == Ask.RetriesHistogram.mode_sequence_histogram(survey, stats, sequence_mode, SystemTime.time.now), message
+    actual_histogram = Ask.RetriesHistogram.mode_sequence_histogram(survey, stats, sequence_mode, SystemTime.time.now)
+    assert expected_histogram == actual_histogram, message
   end
 
   defp set_current_time(time) do
@@ -301,8 +293,8 @@ defmodule Ask.Runtime.RetriesHistogramTest do
   end
 
   defp init_mobileweb(config, _context) do
-    %{survey: survey, respondent: respondent, expected_histogram: expected_histogram, assert_histogram: assert_histogram, histogram_hour: histogram_hour} = init_mode("mobileweb", config)
-    {:ok, survey: survey, respondent: respondent, expected_histogram: expected_histogram, assert_histogram: assert_histogram, histogram_hour: histogram_hour}
+    context = init_mode("mobileweb", config)
+    {:ok, context}
   end
 
   defp call_failed(conn, respondent_id), do:
