@@ -18,8 +18,11 @@ defmodule Ask.Runtime.RetriesHistogramTest do
     :ok
   end
 
-  describe "Simple IVR" do
-    setup [:init_ivr]
+  describe "IVR -> 2h -> IVR" do
+    setup context do
+      config = %{survey_retry_config: %{ivr_retry_configuration: "2h"}, retries: [2], fallback_delay: 0}
+      init_ivr(config, context)
+    end
 
     test "no user interaction", %{expected_histogram: expected_histogram, assert_histogram: assert_histogram,
     call_failed: call_failed, histogram_hour: histogram_hour} do
@@ -138,7 +141,10 @@ defmodule Ask.Runtime.RetriesHistogramTest do
   end
 
   describe "SMS -> 2h -> SMS -> 3h" do
-    setup [:init_sms]
+    setup context do
+      conf = %{survey_retry_config: %{sms_retry_configuration: "2h", fallback_delay: "3h"}, retries: [2], fallback_delay: 3}
+      init_sms(conf, context)
+    end
 
     test "user interactions and stalled-respondent ending", %{expected_histogram: expected_histogram, assert_histogram: assert_histogram,
     histogram_hour: histogram_hour, respondent_reply: respondent_reply} do
@@ -197,7 +203,10 @@ defmodule Ask.Runtime.RetriesHistogramTest do
   end
 
   describe "Mobileweb -> 2h -> Mobileweb -> 3h" do
-    setup [:init_mobileweb]
+    setup context do
+      config = %{}
+      init_mobileweb(config, context)
+    end
 
     @tag :skip
     test "no user interaction", %{expected_histogram: expected_histogram, assert_histogram: assert_histogram} do
@@ -269,9 +278,9 @@ defmodule Ask.Runtime.RetriesHistogramTest do
     %{survey: survey, respondent: respondent}
   end
 
-  defp init_mode(mode) do
-    %{survey: survey, respondent: respondent} = initialize_survey(mode, %{ivr_retry_configuration: "2h", sms_retry_configuration: "2h", mobileweb_retry_configuration: "2h", fallback_delay: "3h"})
-    %{histogram_flow: expected_histogram_flow, histogram_hour: histogram_hour} = configure_retries_and_fallback(mode, [2], 3)
+  defp init_mode(mode, %{survey_retry_config: mode_retry_config, retries: retries, fallback_delay: fallback_delay}) do
+    %{survey: survey, respondent: respondent} = initialize_survey(mode, mode_retry_config)
+    %{histogram_flow: expected_histogram_flow, histogram_hour: histogram_hour} = configure_retries_and_fallback(mode, retries, fallback_delay)
 
     expected_histogram = fn actives -> %{actives: actives, flow: expected_histogram_flow} end
     assert_histogram = fn (histogram, message) -> assert_histogram(survey, [mode], histogram, message) end
@@ -279,20 +288,20 @@ defmodule Ask.Runtime.RetriesHistogramTest do
     %{survey: survey, respondent: respondent, expected_histogram: expected_histogram, assert_histogram: assert_histogram, histogram_hour: histogram_hour}
   end
 
-  defp init_ivr(_context) do
-    %{survey: survey, respondent: respondent, expected_histogram: expected_histogram, assert_histogram: assert_histogram, histogram_hour: histogram_hour} = init_mode("ivr")
+  defp init_ivr(config, _context) do
+    %{respondent: respondent} = context = init_mode("ivr", config)
     call_failed = fn () -> call_failed(build_conn(), respondent.id) end
-    {:ok, survey: survey, respondent: respondent, expected_histogram: expected_histogram, assert_histogram: assert_histogram, histogram_hour: histogram_hour, call_failed: call_failed}
+    {:ok, Map.put(context, :call_failed, call_failed)}
   end
 
-  defp init_sms(_context) do
-    %{survey: survey, respondent: respondent, expected_histogram: expected_histogram, assert_histogram: assert_histogram, histogram_hour: histogram_hour} = init_mode("sms")
+  defp init_sms(config, _context) do
+    %{respondent: respondent} = context = init_mode("sms", config)
     respondent_reply = fn reply -> respondent_reply(respondent.id, reply) end
-    {:ok, survey: survey, respondent: respondent, expected_histogram: expected_histogram, assert_histogram: assert_histogram, histogram_hour: histogram_hour, respondent_reply: respondent_reply}
+    {:ok, Map.put(context, :respondent_reply, respondent_reply)}
   end
 
-  defp init_mobileweb(_context) do
-    %{survey: survey, respondent: respondent, expected_histogram: expected_histogram, assert_histogram: assert_histogram, histogram_hour: histogram_hour} = init_mode("mobileweb")
+  defp init_mobileweb(config, _context) do
+    %{survey: survey, respondent: respondent, expected_histogram: expected_histogram, assert_histogram: assert_histogram, histogram_hour: histogram_hour} = init_mode("mobileweb", config)
     {:ok, survey: survey, respondent: respondent, expected_histogram: expected_histogram, assert_histogram: assert_histogram, histogram_hour: histogram_hour}
   end
 
