@@ -5,7 +5,6 @@ defmodule Ask.Runtime.RetriesHistogramTest do
   import Ask.Factory
   use Ask.ConnCase
   use Timex
-  use Ask.DummySteps
   use Ask.MockTime
   use Ask.TestHelpers
   alias Ask.Runtime.{Broker, Flow, ChannelStatusServer, VerboiceChannel}
@@ -20,7 +19,9 @@ defmodule Ask.Runtime.RetriesHistogramTest do
 
   describe "IVR -> 2h -> IVR" do
     setup context do
-      config = %{survey_retry_config: %{ivr_retry_configuration: "2h"}, retries: [2], fallback_delay: 0}
+      config = TestConfiguration.base_config
+               |> TestConfiguration.with_survey_retries_config(%{ivr_retry_configuration: "2h"})
+               |> TestConfiguration.with_retries([2])
       init_ivr(config, context)
     end
 
@@ -105,7 +106,7 @@ defmodule Ask.Runtime.RetriesHistogramTest do
     end
 
     test "respondent stays in the last inactive column of its current attempt until they are retried", %{expected_histogram: expected_histogram, assert_histogram: assert_histogram,
-    call_failed: call_failed, histogram_hour: histogram_hour} do
+      call_failed: call_failed, histogram_hour: histogram_hour} do
       set_current_time("2019-12-23T09:00:00Z")
 
       # 1st poll, activate the respondent
@@ -132,14 +133,18 @@ defmodule Ask.Runtime.RetriesHistogramTest do
     end
   end
 
-  describe "SMS -> 2h -> SMS -> 3h" do
+  describe "SMS -> 2h -> SMS -> 3h with dummy steps" do
     setup context do
-      conf = %{survey_retry_config: %{sms_retry_configuration: "2h", fallback_delay: "3h"}, retries: [2], fallback_delay: 3}
-      init_sms(conf, context)
+      config = TestConfiguration.base_config
+               |> TestConfiguration.with_survey_retries_config(%{sms_retry_configuration: "2h", fallback_delay: "3h"})
+               |> TestConfiguration.with_retries([2])
+               |> TestConfiguration.with_fallback_delay(3)
+      init_sms(config, context)
     end
 
-    test "user interactions and stalled-respondent ending", %{expected_histogram: expected_histogram, assert_histogram: assert_histogram,
-    histogram_hour: histogram_hour, respondent_reply: respondent_reply} do
+    test "no user interaction" , %{expected_histogram: expected_histogram, assert_histogram: assert_histogram,
+      histogram_hour: histogram_hour} do
+
       set_current_time("2019-12-23T09:00:00Z")
 
       expected_histogram.([])
@@ -148,8 +153,49 @@ defmodule Ask.Runtime.RetriesHistogramTest do
       # First poll, activate the respondent
       broker_poll()
 
-      expected_histogram.([%{hour: 0, respondents: 1}])
-      |> assert_histogram.("The respondent should be in the first column")
+      expected_histogram.([%{hour: histogram_hour.(%{attempt: 1}), respondents: 1}])
+      |> assert_histogram.("The respondent should be in the first attempt active column")
+
+      time_passes(hours: 1)
+
+      expected_histogram.([%{hour: histogram_hour.(%{attempt: 1, hours_after: 1}), respondents: 1}])
+      |> assert_histogram.("the respondent should be in the first attempt - first hour column")
+
+      time_passes(hours: 1)
+
+      # Second poll, it should retry the first question
+      broker_poll()
+
+      expected_histogram.([%{hour: histogram_hour.(%{attempt: 2}), respondents: 1}])
+      |> assert_histogram.("The respondent should be in the second attempt active column")
+
+      time_passes(hours: 2)
+
+      expected_histogram.([%{hour: histogram_hour.(%{attempt: 2, hours_after: 2}), respondents: 1}])
+      |> assert_histogram.("the respondent should be in the second attempt - second hour column")
+
+      time_passes(hours: 1)
+
+      # Third poll, it should stall the respondent
+      broker_poll()
+
+      # Respondent should have been removed from the Histogram
+      expected_histogram.([])
+      |> assert_histogram.("Respondent should have been stalled and removed from the Histogram")
+    end
+
+    test "user interactions and stalled-respondent ending", %{expected_histogram: expected_histogram, assert_histogram: assert_histogram,
+      histogram_hour: histogram_hour, respondent_reply: respondent_reply} do
+      set_current_time("2019-12-23T09:00:00Z")
+
+      expected_histogram.([])
+      |> assert_histogram.("Histogram should be empty since respondent is still in state = pending")
+
+      # First poll, activate the respondent
+      broker_poll()
+
+      expected_histogram.([%{hour: histogram_hour.(%{attempt: 1}), respondents: 1}])
+      |> assert_histogram.("The respondent should be in the first attempt active column")
 
       time_passes(hours: 1)
 
@@ -191,15 +237,47 @@ defmodule Ask.Runtime.RetriesHistogramTest do
       # Third poll, it should stall the respondent
       broker_poll()
 
-      # Respondent should have been stalled and removed from the Histogram
+      # Respondent should have been removed from the Histogram
       expected_histogram.([])
       |> assert_histogram.("Respondent should have been stalled and removed from the Histogram")
     end
   end
 
+  describe "SMS -> 2h -> SMS -> 3h with partial skip logic steps" do
+    setup context do
+      config = TestConfiguration.base_config
+               |> TestConfiguration.with_steps(@flag_steps_partial_skip_logic)
+               |> TestConfiguration.with_survey_retries_config(%{sms_retry_configuration: "2h", fallback_delay: "3h"})
+               |> TestConfiguration.with_retries([2])
+               |> TestConfiguration.with_fallback_delay(3)
+      init_sms(config, context)
+    end
+
+    test "respondent ends survey as partial", %{expected_histogram: expected_histogram, assert_histogram: assert_histogram,
+      histogram_hour: histogram_hour, respondent_reply: respondent_reply} do
+
+      set_current_time("2019-12-23T09:00:00Z")
+
+      # First poll, activate the respondent
+      broker_poll()
+
+      expected_histogram.([%{hour: histogram_hour.(%{attempt: 1}), respondents: 1}])
+      |> assert_histogram.("The respondent should be in the first attempt active column")
+
+      respondent_reply.("Yes")
+
+      expected_histogram.([])
+      |> assert_histogram.("The histogram should be empty since respondent completed the survey")
+
+    end
+  end
+
   describe "Mobileweb -> 2h -> Mobileweb -> 3h" do
     setup context do
-      config = %{survey_retry_config: %{mobileweb_retry_configuration: "2h", fallback_delay: "3h"}, retries: [2], fallback_delay: 3}
+      config = TestConfiguration.base_config
+               |> TestConfiguration.with_survey_retries_config(%{mobileweb_retry_configuration: "2h", fallback_delay: "3h"})
+               |> TestConfiguration.with_retries([2])
+               |> TestConfiguration.with_fallback_delay(3)
       init_mobileweb(config, context)
     end
 
@@ -249,7 +327,7 @@ defmodule Ask.Runtime.RetriesHistogramTest do
   defp assert_histogram(survey, sequence_mode, expected_histogram, message) do
     stats = RetryStat.stats(%{survey_id: survey.id})
     actual_histogram = Ask.RetriesHistogram.mode_sequence_histogram(survey, stats, sequence_mode, SystemTime.time.now)
-    assert expected_histogram == actual_histogram, message
+    assert expected_histogram == actual_histogram, "#{message}: \n\texpected histogram: #{inspect(expected_histogram)} \n\tactual histogram: #{inspect(actual_histogram)}"
   end
 
   defp set_current_time(time) do
@@ -264,15 +342,15 @@ defmodule Ask.Runtime.RetriesHistogramTest do
 
   defp broker_poll(), do: Broker.handle_info(:poll, nil)
 
-  defp initialize_survey(mode, survey_configuration) do
-    [survey, _group, _test_channel, respondent, _phone_number] = create_running_survey_with_channel_and_respondent(@dummy_steps, mode)
+  defp initialize_survey(mode, survey_configuration, steps) do
+    [survey, _group, _test_channel, respondent, _phone_number] = create_running_survey_with_channel_and_respondent(steps, mode)
     survey = survey |> Survey.changeset(survey_configuration) |> Repo.update!
     %{survey: survey, respondent: respondent}
   end
 
-  defp init_mode(mode, %{survey_retry_config: mode_retry_config, retries: retries, fallback_delay: fallback_delay}) do
-    %{survey: survey, respondent: respondent} = initialize_survey(mode, mode_retry_config)
-    %{histogram_flow: expected_histogram_flow, histogram_hour: histogram_hour} = configure_retries_and_fallback(mode, retries, fallback_delay)
+  defp init_mode(mode, config) do
+    %{survey: survey, respondent: respondent} = initialize_survey(mode, config.survey_retry_config, config.questionnaire_steps)
+    %{histogram_flow: expected_histogram_flow, histogram_hour: histogram_hour} = configure_retries_and_fallback(mode, config.retries, config.fallback_delay)
 
     expected_histogram = fn actives -> %{actives: actives, flow: expected_histogram_flow} end
     assert_histogram = fn (histogram, message) -> assert_histogram(survey, [mode], histogram, message) end
@@ -338,4 +416,18 @@ defmodule Ask.Runtime.RetriesHistogramTest do
     respondent = Repo.get!(Respondent, respondent_id)
     Broker.sync_step(respondent, Flow.Message.reply(reply_message), "sms")
   end
+end
+
+defmodule TestConfiguration do
+  use Ask.DummySteps
+
+  def base_config, do: %{survey_retry_config: %{}, retries: [], fallback_delay: 0, questionnaire_steps: @dummy_steps}
+
+  def with_steps(conf, steps), do: Map.put(conf, :questionnaire_steps, steps)
+
+  def with_survey_retries_config(conf, retries_config), do: Map.put(conf, :survey_retry_config, retries_config)
+
+  def with_retries(conf, retries), do: Map.put(conf, :retries, retries)
+
+  def with_fallback_delay(conf, fallback_delay), do: Map.put(conf, :fallback_delay, fallback_delay)
 end
