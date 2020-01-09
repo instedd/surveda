@@ -302,8 +302,7 @@ defmodule Ask.Runtime.RetriesHistogramTest do
       {:ok, %{survey: survey, sequence_mode: sequence_mode, respondent: respondent, expected_histogram: expected_histogram, assert_histogram: assert_histogram, histogram_hour: histogram_hour}}
     end
 
-    @tag :skip
-    test "fallback test", %{survey: survey, expected_histogram: expected_histogram, assert_histogram: assert_histogram, histogram_hour: histogram_hour} do
+    test "fallback test", %{expected_histogram: expected_histogram, assert_histogram: assert_histogram, histogram_hour: histogram_hour} do
       set_current_time("2019-12-23T09:00:00Z")
 
       # First poll, activate the respondent
@@ -316,7 +315,7 @@ defmodule Ask.Runtime.RetriesHistogramTest do
       # Second poll, retry the question
       broker_poll()
 
-      expected_histogram.([%{hour: histogram_hour.(%{attempt: 2}) |> IO.inspect(label: "second attempt hour"), respondents: 1}])
+      expected_histogram.([%{hour: histogram_hour.(%{attempt: 2}), respondents: 1}])
       |> assert_histogram.("the respondent should be in the second attempt active column")
 
       time_passes(hours: 3)
