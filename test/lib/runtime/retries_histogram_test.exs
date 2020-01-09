@@ -10,6 +10,7 @@ defmodule Ask.Runtime.RetriesHistogramTest do
   alias Ask.Runtime.{Broker, Flow, ChannelStatusServer, VerboiceChannel}
   alias Ask.{Repo, Survey, Respondent, RetryStat, SystemTime}
   require Ask.Runtime.ReplyHelper
+  alias Ask.{RespondentGroupChannel, TestChannel, Schedule}
   @moduletag :time_mock
 
   setup do
@@ -17,7 +18,7 @@ defmodule Ask.Runtime.RetriesHistogramTest do
     :ok
   end
 
-  describe "IVR -> 2h -> IVR" do
+  describe "IVR -> 2h -> IVR with dummy steps" do
     setup context do
       config = TestConfiguration.base_config
                |> TestConfiguration.with_survey_retries_config(%{ivr_retry_configuration: "2h"})
@@ -253,7 +254,7 @@ defmodule Ask.Runtime.RetriesHistogramTest do
       init_sms(config, context)
     end
 
-    test "respondent ends survey as partial", %{expected_histogram: expected_histogram, assert_histogram: assert_histogram,
+    test "respondent ends survey", %{expected_histogram: expected_histogram, assert_histogram: assert_histogram,
       histogram_hour: histogram_hour, respondent_reply: respondent_reply} do
 
       set_current_time("2019-12-23T09:00:00Z")
@@ -272,7 +273,63 @@ defmodule Ask.Runtime.RetriesHistogramTest do
     end
   end
 
-  describe "Mobileweb -> 2h -> Mobileweb -> 3h" do
+  describe "SMS -> 2h -> IVR with dummy steps" do
+    setup do
+      test_channel = TestChannel.new
+      channel = insert(:channel, settings: test_channel |> TestChannel.settings, type: "sms")
+      test_fallback_channel = TestChannel.new
+      fallback_channel = insert(:channel, settings: test_fallback_channel |> TestChannel.settings, type: "ivr")
+
+      quiz = insert(:questionnaire, steps: @dummy_steps)
+      sequence_mode = ["sms", "ivr"]
+      survey = insert(:survey, %{schedule: Schedule.always(), state: "running", questionnaires: [quiz], mode: [sequence_mode], fallback_delay: "3h"})
+      group = insert(:respondent_group, survey: survey, respondents_count: 1) |> Repo.preload([:channels])
+
+      RespondentGroupChannel.changeset(%RespondentGroupChannel{}, %{respondent_group_id: group.id, channel_id: channel.id, mode: channel.type}) |> Repo.insert
+      RespondentGroupChannel.changeset(%RespondentGroupChannel{}, %{respondent_group_id: group.id, channel_id: fallback_channel.id, mode: fallback_channel.type}) |> Repo.insert
+
+      respondent = insert(:respondent, survey: survey, respondent_group: group)
+#      phone_number = respondent.sanitized_phone_number
+
+      survey = survey |> Survey.changeset(%{sms_retry_configuration: "2h", ivr_retry_configuration: "2h"}) |> Repo.update!
+
+      histogram_flow = [%{delay: 0, type: "sms"}, contacting_slot("sms", 2), contacting_slot("ivr", 3), contacting_slot("ivr", 2)]
+      expected_histogram = fn actives -> %{actives: actives, flow: histogram_flow} end
+
+      histogram_hour= fn config -> histogram_hour(histogram_flow, config) end
+
+      assert_histogram = fn (histogram, message) -> assert_histogram(survey, sequence_mode, histogram, message) end
+      {:ok, %{survey: survey, sequence_mode: sequence_mode, respondent: respondent, expected_histogram: expected_histogram, assert_histogram: assert_histogram, histogram_hour: histogram_hour}}
+    end
+
+    @tag :skip
+    test "fallback test", %{survey: survey, expected_histogram: expected_histogram, assert_histogram: assert_histogram, histogram_hour: histogram_hour} do
+      set_current_time("2019-12-23T09:00:00Z")
+
+      # First poll, activate the respondent
+      broker_poll()
+
+      expected_histogram.([%{hour: histogram_hour.(%{attempt: 1}), respondents: 1}])
+      |> assert_histogram.("the respondent should be in the first attempt active column")
+
+      time_passes(hours: 2)
+      # Second poll, retry the question
+      broker_poll()
+
+      expected_histogram.([%{hour: histogram_hour.(%{attempt: 2}) |> IO.inspect(label: "second attempt hour"), respondents: 1}])
+      |> assert_histogram.("the respondent should be in the second attempt active column")
+
+      time_passes(hours: 3)
+      # Third poll, retry the question - fallback to ivr mode
+      broker_poll()
+
+      expected_histogram.([%{hour: histogram_hour.(%{attempt: 3}), respondents: 1}])
+      |> assert_histogram.("the respondent should be in the third attempt active column")
+
+    end
+  end
+
+  describe "Mobileweb -> 2h -> Mobileweb -> 3h with dummy steps" do
     setup context do
       config = TestConfiguration.base_config
                |> TestConfiguration.with_survey_retries_config(%{mobileweb_retry_configuration: "2h", fallback_delay: "3h"})

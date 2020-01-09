@@ -273,10 +273,11 @@ defmodule Ask.Runtime.Session do
   end
 
   defp switch_to_fallback_mode(%{fallback_mode: fallback_mode, flow: flow} = session) do
+    IO.puts("====== HELLOOOOOOO")
     session = session
               |> clear_token
-              |> RetriesHistogram.retry
-    run_flow(%Session{
+#              |> RetriesHistogram.retry
+    run_flow_result = run_flow(%Session{
       session |
       current_mode: fallback_mode,
       fallback_mode: nil,
@@ -286,6 +287,9 @@ defmodule Ask.Runtime.Session do
         mode: fallback_mode |> SessionMode.mode
       }
     })
+    {:ok, session, _, _} = run_flow_result
+    RetriesHistogram.retry(session)
+    run_flow_result
   end
 
   def consume_retry(%{current_mode: %{retries: [_ | retries]}} = session) do

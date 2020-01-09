@@ -4,6 +4,8 @@ defmodule Ask.Logger do
   def error(msg) do
     if should_log() do
       Logger.error(msg)
+    else
+      IO.inspect(msg, label: "* ERROR")
     end
   end
 
