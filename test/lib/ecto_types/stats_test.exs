@@ -4,21 +4,21 @@ defmodule Ask.StatsTest do
 
   describe "dump:" do
     test "should dump empty" do
-      assert {:ok, "{\"total_sent_sms\":0,\"total_received_sms\":0,\"total_call_time_seconds\":null,\"total_call_time\":null,\"attempts\":null}"} == Stats.dump(%Stats{})
+      assert {:ok, "{\"total_sent_sms\":0,\"total_received_sms\":0,\"total_call_time_seconds\":null,\"total_call_time\":null,\"call_durations\":{},\"attempts\":null}"} == Stats.dump(%Stats{})
     end
 
     test "should dump full" do
-      assert {:ok, "{\"total_sent_sms\":3,\"total_received_sms\":2,\"total_call_time_seconds\":60,\"total_call_time\":1,\"attempts\":{\"sms\":5,\"mobileweb\":7,\"ivr\":6}}"} == Stats.dump(%Stats{total_received_sms: 2, total_sent_sms: 3, total_call_time_seconds: 60, total_call_time: 1, attempts: %{sms: 5, ivr: 6, mobileweb: 7}})
+      assert {:ok, "{\"total_sent_sms\":3,\"total_received_sms\":2,\"total_call_time_seconds\":60,\"total_call_time\":1,\"call_durations\":{\"12345\":30},\"attempts\":{\"sms\":5,\"mobileweb\":7,\"ivr\":6}}"} == Stats.dump(%Stats{total_received_sms: 2, total_sent_sms: 3, total_call_time_seconds: 60, total_call_time: 1, attempts: %{sms: 5, ivr: 6, mobileweb: 7}, call_durations: %{"12345" => 30}})
     end
   end
 
   describe "load:" do
     test "should load empty" do
-      assert {:ok, %Stats{total_received_sms: nil, total_sent_sms: nil, total_call_time: nil, total_call_time_seconds: nil, attempts: nil}} == Stats.load("{}")
+      assert {:ok, %Stats{total_received_sms: nil, total_sent_sms: nil, total_call_time: nil, total_call_time_seconds: nil, attempts: nil, call_durations: %{}}} == Stats.load("{}")
     end
 
     test "should load full" do
-      assert {:ok, %Stats{total_received_sms: 2, total_sent_sms: 3, total_call_time: 1, total_call_time_seconds: 60, attempts: %{"ivr" => 6, "sms" => 5, "mobileweb" => 7}}} == Stats.load("{\"total_sent_sms\":3,\"total_received_sms\":2,\"total_call_time\":1,\"total_call_time_seconds\":60,\"attempts\":{\"mobileweb\":7,\"sms\":5,\"ivr\":6}}")
+      assert {:ok, %Stats{total_received_sms: 2, total_sent_sms: 3, total_call_time: 1, total_call_time_seconds: 60, attempts: %{"ivr" => 6, "sms" => 5, "mobileweb" => 7}, call_durations: %{"415" => 42, "some-call-id" => 32}}} == Stats.load("{\"total_sent_sms\":3,\"total_received_sms\":2,\"total_call_time\":1,\"total_call_time_seconds\":60,\"attempts\":{\"mobileweb\":7,\"sms\":5,\"ivr\":6},\"call_durations\":{\"415\":42,\"some-call-id\":32}}")
     end
   end
 
@@ -164,16 +164,46 @@ defmodule Ask.StatsTest do
   end
 
   describe "call time:" do
-    test "sets total_call_time_seconds" do
-      stats = %Stats{} |> Stats.total_call_time_seconds(12)
+    test "total_call_time_seconds calculated from no registered calls" do
+      stats = %Stats{}
+
+      assert Stats.total_call_time_seconds(stats) == 0
+    end
+
+    test "total_call_time_seconds calculated from a single registered call" do
+      stats = %Stats{call_durations: %{"1" => 25}}
+
+      assert Stats.total_call_time_seconds(stats) == 25
+    end
+
+    test "total_call_time_seconds calculated from multiple registered calls" do
+      stats = %Stats{call_durations: %{"1" => 25, "40" => 40, "any-kind-of-id" => 2, "zero-lenght" => 0}}
+
+      assert Stats.total_call_time_seconds(stats) == 67
+    end
+
+    test "total_call_time_seconds backward compatibility" do
+      stats = %Stats{total_call_time_seconds: 12}
 
       assert Stats.total_call_time_seconds(stats) == 12
+    end
+
+    test "total_call_time_seconds backward compatibility with registered calls" do
+      stats = %Stats{total_call_time_seconds: 12, call_durations: %{"1" => 25, "40" => 40, "any-kind-of-id" => 2, "zero-lenght" => 0}}
+
+      assert Stats.total_call_time_seconds(stats) == 79
     end
 
     test "total_call_time backward compatibility" do
       stats = %Stats{total_call_time: 1.5}
 
       assert Stats.total_call_time_seconds(stats) == 90
+    end
+
+    test "total_call_time backward compatibility with registered calls" do
+      stats = %Stats{total_call_time: 1.5, call_durations: %{"1" => 25, "40" => 40, "any-kind-of-id" => 2, "zero-lenght" => 0}}
+
+      assert Stats.total_call_time_seconds(stats) == 157
     end
 
     test "resolves to new field in discrepancy" do

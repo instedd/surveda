@@ -228,19 +228,19 @@ defmodule Ask.Runtime.VerboiceChannel do
     Broker.channel_failed(respondent, status)
   end
 
-  def update_call_time_seconds(respondent, call_time) do
+  def update_call_time_seconds(respondent, call_sid, call_time) do
     stats = respondent.stats
-    |> Stats.total_call_time_seconds(call_time)
+    |> Stats.with_call_time(call_sid, call_time)
 
     respondent
     |> Respondent.changeset(%{stats: stats})
     |> Repo.update!
   end
 
-  def callback(conn, %{"path" => ["status", respondent_id, _token], "CallStatus" => status, "CallDuration" => call_duration_seconds} = params) do
+  def callback(conn, %{"path" => ["status", respondent_id, _token], "CallStatus" => status, "CallDuration" => call_duration_seconds, "CallSid" => call_sid} = params) do
     call_duration = call_duration_seconds |> String.to_integer
     respondent = Repo.get!(Respondent, respondent_id)
-                 |> update_call_time_seconds(call_duration)
+                 |> update_call_time_seconds(call_sid, call_duration)
     case status do
       "expired" ->
         # respondent is still being considered as active in Surveda

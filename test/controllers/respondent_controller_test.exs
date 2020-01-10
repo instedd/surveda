@@ -11,7 +11,8 @@ defmodule Ask.RespondentControllerTest do
     "total_call_time" => nil,
     "total_call_time_seconds" => nil,
     "total_received_sms" => 0,
-    "total_sent_sms" => 0
+    "total_sent_sms" => 0,
+    "call_durations" => %{}
   }
 
   describe "normal" do
@@ -773,7 +774,7 @@ defmodule Ask.RespondentControllerTest do
       questionnaire = insert(:questionnaire, name: "test", project: project, steps: @dummy_steps)
       survey = insert(:survey, project: project, cutoff: 4, questionnaires: [questionnaire], state: "ready", schedule: completed_schedule(), mode: [["sms", "ivr"], ["mobileweb"], ["sms", "mobileweb"]])
       group_1 = insert(:respondent_group)
-      respondent_1 = insert(:respondent, survey: survey, hashed_number: "1asd12451eds", disposition: "partial", effective_modes: ["sms", "ivr"], respondent_group: group_1, stats: %Stats{total_received_sms: 4, total_sent_sms: 3, total_call_time_seconds: 12, attempts: %{sms: 1, mobileweb: 2, ivr: 3}})
+      respondent_1 = insert(:respondent, survey: survey, hashed_number: "1asd12451eds", disposition: "partial", effective_modes: ["sms", "ivr"], respondent_group: group_1, stats: %Stats{total_received_sms: 4, total_sent_sms: 3, total_call_time_seconds: 12, call_durations: %{"call-3" => 45}, attempts: %{sms: 1, mobileweb: 2, ivr: 3}})
       insert(:response, respondent: respondent_1, field_name: "Smokes", value: "Yes")
       insert(:response, respondent: respondent_1, field_name: "Exercises", value: "No")
       insert(:response, respondent: respondent_1, field_name: "Perfect Number", value: "100")
@@ -797,7 +798,7 @@ defmodule Ask.RespondentControllerTest do
       assert line_2_disp == "Partial"
       assert line_2_total_sent_sms == "3"
       assert line_2_total_received_sms == "4"
-      assert line_2_total_call_time == "0m 12s"
+      assert line_2_total_call_time == "0m 57s"
       assert line_2_perfect_number == "100"
       assert line_2_section_order == ""
       assert line_2_sms_attempts == "1"
