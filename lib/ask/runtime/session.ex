@@ -275,7 +275,7 @@ defmodule Ask.Runtime.Session do
   defp switch_to_fallback_mode(%{fallback_mode: fallback_mode, flow: flow} = session) do
     session = session
               |> clear_token
-    {:ok, session, _, _} = run_flow_result = run_flow(%Session{
+    run_flow_result = run_flow(%Session{
       session |
       current_mode: fallback_mode,
       fallback_mode: nil,
@@ -285,7 +285,11 @@ defmodule Ask.Runtime.Session do
         mode: fallback_mode |> SessionMode.mode
       }
     })
-    put_elem(run_flow_result, 1, RetriesHistogram.retry(session))
+    result = case run_flow_result do
+      {:ok, session, _, _} -> put_elem(run_flow_result, 1, RetriesHistogram.retry(session))
+      _ -> run_flow_result
+    end
+    result
   end
 
   def consume_retry(%{current_mode: %{retries: [_ | retries]}} = session) do
