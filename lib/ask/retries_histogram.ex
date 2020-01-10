@@ -1,36 +1,36 @@
 defmodule Ask.RetriesHistogram do
-  alias Ask.{Survey, RetryStat}
+  alias Ask.{Survey, RetryStat, SystemTime}
 
   def survey_histograms(%Survey{mode: mode} = survey) do
     stats = %{survey_id: survey.id} |> RetryStat.stats()
-    mode |> Enum.map(fn mode -> survey |> mode_sequence_histogram(stats, mode, Timex.now()) end)
+    mode |> Enum.map(fn mode -> survey |> mode_sequence_histogram(stats, mode) end)
   end
 
-  def mode_sequence_histogram(%Survey{} = survey, stats, mode, now) do
+  defp mode_sequence_histogram(%Survey{} = survey, stats, mode) do
     flow = survey |> retries_histogram_flow(mode)
 
     %{
       flow: flow,
-      actives: retries_histogram_actives(flow, stats, mode, now)
+      actives: retries_histogram_actives(flow, stats, mode)
     }
   end
 
-  defp retries_histogram_actives(flow, stats, mode, now) do
+  defp retries_histogram_actives(flow, stats, mode) do
     enhanced_flow = enhance_flow(flow)
 
-    (get_actives(enhanced_flow, stats, mode, now) ++
-       get_inactives(enhanced_flow, stats, mode, now))
+    (get_actives(enhanced_flow, stats, mode) ++
+       get_inactives(enhanced_flow, stats, mode))
     |> clean_empty_slots()
   end
 
-  defp get_actives(enhanced_flow, stats, mode, now) do
+  defp get_actives(enhanced_flow, stats, mode) do
     enhanced_flow
     |> Enum.map(fn %{index: index} = attempt ->
       get_active(%{
         current_attempt: attempt,
         stats: stats,
         mode: mode,
-        now: now,
+        now: SystemTime.time.now,
         next_attempt: Enum.at(enhanced_flow, index + 1)
       })
     end)
@@ -67,14 +67,14 @@ defmodule Ask.RetriesHistogram do
     %{hour: absolute_delay, respondents: count}
   end
 
-  defp get_inactives(enhanced_flow, stats, mode, now) do
+  defp get_inactives(enhanced_flow, stats, mode) do
     enhanced_flow
     |> Enum.map(fn %{index: index} = attempt ->
       get_attempt_inactives(%{
         current_attempt: attempt,
         stats: stats,
         mode: mode,
-        now: now,
+        now: SystemTime.time.now,
         next_attempt: Enum.at(enhanced_flow, index + 1)
       })
     end)

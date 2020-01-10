@@ -3,6 +3,7 @@ defmodule Ask.BrokerTest do
   use Ask.DummySteps
   use Timex
   use Ask.MockTime
+  use Ask.TimeHelpers
   use Ask.TestHelpers
   alias Ask.Runtime.{Broker, Flow, SurveyLogger, ReplyHelper, ChannelStatusServer}
   alias Ask.{Repo, Survey, Respondent, RespondentDispositionHistory, TestChannel, QuotaBucket, Questionnaire, RespondentGroupChannel, SurveyLogEntry, Schedule, StepBuilder, RetryStat}

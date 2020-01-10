@@ -5,10 +5,10 @@ defmodule Ask.Runtime.RetriesHistogramTest do
   import Ask.Factory
   use Ask.ConnCase
   use Timex
-  use Ask.MockTime
+  use Ask.TimeHelpers
   use Ask.TestHelpers
   alias Ask.Runtime.{Broker, Flow, ChannelStatusServer, VerboiceChannel}
-  alias Ask.{Repo, Survey, Respondent, RetryStat, SystemTime}
+  alias Ask.{Repo, Survey, Respondent}
   require Ask.Runtime.ReplyHelper
   alias Ask.{RespondentGroupChannel, TestChannel, Schedule}
   @moduletag :time_mock
@@ -298,8 +298,8 @@ defmodule Ask.Runtime.RetriesHistogramTest do
 
       histogram_hour= fn config -> histogram_hour(histogram_flow, config) end
 
-      assert_histogram = fn (histogram, message) -> assert_histogram(survey, sequence_mode, histogram, message) end
-      {:ok, %{survey: survey, sequence_mode: sequence_mode, respondent: respondent, expected_histogram: expected_histogram, assert_histogram: assert_histogram, histogram_hour: histogram_hour}}
+      assert_histogram = fn (histogram, message) -> assert_histogram(survey, histogram, message) end
+      {:ok, %{survey: survey, respondent: respondent, expected_histogram: expected_histogram, assert_histogram: assert_histogram, histogram_hour: histogram_hour}}
     end
 
     test "fallback test", %{expected_histogram: expected_histogram, assert_histogram: assert_histogram, histogram_hour: histogram_hour} do
@@ -380,21 +380,10 @@ defmodule Ask.Runtime.RetriesHistogramTest do
     end
   end
 
-  defp assert_histogram(survey, sequence_mode, expected_histogram, message) do
-    stats = RetryStat.stats(%{survey_id: survey.id})
-    actual_histogram = Ask.RetriesHistogram.mode_sequence_histogram(survey, stats, sequence_mode, SystemTime.time.now)
+  defp assert_histogram(survey, expected_histogram, message) do
+    [actual_histogram] = Ask.RetriesHistogram.survey_histograms(survey)
     assert expected_histogram == actual_histogram, "#{message}: \n\texpected histogram: #{inspect(expected_histogram)} \n\tactual histogram: #{inspect(actual_histogram)}"
   end
-
-  defp set_current_time(time) do
-    {:ok, now, _} = DateTime.from_iso8601(time)
-    mock_time(now)
-  end
-
-  defp time_passes(diff), do:
-    SystemTime.time.now
-    |> Timex.shift(diff)
-    |> mock_time
 
   defp broker_poll(), do: Broker.handle_info(:poll, nil)
 
@@ -409,7 +398,7 @@ defmodule Ask.Runtime.RetriesHistogramTest do
     %{histogram_flow: expected_histogram_flow, histogram_hour: histogram_hour} = configure_retries_and_fallback(mode, config.retries, config.fallback_delay)
 
     expected_histogram = fn actives -> %{actives: actives, flow: expected_histogram_flow} end
-    assert_histogram = fn (histogram, message) -> assert_histogram(survey, [mode], histogram, message) end
+    assert_histogram = fn (histogram, message) -> assert_histogram(survey, histogram, message) end
 
     %{survey: survey, respondent: respondent, expected_histogram: expected_histogram, assert_histogram: assert_histogram, histogram_hour: histogram_hour}
   end

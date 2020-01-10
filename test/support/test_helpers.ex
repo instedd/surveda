@@ -52,13 +52,6 @@ defmodule Ask.TestHelpers do
 
         [survey, group, test_channel, respondent, phone_number]
       end
-
-      defp mock_time(time) do
-        Ask.TimeMock
-        |> stub(:now, fn () -> time end)
-        time
-      end
-
     end
   end
 end
