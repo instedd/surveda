@@ -640,8 +640,8 @@ defmodule Ask.Runtime.Broker do
         default_batch_size()
 
       respondents_target when is_integer(respondents_target) ->
-        successful = Survey.successful_respondents(survey, respondents_by_state)
-        estimated_success_rate = estimated_success_rate(successful, respondents_by_state, respondents_target)
+        successful = Survey.completed_state_respondents(survey, respondents_by_state)
+        estimated_success_rate = estimated_success_rate(survey, respondents_target)
         (respondents_target - successful) / estimated_success_rate
         |> trunc
     end
@@ -655,9 +655,10 @@ defmodule Ask.Runtime.Broker do
     Survey.environment_variable_named(:batch_limit_per_minute)
   end
 
-  defp estimated_success_rate(successful, respondents_by_state, respondents_target) do
-    current_success_rate = Survey.success_rate(successful, respondents_by_state["completed"], respondents_by_state["failed"], respondents_by_state["rejected"])
-    completion_rate = Survey.completion_rate(successful, respondents_target)
+  defp estimated_success_rate(survey, respondents_target) do
+    respondents_by_disposition = survey |> Survey.respondents_by_disposition
+    completion_rate = Survey.get_completion_rate(survey, respondents_by_disposition, respondents_target)
+    current_success_rate = Survey.get_success_rate(survey, respondents_by_disposition )
     initial_success_rate = Survey.initial_success_rate()
     Survey.estimated_success_rate(initial_success_rate, current_success_rate, completion_rate)
   end
