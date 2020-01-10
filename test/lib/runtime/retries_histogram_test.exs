@@ -5,7 +5,7 @@ defmodule Ask.Runtime.RetriesHistogramTest do
   import Ask.Factory
   use Ask.ConnCase
   use Timex
-  use Ask.TimeHelpers
+  use Ask.MockTime
   use Ask.TestHelpers
   alias Ask.Runtime.{Broker, Flow, ChannelStatusServer, VerboiceChannel}
   alias Ask.{Repo, Survey, Respondent}

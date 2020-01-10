@@ -1,7 +1,7 @@
 defmodule Ask.RetriesHistogramTest do
   use ExUnit.Case
   use Ask.ModelCase
-  use Ask.TimeHelpers
+  use Ask.MockTime
   alias Ask.{RetriesHistogram, Survey, RetryStat}
 
   test "flow with no retries" do

@@ -273,8 +273,7 @@ defmodule Ask.Runtime.Session do
   end
 
   defp switch_to_fallback_mode(%{fallback_mode: fallback_mode, flow: flow} = session) do
-    session = session
-              |> clear_token
+    session = session |> clear_token
     run_flow_result = run_flow(%Session{
       session |
       current_mode: fallback_mode,

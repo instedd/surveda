@@ -3,7 +3,6 @@ defmodule Ask.BrokerTest do
   use Ask.DummySteps
   use Timex
   use Ask.MockTime
-  use Ask.TimeHelpers
   use Ask.TestHelpers
   alias Ask.Runtime.{Broker, Flow, SurveyLogger, ReplyHelper, ChannelStatusServer}
   alias Ask.{Repo, Survey, Respondent, RespondentDispositionHistory, TestChannel, QuotaBucket, Questionnaire, RespondentGroupChannel, SurveyLogEntry, Schedule, StepBuilder, RetryStat}
@@ -2024,7 +2023,7 @@ defmodule Ask.BrokerTest do
   @tag :time_mock
   setup :set_mox_global
   test "respondent flow via sms" do
-    now = Timex.now |> mock_time
+    set_actual_time()
     [survey, _group, test_channel, respondent, phone_number] = create_running_survey_with_channel_and_respondent()
 
     {:ok, logger} = SurveyLogger.start_link
@@ -2043,7 +2042,7 @@ defmodule Ask.BrokerTest do
     Broker.delivery_confirm(respondent, "Do you smoke?")
 
 
-    reply = Broker.sync_step(respondent, Flow.Message.reply("Yes"), nil, now)
+    reply = Broker.sync_step(respondent, Flow.Message.reply("Yes"), nil)
     assert {:reply, ReplyHelper.simple("Do you exercise", "Do you exercise? Reply 1 for YES, 2 for NO")} = reply
 
     %Respondent{ timeout_at: first_timeout} = respondent = Repo.get(Respondent, respondent.id)
@@ -2052,12 +2051,9 @@ defmodule Ask.BrokerTest do
     Broker.delivery_confirm(respondent, "Do you exercise")
 
     hours_passed = 3
+    time_passes(hours: hours_passed)
 
-    now = now
-      |> Timex.shift(hours: hours_passed)
-      |> mock_time
-
-    reply = Broker.sync_step(respondent, Flow.Message.reply("Yes"), nil, now)
+    reply = Broker.sync_step(respondent, Flow.Message.reply("Yes"), nil)
     assert {:reply, ReplyHelper.simple("Which is the second perfect number?", "Which is the second perfect number??")} = reply
 
     # Every sent SMS resets the timeout
@@ -2078,7 +2074,7 @@ defmodule Ask.BrokerTest do
     reply = Broker.sync_step(respondent, Flow.Message.reply("11"))
     assert {:end, {:reply, ReplyHelper.simple("Thank you", "Thanks for completing this survey")}} = reply
 
-    interval = Interval.new(from: Timex.shift(now, seconds: -5), until: Timex.shift(now, seconds: 5), step: [seconds: 1])
+    interval = Interval.new(from: Timex.shift(SystemTime.time.now, seconds: -5), until: Timex.shift(SystemTime.time.now, seconds: 5), step: [seconds: 1])
 
     respondent = Repo.get(Respondent, respondent.id)
     assert respondent.state == "completed"
