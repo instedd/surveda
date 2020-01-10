@@ -118,6 +118,14 @@ defmodule Ask.Respondent do
     "mobile_web_code_#{respondent_id}"
   end
 
+  def final_dispositions do
+    ["failed", "unresponsive", "ineligible", "rejected", "breakoff", "refused", "partial", "completed"]
+  end
+
+  def non_final_dispositions do
+    ["registered", "queued", "contacted", "started", "interim partial"]
+  end
+
   def add_mode_attempt!(respondent, mode), do: respondent |> changeset(%{stats: Stats.add_attempt(respondent.stats, mode)}) |> Repo.update!
 
   @doc """
