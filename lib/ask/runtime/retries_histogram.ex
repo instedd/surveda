@@ -55,7 +55,7 @@ defmodule Ask.Runtime.RetriesHistogram do
     end
   end
 
-  def next_step(%Respondent{} = respondent, %Session{current_mode: %Ask.Runtime.SMSMode{}} = session, {:reply, _reply}) do
+  def next_step(respondent, %Session{current_mode: %Ask.Runtime.SMSMode{}} = session, {:reply, _reply}) do
     # sms -> transition to active RetryStat
     if respondent.retry_stat_id, do:
       reallocate_respondent(session, respondent, false, Session.current_timeout(session))
@@ -66,24 +66,24 @@ defmodule Ask.Runtime.RetriesHistogram do
     # mobile-web -> do nothing
   end
 
-  def next_step(%Respondent{} = respondent, _session, {:end, _reply}) do
+  def next_step(respondent, _session, {:end, _reply}) do
     # remove respondent from histogram
     remove_respondent(respondent)
   end
 
-  def next_step(%Respondent{} = respondent, _session, :end) do
+  def next_step(respondent, _session, :end) do
     # remove respondent from histogram
     remove_respondent(respondent)
   end
 
-  def respondent_no_longer_active(%Respondent{session: session} = respondent) do # only makes sense for verboice
+  def respondent_no_longer_active(%{session: session} = respondent) do # only makes sense for verboice
     # transition from ivr active to normal retryStat
     session = Session.load(session)
     session = reallocate_respondent(session, respondent, false, Session.current_timeout(session))
     session.respondent
   end
 
-  def retry(%Session{respondent: %Respondent{} = respondent} = session) do
+  def retry(%{respondent: respondent} = session) do
     reallocate_respondent(session, respondent, ivr?(session), Session.current_timeout(session))
   end
 end
