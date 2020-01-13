@@ -1,5 +1,30 @@
 # InSTEDD Surveda Changelog
 
+## 0.24.0
+
+### Features
+
+* Add retries histogram to show scheduling of respondents [#1526](https://github.com/instedd/surveda/issues/1526)
+* Replace (deprecated) Google URL shortener service in favor of a configurable InSTEDD [shorter](https://github.com/instedd/shorter) instance [#1522](https://github.com/instedd/surveda/issues/1522)
+* Add configurable email from address [#1549](https://github.com/instedd/surveda/issues/1549)
+* Survey overview page shows start and end date [#1123](https://github.com/instedd/surveda/issues/1123)
+* Survey is stopped by a background process [#1517](https://github.com/instedd/surveda/issues/1517)
+* Curate list of languages for language autocomplete [#356](https://github.com/instedd/surveda/issues/356)
+* Timezones are chosen with an autocomplete component [#297](https://github.com/instedd/surveda/issues/297)
+* Add date in incentive file [#1113](https://github.com/instedd/surveda/issues/1113)
+* Improve order of responses CSV columns by included before the ones that are always present [#1136](https://github.com/instedd/surveda/issues/1136)
+* Update mobile web url to `https://<server>/mobile/<respondent_id>?token=<token>` [#1520](https://github.com/instedd/surveda/issues/1520)
+* Improve layout of numeric data in tables [#409](https://github.com/instedd/surveda/issues/409)
+* Survey auto-save is now triggered without leaving the field [#280](https://github.com/instedd/surveda/issues/280)
+
+### Bugfixes
+
+* Fix cockpit progress calculations and labeling [#1600](https://github.com/instedd/surveda/issues/1600)
+* Fix questionnaire export issues due to long audio files [#1525](https://github.com/instedd/surveda/issues/1525)
+* Some surveys couldn't be removed depending on its state [#1560](https://github.com/instedd/surveda/issues/1560)
+* Do not log requeue of expired calls in the interactions file [#1519](https://github.com/instedd/surveda/issues/1519)
+* Ignore answers on non-active modes to fix modes column in the respondents file [#1482](https://github.com/instedd/surveda/issues/1482)
+
 ## 0.23.2
 
 ### Bugfixes
