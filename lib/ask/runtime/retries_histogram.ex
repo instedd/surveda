@@ -3,57 +3,72 @@ defmodule Ask.Runtime.RetriesHistogram do
   alias Ask.Runtime.Session
 
   def add_new_respondent(respondent, session, timeout) do
-    try do
+    callback = fn () ->
       %Respondent{} = respondent
       %Session{} = session
       {:ok, retry_stat} = RetryStat.add(retry_stat_group(respondent, ivr?(session), timeout))
       update_respondent(respondent, retry_stat.id)
-    rescue
-      _ -> Logger.error("Error adding new respondent to histogram")
-      respondent
     end
+    run_safe(%{
+      callback: callback,
+      rescue_result: respondent,
+      error_message: "Error adding new respondent to histogram"
+    })
   end
 
   def respondent_no_longer_active(respondent) do # only makes sense for verboice
     # transition from ivr active to normal retryStat
-    try do
+    callback = fn () ->
       %Respondent{} = respondent
       %Session{} = session = Session.load(respondent.session)
       session = reallocate_respondent(session, respondent, false, Session.current_timeout(session))
       session.respondent
-    rescue
-      _ -> Logger.error("Error deactivating ivr respondent in RetriesHistogram")
-      respondent
     end
+    run_safe(%{
+      callback: callback,
+      rescue_result: respondent,
+      error_message: "Error deactivating ivr respondent in RetriesHistogram"
+    })
   end
 
   def retry(session) do
-    try do
+    callback = fn () ->
       %Session{respondent: %Respondent{} = respondent} = session
       reallocate_respondent(session, respondent, ivr?(session), Session.current_timeout(session))
-    rescue
-      _ -> Logger.error("Error handling retry in RetriesHistogram")
-      session
     end
+    run_safe(%{
+      callback: callback,
+      rescue_result: session,
+      error_message: "Error handling retry in RetriesHistogram"
+    })
   end
 
-  def next_step(respondent, session, next_action) do
-    try do
-      do_next_step(respondent, session, next_action)
-    rescue
-      _ -> Logger.error("Error handling next_step in RetriesHistogram")
-     session
-    end
-  end
+  def next_step(respondent, session, next_action), do:
+    run_safe(%{
+      callback: fn () -> do_next_step(respondent, session, next_action) end,
+      rescue_result: respondent,
+      error_message: "Error handling next_step in RetriesHistogram"
+    })
 
   def remove_respondent(respondent) do
+    callback = fn () ->
+        %Respondent{retry_stat_id: retry_stat_id} = respondent
+        RetryStat.subtract(retry_stat_id)
+        update_respondent(respondent, nil)
+      end
+    run_safe(%{
+      callback: callback,
+      rescue_result: respondent,
+      error_message: "Error removing the respondent in RetriesHistogram"
+    })
+  end
+
+  defp run_safe(%{callback: callback, rescue_result: rescue_result, error_message: error_message}) do
     try do
-      %Respondent{retry_stat_id: retry_stat_id} = respondent
-      RetryStat.subtract(retry_stat_id)
-      update_respondent(respondent, nil)
+      callback.()
     rescue
-      e -> Logger.error("Error removing the respondent in RetriesHistogram: " <> e.message)
-      respondent
+      _ -> Logger.error(error_message)
+      rescue_result
     end
   end
 
