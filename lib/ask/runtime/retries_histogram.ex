@@ -57,7 +57,8 @@ defmodule Ask.Runtime.RetriesHistogram do
 
   def next_step(%Respondent{} = respondent, %Session{current_mode: %Ask.Runtime.SMSMode{}} = session, {:reply, _reply}) do
     # sms -> transition to active RetryStat
-    reallocate_respondent(session, respondent, false, Session.current_timeout(session))
+    if respondent.retry_stat_id, do:
+      reallocate_respondent(session, respondent, false, Session.current_timeout(session))
   end
 
   def next_step(_respondent, _session, {:reply, _reply}) do
