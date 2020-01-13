@@ -4,8 +4,6 @@ defmodule Ask.Logger do
   def error(msg) do
     if should_log() do
       Logger.error(msg)
-    else
-      [:red, "\n", msg, ": ", Exception.format_stacktrace()] |> IO.ANSI.format |> IO.puts
     end
   end
 
