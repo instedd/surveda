@@ -5,7 +5,7 @@ defmodule Ask.Logger do
     if should_log() do
       Logger.error(msg)
     else
-      IO.inspect(msg, label: "* ERROR")
+      [:red, "\n", msg, ": ", Exception.format_stacktrace()] |> IO.ANSI.format |> IO.puts
     end
   end
 
