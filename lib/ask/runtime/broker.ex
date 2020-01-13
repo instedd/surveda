@@ -230,16 +230,10 @@ defmodule Ask.Runtime.Broker do
 
     {questionnaire, mode} = select_questionnaire_and_mode(survey)
 
-    {primary_mode, fallback_mode} = case mode do
-      [primary] -> {primary, nil}
-      [primary, fallback] -> {primary, fallback}
-    end
+    {primary_mode, fallback_mode} = get_modes(mode)
 
     # Set respondent questionnaire and mode
-    respondent = respondent
-    |> Respondent.changeset(%{questionnaire_id: questionnaire.id, mode: mode, disposition: "queued"})
-    |> Repo.update!
-    |> RespondentDispositionHistory.create(respondent.disposition, primary_mode)
+    respondent = configure_new_respondent(respondent, questionnaire.id, mode)
 
     primary_channel = RespondentGroup.primary_channel(group, mode)
     fallback_channel = RespondentGroup.fallback_channel(group, mode)
@@ -255,6 +249,21 @@ defmodule Ask.Runtime.Broker do
     Session.start(questionnaire, respondent, primary_channel, primary_mode, survey.schedule, retries, fallback_channel, fallback_mode, fallback_retries, fallback_delay, survey.count_partial_results)
     |> handle_session_started
     |> handle_session_step(SystemTime.time.now)
+  end
+
+  def configure_new_respondent(respondent, questionnaire_id, sequence_mode) do
+    {primary_mode, _} = get_modes(sequence_mode)
+    respondent
+    |> Respondent.changeset(%{questionnaire_id: questionnaire_id, mode: sequence_mode, disposition: "queued"})
+    |> Repo.update!
+    |> RespondentDispositionHistory.create(respondent.disposition, primary_mode)
+  end
+
+  defp get_modes(sequence_mode) do
+    case sequence_mode do
+      [primary] -> {primary, nil}
+      [primary, fallback] -> {primary, fallback}
+    end
   end
 
   defp handle_session_started(session_started)do
