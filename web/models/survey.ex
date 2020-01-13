@@ -28,7 +28,7 @@ defmodule Ask.Survey do
   alias Ask.Ecto.Type.JSON
 
   @max_int 2147483647
-  @default_fallback_delay 10
+  @default_fallback_delay 120
 
   schema "surveys" do
     field :name, :string

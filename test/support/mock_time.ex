@@ -27,7 +27,26 @@ defmodule Ask.MockTime do
   using do
     quote do
       import Mox
+      alias Ask.SystemTime
+
       setup :verify_on_exit!
+      defp mock_time(time) do
+        Ask.TimeMock
+        |> stub(:now, fn () -> time end)
+        time
+      end
+
+      defp set_current_time(time) do
+        {:ok, now, _} = DateTime.from_iso8601(time)
+        mock_time(now)
+      end
+
+      defp set_actual_time, do: mock_time(Timex.now)
+
+      defp time_passes(diff), do:
+        SystemTime.time.now
+        |> Timex.shift(diff)
+        |> mock_time
     end
   end
 end

@@ -1,8 +1,8 @@
 defmodule Ask.Runtime.VerboiceChannel do
   alias __MODULE__
   use Ask.Web, :model
-  alias Ask.{Repo, Respondent, Channel, SurvedaMetrics, Stats, RetryStat}
-  alias Ask.Runtime.{Broker, Flow, Reply}
+  alias Ask.{Repo, Respondent, Channel, SurvedaMetrics, Stats}
+  alias Ask.Runtime.{Broker, Flow, Reply, RetriesHistogram}
   alias Ask.Router.Helpers
   import Plug.Conn
   import XmlBuilder
@@ -192,10 +192,6 @@ defmodule Ask.Runtime.VerboiceChannel do
   defp match_channel(%{settings: %{"verboice_channel" => name}}, %{"name" => name}), do: true
   defp match_channel(_, _), do: false
 
-  defp channel_failed(respondent, "expired", _) do
-    Broker.contact_attempt_expired(respondent)
-  end
-
   defp channel_failed(respondent, "failed", %{"CallStatusReason" => "Busy", "CallStatusCode" => code}) do
     Broker.channel_failed(respondent, "User hangup (#{code})")
   end
@@ -241,20 +237,17 @@ defmodule Ask.Runtime.VerboiceChannel do
     |> Repo.update!
   end
 
-  defp set_retry_stat_timeout(%Respondent{retry_stat_time: retry_stat_time, survey_id: survey_id, stats: stats, mode: mode}) do
-    attempts = stats |> Stats.attempts(:all)
-    RetryStat.transition!(%{attempt: attempts, mode: mode, retry_time: "", survey_id: survey_id},
-      %{attempt: attempts, mode: mode, retry_time: retry_stat_time, survey_id: survey_id})
-  end
-
   def callback(conn, %{"path" => ["status", respondent_id, _token], "CallStatus" => status, "CallDuration" => call_duration_seconds} = params) do
     call_duration = call_duration_seconds |> String.to_integer
     respondent = Repo.get!(Respondent, respondent_id)
-    |> update_call_time_seconds(call_duration)
+                 |> update_call_time_seconds(call_duration)
     case status do
-      s when s in ["failed", "busy", "no-answer", "expired"] ->
-        set_retry_stat_timeout(respondent)
-
+      "expired" ->
+        # respondent is still being considered as active in Surveda
+        Broker.contact_attempt_expired(respondent)
+      s when s in ["failed", "busy", "no-answer"] ->
+        # respondent should no longer be considered as active
+        respondent = RetriesHistogram.respondent_no_longer_active(respondent)
         channel_failed(respondent, status, params)
       _ -> :ok
     end

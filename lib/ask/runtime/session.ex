@@ -3,7 +3,7 @@ defmodule Ask.Runtime.Session do
   import Ecto
   alias Ask.{Repo, QuotaBucket, Respondent, Schedule, RespondentDispositionHistory, Survey}
   alias Ask.Runtime.Flow.TextVisitor
-  alias Ask.Runtime.{Flow, Channel, Session, Reply, SurveyLogger, ReplyStep, SessionMode, SessionModeProvider, SMSMode, IVRMode, MobileWebMode, ChannelPatterns}
+  alias Ask.Runtime.{Flow, Channel, Session, Reply, SurveyLogger, ReplyStep, SessionMode, SessionModeProvider, SMSMode, IVRMode, MobileWebMode, ChannelPatterns, RetriesHistogram}
   use Timex
 
   defstruct [:current_mode, :fallback_mode, :flow, :respondent, :token, :fallback_delay, :channel_state, :count_partial_results, :schedule]
@@ -134,11 +134,11 @@ defmodule Ask.Runtime.Session do
     end
   end
 
-  defp current_timeout(%Session{current_mode: %{retries: []}, fallback_delay: fallback_delay}) do
+  def current_timeout(%Session{current_mode: %{retries: []}, fallback_delay: fallback_delay}) do
     fallback_delay
   end
 
-  defp current_timeout(%Session{current_mode: %{retries: [next_retry | _]}}) do
+  def current_timeout(%Session{current_mode: %{retries: [next_retry | _]}}) do
     next_retry
   end
 
@@ -230,7 +230,8 @@ defmodule Ask.Runtime.Session do
         {:ok, session, %Reply{}, current_timeout(session)}
 
       Channel.message_expired?(runtime_channel, channel_state) ->
-        session = retry(session, runtime_channel)
+        # do not retry since the respondent was never contacted, thus the retries should not be consumed
+        session = contact_respondent(session, runtime_channel)
 
         next_available_date_time = session.schedule |> Schedule.next_available_date_time
 
@@ -244,6 +245,7 @@ defmodule Ask.Runtime.Session do
   end
 
   def timeout(%{current_mode: %{retries: []}, fallback_mode: nil} = session, _) do
+    session = %{session | respondent: RetriesHistogram.remove_respondent(session.respondent)}
     terminate(session)
   end
 
@@ -252,30 +254,27 @@ defmodule Ask.Runtime.Session do
   end
 
   def timeout(%Session{} = session, runtime_channel) do
-    session = session
-      |> add_session_mode_attempt!()
-      |> retry(runtime_channel)
-      |> consume_retry()
+    session = retry(session, runtime_channel)
 
     # The new session will timeout as defined by hd(retries)
     {:ok, session, %Reply{}, current_timeout(session)}
   end
 
-  def terminate(%{current_mode: %SMSMode{}, respondent: respondent} = session) do
+  defp terminate(%{current_mode: %SMSMode{}, respondent: respondent} = session) do
     {:stalled, session |> clear_token(), respondent}
   end
 
-  def terminate(%{current_mode: %IVRMode{}, respondent: respondent}) do
+  defp terminate(%{current_mode: %IVRMode{}, respondent: respondent}) do
     {:failed, respondent}
   end
 
-  def terminate(%{current_mode: %MobileWebMode{}, respondent: respondent} = session) do
+  defp terminate(%{current_mode: %MobileWebMode{}, respondent: respondent} = session) do
     {:stalled, session |> clear_token, respondent}
   end
 
   defp switch_to_fallback_mode(%{fallback_mode: fallback_mode, flow: flow} = session) do
     session = session |> clear_token
-    run_flow(%Session{
+    run_flow_result = run_flow(%Session{
       session |
       current_mode: fallback_mode,
       fallback_mode: nil,
@@ -285,10 +284,19 @@ defmodule Ask.Runtime.Session do
         mode: fallback_mode |> SessionMode.mode
       }
     })
+    result = case run_flow_result do
+      {:ok, session, _, _} -> put_elem(run_flow_result, 1, RetriesHistogram.retry(session))
+      _ -> run_flow_result
+    end
+    result
   end
 
   def consume_retry(%{current_mode: %{retries: [_ | retries]}} = session) do
     %{session | current_mode: %{session.current_mode | retries: retries}}
+  end
+
+  def consume_retry(%{current_mode: %{retries: []}} = session) do
+    session
   end
 
   defp add_session_mode_attempt!(%Session{} = session), do: %{session | respondent: add_respondent_mode_attempt!(session)}
@@ -297,7 +305,15 @@ defmodule Ask.Runtime.Session do
   defp add_respondent_mode_attempt!(%Session{respondent: respondent, current_mode: %IVRMode{}}), do: respondent |> Respondent.add_mode_attempt!(:ivr)
   defp add_respondent_mode_attempt!(%Session{respondent: respondent, current_mode: %MobileWebMode{}}), do: respondent |> Respondent.add_mode_attempt!(:mobileweb)
 
-  def retry(%{current_mode: %SMSMode{}} = session, runtime_channel) do
+  def retry(session, runtime_channel) do
+    session
+    |> add_session_mode_attempt!()
+    |> contact_respondent(runtime_channel)
+    |> consume_retry()
+    |> RetriesHistogram.retry
+  end
+
+  def contact_respondent(%{current_mode: %SMSMode{}} = session, runtime_channel) do
     token = Ecto.UUID.generate
 
     {:ok, _flow, reply} = Flow.retry(session.flow, TextVisitor.new("sms"))
@@ -306,7 +322,7 @@ defmodule Ask.Runtime.Session do
     %{session | token: token, respondent: respondent}
   end
 
-  def retry(%{schedule: schedule, current_mode: %IVRMode{}} = session, runtime_channel) do
+  def contact_respondent(%{schedule: schedule, current_mode: %IVRMode{}} = session, runtime_channel) do
     token = Ecto.UUID.generate
 
     next_available_date_time = schedule
@@ -322,7 +338,7 @@ defmodule Ask.Runtime.Session do
     %{session | channel_state: channel_state, token: token}
   end
 
-  def retry(%{current_mode: %MobileWebMode{}} = session, runtime_channel) do
+  def contact_respondent(%{current_mode: %MobileWebMode{}} = session, runtime_channel) do
     token = Ecto.UUID.generate
 
     reply = mobile_contact_reply(session)
@@ -344,7 +360,7 @@ defmodule Ask.Runtime.Session do
   def contact_attempt_expired(session) do
     runtime_channel = Ask.Channel.runtime_channel(session.current_mode.channel)
 
-    session = retry(session, runtime_channel)
+    session = contact_respondent(session, runtime_channel)
 
     next_available_date_time = session.schedule |> Schedule.next_available_date_time
 
