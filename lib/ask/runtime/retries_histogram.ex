@@ -18,16 +18,25 @@ defmodule Ask.Runtime.RetriesHistogram do
 
   def respondent_no_longer_active(respondent) do # only makes sense for verboice
     # transition from ivr active to normal retryStat
+    error_message = "Error deactivating ivr respondent in RetriesHistogram"
     callback = fn () ->
       %Respondent{} = respondent
       %Session{} = session = Session.load(respondent.session)
       session = reallocate_respondent(session, respondent, false, Session.current_timeout(session))
       session.respondent
     end
+    callback = fn () ->
+      {:ok, respondent} = run_inside_transaction(%{
+        callback: callback,
+        rescue_result: respondent,
+        error_message: error_message
+      })
+      respondent
+    end
     run_safe(%{
       callback: callback,
       rescue_result: respondent,
-      error_message: "Error deactivating ivr respondent in RetriesHistogram"
+      error_message: error_message
     })
   end
 
@@ -61,6 +70,19 @@ defmodule Ask.Runtime.RetriesHistogram do
       rescue_result: respondent,
       error_message: "Error removing the respondent in RetriesHistogram"
     })
+  end
+
+  defp run_inside_transaction(%{callback: callback, rescue_result: rescue_result, error_message: error_message}) do
+    Repo.transaction(fn ->
+      try do
+        callback.()
+      rescue
+        e in Ecto.StaleEntryError ->
+          Logger.error(e, error_message)
+          Repo.rollback(e)
+          rescue_result
+      end
+    end)
   end
 
   defp run_safe(%{callback: callback, rescue_result: rescue_result, error_message: error_message}) do
