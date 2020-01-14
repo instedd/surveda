@@ -4,6 +4,7 @@
 
 ### Features
 
+* The default fallback delay is now 2 hours (previously 10 minutes). [0a732058](https://github.com/instedd/surveda/commit/0a73205850bb91e4192ebfc1c2bc282ea347e4a1)
 * Add retries histogram to show scheduling of respondents [#1526](https://github.com/instedd/surveda/issues/1526)
 * Replace (deprecated) Google URL shortener service in favor of a configurable InSTEDD [shorter](https://github.com/instedd/shorter) instance [#1522](https://github.com/instedd/surveda/issues/1522)
 * Add configurable email from address [#1549](https://github.com/instedd/surveda/issues/1549)
