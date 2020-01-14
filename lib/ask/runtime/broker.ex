@@ -165,7 +165,7 @@ defmodule Ask.Runtime.Broker do
               IO.inspect System.stacktrace()
               raise e
             end
-            Logger.error "Error occurred while polling survey (id: #{survey.id}): #{inspect e} #{inspect System.stacktrace}"
+            Logger.error(e, "Error occurred while polling survey (id: #{survey.id})")
             Sentry.capture_exception(e, [
               stacktrace: System.stacktrace(),
               extra: %{survey_id: survey.id}])
@@ -378,7 +378,7 @@ defmodule Ask.Runtime.Broker do
           #   raise e
           # end
           respondent = Repo.get(Respondent, session.respondent.id)
-          Logger.error "Error occurred while processing sync step (survey_id: #{respondent.survey_id}, respondent_id: #{respondent.id}): #{inspect e} #{inspect System.stacktrace}"
+          Logger.error(e, "Error occurred while processing sync step (survey_id: #{respondent.survey_id}, respondent_id: #{respondent.id})")
           Sentry.capture_exception(e, [
             stacktrace: System.stacktrace(),
             extra: %{survey_id: respondent.survey_id, respondent_id: respondent.id}])
