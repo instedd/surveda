@@ -62,7 +62,7 @@ defmodule Ask.RespondentController do
     stats(conn, survey, survey.quota_vars)
   rescue
     e ->
-      Logger.error "Error occurred while processing respondent stats (survey_id: #{survey_id}): #{inspect e} #{inspect System.stacktrace}"
+      Logger.error(e, "Error occurred while processing respondent stats (survey_id: #{survey_id})")
       Sentry.capture_exception(e, [
         stacktrace: System.stacktrace(),
         extra: %{survey_id: survey_id}])

@@ -7,6 +7,12 @@ defmodule Ask.Logger do
     end
   end
 
+  def error(ex, msg) do
+    if should_log() do
+      Logger.error "#{msg}: #{inspect ex} #{inspect System.stacktrace}"
+    end
+  end
+
   def warn(msg) do
     if should_log() do
       Logger.warn msg
