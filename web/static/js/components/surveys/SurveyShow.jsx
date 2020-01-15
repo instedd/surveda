@@ -49,8 +49,7 @@ class SurveyShow extends Component<any, State> {
     missing: PropTypes.number,
     pending: PropTypes.number,
     multiplier: PropTypes.number,
-    needed: PropTypes.number,
-    overviewType: PropTypes.string
+    needed: PropTypes.number
   }
 
   constructor(props) {
@@ -75,8 +74,8 @@ class SurveyShow extends Component<any, State> {
   }
 
   showHistograms() {
-    const { survey, overviewType } = this.props
-    return overviewType == 'full' && survey && survey.state == 'running'
+    const { survey } = this.props
+    return survey && survey.state == 'running'
   }
 
   stopSurvey() {
@@ -486,8 +485,7 @@ const mapStateToProps = (state, ownProps) => {
     multiplier: surveyStats ? surveyStats.multiplier : null,
     missing: surveyStats ? surveyStats.missing : null,
     needed: surveyStats ? surveyStats.needed : null,
-    pending: surveyStats ? surveyStats.pending : null,
-    overviewType: ownProps.params.overviewType
+    pending: surveyStats ? surveyStats.pending : null
   })
 }
 
