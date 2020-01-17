@@ -87,4 +87,8 @@ defmodule Ask.RespondentTest do
     assert Respondent.next_actual_timeout(respondent, timeout, now) == expected_actual_timeout
   end
 
+  test "final and non-final dispositions don't overlap" do
+    assert MapSet.disjoint?(Respondent.final_dispositions |> MapSet.new, Respondent.non_final_dispositions |> MapSet.new)
+  end
+
 end
