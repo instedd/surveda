@@ -142,24 +142,27 @@ defmodule Ask.RetryStat do
 
   defp count_valid(stats, %{attempt: filter_attempt, mode: filter_mode, retry_time: filter_retry_time, ivr_active: filter_ivr_active}),
     do:
-      Enum.find(stats, fn %RetryStat{attempt: attempt, retry_time: retry_time, ivr_active: ivr_active, mode: mode} ->
+      sum_all_stats_matches(stats, fn %RetryStat{attempt: attempt, retry_time: retry_time, ivr_active: ivr_active, mode: mode} ->
         attempt == filter_attempt and retry_time == filter_retry_time and ivr_active == filter_ivr_active and mode == filter_mode
       end)
-      |> count_stat
 
   defp count_valid(stats, %{attempt: filter_attempt, mode: filter_mode, ivr_active: filter_ivr_active}),
   do:
-    Enum.find(stats, fn %RetryStat{attempt: attempt, ivr_active: ivr_active, mode: mode} ->
+    sum_all_stats_matches(stats, fn %RetryStat{attempt: attempt, ivr_active: ivr_active, mode: mode} ->
       attempt == filter_attempt and ivr_active == filter_ivr_active and mode == filter_mode
     end)
-    |> count_stat
 
   defp count_valid(stats, %{attempt: filter_attempt, mode: filter_mode}),
   do:
-    Enum.find(stats, fn %RetryStat{attempt: attempt, mode: mode} ->
-      attempt == filter_attempt and mode == filter_mode
-    end)
-    |> count_stat
+    sum_all_stats_matches(stats, fn %RetryStat{attempt: attempt, mode: mode} ->
+       attempt == filter_attempt and mode == filter_mode
+     end)
+
+  defp sum_all_stats_matches(stats, predicate) do
+    Enum.filter(stats, predicate)
+    |> Enum.map(&count_stat/1)
+    |> Enum.sum()
+  end
 
   defp count_overdue(_stats, %{ivr_active: true}), do: 0
 
@@ -169,13 +172,10 @@ defmodule Ask.RetryStat do
          retry_time: filter_retry_time
        }),
        do:
-         stats
-         |> Enum.filter(fn %RetryStat{attempt: attempt, retry_time: retry_time, mode: mode, ivr_active: ivr_active} ->
+        sum_all_stats_matches(stats, fn %RetryStat{attempt: attempt, retry_time: retry_time, mode: mode, ivr_active: ivr_active} ->
            attempt == filter_attempt and retry_time <= filter_retry_time and
              mode == filter_mode and not ivr_active
          end)
-         |> Enum.map(fn stat -> stat |> count_stat() end)
-         |> Enum.sum()
 
   defp count_stat(nil), do: 0
   defp count_stat(stat), do: stat.count
