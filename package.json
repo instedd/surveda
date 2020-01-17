@@ -8,7 +8,7 @@
     "eslint": "eslint --ext .jsx,.js web/static/js/ test/js"
   },
   "dependencies": {
-    "@instedd/surveda-d3-components": "1.0.15",
+    "@instedd/surveda-d3-components": "1.0.18",
     "babel-preset-stage-0": "^6.5.0",
     "d3": "^3.5.17",
     "date-fns": "^1.27.2",

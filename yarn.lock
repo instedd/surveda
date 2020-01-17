@@ -2,9 +2,9 @@
 # yarn lockfile v1
 
 
-"@instedd/surveda-d3-components@1.0.15":
-  version "1.0.15"
-  resolved "https://registry.yarnpkg.com/@instedd/surveda-d3-components/-/surveda-d3-components-1.0.15.tgz#0fc967bc021aa3c25e696094686229d8948bda76"
+"@instedd/surveda-d3-components@1.0.18":
+  version "1.0.18"
+  resolved "https://registry.yarnpkg.com/@instedd/surveda-d3-components/-/surveda-d3-components-1.0.18.tgz#70006f4c30beb7133d1848957800908aa5a397fb"
   dependencies:
     d3 "^4.0.0"
     react-tooltip "^3.11.1"
