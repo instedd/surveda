@@ -286,7 +286,7 @@ class SurveyShow extends Component<any, State> {
               </div>
               <Stats data={stats} />
               <Forecasts data={forecasts} ceil={100} forecast={survey.state == 'running'} />
-              { this.showHistograms() ? <SurveyRetriesPanel projectId={projectId} surveyId={surveyId} target={target} /> : null }
+              { this.showHistograms() ? <SurveyRetriesPanel projectId={projectId} surveyId={surveyId} /> : null }
               <div className='row' style={{ 'display': 'flex', 'alignItems': 'center', 'marginTop': '20px' }}>
                 <div style={{ 'width': '50%' }}>
                   <div className='header'>

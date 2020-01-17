@@ -10,8 +10,7 @@ class SurveyRetriesPanel extends Component {
     dispatch: PropTypes.func.isRequired,
     projectId: PropTypes.string.isRequired,
     surveyId: PropTypes.string.isRequired,
-    t: PropTypes.func.isRequired,
-    target: PropTypes.number.isRequired
+    t: PropTypes.func.isRequired
   }
 
   componentWillMount() {
@@ -52,7 +51,7 @@ class SurveyRetriesPanel extends Component {
   }
 
   render() {
-    const { retriesHistograms, target, t } = this.props
+    const { retriesHistograms, t } = this.props
 
     const getHistogram = h => {
       const flow = this.flowForRetriesHistogram(h.flow)
@@ -81,8 +80,6 @@ class SurveyRetriesPanel extends Component {
       if (!retriesHistograms) return t('Loading...')
       return retriesHistograms.map(h => getHistogram(h)).map(h => <RetriesHistogram
         key={h.flow.map(({type}) => type).join('-')}
-        // Used in the y-axis height calculation
-        quota={target}
         // Every attempt in the mode sequence, including the delay between them
         flow={h.flow}
         // Every set of active respondents grouped and ordered by hour
