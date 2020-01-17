@@ -425,7 +425,7 @@ defmodule Ask.Survey do
     completes = exhausted_respondents(respondents_by_disposition)
     multiplier = Float.ceil(1/estimated_success_rate, 0)
     pending = not_exhausted_respondents(respondents_by_disposition)
-    {needed, missing} = get_needed_missing(survey, respondents_by_disposition, respondents_target, pending, completion_rate, current_success_rate)
+    {needed, missing} = get_needed_missing(survey, respondents_by_disposition, respondents_target, pending, completion_rate, estimated_success_rate)
     %{
       success_rate_data: %{
         success_rate: current_success_rate,

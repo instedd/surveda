@@ -557,9 +557,9 @@ defmodule Ask.SurveyControllerTest do
         "initial_success_rate" => 1.0,
         "estimated_success_rate" => 0.85,
         "completes" => 4,
-        "missing" => 4,
+        "missing" => 2,
         "multiplier" => 2,
-        "needed" => 4,
+        "needed" => 2,
         "pending" => 0
       }
     end
