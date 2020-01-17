@@ -135,13 +135,19 @@ defmodule Ask.RetriesHistogramTest do
     assert histogram_actives(survey) == []
 
     {:ok, %{id: stat_id}} = RetryStat.add(%{attempt: 1, mode: [mode], retry_time: retry_time(SystemTime.time.now(), 0), ivr_active: true, survey_id: survey.id})
+    {:ok, %{id: stat_id_2}} = RetryStat.add(%{attempt: 1, mode: [mode], retry_time: retry_time(SystemTime.time.now(), 1), ivr_active: true, survey_id: survey.id})
 
-    assert histogram_actives(survey) == [%{hour: 0, respondents: 1}]
+    assert histogram_actives(survey) == [%{hour: 0, respondents: 2}],
+           "Histogram must take into account all the respondents that are ivr_active without taking into account the retry_time"
 
     time_passes(hours: 1)
-    assert histogram_actives(survey) == [%{hour: 0, respondents: 1}]
+    assert histogram_actives(survey) == [%{hour: 0, respondents: 2}]
 
     {:ok} = RetryStat.subtract(stat_id)
+
+    assert histogram_actives(survey) == [%{hour: 0, respondents: 1}]
+
+    {:ok} = RetryStat.subtract(stat_id_2)
 
     assert histogram_actives(survey) == []
   end
