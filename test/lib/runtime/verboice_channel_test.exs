@@ -256,28 +256,7 @@ defmodule Ask.Runtime.VerboiceChannelTest do
 
       :ok = logger |> GenServer.stop
 
-      assert [enqueueing, call_failed, disposition_changed_to_failed] = (respondent |> Repo.preload(:survey_log_entries)).survey_log_entries
-
-      assert enqueueing.survey_id == survey.id
-      assert enqueueing.action_data == "Enqueueing call"
-      assert enqueueing.action_type == "contact"
-      assert enqueueing.disposition == "queued"
-
-      assert call_failed.survey_id == survey.id
-      assert call_failed.action_data == "(42)"
-      assert call_failed.action_type == "contact"
-      assert call_failed.disposition == "queued"
-
-      assert disposition_changed_to_failed.survey_id == survey.id
-      assert disposition_changed_to_failed.action_data == "Failed"
-      assert disposition_changed_to_failed.action_type == "disposition changed"
-      assert disposition_changed_to_failed.disposition == "queued"
-
-      respondent = Repo.get(Respondent, respondent.id)
-      refute respondent.stats.total_call_time
-      refute respondent.stats.total_call_time_seconds
-      assert respondent.stats.call_durations
-      assert respondent.stats.call_durations["some-id"] == 11
+      respondent |> assert_respondent_state("some-id", 11, "(42)")
 
       :ok = broker |> GenServer.stop
     end
@@ -308,28 +287,7 @@ defmodule Ask.Runtime.VerboiceChannelTest do
 
       :ok = logger |> GenServer.stop
 
-      assert [enqueueing, call_failed, disposition_changed_to_failed] = (respondent |> Repo.preload(:survey_log_entries)).survey_log_entries
-
-      assert enqueueing.survey_id == survey.id
-      assert enqueueing.action_data == "Enqueueing call"
-      assert enqueueing.action_type == "contact"
-      assert enqueueing.disposition == "queued"
-
-      assert call_failed.survey_id == survey.id
-      assert call_failed.action_data == "some random reason"
-      assert call_failed.action_type == "contact"
-      assert call_failed.disposition == "queued"
-
-      assert disposition_changed_to_failed.survey_id == survey.id
-      assert disposition_changed_to_failed.action_data == "Failed"
-      assert disposition_changed_to_failed.action_type == "disposition changed"
-      assert disposition_changed_to_failed.disposition == "queued"
-
-      respondent = Repo.get(Respondent, respondent.id)
-      refute respondent.stats.total_call_time
-      refute respondent.stats.total_call_time_seconds
-      assert respondent.stats.call_durations
-      assert respondent.stats.call_durations["id with spaces"] == 12
+      respondent |> assert_respondent_state("id with spaces", 12, "some random reason")
 
       :ok = broker |> GenServer.stop
     end
@@ -360,28 +318,7 @@ defmodule Ask.Runtime.VerboiceChannelTest do
 
       :ok = logger |> GenServer.stop
 
-      assert [enqueueing, call_failed, disposition_changed_to_failed] = (respondent |> Repo.preload(:survey_log_entries)).survey_log_entries
-
-      assert enqueueing.survey_id == survey.id
-      assert enqueueing.action_data == "Enqueueing call"
-      assert enqueueing.action_type == "contact"
-      assert enqueueing.disposition == "queued"
-
-      assert call_failed.survey_id == survey.id
-      assert call_failed.action_data == "failed"
-      assert call_failed.action_type == "contact"
-      assert enqueueing.disposition == "queued"
-
-      assert disposition_changed_to_failed.survey_id == survey.id
-      assert disposition_changed_to_failed.action_data == "Failed"
-      assert disposition_changed_to_failed.action_type == "disposition changed"
-      assert disposition_changed_to_failed.disposition == "queued"
-
-      respondent = Repo.get(Respondent, respondent.id)
-      refute respondent.stats.total_call_time
-      refute respondent.stats.total_call_time_seconds
-      assert respondent.stats.call_durations
-      assert respondent.stats.call_durations["12345"] == 13
+      respondent |> assert_respondent_state("12345", 13, "failed")
 
       :ok = broker |> GenServer.stop
     end
@@ -412,28 +349,7 @@ defmodule Ask.Runtime.VerboiceChannelTest do
 
       :ok = logger |> GenServer.stop
 
-      assert [enqueueing, call_failed, disposition_changed_to_failed] = (respondent |> Repo.preload(:survey_log_entries)).survey_log_entries
-
-      assert enqueueing.survey_id == survey.id
-      assert enqueueing.action_data == "Enqueueing call"
-      assert enqueueing.action_type == "contact"
-      assert enqueueing.disposition == "queued"
-
-      assert call_failed.survey_id == survey.id
-      assert call_failed.action_data == "no-answer: another reason (foo)"
-      assert call_failed.action_type == "contact"
-      assert call_failed.disposition == "queued"
-
-      assert disposition_changed_to_failed.survey_id == survey.id
-      assert disposition_changed_to_failed.action_data == "Failed"
-      assert disposition_changed_to_failed.action_type == "disposition changed"
-      assert disposition_changed_to_failed.disposition == "queued"
-
-      respondent = Repo.get(Respondent, respondent.id)
-      refute respondent.stats.total_call_time
-      refute respondent.stats.total_call_time_seconds
-      assert respondent.stats.call_durations
-      assert respondent.stats.call_durations["1515"] == 14
+      respondent |> assert_respondent_state("1515", 14, "no-answer: another reason (foo)")
 
       :ok = broker |> GenServer.stop
     end
@@ -464,28 +380,7 @@ defmodule Ask.Runtime.VerboiceChannelTest do
 
       :ok = logger |> GenServer.stop
 
-      assert [enqueueing, call_failed, disposition_changed_to_failed] = (respondent |> Repo.preload(:survey_log_entries)).survey_log_entries
-
-      assert enqueueing.survey_id == survey.id
-      assert enqueueing.action_data == "Enqueueing call"
-      assert enqueueing.action_type == "contact"
-      assert enqueueing.disposition == "queued"
-
-      assert call_failed.survey_id == survey.id
-      assert call_failed.action_data == "busy: yet another reason (bar)"
-      assert call_failed.action_type == "contact"
-      assert call_failed.disposition == "queued"
-
-      assert disposition_changed_to_failed.survey_id == survey.id
-      assert disposition_changed_to_failed.action_data == "Failed"
-      assert disposition_changed_to_failed.action_type == "disposition changed"
-      assert disposition_changed_to_failed.disposition == "queued"
-
-      respondent = Repo.get(Respondent, respondent.id)
-      refute respondent.stats.total_call_time
-      refute respondent.stats.total_call_time_seconds
-      assert respondent.stats.call_durations
-      assert respondent.stats.call_durations["1"] == 15
+      respondent |> assert_respondent_state("1", 15, "busy: yet another reason (bar)")
 
       :ok = broker |> GenServer.stop
     end
@@ -557,5 +452,31 @@ defmodule Ask.Runtime.VerboiceChannelTest do
 
     # :status should be :up when not receiving status information
     assert VerboiceChannel.check_status(%{}) == :up
+  end
+
+  defp assert_respondent_state(respondent, call_id, expected_call_duration, call_fail_reason) do
+    assert [enqueueing, call_failed, disposition_changed_to_failed] = (respondent |> Repo.preload(:survey_log_entries)).survey_log_entries
+
+    assert enqueueing.survey_id == respondent.survey_id
+    assert enqueueing.action_data == "Enqueueing call"
+    assert enqueueing.action_type == "contact"
+    assert enqueueing.disposition == "queued"
+
+    assert call_failed.survey_id == respondent.survey_id
+    assert call_failed.action_data == call_fail_reason
+    assert call_failed.action_type == "contact"
+    assert call_failed.disposition == "queued"
+
+    assert disposition_changed_to_failed.survey_id == respondent.survey_id
+    assert disposition_changed_to_failed.action_data == "Failed"
+    assert disposition_changed_to_failed.action_type == "disposition changed"
+    assert disposition_changed_to_failed.disposition == "queued"
+
+    respondent = Repo.get(Respondent, respondent.id)
+    refute respondent.stats.total_call_time
+    refute respondent.stats.total_call_time_seconds
+    assert respondent.stats.call_durations
+    assert respondent.stats.call_durations[call_id] == expected_call_duration
+    assert Ask.Stats.total_call_time_seconds(respondent.stats) == expected_call_duration
   end
 end
