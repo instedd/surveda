@@ -6,6 +6,7 @@ defmodule Ask.Stats do
             total_sent_sms: 0,
             total_call_time: nil,
             total_call_time_seconds: nil,
+            call_durations: %{},
             attempts: nil
 
   def type, do: :longtext
@@ -19,6 +20,7 @@ defmodule Ask.Stats do
         total_sent_sms: total_sent_sms,
         total_call_time: total_call_time,
         total_call_time_seconds: total_call_time_seconds,
+        call_durations: call_durations,
         attempts: attempts
       }) do
     {:ok,
@@ -27,6 +29,7 @@ defmodule Ask.Stats do
        total_sent_sms: total_sent_sms,
        total_call_time: total_call_time,
        total_call_time_seconds: total_call_time_seconds,
+       call_durations: call_durations || %{},
        attempts: attempts
      }}
   end
@@ -37,6 +40,7 @@ defmodule Ask.Stats do
       total_sent_sms: map["total_sent_sms"],
       total_call_time: map["total_call_time"],
       total_call_time_seconds: map["total_call_time_seconds"],
+      call_durations: map["call_durations"],
       attempts: map["attempts"]
     })
   end
@@ -68,18 +72,28 @@ defmodule Ask.Stats do
   defp total_call_time_minutes(stats), do: (total_call_time_seconds(stats) / 60) |> Kernel.trunc()
   defp total_call_time_minutes_rem(stats), do: rem(total_call_time_seconds(stats), 60)
 
-  def total_call_time_seconds(%Stats{total_call_time: nil, total_call_time_seconds: nil}), do: 0
+  # We should eventually decide to migrate all the ways to store call durations to a single, unified one
+  defp grouped_calls_time(%Stats{total_call_time: nil, total_call_time_seconds: nil}), do: 0
 
-  def total_call_time_seconds(%Stats{total_call_time: minutes, total_call_time_seconds: nil}),
+  defp grouped_calls_time(%Stats{total_call_time: minutes, total_call_time_seconds: nil}),
     do: (minutes * 60) |> Kernel.trunc()
 
-  def total_call_time_seconds(total_call_time_seconds: nil), do: 0
+  defp grouped_calls_time(total_call_time_seconds: nil), do: 0
 
-  def total_call_time_seconds(%Stats{total_call_time_seconds: seconds}) when seconds != nil,
+  defp grouped_calls_time(%Stats{total_call_time_seconds: seconds}) when seconds != nil,
     do: seconds
 
-  def total_call_time_seconds(%Stats{} = stats, count),
-    do: %{stats | total_call_time_seconds: count}
+  def total_call_time_seconds(stats), do:
+    grouped_calls_time(stats) + individual_calls_time(stats)
+
+  defp individual_calls_time(%{call_durations: call_durations}), do:
+    call_durations |> Enum.reduce(0, fn {_call_id, duration}, acum -> acum + duration end)
+  defp individual_calls_time(_stats), do: 0
+
+  def with_call_time(%{call_durations: call_durations} = stats, call_id, seconds) do
+    new_durations = call_durations |> Map.put(call_id, seconds)
+    %{stats | call_durations: new_durations}
+  end
 
   def add_received_sms(%Stats{total_received_sms: total} = stats, count \\ 1),
     do: %{stats | total_received_sms: total + count}

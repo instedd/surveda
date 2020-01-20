@@ -421,7 +421,7 @@ defmodule Ask.Runtime.RetriesHistogramTest do
   end
 
   defp call_failed(conn, respondent_id), do:
-    VerboiceChannel.callback(conn, %{"path" => ["status", respondent_id, "token"], "CallStatus" => "failed", "CallDuration" => "10", "CallStatusReason" => "some random reason", "CallStatusCode" => "42"})
+    VerboiceChannel.callback(conn, %{"path" => ["status", respondent_id, "token"], "CallStatus" => "failed", "CallDuration" => "10", "CallStatusReason" => "some random reason", "CallStatusCode" => "42", "CallSid" => "call-sid"})
 
   defp configure_retries_and_fallback(type, retries_hours, fallback_delay_hours) when type in ["sms", "mobileweb"] do
     flow = base_flow(type, retries_hours)
