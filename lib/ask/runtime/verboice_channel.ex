@@ -228,7 +228,7 @@ defmodule Ask.Runtime.VerboiceChannel do
     Broker.channel_failed(respondent, status)
   end
 
-  def update_call_time_seconds(respondent, call_sid, call_time) do
+  defp update_call_time_seconds(respondent, call_sid, call_time) do
     stats = respondent.stats
     |> Stats.with_call_time(call_sid, call_time)
 
