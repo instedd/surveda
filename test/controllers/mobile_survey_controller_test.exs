@@ -237,7 +237,7 @@ defmodule Ask.MobileSurveyControllerTest do
     Broker.poll
 
     respondent = Repo.get(Respondent, respondent.id)
-    respondent |> Respondent.changeset(%{"state" => "finised"}) |> Repo.update!
+    respondent |> Respondent.changeset(%{"state" => "completed"}) |> Repo.update!
 
     conn = get conn, mobile_survey_path(conn, :get_step, respondent.id, %{token: token})
     assert %{

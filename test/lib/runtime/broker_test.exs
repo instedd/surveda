@@ -1969,13 +1969,13 @@ defmodule Ask.BrokerTest do
     mark_n_active_respondents_as("failed", 20)
     mark_n_active_respondents_as("completed", 30)
     Broker.handle_info(:poll, nil)
-    assert_respondents_by_state(survey, 26, 125)
+    assert_respondents_by_state(survey, 20, 131)
 
     # since all the previous ones failed the success rate decreases
     # and the batch size increases
     mark_n_active_respondents_as("failed", 26)
     Broker.handle_info(:poll, nil)
-    assert_respondents_by_state(survey, 31, 94)
+    assert_respondents_by_state(survey, 20, 111)
   end
 
   test "" do

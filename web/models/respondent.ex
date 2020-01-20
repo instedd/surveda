@@ -66,6 +66,8 @@ defmodule Ask.Respondent do
     struct
     |> cast(params, [:phone_number, :sanitized_phone_number, :state, :session, :quota_bucket_id, :completed_at, :timeout_at, :questionnaire_id, :mode, :disposition, :mobile_web_cookie_code, :language, :effective_modes, :stats, :section_order, :retry_stat_id])
     |> validate_required([:phone_number, :state])
+    |> validate_inclusion(:disposition, ["registered", "queued", "contacted", "failed", "unresponsive", "started", "ineligible", "rejected", "breakoff", "refused", "partial", "interim partial", "completed"])
+    |> validate_inclusion(:state, ["pending", "active", "completed", "failed", "stalled", "rejected", "cancelled"])
     |> Ecto.Changeset.optimistic_lock(:lock_version)
   end
 
@@ -114,6 +116,14 @@ defmodule Ask.Respondent do
 
   def mobile_web_cookie_name(respondent_id) do
     "mobile_web_code_#{respondent_id}"
+  end
+
+  def final_dispositions do
+    ["failed", "unresponsive", "ineligible", "rejected", "breakoff", "refused", "partial", "completed"]
+  end
+
+  def non_final_dispositions do
+    ["registered", "queued", "contacted", "started", "interim partial"]
   end
 
   def add_mode_attempt!(respondent, mode), do: respondent |> changeset(%{stats: Stats.add_attempt(respondent.stats, mode)}) |> Repo.update!

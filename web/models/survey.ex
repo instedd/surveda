@@ -413,22 +413,19 @@ defmodule Ask.Survey do
   end
 
   def stats(survey) do
-    respondents_by_state = survey |> respondents_by_state
-    respondents_total = Enum.map(respondents_by_state, fn {_, v} -> v end) |> Enum.reduce(fn q, acc -> q + acc end)
+    respondents_by_disposition = survey |> respondents_by_disposition
+    respondents_total = Enum.map(respondents_by_disposition, fn {_, v} -> v end) |> Enum.reduce(0, fn q, acc -> q + acc end)
     respondents_target = survey
       |> completed_respondents_needed_by
       |> respondents_target(respondents_total)
+    completion_rate = get_completion_rate(survey, respondents_by_disposition, respondents_target)
+    current_success_rate = get_success_rate(survey, respondents_by_disposition )
     initial_success_rate = initial_success_rate()
-    successful_respondents = survey |> successful_respondents(respondents_by_state)
-    current_success_rate = success_rate(successful_respondents, respondents_by_state["completed"], respondents_by_state["failed"], respondents_by_state["rejected"])
-    completion_rate = completion_rate(successful_respondents, respondents_target)
     estimated_success_rate = estimated_success_rate(initial_success_rate, current_success_rate, completion_rate)
-    completes = respondents_by_state["completed"]
-    pending = respondents_target - completes
+    completes = exhausted_respondents(respondents_by_disposition)
     multiplier = Float.ceil(1/estimated_success_rate, 0)
-    needed = pending*multiplier
-    selected_respondents = respondents_count(respondents_by_state)
-    missing = max(needed - selected_respondents, 0)
+    pending = not_exhausted_respondents(respondents_by_disposition)
+    {needed, missing} = get_needed_missing(survey, respondents_by_disposition, respondents_target, pending, completion_rate, estimated_success_rate)
     %{
       success_rate_data: %{
         success_rate: current_success_rate,
@@ -446,22 +443,46 @@ defmodule Ask.Survey do
     }
   end
 
-  defp respondents_count(respondents_by_state) do
-    filter_key_list = ["active", "pending", "stalled"]
-    Map.take(respondents_by_state, filter_key_list)|> Enum.reduce(0, fn({_k, total}, acc) -> total + acc end)
-  end
-
-  defp respondents_target(:all, respondents_total), do: respondents_total
-  defp respondents_target(completed_respondents_needed, _), do: completed_respondents_needed
-
-  def success_rate(_, 0, 0, 0), do: 1.0
-  def success_rate(successful_respondents, completed_respondents, failed_respondents, rejected_respondents) do
-    successful_respondents / (completed_respondents + failed_respondents + rejected_respondents)
+  def get_completion_rate(survey, respondents_by_disposition, respondents_target) do
+    disposition_filter = if survey.count_partial_results, do: ["completed", "interim partial"], else: ["completed"]
+    completed_respondents = successful_respondents(survey, respondents_by_disposition, disposition_filter)
+    completion_rate(completed_respondents, respondents_target)
   end
 
   def completion_rate(_, nil), do: 0.0
   def completion_rate(_, 0), do: 0.0
-  def completion_rate(completed, respondents_target), do: completed / respondents_target
+  def completion_rate(completed, respondents_target), do: completed/respondents_target
+
+  def get_success_rate(survey, respondents_by_disposition) do
+    completed_respondents = get_completed_respondents(survey, respondents_by_disposition)
+    exhausted_respondents = exhausted_respondents(respondents_by_disposition)
+    success_rate(completed_respondents, exhausted_respondents)
+  end
+
+  def get_completed_respondents(survey, respondents_by_disposition) do
+    disposition_filter = if survey.count_partial_results, do: ["completed", "partial"], else: ["completed"]
+    sum_respondents_by_disposition_filter(respondents_by_disposition, disposition_filter)
+  end
+
+  def success_rate(_, 0), do: 1.0
+  def success_rate(successful_respondents, exhausted_respondents) do
+    successful_respondents / exhausted_respondents
+  end
+
+  defp get_needed_missing(survey, respondents_by_disposition, respondents_target, pending, completion_rate, current_success_rate) do
+    completed_respondents = get_completed_respondents(survey, respondents_by_disposition)
+    case completed_respondents == respondents_target do
+      # if true, means that you reached your target and no longer need to contact more respondents.
+      true -> {0, 0}
+      false ->
+        needed = Float.ceil((respondents_target*completion_rate)*(1/current_success_rate))
+        missing = max(needed - pending, 0)
+        {needed, missing}
+    end
+  end
+
+  defp respondents_target(:all, respondents_total), do: respondents_total
+  defp respondents_target(completed_respondents_needed, _), do: completed_respondents_needed
 
   def initial_success_rate() do
     %{:valid_respondent_rate => initial_valid_respondent_rate,
@@ -493,6 +514,7 @@ defmodule Ask.Survey do
   end
 
   def respondents_by_state(survey) do
+    #used by the broker to calculate batch size
     by_state_defaults = %{
       "active" => 0,
       "pending" => 0,
@@ -506,12 +528,42 @@ defmodule Ask.Survey do
       |> Enum.into(by_state_defaults)
   end
 
-  def successful_respondents(survey, nil) do
-    respondents_by_state = survey |> respondents_by_state
-    survey |> successful_respondents(respondents_by_state)
+  def respondents_by_disposition(survey) do
+    RespondentStats.respondent_count(survey_id: ^survey.id, by: :disposition)
+    |> Enum.into(%{})
   end
 
-  def successful_respondents(survey, respondents_by_state) do
+  def successful_respondents(%Survey{} = survey, respondents_by_disposition, disposition_filter) do
+    quota_completed = Repo.one(
+      from q in (survey |> assoc(:quota_buckets)),
+      select: fragment("sum(least(count, quota))")
+    )
+    successful_respondents(quota_completed, respondents_by_disposition, disposition_filter)
+  end
+
+  def successful_respondents(nil, respondents_by_disposition, disposition_filter) do
+    respondents_by_disposition |> sum_respondents_by_disposition_filter(disposition_filter)
+  end
+
+  def successful_respondents(quota_completed, _, _), do: quota_completed |> Decimal.to_integer
+
+  def exhausted_respondents(respondents_by_disposition) do
+    disposition_filter = Respondent.final_dispositions()
+    respondents_by_disposition |> sum_respondents_by_disposition_filter(disposition_filter)
+  end
+
+  def not_exhausted_respondents(respondents_by_disposition) do
+    disposition_filter = Respondent.non_final_dispositions()
+    respondents_by_disposition |> sum_respondents_by_disposition_filter(disposition_filter)
+  end
+
+  def sum_respondents_by_disposition_filter(respondents_by_disposition, disposition_filter) do
+    respondents_by_disposition |> Enum.reduce(0, fn {disposition, count}, acc ->
+       if disposition in disposition_filter, do: acc + count, else: acc
+    end)
+  end
+
+  def completed_state_respondents(survey, respondents_by_state) do
     quota_completed = Repo.one(
       from q in (survey |> assoc(:quota_buckets)),
       select: fragment("sum(least(count, quota))")
@@ -522,4 +574,5 @@ defmodule Ask.Survey do
       value -> value |> Decimal.to_integer
     end
   end
+
 end

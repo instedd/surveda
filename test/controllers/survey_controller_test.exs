@@ -450,7 +450,7 @@ defmodule Ask.SurveyControllerTest do
       project = create_project_for_user(user)
       survey = insert(:survey, project: project)
       survey = Survey |> Repo.get(survey.id)
-      insert(:respondent, survey: survey, state: "completed")
+      insert(:respondent, survey: survey, disposition: "completed")
 
       conn = get conn, project_survey_survey_path(conn, :stats, project, survey)
 
@@ -471,9 +471,9 @@ defmodule Ask.SurveyControllerTest do
       project = create_project_for_user(user)
       survey = insert(:survey, project: project)
       survey = Survey |> Repo.get(survey.id)
-      insert(:respondent, survey: survey, state: "completed")
-      insert(:respondent, survey: survey, state: "queued")
-      insert(:respondent, survey: survey, state: "started")
+      insert(:respondent, survey: survey, disposition: "completed")
+      insert(:respondent, survey: survey, disposition: "queued")
+      insert(:respondent, survey: survey, disposition: "started")
 
       conn = get conn, project_survey_survey_path(conn, :stats, project, survey)
       controller_response = json_response(conn, 200)["data"]
@@ -484,9 +484,9 @@ defmodule Ask.SurveyControllerTest do
         "initial_success_rate" => 1.0,
         "estimated_success_rate" => 1.0,
         "completes" => 1,
-        "missing" => 2,
+        "missing" => 0,
         "multiplier" => 1,
-        "needed" => 2,
+        "needed" => 1,
         "pending" => 2
       }
     end
@@ -495,9 +495,9 @@ defmodule Ask.SurveyControllerTest do
       project = create_project_for_user(user)
       survey = insert(:survey, project: project, cutoff: 2)
       survey = Survey |> Repo.get(survey.id)
-      insert(:respondent, survey: survey, state: "failed")
-      insert(:respondent, survey: survey, state: "completed")
-      insert(:respondent, survey: survey, state: "completed")
+      insert(:respondent, survey: survey, disposition: "failed")
+      insert(:respondent, survey: survey, disposition: "completed")
+      insert(:respondent, survey: survey, disposition: "completed")
 
       conn = get conn, project_survey_survey_path(conn, :stats, project, survey)
       controller_response = json_response(conn, 200)["data"]
@@ -507,7 +507,7 @@ defmodule Ask.SurveyControllerTest do
         "completion_rate" => 1.0,
         "initial_success_rate" => 1.0,
         "estimated_success_rate" => 0.67,
-        "completes" => 2,
+        "completes" => 3,
         "missing" => 0,
         "multiplier" => 2,
         "needed" => 0,
@@ -519,8 +519,8 @@ defmodule Ask.SurveyControllerTest do
       project = create_project_for_user(user)
       survey = insert(:survey, project: project, cutoff: 2)
       survey = Survey |> Repo.get(survey.id)
-      insert(:respondent, survey: survey, state: "failed")
-      insert(:respondent, survey: survey, state: "completed")
+      insert(:respondent, survey: survey, disposition: "failed")
+      insert(:respondent, survey: survey, disposition: "completed")
 
       conn = get conn, project_survey_survey_path(conn, :stats, project, survey)
 
@@ -529,11 +529,11 @@ defmodule Ask.SurveyControllerTest do
         "completion_rate" => 0.5,
         "initial_success_rate" => 1.0,
         "estimated_success_rate" => 0.75,
-        "completes" => 1,
+        "completes" => 2,
         "missing" => 2,
         "multiplier" => 2,
         "needed" => 2,
-        "pending" => 1
+        "pending" => 0
       }
     end
 
@@ -541,10 +541,10 @@ defmodule Ask.SurveyControllerTest do
       project = create_project_for_user(user)
       survey = insert(:survey, project: project, cutoff: 5)
       survey = Survey |> Repo.get(survey.id)
-      insert(:respondent, survey: survey, state: "failed")
-      insert(:respondent, survey: survey, state: "failed")
-      insert(:respondent, survey: survey, state: "failed")
-      insert(:respondent, survey: survey, state: "completed")
+      insert(:respondent, survey: survey, disposition: "failed")
+      insert(:respondent, survey: survey, disposition: "failed")
+      insert(:respondent, survey: survey, disposition: "failed")
+      insert(:respondent, survey: survey, disposition: "completed")
 
       conn = get conn, project_survey_survey_path(conn, :stats, project, survey)
 
@@ -556,11 +556,11 @@ defmodule Ask.SurveyControllerTest do
         "completion_rate" => 0.2,
         "initial_success_rate" => 1.0,
         "estimated_success_rate" => 0.85,
-        "completes" => 1,
-        "missing" => 8,
+        "completes" => 4,
+        "missing" => 2,
         "multiplier" => 2,
-        "needed" => 8,
-        "pending" => 4
+        "needed" => 2,
+        "pending" => 0
       }
     end
 
