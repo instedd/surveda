@@ -3,7 +3,7 @@ defmodule Ask.Runtime.VerboiceChannelTest do
   use Ask.DummySteps
   use Timex
 
-  alias Ask.{Respondent, BrokerStub, Survey, RetryStat}
+  alias Ask.{Respondent, BrokerStub, Survey, RetryStat, Stats}
   alias Ask.Runtime.{VerboiceChannel, Flow, ReplyHelper, SurveyLogger, Broker, ChannelStatusServer}
 
   require Ask.Runtime.ReplyHelper
@@ -395,7 +395,7 @@ defmodule Ask.Runtime.VerboiceChannelTest do
 
       Ask.RespondentGroupChannel.changeset(%Ask.RespondentGroupChannel{}, %{respondent_group_id: group.id, channel_id: channel.id, mode: "ivr"}) |> Repo.insert
 
-      respondent = insert(:respondent, survey: survey, respondent_group: group)
+      respondent = insert(:respondent, survey: survey, respondent_group: group, stats: %Stats{total_call_time_seconds: 20})
 
       {:ok, logger} = SurveyLogger.start_link
       Broker.handle_info(:poll, nil, Timex.now)
@@ -423,9 +423,10 @@ defmodule Ask.Runtime.VerboiceChannelTest do
 
       respondent = Repo.get(Respondent, respondent.id)
       refute respondent.stats.total_call_time
-      refute respondent.stats.total_call_time_seconds
+      assert respondent.stats.total_call_time_seconds == 20
       assert respondent.stats.call_durations
       assert respondent.stats.call_durations["b1eca8c0-9b77-4273-848f-c821b3dbbabf"] == 16
+      assert Stats.total_call_time_seconds(respondent.stats) == 36
 
       VerboiceChannel.callback(conn, %{"path" => ["status", respondent.id, "token"], "CallStatus" => "expired", "CallDuration" => "16"})
     end
@@ -477,6 +478,6 @@ defmodule Ask.Runtime.VerboiceChannelTest do
     refute respondent.stats.total_call_time_seconds
     assert respondent.stats.call_durations
     assert respondent.stats.call_durations[call_id] == expected_call_duration
-    assert Ask.Stats.total_call_time_seconds(respondent.stats) == expected_call_duration
+    assert Stats.total_call_time_seconds(respondent.stats) == expected_call_duration
   end
 end
