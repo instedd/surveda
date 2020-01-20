@@ -7,8 +7,8 @@ defmodule Ask.Runtime.RetriesHistogramTest do
   use Timex
   use Ask.MockTime
   use Ask.TestHelpers
-  alias Ask.Runtime.{Broker, Flow, ChannelStatusServer, VerboiceChannel}
-  alias Ask.{Repo, Survey, Respondent}
+  alias Ask.Runtime.{Broker, Flow, ChannelStatusServer, VerboiceChannel, RetriesHistogram, Session}
+  alias Ask.{Repo, Survey, Respondent, Stats}
   require Ask.Runtime.ReplyHelper
   alias Ask.{RespondentGroupChannel, TestChannel, Schedule}
   @moduletag :time_mock
@@ -377,6 +377,40 @@ defmodule Ask.Runtime.RetriesHistogramTest do
       expected_histogram.([])
       |> assert_histogram.("the histogram should be empty")
 
+    end
+  end
+
+
+  describe "RetriesHistogram.add_new_respondent" do
+
+    setup context do
+      config = TestConfiguration.base_config
+               |> TestConfiguration.with_survey_retries_config(%{sms_retry_configuration: "3h", fallback_delay: "3h"})
+               |> TestConfiguration.with_retries([3])
+               |> TestConfiguration.with_fallback_delay(3)
+      init_sms(config, context)
+    end
+
+    test "should reallocate respondent if was already in histogram", %{respondent: respondent, expected_histogram: expected_histogram, assert_histogram: assert_histogram, histogram_hour: histogram_hour} do
+      set_actual_time()
+
+      add_respondent_to_histogram = fn r -> RetriesHistogram.add_new_respondent(r, %Session{respondent: r}, 180) end
+      update_respondent_attempt = fn respondent, attempt -> Repo.get(Respondent, respondent.id)
+                                                            |> Respondent.changeset(%{stats: %Stats{attempts: %{"sms" => attempt}}, mode: ["sms"]})
+                                                            |> Repo.update! end
+      respondent
+      |> update_respondent_attempt.(1)
+      |> add_respondent_to_histogram.()
+
+      expected_histogram.([%{hour: histogram_hour.(%{attempt: 1}), respondents: 1}])
+      |> assert_histogram.("The respondent should be in the first attempt slot")
+
+      respondent
+      |> update_respondent_attempt.(2)
+      |> add_respondent_to_histogram.()
+
+      expected_histogram.([%{hour: histogram_hour.(%{attempt: 2}), respondents: 1}])
+      |> assert_histogram.("The respondent should be in the second attempt slot")
     end
   end
 
