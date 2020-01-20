@@ -212,6 +212,12 @@ defmodule Ask.StatsTest do
       assert Stats.total_call_time_seconds(stats) == 30
     end
 
+    test "resolves to new field in discrepancy with registered calls" do
+      stats = %Stats{total_call_time: 1.5, total_call_time_seconds: 30, call_durations: %{"1" => 25, "40" => 40, "any-kind-of-id" => 2, "zero-lenght" => 0}}
+
+      assert Stats.total_call_time_seconds(stats) == 97
+    end
+
     test "defaults old total_call_time to zero" do
       {:ok, stats} = Stats.load("{}")
 
