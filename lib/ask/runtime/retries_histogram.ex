@@ -6,9 +6,19 @@ defmodule Ask.Runtime.RetriesHistogram do
     callback = fn () ->
       %Respondent{} = respondent
       %Session{} = session
-      {:ok, retry_stat} = RetryStat.add(retry_stat_group(respondent, ivr?(session), timeout))
-      update_respondent(respondent, retry_stat.id)
+      ivr_active? = ivr?(session)
+      if(respondent.retry_stat_id) do
+        # This shouldn't happen but just-in-case to avoid showing more respondents than the survey-actual-respondents-size
+        prev_stat_id = respondent.retry_stat_id
+        respondent = reallocate_respondent(session, respondent, ivr_active?, timeout).respondent
+        Logger.warn("Adding again respondent (id: #{respondent.id}) to the histogram. Actual retry_stat_id: #{respondent.retry_stat_id}, previous: #{prev_stat_id}")
+        respondent
+      else
+        {:ok, retry_stat} = RetryStat.add(retry_stat_group(respondent, ivr_active?, timeout))
+        update_respondent(respondent, retry_stat.id)
+      end
     end
+
     run_safe(%{
       callback: callback,
       rescue_result: respondent,
