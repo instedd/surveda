@@ -173,9 +173,8 @@ defmodule Ask.QuestionnaireController do
     |> load_project(project_id)
 
     questionnaire = load_questionnaire_not_snapshot(project, id)
-
-    audio_ids = collect_steps_audio_ids(questionnaire.steps, [])
-    audio_ids = collect_steps_audio_ids(questionnaire.quota_completed_steps, audio_ids)
+    all_questionnaire_steps = Questionnaire.all_steps(questionnaire)
+    audio_ids = collect_steps_audio_ids(all_questionnaire_steps, [])
     audio_ids = collect_prompt_audio_ids(questionnaire.settings["error_message"], audio_ids)
     #for each audio: charges it in memory and then streams it.
     audio_resource = Stream.resource(
