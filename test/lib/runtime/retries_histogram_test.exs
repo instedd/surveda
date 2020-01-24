@@ -132,6 +132,37 @@ defmodule Ask.Runtime.RetriesHistogramTest do
       expected_histogram.([%{hour: histogram_hour.(%{attempt: 2}), respondents: 1}])
       |> assert_histogram.("The respondent should be in the second attempt active column")
     end
+
+    test "respondent replies and ends survey", %{expected_histogram: expected_histogram, assert_histogram: assert_histogram,
+      histogram_hour: histogram_hour, respondent_reply: respondent_reply} do
+      assert_respondent_active_in_first_attempt =  fn () -> expected_histogram.([%{hour: histogram_hour.(%{attempt: 1}), respondents: 1}])
+                                                            |> assert_histogram.("the respondent should be in the first attempt active column")
+      end
+
+      set_current_time("2019-12-23T09:00:00Z")
+
+      # 1st poll, activate the respondent
+      broker_poll()
+      assert_respondent_active_in_first_attempt.()
+
+      # "Do you smoke? Press 8 for YES, 9 for NO"
+      {:reply, _} = respondent_reply.("8")
+      assert_respondent_active_in_first_attempt.()
+
+      # "Do you exercise? Press 1 for YES, 2 for NO"
+      {:reply, _} = respondent_reply.("1")
+      assert_respondent_active_in_first_attempt.()
+
+      #"Which is the second perfect number"
+      {:reply, _} = respondent_reply.("23")
+      assert_respondent_active_in_first_attempt.()
+
+      # "What's the number of this question?"
+      {:end, _} = respondent_reply.("4")
+
+      expected_histogram.([])
+      |> assert_histogram.("The respondent should have ended the survey, thus the histogram should be empty")
+    end
   end
 
   describe "SMS -> 2h -> SMS -> 3h with dummy steps" do
@@ -440,12 +471,14 @@ defmodule Ask.Runtime.RetriesHistogramTest do
   defp init_ivr(config, _context) do
     %{respondent: respondent} = context = init_mode("ivr", config)
     call_failed = fn () -> call_failed(build_conn(), respondent.id) end
-    {:ok, Map.put(context, :call_failed, call_failed)}
+#    respondent_reply = fn response -> VerboiceChannel.callback(build_conn(), %{"respondent" => respondent.id, "Digits" => response}) end
+
+    {:ok, Map.merge(context, %{call_failed: call_failed, respondent_reply: fn reply -> respondent_reply(respondent.id, reply, "ivr") end})}
   end
 
   defp init_sms(config, _context) do
     %{respondent: respondent} = context = init_mode("sms", config)
-    respondent_reply = fn reply -> respondent_reply(respondent.id, reply) end
+    respondent_reply = fn reply -> respondent_reply(respondent.id, reply, "sms") end
     {:ok, Map.put(context, :respondent_reply, respondent_reply)}
   end
 
@@ -491,9 +524,9 @@ defmodule Ask.Runtime.RetriesHistogramTest do
 
   defp contacting_slot(type, delay), do: %{delay: delay, label: "#{delay}h", type: type}
 
-  defp respondent_reply(respondent_id, reply_message) do
+  defp respondent_reply(respondent_id, reply_message, mode) do
     respondent = Repo.get!(Respondent, respondent_id)
-    Broker.sync_step(respondent, Flow.Message.reply(reply_message), "sms")
+    Broker.sync_step(respondent, Flow.Message.reply(reply_message), mode)
   end
 end
 
