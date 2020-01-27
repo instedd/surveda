@@ -90,6 +90,7 @@ defmodule Ask.QuestionnaireControllerTest do
         "languages" => [],
         "updated_at" => DateTime.to_iso8601(questionnaire.updated_at),
         "valid" => true,
+        "description" => nil,
         "settings" => %{
           "error_message" => %{
             "en" => %{

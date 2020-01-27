@@ -122,6 +122,30 @@ defmodule Ask.QuestionnaireController do
     end)
   end
 
+  def set_description(conn, %{"description" => description , "project_id" => project_id, "questionnaire_id" => id}) do
+    project = conn
+              |> load_project_for_change(project_id)
+
+    questionnaire = load_questionnaire_not_snapshot(project, id)
+    changeset = questionnaire
+                |> Questionnaire.changeset(%{description: description})
+
+    multi = Multi.new
+            |> Multi.update(:questionnaire, changeset, force: Map.has_key?(changeset.changes, :questionnaires))
+            |> Questionnaire.update_activity_logs(conn, project, changeset)
+            |> Repo.transaction
+
+    case multi do
+      {:ok, %{questionnaire: questionnaire}} ->
+        render(conn, "show.json", questionnaire: questionnaire)
+      {:error, _, changeset, _} ->
+        Logger.warn "Error when updating questionnaire description: #{inspect changeset}"
+        conn
+        |> put_status(:unprocessable_entity)
+        |> render(Ask.ChangesetView, "error.json", changeset: changeset)
+    end
+  end
+
   def delete(conn, %{"project_id" => project_id, "id" => id}) do
     project = conn
     |> load_project_for_change(project_id)
