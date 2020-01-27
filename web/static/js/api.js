@@ -312,6 +312,10 @@ export const deleteQuestionnaire = (projectId, questionnaire) => {
   return apiDelete(`projects/${projectId}/questionnaires/${questionnaire.id}`)
 }
 
+export const setQuestionnaireDescription = (projectId, surveyId, description) => {
+  return apiPostJSON(`projects/${projectId}/questionnaires/${surveyId}/set_description`, questionnaireSchema, { description })
+}
+
 export const launchSurvey = (projectId, surveyId) => {
   return apiPostJSON(`projects/${projectId}/surveys/${surveyId}/launch`, surveySchema)
 }

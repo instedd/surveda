@@ -19,6 +19,7 @@ import undoReducer from './undo'
 const dataReducer = (state: Questionnaire, action): Questionnaire => {
   switch (action.type) {
     case actions.CHANGE_NAME: return changeName(state, action)
+    case actions.CHANGE_DESCRIPTION: return changeDescription(state, action)
     case actions.SET_ACTIVE_MODE: return setActiveMode(state, action)
     case actions.ADD_MODE: return addMode(state, action)
     case actions.REMOVE_MODE: return removeMode(state, action)
@@ -1020,6 +1021,13 @@ const changeName = (state: Questionnaire, action: ActionChangeName): Questionnai
   return {
     ...state,
     name: action.newName.trim()
+  }
+}
+
+const changeDescription = (state, action) => {
+  return {
+    ...state,
+    description: action.newDescription
   }
 }
 
