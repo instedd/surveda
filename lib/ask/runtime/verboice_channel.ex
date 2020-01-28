@@ -343,11 +343,13 @@ defmodule Ask.Runtime.VerboiceChannel do
     def prepare(_, _), do: :ok
 
     def setup(channel, respondent, token, not_before, not_after) do
+      in_five_seconds = Timex.shift(not_before, seconds: 5)
+
       params = [
         address: respondent.sanitized_phone_number,
         callback_url: VerboiceChannel.callback_url(respondent),
         status_callback_url: VerboiceChannel.status_callback_url(respondent, token),
-        not_before: not_before,
+        not_before: in_five_seconds,
         not_after: not_after
       ]
 
