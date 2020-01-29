@@ -3,6 +3,8 @@ defmodule Ask.Mixfile do
 
   def project do
     [app: :ask,
+     build_path: "/_build",
+     deps_path: "/deps",
      version: "0.24.0",
      elixir: "~> 1.5",
      elixirc_paths: elixirc_paths(Mix.env),
