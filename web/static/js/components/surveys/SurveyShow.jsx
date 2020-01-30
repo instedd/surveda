@@ -182,7 +182,7 @@ class SurveyShow extends Component<any, State> {
       {value: target, label: t('Target')},
       {value: respondentsByDisposition.responsive.detail.completed.count, label: t('Completes')},
       {value: respondentsByDisposition.responsive.detail.partial.count, label: t('Partials')},
-      {value: contactedRespondents, label: t('Contacted Respondents')}
+      {value: contactedRespondents, label: t('Attempted Respondents')}
     ]
     let colors = referenceColors(reference.length)
 
