@@ -110,7 +110,6 @@ defmodule Ask.Router do
         resources "/questionnaires", QuestionnaireController, except: [:new, :edit] do
           get "/export_zip", QuestionnaireController, :export_zip, as: :questionnaires_export_zip
           post "/import_zip", QuestionnaireController, :import_zip, as: :questionnaires_import_zip
-          post "/set_description", QuestionnaireController, :set_description, as: :questionnaire_set_description
         end
         get "/autocomplete_vars", ProjectController, :autocomplete_vars, as: :autocomplete_vars
         get "/autocomplete_primary_language", ProjectController, :autocomplete_primary_language, as: :autocomplete_primary_language
