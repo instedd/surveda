@@ -497,15 +497,7 @@ export const setSecondaryColor = (color) => ({
   color
 })
 
-export const changeDescription = (newDescription: string) => (dispatch: Function, getState: () => Store) => {
-  const questionnaire = getState().questionnaire.data
-  if (!questionnaire) return
-  api.setQuestionnaireDescription(questionnaire.projectId, questionnaire.id, newDescription)
-
-  dispatch(descriptionChanged(newDescription))
-}
-
-export const descriptionChanged = (newDescription: string) => {
+export const changeDescription = (newDescription: string) => {
   return ({
     type: CHANGE_DESCRIPTION,
     newDescription
