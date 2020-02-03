@@ -1,6 +1,6 @@
 import React, { PropTypes, Component } from 'react'
 import { connect } from 'react-redux'
-import { EditableTitleLabel } from '../ui'
+import {EditableDescriptionLabel, EditableTitleLabel} from '../ui'
 import QuestionnaireMenu from './QuestionnaireMenu'
 import * as questionnaireActions from '../../actions/questionnaire'
 import withQuestionnaire from './withQuestionnaire'
@@ -21,10 +21,22 @@ class QuestionnaireTitle extends Component {
     dispatch(questionnaireActions.changeName(newName))
   }
 
+  handleSubmitDescription(newDescription) {
+    const { dispatch, questionnaire } = this.props
+    if (questionnaire.description == newDescription) return
+
+    dispatch(questionnaireActions.changeDescription(newDescription))
+  }
+
   render() {
     const { questionnaire, readOnly, t } = this.props
 
-    return <EditableTitleLabel title={questionnaire.name} onSubmit={(value) => { this.handleSubmit(value) }} emptyText={t('Untitled questionnaire')} readOnly={readOnly} more={<QuestionnaireMenu />} />
+    return (
+      <div className='title-container'>
+        <EditableTitleLabel title={questionnaire.name} onSubmit={(value) => { this.handleSubmit(value) }} emptyText={t('Untitled questionnaire')} readOnly={readOnly} more={<QuestionnaireMenu />} />
+        <EditableDescriptionLabel description={questionnaire.description} emptyText={t('Add description')} onSubmit={(value) => { this.handleSubmitDescription(value) }} readOnly={readOnly} />
+      </div>
+    )
   }
 }
 

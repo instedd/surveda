@@ -34,7 +34,7 @@ class SurveyTitle extends Component {
     if (survey == null) return null
 
     return (
-      <div className='survey-title-container'>
+      <div className='title-container'>
         <EditableTitleLabel title={survey.name} emptyText={t('Untitled survey')} onSubmit={(value) => { this.handleSubmitTitle(value) }} readOnly={readOnly} />
         <EditableDescriptionLabel description={survey.description} emptyText={t('Add description')} onSubmit={(value) => { this.handleSubmitDescription(value) }} readOnly={readOnly} />
       </div>

@@ -141,7 +141,7 @@ class QuestionnaireIndex extends Component<any> {
               if (!questionnaire) return <tr key={-index} className='empty-row'><td colSpan={readOnly ? 3 : 5} /></tr>
 
               return (
-                <tr key={questionnaire.id}>
+                <tr key={questionnaire.id} title={questionnaire.description}>
                   <td onClick={() => this.goTo(questionnaire.id)}>
                     <UntitledIfEmpty text={questionnaire.name} emptyText={t('Untitled questionnaire')} />
                   </td>

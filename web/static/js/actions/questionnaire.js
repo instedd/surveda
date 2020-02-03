@@ -65,6 +65,7 @@ export const TOGGLE_ACCEPTS_ALPHABETICAL_ANSWERS = 'QUESTIONNAIRE_TOGGLE_ACCEPTS
 export const SET_DIRTY = 'QUESTIONNAIRE_SET_DIRTY'
 export const UNDO = 'QUESTIONNAIRE_UNDO'
 export const REDO = 'QUESTIONNAIRE_REDO'
+export const CHANGE_DESCRIPTION = 'QUESTIONNAIRE_CHANGE_DESCRIPTION'
 
 export const fetchQuestionnaire = (projectId, id) => (dispatch, getState) => {
   dispatch(fetch(projectId, id))
@@ -494,4 +495,9 @@ export const setPrimaryColor = (color) => ({
 export const setSecondaryColor = (color) => ({
   type: SET_SECONDARY_COLOR,
   color
+})
+
+export const changeDescription = (newDescription: string) => ({
+  type: CHANGE_DESCRIPTION,
+  newDescription
 })

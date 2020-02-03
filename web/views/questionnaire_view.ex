@@ -12,6 +12,7 @@ defmodule Ask.QuestionnaireView do
   def render("questionnaire.json", %{questionnaire: questionnaire}) do
     %{id: questionnaire.id,
       name: questionnaire.name,
+      description: questionnaire.description,
       modes: questionnaire.modes,
       updated_at: questionnaire.updated_at,
       project_id: questionnaire.project_id,
