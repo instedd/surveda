@@ -1027,7 +1027,7 @@ const changeName = (state: Questionnaire, action: ActionChangeName): Questionnai
 const changeDescription = (state, action) => {
   return {
     ...state,
-    description: action.newDescription
+    description: action.newDescription.trim()
   }
 }
 

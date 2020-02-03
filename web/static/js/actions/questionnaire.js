@@ -497,9 +497,7 @@ export const setSecondaryColor = (color) => ({
   color
 })
 
-export const changeDescription = (newDescription: string) => {
-  return ({
-    type: CHANGE_DESCRIPTION,
-    newDescription
-  })
-}
+export const changeDescription = (newDescription: string) => ({
+  type: CHANGE_DESCRIPTION,
+  newDescription
+})
