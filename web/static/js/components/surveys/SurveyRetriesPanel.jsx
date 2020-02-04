@@ -116,7 +116,7 @@ class SurveyRetriesPanel extends Component {
 }
 
 const mapStateToProps = (state, ownProps) => {
-  const surveyRetriesHistograms = ownProps.surveyId == state.survey.data.id ? state.surveyRetriesHistograms.histograms : null
+  const surveyRetriesHistograms = ownProps.surveyId == state.surveyRetriesHistograms.surveyId ? state.surveyRetriesHistograms.histograms : null
 
   return ({
     retriesHistograms: surveyRetriesHistograms
