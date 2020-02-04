@@ -159,6 +159,18 @@
       border-bottom-color: color('grey', 'lighten-2');
       position: absolute;
       width: 40px;
+      margin: 8px 0;
+      text-align: center;
+    }
+    .comparisons-total {
+      width: 40px;
+      padding: 0;
+      margin-top: 8px;
+      text-align: center;
+    }
+    & > .comparisons-total-icon {
+      margin-top: 6px;
+      margin-left: 8px;
     }
   }
 }
