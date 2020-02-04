@@ -1487,8 +1487,7 @@ defmodule Ask.SurveyControllerTest do
     assert json_response(conn, 200)
     assert Repo.get(Survey, survey.id).state == "running"
 
-    received_at_uri = "#{Ask.Endpoint.url}/callbacks/test"
-    assert_received [:prepare, ^test_channel, ^received_at_uri]
+    assert_received [:prepare, ^test_channel]
   end
 
   test "sets started_at with proper datetime value when a survey is launched", %{conn: conn, user: user} do

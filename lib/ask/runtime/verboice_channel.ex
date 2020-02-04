@@ -303,17 +303,19 @@ defmodule Ask.Runtime.VerboiceChannel do
   end
 
   def callback_url(respondent) do
-    Ask.Router.Helpers.callback_url(Ask.Endpoint, :callback, "verboice", respondent: respondent.id)
+    verboice_callback(Ask.Router.Helpers.callback_path(Ask.Endpoint, :callback, "verboice", respondent: respondent.id))
   end
 
   def no_reply_callback_url(respondent) do
-    Ask.Router.Helpers.callback_url(Ask.Endpoint, :callback, "verboice", respondent: respondent.id, Digits: "timeout")
+    verboice_callback(Ask.Router.Helpers.callback_path(Ask.Endpoint, :callback, "verboice", respondent: respondent.id, Digits: "timeout"))
   end
 
   def status_callback_url(respondent, token) do
     respondent_id = respondent.id |> Integer.to_string
-    Ask.Router.Helpers.callback_url(Ask.Endpoint, :callback, "verboice", ["status", respondent_id, token], [])
+    verboice_callback(Ask.Router.Helpers.callback_path(Ask.Endpoint, :callback, "verboice", ["status", respondent_id, token], []))
   end
+
+  defp verboice_callback(path), do: Ask.Runtime.ChannelHelper.provider_callback_url(Verboice, path)
 
   def process_call_response(response) do
     case response do
@@ -340,7 +342,7 @@ defmodule Ask.Runtime.VerboiceChannel do
   defimpl Ask.Runtime.Channel, for: Ask.Runtime.VerboiceChannel do
     def has_delivery_confirmation?(_), do: false
     def ask(_, _, _, _), do: throw(:not_implemented)
-    def prepare(_, _), do: :ok
+    def prepare(_), do: :ok
 
     def setup(channel, respondent, token, not_before, not_after) do
       in_five_seconds = Timex.shift(not_before, seconds: 5)

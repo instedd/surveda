@@ -240,7 +240,8 @@ defmodule Ask.Runtime.NuntiumChannel do
   def check_status(_any_other), do: {:down, []}
 
   defimpl Ask.Runtime.Channel, for: Ask.Runtime.NuntiumChannel do
-    def prepare(channel, callback_url) do
+    def prepare(channel) do
+      callback_url = Ask.Runtime.ChannelHelper.provider_callback_url(Nuntium, Ask.Router.Helpers.callback_path(Ask.Endpoint, :callback, "nuntium"))
       # Update the Nuntium app to setup the callback URL
       client = Nuntium.Client.new(channel.base_url, channel.oauth_token)
 
@@ -251,7 +252,7 @@ defmodule Ask.Runtime.NuntiumChannel do
         },
         delivery_ack: %{
           method: "get",
-          url: Ask.Router.Helpers.callback_url(Ask.Endpoint, :callback, "nuntium", ["status"], [])
+          url: Ask.Runtime.ChannelHelper.provider_callback_url(Nuntium, Ask.Router.Helpers.callback_path(Ask.Endpoint, :callback, "nuntium", ["status"], []))
         }
       }
 
