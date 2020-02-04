@@ -438,11 +438,11 @@ defmodule Ask.SurveyControllerTest do
         "completion_rate" => 0,
         "initial_success_rate" => 1.0,
         "estimated_success_rate" => 1.0,
-        "completes" => 0,
-        "missing" => 0,
-        "multiplier" => 1,
-        "needed" => 0,
-        "pending" => 0
+        "exhausted" => 0,
+        "available" => 0,
+        "additional_completes" => 0,
+        "needed_to_complete" => 0,
+        "additional_respondents" => 0
       }
     end
 
@@ -459,11 +459,11 @@ defmodule Ask.SurveyControllerTest do
         "completion_rate" => 1.0,
         "initial_success_rate" => 1.0,
         "estimated_success_rate" => 1.0,
-        "completes" => 1,
-        "missing" => 0,
-        "multiplier" => 1,
-        "needed" => 0,
-        "pending" => 0
+        "exhausted" => 1,
+        "available" => 0,
+        "additional_completes" => 0,
+        "needed_to_complete" => 0,
+        "additional_respondents" => 0
       }
     end
 
@@ -483,11 +483,11 @@ defmodule Ask.SurveyControllerTest do
         "completion_rate" => 0.33,
         "initial_success_rate" => 1.0,
         "estimated_success_rate" => 1.0,
-        "completes" => 1,
-        "missing" => 0,
-        "multiplier" => 1,
-        "needed" => 1,
-        "pending" => 2
+        "exhausted" => 1,
+        "available" => 2,
+        "additional_completes" => 2,
+        "needed_to_complete" => 2,
+        "additional_respondents" => 0
       }
     end
 
@@ -507,11 +507,11 @@ defmodule Ask.SurveyControllerTest do
         "completion_rate" => 1.0,
         "initial_success_rate" => 1.0,
         "estimated_success_rate" => 0.67,
-        "completes" => 3,
-        "missing" => 0,
-        "multiplier" => 2,
-        "needed" => 0,
-        "pending" => 0
+        "exhausted" => 3,
+        "available" => 0,
+        "additional_completes" => 0,
+        "needed_to_complete" => 0,
+        "additional_respondents" => 0
       }
     end
 
@@ -529,11 +529,11 @@ defmodule Ask.SurveyControllerTest do
         "completion_rate" => 0.5,
         "initial_success_rate" => 1.0,
         "estimated_success_rate" => 0.75,
-        "completes" => 2,
-        "missing" => 2,
-        "multiplier" => 2,
-        "needed" => 2,
-        "pending" => 0
+        "exhausted" => 2,
+        "available" => 0,
+        "additional_completes" => 1,
+        "needed_to_complete" => 1,
+        "additional_respondents" => 1
       }
     end
 
@@ -556,11 +556,11 @@ defmodule Ask.SurveyControllerTest do
         "completion_rate" => 0.2,
         "initial_success_rate" => 1.0,
         "estimated_success_rate" => 0.85,
-        "completes" => 4,
-        "missing" => 2,
-        "multiplier" => 2,
-        "needed" => 2,
-        "pending" => 0
+        "exhausted" => 4,
+        "available" => 0,
+        "additional_completes" => 4,
+        "needed_to_complete" => 5,
+        "additional_respondents" => 5
       }
     end
 
