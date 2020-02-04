@@ -80,7 +80,7 @@ class SkipLogic extends Component<Props, State> {
 
     skipOptions.unshift({
       id: '',
-      title: t('Next question'),
+      title: t('Next step'),
       enabled: true
     })
 
