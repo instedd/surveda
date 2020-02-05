@@ -45,10 +45,11 @@ class SurveyShow extends Component<any, State> {
     estimatedSuccessRate: PropTypes.number,
     initialSuccessRate: PropTypes.number,
     successRate: PropTypes.number,
-    completes: PropTypes.number,
-    missing: PropTypes.number,
-    pending: PropTypes.number,
-    needed: PropTypes.number
+    exhausted: PropTypes.number,
+    available: PropTypes.number,
+    neededToComplete: PropTypes.number,
+    additionalCompletes: PropTypes.number,
+    additionalRespondents: PropTypes.number
   }
 
   constructor(props) {
