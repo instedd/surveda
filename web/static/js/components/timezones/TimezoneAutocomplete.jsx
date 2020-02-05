@@ -66,8 +66,14 @@ class TimezoneAutocomplete extends Component {
     dispatch(actions.setTimezone(timezone.id))
   }
 
+  getTimeForTimezone(timezone, locale) {
+    var date = new Date(Date.now())
+    return date.toLocaleString(locale, {timeZone: timezone, hour12: false, hour: '2-digit', minute: '2-digit',  weekday: 'long'});
+  }
+
   render() {
-    const { timezones, t, readOnly } = this.props
+    const { timezones, t, readOnly, i18n } = this.props
+    const currentLanguage = i18n.language
 
     if (!timezones || !timezones.items) {
       return (
@@ -89,6 +95,7 @@ class TimezoneAutocomplete extends Component {
             className='timezone-dropdown'
             ref='autocomplete'
           />
+          <span className='small-text-bellow'>{t('Time at selected timezone: {{time}}', {time: this.getTimeForTimezone(this.props.selectedTz, currentLanguage)})}</span>
         </div>
       )
     }
