@@ -234,7 +234,7 @@ defmodule Ask.SessionTest do
     assert_receive [:setup, ^test_channel, respondent_received, ^token]
     assert respondent_received.id == respondent.id
 
-    assert {:ok, %Session{token: token2, respondent: respondent}, _, 120} = Session.timeout(session)
+    assert {:ok, %Session{token: token2, respondent: respondent}, _, 5} = Session.timeout(session)
     assert 2 == respondent.stats |> Stats.attempts(:ivr)
     assert token2 != token
     assert_receive [:setup, ^test_channel, respondent_received, ^token2]
@@ -376,7 +376,7 @@ defmodule Ask.SessionTest do
 
     assert 1 == respondent_received.stats |> Stats.attempts(:sms)
 
-    {:ok, session = %Session{token: token, respondent: respondent}, _, 3} = Session.timeout(session)
+    {:ok, session = %Session{token: token, respondent: respondent}, _, 2} = Session.timeout(session)
     refute_receive [:setup, _, _, _, _]
     assert_receive [:ask, ^test_channel, respondent_received, ^token, ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO")]
     assert respondent.id == respondent_received.id
