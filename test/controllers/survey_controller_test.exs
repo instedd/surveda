@@ -485,6 +485,68 @@ defmodule Ask.SurveyControllerTest do
       %{"additional_respondents" => 0} = testing_survey(%{user: user, cutoff: 1, respondents: respondents})
         |> get_stats(conn)
     end
+
+    test "expose correctly respondents in final dispositions", %{conn: conn, user: user} do
+      final_dispositions = Respondent.final_dispositions()
+      respondents = Enum.map(final_dispositions, fn disposition -> %{disposition: disposition} end)
+      %{"exhausted" => exhausted, "available" => 0} = testing_survey(%{user: user, respondents: respondents})
+        |> get_stats(conn)
+      assert exhausted == Enum.count(final_dispositions)
+    end
+
+    test "expose correctly respondents in non final dispositions", %{conn: conn, user: user} do
+      non_final_dispositions = Respondent.non_final_dispositions()
+      respondents = Enum.map(non_final_dispositions, fn disposition -> %{disposition: disposition} end)
+      %{"exhausted" => 0, "available" => available} = testing_survey(%{user: user, respondents: respondents})
+        |> get_stats(conn)
+      assert available == Enum.count(non_final_dispositions)
+    end
+
+    test "needed to complete is zero when completed", %{conn: conn, user: user} do
+      respondents = [%{disposition: "completed"}]
+      %{"needed_to_complete" => 0} = testing_survey(%{user: user, respondents: respondents})
+        |> get_stats(conn)
+    end
+
+    test "needed to complete equals target with no respondents", %{conn: conn, user: user} do
+      %{"needed_to_complete" => 5} = testing_survey(%{user: user, respondents: [], cutoff: 5})
+        |> get_stats(conn)
+    end
+
+    test "additional_completes equals target - completed respondents", %{conn: conn, user: user} do
+      respondents = Enum.map(["completed", "completed", "queued"], fn disposition -> %{disposition: disposition} end)
+      %{"additional_completes" => 3} = testing_survey(%{user: user, respondents: respondents, cutoff: 5})
+        |> get_stats(conn)
+    end
+
+    test "needed to complete duplicates additional to complete when estimated success rate is 50%", %{conn: conn, user: user} do
+      respondents = Enum.map(1..99, fn _ -> %{disposition: "completed"} end) ++ Enum.map(1..99, fn _ -> %{disposition: "failed"} end)
+      %{"additional_completes" => 1, "needed_to_complete" => 2} = testing_survey(%{user: user, respondents: respondents, cutoff: 100})
+        |> get_stats(conn)
+    end
+
+    test "needed to complete equals additional_completes when estimated success rate is 100%", %{conn: conn, user: user} do
+      respondents = [%{disposition: "completed"}]
+      %{"additional_completes" => 1, "needed_to_complete" => 1} = testing_survey(%{user: user, respondents: respondents, cutoff: 2})
+        |> get_stats(conn)
+    end
+
+    test "additional respondents equals needed to complete - respondents in non final dispositions", %{conn: conn, user: user} do
+      non_final_dispositions = Respondent.non_final_dispositions()
+      respondents = [%{disposition: "completed"}] ++ Enum.map(non_final_dispositions, fn disposition -> %{disposition: disposition} end)
+      %{"needed_to_complete" => 100, "additional_respondents" => additional_respondents} = testing_survey(%{user: user, respondents: respondents, cutoff: 101})
+        |> get_stats(conn)
+      assert additional_respondents == 100 - Enum.count(non_final_dispositions)
+    end
+
+    test "additional respondents depends on needed to complete (it doesn't depend on additional_completes)", %{conn: conn, user: user} do
+      non_final_dispositions = Respondent.non_final_dispositions()
+      respondents = Enum.map(1..100, fn _ -> %{disposition: "completed"} end) ++ Enum.map(1..100, fn _ -> %{disposition: "failed"} end) ++ Enum.map(non_final_dispositions, fn disposition -> %{disposition: disposition} end)
+      %{"needed_to_complete" => 18, "additional_completes" => 10, "additional_respondents" => additional_respondents} = testing_survey(%{user: user, respondents: respondents, cutoff: 110})
+        |> get_stats(conn)
+      assert additional_respondents == 18 - Enum.count(non_final_dispositions)
+    end
+
   end
 
   defp get_stats(%{survey: survey, project: project}, conn) do
