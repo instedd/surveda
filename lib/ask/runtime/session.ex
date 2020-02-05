@@ -254,10 +254,50 @@ defmodule Ask.Runtime.Session do
   end
 
   def timeout(%Session{} = session, runtime_channel) do
+    timeout_option = best_timeout_option(session)
     session = retry(session, runtime_channel)
 
-    # The new session will timeout as defined by hd(retries)
-    {:ok, session, %Reply{}, current_timeout(session)}
+    case timeout_option do
+      %Session{} ->
+        # The new session will timeout as defined by hd(retries)
+        {:ok, session, %Reply{}, current_timeout(timeout_option)}
+      _ ->
+        {:ok, session, %Reply{}, timeout_option}
+    end
+  end
+
+  def best_timeout_option(session) do
+    current_mode = session.current_mode
+
+    case current_mode do
+      %SMSMode{} ->
+        check_sms_timeout(session)
+      _ ->
+        session
+    end
+  end
+
+  defp check_sms_timeout(session) do
+    case is_last_retry?(session.current_mode.retries) do
+      :true ->
+        respondent = Repo.get(Ask.Respondent, session.respondent.id)
+        survey = (respondent |> Repo.preload(:survey)).survey
+        last_sms_retry_timeout(survey)
+      :false ->
+        session
+    end
+  end
+
+  defp last_sms_retry_timeout(survey) do
+    survey_retries_list = Survey.retries_configuration(survey, "sms")
+    case survey_retries_list do
+      [] -> Survey.fallback_delay(survey)
+      _ -> List.last(survey_retries_list)
+    end
+  end
+
+  def is_last_retry?(retries_list) do
+    length(retries_list) == 1
   end
 
   defp terminate(%{current_mode: %SMSMode{}, respondent: respondent} = session) do
