@@ -419,22 +419,22 @@ defmodule Ask.Survey do
       |> completed_respondents_needed_by
       |> respondents_target(respondents_total)
     completion_rate = get_completion_rate(survey, respondents_by_disposition, respondents_target)
-    current_success_rate = get_success_rate(survey, respondents_by_disposition )
+    current_success_rate = get_success_rate(survey, respondents_by_disposition)
     initial_success_rate = initial_success_rate()
     completed_respondents = get_completed_respondents(survey, respondents_by_disposition)
     additional_completes = respondents_target - completed_respondents
     estimated_success_rate = estimated_success_rate(initial_success_rate, current_success_rate, completion_rate)
     exhausted = exhausted_respondents(respondents_by_disposition)
     available = not_exhausted_respondents(respondents_by_disposition)
-    needed_to_complete = Float.round(additional_completes / estimated_success_rate)
+    needed_to_complete = Kernel.trunc(Float.round(additional_completes / estimated_success_rate))
     additional_respondents = needed_to_complete - available
 
     %{
       success_rate_data: %{
-        success_rate: current_success_rate,
-        completion_rate: completion_rate,
-        initial_success_rate: initial_success_rate,
-        estimated_success_rate: estimated_success_rate,
+        success_rate: Float.round(current_success_rate, 2),
+        completion_rate: Float.round(completion_rate, 2),
+        initial_success_rate: Float.round(initial_success_rate, 2),
+        estimated_success_rate: Float.round(estimated_success_rate, 2),
       },
       queue_size_data: %{
         exhausted: exhausted,

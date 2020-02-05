@@ -427,15 +427,9 @@ defmodule Ask.SurveyControllerTest do
 
   describe "stats" do
     test "show survey stats when there's no respondent", %{conn: conn, user: user} do
-      project = create_project_for_user(user)
-      survey = insert(:survey, project: project)
-      survey = Survey |> Repo.get(survey.id)
-
-      conn = get conn, project_survey_survey_path(conn, :stats, project, survey)
-
-      assert json_response(conn, 200)["data"] == %{
+      %{
         "success_rate" => 1.0,
-        "completion_rate" => 0,
+        "completion_rate" => 0.0,
         "initial_success_rate" => 1.0,
         "estimated_success_rate" => 1.0,
         "exhausted" => 0,
@@ -443,149 +437,86 @@ defmodule Ask.SurveyControllerTest do
         "additional_completes" => 0,
         "needed_to_complete" => 0,
         "additional_respondents" => 0
-      }
+      } = testing_survey(%{user: user, respondents: []})
+        |> get_stats(conn)
     end
 
     test "measures the completion rate when it's completed", %{conn: conn, user: user} do
-      project = create_project_for_user(user)
-      survey = insert(:survey, project: project)
-      survey = Survey |> Repo.get(survey.id)
-      insert(:respondent, survey: survey, disposition: "completed")
-
-      conn = get conn, project_survey_survey_path(conn, :stats, project, survey)
-
-      assert json_response(conn, 200)["data"] == %{
-        "success_rate" => 1.0,
-        "completion_rate" => 1.0,
-        "initial_success_rate" => 1.0,
-        "estimated_success_rate" => 1.0,
-        "exhausted" => 1,
-        "available" => 0,
-        "additional_completes" => 0,
-        "needed_to_complete" => 0,
-        "additional_respondents" => 0
-      }
+      respondents = Enum.map(["completed"], fn disposition -> %{disposition: disposition} end)
+      %{"completion_rate" => 1.0} = testing_survey(%{user: user, respondents: respondents})
+        |> get_stats(conn)
     end
 
     test "measures the completion rate when it isn't completed", %{conn: conn, user: user} do
-      project = create_project_for_user(user)
-      survey = insert(:survey, project: project)
-      survey = Survey |> Repo.get(survey.id)
-      insert(:respondent, survey: survey, disposition: "completed")
-      insert(:respondent, survey: survey, disposition: "queued")
-      insert(:respondent, survey: survey, disposition: "started")
-
-      conn = get conn, project_survey_survey_path(conn, :stats, project, survey)
-      controller_response = json_response(conn, 200)["data"]
-      response_rounded = Map.new(controller_response, fn{k, v} -> {k,Float.round(v/1, 2)} end)
-      assert response_rounded == %{
-        "success_rate" => 1.0,
-        "completion_rate" => 0.33,
-        "initial_success_rate" => 1.0,
-        "estimated_success_rate" => 1.0,
-        "exhausted" => 1,
-        "available" => 2,
-        "additional_completes" => 2,
-        "needed_to_complete" => 2,
-        "additional_respondents" => 0
-      }
+      respondents = Enum.map(["completed", "queued", "started"], fn disposition -> %{disposition: disposition} end)
+      %{"completion_rate" => 0.33} = testing_survey(%{user: user, respondents: respondents})
+        |> get_stats(conn)
     end
 
     test "estimated success rate equals current when completed", %{conn: conn, user: user} do
-      project = create_project_for_user(user)
-      survey = insert(:survey, project: project, cutoff: 2)
-      survey = Survey |> Repo.get(survey.id)
-      insert(:respondent, survey: survey, disposition: "failed")
-      insert(:respondent, survey: survey, disposition: "completed")
-      insert(:respondent, survey: survey, disposition: "completed")
-
-      conn = get conn, project_survey_survey_path(conn, :stats, project, survey)
-      controller_response = json_response(conn, 200)["data"]
-      response_rounded = Map.new(controller_response, fn{k, v} -> {k,Float.round(v/1, 2)} end)
-      assert response_rounded == %{
+      respondents = Enum.map(1..2, fn _ -> %{disposition: "completed"} end) ++ [%{disposition: "failed"}]
+      %{
         "success_rate" => 0.67,
         "completion_rate" => 1.0,
-        "initial_success_rate" => 1.0,
-        "estimated_success_rate" => 0.67,
-        "exhausted" => 3,
-        "available" => 0,
-        "additional_completes" => 0,
-        "needed_to_complete" => 0,
-        "additional_respondents" => 0
-      }
+        "estimated_success_rate" => 0.67
+      } = testing_survey(%{user: user, cutoff: 2, respondents: respondents})
+        |> get_stats(conn)
     end
 
     test "estimated success rate averages initial and current when completion rate is 50%", %{conn: conn, user: user} do
-      project = create_project_for_user(user)
-      survey = insert(:survey, project: project, cutoff: 2)
-      survey = Survey |> Repo.get(survey.id)
-      insert(:respondent, survey: survey, disposition: "failed")
-      insert(:respondent, survey: survey, disposition: "completed")
-
-      conn = get conn, project_survey_survey_path(conn, :stats, project, survey)
-
-      assert json_response(conn, 200)["data"] == %{
-        "success_rate" => 0.5,
+      respondents = [%{disposition: "failed"}, %{disposition: "completed"}]
+      %{
         "completion_rate" => 0.5,
         "initial_success_rate" => 1.0,
+        "success_rate" => 0.5,
         "estimated_success_rate" => 0.75,
-        "exhausted" => 2,
-        "available" => 0,
-        "additional_completes" => 1,
-        "needed_to_complete" => 1,
-        "additional_respondents" => 1
-      }
+      } = testing_survey(%{user: user, respondents: respondents})
+          |> get_stats(conn)
     end
 
     test "estimated success rate is calculated using linear interpolation", %{conn: conn, user: user} do
-      project = create_project_for_user(user)
-      survey = insert(:survey, project: project, cutoff: 5)
-      survey = Survey |> Repo.get(survey.id)
-      insert(:respondent, survey: survey, disposition: "failed")
-      insert(:respondent, survey: survey, disposition: "failed")
-      insert(:respondent, survey: survey, disposition: "failed")
-      insert(:respondent, survey: survey, disposition: "completed")
-
-      conn = get conn, project_survey_survey_path(conn, :stats, project, survey)
-
-      controller_response = json_response(conn, 200)["data"]
-      response_rounded = Map.new(controller_response, fn{k, v} -> {k,Float.round(v/1, 2)} end)
-
-      assert response_rounded== %{
-        "success_rate" => 0.25,
-        "completion_rate" => 0.2,
-        "initial_success_rate" => 1.0,
-        "estimated_success_rate" => 0.85,
-        "exhausted" => 4,
-        "available" => 0,
-        "additional_completes" => 4,
-        "needed_to_complete" => 5,
-        "additional_respondents" => 5
-      }
+      respondents = Enum.map(1..3, fn _ -> %{disposition: "failed"} end) ++ [%{disposition: "completed"}]
+      %{"estimated_success_rate" => 0.85} = testing_survey(%{user: user, cutoff: 5, respondents: respondents})
+        |> get_stats(conn)
     end
+  end
 
-    test "retries histograms", %{conn: conn, user: user} do
-      project = create_project_for_user(user)
-      survey = insert(:survey, project: project, fallback_delay: "2h")
+  defp get_stats(%{survey: survey, project: project}, conn) do
+    conn = get conn, project_survey_survey_path(conn, :stats, project, survey)
+    json_response(conn, 200)["data"]
+  end
 
-      conn = get conn, project_survey_survey_path(conn, :retries_histograms, project, survey)
-      response = json_response(conn, 200)["data"]
+  defp testing_survey(%{user: user, cutoff: cutoff, respondents: respondents}) do
+    project = create_project_for_user(user)
+    survey = if cutoff, do: insert(:survey, project: project, cutoff: cutoff), else: insert(:survey, project: project)
+    survey = Survey |> Repo.get(survey.id)
+    Enum.each(respondents, fn %{disposition: disposition} -> insert(:respondent, survey: survey, disposition: disposition) end)
+    %{project: project, survey: survey}
+  end
 
-      assert response == [%{"actives" => [], "flow" => [%{"delay" => 0, "type" => "sms"}, %{"delay" => 2, "type" => "end", "label" => "2h"}]}]
+  defp testing_survey(%{user: user, respondents: respondents}), do: testing_survey(%{user: user, respondents: respondents, cutoff: nil})
+
+  test "retries histograms", %{conn: conn, user: user} do
+    project = create_project_for_user(user)
+    survey = insert(:survey, project: project, fallback_delay: "2h")
+
+    conn = get conn, project_survey_survey_path(conn, :retries_histograms, project, survey)
+    response = json_response(conn, 200)["data"]
+
+    assert response == [%{"actives" => [], "flow" => [%{"delay" => 0, "type" => "sms"}, %{"delay" => 2, "type" => "end", "label" => "2h"}]}]
+  end
+
+  test "renders page not found when id is nonexistent", %{conn: conn} do
+    assert_error_sent 404, fn ->
+      get conn, project_survey_path(conn, :show, -1, -1)
     end
+  end
 
-    test "renders page not found when id is nonexistent", %{conn: conn} do
-      assert_error_sent 404, fn ->
-        get conn, project_survey_path(conn, :show, -1, -1)
-      end
-    end
+  test "forbid access to survey if the project does not belong to the current user", %{conn: conn} do
+    survey = insert(:survey)
 
-    test "forbid access to survey if the project does not belong to the current user", %{conn: conn} do
-      survey = insert(:survey)
-
-      assert_error_sent :forbidden, fn ->
-        get conn, project_survey_path(conn, :show, survey.project, survey)
-      end
+    assert_error_sent :forbidden, fn ->
+      get conn, project_survey_path(conn, :show, survey.project, survey)
     end
   end
 
