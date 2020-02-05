@@ -427,7 +427,7 @@ defmodule Ask.Survey do
     exhausted = exhausted_respondents(respondents_by_disposition)
     available = not_exhausted_respondents(respondents_by_disposition)
     needed_to_complete = Kernel.trunc(Float.round(additional_completes / estimated_success_rate))
-    additional_respondents = needed_to_complete - available
+    additional_respondents = if needed_to_complete - available > 0, do: needed_to_complete - available, else: 0
 
     %{
       success_rate_data: %{

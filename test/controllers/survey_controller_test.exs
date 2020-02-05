@@ -479,6 +479,12 @@ defmodule Ask.SurveyControllerTest do
       %{"estimated_success_rate" => 0.85} = testing_survey(%{user: user, cutoff: 5, respondents: respondents})
         |> get_stats(conn)
     end
+
+    test "additional respondents are never less than zero", %{conn: conn, user: user} do
+      respondents = Enum.map(1..2, fn _ -> %{disposition: "queued"} end)
+      %{"additional_respondents" => 0} = testing_survey(%{user: user, cutoff: 1, respondents: respondents})
+        |> get_stats(conn)
+    end
   end
 
   defp get_stats(%{survey: survey, project: project}, conn) do
