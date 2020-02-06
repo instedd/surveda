@@ -428,7 +428,7 @@ defmodule Ask.SurveyControllerTest do
   describe "stats" do
     test "show survey stats when there's no respondent", %{conn: conn, user: user} do
       %{
-        "success_rate" => 1.0,
+        "success_rate" => 0.0,
         "completion_rate" => 0.0,
         "initial_success_rate" => 1.0,
         "estimated_success_rate" => 1.0,
