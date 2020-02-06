@@ -13,7 +13,8 @@ class TimezoneAutocomplete extends Component {
     dispatch: PropTypes.func.isRequired,
     selectedTz: PropTypes.string,
     timezones: PropTypes.object,
-    readOnly: PropTypes.bool
+    readOnly: PropTypes.bool,
+    i18n: PropTypes.object
   }
 
   constructor(props) {
@@ -68,7 +69,7 @@ class TimezoneAutocomplete extends Component {
 
   getTimeForTimezone(timezone, locale) {
     var date = new Date(Date.now())
-    return date.toLocaleString(locale, {timeZone: timezone, hour12: false, hour: '2-digit', minute: '2-digit',  weekday: 'long'});
+    return date.toLocaleString(locale, {timeZone: timezone, hour12: false, hour: '2-digit', minute: '2-digit', weekday: 'long'})
   }
 
   render() {
