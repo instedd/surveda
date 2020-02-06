@@ -217,7 +217,7 @@ defmodule Ask.SessionTest do
     assert respondent.id == respondent_received.id
     assert_receive [:ask, ^test_channel, ^respondent_received, ^token, ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO")]
 
-    assert {:ok, session = %Session{token: token2, respondent: respondent}, _, 120} = Session.timeout(session)
+    assert {:ok, session = %Session{token: token2, respondent: respondent}, _, 5} = Session.timeout(session)
     assert 2 == respondent.stats |> Stats.attempts(:sms)
     assert token2 != token
     assert_receive [:ask, ^test_channel, respondent_received, ^token2, ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO")]
@@ -234,7 +234,7 @@ defmodule Ask.SessionTest do
     assert_receive [:setup, ^test_channel, respondent_received, ^token]
     assert respondent_received.id == respondent.id
 
-    assert {:ok, %Session{token: token2, respondent: respondent}, _, 120} = Session.timeout(session)
+    assert {:ok, %Session{token: token2, respondent: respondent}, _, 5} = Session.timeout(session)
     assert 2 == respondent.stats |> Stats.attempts(:ivr)
     assert token2 != token
     assert_receive [:setup, ^test_channel, respondent_received, ^token2]
@@ -395,6 +395,94 @@ defmodule Ask.SessionTest do
     assert result.flow.questionnaire == expected_session.flow.questionnaire
     assert result.flow.mode == expected_session.flow.mode
     assert result.flow.current_step == expected_session.flow.current_step
+  end
+
+  test "timeouts a respondent with a fallback and no retries list", %{quiz: quiz, respondent: respondent, test_channel: test_channel, channel: channel} do
+    fallback_runtime_channel = TestChannel.new
+    fallback_channel = build(:channel, settings: fallback_runtime_channel |> TestChannel.settings, type: "ivr")
+    fallback_retries = []
+    fallback_delay = 15
+
+    {:ok, session = %Session{token: token, respondent: respondent}, _, 15} = handle_session_started(Session.start(quiz, respondent, channel, "sms", Schedule.always(), [], fallback_channel, "ivr", fallback_retries, fallback_delay), quiz.id, ["sms", "ivr"])
+    assert_receive [:setup, ^test_channel, respondent_received, ^token]
+    assert respondent.id == respondent_received.id
+    assert_receive [:ask, ^test_channel, ^respondent_received, ^token, ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO")]
+    assert 1 == respondent_received.stats |> Stats.attempts(:sms)
+
+    {:ok, session, _, before_terminate_wait_time} = Session.timeout(session)
+    assert fallback_delay == before_terminate_wait_time
+
+    {state, _} = Session.timeout(session)
+    assert :failed == state
+  end
+
+  test "timeouts a respondent with retries list and no fallback", %{quiz: quiz, respondent: respondent, test_channel: test_channel, channel: channel} do
+    {:ok, session = %Session{token: token, respondent: respondent}, _, 2} = handle_session_started(Session.start(quiz, respondent, channel, "sms", Schedule.always(), [2, 3], nil, nil, nil), quiz.id, ["sms", "ivr"])
+    assert_receive [:setup, ^test_channel, respondent_received, ^token]
+    assert respondent.id == respondent_received.id
+    assert_receive [:ask, ^test_channel, ^respondent_received, ^token, ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO")]
+    assert 1 == respondent_received.stats |> Stats.attempts(:sms)
+
+    {:ok, session = %Session{token: token, respondent: respondent}, _, 3} = Session.timeout(session)
+    refute_receive [:setup, _, _, _, _]
+    assert_receive [:ask, ^test_channel, respondent_received, ^token, ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO")]
+    assert respondent.id == respondent_received.id
+    assert 2 == respondent_received.stats |> Stats.attempts(:sms)
+
+    {:ok, session, _, before_stalled_wait_time} = Session.timeout(session)
+    assert 3 == before_stalled_wait_time
+
+    {state, _, _} = Session.timeout(session)
+    assert :stalled == state
+  end
+
+  test "timeouts a respondent with no fallback and no retries list", %{quiz: quiz, respondent: respondent, test_channel: test_channel, channel: channel} do
+    {:ok, session = %Session{token: token}, _, fallback_delay} = handle_session_started(Session.start(quiz, respondent, channel, "sms", Schedule.always(), [], nil, nil, nil), quiz.id, ["sms", "ivr"])
+    assert_receive [:setup, ^test_channel, respondent_received, ^token]
+    assert 1 == respondent_received.stats |> Stats.attempts(:sms)
+    default_fallback_delay = Survey.default_fallback_delay()
+    assert fallback_delay == default_fallback_delay
+
+    {state, _, _} = Session.timeout(session)
+    assert :stalled == state
+  end
+
+  test "timesout a respondent with fallback and retries list", %{quiz: quiz, respondent: respondent, test_channel: test_channel, channel: channel} do
+    fallback_runtime_channel = TestChannel.new
+    fallback_channel = build(:channel, settings: fallback_runtime_channel |> TestChannel.settings, type: "ivr")
+    fallback_retries = [8]
+    fallback_delay = 15
+
+    {:ok, session = %Session{token: token, respondent: respondent}, _, 2} = handle_session_started(Session.start(quiz, respondent, channel, "sms", Schedule.always(), [2, 8], fallback_channel, "ivr", fallback_retries, fallback_delay), quiz.id, ["sms", "ivr"])
+    assert_receive [:setup, ^test_channel, respondent_received, ^token]
+    assert respondent.id == respondent_received.id
+    assert_receive [:ask, ^test_channel, ^respondent_received, ^token, ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO")]
+
+    assert 1 == respondent_received.stats |> Stats.attempts(:sms)
+
+    {:ok, session = %Session{token: token, respondent: respondent}, _, 8} = Session.timeout(session)
+
+    refute_receive [:setup, _, _, _, _]
+    assert_receive [:ask, ^test_channel, respondent_received, ^token, ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO")]
+    assert respondent.id == respondent_received.id
+    assert 2 == respondent_received.stats |> Stats.attempts(:sms)
+
+    {:ok, session, _, received_fallback_delay} = Session.timeout(session)
+
+    refute_receive [:setup, _, _, _, _]
+    assert_receive [:ask, ^test_channel, respondent_received, _,_]
+    assert respondent.id == respondent_received.id
+    assert 3 == respondent_received.stats |> Stats.attempts(:sms)
+    assert fallback_delay == received_fallback_delay
+
+    {:ok, session, _, fallback_retry} = Session.timeout(session)
+    assert hd(fallback_retries) == fallback_retry
+
+    {:ok, session, _, before_terminate_wait_time} = Session.timeout(session)
+    assert List.last(fallback_retries) == before_terminate_wait_time
+
+    {state,_} = Session.timeout(session)
+    assert :failed == state
   end
 
   test "applies first pattern that matches when swtiching to fallback", %{quiz: quiz, channel: channel} do

@@ -254,11 +254,16 @@ defmodule Ask.Runtime.Session do
   end
 
   def timeout(%Session{} = session, runtime_channel) do
+    best_timeout_option = best_timeout_option(session)
     session = retry(session, runtime_channel)
 
     # The new session will timeout as defined by hd(retries)
-    {:ok, session, %Reply{}, current_timeout(session)}
+    {:ok, session, %Reply{}, best_timeout_option || current_timeout(session)}
   end
+
+  def best_timeout_option(%{current_mode: %{retries: retries}, fallback_mode: nil}) when length(retries) == 1, do: hd(retries)
+
+  def best_timeout_option(_), do: nil
 
   defp terminate(%{current_mode: %SMSMode{}, respondent: respondent} = session) do
     {:stalled, session |> clear_token(), respondent}

@@ -514,7 +514,7 @@ defmodule Ask.BrokerTest do
     assert_received [:ask, ^test_channel, %Respondent{sanitized_phone_number: ^phone_number}, _token, ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO")]
 
     # Assert first retry
-    {:ok, expected_timeout_at, _} = DateTime.from_iso8601("2019-12-09T12:00:00Z")
+    {:ok, expected_timeout_at, _} = DateTime.from_iso8601("2019-12-09T11:00:00Z")
 
     respondent = Repo.get!(Respondent, respondent.id)
     assert respondent.timeout_at == expected_timeout_at
@@ -3631,7 +3631,7 @@ defmodule Ask.BrokerTest do
     assert updated_respondent.state == "active"
 
     now = Timex.now
-    interval = Interval.new(from: Timex.shift(now, minutes: 9), until: Timex.shift(now, minutes: 11), step: [seconds: 1])
+    interval = Interval.new(from: Timex.shift(now, minutes: 1), until: Timex.shift(now, minutes: 3), step: [seconds: 1])
     assert updated_respondent.timeout_at in interval
   end
 
