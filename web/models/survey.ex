@@ -428,14 +428,14 @@ defmodule Ask.Survey do
     available = not_exhausted_respondents(respondents_by_disposition)
     needed_to_complete = Kernel.trunc(Float.round(additional_completes / estimated_success_rate))
     additional_respondents = if needed_to_complete - available > 0, do: needed_to_complete - available, else: 0
-    success_rate = if exhausted > 0, do: Float.round(current_success_rate, 2), else: 0.0
+    success_rate = if exhausted > 0, do: Float.round(current_success_rate, 3), else: 0.0
 
     %{
       success_rate_data: %{
         success_rate: success_rate,
-        completion_rate: Float.round(completion_rate, 2),
-        initial_success_rate: Float.round(initial_success_rate, 2),
-        estimated_success_rate: Float.round(estimated_success_rate, 2)
+        completion_rate: Float.round(completion_rate, 3),
+        initial_success_rate: Float.round(initial_success_rate, 3),
+        estimated_success_rate: Float.round(estimated_success_rate, 3)
       },
       queue_size_data: %{
         exhausted: exhausted,
