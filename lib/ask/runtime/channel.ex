@@ -20,13 +20,13 @@ end
 
 defmodule Ask.Runtime.ChannelHelper do
 
-  def provider_callback_url(provider, path), do: provider_callback_endpoint(provider) <> path
+  def provider_callback_url(_provider, nil, path), do: application_endpoint() <> path
+  def provider_callback_url(provider, channel_base_url, path), do: provider_callback_endpoint(provider, channel_base_url) <> path
 
-  defp provider_callback_endpoint(provider) do
-    case Ask.Config.provider_config(provider) do
+  defp provider_callback_endpoint(provider, channel_base_url) do
+    case Ask.Config.provider_config(provider, channel_base_url) do
       nil -> application_endpoint()
-      [] -> application_endpoint()
-      configs -> hd(configs)[:base_callback_url] || application_endpoint()
+      config -> config[:base_callback_url] || application_endpoint()
     end
   end
 

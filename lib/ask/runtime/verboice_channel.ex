@@ -55,7 +55,8 @@ defmodule Ask.Runtime.VerboiceChannel do
   end
 
   def gather(respondent, prompts, num_digits) do
-    gather_options = %{action: callback_url(respondent), finishOnKey: ""}
+    channel_base_url = channel_base_url(respondent)
+    gather_options = %{action: callback_url(respondent, channel_base_url), finishOnKey: ""}
     |> add_num_digits(num_digits)
 
     [
@@ -66,10 +67,19 @@ defmodule Ask.Runtime.VerboiceChannel do
       element(:Gather, gather_options, [
         say_or_play(prompts)
       ]),
-      element(:Redirect, no_reply_callback_url(respondent))
+      element(:Redirect, no_reply_callback_url(respondent, channel_base_url))
     ]
   end
 
+  defp channel_base_url(respondent) do
+    try do
+      session = respondent.session |> Ask.Runtime.Session.load
+      channel = session.current_mode.channel
+      channel.base_url
+    rescue
+      _ -> nil
+    end
+  end
   defp add_num_digits(options, num_digits) do
     if num_digits do
       Map.put(options, :numDigits, num_digits)
@@ -302,20 +312,22 @@ defmodule Ask.Runtime.VerboiceChannel do
     |> send_resp(200, response(hangup()) |> generate)
   end
 
-  def callback_url(respondent) do
-    verboice_callback(Ask.Router.Helpers.callback_path(Ask.Endpoint, :callback, "verboice", respondent: respondent.id))
+  def callback_url(respondent, channel_base_url) do
+    verboice_callback(channel_base_url, Ask.Router.Helpers.callback_path(Ask.Endpoint, :callback, "verboice", respondent: respondent.id))
   end
 
-  def no_reply_callback_url(respondent) do
-    verboice_callback(Ask.Router.Helpers.callback_path(Ask.Endpoint, :callback, "verboice", respondent: respondent.id, Digits: "timeout"))
+  def no_reply_callback_url(respondent, channel_base_url) do
+    verboice_callback(channel_base_url, Ask.Router.Helpers.callback_path(Ask.Endpoint, :callback, "verboice", respondent: respondent.id, Digits: "timeout"))
   end
 
-  def status_callback_url(respondent, token) do
+  def status_callback_url(respondent, channel_base_url, token) do
     respondent_id = respondent.id |> Integer.to_string
-    verboice_callback(Ask.Router.Helpers.callback_path(Ask.Endpoint, :callback, "verboice", ["status", respondent_id, token], []))
+    verboice_callback(channel_base_url, Ask.Router.Helpers.callback_path(Ask.Endpoint, :callback, "verboice", ["status", respondent_id, token], []))
   end
 
-  defp verboice_callback(path), do: Ask.Runtime.ChannelHelper.provider_callback_url(Verboice, path)
+  defp verboice_callback(channel_base_url, path) do
+    Ask.Runtime.ChannelHelper.provider_callback_url(Verboice, channel_base_url, path)
+  end
 
   def process_call_response(response) do
     case response do
@@ -346,11 +358,11 @@ defmodule Ask.Runtime.VerboiceChannel do
 
     def setup(channel, respondent, token, not_before, not_after) do
       in_five_seconds = Timex.shift(not_before, seconds: 5)
-
+      channel_base_url = channel.client.base_url
       params = [
         address: respondent.sanitized_phone_number,
-        callback_url: VerboiceChannel.callback_url(respondent),
-        status_callback_url: VerboiceChannel.status_callback_url(respondent, token),
+        callback_url: VerboiceChannel.callback_url(respondent, channel_base_url),
+        status_callback_url: VerboiceChannel.status_callback_url(respondent, channel_base_url, token),
         not_before: in_five_seconds,
         not_after: not_after
       ]
