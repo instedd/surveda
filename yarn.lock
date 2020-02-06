@@ -2,10 +2,11 @@
 # yarn lockfile v1
 
 
-"@instedd/surveda-d3-components@1.1.0":
-  version "1.1.0"
-  resolved "https://registry.yarnpkg.com/@instedd/surveda-d3-components/-/surveda-d3-components-1.1.0.tgz#c3c09352c44669587c7637bf0d4498572e65d2cc"
+"@instedd/surveda-d3-components@1.1.1":
+  version "1.1.1"
+  resolved "https://registry.yarnpkg.com/@instedd/surveda-d3-components/-/surveda-d3-components-1.1.1.tgz#731a2434e0d59f6c801b9796389a75f7d87edfba"
   dependencies:
+    classnames "^2.2.6"
     d3 "^4.0.0"
     react-tooltip "^3.11.1"
 
@@ -1259,6 +1260,10 @@ clap@^1.0.9:
 classnames@^2.2.5:
   version "2.2.5"
   resolved "https://registry.yarnpkg.com/classnames/-/classnames-2.2.5.tgz#fb3801d453467649ef3603c7d61a02bd129bde6d"
+
+classnames@^2.2.6:
+  version "2.2.6"
+  resolved "https://registry.yarnpkg.com/classnames/-/classnames-2.2.6.tgz#43935bffdd291f326dad0a205309b38d00f650ce"
 
 cli-cursor@^1.0.1:
   version "1.0.2"

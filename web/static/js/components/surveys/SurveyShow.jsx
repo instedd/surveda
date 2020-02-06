@@ -293,7 +293,7 @@ class SurveyShow extends Component<any, State> {
                     <div className='title'>{t('SUCCESS RATE')}</div>
                     <div className='description'>{t('Estimated by combining initial and current values')}</div>
                   </div>
-                  <SuccessRate initial={initialSuccessRate} actual={successRate} estimated={estimatedSuccessRate} progress={completionRate} weight={24} />
+                  <SuccessRate initial={initialSuccessRate} actual={successRate} estimated={estimatedSuccessRate} progress={completionRate} exhausted={exhausted} weight={24} />
                 </div>
                 <div style={{ 'width': '50%' }}>
                   <div className='header'>
