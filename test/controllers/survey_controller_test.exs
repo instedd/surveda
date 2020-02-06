@@ -449,16 +449,16 @@ defmodule Ask.SurveyControllerTest do
 
     test "measures the completion rate when it isn't completed", %{conn: conn, user: user} do
       respondents = Enum.map(["completed", "queued", "started"], fn disposition -> %{disposition: disposition} end)
-      %{"completion_rate" => 0.33} = testing_survey(%{user: user, respondents: respondents})
+      %{"completion_rate" => 0.333} = testing_survey(%{user: user, respondents: respondents})
         |> get_stats(conn)
     end
 
     test "estimated success rate equals current when completed", %{conn: conn, user: user} do
       respondents = Enum.map(1..2, fn _ -> %{disposition: "completed"} end) ++ [%{disposition: "failed"}]
       %{
-        "success_rate" => 0.67,
+        "success_rate" => 0.667,
         "completion_rate" => 1.0,
-        "estimated_success_rate" => 0.67
+        "estimated_success_rate" => 0.667
       } = testing_survey(%{user: user, cutoff: 2, respondents: respondents})
         |> get_stats(conn)
     end
