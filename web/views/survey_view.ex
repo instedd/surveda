@@ -22,11 +22,11 @@ defmodule Ask.SurveyView do
         completion_rate: success_rate_data.completion_rate,
         initial_success_rate: success_rate_data.initial_success_rate,
         estimated_success_rate: success_rate_data.estimated_success_rate,
-        completes: queue_size_data.completes,
-        missing: queue_size_data.missing,
-        multiplier: queue_size_data.multiplier,
-        needed: queue_size_data.needed,
-        pending: queue_size_data.pending
+        exhausted: queue_size_data.exhausted,
+        available: queue_size_data.available,
+        additional_respondents: queue_size_data.additional_respondents,
+        needed_to_complete: queue_size_data.needed_to_complete,
+        additional_completes: queue_size_data.additional_completes
       }
     }
   end

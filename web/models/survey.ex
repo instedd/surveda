@@ -419,26 +419,29 @@ defmodule Ask.Survey do
       |> completed_respondents_needed_by
       |> respondents_target(respondents_total)
     completion_rate = get_completion_rate(survey, respondents_by_disposition, respondents_target)
-    current_success_rate = get_success_rate(survey, respondents_by_disposition )
+    current_success_rate = get_success_rate(survey, respondents_by_disposition)
     initial_success_rate = initial_success_rate()
+    completed_respondents = get_completed_respondents(survey, respondents_by_disposition)
+    additional_completes = respondents_target - completed_respondents
     estimated_success_rate = estimated_success_rate(initial_success_rate, current_success_rate, completion_rate)
-    completes = exhausted_respondents(respondents_by_disposition)
-    multiplier = Float.ceil(1/estimated_success_rate, 0)
-    pending = not_exhausted_respondents(respondents_by_disposition)
-    {needed, missing} = get_needed_missing(survey, respondents_by_disposition, respondents_target, pending, completion_rate, estimated_success_rate)
+    exhausted = exhausted_respondents(respondents_by_disposition)
+    available = not_exhausted_respondents(respondents_by_disposition)
+    needed_to_complete = Kernel.trunc(Float.round(additional_completes / estimated_success_rate))
+    additional_respondents = if needed_to_complete - available > 0, do: needed_to_complete - available, else: 0
+
     %{
       success_rate_data: %{
-        success_rate: current_success_rate,
-        completion_rate: completion_rate,
-        initial_success_rate: initial_success_rate,
-        estimated_success_rate: estimated_success_rate,
+        success_rate: Float.round(current_success_rate, 2),
+        completion_rate: Float.round(completion_rate, 2),
+        initial_success_rate: Float.round(initial_success_rate, 2),
+        estimated_success_rate: Float.round(estimated_success_rate, 2),
       },
       queue_size_data: %{
-        completes: completes,
-        pending: pending,
-        multiplier: multiplier,
-        needed: needed,
-        missing: missing
+        exhausted: exhausted,
+        available: available,
+        additional_completes: additional_completes,
+        needed_to_complete: needed_to_complete,
+        additional_respondents: additional_respondents
       }
     }
   end
@@ -467,18 +470,6 @@ defmodule Ask.Survey do
   def success_rate(_, 0), do: 1.0
   def success_rate(successful_respondents, exhausted_respondents) do
     successful_respondents / exhausted_respondents
-  end
-
-  defp get_needed_missing(survey, respondents_by_disposition, respondents_target, pending, completion_rate, current_success_rate) do
-    completed_respondents = get_completed_respondents(survey, respondents_by_disposition)
-    case completed_respondents == respondents_target do
-      # if true, means that you reached your target and no longer need to contact more respondents.
-      true -> {0, 0}
-      false ->
-        needed = Float.ceil((respondents_target*completion_rate)*(1/current_success_rate))
-        missing = max(needed - pending, 0)
-        {needed, missing}
-    end
   end
 
   defp respondents_target(:all, respondents_total), do: respondents_total

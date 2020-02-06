@@ -45,11 +45,11 @@ class SurveyShow extends Component<any, State> {
     estimatedSuccessRate: PropTypes.number,
     initialSuccessRate: PropTypes.number,
     successRate: PropTypes.number,
-    completes: PropTypes.number,
-    missing: PropTypes.number,
-    pending: PropTypes.number,
-    multiplier: PropTypes.number,
-    needed: PropTypes.number
+    exhausted: PropTypes.number,
+    available: PropTypes.number,
+    neededToComplete: PropTypes.number,
+    additionalCompletes: PropTypes.number,
+    additionalRespondents: PropTypes.number
   }
 
   constructor(props) {
@@ -134,7 +134,7 @@ class SurveyShow extends Component<any, State> {
 
   render() {
     const { questionnaires, survey, respondentsByDisposition, reference, contactedRespondents, cumulativePercentages, target, project, t, projectId, surveyId,
-      estimatedSuccessRate, initialSuccessRate, successRate, completionRate, completes, missing, pending, multiplier, needed } = this.props
+      estimatedSuccessRate, initialSuccessRate, successRate, completionRate, exhausted, available, neededToComplete, additionalCompletes, additionalRespondents } = this.props
     const { stopUnderstood } = this.state
 
     if (!survey || !cumulativePercentages || !questionnaires || !respondentsByDisposition || !reference) {
@@ -300,7 +300,7 @@ class SurveyShow extends Component<any, State> {
                     <div className='title'>{t('QUEUE SIZE')}</div>
                     <div className='description'>{t('Amount of respondents that are estimated we need to contact to reach the target completes. It increases when the success rate decreases and viceversa.')}</div>
                   </div>
-                  <QueueSize completes={completes} pending={pending} needed={needed} missing={missing} successRate={estimatedSuccessRate} multiplier={multiplier} weight={24} />
+                  <QueueSize exhausted={exhausted} available={available} needed={neededToComplete} additionalCompletes={additionalCompletes} additionalRespondents={additionalRespondents} weight={24} />
                 </div>
               </div>
             </div>
@@ -481,11 +481,11 @@ const mapStateToProps = (state, ownProps) => {
     estimatedSuccessRate: surveyStats ? surveyStats.estimated_success_rate : null,
     initialSuccessRate: surveyStats ? surveyStats.initial_success_rate : null,
     successRate: surveyStats ? surveyStats.success_rate : null,
-    completes: surveyStats ? surveyStats.completes : null,
-    multiplier: surveyStats ? surveyStats.multiplier : null,
-    missing: surveyStats ? surveyStats.missing : null,
-    needed: surveyStats ? surveyStats.needed : null,
-    pending: surveyStats ? surveyStats.pending : null
+    exhausted: surveyStats ? surveyStats.exhausted : null,
+    available: surveyStats ? surveyStats.available : null,
+    neededToComplete: surveyStats ? surveyStats.needed_to_complete : null,
+    additionalCompletes: surveyStats ? surveyStats.additional_completes : null,
+    additionalRespondents: surveyStats ? surveyStats.additional_respondents : null
   })
 }
 
