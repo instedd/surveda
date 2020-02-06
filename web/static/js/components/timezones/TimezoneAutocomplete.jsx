@@ -68,7 +68,7 @@ class TimezoneAutocomplete extends Component {
   }
 
   getTimeForTimezone(timezone, locale) {
-    var date = new Date(Date.now())
+    var date = new Date()
     return date.toLocaleString(locale, {timeZone: timezone, hour12: false, hour: '2-digit', minute: '2-digit', weekday: 'long'})
   }
 
