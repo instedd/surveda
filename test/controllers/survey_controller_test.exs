@@ -427,126 +427,304 @@ defmodule Ask.SurveyControllerTest do
 
   describe "stats" do
     test "show survey stats when there's no respondent", %{conn: conn, user: user} do
+      testing_survey = testing_survey(%{user: user, respondents: []})
+
       %{
-        "success_rate" => 0.0,
-        "completion_rate" => 0.0,
-        "initial_success_rate" => 1.0,
-        "estimated_success_rate" => 1.0,
-        "exhausted" => 0,
-        "available" => 0,
-        "additional_completes" => 0,
-        "needed_to_complete" => 0,
-        "additional_respondents" => 0
-      } = testing_survey(%{user: user, respondents: []})
-        |> get_stats(conn)
+        "success_rate" => success_rate,
+        "completion_rate" => completion_rate,
+        "initial_success_rate" => initial_success_rate,
+        "estimated_success_rate" => estimated_success_rate,
+        "exhausted" => exhausted,
+        "available" => available,
+        "additional_completes" => additional_completes,
+        "needed_to_complete" => needed_to_complete,
+        "additional_respondents" => additional_respondents
+      } = get_stats(testing_survey, conn)
+
+      assert success_rate == 0,
+        "success_rate should equal 0 when there's no respondent"
+      assert completion_rate == 0,
+        "completion_rate should equal 0 when there's no respondent"
+      assert initial_success_rate == Float.round(Survey.initial_success_rate(), 3),
+        "initial_success_rate should match initial configuration when there's no respondent"
+      assert estimated_success_rate == initial_success_rate,
+        "estimated_success_rate should equal initial_success_rate when there's no respondent"
+      assert exhausted == 0,
+        "exhausted should equal 0 when there's no respondent"
+      assert available == 0,
+        "available should equal 0 when there's no respondent"
+      assert additional_completes == 0,
+        "additional_completes should equal 0 when there's no respondent"
+      assert needed_to_complete == 0,
+        "needed_to_complete should equal 0 when there's no respondent"
+      assert additional_respondents == 0,
+        "additional_respondents should equal 0 when there's no respondent"
     end
 
-    test "measures the completion rate when it's completed", %{conn: conn, user: user} do
+    test "measures the completion rate when survey is completed", %{conn: conn, user: user} do
       respondents = Enum.map(["completed"], fn disposition -> %{disposition: disposition} end)
-      %{"completion_rate" => 1.0} = testing_survey(%{user: user, respondents: respondents})
-        |> get_stats(conn)
+      testing_survey = testing_survey(%{user: user, respondents: respondents})
+
+      %{"completion_rate" => completion_rate} = get_stats(testing_survey, conn)
+
+      assert completion_rate == 1.0,
+        "completion_rate should equal 1.0 (100%) when completed = 1 and target = 1"
     end
 
-    test "measures the completion rate when it isn't completed", %{conn: conn, user: user} do
+    test "measures the completion rate when survey isn't completed", %{conn: conn, user: user} do
       respondents = Enum.map(["completed", "queued", "started"], fn disposition -> %{disposition: disposition} end)
-      %{"completion_rate" => 0.333} = testing_survey(%{user: user, respondents: respondents})
-        |> get_stats(conn)
+      testing_survey = testing_survey(%{user: user, respondents: respondents})
+
+      %{"completion_rate" => completion_rate} = get_stats(testing_survey, conn)
+
+      assert completion_rate == 0.333,
+        "completion rate should equal 0.333 (33.3%) when completed = 1 and target = 3"
     end
 
     test "estimated success rate equals current when completed", %{conn: conn, user: user} do
-      respondents = Enum.map(1..2, fn _ -> %{disposition: "completed"} end) ++ [%{disposition: "failed"}]
+      completed_respondents = Enum.map(1..2, fn _ -> %{disposition: "completed"} end)
+      respondents = completed_respondents ++ [%{disposition: "failed"}]
+      testing_survey = testing_survey(%{user: user, cutoff: 2, respondents: respondents})
+
       %{
-        "success_rate" => 0.667,
-        "completion_rate" => 1.0,
-        "estimated_success_rate" => 0.667
-      } = testing_survey(%{user: user, cutoff: 2, respondents: respondents})
-        |> get_stats(conn)
+        "success_rate" => success_rate,
+        "completion_rate" => completion_rate,
+        "estimated_success_rate" => estimated_success_rate,
+        "exhausted" => exhausted
+      } = get_stats(testing_survey, conn)
+
+      assert completion_rate == 1,
+        "completion_rate should equal 1.0 (100%) when survey is completed"
+      assert exhausted == 3,
+        "exhausted should equal 3 when completed = 2 and failed = 1"
+      assert Float.round(success_rate, 2) == Float.round(Enum.count(completed_respondents) / exhausted, 2),
+        "success_rate should equal completed / exhausted"
+      assert estimated_success_rate == success_rate,
+        "estimated_success_rate should equal success_rate when survey is completed"
     end
 
     test "estimated success rate averages initial and current when completion rate is 50%", %{conn: conn, user: user} do
-      respondents = [%{disposition: "failed"}, %{disposition: "completed"}]
+      completed_respondents = Enum.map(1..2, fn _ -> %{disposition: "completed"} end)
+      respondents = completed_respondents ++ Enum.map(["failed", "started"], fn disposition -> %{disposition: disposition} end)
+      testing_survey = testing_survey(%{user: user, respondents: respondents})
+
       %{
-        "completion_rate" => 0.5,
-        "initial_success_rate" => 1.0,
-        "success_rate" => 0.5,
-        "estimated_success_rate" => 0.75,
-      } = testing_survey(%{user: user, respondents: respondents})
-          |> get_stats(conn)
+        "completion_rate" => completion_rate,
+        "initial_success_rate" => initial_success_rate,
+        "success_rate" => success_rate,
+        "estimated_success_rate" => estimated_success_rate,
+        "exhausted" => exhausted
+      } = get_stats(testing_survey, conn)
+
+      assert completion_rate == 0.5,
+        "completion_rate should equal 0.5 (50%) when completed = 2 and target = 4"
+      assert exhausted == 3,
+        "exhausted should equal 3 when completed = 2 and failed = 1"
+      assert Float.round(success_rate, 2) == Float.round(Enum.count(completed_respondents) / exhausted, 2),
+        "success_rate should equal completed / exhausted"
+      assert Float.round(estimated_success_rate, 2) == Float.round(((initial_success_rate + success_rate) / 2), 2),
+        "estimated_success_rate should average initial and current when completion rate is 50%"
     end
 
     test "estimated success rate is calculated using linear interpolation", %{conn: conn, user: user} do
-      respondents = Enum.map(1..3, fn _ -> %{disposition: "failed"} end) ++ [%{disposition: "completed"}]
-      %{"estimated_success_rate" => 0.85} = testing_survey(%{user: user, cutoff: 5, respondents: respondents})
-        |> get_stats(conn)
-    end
+      completed_respondents = [%{disposition: "completed"}]
+      respondents = Enum.map(1..3, fn _ -> %{disposition: "failed"} end) ++ completed_respondents
+      testing_survey = testing_survey(%{user: user, cutoff: 5, respondents: respondents})
 
-    test "additional respondents are never less than zero", %{conn: conn, user: user} do
-      respondents = Enum.map(1..2, fn _ -> %{disposition: "queued"} end)
-      %{"additional_respondents" => 0} = testing_survey(%{user: user, cutoff: 1, respondents: respondents})
-        |> get_stats(conn)
+      %{
+        "completion_rate" => completion_rate,
+        "initial_success_rate" => initial_success_rate,
+        "success_rate" => success_rate,
+        "estimated_success_rate" => estimated_success_rate,
+        "exhausted" => exhausted
+      } = get_stats(testing_survey, conn)
+
+      assert completion_rate == 0.2,
+        "completion_rate should equal 0.2 (20%) when completed = 1 and target = 5"
+      assert exhausted == 4,
+        "exhausted should equal 3 when completed = 1 and failed = 4"
+      assert Float.round(success_rate, 2) == Float.round(Enum.count(completed_respondents) / exhausted, 2),
+        "success_rate should equal completed / exhausted"
+      assert Float.round(estimated_success_rate, 2) ==
+        Float.round(((initial_success_rate * (1 - completion_rate)) + (success_rate * completion_rate)), 2),
+        "estimated_success_rate should be calculated using linear interpolation%"
     end
 
     test "expose correctly respondents in final dispositions", %{conn: conn, user: user} do
       final_dispositions = Respondent.final_dispositions()
       respondents = Enum.map(final_dispositions, fn disposition -> %{disposition: disposition} end)
-      %{"exhausted" => exhausted, "available" => 0} = testing_survey(%{user: user, respondents: respondents})
-        |> get_stats(conn)
-      assert exhausted == Enum.count(final_dispositions)
+      testing_survey = testing_survey(%{user: user, respondents: respondents})
+
+      %{"exhausted" => exhausted, "available" => available} = get_stats(testing_survey, conn)
+
+      assert exhausted == Enum.count(final_dispositions),
+        "exhausted should equal respondents in final_dispositions"
+      assert available == 0,
+        "available should equal 0 when every respondent is in a final disposition"
     end
 
     test "expose correctly respondents in non final dispositions", %{conn: conn, user: user} do
       non_final_dispositions = Respondent.non_final_dispositions()
       respondents = Enum.map(non_final_dispositions, fn disposition -> %{disposition: disposition} end)
-      %{"exhausted" => 0, "available" => available} = testing_survey(%{user: user, respondents: respondents})
-        |> get_stats(conn)
-      assert available == Enum.count(non_final_dispositions)
+      testing_survey = testing_survey(%{user: user, respondents: respondents})
+
+      %{"exhausted" => exhausted, "available" => available} = get_stats(testing_survey, conn)
+
+      assert available == Enum.count(non_final_dispositions),
+        "available should equal respondents in non_final_dispositions"
+      assert exhausted == 0,
+        "exhausted should equal 0 when every respondent is in a non final disposition"
     end
 
-    test "needed to complete is zero when completed", %{conn: conn, user: user} do
+    test "needed to complete is zero when survey is completed", %{conn: conn, user: user} do
       respondents = [%{disposition: "completed"}]
-      %{"needed_to_complete" => 0} = testing_survey(%{user: user, respondents: respondents})
-        |> get_stats(conn)
+      testing_survey = testing_survey(%{user: user, respondents: respondents})
+
+      %{
+        "completion_rate" => completion_rate,
+        "needed_to_complete" => needed_to_complete
+      } = get_stats(testing_survey, conn)
+
+      assert completion_rate == 1,
+        "completion_rate should equal 1.0 (100%) when completed = 1 and target = 1"
+      assert needed_to_complete == 0,
+        "needed_to_complete should equal 0 when survey is completed"
     end
 
-    test "needed to complete equals target with no respondents", %{conn: conn, user: user} do
-      %{"needed_to_complete" => 5} = testing_survey(%{user: user, respondents: [], cutoff: 5})
-        |> get_stats(conn)
+    test "additional_completes equals target with no respondents", %{conn: conn, user: user} do
+      target = 5
+      testing_survey = testing_survey(%{user: user, respondents: [], cutoff: target})
+
+      %{"additional_completes" => needed_to_complete} = get_stats(testing_survey, conn)
+
+      assert needed_to_complete == target,
+        "additional_completes should equal target when there's no respondent"
     end
 
     test "additional_completes equals target - completed respondents", %{conn: conn, user: user} do
-      respondents = Enum.map(["completed", "completed", "queued"], fn disposition -> %{disposition: disposition} end)
-      %{"additional_completes" => 3} = testing_survey(%{user: user, respondents: respondents, cutoff: 5})
-        |> get_stats(conn)
+      target = 5
+      completed_respondents = Enum.map(1..2, fn _ -> %{disposition: "completed"} end)
+      respondents = [%{disposition: "queued"}] ++ completed_respondents
+      testing_survey = testing_survey(%{user: user, respondents: respondents, cutoff: 5})
+
+      %{"additional_completes" => additional_completes} = get_stats(testing_survey, conn)
+
+      assert additional_completes == target - Enum.count(completed_respondents),
+        "additional_completes should equal target - completed_respondents"
     end
 
-    test "needed to complete duplicates additional to complete when estimated success rate is 50%", %{conn: conn, user: user} do
-      respondents = Enum.map(1..99, fn _ -> %{disposition: "completed"} end) ++ Enum.map(1..99, fn _ -> %{disposition: "failed"} end)
-      %{"additional_completes" => 1, "needed_to_complete" => 2} = testing_survey(%{user: user, respondents: respondents, cutoff: 100})
-        |> get_stats(conn)
+    test "additional_completes duplicates needed when estimated success rate ~= 50%", %{conn: conn, user: user} do
+      target = 100
+      completed_respondents = Enum.map(1..99, fn _ -> %{disposition: "completed"} end)
+      failed_respondents = Enum.map(1..99, fn _ -> %{disposition: "failed"} end)
+      respondents = completed_respondents ++ failed_respondents
+      testing_survey = testing_survey(%{user: user, respondents: respondents, cutoff: target})
+
+      %{
+        "estimated_success_rate" => estimated_success_rate,
+        "additional_completes" => additional_completes,
+        "needed_to_complete" => needed_to_complete
+      } = get_stats(testing_survey, conn)
+
+      assert Float.round(estimated_success_rate, 1) == 0.5,
+        "estimated_success_rate should equal 0.5 (50%) when (completed + failed) ~= target"
+      assert additional_completes == target - Enum.count(completed_respondents),
+        "additional_completes should equal target - completed"
+      assert needed_to_complete == additional_completes * 2,
+        "additional_completes should duplicate needed_to_complete when estimated success rate is 50%"
     end
 
-    test "needed to complete equals additional_completes when estimated success rate is 100%", %{conn: conn, user: user} do
-      respondents = [%{disposition: "completed"}]
-      %{"additional_completes" => 1, "needed_to_complete" => 1} = testing_survey(%{user: user, respondents: respondents, cutoff: 2})
-        |> get_stats(conn)
+    test "needed equals additional_completes when estimated success rate ~= 100%", %{conn: conn, user: user} do
+      target = 100
+      completed_respondents = Enum.map(1..99, fn _ -> %{disposition: "completed"} end)
+      testing_survey = testing_survey(%{user: user, respondents: completed_respondents, cutoff: target})
+
+      %{
+        "estimated_success_rate" => estimated_success_rate,
+        "additional_completes" => additional_completes,
+        "needed_to_complete" => needed_to_complete
+      } = get_stats(testing_survey, conn)
+
+      assert Float.round(estimated_success_rate, 1) == 1.0,
+        "estimated_success_rate should equal 1.0 (100%) when completed ~= target"
+      assert additional_completes == target - Enum.count(completed_respondents),
+        "additional_completes should equal target - completed"
+      assert needed_to_complete == additional_completes,
+        "additional_completes should equal needed_to_complete when estimated success rate is 100%"
     end
 
-    test "additional respondents equals needed to complete - respondents in non final dispositions", %{conn: conn, user: user} do
-      non_final_dispositions = Respondent.non_final_dispositions()
-      respondents = [%{disposition: "completed"}] ++ Enum.map(non_final_dispositions, fn disposition -> %{disposition: disposition} end)
-      %{"needed_to_complete" => 100, "additional_respondents" => additional_respondents} = testing_survey(%{user: user, respondents: respondents, cutoff: 101})
-        |> get_stats(conn)
-      assert additional_respondents == 100 - Enum.count(non_final_dispositions)
+    test "additional_respondents equals needed - available", %{conn: conn, user: user} do
+      target = 100
+      non_final_disposition_respondents = Enum.map(
+        ["queued", "contacted"], fn disposition -> %{disposition: disposition} end
+      )
+      completed_respondents = Enum.map(1..96, fn _ -> %{disposition: "completed"} end)
+      respondents = completed_respondents ++ non_final_disposition_respondents
+      testing_survey = testing_survey(%{user: user, respondents: respondents, cutoff: target})
+
+      %{
+        "estimated_success_rate" => estimated_success_rate,
+        "needed_to_complete" => needed_to_complete,
+        "additional_respondents" => additional_respondents,
+        "available" => available
+      } = get_stats(testing_survey, conn)
+
+      assert Float.round(estimated_success_rate, 1) == 1.0,
+        "estimated_success_rate should equal 1.0 (100%) when completed ~= target"
+      assert needed_to_complete == target - Enum.count(completed_respondents),
+        "needed to complete should equals target - completed when estimated success rate is 100%"
+      assert available == Enum.count(non_final_disposition_respondents),
+        "available should equal respondents in non_final_dispositions"
+      assert additional_respondents == needed_to_complete - available,
+        "additional_respondents equals needed - respondents in non final dispositions"
     end
 
-    test "additional respondents depends on needed to complete (it doesn't depend on additional_completes)", %{conn: conn, user: user} do
-      non_final_dispositions = Respondent.non_final_dispositions()
-      respondents = Enum.map(1..100, fn _ -> %{disposition: "completed"} end) ++ Enum.map(1..100, fn _ -> %{disposition: "failed"} end) ++ Enum.map(non_final_dispositions, fn disposition -> %{disposition: disposition} end)
-      %{"needed_to_complete" => 18, "additional_completes" => 10, "additional_respondents" => additional_respondents} = testing_survey(%{user: user, respondents: respondents, cutoff: 110})
-        |> get_stats(conn)
-      assert additional_respondents == 18 - Enum.count(non_final_dispositions)
+    test "additional_respondents depends on needed (not in additional_completes)", %{conn: conn, user: user} do
+      target = 100
+      non_final_disposition_respondents = [%{disposition: "queued"}]
+      completed_respondents = Enum.map(1..98, fn _ -> %{disposition: "completed"} end)
+      failed_respondents = Enum.map(1..98, fn _ -> %{disposition: "failed"} end)
+      respondents = completed_respondents ++ failed_respondents ++ non_final_disposition_respondents
+      testing_survey = testing_survey(%{user: user, respondents: respondents, cutoff: target})
+
+      %{
+        "estimated_success_rate" => estimated_success_rate,
+        "additional_completes" => additional_completes,
+        "needed_to_complete" => needed_to_complete,
+        "additional_respondents" => additional_respondents,
+        "available" => available
+      } = get_stats(testing_survey, conn)
+
+      assert Float.round(estimated_success_rate, 1) == 0.5,
+        "estimated_success_rate should equal 0.5 (50%) when (completed + failed) ~= target"
+      assert available == Enum.count(non_final_disposition_respondents),
+        "available should equal respondents in non_final_dispositions"
+      assert needed_to_complete == additional_completes * 2,
+        "needed_to_complete should duplicate additional_completes when estimated success rate is 50%"
+      assert additional_respondents == needed_to_complete - available,
+        "additional_respondents equals needed - available"
+      refute additional_respondents == additional_completes - available,
+        "additional_respondents shouldn't equal additional_completes - available"
     end
 
+    test "additional respondents are never less than zero, even when available > needed ", %{conn: conn, user: user} do
+      target = 100
+      non_final_disposition_respondents = Enum.map(1..50, fn _ -> %{disposition: "queued"} end)
+      completed_respondents = Enum.map(1..96, fn _ -> %{disposition: "completed"} end)
+      respondents = completed_respondents ++ non_final_disposition_respondents
+      testing_survey = testing_survey(%{user: user, respondents: respondents, cutoff: target})
+
+      %{
+        "additional_respondents" => additional_respondents,
+        "needed_to_complete" => needed_to_complete,
+        "available" => available
+      } = get_stats(testing_survey, conn)
+
+      assert needed_to_complete - available < 0,
+             "needed_to_complete - available should be less than 0"
+      assert additional_respondents == 0,
+             "additional_respondents should equal 0 when available > needed"
+    end
   end
 
   defp get_stats(%{survey: survey, project: project}, conn) do
