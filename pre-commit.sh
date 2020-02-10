@@ -7,6 +7,14 @@ echo "----==== Running Mix tests ====----"
 docker-compose run --rm -e MIX_ENV=test app mix do compile --force --warnings-as-errors, test
 MIX=$?
 
+echo "----==== Running Yarn check ====----"
+docker-compose run --rm webpack yarn check
+CHECK=$?
+
+if [ $CHECK -eq 0 ]; then
+  echo "${GREEN}OK${NC}";
+fi
+
 if [ $MIX -eq 0 ]; then
   echo "${GREEN}OK${NC}";
 fi
@@ -35,12 +43,15 @@ if [ $ESLINT -eq 0 ]; then
   echo "${GREEN}OK${NC}";
 fi
 
-if [ $MIX -eq 0 ] && [ $JS -eq 0 ] && [ $FLOW -eq 0 ] && [ $ESLINT -eq 0 ]; then
+if [ $MIX -eq 0 ] && [ $CHECK -eq 0 ] && [ $JS -eq 0 ] && [ $FLOW -eq 0 ] && [ $ESLINT -eq 0 ]; then
   echo "${GREEN}----==== Good to go! ====----${NC}"
 else
   echo "${RED}----==== Oops! ====----${NC}"
   if [ $MIX -ne 0 ]; then
   echo "${RED}Mix tests failed${NC}";
+  fi
+  if [ $CHECK -ne 0 ]; then
+    echo "${RED}Yarn check failed${NC}";
   fi
   if [ $JS -ne 0 ]; then
     echo "${RED}JS tests failed${NC}";

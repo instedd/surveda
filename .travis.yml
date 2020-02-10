@@ -20,6 +20,7 @@ before_script:
 
 script:
   - docker-compose run --rm -e MIX_ENV=test app mix do compile --warnings-as-errors, test
+  - docker-compose run --rm webpack yarn check
   - docker-compose run --rm webpack yarn test
   - docker-compose run --rm webpack yarn webpack
   - docker-compose run --rm webpack yarn flow check
