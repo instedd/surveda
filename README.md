@@ -132,9 +132,37 @@ Surveda uses InSTEDD's [shorter](https://github.com/instedd/shorter) for sending
 Is necessary to configure an api-key in surveda to use this service. If no api-key is provided, surveda works fine but
 full-urls are sent to respondents
 
-For editing/creating a new api-key: 
+For editing/creating a new api-key:
 1. Go to AWS console
 2. Go to API Gateway service
-3. Select Usage-Plans 
+3. Select Usage-Plans
 4. Select "Surveda Shorter" plan
 5. Edit or create under "API Keys" tab
+
+## Test surveda-d3-components locally
+
+In past experiences (different components for the survey cockpit) we didn't' find a clear way to test surveda-d3-components locally. So devs had to wait for the component being published to test everything was working well. Here's a clear and easy way to work with them locally.
+
+From your `surveda-d3-components` local directory run:
+
+``` bash
+docker-compose run --rm node yarn run clean
+docker-compose run --rm node yarn run build
+```
+
+In your surveda `docker-compose.yml` file, add a link to your `surveda-d3-components` local directory using a volume.
+For that, add this line to the volumes section of the `webpack` Surveda service
+
+```yml
+      - '/{your surveda-d3-components local directory}/umd/@instedd:/surveda_d3'
+```
+
+In Surveda `package.json`, update the `"@instedd/surveda-d3-components"` dependency with `"file:/surveda_d3"`
+
+Run:
+
+```bash
+docker-compose run --rm webpack yarn install
+```
+
+You should now being able to test your surveda-d3-components in your Surveda locally.
