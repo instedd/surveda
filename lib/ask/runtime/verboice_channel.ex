@@ -51,7 +51,7 @@ defmodule Ask.Runtime.VerboiceChannel do
   end
 
   def gather(respondent, prompts = [prompt, _ | _], num_digits) do
-    [say_or_play(prompt) | gather(respondent, tl(prompts), num_digits)]
+    [say_or_play(prompt, channel_base_url(respondent)) | gather(respondent, tl(prompts), num_digits)]
   end
 
   def gather(respondent, prompts, num_digits) do
@@ -65,7 +65,7 @@ defmodule Ask.Runtime.VerboiceChannel do
       # and '#' is sent here so it can be considered a refusal, a valid
       # option, etc.
       element(:Gather, gather_options, [
-        say_or_play(prompts)
+        say_or_play(prompts, channel_base_url)
       ]),
       element(:Redirect, no_reply_callback_url(respondent, channel_base_url))
     ]
@@ -88,20 +88,16 @@ defmodule Ask.Runtime.VerboiceChannel do
     end
   end
 
-  def say_or_play([prompt]) do
-    [say_or_play(prompt)]
+  def say_or_play(%{"audio_source" => audio_source, "audio_id" => audio_id}, channel_base_url) when audio_source in ["upload", "record"] do
+    element(:Play, "#{verboice_callback(channel_base_url, Helpers.audio_delivery_path(Ask.Endpoint, :show, audio_id))}.mp3")
   end
 
-  def say_or_play([prompt | prompts]) do
-    [say_or_play(prompt) | say_or_play(prompts)]
-  end
-
-  def say_or_play(%{"audio_source" => audio_source, "audio_id" => audio_id}) when audio_source in ["upload", "record"] do
-    element(:Play, "#{Helpers.audio_delivery_url(Ask.Endpoint, :show, audio_id)}.mp3")
-  end
-
-  def say_or_play(%{"audio_source" => "tts", "text" => text}) do
+  def say_or_play(%{"audio_source" => "tts", "text" => text}, _) do
     element(:Say, text)
+  end
+
+  def say_or_play(prompts, channel_base_url) do
+    Enum.map(prompts, fn p -> say_or_play(p, channel_base_url) end)
   end
 
   defp hangup do
@@ -290,7 +286,7 @@ defmodule Ask.Runtime.VerboiceChannel do
             gather(respondent, prompts, num_digits)
           {:end, {:reply, reply}} ->
             prompts = Reply.prompts(reply)
-            say_or_play(prompts) ++ [hangup()]
+            say_or_play(prompts, channel_base_url(respondent)) ++ [hangup()]
           :end ->
             hangup()
         end
