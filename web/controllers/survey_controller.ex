@@ -740,7 +740,7 @@ defmodule Ask.SurveyController do
   defp prepare_channels(_, []), do: :ok
   defp prepare_channels(conn, [channel | rest]) do
     runtime_channel = Ask.Channel.runtime_channel(channel)
-    case Ask.Runtime.Channel.prepare(runtime_channel, callback_url(conn, :callback, channel.provider)) do
+    case Ask.Runtime.Channel.prepare(runtime_channel) do
       {:ok, _} -> prepare_channels(conn, rest)
       error -> error
     end

@@ -93,6 +93,7 @@ Once you have GUISSO enabled on Surveda, you can connect a Verboice instance tha
 config :ask, Verboice,
   base_url: "http://web.verboice.lvh.me", # or the URL for your Verboice instance
   channel_ui: true,
+  base_callback_url: "http://abcd123.ngrok.io", # specify the base URL to use on channel callbacks if it's not the same as the host
   guisso: [
     base_url: "http://web.guisso.lvh.me", # or the URL for your GUISSO
     client_id: "<Surveda's client id>",

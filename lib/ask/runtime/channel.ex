@@ -1,5 +1,5 @@
 defprotocol Ask.Runtime.Channel do
-  def prepare(channel, callback_url)
+  def prepare(channel)
   def setup(channel, respondent, token, not_before, not_after)
   def has_delivery_confirmation?(channel)
   def ask(channel, respondent, token, prompts)
@@ -16,4 +16,19 @@ defmodule Ask.Runtime.ChannelProvider do
   @callback sync_channels(user_id :: integer, base_url :: String.t) :: :ok
   @callback create_channel(user :: Ask.User.t, base_url :: String.t, api_channel :: map) :: Ask.Channel
   @callback callback(conn :: Plug.Conn.t, params :: map()) :: Plug.Conn.t
+end
+
+defmodule Ask.Runtime.ChannelHelper do
+
+  def provider_callback_url(_provider, nil, path), do: application_endpoint() <> path
+  def provider_callback_url(provider, channel_base_url, path), do: provider_callback_endpoint(provider, channel_base_url) <> path
+
+  defp provider_callback_endpoint(provider, channel_base_url) do
+    case Ask.Config.provider_config(provider, channel_base_url) do
+      nil -> application_endpoint()
+      config -> config[:base_callback_url] || application_endpoint()
+    end
+  end
+
+  def application_endpoint(), do: Ask.Endpoint.url
 end

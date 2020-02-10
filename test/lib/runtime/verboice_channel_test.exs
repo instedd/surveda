@@ -17,6 +17,7 @@ defmodule Ask.Runtime.VerboiceChannelTest do
   setup %{conn: conn} do
     GenServer.start_link(BrokerStub, [], name: BrokerStub.server_ref)
     ChannelStatusServer.start_link
+    Ask.Config.start_link()
     respondent = insert(:respondent, phone_number: "123", state: "active", session: %{"current_mode" => %{"mode" => "ivr"}})
     {
       :ok,

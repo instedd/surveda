@@ -80,8 +80,8 @@ defmodule Ask.TestChannel do
 end
 
 defimpl Ask.Runtime.Channel, for: Ask.TestChannel do
-  def prepare(channel, callback_url) do
-    send channel.pid, [:prepare, channel, callback_url]
+  def prepare(channel) do
+    send channel.pid, [:prepare, channel]
     :ok
   end
 
