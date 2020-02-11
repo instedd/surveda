@@ -4,8 +4,9 @@ defmodule Ask.Respondent do
   alias Ask.{Stats, Repo, Respondent, Survey}
 
   schema "respondents" do
-    field :phone_number, :string
-    field :sanitized_phone_number, :string
+    field :phone_number, :string # phone_number as-it-is in the respondents_list
+    field :sanitized_phone_number, :string # phone_number with the channel's patterns applied `channel.apply_patterns(canonical_phone_number)`
+    field :canonical_phone_number, :string # phone_number with the basic prunes/validations applied
     field :hashed_number, :string
     field :section_order, JSON
 
@@ -64,7 +65,7 @@ defmodule Ask.Respondent do
   """
   def changeset(struct, params \\ %{}) do
     struct
-    |> cast(params, [:phone_number, :sanitized_phone_number, :state, :session, :quota_bucket_id, :completed_at, :timeout_at, :questionnaire_id, :mode, :disposition, :mobile_web_cookie_code, :language, :effective_modes, :stats, :section_order, :retry_stat_id])
+    |> cast(params, [:phone_number, :sanitized_phone_number, :canonical_phone_number, :state, :session, :quota_bucket_id, :completed_at, :timeout_at, :questionnaire_id, :mode, :disposition, :mobile_web_cookie_code, :language, :effective_modes, :stats, :section_order, :retry_stat_id])
     |> validate_required([:phone_number, :state])
     |> validate_inclusion(:disposition, ["registered", "queued", "contacted", "failed", "unresponsive", "started", "ineligible", "rejected", "breakoff", "refused", "partial", "interim partial", "completed"])
     |> validate_inclusion(:state, ["pending", "active", "completed", "failed", "stalled", "rejected", "cancelled"])
