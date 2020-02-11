@@ -150,12 +150,12 @@ defmodule Ask.Runtime.Session do
   end
 
   defp apply_patterns_if_match(patterns, respondent) do
-    sanitized_number_as_list = Respondent.sanitize_phone_number(respondent.phone_number) |> String.graphemes
-    matching_patterns = ChannelPatterns.matching_patterns(patterns, sanitized_number_as_list)
+    canonical_number_as_list = respondent.canonical_phone_number |> String.graphemes
+    matching_patterns = ChannelPatterns.matching_patterns(patterns, canonical_number_as_list)
     case matching_patterns do
       [] -> respondent
       [p | _] ->
-        sanitized_phone_number = ChannelPatterns.apply_pattern(p, sanitized_number_as_list)
+        sanitized_phone_number = ChannelPatterns.apply_pattern(p, canonical_number_as_list)
         {:ok, updated_respondent} = respondent |> Respondent.changeset(%{sanitized_phone_number: sanitized_phone_number}) |> Repo.update
         updated_respondent
     end

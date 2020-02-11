@@ -72,7 +72,7 @@ defmodule Ask.Respondent do
     |> Ecto.Changeset.optimistic_lock(:lock_version)
   end
 
-  def sanitize_phone_number(text) do
+  def canonicalize_phone_number(text) do
     ~r/[^\d]/ |> Regex.replace(text, "")
   end
 

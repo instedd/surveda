@@ -396,6 +396,7 @@ defmodule Ask.SurveyController do
       respondent_group_id: respondent_group.id,
       phone_number: phone_number,
       sanitized_phone_number: phone_number,
+      canonical_phone_number: phone_number,
       hashed_number: phone_number}
     |> Ecto.Changeset.change
     |> Repo.insert!
