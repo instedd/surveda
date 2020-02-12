@@ -54,8 +54,8 @@ defmodule Ask.Respondent do
     has_many :survey_log_entries, Ask.SurveyLogEntry
     field :lock_version, :integer, default: 1
     field :stats, Ask.Stats, default: %Ask.Stats{}
-
     field :experiment_name, :string, virtual: true
+    field :user_stopped, :boolean, default: false
 
     timestamps()
   end
