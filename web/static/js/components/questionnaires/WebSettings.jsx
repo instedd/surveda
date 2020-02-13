@@ -47,11 +47,11 @@ class WebSettings extends Component {
     }
   }
 
-  messageChange(text, key) {
+  messageChange(key, text) {
     this.setState({[key]: text})
   }
 
-  messageBlur(text, key) {
+  messageBlur(key, text) {
     this.props.dispatch(actions.setMobileWebQuestionnaireMsg(key, text))
   }
 
@@ -59,8 +59,8 @@ class WebSettings extends Component {
     this.props.dispatch(actions.setDisplayedTitle(text))
   }
 
-  smsMessageBlur(text) {
-    this.props.dispatch(actions.setMobileWebSmsMessage(text))
+  settingTextBlur(key, text) {
+    this.props.dispatch(actions.setMobileWebSettingText(key, text))
   }
 
   surveyIsOverMessageBlur(text) {
@@ -71,7 +71,7 @@ class WebSettings extends Component {
     this.props.dispatch(actions.setSurveyAlreadyTakenMessage(text))
   }
 
-  colorSelectionBlur(text, mode) {
+  colorSelectionBlur(mode, text) {
     const { dispatch } = this.props
     if (mode == 'primary') {
       dispatch(actions.setPrimaryColor(this.state.primaryColor))
@@ -164,7 +164,7 @@ class WebSettings extends Component {
       inputErrors={this.messageErrors('errorMessage')}
       value={this.state.errorMessage}
       originalValue={this.state.errorMessage}
-      onBlur={text => this.messageBlur(text, 'errorMessage')}
+      onBlur={text => this.messageBlur('errorMessage', text)}
       readOnly={this.props.readOnly}
       />
   }
@@ -175,7 +175,7 @@ class WebSettings extends Component {
       inputErrors={this.messageErrors('thankYouMessage')}
       value={this.state.thankYouMessage}
       originalValue={this.state.thankYouMessage}
-      onBlur={text => this.messageBlur(text, 'thankYouMessage')}
+      onBlur={text => this.messageBlur('thankYouMessage', text)}
       readOnly={this.props.readOnly}
       />
   }
@@ -193,7 +193,7 @@ class WebSettings extends Component {
           <input
             type='text'
             disabled={this.props.readOnly}
-            onChange={text => this.messageChange(text.target.value, 'title')}
+            onChange={text => this.messageChange('title', text.target.value)}
             onBlur={text => this.titleBlur(text.target.value)}
             className={className}
            />
@@ -209,7 +209,7 @@ class WebSettings extends Component {
       value={this.state.smsMessage}
       originalValue={this.state.smsMessage}
       readOnly={this.props.readOnly}
-      onBlur={text => this.smsMessageBlur(text)}
+      onBlur={text => this.settingTextBlur('mobileWebSmsMessage', text)}
       fixedEndLength={20}
       />
   }
@@ -257,8 +257,8 @@ class WebSettings extends Component {
             <input
               type='text'
               disabled={this.props.readOnly}
-              onChange={text => this.messageChange(text.target.value, 'primaryColor')}
-              onBlur={text => this.colorSelectionBlur(text.target.value, 'primary')}
+              onChange={text => this.messageChange('primaryColor', text.target.value)}
+              onBlur={text => this.colorSelectionBlur('primary', text.target.value)}
               className={primaryClassName}
            />
           </InputWithLabel>
@@ -269,8 +269,8 @@ class WebSettings extends Component {
             <input
               type='text'
               disabled={this.props.readOnly}
-              onChange={text => this.messageChange(text.target.value, 'secondaryColor')}
-              onBlur={text => this.colorSelectionBlur(text.target.value, 'secondary')}
+              onChange={text => this.messageChange('secondaryColor', text.target.value)}
+              onBlur={text => this.colorSelectionBlur('secondary', text.target.value)}
               className={secondaryClassName}
            />
           </InputWithLabel>

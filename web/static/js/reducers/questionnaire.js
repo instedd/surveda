@@ -35,7 +35,7 @@ const dataReducer = (state: Questionnaire, action): Questionnaire => {
     case actions.AUTOCOMPLETE_SMS_QUESTIONNAIRE_MSG: return autocompleteSmsQuestionnaireMsg(state, action)
     case actions.AUTOCOMPLETE_IVR_QUESTIONNAIRE_MSG: return autocompleteIvrQuestionnaireMsg(state, action)
     case actions.UPLOAD_CSV_FOR_TRANSLATION: return uploadCsvForTranslation(state, action)
-    case actions.SET_MOBILE_WEB_SMS_MESSAGE: return setMobileWebSmsMessage(state, action)
+    case actions.SET_MOBILE_WEB_SETTING_TEXT: return setMobileWebSettingText(state, action)
     case actions.SET_MOBILE_WEB_SURVEY_IS_OVER_MESSAGE: return setMobileWebSurveyIsOverMessage(state, action)
     case actions.SET_PRIMARY_COLOR: return setPrimaryColor(state, action)
     case actions.SET_SECONDARY_COLOR: return setSecondaryColor(state, action)
@@ -1230,12 +1230,12 @@ const autocompleteIvrQuestionnaireMsg = (state, action) => {
   }
 }
 
-const setMobileWebSmsMessage = (state, action) => {
+const setMobileWebSettingText = (state, action) => {
   return {
     ...state,
     settings: {
       ...state.settings,
-      mobileWebSmsMessage: action.text
+      [action.key]: action.text
     }
   }
 }
