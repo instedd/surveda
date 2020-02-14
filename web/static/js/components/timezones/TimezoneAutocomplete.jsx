@@ -57,7 +57,7 @@ class TimezoneAutocomplete extends Component {
   autocompleteGetData(value, callback) {
     const { timezones } = this.props
     const matches = (value, tz) => { return (tz.indexOf(value) !== -1 || tz.toLowerCase().indexOf(value) !== -1) }
-    const matchingOptions = timezones.items.filter((tz) => matches(formatTimezone(value.toLowerCase()), formatTimezone(tz)))
+    const matchingOptions = Object.keys(timezones.items).filter((tz) => matches(formatTimezone(value.toLowerCase()), formatTimezone(tz)))
     callback(value, this.buildTimezonesforAutoselect(matchingOptions))
   }
 
@@ -73,7 +73,7 @@ class TimezoneAutocomplete extends Component {
   }
 
   render() {
-    const { timezones, t, readOnly, i18n } = this.props
+    const { timezones, t, readOnly, i18n, selectedTz } = this.props
     const currentLanguage = i18n.language
 
     if (!timezones || !timezones.items) {
@@ -81,6 +81,8 @@ class TimezoneAutocomplete extends Component {
         <div>{t('Loading timezones...')}</div>
       )
     } else {
+      const canonicalTz = timezones.items[selectedTz]
+
       return (
         <div className='input-field timezone-selection'>
           <InputWithLabel value={this.state.timezone.text} label={t('Timezone')}>
@@ -96,7 +98,7 @@ class TimezoneAutocomplete extends Component {
             className='timezone-dropdown'
             ref='autocomplete'
           />
-          <span className='small-text-bellow'>{t('Time at selected timezone: {{time}}', {time: this.getTimeForTimezone(this.props.selectedTz, currentLanguage)})}</span>
+          <span className='small-text-bellow'>{t('Time at selected timezone: {{time}}', {time: this.getTimeForTimezone(canonicalTz, currentLanguage)})}</span>
         </div>
       )
     }
