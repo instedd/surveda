@@ -41,6 +41,7 @@ export const validate = (state: DataStore<Questionnaire>) => {
   validateThankYouMessage(data.settings.thankYouMessage, context)
 
   validateTitle(data, context)
+  validateMobileWebIntroMessage(data, context)
   validateMobileWebSmsMessage(data, context)
   validateMobileWebSurveyIsOverMessage(data, context)
   validateSurveyAlreadyTakenMessage(data, context)
@@ -439,6 +440,15 @@ const validateTitle = (data, context) => {
       addError(context, `title['${lang}']`, k('Title must not be blank'), lang, 'mobileweb')
     }
   })
+}
+
+const validateMobileWebIntroMessage = (data, context) => {
+  if (!context.mobileweb) return
+
+  if (isBlank(data.settings.mobileWebIntroMessage)) {
+    addError(context, 'mobileWebIntroMessage', k('Mobile web intro message must not be blank'), null, 'mobileweb')
+    return
+  }
 }
 
 const validateMobileWebSmsMessage = (data, context) => {
