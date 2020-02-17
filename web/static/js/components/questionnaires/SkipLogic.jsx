@@ -1,7 +1,6 @@
 // @flow
 import findIndex from 'lodash/findIndex'
 import React, { Component } from 'react'
-import { Input } from 'react-materialize'
 import { connect } from 'react-redux'
 import propsAreEqual from '../../propsAreEqual'
 import { translate } from 'react-i18next'
