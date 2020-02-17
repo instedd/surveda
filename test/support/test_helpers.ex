@@ -48,7 +48,7 @@ defmodule Ask.TestHelpers do
         Ask.RespondentGroupChannel.changeset(%Ask.RespondentGroupChannel{}, %{respondent_group_id: group.id, channel_id: channel.id, mode: mode}) |> Ask.Repo.insert
 
         respondent = insert(:respondent, survey: survey, respondent_group: group)
-        phone_number = respondent.sanitized_phone_number
+        phone_number = respondent.canonical_phone_number
 
         [survey, group, test_channel, respondent, phone_number]
       end

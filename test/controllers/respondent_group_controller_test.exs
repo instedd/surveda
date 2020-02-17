@@ -473,10 +473,12 @@ defmodule Ask.RespondentGroupControllerTest do
       group = insert(:respondent_group, survey: survey, respondents_count: 2, sample: ["9988776655", "(549) 11 4234 2343"])
 
       # This doesn't exist in the uploaded csv
-      insert(:respondent, survey: survey, respondent_group: group, phone_number: "9988776655", sanitized_phone_number: "9988776655")
+      insert(:respondent, survey: survey, respondent_group: group, phone_number: "9988776655", sanitized_phone_number: "9988776655", canonical_phone_number: "9988776655")
 
       # This exists, so we expect no duplicates for this
-      insert(:respondent, survey: survey, respondent_group: group, phone_number: "(549) 11 4234 2343", sanitized_phone_number: "5491142342343")
+      phone_number = "(549) 11 4234 2343"
+      canonical_phone_number = Respondent.canonicalize_phone_number(phone_number)
+      insert(:respondent, survey: survey, respondent_group: group, phone_number: "(549) 11 4234 2343", sanitized_phone_number: canonical_phone_number, canonical_phone_number: canonical_phone_number)
 
       file = %Plug.Upload{path: "test/fixtures/respondent_phone_numbers.csv", filename: "phone_numbers.csv"}
 
@@ -505,6 +507,7 @@ defmodule Ask.RespondentGroupControllerTest do
       assert Enum.at(respondents, 2).survey_id == survey.id
       assert Enum.at(respondents, 2).phone_number == "(549) 11 2421 3125"
       assert Enum.at(respondents, 2).sanitized_phone_number == "5491124213125"
+      assert Enum.at(respondents, 2).canonical_phone_number == "5491124213125"
       assert Enum.at(respondents, 2).respondent_group_id == group.id
     end
 
@@ -520,6 +523,36 @@ defmodule Ask.RespondentGroupControllerTest do
       assert response(conn, 422)
       respondents = Repo.all(from r in Respondent, where: r.survey_id == ^survey.id)
       assert length(respondents) == 1
+    end
+
+    test "duplicated respondents should be ignored even if the sanitized_phone_number has changed", %{conn: conn, user: user} do
+      project = create_project_for_user(user)
+      survey = insert(:survey, project: project, state: "running")
+      group = insert(:respondent_group, survey: survey, respondents_count: 2, sample: ["9988776655", "(549) 11 4234 2343"])
+
+      # This doesn't exist in the uploaded csv
+      insert(:respondent, survey: survey, respondent_group: group, phone_number: "9988776655", sanitized_phone_number: "9988776655", canonical_phone_number: "9988776655")
+
+      # This exists, so we expect no duplicates for this
+      phone_number = "(549) 11 4234 2343"
+      canonical_phone_number = Respondent.canonicalize_phone_number(phone_number)
+      insert(:respondent, survey: survey, respondent_group: group, phone_number: "(549) 11 4234 2343", sanitized_phone_number: "555#{canonical_phone_number}", canonical_phone_number: canonical_phone_number)
+
+      file = %Plug.Upload{path: "test/fixtures/respondent_phone_numbers.csv", filename: "phone_numbers.csv"}
+
+      conn = post conn, project_survey_respondent_group_add_path(conn, :add, project.id, survey.id, group.id), file: file
+
+      group = RespondentGroup |> Repo.get(group.id)
+      respondents = Repo.all(from r in Respondent, where: r.survey_id == ^survey.id)
+      respondents_with_same_phone_number = Repo.all(from r in Respondent, where: r.survey_id == ^survey.id, where: r.phone_number == "(549) 11 4234 2343")
+      response_data = json_response(conn, 200)["data"]
+
+      assert length(respondents) == 15, "survey should have 15 respondents: the file has 14 numbers, 1 is duplicated and there where 2 respondents before"
+      assert length(respondents_with_same_phone_number) == 1
+
+      assert response_data["id"] == group.id
+      assert response_data["name"] == group.name
+      assert response_data["respondents_count"] == 15
     end
   end
 

@@ -273,7 +273,8 @@ defmodule Ask.RespondentGroupController do
   defp to_entries(rows, project, survey, group, local_time) do
     rows
     |> Stream.map(fn row ->
-      %{phone_number: row, sanitized_phone_number: Respondent.sanitize_phone_number(row), survey_id: survey.id, respondent_group_id: group.id, inserted_at: local_time, updated_at: local_time, hashed_number: Respondent.hash_phone_number(row, project.salt), disposition: "registered", stats: %Stats{}}
+      canonical_number = Respondent.canonicalize_phone_number(row)
+      %{phone_number: row, sanitized_phone_number: canonical_number, canonical_phone_number: canonical_number, survey_id: survey.id, respondent_group_id: group.id, inserted_at: local_time, updated_at: local_time, hashed_number: Respondent.hash_phone_number(row, project.salt), disposition: "registered", stats: %Stats{}}
     end)
   end
 
@@ -288,17 +289,17 @@ defmodule Ask.RespondentGroupController do
 
   defp remove_duplicates_with_respect_to(phone_numbers, group) do
     # Select numbers that already exist in the DB
-    sanitized_numbers = Enum.map(phone_numbers, &Respondent.sanitize_phone_number/1)
+    canonical_numbers = Enum.map(phone_numbers, &Respondent.canonicalize_phone_number/1)
     existing_numbers = Repo.all(from r in Respondent,
       where: r.respondent_group_id == ^group.id,
-      where: r.sanitized_phone_number in ^sanitized_numbers,
-      select: r.sanitized_phone_number)
+      where: r.canonical_phone_number in ^canonical_numbers,
+      select: r.canonical_phone_number)
 
     # And then remove them from phone_numbers (because they are duplicates)
     # (no easier way to do this, plus we expect `existing_numbers` to
     # be empty or near empty)
     Enum.reject(phone_numbers, fn num ->
-      Respondent.sanitize_phone_number(num) in existing_numbers
+      Respondent.canonicalize_phone_number(num) in existing_numbers
     end)
   end
 
