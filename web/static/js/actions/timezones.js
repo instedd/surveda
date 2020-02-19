@@ -4,7 +4,7 @@ import * as api from '../api'
 
 export const fetchTimezones = () => (dispatch, getState) => {
   const state = getState()
-  if (state.timezones.fetching) {
+  if (state.timezones.fetching || state.timezones.items) {
     return
   }
   dispatch(startFetchingTimezones())
