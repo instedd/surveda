@@ -206,7 +206,7 @@ class SurveyStatus extends PureComponent {
     }
 
     return (
-      <p className={classNames(color, 'truncate')}>
+      <p className={classNames(color, 'truncate', 'survey-status-container')}>
         {component}
       </p>
     )
