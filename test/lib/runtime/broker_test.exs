@@ -3838,7 +3838,8 @@ defmodule Ask.BrokerTest do
     [survey, group, _, _, _] = create_running_survey_with_channel_and_respondent()
 
     phone_number = "1-734-555-1212"
-    respondent = insert(:respondent, survey: survey, respondent_group: group, phone_number: phone_number, sanitized_phone_number: Ask.Respondent.sanitize_phone_number(phone_number))
+    canonical_phone_number = Ask.Respondent.canonicalize_phone_number(phone_number)
+    respondent = insert(:respondent, survey: survey, respondent_group: group, phone_number: phone_number, sanitized_phone_number: canonical_phone_number, canonical_phone_number: canonical_phone_number)
 
     {:ok, logger} = SurveyLogger.start_link
     {:ok, broker} = Broker.start_link
@@ -3897,7 +3898,8 @@ defmodule Ask.BrokerTest do
 
   test "respondent phone number is masked if it's part of a response" do
     phone_number = "1-734-555-1212"
-    respondent = insert(:respondent, phone_number: phone_number, sanitized_phone_number: Ask.Respondent.sanitize_phone_number(phone_number))
+    canonical_phone_number = Ask.Respondent.canonicalize_phone_number(phone_number)
+    respondent = insert(:respondent, phone_number: phone_number, sanitized_phone_number: canonical_phone_number, canonical_phone_number: canonical_phone_number)
 
     [
       {"1-734-5##-####", "1-734-555-1212"},

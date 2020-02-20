@@ -91,7 +91,9 @@ defmodule Ask.SessionTest do
     ]
     test_channel = TestChannel.new
     channel = insert(:channel, settings: test_channel |> TestChannel.settings, patterns: patterns)
-    respondent = insert(:respondent, phone_number: "12 34", sanitized_phone_number: "1234")
+    phone_number = "12 34"
+    canonical_phone_number = Respondent.canonicalize_phone_number(phone_number)
+    respondent = insert(:respondent, phone_number: phone_number, sanitized_phone_number: canonical_phone_number, canonical_phone_number: canonical_phone_number)
 
     {:ok, %{respondent: respondent}, _, _} = Session.start(quiz, respondent, channel, "sms", Schedule.always())
 
@@ -102,12 +104,14 @@ defmodule Ask.SessionTest do
   test "sanitized_phone_number remains the same when starting and channel has no patterns", %{quiz: quiz} do
     test_channel = TestChannel.new
     channel = insert(:channel, settings: test_channel |> TestChannel.settings, patterns: [])
-    respondent = insert(:respondent, phone_number: "12 34", sanitized_phone_number: "1234")
+    phone_number = "12 34"
+    canonical_phone_number = Respondent.canonicalize_phone_number(phone_number)
+    respondent = insert(:respondent, phone_number: phone_number, sanitized_phone_number: canonical_phone_number, canonical_phone_number: canonical_phone_number)
 
     {:ok, %{respondent: respondent}, _, _} = Session.start(quiz, respondent, channel, "sms", Schedule.always())
 
-    assert respondent.sanitized_phone_number == "1234"
-    assert (Respondent |> Repo.get(respondent.id)).sanitized_phone_number == "1234"
+    assert respondent.sanitized_phone_number == canonical_phone_number
+    assert (Respondent |> Repo.get(respondent.id)).sanitized_phone_number == canonical_phone_number
   end
 
   test "sanitized_phone_number remains the same when starting and no pattern matches", %{quiz: quiz} do
@@ -118,12 +122,14 @@ defmodule Ask.SessionTest do
     ]
     test_channel = TestChannel.new
     channel = insert(:channel, settings: test_channel |> TestChannel.settings, patterns: patterns)
-    respondent = insert(:respondent, phone_number: "12 34", sanitized_phone_number: "1234")
+    phone_number = "12 34"
+    canonical_phone_number = Respondent.canonicalize_phone_number(phone_number)
+    respondent = insert(:respondent, phone_number: phone_number, sanitized_phone_number: canonical_phone_number, canonical_phone_number: canonical_phone_number)
 
     {:ok, %{respondent: respondent}, _, _} = Session.start(quiz, respondent, channel, "sms", Schedule.always())
 
-    assert respondent.sanitized_phone_number == "1234"
-    assert (Respondent |> Repo.get(respondent.id)).sanitized_phone_number == "1234"
+    assert respondent.sanitized_phone_number == canonical_phone_number
+    assert (Respondent |> Repo.get(respondent.id)).sanitized_phone_number == canonical_phone_number
   end
 
   test "reloading the page should not consume retries in mobileweb mode", %{respondent: respondent, test_channel: test_channel, channel: channel} do
@@ -486,7 +492,9 @@ defmodule Ask.SessionTest do
   end
 
   test "applies first pattern that matches when swtiching to fallback", %{quiz: quiz, channel: channel} do
-    respondent = insert(:respondent, phone_number: "12 34", sanitized_phone_number: "1234")
+    phone_number = "12 34"
+    canonical_phone_number = Respondent.canonicalize_phone_number(phone_number)
+    respondent = insert(:respondent, phone_number: "12 34", sanitized_phone_number: canonical_phone_number, canonical_phone_number: canonical_phone_number)
     patterns = [
       %{"input" => "22XXXX", "output" => "5XXXX"},
       %{"input" => "XXXX", "output" => "4XXXX"},

@@ -1,9 +1,11 @@
 import React, { PureComponent, PropTypes } from 'react'
-import TimeAgo from 'react-timeago'
-import { Tooltip } from '../ui'
-import { formatTimezone } from '../timezones/util'
-import classNames from 'classnames/bind'
 import { translate, Trans } from 'react-i18next'
+import { connect } from 'react-redux'
+import { formatTimezone } from '../timezones/util'
+import { Tooltip } from '../ui'
+import {fetchTimezones} from '../../actions/timezones'
+import TimeAgo from 'react-timeago'
+import classNames from 'classnames/bind'
 import DownChannelsStatus from '../channels/DownChannelsStatus'
 import dateformat from 'dateformat'
 import map from 'lodash/map'
@@ -12,14 +14,21 @@ import min from 'lodash/min'
 class SurveyStatus extends PureComponent {
   static propTypes = {
     t: PropTypes.func,
+    dispatch: PropTypes.func.isRequired,
     survey: PropTypes.object.isRequired,
-    short: PropTypes.bool
+    short: PropTypes.bool,
+    timezones: PropTypes.object
   }
 
   constructor(props) {
     super(props)
     this.bindedFormatter = this.formatter.bind(this)
     this.bindedStartedFormatter = this.startedFormatter.bind(this)
+  }
+
+  componentDidMount() {
+    const { dispatch } = this.props
+    dispatch(fetchTimezones())
   }
 
   formatter(number, unit, suffix, date, defaultFormatter) {
@@ -69,9 +78,10 @@ class SurveyStatus extends PureComponent {
   }
 
   hourDescription(survey, date) {
+    const { timezones } = this.props
     let locale = Intl.DateTimeFormat().resolvedOptions().locale || 'en-US'
     let options = {
-      timeZone: survey.schedule.timezone,
+      timeZone: timezones.items[survey.schedule.timezone],
       hour12: true,
       hour: 'numeric'
     }
@@ -90,7 +100,7 @@ class SurveyStatus extends PureComponent {
   }
 
   render() {
-    const { survey, t } = this.props
+    const { survey, t, timezones } = this.props
 
     if (!survey) {
       return <p>{t('Loading...')}</p>
@@ -121,9 +131,11 @@ class SurveyStatus extends PureComponent {
           break
         } else {
           if (survey.nextScheduleTime) {
-            icon = 'access_time'
-            const date = new Date(survey.nextScheduleTime)
-            text = this.nextCallDescription(survey, date)
+            if (timezones && timezones.items) {
+              icon = 'access_time'
+              const date = new Date(survey.nextScheduleTime)
+              text = this.nextCallDescription(survey, date)
+            }
           } else {
             icon = 'play_arrow'
             text = <TimeAgo date={survey.startedAt} live={false} formatter={this.bindedStartedFormatter} />
@@ -194,11 +206,17 @@ class SurveyStatus extends PureComponent {
     }
 
     return (
-      <p className={classNames(color, 'truncate')}>
+      <p className={classNames(color, 'truncate', 'survey-status-container')}>
         {component}
       </p>
     )
   }
 }
 
-export default translate()(SurveyStatus)
+const mapStateToProps = (state) => {
+  return {
+    timezones: state.timezones
+  }
+}
+
+export default translate()(connect(mapStateToProps)(SurveyStatus))

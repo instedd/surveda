@@ -410,7 +410,7 @@ defmodule Ask.Runtime.Broker do
   end
 
   def mask_phone_number(%Respondent{} = respondent, {:reply, response}) do
-    pii = respondent.sanitized_phone_number |> String.slice(-6..-1)
+    pii = respondent.canonical_phone_number |> String.slice(-6..-1)
     # pii can be empty if the sanitized_phone_number has less than 5 digits,
     # that could be mostly to the case of a randomly generated phone number form a test
     # String.contains? returns true for empty strings
@@ -434,7 +434,7 @@ defmodule Ask.Runtime.Broker do
   end
 
   defp contains_phone_number(response, pii) do
-    String.contains?(Respondent.sanitize_phone_number(response), pii)
+    String.contains?(Respondent.canonicalize_phone_number(response), pii)
   end
 
   defp phone_number_matcher(pii) do

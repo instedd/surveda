@@ -3,7 +3,7 @@ defmodule Ask.ChannelPatternsTest do
   alias Ask.Runtime.ChannelPatterns
 
   test "matches sanitized phone number against input patterns" do
-    sanitized_phone_number = ["1", "2", "3", "4"]
+    canonical_phone_number = ["1", "2", "3", "4"]
     patterns = [
       %{"input" => "1XXX", "output" => "1XXX"}, #matches
       %{"input" => "X2XX", "output" => "1XXX"}, #matches
@@ -21,7 +21,7 @@ defmodule Ask.ChannelPatternsTest do
       %{"input" => "X1234", "output" => "1XXX"} #doesn't match
     ]
 
-    assert (ChannelPatterns.matching_patterns(patterns, sanitized_phone_number) == [
+    assert (ChannelPatterns.matching_patterns(patterns, canonical_phone_number) == [
       %{"input" => "1XXX", "output" => "1XXX"}, #matches
       %{"input" => "X2XX", "output" => "1XXX"}, #matches
       %{"input" => "XX3X", "output" => "1XXX"}, #matches
@@ -33,24 +33,24 @@ defmodule Ask.ChannelPatternsTest do
   end
 
   test "matching against empty patterns returns empty list" do
-    sanitized_phone_number = ["1", "2", "3", "4"]
-    assert ChannelPatterns.matching_patterns([], sanitized_phone_number) == []
+    canonical_phone_number = ["1", "2", "3", "4"]
+    assert ChannelPatterns.matching_patterns([], canonical_phone_number) == []
   end
 
   test "applies output pattern to sanitized phone number" do
-    sanitized_phone_number = ["1", "2", "3", "4"]
+    canonical_phone_number = ["1", "2", "3", "4"]
     patterns = [
       %{"input" => "XXXX", "output" => "555XXXX"},
       %{"input" => "XXXX", "output" => "XXXX555"},
       %{"input" => "XXXX", "output" => "7X9X5X3X0"}
     ]
 
-    expected_sanitized_phone_numbers = [
+    expected_canonical_phone_numbers = [
       "5551234",
       "1234555",
       "719253340"
     ]
 
-    assert (patterns |> Enum.map(&(ChannelPatterns.apply_pattern(&1, sanitized_phone_number)))) == expected_sanitized_phone_numbers
+    assert (patterns |> Enum.map(&(ChannelPatterns.apply_pattern(&1, canonical_phone_number)))) == expected_canonical_phone_numbers
   end
 end

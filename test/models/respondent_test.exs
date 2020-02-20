@@ -18,8 +18,8 @@ defmodule Ask.RespondentTest do
     refute changeset.valid?
   end
 
-  test "sanitize phone number" do
-    num = Respondent.sanitize_phone_number("+ (549) 11 1234 5627")
+  test "canonicalize phone number" do
+    num = Respondent.canonicalize_phone_number("+ (549) 11 1234 5627")
     assert num == "5491112345627"
   end
 

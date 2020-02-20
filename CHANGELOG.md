@@ -1,5 +1,12 @@
 # InSTEDD Surveda Changelog
 
+## 0.24.1
+
+### Bugfixes
+
+* Fix duplicate respondents while improving sanitation of phone numbers for on imports [#1639](https://github.com/instedd/surveda/issues/1639)
+* Fix usage of deprecated timezones [#1653](https://github.com/instedd/surveda/issues/1653), [#1657](https://github.com/instedd/surveda/issues/1657)
+
 ## 0.24.0
 
 ### Features
