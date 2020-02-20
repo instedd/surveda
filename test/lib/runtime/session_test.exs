@@ -514,7 +514,9 @@ defmodule Ask.SessionTest do
   end
 
   test "sanitized_phone_number remains the same when switching to fallback and channel has no patterns", %{quiz: quiz, channel: channel} do
-    respondent = insert(:respondent, phone_number: "12 34", sanitized_phone_number: "1234")
+    phone_number = "12 34"
+    canonical_phone_number = Respondent.canonicalize_phone_number(phone_number)
+    respondent = insert(:respondent, phone_number: phone_number, sanitized_phone_number: canonical_phone_number, canonical_phone_number: canonical_phone_number)
 
     fallback_runtime_channel = TestChannel.new
     fallback_channel = build(:channel, settings: fallback_runtime_channel |> TestChannel.settings, type: "ivr", patterns: [])
@@ -528,7 +530,9 @@ defmodule Ask.SessionTest do
   end
 
   test "sanitized_phone_number remains the same when switching to fallback and no pattern matches", %{quiz: quiz, channel: channel} do
-    respondent = insert(:respondent, phone_number: "12 34", sanitized_phone_number: "1234")
+    phone_number = "12 34"
+    canonical_phone_number = Respondent.canonicalize_phone_number(phone_number)
+    respondent = insert(:respondent, phone_number: phone_number, sanitized_phone_number: canonical_phone_number, canonical_phone_number: canonical_phone_number)
     patterns = [
       %{"input" => "22XXXX", "output" => "5XXXX"},
       %{"input" => "1234XXXX5", "output" => "5XXXX"},
