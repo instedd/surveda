@@ -27,7 +27,7 @@ defmodule Ask do
       [
         worker(Ask.OAuthTokenServer, []),
         worker(Ask.Runtime.SurveyLogger, []),
-        worker(Ask.Runtime.Broker, []),
+        worker(Ask.Runtime.ProactiveBroker, []),
         worker(Ask.FloipPusher, []),
         worker(Ask.JsonSchema, []),
         worker(Ask.Runtime.ChannelStatusServer, []),
