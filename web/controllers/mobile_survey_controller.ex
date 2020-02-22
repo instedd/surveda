@@ -11,7 +11,7 @@ defmodule Ask.MobileSurveyController do
       conn
         |> put_status(:not_found)
         |> put_layout({Ask.LayoutView, "mobile_survey.html"})
-        |> render("404.html", title: @default_title)
+        |> render("404.html", title: @default_title, mobile_web_intro_message: "mobile_web_intro_message")
     else
       color_style = color_style_for(respondent_id)
       authorize(conn, respondent_id, token, fn ->
@@ -27,16 +27,16 @@ defmodule Ask.MobileSurveyController do
 
     default_language = questionnaire.default_language
 
-    title = case questionnaire do
-      %{settings: %{"title" => %{^default_language => some_title}}} ->
-        some_title
+    {title, mobile_web_intro_message} = case questionnaire do
+      %{settings: %{"title" => %{^default_language => some_title}, "mobile_web_intro_message" => intro_message }} ->
+        {some_title, intro_message}
       _ ->
-        "Your survey"
+        {"Your survey", "Go ahead"}
     end
 
     conn
     |> put_layout({Ask.LayoutView, "mobile_survey.html"})
-    |> render("index.html", respondent_id: respondent.id, token: token, color_style: color_style, title: title)
+    |> render("index.html", respondent_id: respondent.id, token: token, color_style: color_style, title: title, mobile_web_intro_message: mobile_web_intro_message)
   end
 
   defp color_style_for(respondent_id) do
@@ -155,7 +155,7 @@ defmodule Ask.MobileSurveyController do
       conn
         |> put_status(403)
         |> put_layout({Ask.LayoutView, "mobile_survey.html"})
-        |> render("unauthorized.html", header_color: primary_color, title: @default_title)
+        |> render("unauthorized.html", header_color: primary_color, title: @default_title, mobile_web_intro_message: "")
     end
   end
 
@@ -190,6 +190,6 @@ defmodule Ask.MobileSurveyController do
     conn
       |> put_status(401)
       |> put_layout({Ask.LayoutView, "mobile_survey.html"})
-      |> render("unauthorized.html", header_color: primary_color, title: @default_title)
+      |> render("unauthorized.html", header_color: primary_color, title: @default_title, mobile_web_intro_message: "")
   end
 end

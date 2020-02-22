@@ -4,6 +4,7 @@
     window.mixEnv = "<%= Mix.env %>"
     window.respondentId = <%= @respondent_id %>
     window.token = "<%= @token %>"
+    window.introMessage = "<%= raw @mobile_web_intro_message %>"
     window.colorStyle = <%= raw Poison.encode!(@color_style) %>
   </script>
   <script src="<%= static_path(@conn, "/js/mobileSurvey.js") %>"></script>

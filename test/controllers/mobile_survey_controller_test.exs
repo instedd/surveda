@@ -15,6 +15,34 @@ defmodule Ask.MobileSurveyControllerTest do
     {:ok, conn: conn}
   end
 
+  describe "index" do
+    setup %{conn: conn} do
+      test_channel = TestChannel.new(false, true)
+
+      channel = insert(:channel, settings: test_channel |> TestChannel.settings, type: "sms")
+      quiz = insert(:questionnaire, steps: @mobileweb_dummy_steps, settings: %{"error_message" => %{"en" => %{"mobileweb" => "Invalid value"}}, "title" => %{"en" => "Survey"}, "mobile_web_intro_message" => "My intro message"})
+      survey = insert(:survey, %{schedule: Ask.Schedule.always(), state: "running", questionnaires: [quiz], mode: [["mobileweb"]]})
+      group = insert(:respondent_group, survey: survey, respondents_count: 1) |> Repo.preload(:channels)
+
+      RespondentGroupChannel.changeset(%RespondentGroupChannel{}, %{respondent_group_id: group.id, channel_id: channel.id, mode: "mobileweb"}) |> Repo.insert
+
+      respondent = insert(:respondent, survey: survey, respondent_group: group)
+
+      Broker.start_link
+      Ask.Config.start_link
+      Broker.poll
+
+      {:ok, conn: conn, respondent: respondent}
+    end
+
+    test "includes mobile_web_intro_message", %{conn: conn, respondent: respondent} do
+      conn = get conn, mobile_survey_path(conn, :index, respondent.id, %{token: Respondent.token(respondent.id)})
+      response = response(conn, 200)
+
+      assert String.contains?(response, "window.introMessage = \"My intro message\"\n")
+    end
+  end
+
   test "respondent flow via mobileweb", %{conn: conn} do
     test_channel = TestChannel.new(false, true)
 
