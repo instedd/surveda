@@ -8,35 +8,49 @@ import ExplanationStep from './steps/ExplanationStep'
 import LanguageSelectionStep from './steps/LanguageSelectionStep'
 import Header from './Header'
 import EndStep from './steps/EndStep'
+import IntroStep from './steps/IntroStep'
 
-class Step extends Component<any> {
+type Props = {
+  dispatch: PropTypes.func.isRequired,
+  respondentId: any,
+  token: string,
+  step: PropTypes.object.isRequired,
+  progress: number,
+  errorMessage: ?string,
+  introMessage: string,
+}
+
+type State = {
+  userConsent: boolean
+}
+
+class Step extends Component<Props, State> {
   handleSubmit: PropTypes.func.isRequired
   hideMoreContentHint: PropTypes.func.isRequired
-  props: {
-    dispatch: PropTypes.func.isRequired,
-    respondentId: any,
-    token: string,
-    step: PropTypes.object.isRequired,
-    progress: number,
-    errorMessage: ?string
-  }
 
   constructor(props) {
     super(props)
 
     this.handleSubmit = this.handleSubmit.bind(this)
     this.hideMoreContentHint = this.hideMoreContentHint.bind(this)
+    this.state = { userConsent: false }
+  }
+
+  userConsented() {
+    this.setState({userConsent: true})
+    this.fetchStep()
   }
 
   componentDidMount() {
-    this.fetchStep()
     window.addEventListener('scroll', this.hideMoreContentHint)
 
     // This is so that when the user switches between tabs,
     // in case there are multiple tabs open they refresh
     // to the current step and so there's no way to submit
     // an answer for a previous question
-    window.onfocus = () => this.fetchStep()
+    window.onfocus = () => {
+      if (this.state.userConsent) this.fetchStep()
+    }
   }
 
   componentWillUnmount() {
@@ -74,22 +88,27 @@ class Step extends Component<any> {
     return contentHeight > viewportHeight
   }
 
-  stepComponent() {
-    const { step, progress, errorMessage } = this.props
+  stepComponent(userConsent) {
+    const { step, progress, errorMessage, introMessage } = this.props
 
-    switch (step.type) {
-      case 'multiple-choice':
-        return <MultipleChoiceStep ref='step' step={step} onClick={value => this.handleValue(value)} />
-      case 'numeric':
-        return <NumericStep ref='step' step={step} errorMessage={errorMessage} onRefusal={value => this.handleValue(value)} />
-      case 'explanation':
-        return <ExplanationStep ref='step' step={step} progress={progress} />
-      case 'language-selection':
-        return <LanguageSelectionStep ref='step' step={step} onClick={value => this.handleValue(value)} />
-      case 'end':
-        return <EndStep ref='step' step={step} />
-      default:
-        throw new Error(`Unknown step type: ${step.type}`)
+    if (userConsent) {
+      switch (step.type) {
+        case 'multiple-choice':
+          return <MultipleChoiceStep ref='step' step={step} onClick={value => this.handleValue(value)} />
+        case 'numeric':
+          return <NumericStep ref='step' step={step} errorMessage={errorMessage} onRefusal={value => this.handleValue(value)} />
+        case 'explanation':
+          return <ExplanationStep ref='step' step={step} progress={progress} />
+        case 'language-selection':
+          return <LanguageSelectionStep ref='step' step={step} onClick={value => this.handleValue(value)} />
+        case 'end':
+          return <EndStep ref='step' step={step} />
+        default:
+          throw new Error(`Unknown step type: ${step.type}`)
+      }
+    }
+    else {
+      return <IntroStep introMessage={introMessage} onClick={value => this.userConsented()} />
     }
   }
 
@@ -107,7 +126,11 @@ class Step extends Component<any> {
 
   render() {
     const { step } = this.props
-    if (!step) {
+    const { userConsent } = this.state
+
+    const isLoading = userConsent && !step
+
+    if (isLoading) {
       return <div>Loading...</div>
     }
 
@@ -116,7 +139,7 @@ class Step extends Component<any> {
         <Header />
         <main>
           <form onSubmit={this.handleSubmit}>
-            {this.stepComponent()}
+            { this.stepComponent(userConsent) }
           </form>
         </main>
         <div ref='moreContentHint' className='more-content-arrow'>
@@ -147,7 +170,8 @@ const mapStateToProps = (state) => ({
   progress: state.step.progress,
   errorMessage: state.step.errorMessage,
   respondentId: window.respondentId,
-  token: window.token
+  token: window.token,
+  introMessage: window.introMessage
 })
 
 Step.childContextTypes = {
