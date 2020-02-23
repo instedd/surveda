@@ -97,7 +97,6 @@ defmodule Ask.MobileSurveyControllerTest do
       "type" => "explanation"
     } = json["step"]
     assert json["progress"] == 20.0
-    assert json["title"] == "Survey"
 
     conn = get conn, mobile_survey_path(conn, :get_step, respondent.id, %{token: token})
     json = json_response(conn, 200)

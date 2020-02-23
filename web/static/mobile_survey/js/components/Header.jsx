@@ -32,7 +32,7 @@ Header.contextTypes = {
 
 const mapStateToProps = (state) => ({
   progress: state.step.progress,
-  title: state.step.title
+  title: document.title
 })
 
 export default connect(mapStateToProps)(Header)

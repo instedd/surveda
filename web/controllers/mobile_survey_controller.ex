@@ -94,14 +94,11 @@ defmodule Ask.MobileSurveyController do
           {end_step(fetch_survey_already_taken_message(respondent)), end_progress(), nil}
       end
 
-    title = fetch_title(respondent_id)
-
     json(conn, %{
       step: step,
       progress: progress,
       error_message:
-      error_message,
-      title: title,
+      error_message
     })
   end
 
@@ -129,13 +126,6 @@ defmodule Ask.MobileSurveyController do
 
   defp end_progress do
     100.0
-  end
-
-  defp fetch_title(respondent_id) do
-    respondent = Repo.get!(Respondent, respondent_id)
-    questionnaire = Repo.preload(respondent, :questionnaire).questionnaire
-    language = respondent.language || questionnaire.default_language
-    (questionnaire.settings["title"] || %{})[language] || ""
   end
 
   defp fetch_survey_already_taken_message(respondent) do
