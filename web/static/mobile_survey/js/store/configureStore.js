@@ -1,12 +1,5 @@
-import { createStore, applyMiddleware, compose } from 'redux'
-import rootReducer from '../reducers'
-
-export default function configureStore(preState, middlewares = [], enhancers = []) {
-  return createStore(
-    rootReducer,
-    preState,
-    compose(
-      applyMiddleware(...middlewares),
-      ...enhancers)
-  )
+if (window.mixEnv == 'prod') {
+  module.exports = require('./configureStore.prod')
+} else {
+  module.exports = require('./configureStore.dev')
 }
