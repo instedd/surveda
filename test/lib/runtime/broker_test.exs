@@ -753,6 +753,13 @@ defmodule Ask.BrokerTest do
     assert_received [:ask, ^test_channel, ^respondent, ^token, ReplyHelper.simple("Do you exercise?", "Do you exercise? Reply 1 for YES, 2 for NO")]
 
     respondent = Repo.get!(Respondent, respondent.id)
+    Broker.delivery_confirm(respondent, "Do you exercise?")
+
+    respondent = Repo.get!(Respondent, respondent.id)
+
+    assert respondent.state == "active"
+    assert respondent.disposition == "contacted"
+
     Broker.sync_step(respondent, Flow.Message.reply("StoP"))
 
     respondent = Repo.get!(Respondent, respondent.id)
@@ -760,7 +767,7 @@ defmodule Ask.BrokerTest do
     assert respondent.disposition == "refused"
 
     histories = RespondentDispositionHistory |> Repo.all
-    assert length(histories) == 3
+    assert length(histories) == 4
 
     history = histories |> Enum.take(-1) |> hd
     assert history.respondent_id == respondent.id
