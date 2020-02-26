@@ -76,7 +76,7 @@ class QuestionnaireSteps extends Component<Props> {
         { groups.map((item, index) => {
           const section = item.section
           return section
-            ? <div className='section-container'>
+            ? <div key={index} className='section-container'>
               { dummyDropSectionTarget(index) }
               <DraggableSection sectionId={section.id} readOnly={readOnly} >
                 <Section title={section.title} randomize={section.randomize} key={section.id} id={section.id} readOnly={readOnly} quotaCompletedSteps>

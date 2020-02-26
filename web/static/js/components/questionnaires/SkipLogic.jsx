@@ -1,11 +1,11 @@
 // @flow
 import findIndex from 'lodash/findIndex'
 import React, { Component } from 'react'
-import { Input } from 'react-materialize'
 import { connect } from 'react-redux'
 import propsAreEqual from '../../propsAreEqual'
 import { translate } from 'react-i18next'
 import { hasSections } from '../../reducers/questionnaire'
+import classNames from 'classnames/bind'
 
 type Props = {
   value: ?string,
@@ -107,23 +107,23 @@ class SkipLogic extends Component<Props, State> {
     let { skipOptions, currentValueIsValid } = this.skipOptions(this.state.value, stepsAfter, stepsBefore)
 
     return (
-      <Input type='select'
+      <select
         label={label}
         disabled={readOnly}
         onChange={e => this.change(e)}
-        defaultValue={this.state.value}
-        className={currentValueIsValid ? '' : 'invalidValue'}>
+        value={this.state.value != null ? this.state.value : ''}
+        className={classNames('browser-default', {'invalidValue': !currentValueIsValid})}>
         { skipOptions.map((option) =>
           <option
             key={option.id}
             id={option.id}
             name={option.title}
             value={option.id}
-            disabled={!(option.enabled)} >
+            disabled={!(option.enabled)}>
             {option.title}
           </option>
         )}
-      </Input>
+      </select>
     )
   }
 }
