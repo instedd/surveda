@@ -111,7 +111,7 @@ class SkipLogic extends Component<Props, State> {
         label={label}
         disabled={readOnly}
         onChange={e => this.change(e)}
-        value={currentValueIsValid ? this.state.value : ''}
+        value={this.state.value != null ? this.state.value : ''}
         className={classNames('browser-default', {'invalidValue': !currentValueIsValid})}>
         { skipOptions.map((option) =>
           <option
