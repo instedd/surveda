@@ -767,7 +767,7 @@ defmodule Ask.BrokerTest do
     assert respondent.disposition == "refused"
 
     histories = RespondentDispositionHistory |> Repo.all
-    assert length(histories) == 4
+    assert length(histories) == 3
 
     history = histories |> Enum.take(-1) |> hd
     assert history.respondent_id == respondent.id
@@ -779,7 +779,7 @@ defmodule Ask.BrokerTest do
     assert last_entry.survey_id == survey.id
     assert last_entry.action_data == "Refused"
     assert last_entry.action_type == "disposition changed"
-    assert last_entry.disposition == "started"
+    assert last_entry.disposition == "contacted"
   end
 
   test "mark disposition as completed when partial on end" do

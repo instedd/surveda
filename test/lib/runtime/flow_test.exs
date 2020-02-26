@@ -33,19 +33,19 @@ defmodule Ask.FlowTest do
 
   test "first step of empty quiz" do
     quiz = build(:questionnaire)
-    step = Flow.start(quiz, "sms") |> Flow.step(@sms_visitor)
+    step = Flow.start(quiz, "sms") |> test_step("sms")
     assert {:end, _, _} = step
   end
 
   test "first step (sms mode)" do
-    step = Flow.start(@quiz, "sms") |> Flow.step(@sms_visitor)
+    step = Flow.start(@quiz, "sms") |> test_step("sms")
     assert {:ok, %Flow{}, reply} = step
     assert Reply.num_digits(reply) == nil # because of sms mode
     assert ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO") = reply
   end
 
   test "first step (ivr mode)" do
-    step = Flow.start(@quiz, "ivr") |> Flow.step(@ivr_visitor)
+    step = start_ivr()
     assert {:ok, %Flow{}, reply} = step
     assert Reply.num_digits(reply) == 1
     assert ReplyHelper.simple("Do you smoke?", %{"text" => "Do you smoke? Press 8 for YES, 9 for NO", "audio_source" => "tts"}) = reply
@@ -67,7 +67,7 @@ defmodule Ask.FlowTest do
         ]
       )]
     quiz = build(:questionnaire, steps: steps)
-    step = Flow.start(quiz, "ivr") |> Flow.step(@ivr_visitor)
+    step = start_ivr(quiz)
     assert {:ok, %Flow{}, reply} = step
     assert Reply.num_digits(reply) == nil
   end
@@ -88,7 +88,7 @@ defmodule Ask.FlowTest do
         ]
       )]
     quiz = build(:questionnaire, steps: steps)
-    step = Flow.start(quiz, "ivr") |> Flow.step(@ivr_visitor)
+    step = start_ivr(quiz)
     assert {:ok, %Flow{}, reply} = step
     assert Reply.num_digits(reply) == 1
   end
@@ -106,7 +106,7 @@ defmodule Ask.FlowTest do
         choices: ["en", "es"]
       )]
     quiz = build(:questionnaire, steps: steps)
-    step = Flow.start(quiz, "ivr") |> Flow.step(@ivr_visitor)
+    step = start_ivr(quiz)
     assert {:ok, %Flow{}, reply} = step
     assert Reply.num_digits(reply) == 1
   end
@@ -124,7 +124,7 @@ defmodule Ask.FlowTest do
         choices: ["en", "es", "a", "b", "c", "d", "e", "f", "g", "h"]
       )]
     quiz = build(:questionnaire, steps: steps)
-    step = Flow.start(quiz, "ivr") |> Flow.step(@ivr_visitor)
+    step = start_ivr(quiz)
     assert {:ok, %Flow{}, reply} = step
     assert Reply.num_digits(reply) == nil
   end
@@ -144,7 +144,7 @@ defmodule Ask.FlowTest do
         refusal: nil
       )]
     quiz = build(:questionnaire, steps: steps)
-    step = Flow.start(quiz, "ivr") |> Flow.step(@ivr_visitor)
+    step = start_ivr(quiz)
     assert {:ok, %Flow{}, reply} = step
     assert Reply.num_digits(reply) == nil
   end
@@ -164,7 +164,7 @@ defmodule Ask.FlowTest do
         refusal: nil,
       )]
     quiz = build(:questionnaire, steps: steps)
-    step = Flow.start(quiz, "ivr") |> Flow.step(@ivr_visitor)
+    step = start_ivr(quiz)
     assert {:ok, %Flow{}, reply} = step
     assert Reply.num_digits(reply) == nil
   end
@@ -184,7 +184,7 @@ defmodule Ask.FlowTest do
         refusal: nil,
       )]
     quiz = build(:questionnaire, steps: steps)
-    step = Flow.start(quiz, "ivr") |> Flow.step(@ivr_visitor)
+    step = start_ivr(quiz)
     assert {:ok, %Flow{}, reply} = step
     assert Reply.num_digits(reply) == 5
   end
@@ -208,38 +208,38 @@ defmodule Ask.FlowTest do
         },
       )]
     quiz = build(:questionnaire, steps: steps)
-    step = Flow.start(quiz, "ivr") |> Flow.step(@ivr_visitor)
+    step = start_ivr(quiz)
     assert {:ok, %Flow{}, reply} = step
     assert Reply.num_digits(reply) == nil
   end
 
   test "retry step" do
-    {:ok, flow, _prompts} = Flow.start(@quiz, "sms") |> Flow.step(@sms_visitor)
-    {:ok, %Flow{}, ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO")} = flow |> Flow.retry(@sms_visitor)
+    {:ok, flow, _prompts} = start_sms()
+    {:ok, %Flow{}, ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO")} = flow |> Flow.retry(@sms_visitor, "any_disposition")
   end
 
   test "replies when never started" do
     # this can happen on a fallback channel
     step = Flow.start(@quiz, "sms")
-    |> Flow.step(@sms_visitor, Flow.Message.reply("Y"))
+    |> reply_sms("Y")
     assert {:ok, %Flow{}, ReplyHelper.simple("Do you exercise", "Do you exercise? Reply 1 for YES, 2 for NO", %{"Smokes" => "Yes"})} = step
   end
 
   test "next step with store" do
-    {:ok, flow, _} = Flow.start(@quiz, "sms") |> Flow.step(@sms_visitor)
-    step = flow |> Flow.step(@sms_visitor, Flow.Message.reply("Y"))
+    {:ok, flow, _} = start_sms()
+    step = flow |> reply_sms("Y")
     assert {:ok, %Flow{}, ReplyHelper.simple("Do you exercise", "Do you exercise? Reply 1 for YES, 2 for NO", %{"Smokes" => "Yes"})} = step
   end
 
   test "next step (ivr mode)" do
-    {:ok, flow, _} = Flow.start(@quiz, "ivr") |> Flow.step(@ivr_visitor)
-    step = flow |> Flow.step(@ivr_visitor, Flow.Message.reply("8"))
+    {:ok, flow, _} = start_ivr()
+    step = flow |> reply_ivr("8")
     assert {:ok, %Flow{}, ReplyHelper.simple("Do you exercise", %{"text" => "Do you exercise? Press 1 for YES, 2 for NO", "audio_source" => "tts"}, %{"Smokes" => "Yes"})} = step
   end
 
-  test "next step with STOP" do
-    {:ok, flow, _} = Flow.start(@quiz, "sms") |> Flow.step(@sms_visitor)
-    step = flow |> Flow.step(@sms_visitor, Flow.Message.reply("StoP"))
+  test "next step with STOP when started" do
+    {:ok, flow, _} = start_sms()
+    step = flow |> reply_sms("StoP")
 
     assert {:stopped, nil, reply} = step
 
@@ -251,8 +251,8 @@ defmodule Ask.FlowTest do
   end
 
   test "retry step (sms mode)" do
-    {:ok, flow, _} = Flow.start(@quiz, "sms") |> Flow.step(@sms_visitor)
-    step = flow |> Flow.step(@sms_visitor, Flow.Message.reply("x"))
+    {:ok, flow, _} = start_sms()
+    step = test_reply(flow, "sms", "x")
     assert {:ok, %Flow{}, reply} = step
     prompts = Reply.prompts(reply)
     assert prompts == [
@@ -261,8 +261,8 @@ defmodule Ask.FlowTest do
   end
 
   test "retry step (ivr mode)" do
-    {:ok, flow, _} = Flow.start(@quiz, "ivr") |> Flow.step(@ivr_visitor)
-    step = flow |> Flow.step(@ivr_visitor, Flow.Message.reply("0"))
+    {:ok, flow, _} = start_ivr()
+    step = test_reply(flow, "ivr", "0")
     assert {:ok, %Flow{}, reply} = step
     prompts = Reply.prompts(reply)
     assert prompts == [
@@ -271,8 +271,8 @@ defmodule Ask.FlowTest do
   end
 
   test "retry step up to 3 times (sms mode)" do
-    {:ok, flow, _} = Flow.start(@quiz, "sms") |> Flow.step(@sms_visitor)
-    step = flow |> Flow.step(@sms_visitor, Flow.Message.reply("x"))
+    {:ok, flow, _} = start_sms()
+    step = flow |> reply_sms("x")
     {:ok, flow, reply} = step
     prompts = Reply.prompts(reply)
 
@@ -282,7 +282,7 @@ defmodule Ask.FlowTest do
       "Do you smoke? Reply 1 for YES, 2 for NO"
     ]
 
-    step = flow |> Flow.step(@sms_visitor, Flow.Message.reply("x"))
+    step = flow |> reply_sms("x")
     {:ok, flow, reply} = step
     prompts = Reply.prompts(reply)
 
@@ -292,14 +292,14 @@ defmodule Ask.FlowTest do
       "Do you smoke? Reply 1 for YES, 2 for NO"
     ]
 
-    step = flow |> Flow.step(@sms_visitor, Flow.Message.reply("x"))
+    step = flow |> reply_sms("x")
 
     assert {:no_retries_left, _, _} = step
   end
 
   test "retry step 2 times, then valid answer, then retry 3 times (ivr mode)" do
-    {:ok, flow, _} = Flow.start(@quiz, "ivr") |> Flow.step(@ivr_visitor)
-    step = flow |> Flow.step(@ivr_visitor, Flow.Message.reply("0"))
+    {:ok, flow, _} = start_ivr()
+    step = flow |> reply_ivr("0")
 
     assert {:ok, flow, reply} = step
     prompts = Reply.prompts(reply)
@@ -310,7 +310,7 @@ defmodule Ask.FlowTest do
       %{"text" => "Do you smoke? Press 8 for YES, 9 for NO", "audio_source" => "tts"}
     ]
 
-    step = flow |> Flow.step(@ivr_visitor, Flow.Message.reply("8"))
+    step = flow |> reply_ivr("8")
 
     assert {:ok, flow, reply} = step
     prompts = Reply.prompts(reply)
@@ -320,7 +320,7 @@ defmodule Ask.FlowTest do
     assert stores == %{"Smokes" => "Yes"}
     assert prompts == [%{"text" => "Do you exercise? Press 1 for YES, 2 for NO", "audio_source" => "tts"}]
 
-    step = flow |> Flow.step(@ivr_visitor, Flow.Message.reply("8"))
+    step = flow |> reply_ivr("8")
 
     assert {:ok, flow, reply} = step
     prompts = Reply.prompts(reply)
@@ -331,7 +331,7 @@ defmodule Ask.FlowTest do
       %{"text" => "Do you exercise? Press 1 for YES, 2 for NO", "audio_source" => "tts"}
     ]
 
-    step = flow |> Flow.step(@ivr_visitor, Flow.Message.reply("8"))
+    step = flow |> reply_ivr("8")
 
     assert {:ok, flow, reply} = step
     prompts = Reply.prompts(reply)
@@ -342,51 +342,50 @@ defmodule Ask.FlowTest do
       %{"text" => "Do you exercise? Press 1 for YES, 2 for NO", "audio_source" => "tts"}
     ]
 
-    step = flow |> Flow.step(@ivr_visitor, Flow.Message.reply("8"))
+    step = flow |> reply_ivr("8")
 
     assert {:no_retries_left, _, _} = step
   end
 
   test "mark as failed when no reply is received after 3 retries (ivr)" do
-    {:ok, flow, _} = Flow.start(@quiz, "ivr") |> Flow.step(@ivr_visitor)
-
-    step = flow |> Flow.step(@ivr_visitor, Flow.Message.no_reply)
+    {:ok, flow, _} = start_ivr()
+    step = flow |> reply_ivr(nil)
 
     assert {:ok, flow, reply} = step
     assert flow.retries == 1
     assert ReplyHelper.simple("Do you smoke?", %{"text" => "Do you smoke? Press 8 for YES, 9 for NO", "audio_source" => "tts"}) = reply
 
-    step = flow |> Flow.step(@ivr_visitor, Flow.Message.no_reply)
+    step = flow |> reply_ivr(nil)
 
     assert {:ok, flow, reply} = step
     assert flow.retries == 2
     assert ReplyHelper.simple("Do you smoke?", %{"text" => "Do you smoke? Press 8 for YES, 9 for NO", "audio_source" => "tts"}) = reply
 
-    step = flow |> Flow.step(@ivr_visitor, Flow.Message.no_reply)
+    step = flow |> reply_ivr(nil)
 
     assert {:no_retries_left, _, _} = step
   end
 
   test "retry question without the error message when no reply is received" do
-    {:ok, flow, _} = Flow.start(@quiz, "ivr") |> Flow.step(@ivr_visitor)
-    step = flow |> Flow.step(@ivr_visitor, Flow.Message.no_reply)
+    {:ok, flow, _} = start_ivr()
+    step = flow |> reply_ivr(nil)
 
     assert {:ok, %Flow{retries: 1}, ReplyHelper.simple("Do you smoke?", %{"text" => "Do you smoke? Press 8 for YES, 9 for NO", "audio_source" => "tts"})} = step
   end
 
   test "next step with store, case insensitive, strip space" do
-    {:ok, flow, _} = Flow.start(@quiz, "sms") |> Flow.step(@sms_visitor)
-    step = flow |> Flow.step(@sms_visitor, Flow.Message.reply(" y "))
+    {:ok, flow, _} = start_sms()
+    step = flow |> reply_sms(" y ")
     assert {:ok, %Flow{}, ReplyHelper.simple("Do you exercise", "Do you exercise? Reply 1 for YES, 2 for NO", %{"Smokes" => "Yes"})} = step
   end
 
   test "last step" do
     flow = Flow.start(@quiz, "sms")
-    {:ok, flow, _} = flow |> Flow.step(@sms_visitor)
-    {:ok, flow, _} = flow |> Flow.step(@sms_visitor, Flow.Message.reply("Y"))
-    {:ok, flow, _} = flow |> Flow.step(@sms_visitor, Flow.Message.reply("N"))
-    {:ok, flow, _} = flow |> Flow.step(@sms_visitor, Flow.Message.reply("99"))
-    step = flow |> Flow.step(@sms_visitor, Flow.Message.reply("11"))
+    {:ok, flow, _} = flow |> test_step("sms")
+    {:ok, flow, _} = flow |> reply_sms("Y")
+    {:ok, flow, _} = flow |> reply_sms("N")
+    {:ok, flow, _} = flow |> reply_sms("99")
+    step = flow |> reply_sms("11")
     assert {:end, _, _} = step
   end
 
@@ -394,8 +393,8 @@ defmodule Ask.FlowTest do
     {:ok, flow, _} =
       build(:questionnaire, steps: @skip_logic)
       |> Flow.start("sms")
-      |> Flow.step(@sms_visitor)
-    flow |> Flow.step(@sms_visitor, Flow.Message.reply(response))
+      |> test_step("sms")
+    flow |> reply_sms(response)
   end
 
   # skip logic
@@ -456,8 +455,8 @@ defmodule Ask.FlowTest do
     {:ok, flow, _} =
       build(:questionnaire, steps: steps)
       |> Flow.start("sms")
-      |> Flow.step(@sms_visitor)
-    result = flow |> Flow.step(@sms_visitor, Flow.Message.reply("skip"))
+      |> test_step("sms")
+    result = flow |> reply_sms("skip")
 
     assert {:end, _, %{stores: %{"Perfect Number" => "REFUSED"}}} = result
   end
@@ -494,8 +493,8 @@ defmodule Ask.FlowTest do
     {:ok, flow, _} =
       build(:questionnaire, steps: steps)
       |> Flow.start("sms")
-      |> Flow.step(@sms_visitor)
-    result = flow |> Flow.step(@sms_visitor, Flow.Message.reply("1"))
+      |> test_step("sms")
+    result = flow |> reply_sms("1")
 
     # No stores (because of refusal)
     assert {:end, _, %{stores: %{"Perfect Number" => "REFUSED"}}} = result
@@ -504,55 +503,55 @@ defmodule Ask.FlowTest do
   describe "numeric steps" do
     test "when value is in a middle range it finds it" do
       {:ok, flow, _} = init_quiz_and_send_response("S")
-      result = flow |> Flow.step(@sms_visitor, Flow.Message.reply("50"))
+      result = flow |> reply_sms("50")
       assert {:end, _, %Ask.Runtime.Reply{stores: %{"Probability" => "50"}}} = result
     end
 
     test "when value is in a middle range it finds it, permissive" do
       {:ok, flow, _} = init_quiz_and_send_response("S")
-      result = flow |> Flow.step(@sms_visitor, Flow.Message.reply(" 50 units "))
+      result = flow |> reply_sms(" 50 units ")
       assert {:end, _, %Ask.Runtime.Reply{stores: %{"Probability" => "50"}}} = result
     end
 
     test "accepts a string as an answer" do
       {:ok, flow, _} = init_quiz_and_send_response("S")
-      result = flow |> Flow.step(@sms_visitor, Flow.Message.reply(" fifty "))
+      result = flow |> reply_sms(" fifty ")
       assert {:end, _, %Ask.Runtime.Reply{stores: %{"Probability" => "50"}}} = result
     end
 
     test "accepts a string with two words as an answer" do
       {:ok, flow, _} = init_quiz_and_send_response("S")
-      result = flow |> Flow.step(@sms_visitor, Flow.Message.reply(" fifty one "))
+      result = flow |> reply_sms(" fifty one ")
       assert {:end, _, %Ask.Runtime.Reply{stores: %{"Probability" => "51"}}} = result
     end
 
     test "accepts a string close enough to a number as an answer" do
       {:ok, flow, _} = init_quiz_and_send_response("S")
-      result = flow |> Flow.step(@sms_visitor, Flow.Message.reply(" finty "))
+      result = flow |> reply_sms(" finty ")
       assert {:end, _, %Ask.Runtime.Reply{stores: %{"Probability" => "50"}}} = result
     end
 
     test "accepts a string close enough to a number as an answer 2" do
       {:ok, flow, _} = init_quiz_and_send_response("S")
-      result = flow |> Flow.step(@sms_visitor, Flow.Message.reply(" fifti "))
+      result = flow |> reply_sms(" fifti ")
       assert {:end, _, %Ask.Runtime.Reply{stores: %{"Probability" => "50"}}} = result
     end
 
     test "accepts a string with two words that is close enough as an answer (2 errors)" do
       {:ok, flow, _} = init_quiz_and_send_response("S")
-      result = flow |> Flow.step(@sms_visitor, Flow.Message.reply(" finty onw "))
+      result = flow |> reply_sms(" finty onw ")
       assert {:end, _, %Ask.Runtime.Reply{stores: %{"Probability" => "51"}}} = result
     end
 
     test "accepts a string with two words that is close enough to the same value more than one time" do
       {:ok, flow, _} = init_quiz_and_send_response("S")
-      result = flow |> Flow.step(@sms_visitor, Flow.Message.reply(" twenty_one "))
+      result = flow |> reply_sms(" twenty_one ")
       assert {:end, _, %Ask.Runtime.Reply{stores: %{"Probability" => "21"}}} = result
     end
 
     test "does not accept a string when is close enough to more than one number as an answer" do
       {:ok, flow, _} = init_quiz_and_send_response("S")
-      result = flow |> Flow.step(@sms_visitor, Flow.Message.reply(" fixty "))
+      result = flow |> reply_sms(" fixty ")
 
       assert {:ok, flow, reply} = result
       prompts = Reply.prompts(reply)
@@ -566,7 +565,7 @@ defmodule Ask.FlowTest do
 
     test "does not accept a string when is close enough to more than one number as an answer (2)" do
       {:ok, flow, _} = init_quiz_and_send_response("S")
-      result = flow |> Flow.step(@sms_visitor, Flow.Message.reply(" fixty three"))
+      result = flow |> reply_sms(" fixty three")
 
       assert {:ok, flow, reply} = result
       prompts = Reply.prompts(reply)
@@ -580,7 +579,7 @@ defmodule Ask.FlowTest do
 
     test "does not accept a string when is not close enough to a number as an answer" do
       {:ok, flow, _} = init_quiz_and_send_response("S")
-      result = flow |> Flow.step(@sms_visitor, Flow.Message.reply(" finte "))
+      result = flow |> reply_sms(" finte ")
 
       assert {:ok, flow, reply} = result
       prompts = Reply.prompts(reply)
@@ -618,8 +617,8 @@ defmodule Ask.FlowTest do
       {:ok, flow, _} =
         build(:questionnaire, steps: steps)
         |> Flow.start("sms")
-        |> Flow.step(@sms_visitor)
-      result = flow |> Flow.step(@sms_visitor, Flow.Message.reply("twenty-eight"))
+      |> test_step("sms")
+      result = flow |> reply_sms("twenty-eight")
 
       assert {:ok, flow, reply} = result
 
@@ -653,14 +652,14 @@ defmodule Ask.FlowTest do
       flow = Flow.start(quiz, "sms")
       assert flow.language == "en"
 
-      step = flow |> Flow.step(@sms_visitor, Flow.Message.reply("2"))
+      step = flow |> reply_sms("2")
       {_, flow1, reply1} = step
       prompts = Reply.prompts(reply1)
 
       assert flow1.language == "es"
       assert prompts == ["Which is the second perfect number?? (Spanish)"]
 
-      step2 = flow1 |> Flow.step(@sms_visitor, Flow.Message.reply("veintiocho"))
+      step2 = flow1 |> reply_sms("veintiocho")
 
       {_, _, %Ask.Runtime.Reply{stores: %{"Perfect Number" => "28"}}} = step2
     end
@@ -686,14 +685,14 @@ defmodule Ask.FlowTest do
       flow = Flow.start(quiz, "sms")
       assert flow.language == "en"
 
-      step = flow |> Flow.step(@sms_visitor, Flow.Message.reply("1"))
+      step = flow |> reply_sms("1")
       {_, flow1, reply1} = step
       prompts = Reply.prompts(reply1)
 
       assert flow1.language == "en"
       assert prompts == ["Which is the second perfect number??"]
 
-      step2 = flow1 |> Flow.step(@sms_visitor, Flow.Message.reply("twenty-eight"))
+      step2 = flow1 |> reply_sms("twenty-eight")
 
       {_, _, %Ask.Runtime.Reply{stores: %{"Perfect Number" => "28"}}} = step2
     end
@@ -735,8 +734,8 @@ defmodule Ask.FlowTest do
       {:ok, flow, _} =
         build(:questionnaire, steps: @numeric_steps_no_min_max)
         |> Flow.start("sms")
-        |> Flow.step(@sms_visitor)
-      result = flow |> Flow.step(@sms_visitor, Flow.Message.reply("-10"))
+      |> test_step("sms")
+      result = flow |> reply_sms("-10")
       assert {:end, _, _} = result
     end
 
@@ -744,14 +743,14 @@ defmodule Ask.FlowTest do
       {:ok, flow, _} =
         build(:questionnaire, steps: @numeric_steps_no_min_max)
         |> Flow.start("sms")
-        |> Flow.step(@sms_visitor)
-      result = flow |> Flow.step(@sms_visitor, Flow.Message.reply("999"))
+      |> test_step("sms")
+      result = flow |> reply_sms("999")
       assert {:end, _, _} = result
     end
 
     test "when value is less than min" do
       {:ok, flow, _} = init_quiz_and_send_response("S")
-      result = flow |> Flow.step(@sms_visitor, Flow.Message.reply("-1"))
+      result = flow |> reply_sms("-1")
 
       assert {:ok, %Flow{}, reply} = result
       prompts = Reply.prompts(reply)
@@ -764,7 +763,7 @@ defmodule Ask.FlowTest do
 
     test "when value is greater than max" do
       {:ok, flow, _} = init_quiz_and_send_response("S")
-      result = flow |> Flow.step(@sms_visitor, Flow.Message.reply("101"))
+      result = flow |> reply_sms("101")
 
       assert {:ok, %Flow{}, reply} = result
       prompts = Reply.prompts(reply)
@@ -788,7 +787,7 @@ defmodule Ask.FlowTest do
 
       assert_raise RuntimeError, fn ->
         flow
-        |> Flow.step(@sms_visitor, Flow.Message.reply("Y"))
+        |> reply_sms("Y")
       end
     end
   end
@@ -803,14 +802,14 @@ defmodule Ask.FlowTest do
     assert flow.language == "en"
     assert flow.current_step == nil
 
-    step = flow |> Flow.step(@sms_visitor)
+    step = flow |> test_step("sms")
     assert {:ok, flow, reply} = step
     prompts = Reply.prompts(reply)
 
     assert prompts == ["1 for English, 2 for Spanish"]
     assert flow.current_step == 0
 
-    step = flow |> Flow.step(@sms_visitor, Flow.Message.reply("2"))
+    step = flow |> reply_sms("2")
     assert {:ok, flow, reply} = step
     prompts = Reply.prompts(reply)
 
@@ -827,10 +826,10 @@ defmodule Ask.FlowTest do
 
     flow = Flow.start(quiz, "sms")
 
-    step = flow |> Flow.step(@sms_visitor)
+    step = flow |> test_step("sms")
     assert {:ok, flow, _} = step
 
-    step = flow |> Flow.step(@sms_visitor, Flow.Message.reply("text"))
+    step = flow |> reply_sms("text")
     assert {:ok, %Flow{}, reply} = step
     prompts = Reply.prompts(reply)
     assert prompts == [
@@ -856,7 +855,7 @@ defmodule Ask.FlowTest do
 
     quiz = build(:questionnaire, steps: steps)
 
-    step = Flow.start(quiz, "sms") |> Flow.step(@sms_visitor)
+    step = start_sms(quiz)
     assert {:ok, %Flow{}, reply} = step
     prompts = Reply.prompts(reply)
     assert prompts == ["Do you smoke?", "Reply 1 for YES, 2 for NO"]
@@ -866,7 +865,7 @@ defmodule Ask.FlowTest do
     test "adds previous explanation steps to prompts" do
       quiz = build(:questionnaire, steps: @explanation_steps_minimal)
       flow = Flow.start(quiz, "sms")
-      flow_state = flow |> Flow.step(@sms_visitor)
+      flow_state = flow |> test_step("sms")
 
       assert {:ok, flow, reply} = flow_state
       prompts = Reply.prompts(reply)
@@ -878,7 +877,7 @@ defmodule Ask.FlowTest do
     test "ends but keeps the prompts" do
       quiz = build(:questionnaire, steps: @only_explanation_steps)
       flow = Flow.start(quiz, "sms")
-      flow_state = flow |> Flow.step(@sms_visitor)
+      flow_state = flow |> test_step("sms")
 
       assert {:end, _, reply} = flow_state
       prompts = Reply.prompts(reply)
@@ -902,7 +901,7 @@ defmodule Ask.FlowTest do
     test "performs the first question inside the first section" do
       quiz = build(:questionnaire, steps: @one_section)
       flow = Flow.start(quiz, "sms")
-      flow_state = flow |> Flow.step(@sms_visitor)
+      flow_state = flow |> test_step("sms")
 
       assert {:ok, flow, reply} = flow_state
       prompts = Reply.prompts(reply)
@@ -914,7 +913,7 @@ defmodule Ask.FlowTest do
     test "accepts an answer for the first question inside the first section and moves to the next step" do
       quiz = build(:questionnaire, steps: @one_section)
       flow = Flow.start(quiz, "sms")
-      flow_state = flow |> Flow.step(@sms_visitor)
+      flow_state = flow |> test_step("sms")
 
       assert {:ok, flow, reply} = flow_state
       prompts = Reply.prompts(reply)
@@ -922,7 +921,7 @@ defmodule Ask.FlowTest do
       assert prompts == ["Do you smoke? Reply 1 for YES, 2 for NO, 3 for MAYBE, 4 for SOMETIMES, 5 for ALWAYS, 6 for I dont know"]
       assert flow.current_step == {0,0}
 
-      step = flow |> Flow.step(@sms_visitor, Flow.Message.reply("2"))
+      step = flow |> reply_sms("2")
       assert {:ok, flow, reply} = step
       prompts = Reply.prompts(reply)
 
@@ -935,7 +934,7 @@ defmodule Ask.FlowTest do
 
       quiz = build(:questionnaire, steps: steps)
       flow = Flow.start(quiz, "sms")
-      flow_state = flow |> Flow.step(@sms_visitor)
+      flow_state = flow |> test_step("sms")
 
       assert {:ok, flow, reply} = flow_state
       prompts = Reply.prompts(reply)
@@ -943,7 +942,7 @@ defmodule Ask.FlowTest do
       assert prompts == ["Reply 1 for English, mande 2 para Español"]
       assert flow.current_step == {0,0}
 
-      step = flow |> Flow.step(@sms_visitor, Flow.Message.reply("2"))
+      step = flow |> reply_sms("2")
       assert {:ok, flow, reply} = step
       prompts = Reply.prompts(reply)
 
@@ -956,7 +955,7 @@ defmodule Ask.FlowTest do
       quiz = build(:questionnaire, steps: @three_sections)
       flow = Flow.start(quiz, "sms")
       flow = %{flow | current_step: {0, 4}}
-      flow_state = flow |> Flow.step(@sms_visitor)
+      flow_state = flow |> test_step("sms")
 
       assert {:ok, flow, reply} = flow_state
       prompts = Reply.prompts(reply)
@@ -964,7 +963,7 @@ defmodule Ask.FlowTest do
       assert prompts == ["Is this the last question?"]
       assert flow.current_step == {0,4}
 
-      step = flow |> Flow.step(@sms_visitor, Flow.Message.reply("2"))
+      step = flow |> reply_sms("2")
       assert {:ok, flow, reply} = step
       prompts = Reply.prompts(reply)
 
@@ -976,7 +975,7 @@ defmodule Ask.FlowTest do
       quiz = build(:questionnaire, steps: @three_sections)
       flow = Flow.start(quiz, "sms")
       flow = %{flow | current_step: {0, 4}}
-      flow_state = flow |> Flow.step(@sms_visitor)
+      flow_state = flow |> test_step("sms")
 
       assert {:ok, flow, reply} = flow_state
       prompts = Reply.prompts(reply)
@@ -987,7 +986,7 @@ defmodule Ask.FlowTest do
       assert prompts == ["Is this the last question?"]
       assert flow.current_step == {0,4}
 
-      step = flow |> Flow.step(@sms_visitor, Flow.Message.reply("2"))
+      step = flow |> reply_sms("2")
       assert {:ok, flow, reply} = step
       prompts = Reply.prompts(reply)
 
@@ -1000,7 +999,7 @@ defmodule Ask.FlowTest do
     test "When skip logic is 'end section', it moves to the next one" do
       quiz = build(:questionnaire, steps: @three_sections_skip_logic)
       flow = Flow.start(quiz, "sms")
-      flow_state = flow |> Flow.step(@sms_visitor)
+      flow_state = flow |> test_step("sms")
 
       assert {:ok, flow, reply} = flow_state
       prompts = Reply.prompts(reply)
@@ -1008,7 +1007,7 @@ defmodule Ask.FlowTest do
       assert prompts == ["Do you want to end this section? Reply 1 for YES, 2 for NO"]
       assert flow.current_step == {0,0}
 
-      step = flow |> Flow.step(@sms_visitor, Flow.Message.reply("1"))
+      step = flow |> reply_sms("1")
       assert {:ok, flow, reply} = step
       prompts = Reply.prompts(reply)
 
@@ -1019,7 +1018,7 @@ defmodule Ask.FlowTest do
     test "When skip logic is an id from a step inside the section, it moves to that one" do
       quiz = build(:questionnaire, steps: @three_sections_skip_logic)
       flow = Flow.start(quiz, "sms")
-      flow_state = flow |> Flow.step(@sms_visitor)
+      flow_state = flow |> test_step("sms")
 
       assert {:ok, flow, reply} = flow_state
       prompts = Reply.prompts(reply)
@@ -1027,7 +1026,7 @@ defmodule Ask.FlowTest do
       assert prompts == ["Do you want to end this section? Reply 1 for YES, 2 for NO"]
       assert flow.current_step == {0,0}
 
-      step = flow |> Flow.step(@sms_visitor, Flow.Message.reply("2"))
+      step = flow |> reply_sms("2")
       assert {:ok, flow, reply} = step
       prompts = Reply.prompts(reply)
 
@@ -1039,7 +1038,7 @@ defmodule Ask.FlowTest do
       quiz = build(:questionnaire, steps: @three_sections_skip_logic)
       flow = Flow.start(quiz, "sms")
       flow = %{flow | current_step: {0, 2}}
-      flow_state = flow |> Flow.step(@sms_visitor)
+      flow_state = flow |> test_step("sms")
 
       assert {:ok, flow, reply} = flow_state
       prompts = Reply.prompts(reply)
@@ -1048,7 +1047,7 @@ defmodule Ask.FlowTest do
       assert flow.current_step == {0,2}
 
       assert_raise RuntimeError, fn ->
-        flow |> Flow.step(@sms_visitor, Flow.Message.reply("Yes"))
+        flow |> reply_sms("Yes")
       end
     end
 
@@ -1056,7 +1055,7 @@ defmodule Ask.FlowTest do
       quiz = build(:questionnaire, steps: @three_sections_skip_logic)
       flow = Flow.start(quiz, "sms")
       flow = %{flow | current_step: {2, 1}}
-      flow_state = flow |> Flow.step(@sms_visitor)
+      flow_state = flow |> test_step("sms")
 
       assert {:ok, flow, reply} = flow_state
       prompts = Reply.prompts(reply)
@@ -1064,7 +1063,7 @@ defmodule Ask.FlowTest do
       assert prompts == ["Do you exercise? Reply 1 for YES, 2 for NO"]
       assert flow.current_step == {2,1}
 
-      flow_state = flow |> Flow.step(@sms_visitor, Flow.Message.reply("2"))
+      flow_state = flow |> reply_sms("2")
       assert {:end, _, reply} = flow_state
       prompts = Reply.prompts(reply)
 
@@ -1113,14 +1112,14 @@ defmodule Ask.FlowTest do
       quiz = build(:questionnaire, steps: @three_sections_random_except_last_one)
       flow = Flow.start(quiz, "sms")
       flow = %{flow | current_step: {3, 1}}
-      flow_state = flow |> Flow.step(@sms_visitor)
+      flow_state = flow |> test_step("sms")
 
       assert {:ok, flow, reply} = flow_state
       prompts = Reply.prompts(reply)
 
       assert prompts == ["Do you exercise? Reply 1 for YES, 2 for NO"]
       assert flow.current_step == {3,1}
-      step = flow |> Flow.step(@sms_visitor, Flow.Message.reply("2"))
+      step = flow |> reply_sms("2")
       assert {:end, _, reply} = step
 
       prompts = Reply.prompts(reply)
@@ -1133,7 +1132,7 @@ defmodule Ask.FlowTest do
       quiz = build(:questionnaire, steps: @three_sections_skip_logic)
       flow = Flow.start(quiz, "sms")
       flow = %{flow | section_order: [0,2,1]}
-      flow_state = flow |> Flow.step(@sms_visitor)
+      flow_state = flow |> test_step("sms")
 
       assert {:ok, flow, reply} = flow_state
       prompts = Reply.prompts(reply)
@@ -1141,7 +1140,7 @@ defmodule Ask.FlowTest do
       assert prompts == ["Do you want to end this section? Reply 1 for YES, 2 for NO"]
       assert flow.current_step == {0,0}
 
-      step = flow |> Flow.step(@sms_visitor, Flow.Message.reply("1"))
+      step = flow |> reply_sms("1")
       assert {:ok, flow, reply} = step
       prompts = Reply.prompts(reply)
 
@@ -1153,14 +1152,14 @@ defmodule Ask.FlowTest do
       quiz = build(:questionnaire, steps: @three_sections_random)
       flow = Flow.start(quiz, "sms")
       flow = %{flow | current_step: {1, 3}}
-      flow_state = flow |> Flow.step(@sms_visitor)
+      flow_state = flow |> test_step("sms")
 
       assert {:ok, flow, reply} = flow_state
       prompts = Reply.prompts(reply)
 
       assert prompts == ["What's the number of this question??"]
       assert flow.current_step == {1,3}
-      step = flow |> Flow.step(@sms_visitor, Flow.Message.reply("2"))
+      step = flow |> reply_sms("2")
       assert {:ok, flow, _} = step
 
       section_index = Enum.at(flow.section_order, 2)
@@ -1172,7 +1171,7 @@ defmodule Ask.FlowTest do
       quiz = build(:questionnaire, steps: @three_sections_random)
       flow = Flow.start(quiz, "sms")
 
-      flow_state = flow |> Flow.step(@sms_visitor)
+      flow_state = flow |> test_step("sms")
 
       assert {:ok, flow, _} = flow_state
 
@@ -1183,7 +1182,7 @@ defmodule Ask.FlowTest do
       quiz = build(:questionnaire, steps: @three_sections_random)
       flow = Flow.start(quiz, "sms")
       flow = %{flow | section_order: [2,0,1]}
-      flow_state = flow |> Flow.step(@sms_visitor)
+      flow_state = flow |> test_step("sms")
 
       assert {:ok, flow, _} = flow_state
 
@@ -1195,7 +1194,7 @@ defmodule Ask.FlowTest do
     test "flag steps and send prompts" do
       quiz = build(:questionnaire, steps: @flag_steps)
       flow = Flow.start(quiz, "sms")
-      flow_state = flow |> Flow.step(@sms_visitor)
+      flow_state = flow |> test_step("sms")
 
       assert {:ok, flow, reply} = flow_state
       prompts = Reply.prompts(reply)
@@ -1209,7 +1208,7 @@ defmodule Ask.FlowTest do
     test "ending keeps the last flag" do
       quiz = build(:questionnaire, steps: @partial_step)
       flow = Flow.start(quiz, "sms")
-      flow_state = flow |> Flow.step(@sms_visitor)
+      flow_state = flow |> test_step("sms")
       assert {:end, _, reply} = flow_state
       assert Reply.disposition(reply) == "interim partial"
     end
@@ -1243,8 +1242,8 @@ defmodule Ask.FlowTest do
       {:ok, flow, _} =
         build(:questionnaire, steps: steps)
         |> Flow.start("sms")
-        |> Flow.step(@sms_visitor)
-      assert {:end, _, reply} = flow |> Flow.step(@sms_visitor, Flow.Message.reply("1"))
+        |> test_step("sms")
+      assert {:end, _, reply} = flow |> reply_sms("1")
       assert Reply.disposition(reply) == "ineligible"
     end
 
@@ -1277,9 +1276,41 @@ defmodule Ask.FlowTest do
       {:ok, flow, _} =
         build(:questionnaire, steps: steps)
         |> Flow.start("sms")
-        |> Flow.step(@sms_visitor)
-      assert {:end, _, reply} = flow |> Flow.step(@sms_visitor, Flow.Message.reply("1"))
+        |> test_step("sms")
+      assert {:end, _, reply} = flow |> reply_sms("1")
       assert Reply.disposition(reply) == "refused"
+    end
+  end
+
+  defp test_start(mode, quiz \\ @quiz), do:
+    Flow.start(quiz, mode)
+      |> test_step(mode)
+
+  defp test_step(flow, mode), do:
+    Flow.step(flow, test_visitor(mode), :answer, "any_disposition")
+
+  defp test_reply(flow, mode, nil), do:
+    Flow.step(flow, test_visitor(mode), Flow.Message.no_reply, "any_disposition")
+
+  defp reply_sms(flow, reply), do: test_reply(flow, "sms", reply)
+
+  defp start_sms(quiz), do: test_start("sms", quiz)
+
+  defp start_sms(), do: test_start("sms")
+
+  defp start_ivr(quiz), do: test_start("ivr", quiz)
+
+  defp start_ivr(), do: test_start("ivr")
+
+  defp reply_ivr(flow, reply), do: test_reply(flow, "ivr", reply)
+
+  defp test_reply(flow, mode, reply, old_disposition \\ "any_disposition"), do:
+    Flow.step(flow, test_visitor(mode), Flow.Message.reply(reply), old_disposition)
+
+  defp test_visitor(mode) do
+    case mode do
+      "ivr" -> @ivr_visitor
+      "sms" -> @sms_visitor
     end
   end
 end

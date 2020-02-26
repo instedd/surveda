@@ -36,7 +36,7 @@ defmodule Ask.Runtime.Session do
     # Is this really necessary?
     Channel.setup(runtime_channel, respondent, token, nil, nil)
 
-    case flow |> Flow.step(session.current_mode |> SessionMode.visitor) do
+    case flow |> Flow.step(session.current_mode |> SessionMode.visitor, :answer, respondent.disposition) do
       {:end, _, reply} ->
         respondent = if Reply.prompts(reply) != [] do
           log_prompts(reply, channel, flow.mode, respondent, true)
@@ -321,8 +321,9 @@ defmodule Ask.Runtime.Session do
   def contact_respondent(%{current_mode: %SMSMode{}} = session, runtime_channel) do
     token = Ecto.UUID.generate
 
-    {:ok, _flow, reply} = Flow.retry(session.flow, TextVisitor.new("sms"))
-    log_prompts(reply, session.current_mode.channel, session.flow.mode, session.respondent)
+    respondent = session.respondent
+    {:ok, _flow, reply} = Flow.retry(session.flow, TextVisitor.new("sms"), respondent.disposition)
+    log_prompts(reply, session.current_mode.channel, session.flow.mode, respondent)
     respondent = runtime_channel |> Channel.ask(session.respondent, token, reply)
     %{session | token: token, respondent: respondent}
   end
@@ -393,14 +394,17 @@ defmodule Ask.Runtime.Session do
       response == Flow.Message.no_reply ->
         # no_reply is produced, for example, from a timeout in Verboice
         session
+      Flow.Message.is_stop_reply(response) ->
+        # the user asked for stopping receiving messages
+        session
       response == Flow.Message.answer ->
         update_respondent_disposition(session, "contacted", current_mode)
       true ->
         update_respondent_disposition(session, "started", current_mode)
     end
 
-    step_answer = Flow.step(session.flow, current_mode |> SessionMode.visitor, response, SessionMode.mode(current_mode))
     respondent = session.respondent
+    step_answer = Flow.step(session.flow, current_mode |> SessionMode.visitor, response, SessionMode.mode(current_mode), respondent.disposition)
 
     reply = case step_answer do
       {:end, _, reply} -> reply

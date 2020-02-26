@@ -365,7 +365,8 @@ defmodule Ask.Runtime.Broker do
     transaction_result = Repo.transaction(fn ->
       try do
         reply = mask_phone_number(session.respondent, reply)
-        handle_session_step(Session.sync_step(session, reply, session_mode), now)
+        session_step = Session.sync_step(session, reply, session_mode)
+        handle_session_step(session_step, now)
       rescue
         e in Ecto.StaleEntryError ->
           Repo.rollback(e)
