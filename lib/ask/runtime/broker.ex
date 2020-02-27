@@ -546,7 +546,7 @@ defmodule Ask.Runtime.Broker do
 
   defp update_respondent(%Respondent{} = respondent, :stopped, disposition, _) do
     session = respondent.session |> Session.load
-    update_respondent_and_set_disposition(respondent, session, nil, nil, nil, disposition, "failed")
+    update_respondent_and_set_disposition(respondent, session, nil, nil, nil, disposition, "failed", true)
   end
 
   defp update_respondent(%Respondent{} = respondent, {:ok, session, timeout}, nil, now) do
@@ -598,11 +598,11 @@ defmodule Ask.Runtime.Broker do
     |> update_quota_bucket(old_disposition, respondent.session["count_partial_results"])
   end
 
-  defp update_respondent_and_set_disposition(respondent, session, dump, timeout, timeout_at, disposition, state) do
+  defp update_respondent_and_set_disposition(respondent, session, dump, timeout, timeout_at, disposition, state, user_stopped \\ false) do
     old_disposition = respondent.disposition
     if Flow.should_update_disposition(old_disposition, disposition) do
       respondent
-      |> Respondent.changeset(%{disposition: disposition, state: state, session: dump, timeout_at: timeout_at})
+      |> Respondent.changeset(%{disposition: disposition, state: state, session: dump, timeout_at: timeout_at, user_stopped: user_stopped})
       |> Repo.update!
       |> RespondentDispositionHistory.create(old_disposition, session.current_mode |> SessionMode.mode)
       |> update_quota_bucket(old_disposition, session.count_partial_results)
