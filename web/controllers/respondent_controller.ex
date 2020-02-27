@@ -647,6 +647,8 @@ defmodule Ask.RespondentController do
 
         row = row ++ [modes]
 
+        row = row ++ [respondent.user_stopped]
+
         row = row ++ Enum.map(stats, fn stat ->
           respondent |> respondent_stat(stat)
         end)
@@ -701,7 +703,7 @@ defmodule Ask.RespondentController do
     end)
 
     # Add header to csv_rows
-    header = ["respondent_id", "disposition", "date", "modes"]
+    header = ["respondent_id", "disposition", "date", "modes", "user_stopped"]
     header = header ++ Enum.map(stats, fn stat ->
       case stat do
         :total_sent_sms -> "total_sent_sms"
@@ -923,5 +925,4 @@ defmodule Ask.RespondentController do
 
     Ask.TimeUtil.format(Ecto.DateTime.cast!(dt), offset_seconds, tz_offset)
   end
-
 end
