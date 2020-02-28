@@ -21,6 +21,7 @@ type Props = {
 }
 
 type State = {
+  // User willingly decided to go on with the survey
   userConsent: boolean
 }
 
@@ -37,7 +38,9 @@ class Step extends Component<Props, State> {
   }
 
   userConsented() {
+    // Only when user consented, the survey step is fetched
     this.setState({userConsent: true})
+    // When fetching the survey, the cookie is created. After this first fetch, that cookie is needed to continue the survey, all others will fail.
     this.fetchStep()
   }
 
@@ -108,6 +111,7 @@ class Step extends Component<Props, State> {
       }
     }
     else {
+      // Before the first step fetch, show an intro message with user consent button
       return <IntroStep introMessage={introMessage} onClick={value => this.userConsented()} />
     }
   }
