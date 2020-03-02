@@ -1295,7 +1295,7 @@ describe('questionnaire reducer', () => {
         actions.fetch(1, 1),
         actions.receive(questionnaire),
         actions.addMode('mobileweb'),
-        actions.setMobileWebSettingText('mobileWebSmsMessage', prompt)
+        actions.setMobileWebSmsMessage(prompt)
       ])
 
       expect(resultState.errors).toExclude({
@@ -2716,10 +2716,22 @@ describe('questionnaire reducer', () => {
       const state = playActions([
         actions.fetch(1, 1),
         actions.receive(questionnaire),
-        actions.setMobileWebSettingText('mobileWebSmsMessage', mobileWebSmsMessage)
+        actions.setMobileWebSmsMessage(mobileWebSmsMessage)
       ])
 
       expect(state.data.settings.mobileWebSmsMessage).toEqual(mobileWebSmsMessage)
+    })
+
+    it('should set mobile web intro message', () => {
+      const mobileWebIntroMessage = 'Go ahead!'
+
+      const state = playActions([
+        actions.fetch(1, 1),
+        actions.receive(questionnaire),
+        actions.setMobileWebIntroMessage(mobileWebIntroMessage)
+      ])
+
+      expect(state.data.settings.mobileWebIntroMessage).toEqual(mobileWebIntroMessage)
     })
 
     it('should set mobile web survey is over message', () => {

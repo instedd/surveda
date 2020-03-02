@@ -60,8 +60,12 @@ class WebSettings extends Component {
     this.props.dispatch(actions.setDisplayedTitle(text))
   }
 
-  settingTextBlur(key, text) {
-    this.props.dispatch(actions.setMobileWebSettingText(key, text))
+  smsMessageBlur(text) {
+    this.props.dispatch(actions.setMobileWebSmsMessage(text))
+  }
+
+  introMessageBlur(text) {
+    this.props.dispatch(actions.setMobileWebIntroMessage(text))
   }
 
   surveyIsOverMessageBlur(text) {
@@ -212,7 +216,7 @@ class WebSettings extends Component {
       inputErrors={this.introMessageErrors()}
       value={this.state.introMessage}
       originalValue={this.state.introMessage}
-      onBlur={text => this.settingTextBlur('mobileWebIntroMessage', text)}
+      onBlur={text => this.introMessageBlur(text)}
       readOnly={this.props.readOnly}
       />
   }
@@ -224,7 +228,7 @@ class WebSettings extends Component {
       value={this.state.smsMessage}
       originalValue={this.state.smsMessage}
       readOnly={this.props.readOnly}
-      onBlur={text => this.settingTextBlur('mobileWebSmsMessage', text)}
+      onBlur={text => this.smsMessageBlur(text)}
       fixedEndLength={20}
       />
   }
