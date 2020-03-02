@@ -20,7 +20,7 @@ defmodule Ask.MobileSurveyControllerTest do
       test_channel = TestChannel.new(false, true)
 
       channel = insert(:channel, settings: test_channel |> TestChannel.settings, type: "sms")
-      quiz = insert(:questionnaire, steps: @mobileweb_dummy_steps, settings: %{"error_message" => %{"en" => %{"mobileweb" => "Invalid value"}}, "title" => %{"en" => "Survey"}, "mobile_web_intro_message" => "My intro message"})
+      quiz = insert(:questionnaire, steps: @mobileweb_dummy_steps, settings: %{"error_message" => %{"en" => %{"mobileweb" => "Invalid value"}}, "title" => %{"en" => "Survey"}, "mobile_web_intro_message" => "My HTML escaped & intro message"})
       survey = insert(:survey, %{schedule: Ask.Schedule.always(), state: "running", questionnaires: [quiz], mode: [["mobileweb"]]})
       group = insert(:respondent_group, survey: survey, respondents_count: 1) |> Repo.preload(:channels)
 
@@ -37,9 +37,10 @@ defmodule Ask.MobileSurveyControllerTest do
 
     test "includes mobile_web_intro_message", %{conn: conn, respondent: respondent} do
       conn = get conn, mobile_survey_path(conn, :index, respondent.id, %{token: Respondent.token(respondent.id)})
+
       response = response(conn, 200)
 
-      assert String.contains?(response, "window.introMessage = \"My intro message\"\n")
+      assert String.contains?(response, "window.introMessageInnerText = \"My HTML escaped &amp; intro message\"\n")
     end
   end
 

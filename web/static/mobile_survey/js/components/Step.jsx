@@ -17,7 +17,7 @@ type Props = {
   step: PropTypes.object.isRequired,
   progress: number,
   errorMessage: ?string,
-  introMessage: string,
+  introMessageInnerText: string,
 }
 
 type State = {
@@ -92,7 +92,7 @@ class Step extends Component<Props, State> {
   }
 
   stepComponent(userConsent) {
-    const { step, progress, errorMessage, introMessage } = this.props
+    const { step, progress, errorMessage, introMessageInnerText } = this.props
 
     if (userConsent) {
       switch (step.type) {
@@ -114,7 +114,7 @@ class Step extends Component<Props, State> {
       // Before the first step fetch, show an intro message with user consent button.
       // We added this intro step to avoid setting the identifier cookie before the actual respondent is taking the survey.
       // Because we limit the survey response to a single user, and web bots are ruining the respondent opportunity of taking it.
-      return <IntroStep introMessage={introMessage} onClick={value => this.userConsented()} />
+      return <IntroStep introMessageInnerText={introMessageInnerText} onClick={value => this.userConsented()} />
     }
   }
 
@@ -177,7 +177,7 @@ const mapStateToProps = (state) => ({
   errorMessage: state.step.errorMessage,
   respondentId: window.respondentId,
   token: window.token,
-  introMessage: window.introMessage
+  introMessageInnerText: window.introMessageInnerText
 })
 
 Step.childContextTypes = {
