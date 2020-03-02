@@ -111,7 +111,9 @@ class Step extends Component<Props, State> {
       }
     }
     else {
-      // Before the first step fetch, show an intro message with user consent button
+      // Before the first step fetch, show an intro message with user consent button.
+      // We added this intro step to avoid setting the identifier cookie before the actual respondent is taking the survey.
+      // Because we limit the survey response to a single user, and web bots are ruining the respondent opportunity of taking it.
       return <IntroStep introMessage={introMessage} onClick={value => this.userConsented()} />
     }
   }
