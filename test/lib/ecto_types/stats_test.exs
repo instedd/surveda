@@ -4,11 +4,11 @@ defmodule Ask.StatsTest do
 
   describe "dump:" do
     test "should dump empty" do
-      assert {:ok, "{\"total_sent_sms\":0,\"total_received_sms\":0,\"total_call_time_seconds\":null,\"total_call_time\":null,\"call_durations\":{},\"attempts\":null}"} == Stats.dump(%Stats{})
+      assert {:ok, "{\"total_sent_sms\":0,\"total_received_sms\":0,\"total_call_time_seconds\":null,\"total_call_time\":null,\"last_call_started\":false,\"call_durations\":{},\"attempts\":null}"} == Stats.dump(%Stats{})
     end
 
     test "should dump full" do
-      assert {:ok, "{\"total_sent_sms\":3,\"total_received_sms\":2,\"total_call_time_seconds\":60,\"total_call_time\":1,\"call_durations\":{\"12345\":30},\"attempts\":{\"sms\":5,\"mobileweb\":7,\"ivr\":6}}"} == Stats.dump(%Stats{total_received_sms: 2, total_sent_sms: 3, total_call_time_seconds: 60, total_call_time: 1, attempts: %{sms: 5, ivr: 6, mobileweb: 7}, call_durations: %{"12345" => 30}})
+      assert {:ok, "{\"total_sent_sms\":3,\"total_received_sms\":2,\"total_call_time_seconds\":60,\"total_call_time\":1,\"last_call_started\":true,\"call_durations\":{\"12345\":30},\"attempts\":{\"sms\":5,\"mobileweb\":7,\"ivr\":6}}"} == Stats.dump(%Stats{total_received_sms: 2, total_sent_sms: 3, total_call_time_seconds: 60, total_call_time: 1, attempts: %{sms: 5, ivr: 6, mobileweb: 7}, last_call_started: true, call_durations: %{"12345" => 30}})
     end
   end
 

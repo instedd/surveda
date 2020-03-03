@@ -12,6 +12,7 @@ defmodule Ask.RespondentControllerTest do
     "total_call_time_seconds" => nil,
     "total_received_sms" => 0,
     "total_sent_sms" => 0,
+    "last_call_started" => false,
     "call_durations" => %{}
   }
 
@@ -819,6 +820,27 @@ defmodule Ask.RespondentControllerTest do
       assert line_3_sms_attempts == "0"
       assert line_3_mobileweb_attempts == "0"
       assert line_3_ivr_attempts == "0"
+    end
+
+    test "download results csv with non-started last call", %{conn: conn, user: user} do
+      project = create_project_for_user(user)
+      questionnaire = insert(:questionnaire, name: "test", project: project, steps: @dummy_steps)
+      survey = insert(:survey, project: project, cutoff: 4, questionnaires: [questionnaire], state: "ready", schedule: completed_schedule(), mode: [["sms", "ivr"], ["mobileweb"], ["sms", "mobileweb"]])
+      group = insert(:respondent_group)
+      respondent = insert(:respondent, survey: survey, hashed_number: "1asd12451eds", disposition: "partial", effective_modes: ["sms", "ivr"], respondent_group: group, stats: %Stats{total_received_sms: 4, total_sent_sms: 3, total_call_time_seconds: 12, call_durations: %{"call-3" => 45}, attempts: %{sms: 1, mobileweb: 2, ivr: 3}, last_call_started: false})
+      insert(:response, respondent: respondent, field_name: "Smokes", value: "Yes")
+      insert(:response, respondent: respondent, field_name: "Exercises", value: "No")
+      insert(:response, respondent: respondent, field_name: "Perfect Number", value: "100")
+
+      conn = get conn, project_survey_respondents_results_path(conn, :results, survey.project.id, survey.id, %{"offset" => "0", "_format" => "csv"})
+      csv = response(conn, 200)
+
+      [line1, line2, _] = csv |> String.split("\r\n")
+      assert line1 == "respondent_id,disposition,date,modes,total_sent_sms,total_received_sms,sms_attempts,total_call_time,ivr_attempts,mobileweb_attempts,section_order,sample_file,Smokes,Exercises,Perfect_Number,Question"
+
+      line_2_ivr_attempts = [line2] |> Stream.map(&(&1)) |> CSV.decode |> Enum.to_list |> hd |> Enum.at(8)
+
+      assert line_2_ivr_attempts == "2"
     end
 
     test "download results csv with sections", %{conn: conn, user: user} do
