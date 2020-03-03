@@ -110,7 +110,8 @@ defmodule Ask.Stats do
   def attempts(%Stats{attempts: _}, :sms), do: 0
 
   def attempts(%Stats{attempts: nil}, :ivr), do: 0
-  def attempts(%Stats{attempts: %{"ivr" => total}}, :ivr), do: total
+  def attempts(%Stats{attempts: %{"ivr" => total}, last_call_started: true}, :ivr), do: total
+  def attempts(%Stats{attempts: %{"ivr" => total}}, :ivr), do: total - 1
   def attempts(%Stats{attempts: _}, :ivr), do: 0
 
   def attempts(%Stats{attempts: nil}, :mobileweb), do: 0

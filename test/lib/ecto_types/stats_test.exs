@@ -57,10 +57,19 @@ defmodule Ask.StatsTest do
       assert 0 == stats |> Stats.attempts(:all)
 
       stats = stats |> Stats.add_attempt(:ivr)
+      assert 1 == stats.attempts["ivr"]
+      assert 0 == stats |> Stats.attempts(:ivr)
+      assert 0 == stats |> Stats.attempts(:all)
+
+      stats = stats |> Stats.with_last_call_attempted
+      assert 1 == stats.attempts["ivr"]
       assert 1 == stats |> Stats.attempts(:ivr)
       assert 1 == stats |> Stats.attempts(:all)
 
-      stats = stats |> Stats.add_attempt(:ivr)
+      stats = stats
+              |> Stats.add_attempt(:ivr)
+              |> Stats.with_last_call_attempted
+      assert 2 == stats.attempts["ivr"]
       assert 2 == stats |> Stats.attempts(:ivr)
       assert 2 == stats |> Stats.attempts(:all)
 
@@ -100,18 +109,22 @@ defmodule Ask.StatsTest do
       assert 1 == stats |> Stats.attempts(:all)
 
       stats = stats |> Stats.add_attempt(:ivr)
-      assert 1 == stats |> Stats.attempts(:ivr)
-      assert 2 == stats |> Stats.attempts(:all)
+      assert 0 == stats |> Stats.attempts(:ivr)
+      assert 1 == stats |> Stats.attempts(:all)
 
       stats = stats |> Stats.add_attempt(:mobileweb)
       assert 1 == stats |> Stats.attempts(:mobileweb)
-      assert 3 == stats |> Stats.attempts(:all)
+      assert 2 == stats |> Stats.attempts(:all)
 
       stats = stats |> Stats.add_attempt(:sms)
       assert 2 == stats |> Stats.attempts(:sms)
+      assert 3 == stats |> Stats.attempts(:all)
+
+      stats = stats |> Stats.with_last_call_attempted
+      assert 1 == stats |> Stats.attempts(:ivr)
       assert 4 == stats |> Stats.attempts(:all)
 
-      stats = stats |> Stats.add_attempt(:ivr)
+      stats = stats |> Stats.add_attempt(:ivr) |> Stats.with_last_call_attempted
       assert 2 == stats |> Stats.attempts(:ivr)
       assert 5 == stats |> Stats.attempts(:all)
 
@@ -119,7 +132,7 @@ defmodule Ask.StatsTest do
       assert 2 == stats |> Stats.attempts(:mobileweb)
       assert 6 == stats |> Stats.attempts(:all)
 
-      stats = stats |> Stats.add_attempt(:ivr)
+      stats = stats |> Stats.add_attempt(:ivr) |> Stats.with_last_call_attempted
       assert 3 == stats |> Stats.attempts(:ivr)
       assert 7 == stats |> Stats.attempts(:all)
 
