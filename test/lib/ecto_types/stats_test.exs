@@ -156,6 +156,36 @@ defmodule Ask.StatsTest do
       assert 1 == stats |> Stats.attempts(:sms)
       assert 2 == stats |> Stats.attempts(:all)
     end
+
+    test "full counts non-started ivr calls" do
+      stats = %Stats{}
+
+      assert 0 == stats |> Stats.attempts(:ivr)
+      assert 0 == stats |> Stats.attempts(:all)
+      assert 0 == stats |> Stats.attempts(:full)
+
+      stats = stats |> Stats.add_attempt(:sms)
+      assert 1 == stats |> Stats.attempts(:sms)
+      assert 0 == stats |> Stats.attempts(:ivr)
+      assert 1 == stats |> Stats.attempts(:all)
+      assert 1 == stats |> Stats.attempts(:full)
+      
+      stats = stats |> Stats.add_attempt(:mobileweb)
+      assert 1 == stats |> Stats.attempts(:mobileweb)
+      assert 0 == stats |> Stats.attempts(:ivr)
+      assert 2 == stats |> Stats.attempts(:all)
+      assert 2 == stats |> Stats.attempts(:full)
+
+      stats = stats |> Stats.add_attempt(:ivr)
+      assert 0 == stats |> Stats.attempts(:ivr)
+      assert 2 == stats |> Stats.attempts(:all)
+      assert 3 == stats |> Stats.attempts(:full)
+      
+      stats = stats |> Stats.with_last_call_attempted
+      assert 1 == stats |> Stats.attempts(:ivr)
+      assert 3 == stats |> Stats.attempts(:all)
+      assert 3 == stats |> Stats.attempts(:full)
+    end
   end
 
   describe "sms count:" do
