@@ -3,17 +3,17 @@ import React, { Component, PropTypes } from 'react'
 import Prompt from '../Prompt'
 
 type Props = {
-  introMessageInnerText: string,
+  introMessage: string,
   onClick: Function
 };
 
 class IntroStep extends Component<Props> {
   render() {
-    const { introMessageInnerText, onClick } = this.props
+    const { introMessage, onClick } = this.props
 
     return (
       <div>
-        <Prompt key={introMessageInnerText} text={introMessageInnerText} />
+        <div className={'prompt'}><h1>{introMessage}</h1></div>
         <button type="button" className='btn large block' style={{borderColor: this.context.primaryColor, color: this.context.primaryColor}} onClick={onClick}>
           <svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 0 24 24" width="24">
             <path d="M0 0h24v24H0z" fill="none"/>

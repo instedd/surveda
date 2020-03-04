@@ -40,7 +40,7 @@ defmodule Ask.MobileSurveyControllerTest do
 
       response = response(conn, 200)
 
-      assert String.contains?(response, "window.introMessageInnerText = \"My HTML escaped &amp; intro message\"\n")
+      assert String.contains?(response, "<div id=\"root\" role=\"main\" data-config=\"{&quot;introMessage&quot;:&quot;My HTML escaped &amp; intro message&quot;}\"></div>\n")
     end
   end
 
