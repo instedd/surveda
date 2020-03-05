@@ -93,7 +93,7 @@ defmodule Ask.Runtime.RetriesHistogram do
 
   defp retry_stat_group(%Respondent{stats: stats, mode: mode, survey_id: survey_id}, ivr_active?, timeout) do
     retry_time = Respondent.next_timeout_lowerbound(timeout, SystemTime.time.now) |> RetryStat.retry_time
-    %{attempt: stats |> Stats.attempts(:all), mode: mode, retry_time: retry_time, ivr_active: ivr_active?, survey_id: survey_id}
+    %{attempt: stats |> Stats.attempts(:full), mode: mode, retry_time: retry_time, ivr_active: ivr_active?, survey_id: survey_id}
   end
 
   defp reallocate_respondent(%Session{} = session, %Respondent{retry_stat_id: retry_stat_id} = respondent, ivr_active?, timeout) do

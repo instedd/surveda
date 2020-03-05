@@ -254,8 +254,9 @@ defmodule Ask.Runtime.VerboiceChannel do
       s when s in ["failed", "busy", "no-answer"] ->
         # respondent should no longer be considered as active
         respondent = RetriesHistogram.respondent_no_longer_active(respondent)
+                     |> Respondent.call_attempted
         channel_failed(respondent, status, params)
-      _ -> :ok
+      _ -> Respondent.call_attempted(respondent)
     end
     SurvedaMetrics.increment_counter_with_label(:surveda_verboice_status_callback, [status])
     conn |> send_resp(200, "")
@@ -273,6 +274,8 @@ defmodule Ask.Runtime.VerboiceChannel do
         hangup()
 
       %Respondent{session: %{"current_mode" => %{"mode" => "ivr"}}} ->
+        respondent = Respondent.call_attempted(respondent)
+
         response = case params["Digits"] do
           nil -> Flow.Message.answer()
           "timeout" -> Flow.Message.no_reply()

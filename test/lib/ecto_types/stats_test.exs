@@ -4,11 +4,11 @@ defmodule Ask.StatsTest do
 
   describe "dump:" do
     test "should dump empty" do
-      assert {:ok, "{\"total_sent_sms\":0,\"total_received_sms\":0,\"total_call_time_seconds\":null,\"total_call_time\":null,\"call_durations\":{},\"attempts\":null}"} == Stats.dump(%Stats{})
+      assert {:ok, "{\"total_sent_sms\":0,\"total_received_sms\":0,\"total_call_time_seconds\":null,\"total_call_time\":null,\"pending_call\":false,\"call_durations\":{},\"attempts\":null}"} == Stats.dump(%Stats{})
     end
 
     test "should dump full" do
-      assert {:ok, "{\"total_sent_sms\":3,\"total_received_sms\":2,\"total_call_time_seconds\":60,\"total_call_time\":1,\"call_durations\":{\"12345\":30},\"attempts\":{\"sms\":5,\"mobileweb\":7,\"ivr\":6}}"} == Stats.dump(%Stats{total_received_sms: 2, total_sent_sms: 3, total_call_time_seconds: 60, total_call_time: 1, attempts: %{sms: 5, ivr: 6, mobileweb: 7}, call_durations: %{"12345" => 30}})
+      assert {:ok, "{\"total_sent_sms\":3,\"total_received_sms\":2,\"total_call_time_seconds\":60,\"total_call_time\":1,\"pending_call\":true,\"call_durations\":{\"12345\":30},\"attempts\":{\"sms\":5,\"mobileweb\":7,\"ivr\":6}}"} == Stats.dump(%Stats{total_received_sms: 2, total_sent_sms: 3, total_call_time_seconds: 60, total_call_time: 1, attempts: %{sms: 5, ivr: 6, mobileweb: 7}, pending_call: true, call_durations: %{"12345" => 30}})
     end
   end
 
@@ -57,10 +57,19 @@ defmodule Ask.StatsTest do
       assert 0 == stats |> Stats.attempts(:all)
 
       stats = stats |> Stats.add_attempt(:ivr)
+      assert 1 == stats.attempts["ivr"]
+      assert 0 == stats |> Stats.attempts(:ivr)
+      assert 0 == stats |> Stats.attempts(:all)
+
+      stats = stats |> Stats.with_last_call_attempted
+      assert 1 == stats.attempts["ivr"]
       assert 1 == stats |> Stats.attempts(:ivr)
       assert 1 == stats |> Stats.attempts(:all)
 
-      stats = stats |> Stats.add_attempt(:ivr)
+      stats = stats
+              |> Stats.add_attempt(:ivr)
+              |> Stats.with_last_call_attempted
+      assert 2 == stats.attempts["ivr"]
       assert 2 == stats |> Stats.attempts(:ivr)
       assert 2 == stats |> Stats.attempts(:all)
 
@@ -100,18 +109,22 @@ defmodule Ask.StatsTest do
       assert 1 == stats |> Stats.attempts(:all)
 
       stats = stats |> Stats.add_attempt(:ivr)
-      assert 1 == stats |> Stats.attempts(:ivr)
-      assert 2 == stats |> Stats.attempts(:all)
+      assert 0 == stats |> Stats.attempts(:ivr)
+      assert 1 == stats |> Stats.attempts(:all)
 
       stats = stats |> Stats.add_attempt(:mobileweb)
       assert 1 == stats |> Stats.attempts(:mobileweb)
-      assert 3 == stats |> Stats.attempts(:all)
+      assert 2 == stats |> Stats.attempts(:all)
 
       stats = stats |> Stats.add_attempt(:sms)
       assert 2 == stats |> Stats.attempts(:sms)
+      assert 3 == stats |> Stats.attempts(:all)
+
+      stats = stats |> Stats.with_last_call_attempted
+      assert 1 == stats |> Stats.attempts(:ivr)
       assert 4 == stats |> Stats.attempts(:all)
 
-      stats = stats |> Stats.add_attempt(:ivr)
+      stats = stats |> Stats.add_attempt(:ivr) |> Stats.with_last_call_attempted
       assert 2 == stats |> Stats.attempts(:ivr)
       assert 5 == stats |> Stats.attempts(:all)
 
@@ -119,7 +132,7 @@ defmodule Ask.StatsTest do
       assert 2 == stats |> Stats.attempts(:mobileweb)
       assert 6 == stats |> Stats.attempts(:all)
 
-      stats = stats |> Stats.add_attempt(:ivr)
+      stats = stats |> Stats.add_attempt(:ivr) |> Stats.with_last_call_attempted
       assert 3 == stats |> Stats.attempts(:ivr)
       assert 7 == stats |> Stats.attempts(:all)
 
@@ -142,6 +155,36 @@ defmodule Ask.StatsTest do
       stats = stats |> Stats.add_attempt(:sms)
       assert 1 == stats |> Stats.attempts(:sms)
       assert 2 == stats |> Stats.attempts(:all)
+    end
+
+    test "full counts non-started ivr calls" do
+      stats = %Stats{}
+
+      assert 0 == stats |> Stats.attempts(:ivr)
+      assert 0 == stats |> Stats.attempts(:all)
+      assert 0 == stats |> Stats.attempts(:full)
+
+      stats = stats |> Stats.add_attempt(:sms)
+      assert 1 == stats |> Stats.attempts(:sms)
+      assert 0 == stats |> Stats.attempts(:ivr)
+      assert 1 == stats |> Stats.attempts(:all)
+      assert 1 == stats |> Stats.attempts(:full)
+      
+      stats = stats |> Stats.add_attempt(:mobileweb)
+      assert 1 == stats |> Stats.attempts(:mobileweb)
+      assert 0 == stats |> Stats.attempts(:ivr)
+      assert 2 == stats |> Stats.attempts(:all)
+      assert 2 == stats |> Stats.attempts(:full)
+
+      stats = stats |> Stats.add_attempt(:ivr)
+      assert 0 == stats |> Stats.attempts(:ivr)
+      assert 2 == stats |> Stats.attempts(:all)
+      assert 3 == stats |> Stats.attempts(:full)
+      
+      stats = stats |> Stats.with_last_call_attempted
+      assert 1 == stats |> Stats.attempts(:ivr)
+      assert 3 == stats |> Stats.attempts(:all)
+      assert 3 == stats |> Stats.attempts(:full)
     end
   end
 
@@ -230,5 +273,4 @@ defmodule Ask.StatsTest do
       assert Stats.total_call_time(stats) == "1m 30s"
     end
   end
-
 end

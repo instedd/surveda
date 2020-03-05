@@ -129,6 +129,9 @@ defmodule Ask.Respondent do
 
   def add_mode_attempt!(respondent, mode), do: respondent |> changeset(%{stats: Stats.add_attempt(respondent.stats, mode)}) |> Repo.update!
 
+  def call_attempted(%{stats: %{pending_call: false} } = respondent), do: respondent
+  def call_attempted(%{stats: stats} = respondent), do: respondent |> changeset(%{stats: Stats.with_last_call_attempted(stats)}) |> Repo.update!
+
   @doc """
   Computes the date-time on which the respondent should be retried or stalled given the timeout and time-window availability
   """

@@ -456,6 +456,57 @@ defmodule Ask.Runtime.VerboiceChannelTest do
     assert VerboiceChannel.check_status(%{}) == :up
   end
 
+  describe "attempts count" do
+    setup %{conn: conn} do
+      test_channel = Ask.TestChannel.new(false, false)
+
+      channel = insert(:channel, settings: test_channel |> Ask.TestChannel.settings, type: "ivr")
+      quiz = insert(:questionnaire, steps: @dummy_steps)
+      survey = insert(:survey, Map.merge(@survey, %{state: "running", questionnaires: [quiz], mode: [["ivr"]]}))
+      group = insert(:respondent_group, survey: survey, respondents_count: 1) |> Repo.preload(:channels)
+
+      Ask.RespondentGroupChannel.changeset(%Ask.RespondentGroupChannel{}, %{respondent_group_id: group.id, channel_id: channel.id, mode: "ivr"}) |> Repo.insert
+
+      respondent = insert(:respondent, survey: survey, respondent_group: group)
+
+      {:ok, _logger} = SurveyLogger.start_link
+      {:ok, _broker} = Broker.start_link
+      Broker.poll
+
+      respondent = Repo.get(Respondent, respondent.id)
+      assert respondent.state == "active"
+
+      {:ok, %{conn: conn, respondent: respondent}}
+    end
+
+    test "counts attempt upon non-expired status callback", %{conn: conn, respondent: respondent} do
+      assert Stats.attempts(respondent.stats, :ivr) == 0
+
+      VerboiceChannel.callback(conn, %{"path" => ["status", respondent.id, "token"], "CallStatus" => "failed", "CallDuration" => "0", "CallSid" => "6B8F5B7B-E412-46D3-96E1-688215F43CC3", "CallStatusReason" => "some random reason", "CallStatusCode" => "42"})
+
+      respondent = Repo.get(Respondent, respondent.id)
+      assert Stats.attempts(respondent.stats, :ivr) == 1
+    end
+
+    test "doesn't count attempts upon expired status callback", %{conn: conn, respondent: respondent} do
+      assert Stats.attempts(respondent.stats, :ivr) == 0
+
+      VerboiceChannel.callback(conn, %{"path" => ["status", respondent.id, "token"], "CallStatus" => "expired", "CallDuration" => "0", "CallSid" => "6B8F5B7B-E412-46D3-96E1-688215F43CC3", "CallStatusReason" => "expired", "CallStatusCode" => "2"})
+
+      respondent = Repo.get(Respondent, respondent.id)
+      assert Stats.attempts(respondent.stats, :ivr) == 0
+    end
+    
+    test "counts attempt upon respondent interaction callback", %{conn: conn, respondent: respondent} do
+      assert Stats.attempts(respondent.stats, :ivr) == 0
+
+      VerboiceChannel.callback(conn, %{"respondent" => respondent.id, "Digits" => "3"})
+
+      respondent = Repo.get(Respondent, respondent.id)
+      assert Stats.attempts(respondent.stats, :ivr) == 1
+    end
+  end
+
   defp assert_respondent_state(respondent, call_id, expected_call_duration, call_fail_reason) do
     assert [enqueueing, call_failed, disposition_changed_to_failed] = (respondent |> Repo.preload(:survey_log_entries)).survey_log_entries
 
