@@ -273,5 +273,4 @@ defmodule Ask.StatsTest do
       assert Stats.total_call_time(stats) == "1m 30s"
     end
   end
-
 end

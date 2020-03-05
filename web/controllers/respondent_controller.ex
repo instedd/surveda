@@ -30,11 +30,25 @@ defmodule Ask.RespondentController do
     |> conditional_page(limit, page)
     |> sort_respondents(sort_by, sort_asc)
     |> Repo.all
-    |> mask_phone_numbers
+    |> Enum.map(fn respondent ->
+      respondent
+      |> mask_phone_numbers
+      |> effective_stats
+    end)
 
     respondents_count = Ask.RespondentStats.respondent_count(survey_id: ^survey_id)
-
     render(conn, "index.json", respondents: respondents, respondents_count: respondents_count)
+  end
+
+  defp effective_stats(respondent) do
+    effective_stats = case respondent.stats do
+      %{attempts: %{"ivr" => _ivr_attempts}} = stats ->
+        effective_attempts = Map.put(stats.attempts, "ivr", Ask.Stats.attempts(stats, :ivr))
+        %{stats | attempts: effective_attempts}
+      stats -> stats
+    end
+
+    %{respondent | stats: effective_stats}
   end
 
   defp sort_respondents(query, sort_by, sort_asc) do
@@ -845,10 +859,8 @@ defmodule Ask.RespondentController do
     conn |> csv_stream(rows, filename)
   end
 
-  defp mask_phone_numbers(respondents) do
-    respondents |> Enum.map(fn respondent ->
-      %{respondent | phone_number: Respondent.mask_phone_number(respondent.phone_number)}
-    end)
+  defp mask_phone_numbers(respondent) do
+    %{respondent | phone_number: Respondent.mask_phone_number(respondent.phone_number)}
   end
 
   defp experiment_name(quiz, mode) do
