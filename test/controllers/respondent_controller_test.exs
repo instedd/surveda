@@ -12,7 +12,7 @@ defmodule Ask.RespondentControllerTest do
     "total_call_time_seconds" => nil,
     "total_received_sms" => 0,
     "total_sent_sms" => 0,
-    "last_call_started" => false,
+    "pending_call" => false,
     "call_durations" => %{}
   }
 
@@ -771,7 +771,7 @@ defmodule Ask.RespondentControllerTest do
       questionnaire = insert(:questionnaire, name: "test", project: project, steps: @dummy_steps)
       survey = insert(:survey, project: project, cutoff: 4, questionnaires: [questionnaire], state: "ready", schedule: completed_schedule(), mode: [["sms", "ivr"], ["mobileweb"], ["sms", "mobileweb"]])
       group = insert(:respondent_group)
-      insert(:respondent, survey: survey, hashed_number: "1asd12451eds", disposition: "partial", effective_modes: ["sms", "ivr"], respondent_group: group, stats: %Stats{total_received_sms: 4, total_sent_sms: 3, total_call_time_seconds: 12, call_durations: %{"call-3" => 45}, attempts: %{sms: 1, mobileweb: 2, ivr: 3}, last_call_started: false})
+      insert(:respondent, survey: survey, hashed_number: "1asd12451eds", disposition: "partial", effective_modes: ["sms", "ivr"], respondent_group: group, stats: %Stats{total_received_sms: 4, total_sent_sms: 3, total_call_time_seconds: 12, call_durations: %{"call-3" => 45}, attempts: %{sms: 1, mobileweb: 2, ivr: 3}, pending_call: true})
 
       conn = get conn, project_survey_respondent_path(conn, :index, project.id, survey.id)
       data = json_response(conn, 200)["data"]
@@ -779,7 +779,7 @@ defmodule Ask.RespondentControllerTest do
       respondent = hd(data["respondents"])
       assert respondent["stats"]["attempts"]["sms"] == 1
       assert respondent["stats"]["attempts"]["mobileweb"] == 2
-      assert respondent["stats"]["attempts"]["ivr"] == 2, "should be 2 since last_call_started = false and ivr: 3"
+      assert respondent["stats"]["attempts"]["ivr"] == 2, "should be 2 since pending_call = true and ivr: 3"
     end
 
     test "index respondents with started last call", %{conn: conn, user: user} do
@@ -787,7 +787,7 @@ defmodule Ask.RespondentControllerTest do
       questionnaire = insert(:questionnaire, name: "test", project: project, steps: @dummy_steps)
       survey = insert(:survey, project: project, cutoff: 4, questionnaires: [questionnaire], state: "ready", schedule: completed_schedule(), mode: [["sms", "ivr"], ["mobileweb"], ["sms", "mobileweb"]])
       group = insert(:respondent_group)
-      insert(:respondent, survey: survey, hashed_number: "1asd12451eds", disposition: "partial", effective_modes: ["sms", "ivr"], respondent_group: group, stats: %Stats{total_received_sms: 4, total_sent_sms: 3, total_call_time_seconds: 12, call_durations: %{"call-3" => 45}, attempts: %{sms: 1, mobileweb: 2, ivr: 3}, last_call_started: true})
+      insert(:respondent, survey: survey, hashed_number: "1asd12451eds", disposition: "partial", effective_modes: ["sms", "ivr"], respondent_group: group, stats: %Stats{total_received_sms: 4, total_sent_sms: 3, total_call_time_seconds: 12, call_durations: %{"call-3" => 45}, attempts: %{sms: 1, mobileweb: 2, ivr: 3}, pending_call: false})
 
       conn = get conn, project_survey_respondent_path(conn, :index, project.id, survey.id)
       data = json_response(conn, 200)["data"]
@@ -795,7 +795,7 @@ defmodule Ask.RespondentControllerTest do
       respondent = hd(data["respondents"])
       assert respondent["stats"]["attempts"]["sms"] == 1
       assert respondent["stats"]["attempts"]["mobileweb"] == 2
-      assert respondent["stats"]["attempts"]["ivr"] == 3, "should be 3 since last_call_started = true and ivr: 3"
+      assert respondent["stats"]["attempts"]["ivr"] == 3, "should be 3 since pending_call = false and ivr: 3"
     end
 
   end
@@ -808,7 +808,7 @@ defmodule Ask.RespondentControllerTest do
       questionnaire = insert(:questionnaire, name: "test", project: project, steps: @dummy_steps)
       survey = insert(:survey, project: project, cutoff: 4, questionnaires: [questionnaire], state: "ready", schedule: completed_schedule(), mode: [["sms", "ivr"], ["mobileweb"], ["sms", "mobileweb"]])
       group_1 = insert(:respondent_group)
-      respondent_1 = insert(:respondent, survey: survey, hashed_number: "1asd12451eds", disposition: "partial", effective_modes: ["sms", "ivr"], respondent_group: group_1, stats: %Stats{total_received_sms: 4, total_sent_sms: 3, total_call_time_seconds: 12, call_durations: %{"call-3" => 45}, attempts: %{sms: 1, mobileweb: 2, ivr: 3}, last_call_started: true})
+      respondent_1 = insert(:respondent, survey: survey, hashed_number: "1asd12451eds", disposition: "partial", effective_modes: ["sms", "ivr"], respondent_group: group_1, stats: %Stats{total_received_sms: 4, total_sent_sms: 3, total_call_time_seconds: 12, call_durations: %{"call-3" => 45}, attempts: %{sms: 1, mobileweb: 2, ivr: 3}, pending_call: false})
       insert(:response, respondent: respondent_1, field_name: "Smokes", value: "Yes")
       insert(:response, respondent: respondent_1, field_name: "Exercises", value: "No")
       insert(:response, respondent: respondent_1, field_name: "Perfect Number", value: "100")
@@ -860,7 +860,7 @@ defmodule Ask.RespondentControllerTest do
       questionnaire = insert(:questionnaire, name: "test", project: project, steps: @dummy_steps)
       survey = insert(:survey, project: project, cutoff: 4, questionnaires: [questionnaire], state: "ready", schedule: completed_schedule(), mode: [["sms", "ivr"], ["mobileweb"], ["sms", "mobileweb"]])
       group = insert(:respondent_group)
-      respondent = insert(:respondent, survey: survey, hashed_number: "1asd12451eds", disposition: "partial", effective_modes: ["sms", "ivr"], respondent_group: group, stats: %Stats{total_received_sms: 4, total_sent_sms: 3, total_call_time_seconds: 12, call_durations: %{"call-3" => 45}, attempts: %{sms: 1, mobileweb: 2, ivr: 3}, last_call_started: false})
+      respondent = insert(:respondent, survey: survey, hashed_number: "1asd12451eds", disposition: "partial", effective_modes: ["sms", "ivr"], respondent_group: group, stats: %Stats{total_received_sms: 4, total_sent_sms: 3, total_call_time_seconds: 12, call_durations: %{"call-3" => 45}, attempts: %{sms: 1, mobileweb: 2, ivr: 3}, pending_call: true})
       insert(:response, respondent: respondent, field_name: "Smokes", value: "Yes")
       insert(:response, respondent: respondent, field_name: "Exercises", value: "No")
       insert(:response, respondent: respondent, field_name: "Perfect Number", value: "100")

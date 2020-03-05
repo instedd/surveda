@@ -8,7 +8,7 @@ defmodule Ask.Stats do
             total_call_time_seconds: nil,
             call_durations: %{},
             attempts: nil,
-            last_call_started: false
+            pending_call: false
 
   def type, do: :longtext
 
@@ -23,7 +23,7 @@ defmodule Ask.Stats do
         total_call_time_seconds: total_call_time_seconds,
         call_durations: call_durations,
         attempts: attempts,
-        last_call_started: last_call_started
+        pending_call: pending_call
       }) do
     {:ok,
      %Stats{
@@ -33,7 +33,7 @@ defmodule Ask.Stats do
        total_call_time_seconds: total_call_time_seconds,
        call_durations: call_durations || %{},
        attempts: attempts,
-       last_call_started: last_call_started || false
+       pending_call: pending_call || false
      }}
   end
 
@@ -45,7 +45,7 @@ defmodule Ask.Stats do
       total_call_time_seconds: map["total_call_time_seconds"],
       call_durations: map["call_durations"],
       attempts: map["attempts"],
-      last_call_started: map["last_call_started"]
+      pending_call: map["pending_call"]
     })
   end
 
@@ -110,13 +110,13 @@ defmodule Ask.Stats do
   def attempts(%Stats{attempts: _}, :sms), do: 0
 
   def attempts(%Stats{attempts: nil}, :ivr), do: 0
-  def attempts(%Stats{attempts: %{"ivr" => total}, last_call_started: true}, :ivr), do: total
-  def attempts(%Stats{attempts: %{"ivr" => total}}, :ivr), do: total - 1
+  def attempts(%Stats{attempts: %{"ivr" => total}, pending_call: true}, :ivr), do: total - 1
+  def attempts(%Stats{attempts: %{"ivr" => total}}, :ivr), do: total
   def attempts(%Stats{attempts: _}, :ivr), do: 0
 
-  def attempts(%Stats{attempts: %{"ivr" => _total}, last_call_started: true}, :current_ivr), do: 0
-  def attempts(%Stats{attempts: %{"ivr" => _total}}, :current_ivr), do: 1
-  def attempts(_, :current_ivr), do: 0
+  def attempts(%Stats{attempts: %{"ivr" => _total}, pending_call: true}, :pending_call), do: 1
+  def attempts(%Stats{attempts: %{"ivr" => _total}}, :pending_call), do: 0
+  def attempts(_, :pending_call), do: 0
 
   def attempts(%Stats{attempts: nil}, :mobileweb), do: 0
   def attempts(%Stats{attempts: %{"mobileweb" => total}}, :mobileweb), do: total
@@ -126,12 +126,12 @@ defmodule Ask.Stats do
     do: attempts(stats, :sms) + attempts(stats, :ivr) + attempts(stats, :mobileweb)
 
   def attempts(%Stats{} = stats, :full),
-    do: attempts(stats, :all) + attempts(stats, :current_ivr)
+    do: attempts(stats, :all) + attempts(stats, :pending_call)
 
   def add_attempt(stats, mode) do
     stats = add_attempt_internal(stats, mode)
     case mode do
-      :ivr -> stats |> Map.put(:last_call_started, false)
+      :ivr -> stats |> Map.put(:pending_call, true)
       _ -> stats
     end
   end
@@ -161,5 +161,5 @@ defmodule Ask.Stats do
   defp add_attempt_internal(%Stats{attempts: attempts} = stats, :mobileweb),
     do: %{stats | attempts: Map.put(attempts, "mobileweb", 1)}
 
-  def with_last_call_attempted(stats), do: stats |> Map.put(:last_call_started, true)
+  def with_last_call_attempted(stats), do: stats |> Map.put(:pending_call, false)
 end
