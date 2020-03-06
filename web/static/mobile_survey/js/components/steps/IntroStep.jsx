@@ -13,7 +13,7 @@ class IntroStep extends Component<Props> {
 
     return (
       <div>
-        <div className={'prompt'}><h1>{introMessage}</h1></div>
+        <Prompt text={introMessage} />
         <button type="button" className='btn large block' style={{borderColor: this.context.primaryColor, color: this.context.primaryColor}} onClick={onClick}>
           <svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 0 24 24" width="24">
             <path d="M0 0h24v24H0z" fill="none"/>
