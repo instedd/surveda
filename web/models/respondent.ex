@@ -147,4 +147,12 @@ defmodule Ask.Respondent do
   def next_timeout_lowerbound(timeout, now), do:
     Timex.shift(now, minutes: timeout)
 
+  def with_lock(respondent_id, operation, respondent_modifier \\ fn x -> x end) do
+    Mutex.under(Ask.Mutex, respondent_id, fn ->
+      respondent = Respondent
+                   |> Repo.get(respondent_id)
+                   |> respondent_modifier.()
+      operation.(respondent)
+    end)
+  end
 end

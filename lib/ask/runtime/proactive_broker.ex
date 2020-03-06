@@ -29,13 +29,8 @@ defmodule Ask.Runtime.ProactiveBroker do
   def handle_info(:poll, state, now) do
     try do
       mark_stalled_for_eight_hours_respondents_as_failed()
-
-      Repo.all(from r in Respondent, where: r.state == "active" and r.timeout_at <= ^now, limit: ^batch_limit_per_minute())
-      |> Enum.each(&retry_respondent(&1))
-
-      all_running_surveys()
-      |> Enum.filter(&Schedule.intersect?(&1.schedule, now))
-      |> Enum.each(&poll_survey/1)
+      retry_respondents(now)
+      poll_active_surveys(now)
 
       {:noreply, state}
     after
@@ -63,7 +58,7 @@ defmodule Ask.Runtime.ProactiveBroker do
     Repo.transaction(fn ->
       try do
         Broker.handle_session_step(Session.timeout(session), SystemTime.time.now)
-      rescue
+      rescue #FIXME: this should no longer happen. Remove rescue and transaction?
         e in Ecto.StaleEntryError ->
           Logger.error(inspect e)
           # Maybe sync_step or another action was executed while the timeout was executed,
@@ -134,10 +129,19 @@ defmodule Ask.Runtime.ProactiveBroker do
     end
   end
 
-  defp all_running_surveys do
-    Repo.all(from s in Survey, where: s.state == "running",
-                               preload: [respondent_groups: [respondent_group_channels: :channel]]
-    )
+  defp poll_active_surveys(now) do
+    all_running_surveys = Repo.all(from s in Survey,
+                                   where: s.state == "running",
+                                   preload: [respondent_groups: [respondent_group_channels: :channel]])
+    all_running_surveys
+    |> Enum.filter(&Schedule.intersect?(&1.schedule, now))
+    |> Enum.each(&poll_survey/1)
+  end
+
+  defp retry_respondents(now) do
+    #FIXME: get only the respondent ids
+    Repo.all(from r in Respondent, where: r.state == "active" and r.timeout_at <= ^now, limit: ^batch_limit_per_minute())
+    |> Enum.each(fn respondent -> Respondent.with_lock(respondent.id, &retry_respondent(&1)) end)
   end
 
   defp start(survey, respondent) do
@@ -201,13 +205,18 @@ defmodule Ask.Runtime.ProactiveBroker do
   defp mark_stalled_for_eight_hours_respondents_as_failed do
     eight_hours_ago = SystemTime.time.now |> Timex.shift(hours: -8)
 
+    # FIXME: only obtain the ids instead of all the respondents since are being fetch again inside the lock
     (from r in Respondent,
           where: r.state == "stalled",
           where: r.updated_at <= ^eight_hours_ago)
     |> Repo.all
     |> Enum.each(fn respondent ->
-      respondent = RetriesHistogram.remove_respondent(respondent)
-      Broker.update_respondent(respondent, :failed)
+      Respondent.with_lock(respondent.id, fn respondent ->
+        if(respondent.state == "stalled") do # the respondent obtained inside the lock may no longer be "stalled"
+          respondent = RetriesHistogram.remove_respondent(respondent)
+          Broker.update_respondent(respondent, :failed)
+        end
+      end)
     end)
   end
 
@@ -221,6 +230,7 @@ defmodule Ask.Runtime.ProactiveBroker do
   end
 
   defp set_stalled_respondents_as_failed(survey) do
+    # Bulk operation. Respondents are never brought to memory. For now without lock (stalled state may/will be removed)
     from(r in assoc(survey, :respondents), where: r.state == "stalled")
     |> Repo.update_all(set: [state: "failed", session: nil, timeout_at: nil])
   end
@@ -231,9 +241,9 @@ defmodule Ask.Runtime.ProactiveBroker do
     (from r in assoc(survey, :respondents),
           where: r.state == "pending",
           limit: ^count)
-    |> preload(respondent_group: [respondent_group_channels: :channel])
-    |> Repo.all
-    |> Enum.each(&start(survey, &1))
+#    |> preload(respondent_group: [respondent_group_channels: :channel])
+    |> Repo.all #FIXME: only get the respondent ids
+    |> Enum.each(fn respondent -> Respondent.with_lock(respondent.id, &start(survey, &1), &Repo.preload(&1, respondent_group: [respondent_group_channels: :channel])) end)
   end
 
   defp select_questionnaire_and_mode(%Survey{comparisons: []} = survey) do
