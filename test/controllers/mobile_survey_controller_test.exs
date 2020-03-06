@@ -20,7 +20,7 @@ defmodule Ask.MobileSurveyControllerTest do
       test_channel = TestChannel.new(false, true)
 
       channel = insert(:channel, settings: test_channel |> TestChannel.settings, type: "sms")
-      quiz = insert(:questionnaire, steps: @mobileweb_dummy_steps, settings: %{"error_message" => %{"en" => %{"mobileweb" => "Invalid value"}}, "title" => %{"en" => "Survey"}, "mobile_web_intro_message" => "My HTML escaped & intro message"})
+      quiz = insert(:questionnaire, steps: @mobileweb_dummy_steps, settings: %{"error_message" => %{"en" => %{"mobileweb" => "Invalid value"}}, "title" => %{"en" => "Survey"}, "mobile_web_intro_message" => "My HTML escaped & intro message", "mobile_web_color_style" => %{"secondary_color" => "#ae1", "primary_color" => "#e21"}})
       survey = insert(:survey, %{schedule: Ask.Schedule.always(), state: "running", questionnaires: [quiz], mode: [["mobileweb"]]})
       group = insert(:respondent_group, survey: survey, respondents_count: 1) |> Repo.preload(:channels)
 
@@ -35,12 +35,12 @@ defmodule Ask.MobileSurveyControllerTest do
       {:ok, conn: conn, respondent: respondent}
     end
 
-    test "includes mobile_web_intro_message", %{conn: conn, respondent: respondent} do
+    test "includes config in root", %{conn: conn, respondent: respondent} do
       conn = get conn, mobile_survey_path(conn, :index, respondent.id, %{token: Respondent.token(respondent.id)})
 
       response = response(conn, 200)
 
-      assert String.contains?(response, "<div id=\"root\" role=\"main\" data-config=\"{&quot;introMessage&quot;:&quot;My HTML escaped &amp; intro message&quot;}\"></div>\n")
+      assert String.contains?(response, "<div id=\"root\" role=\"main\" data-config=\"{&quot;introMessage&quot;:&quot;My HTML escaped &amp; intro message&quot;,&quot;colorStyle&quot;:{&quot;secondary_color&quot;:&quot;#ae1&quot;,&quot;primary_color&quot;:&quot;#e21&quot;}}\"></div>\n")
     end
   end
 

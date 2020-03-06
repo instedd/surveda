@@ -18,6 +18,7 @@ type Props = {
   progress: number,
   errorMessage: ?string,
   introMessage: string,
+  colorStyle: PropTypes.object.isRequired
 }
 
 type State = {
@@ -159,11 +160,13 @@ class Step extends Component<Props, State> {
   }
 
   primaryColor() {
-    return window.colorStyle && window.colorStyle.primary_color ? window.colorStyle.primary_color : 'rgb(102,72,162)'
+    const { colorStyle}  = this.props
+    return colorStyle && colorStyle.primary_color ? colorStyle.primary_color : 'rgb(102,72,162)'
   }
 
   secondaryColor() {
-    return window.colorStyle && window.colorStyle.secondary_color ? window.colorStyle.secondary_color : 'rgb(251,154,0)'
+    const { colorStyle}  = this.props
+    return colorStyle && colorStyle.secondary_color ? colorStyle.secondary_color : 'rgb(251,154,0)'
   }
 
   getChildContext() {
@@ -177,7 +180,8 @@ const mapStateToProps = (state) => ({
   errorMessage: state.step.errorMessage,
   respondentId: window.respondentId,
   token: window.token,
-  introMessage: state.config.introMessage
+  introMessage: state.config.introMessage,
+  colorStyle: state.config.colorStyle
 })
 
 Step.childContextTypes = {
