@@ -12,71 +12,11 @@ defmodule Ask.Runtime.Broker do
     handle_next_action(next_action, respondent.id)
   end
 
-  defp handle_next_action(next_action, respondent_id) do
-    respondent = Repo.get(Respondent, respondent_id)
-    session = if respondent.session, do: Session.load(respondent.session), else: respondent.session
-    RetriesHistogram.next_step(respondent, session, next_action)
-    next_action
-  end
-
   # We expose this method so we can test that if a stale respondent is
   # passed, it's reloaded and the action is retried (this can happen
   # if a timeout happens in between this call)
   def sync_step_internal(session, reply) do
     sync_step_internal(session, reply, session.current_mode, SystemTime.time.now)
-  end
-
-  def sync_step_internal(_, _, :invalid_mode, _) do
-    :end
-  end
-
-  def sync_step_internal(session, reply, session_mode, now) do
-    transaction_result = Repo.transaction(fn ->
-      try do
-        reply = mask_phone_number(session.respondent, reply)
-        session_step = Session.sync_step(session, reply, session_mode)
-        handle_session_step(session_step, now)
-      rescue
-        e in Ecto.StaleEntryError ->
-          Repo.rollback(e)
-        e ->
-          # If we uncomment this a test will fail (the one that cheks that nothing breaks),
-          # but this could help you find a bug in a particular test that is not working.
-          # if Mix.env == :test do
-          #   IO.inspect e
-          #   IO.inspect System.stacktrace()
-          #   raise e
-          # end
-          respondent = Repo.get(Respondent, session.respondent.id)
-          Logger.error(e, "Error occurred while processing sync step (survey_id: #{respondent.survey_id}, respondent_id: #{respondent.id})")
-          Sentry.capture_exception(e, [
-            stacktrace: System.stacktrace(),
-            extra: %{survey_id: respondent.survey_id, respondent_id: respondent.id}])
-
-          try do
-            handle_session_step({:failed, respondent}, now)
-          rescue
-            e ->
-              if Mix.env == :test do
-                IO.inspect e
-                IO.inspect System.stacktrace()
-                raise e
-              end
-              :end
-          end
-      end
-    end)
-
-    case transaction_result do
-      {:ok, response} ->
-        response
-      {:error, %Ecto.StaleEntryError{}} ->
-        respondent = Repo.get(Respondent, session.respondent.id)
-        # Maybe timeout or another action was executed while sync_step was executed, so we need to retry
-        sync_step(respondent, reply, session_mode)
-      value ->
-        value
-    end
   end
 
   def mask_phone_number(%Respondent{} = respondent, {:reply, response}) do
@@ -308,6 +248,59 @@ defmodule Ask.Runtime.Broker do
     end
   end
 
+  defp sync_step_internal(_, _, :invalid_mode, _) do
+    :end
+  end
+
+  defp sync_step_internal(session, reply, session_mode, now) do
+    transaction_result = Repo.transaction(fn ->
+      try do
+        reply = mask_phone_number(session.respondent, reply)
+        session_step = Session.sync_step(session, reply, session_mode)
+        handle_session_step(session_step, now)
+      rescue
+        e in Ecto.StaleEntryError ->
+          Repo.rollback(e)
+        e ->
+          # If we uncomment this a test will fail (the one that cheks that nothing breaks),
+          # but this could help you find a bug in a particular test that is not working.
+          # if Mix.env == :test do
+          #   IO.inspect e
+          #   IO.inspect System.stacktrace()
+          #   raise e
+          # end
+          respondent = Repo.get(Respondent, session.respondent.id)
+          Logger.error(e, "Error occurred while processing sync step (survey_id: #{respondent.survey_id}, respondent_id: #{respondent.id})")
+          Sentry.capture_exception(e, [
+            stacktrace: System.stacktrace(),
+            extra: %{survey_id: respondent.survey_id, respondent_id: respondent.id}])
+
+          try do
+            handle_session_step({:failed, respondent}, now)
+          rescue
+            e ->
+              if Mix.env == :test do
+                IO.inspect e
+                IO.inspect System.stacktrace()
+                raise e
+              end
+              :end
+          end
+      end
+    end)
+
+    case transaction_result do
+      {:ok, response} ->
+        response
+      {:error, %Ecto.StaleEntryError{}} ->
+        respondent = Repo.get(Respondent, session.respondent.id)
+        # Maybe timeout or another action was executed while sync_step was executed, so we need to retry
+        sync_step(respondent, reply, session_mode)
+      value ->
+        value
+    end
+  end
+
   defp update_respondent_and_set_disposition(respondent, session, timeout, %{disposition: disposition} =  changes) do
     old_disposition = respondent.disposition
     if Flow.should_update_disposition(old_disposition, disposition) do
@@ -366,4 +359,10 @@ defmodule Ask.Runtime.Broker do
     |> Regex.compile!
   end
 
+  defp handle_next_action(next_action, respondent_id) do
+    respondent = Repo.get(Respondent, respondent_id)
+    session = if respondent.session, do: Session.load(respondent.session), else: respondent.session
+    RetriesHistogram.next_step(respondent, session, next_action)
+    next_action
+  end
 end
