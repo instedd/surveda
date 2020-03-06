@@ -216,8 +216,11 @@ class WebSettings extends Component {
       inputErrors={this.introMessageErrors()}
       value={this.state.introMessage}
       originalValue={this.state.introMessage}
-      onBlur={text => this.introMessageBlur(text)}
       readOnly={this.props.readOnly}
+      onBlur={text => this.introMessageBlur(text)}
+      // Since we're preventing script injection, we're rendering plain text
+      // Maybe, we should consider doing the same in every mobile web setting
+      plainText
       />
   }
 

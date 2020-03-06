@@ -15,7 +15,7 @@ class MobileWebPrompt extends Component {
   }
 
   render() {
-    const { value, readOnly, onBlur, inputErrors, t } = this.props
+    const { value, readOnly, onBlur, inputErrors, t, plainText } = this.props
     let { label } = this.props
     if (!label) label = t('Mobile Web Message')
 
@@ -30,6 +30,7 @@ class MobileWebPrompt extends Component {
               errors={shouldDisplayErrors && map(inputErrors, (error) => t(...error))}
               value={value}
               readOnly={readOnly}
+              plainText={plainText || false}
               />
           </div>
         </div>
@@ -46,7 +47,8 @@ MobileWebPrompt.propTypes = {
   onBlur: PropTypes.func.isRequired,
   inputErrors: PropTypes.array,
   readOnly: PropTypes.bool,
-  stepId: PropTypes.string
+  stepId: PropTypes.string,
+  plainText: PropTypes.bool
 }
 
 const mapDispatchToProps = (dispatch) => ({
