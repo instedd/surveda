@@ -54,8 +54,8 @@ defmodule Ask.Respondent do
     has_many :survey_log_entries, Ask.SurveyLogEntry
     field :lock_version, :integer, default: 1
     field :stats, Ask.Stats, default: %Ask.Stats{}
-
     field :experiment_name, :string, virtual: true
+    field :user_stopped, :boolean, default: false
 
     timestamps()
   end
@@ -65,8 +65,8 @@ defmodule Ask.Respondent do
   """
   def changeset(struct, params \\ %{}) do
     struct
-    |> cast(params, [:phone_number, :sanitized_phone_number, :canonical_phone_number, :state, :session, :quota_bucket_id, :completed_at, :timeout_at, :questionnaire_id, :mode, :disposition, :mobile_web_cookie_code, :language, :effective_modes, :stats, :section_order, :retry_stat_id])
-    |> validate_required([:phone_number, :state])
+    |> cast(params, [:phone_number, :sanitized_phone_number, :canonical_phone_number, :state, :session, :quota_bucket_id, :completed_at, :timeout_at, :questionnaire_id, :mode, :disposition, :mobile_web_cookie_code, :language, :effective_modes, :stats, :section_order, :retry_stat_id, :user_stopped])
+    |> validate_required([:phone_number, :state, :user_stopped])
     |> validate_inclusion(:disposition, ["registered", "queued", "contacted", "failed", "unresponsive", "started", "ineligible", "rejected", "breakoff", "refused", "partial", "interim partial", "completed"])
     |> validate_inclusion(:state, ["pending", "active", "completed", "failed", "stalled", "rejected", "cancelled"])
     |> Ecto.Changeset.optimistic_lock(:lock_version)

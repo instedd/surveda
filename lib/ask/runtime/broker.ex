@@ -365,7 +365,8 @@ defmodule Ask.Runtime.Broker do
     transaction_result = Repo.transaction(fn ->
       try do
         reply = mask_phone_number(session.respondent, reply)
-        handle_session_step(Session.sync_step(session, reply, session_mode), now)
+        session_step = Session.sync_step(session, reply, session_mode)
+        handle_session_step(session_step, now)
       rescue
         e in Ecto.StaleEntryError ->
           Repo.rollback(e)
@@ -545,7 +546,7 @@ defmodule Ask.Runtime.Broker do
 
   defp update_respondent(%Respondent{} = respondent, :stopped, disposition, _) do
     session = respondent.session |> Session.load
-    update_respondent_and_set_disposition(respondent, session, nil, nil, nil, disposition, "failed")
+    update_respondent_and_set_disposition(respondent, session, nil, %{disposition: disposition, state: "failed", session: nil, timeout_at: nil, user_stopped: true})
   end
 
   defp update_respondent(%Respondent{} = respondent, {:ok, session, timeout}, nil, now) do
@@ -566,7 +567,7 @@ defmodule Ask.Runtime.Broker do
 
   defp update_respondent(%Respondent{} = respondent, {:ok, session, timeout}, disposition, _) do
     timeout_at = Respondent.next_actual_timeout(respondent, timeout, SystemTime.time.now)
-    update_respondent_and_set_disposition(respondent, session, Session.dump(session), timeout, timeout_at, disposition, "active")
+    update_respondent_and_set_disposition(respondent, session, timeout, %{session: Session.dump(session), timeout_at: timeout_at, disposition: disposition, state: "active"})
   end
 
   defp update_respondent(%Respondent{} = respondent, :end, reply_disposition, _) do
@@ -597,11 +598,11 @@ defmodule Ask.Runtime.Broker do
     |> update_quota_bucket(old_disposition, respondent.session["count_partial_results"])
   end
 
-  defp update_respondent_and_set_disposition(respondent, session, dump, timeout, timeout_at, disposition, state) do
+  defp update_respondent_and_set_disposition(respondent, session, timeout, %{disposition: disposition} =  changes) do
     old_disposition = respondent.disposition
     if Flow.should_update_disposition(old_disposition, disposition) do
       respondent
-      |> Respondent.changeset(%{disposition: disposition, state: state, session: dump, timeout_at: timeout_at})
+      |> Respondent.changeset(changes)
       |> Repo.update!
       |> RespondentDispositionHistory.create(old_disposition, session.current_mode |> SessionMode.mode)
       |> update_quota_bucket(old_disposition, session.count_partial_results)

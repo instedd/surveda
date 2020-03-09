@@ -274,7 +274,7 @@ defmodule Ask.RespondentGroupController do
     rows
     |> Stream.map(fn row ->
       canonical_number = Respondent.canonicalize_phone_number(row)
-      %{phone_number: row, sanitized_phone_number: canonical_number, canonical_phone_number: canonical_number, survey_id: survey.id, respondent_group_id: group.id, inserted_at: local_time, updated_at: local_time, hashed_number: Respondent.hash_phone_number(row, project.salt), disposition: "registered", stats: %Stats{}}
+      %{phone_number: row, sanitized_phone_number: canonical_number, canonical_phone_number: canonical_number, survey_id: survey.id, respondent_group_id: group.id, inserted_at: local_time, updated_at: local_time, hashed_number: Respondent.hash_phone_number(row, project.salt), disposition: "registered", stats: %Stats{}, user_stopped: false}
     end)
   end
 

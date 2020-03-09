@@ -3,7 +3,7 @@ defmodule Ask.Runtime.Flow do
   defstruct current_step: nil, questionnaire: nil, mode: nil, language: nil, retries: 0, in_quota_completed_steps: false, has_sections: false, section_order: nil
   alias Ask.{Repo, Questionnaire}
   alias Ask.Runtime.{Reply, Step}
-  alias Ask.Runtime.Flow.Visitor
+  alias Ask.Runtime.Flow.{Visitor, Message}
   alias __MODULE__
 
   @max_retries 2
@@ -18,19 +18,19 @@ defmodule Ask.Runtime.Flow do
     %Flow{questionnaire: quiz, mode: mode, language: quiz.default_language, has_sections: has_sections, section_order: section_order}
   end
 
-  def step(flow, visitor, reply \\ :answer) do
-    step(flow, visitor, reply, flow.mode)
+  def step(flow, visitor, reply, old_disposition) do
+    step(flow, visitor, reply, flow.mode, old_disposition)
   end
 
-  def step(flow, visitor, reply, mode) do
+  def step(flow, visitor, reply, mode, old_disposition) do
     flow
     |> accept_reply(reply, visitor, mode)
-    |> eval(mode)
+    |> eval(mode, old_disposition)
   end
 
-  def retry(flow, visitor) do
+  def retry(flow, visitor, old_disposition) do
     {flow, %Reply{}, visitor}
-    |> eval(flow.mode)
+    |> eval(flow.mode, old_disposition)
   end
 
   def dump(flow) do
@@ -218,7 +218,7 @@ defmodule Ask.Runtime.Flow do
   end
 
   defp accept_reply(flow, {:reply, reply}, visitor, mode) do
-    if String.downcase(reply) == "stop" do
+    if Message.is_stop_reply({:reply, reply}) do
       :stopped
     else
       accept_reply_non_stop(flow, reply, visitor, mode)
@@ -300,6 +300,14 @@ defmodule Ask.Runtime.Flow do
   def should_update_disposition(nil, _), do: true
   def should_update_disposition(_, _), do: false
 
+  defp stopped_disposition_from(old_disposition) do
+    case old_disposition do
+      "started" -> "breakoff"
+      "interim partial" -> "partial"
+      _ -> "refused"
+    end
+  end
+
   def failed_disposition_from(old_disposition) do
     case old_disposition do
       "queued" -> "failed"
@@ -339,15 +347,15 @@ defmodule Ask.Runtime.Flow do
     {:wait_for_reply, state}
   end
 
-  defp eval(:stopped, _mode) do
-    {:stopped, nil, %Reply{disposition: "refused"}}
+  defp eval(:stopped, _mode, old_disposition) do
+    {:stopped, nil, %Reply{disposition: stopped_disposition_from(old_disposition)}}
   end
 
-  defp eval({:no_retries_left, flow}, _mode) do
+  defp eval({:no_retries_left, flow}, _mode, _old_disposition) do
     {:no_retries_left, flow, %Reply{}}
   end
 
-  defp eval({flow, state, visitor}, mode) do
+  defp eval({flow, state, visitor}, mode, old_disposition) do
     step = current_step(flow)
     case step do
       nil ->
@@ -364,7 +372,7 @@ defmodule Ask.Runtime.Flow do
             case visitor |> Visitor.accept_step(step, flow.language) do
               {:continue, visitor} ->
                 flow = %{flow | current_step: next_step_by_skip_logic(flow, step, nil, mode)}
-                eval({flow, state, visitor}, mode)
+                eval({flow, state, visitor}, mode, old_disposition)
               {:stop, visitor} ->
                 reply(state, visitor, flow)
             end
@@ -507,6 +515,12 @@ defmodule Ask.Runtime.Flow.Message do
   def answer do
     :answer
   end
+
+  def is_stop_reply({:reply, reply}), do:
+    String.downcase(reply) == "stop"
+
+  def is_stop_reply(_), do: false
+
 end
 
 defprotocol Ask.Runtime.Flow.Visitor do

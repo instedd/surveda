@@ -741,38 +741,41 @@ defmodule Ask.BrokerTest do
     :ok = broker |> GenServer.stop
   end
 
-  test "mark disposition as refused and respondent as failed when the respondent sends 'STOP'" do
-    [survey, _group, test_channel, _respondent, phone_number] = create_running_survey_with_channel_and_respondent(@flag_steps_refused_skip_logic)
+  describe "STOP MO" do
+    setup do
+      start_test(@explanation_steps_minimal)
+      poll_survey()
 
-    {:ok, _} = Broker.start_link
-    {:ok, logger} = SurveyLogger.start_link
+      :ok
+    end
 
-    # First poll, activate the respondent
-    Broker.handle_info(:poll, nil)
-    assert_received [:setup, ^test_channel, respondent = %Respondent{sanitized_phone_number: ^phone_number}, token]
-    assert_received [:ask, ^test_channel, ^respondent, ^token, ReplyHelper.simple("Do you exercise?", "Do you exercise? Reply 1 for YES, 2 for NO")]
+    test "base scenario (previous to the STOP MO message)" do
+      confirm_delivery("Do you exercise?")
+      assert_respondent(%{current_state: "active", previous_disposition: "queued", current_disposition: "contacted", user_stopped: false})
+    end
 
-    respondent = Repo.get!(Respondent, respondent.id)
-    Broker.sync_step(respondent, Flow.Message.reply("StoP"))
+    test "contacted -> refused" do
+      confirm_delivery("Do you exercise?")
+      respondent_sends_stop()
 
-    respondent = Repo.get!(Respondent, respondent.id)
-    assert respondent.state == "failed"
-    assert respondent.disposition == "refused"
+      assert_respondent(%{current_state: "failed", previous_disposition: "contacted", current_disposition: "refused", user_stopped: true})
+    end
 
-    histories = RespondentDispositionHistory |> Repo.all
-    assert length(histories) == 3
+    test "started -> breakoff" do
+      confirm_delivery("Do you exercise?")
+      respondent_answers("Any thing")
+      respondent_sends_stop()
 
-    history = histories |> Enum.take(-1) |> hd
-    assert history.respondent_id == respondent.id
-    assert history.disposition == "refused"
+      assert_respondent(%{current_state: "failed", previous_disposition: "started", current_disposition: "breakoff", user_stopped: true})
+    end
 
-    :ok = logger |> GenServer.stop
-    last_entry = ((respondent |> Repo.preload(:survey_log_entries)).survey_log_entries) |> Enum.at(-1)
+    test "queued -> refused" do
+      #     This test covers an improbable (and normally unexpected) scenario.
+      #     It's expected that a "queued" respondent isn't yet contacted.
+      respondent_sends_stop()
 
-    assert last_entry.survey_id == survey.id
-    assert last_entry.action_data == "Refused"
-    assert last_entry.action_type == "disposition changed"
-    assert last_entry.disposition == "started"
+      assert_respondent(%{current_state: "failed", previous_disposition: "queued", current_disposition: "refused", user_stopped: true})
+    end
   end
 
   test "mark disposition as completed when partial on end" do
@@ -4003,4 +4006,57 @@ defmodule Ask.BrokerTest do
       Repo.update(respondent |> change |> Respondent.changeset(%{state: new_state}))
     end)
   end
+
+  defp confirm_delivery(message) do
+    respondent = Repo.one!(Respondent)
+    Broker.delivery_confirm(respondent, message)
+  end
+
+  defp start_test(steps) do
+    create_running_survey_with_channel_and_respondent(steps)
+    Broker.start_link
+    SurveyLogger.start_link
+  end
+
+  defp poll_survey(), do:
+    Broker.handle_info(:poll, nil)
+
+  defp respondent_answers(message) do
+    respondent = Repo.one!(Respondent)
+    Broker.sync_step(respondent, Flow.Message.reply(message))
+  end
+
+  defp assert_respondent(%{current_state: current_state, previous_disposition: previous_disposition, current_disposition: current_disposition, user_stopped: user_stopped}) do
+    respondent = Repo.one!(Respondent)
+
+    assert respondent.state == current_state
+    assert respondent.disposition == current_disposition
+    assert respondent.user_stopped == user_stopped
+    assert_last_history_disposition_is(current_disposition)
+    assert_disposition_changed(previous_disposition, current_disposition)
+  end
+
+  defp respondent_sends_stop() do
+    respondent_answers("StoP")
+  end
+
+  defp assert_disposition_changed(old_disposition, new_disposition) do
+    last_entry = SurveyLogEntry |> Repo.all |> take_last
+
+    assert last_entry.action_type == "disposition changed"
+    assert last_entry.disposition == old_disposition
+    assert last_entry.action_data == upcaseFirst(new_disposition)
+  end
+
+  defp assert_last_history_disposition_is(disposition) do
+    last_history = RespondentDispositionHistory |> Repo.all |> take_last
+
+    assert last_history.disposition == disposition
+  end
+
+  defp take_last(records), do:
+    records |> Enum.take(-1) |> hd
+
+  defp upcaseFirst(<<first::utf8, rest::binary>>), do: String.upcase(<<first::utf8>>) <> rest
+
 end
