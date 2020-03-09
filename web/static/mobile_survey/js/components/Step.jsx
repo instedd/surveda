@@ -8,35 +8,53 @@ import ExplanationStep from './steps/ExplanationStep'
 import LanguageSelectionStep from './steps/LanguageSelectionStep'
 import Header from './Header'
 import EndStep from './steps/EndStep'
+import IntroStep from './steps/IntroStep'
 
-class Step extends Component<any> {
+type Props = {
+  dispatch: PropTypes.func.isRequired,
+  respondentId: any,
+  token: string,
+  step: PropTypes.object.isRequired,
+  progress: number,
+  errorMessage: ?string,
+  introMessage: string,
+  colorStyle: PropTypes.object.isRequired
+}
+
+type State = {
+  // User willingly decided to go on with the survey
+  userConsent: boolean
+}
+
+class Step extends Component<Props, State> {
   handleSubmit: PropTypes.func.isRequired
   hideMoreContentHint: PropTypes.func.isRequired
-  props: {
-    dispatch: PropTypes.func.isRequired,
-    respondentId: any,
-    token: string,
-    step: PropTypes.object.isRequired,
-    progress: number,
-    errorMessage: ?string
-  }
 
   constructor(props) {
     super(props)
 
     this.handleSubmit = this.handleSubmit.bind(this)
     this.hideMoreContentHint = this.hideMoreContentHint.bind(this)
+    this.state = { userConsent: false }
+  }
+
+  userConsented() {
+    // Only when user consented, the survey step is fetched
+    this.setState({userConsent: true})
+    // When fetching the survey, the cookie is created. After this first fetch, that cookie is needed to continue the survey, all others will fail.
+    this.fetchStep()
   }
 
   componentDidMount() {
-    this.fetchStep()
     window.addEventListener('scroll', this.hideMoreContentHint)
 
     // This is so that when the user switches between tabs,
     // in case there are multiple tabs open they refresh
     // to the current step and so there's no way to submit
     // an answer for a previous question
-    window.onfocus = () => this.fetchStep()
+    window.onfocus = () => {
+      if (this.state.userConsent) this.fetchStep()
+    }
   }
 
   componentWillUnmount() {
@@ -74,22 +92,30 @@ class Step extends Component<any> {
     return contentHeight > viewportHeight
   }
 
-  stepComponent() {
-    const { step, progress, errorMessage } = this.props
+  stepComponent(userConsent) {
+    const { step, progress, errorMessage, introMessage } = this.props
 
-    switch (step.type) {
-      case 'multiple-choice':
-        return <MultipleChoiceStep ref='step' step={step} onClick={value => this.handleValue(value)} />
-      case 'numeric':
-        return <NumericStep ref='step' step={step} errorMessage={errorMessage} onRefusal={value => this.handleValue(value)} />
-      case 'explanation':
-        return <ExplanationStep ref='step' step={step} progress={progress} />
-      case 'language-selection':
-        return <LanguageSelectionStep ref='step' step={step} onClick={value => this.handleValue(value)} />
-      case 'end':
-        return <EndStep ref='step' step={step} />
-      default:
-        throw new Error(`Unknown step type: ${step.type}`)
+    if (userConsent) {
+      switch (step.type) {
+        case 'multiple-choice':
+          return <MultipleChoiceStep ref='step' step={step} onClick={value => this.handleValue(value)} />
+        case 'numeric':
+          return <NumericStep ref='step' step={step} errorMessage={errorMessage} onRefusal={value => this.handleValue(value)} />
+        case 'explanation':
+          return <ExplanationStep ref='step' step={step} progress={progress} />
+        case 'language-selection':
+          return <LanguageSelectionStep ref='step' step={step} onClick={value => this.handleValue(value)} />
+        case 'end':
+          return <EndStep ref='step' step={step} />
+        default:
+          throw new Error(`Unknown step type: ${step.type}`)
+      }
+    }
+    else {
+      // Before the first step fetch, show an intro message with user consent button.
+      // We added this intro step to avoid setting the identifier cookie before the actual respondent is taking the survey.
+      // Because we limit the survey response to a single user, and web bots are ruining the respondent opportunity of taking it.
+      return <IntroStep introMessage={introMessage} onClick={value => this.userConsented()} />
     }
   }
 
@@ -107,7 +133,11 @@ class Step extends Component<any> {
 
   render() {
     const { step } = this.props
-    if (!step) {
+    const { userConsent } = this.state
+
+    const isLoading = userConsent && !step
+
+    if (isLoading) {
       return <div>Loading...</div>
     }
 
@@ -116,7 +146,7 @@ class Step extends Component<any> {
         <Header />
         <main>
           <form onSubmit={this.handleSubmit}>
-            {this.stepComponent()}
+            { this.stepComponent(userConsent) }
           </form>
         </main>
         <div ref='moreContentHint' className='more-content-arrow'>
@@ -130,11 +160,13 @@ class Step extends Component<any> {
   }
 
   primaryColor() {
-    return window.colorStyle && window.colorStyle.primary_color ? window.colorStyle.primary_color : 'rgb(102,72,162)'
+    const { colorStyle}  = this.props
+    return colorStyle && colorStyle.primary_color ? colorStyle.primary_color : 'rgb(102,72,162)'
   }
 
   secondaryColor() {
-    return window.colorStyle && window.colorStyle.secondary_color ? window.colorStyle.secondary_color : 'rgb(251,154,0)'
+    const { colorStyle}  = this.props
+    return colorStyle && colorStyle.secondary_color ? colorStyle.secondary_color : 'rgb(251,154,0)'
   }
 
   getChildContext() {
@@ -147,7 +179,9 @@ const mapStateToProps = (state) => ({
   progress: state.step.progress,
   errorMessage: state.step.errorMessage,
   respondentId: window.respondentId,
-  token: window.token
+  token: window.token,
+  introMessage: state.config.introMessage,
+  colorStyle: state.config.colorStyle
 })
 
 Step.childContextTypes = {

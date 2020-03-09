@@ -40,10 +40,11 @@ export const validate = (state: DataStore<Questionnaire>) => {
   validateMessage('errorMessage', data.settings.errorMessage, context)
   validateThankYouMessage(data.settings.thankYouMessage, context)
 
-  validateTitle(data, context)
-  validateMobileWebSmsMessage(data, context)
-  validateMobileWebSurveyIsOverMessage(data, context)
-  validateSurveyAlreadyTakenMessage(data, context)
+  validateMobileWebRequiredField(data, context, 'mobileWebIntroMessage', k('Intro message must not be blank'))
+  validateMobileWebRequiredField(data, context, 'mobileWebSmsMessage', k('SMS message must not be blank'))
+  validateMobileWebRequiredField(data, context, 'mobileWebSurveyIsOverMessage', k('"Survey is over" must not be blank'))
+  validateMobileWebRequiredField(data, context, 'title', k('Title must not be blank'), 'multilingual')
+  validateMobileWebRequiredField(data, context, 'surveyAlreadyTakenMessage', k('"Survey already taken" message must not be blank'), 'multilingual')
   validateMobileWebColorStyle(data, context)
 
   state.errorsByPath = errorsByPath(state.errors)
@@ -430,23 +431,20 @@ const validateThankYouMessage = (msg: ?LocalizedPrompt, context: ValidationConte
   }
 }
 
-const validateTitle = (data, context) => {
+const validateMobileWebRequiredField = (data: Questionnaire, context: ValidationContext, fieldName: string, validationMessage: string, languages: ?string) => {
   if (!context.mobileweb) return
 
-  context.languages.forEach(lang => {
-    const text = (data.settings.title || {})[lang]
-    if (isBlank(text)) {
-      addError(context, `title['${lang}']`, k('Title must not be blank'), lang, 'mobileweb')
+  if (languages == 'multilingual') {
+    context.languages.forEach(lang => {
+      const text = (data.settings[fieldName] || {})[lang]
+      if (isBlank(text)) {
+        addError(context, `${fieldName}['${lang}']`, validationMessage, lang, 'mobileweb')
+      }
+    })
+  } else {
+    if (isBlank(data.settings[fieldName])) {
+      addError(context, `${fieldName}`, validationMessage, null, 'mobileweb')
     }
-  })
-}
-
-const validateMobileWebSmsMessage = (data, context) => {
-  if (!context.mobileweb) return
-
-  if (isBlank(data.settings.mobileWebSmsMessage)) {
-    addError(context, 'mobileWebSmsMessage', k('Mobile web SMS message must not be blank'), null, 'mobileweb')
-    return
   }
 }
 
@@ -467,25 +465,6 @@ const validateMobileWebColorStyle = (data, context) => {
     }
   }
   return
-}
-
-const validateMobileWebSurveyIsOverMessage = (data, context) => {
-  if (!context.mobileweb) return
-
-  if (isBlank(data.settings.mobileWebSurveyIsOverMessage)) {
-    addError(context, 'mobileWebSurveyIsOverMessage', k('Mobile web "Survey is over" message must not be blank'), null, 'mobileweb')
-  }
-}
-
-const validateSurveyAlreadyTakenMessage = (data, context) => {
-  if (!context.mobileweb) return
-
-  context.languages.forEach(lang => {
-    const text = (data.settings.surveyAlreadyTakenMessage || {})[lang]
-    if (isBlank(text)) {
-      addError(context, `surveyAlreadyTakenMessage['${lang}']`, k('"Survey already taken" message must not be blank'), lang, 'mobileweb')
-    }
-  })
 }
 
 const validateDuplicateStepStore = (steps, quotaCompletedSteps, context) => {

@@ -16,6 +16,7 @@ export type Questionnaire = {
 
 export type Settings = {
   errorMessage?: LocalizedPrompt,
+  mobileWebIntroMessage?: ?string,
   mobileWebSmsMessage?: ?string,
   mobileWebSurveyIsOverMessage?: ?string,
   mobileWebColorStyle?: ColorStylePrompt,

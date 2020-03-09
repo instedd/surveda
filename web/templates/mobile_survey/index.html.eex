@@ -1,10 +1,9 @@
 <body>
-  <div id="root" role="main"></div>
+  <div id="root" role="main" data-config="<%= Poison.encode!(%{introMessage: @mobile_web_intro_message, colorStyle: @color_style}) %>"></div>
   <script>
     window.mixEnv = "<%= Mix.env %>"
     window.respondentId = <%= @respondent_id %>
     window.token = "<%= @token %>"
-    window.colorStyle = <%= raw Poison.encode!(@color_style) %>
   </script>
   <script src="<%= static_path(@conn, "/js/mobileSurvey.js") %>"></script>
 </body>

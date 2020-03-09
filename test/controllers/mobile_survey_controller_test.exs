@@ -15,6 +15,35 @@ defmodule Ask.MobileSurveyControllerTest do
     {:ok, conn: conn}
   end
 
+  describe "index" do
+    setup %{conn: conn} do
+      test_channel = TestChannel.new(false, true)
+
+      channel = insert(:channel, settings: test_channel |> TestChannel.settings, type: "sms")
+      quiz = insert(:questionnaire, steps: @mobileweb_dummy_steps, settings: %{"error_message" => %{"en" => %{"mobileweb" => "Invalid value"}}, "title" => %{"en" => "Survey"}, "mobile_web_intro_message" => "My HTML escaped & intro message", "mobile_web_color_style" => %{"secondary_color" => "#ae1", "primary_color" => "#e21"}})
+      survey = insert(:survey, %{schedule: Ask.Schedule.always(), state: "running", questionnaires: [quiz], mode: [["mobileweb"]]})
+      group = insert(:respondent_group, survey: survey, respondents_count: 1) |> Repo.preload(:channels)
+
+      RespondentGroupChannel.changeset(%RespondentGroupChannel{}, %{respondent_group_id: group.id, channel_id: channel.id, mode: "mobileweb"}) |> Repo.insert
+
+      respondent = insert(:respondent, survey: survey, respondent_group: group)
+
+      Broker.start_link
+      Ask.Config.start_link
+      Broker.poll
+
+      {:ok, conn: conn, respondent: respondent}
+    end
+
+    test "includes config in root", %{conn: conn, respondent: respondent} do
+      conn = get conn, mobile_survey_path(conn, :index, respondent.id, %{token: Respondent.token(respondent.id)})
+
+      response = response(conn, 200)
+
+      assert String.contains?(response, "<div id=\"root\" role=\"main\" data-config=\"{&quot;introMessage&quot;:&quot;My HTML escaped &amp; intro message&quot;,&quot;colorStyle&quot;:{&quot;secondary_color&quot;:&quot;#ae1&quot;,&quot;primary_color&quot;:&quot;#e21&quot;}}\"></div>\n")
+    end
+  end
+
   test "respondent flow via mobileweb", %{conn: conn} do
     test_channel = TestChannel.new(false, true)
 
@@ -69,7 +98,6 @@ defmodule Ask.MobileSurveyControllerTest do
       "type" => "explanation"
     } = json["step"]
     assert json["progress"] == 20.0
-    assert json["title"] == "Survey"
 
     conn = get conn, mobile_survey_path(conn, :get_step, respondent.id, %{token: token})
     json = json_response(conn, 200)

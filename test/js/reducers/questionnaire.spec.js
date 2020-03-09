@@ -2722,6 +2722,18 @@ describe('questionnaire reducer', () => {
       expect(state.data.settings.mobileWebSmsMessage).toEqual(mobileWebSmsMessage)
     })
 
+    it('should set mobile web intro message', () => {
+      const mobileWebIntroMessage = 'Go ahead!'
+
+      const state = playActions([
+        actions.fetch(1, 1),
+        actions.receive(questionnaire),
+        actions.setMobileWebIntroMessage(mobileWebIntroMessage)
+      ])
+
+      expect(state.data.settings.mobileWebIntroMessage).toEqual(mobileWebIntroMessage)
+    })
+
     it('should set mobile web survey is over message', () => {
       const mobileWebSurveyIsOverMessage = 'Done'
 

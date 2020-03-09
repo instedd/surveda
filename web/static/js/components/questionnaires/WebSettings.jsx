@@ -39,6 +39,7 @@ class WebSettings extends Component {
       errorMessage: props.errorMessage,
       thankYouMessage: props.thankYouMessage,
       title: props.title,
+      introMessage: props.introMessage,
       smsMessage: props.smsMessage,
       surveyIsOverMessage: props.surveyIsOverMessage,
       surveyAlreadyTakenMessage: props.surveyAlreadyTakenMessage,
@@ -47,11 +48,11 @@ class WebSettings extends Component {
     }
   }
 
-  messageChange(text, key) {
+  messageChange(key, text) {
     this.setState({[key]: text})
   }
 
-  messageBlur(text, key) {
+  messageBlur(key, text) {
     this.props.dispatch(actions.setMobileWebQuestionnaireMsg(key, text))
   }
 
@@ -63,6 +64,10 @@ class WebSettings extends Component {
     this.props.dispatch(actions.setMobileWebSmsMessage(text))
   }
 
+  introMessageBlur(text) {
+    this.props.dispatch(actions.setMobileWebIntroMessage(text))
+  }
+
   surveyIsOverMessageBlur(text) {
     this.props.dispatch(actions.setMobileWebSurveyIsOverMessage(text))
   }
@@ -71,7 +76,7 @@ class WebSettings extends Component {
     this.props.dispatch(actions.setSurveyAlreadyTakenMessage(text))
   }
 
-  colorSelectionBlur(text, mode) {
+  colorSelectionBlur(mode, text) {
     const { dispatch } = this.props
     if (mode == 'primary') {
       dispatch(actions.setPrimaryColor(this.state.primaryColor))
@@ -144,6 +149,9 @@ class WebSettings extends Component {
               {this.titleComponent()}
             </li>
             <li className='collection-item'>
+              {this.introMessageComponent()}
+            </li>
+            <li className='collection-item'>
               {this.smsMessageComponent()}
             </li>
             <li className='collection-item'>
@@ -164,7 +172,7 @@ class WebSettings extends Component {
       inputErrors={this.messageErrors('errorMessage')}
       value={this.state.errorMessage}
       originalValue={this.state.errorMessage}
-      onBlur={text => this.messageBlur(text, 'errorMessage')}
+      onBlur={text => this.messageBlur('errorMessage', text)}
       readOnly={this.props.readOnly}
       />
   }
@@ -175,7 +183,7 @@ class WebSettings extends Component {
       inputErrors={this.messageErrors('thankYouMessage')}
       value={this.state.thankYouMessage}
       originalValue={this.state.thankYouMessage}
-      onBlur={text => this.messageBlur(text, 'thankYouMessage')}
+      onBlur={text => this.messageBlur('thankYouMessage', text)}
       readOnly={this.props.readOnly}
       />
   }
@@ -193,13 +201,24 @@ class WebSettings extends Component {
           <input
             type='text'
             disabled={this.props.readOnly}
-            onChange={text => this.messageChange(text.target.value, 'title')}
+            onChange={text => this.messageChange('title', text.target.value)}
             onBlur={text => this.titleBlur(text.target.value)}
             className={className}
            />
         </InputWithLabel>
       </div>
     </div>
+  }
+
+  introMessageComponent() {
+    return <MobileWebPrompt id='web_settings_intro_message'
+      label={this.props.t('Intro message')}
+      inputErrors={this.introMessageErrors()}
+      value={this.state.introMessage}
+      originalValue={this.state.introMessage}
+      onBlur={text => this.introMessageBlur(text)}
+      readOnly={this.props.readOnly}
+      />
   }
 
   smsMessageComponent() {
@@ -257,8 +276,8 @@ class WebSettings extends Component {
             <input
               type='text'
               disabled={this.props.readOnly}
-              onChange={text => this.messageChange(text.target.value, 'primaryColor')}
-              onBlur={text => this.colorSelectionBlur(text.target.value, 'primary')}
+              onChange={text => this.messageChange('primaryColor', text.target.value)}
+              onBlur={text => this.colorSelectionBlur('primary', text.target.value)}
               className={primaryClassName}
            />
           </InputWithLabel>
@@ -269,8 +288,8 @@ class WebSettings extends Component {
             <input
               type='text'
               disabled={this.props.readOnly}
-              onChange={text => this.messageChange(text.target.value, 'secondaryColor')}
-              onBlur={text => this.colorSelectionBlur(text.target.value, 'secondary')}
+              onChange={text => this.messageChange('secondaryColor', text.target.value)}
+              onBlur={text => this.colorSelectionBlur('secondary', text.target.value)}
               className={secondaryClassName}
            />
           </InputWithLabel>
@@ -287,6 +306,11 @@ class WebSettings extends Component {
   titleErrors() {
     const { questionnaire, errorsByPath } = this.props
     return errorsByPath[`title['${questionnaire.activeLanguage}']`]
+  }
+
+  introMessageErrors() {
+    const { errorsByPath } = this.props
+    return errorsByPath['mobileWebIntroMessage']
   }
 
   smsMessageErrors() {
@@ -317,6 +341,7 @@ class WebSettings extends Component {
     return !!this.messageErrors('errorMessage') ||
       !!this.messageErrors('thankYouMessage') ||
       !!this.titleErrors() ||
+      !!this.introMessageErrors() ||
       !!this.smsMessageErrors() ||
       !!this.surveyIsOverMessageErrors() ||
       !!this.surveyAlreadyTakenMessageErrors() ||
@@ -341,6 +366,7 @@ WebSettings.propTypes = {
   t: PropTypes.func,
   thankYouMessage: PropTypes.string,
   title: PropTypes.string,
+  introMessage: PropTypes.string,
   smsMessage: PropTypes.string,
   surveyIsOverMessage: PropTypes.string,
   surveyAlreadyTakenMessage: PropTypes.string,
@@ -355,6 +381,7 @@ const mapStateToProps = (state, ownProps) => {
     errorMessage: getPromptMobileWeb(questionnaire.settings.errorMessage, questionnaire.activeLanguage),
     thankYouMessage: getPromptMobileWeb(questionnaire.settings.thankYouMessage, questionnaire.activeLanguage),
     title: (questionnaire.settings.title || {})[questionnaire.activeLanguage] || '',
+    introMessage: questionnaire.settings.mobileWebIntroMessage || '',
     smsMessage: questionnaire.settings.mobileWebSmsMessage || '',
     surveyIsOverMessage: questionnaire.settings.mobileWebSurveyIsOverMessage || '',
     surveyAlreadyTakenMessage: (questionnaire.settings.surveyAlreadyTakenMessage || {})[questionnaire.activeLanguage] || '',
