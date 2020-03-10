@@ -51,52 +51,57 @@ defmodule Ask.Runtime.NuntiumChannel do
   end
 
   def callback(conn, %{"path" => ["status"], "respondent_id" => respondent_id, "state" => state} = args, broker) do
-    case Repo.get(Respondent, respondent_id) do
-      nil ->
-        # Ignore the callback if the respondent doesn't exist, otherwise Nuntium will retry forever
-        :ok
+    Respondent.with_lock(respondent_id, fn respondent ->
+      case respondent do
+        nil ->
+          # Ignore the callback if the respondent doesn't exist, otherwise Nuntium will retry forever
+          :ok
 
-      respondent ->
-        case state do
-          "failed" ->
-            broker.channel_failed(respondent)
-          "delivered" ->
-            broker.delivery_confirm(respondent, args["step_title"], "sms")
-          _ -> :ok
-        end
-    end
-    SurvedaMetrics.increment_counter_with_label(:surveda_nuntium_status_callback, [state])
-
+        respondent ->
+          case state do
+            "failed" ->
+              broker.channel_failed(respondent)
+            "delivered" ->
+              broker.delivery_confirm(respondent, args["step_title"], "sms")
+            _ -> :ok
+          end
+      end
+      SurvedaMetrics.increment_counter_with_label(:surveda_nuntium_status_callback, [state])
+    end)
     conn |> send_resp(200, "")
   end
 
   def callback(conn, %{"from" => from, "body" => body}, broker) do
     %URI{host: phone_number} = URI.parse(from)
 
+    #FIXME: only get the id
     respondent = Repo.one(from r in Respondent,
       where: r.sanitized_phone_number == ^phone_number and (r.state == "active" or r.state == "stalled"),
       order_by: [desc: r.updated_at],
       limit: 1)
 
     reply = case respondent do
-      nil ->
-        nil
-      %Respondent{session: %{"current_mode" => %{"mode" => "sms"}}} ->
-        case broker.sync_step(respondent, Flow.Message.reply(body), "sms") do
-          {:reply, reply} ->
-            update_stats(respondent, reply)
-            reply
-          {:end, {:reply, reply}} ->
-            update_stats(respondent, reply)
-            reply
-          :end ->
-            update_stats(respondent)
+      nil -> nil
+      _ -> Respondent.with_lock(respondent.id, fn respondent ->
+        case respondent do
+          %Respondent{session: %{"current_mode" => %{"mode" => "sms"}}} ->
+            case broker.sync_step(respondent, Flow.Message.reply(body), "sms") do
+              {:reply, reply} ->
+                update_stats(respondent, reply)
+                reply
+              {:end, {:reply, reply}} ->
+                update_stats(respondent, reply)
+                reply
+              :end ->
+                update_stats(respondent)
+                nil
+            end
+          _ ->
             nil
         end
-      _ ->
-        nil
+      end)
     end
-    json_reply = reply_to_messages(reply, from, respondent)
+    json_reply = reply_to_messages(reply, from, respondent) # FIXME: only pass the respondent.id
     SurvedaMetrics.increment_counter(:surveda_nuntium_incoming)
     Phoenix.Controller.json(conn, json_reply)
   end
@@ -123,7 +128,7 @@ defmodule Ask.Runtime.NuntiumChannel do
 
   def update_stats(respondent, reply \\ %Reply{}) do
     respondent = Respondent
-      |> Repo.get(respondent.id)
+      |> Repo.get(respondent.id) #FIXME: this should no longer be necessary
 
     stats = respondent.stats
     stats = stats
@@ -279,7 +284,7 @@ defmodule Ask.Runtime.NuntiumChannel do
 
     def ask(channel, respondent, token, reply) do
       to = "sms://#{respondent.sanitized_phone_number}"
-      messages = Ask.Runtime.NuntiumChannel.reply_to_messages(reply, to, respondent) |>
+      messages = Ask.Runtime.NuntiumChannel.reply_to_messages(reply, to, respondent) |> #FIXME: only pass respondent.id
         Enum.map(fn(msg) ->
           Map.merge(msg, %{suggested_channel: channel.settings["nuntium_channel"], channel: channel.settings["nuntium_channel"], session_token: token})
         end)
