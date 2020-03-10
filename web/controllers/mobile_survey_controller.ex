@@ -71,10 +71,8 @@ defmodule Ask.MobileSurveyController do
   end
 
   defp sync_step(conn, respondent_id, value) do
-    respondent = Repo.get!(Respondent, respondent_id)
-    survey = Repo.preload(respondent, :survey).survey
-
-    {step, progress, error_message} =
+    {step, progress, error_message} = Respondent.with_lock(respondent_id, fn respondent ->
+      survey = Repo.preload(respondent, :survey).survey
       cond do
         survey.state == "terminated" ->
           questionnaires = Repo.preload(survey, :questionnaires).questionnaires
@@ -93,12 +91,12 @@ defmodule Ask.MobileSurveyController do
         true ->
           {end_step(fetch_survey_already_taken_message(respondent)), end_progress(), nil}
       end
+    end, &Repo.preload(&1, :questionnaire))
 
     json(conn, %{
       step: step,
       progress: progress,
-      error_message:
-      error_message
+      error_message: error_message
     })
   end
 
@@ -129,9 +127,8 @@ defmodule Ask.MobileSurveyController do
   end
 
   defp fetch_survey_already_taken_message(respondent) do
-    questionnaire = Repo.preload(respondent, :questionnaire).questionnaire
-    language = respondent.language || questionnaire.default_language
-    (questionnaire.settings["survey_already_taken_message"] || %{})[language] || "You already took this survey"
+    language = respondent.language || respondent.questionnaire.default_language
+    (respondent.questionnaire.settings["survey_already_taken_message"] || %{})[language] || "You already took this survey"
   end
 
   defp authorize(conn, respondent_id, token, success_fn) do
