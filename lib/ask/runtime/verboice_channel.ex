@@ -245,7 +245,7 @@ defmodule Ask.Runtime.VerboiceChannel do
 
   def callback(conn, %{"path" => ["status", respondent_id, _token], "CallStatus" => status, "CallDuration" => call_duration_seconds, "CallSid" => call_sid} = params) do
     call_duration = call_duration_seconds |> String.to_integer
-    Respondent.with_lock(respondent_id, fn respondent ->
+    Respondent.with_lock(respondent_id, fn respondent -> #FIXME: Before respondent was being fetch with Repo.get! that throws an exception. nil respondent should be managed (see NuntiumChannel)
       respondent = update_call_time_seconds(respondent, call_sid, call_duration)
       case status do
         "expired" ->

@@ -74,15 +74,15 @@ defmodule Ask.Runtime.NuntiumChannel do
   def callback(conn, %{"from" => from, "body" => body}, broker) do
     %URI{host: phone_number} = URI.parse(from)
 
-    #FIXME: only get the id
-    respondent = Repo.one(from r in Respondent,
+    respondent_id = Repo.one(from r in Respondent,
+      select: r.id,
       where: r.sanitized_phone_number == ^phone_number and (r.state == "active" or r.state == "stalled"),
       order_by: [desc: r.updated_at],
       limit: 1)
 
-    reply = case respondent do
+    reply = case respondent_id do
       nil -> nil
-      _ -> Respondent.with_lock(respondent.id, fn respondent ->
+      _ -> Respondent.with_lock(respondent_id, fn respondent ->
         case respondent do
           %Respondent{session: %{"current_mode" => %{"mode" => "sms"}}} ->
             case broker.sync_step(respondent, Flow.Message.reply(body), "sms") do
@@ -101,7 +101,7 @@ defmodule Ask.Runtime.NuntiumChannel do
         end
       end)
     end
-    json_reply = reply_to_messages(reply, from, respondent) # FIXME: only pass the respondent.id
+    json_reply = reply_to_messages(reply, from, respondent_id)
     SurvedaMetrics.increment_counter(:surveda_nuntium_incoming)
     Phoenix.Controller.json(conn, json_reply)
   end
@@ -111,15 +111,15 @@ defmodule Ask.Runtime.NuntiumChannel do
     conn |> send_resp(200, "OK")
   end
 
-  def reply_to_messages(nil, _to, _respondent) do; []; end
+  def reply_to_messages(nil, _to, _respondent_id) do; []; end
   def reply_to_messages(_reply, _to, nil) do; []; end
-  def reply_to_messages(reply, to, respondent) do
+  def reply_to_messages(reply, to, respondent_id) do
     Enum.flat_map Reply.steps(reply), fn step ->
       step.prompts |> Enum.with_index |> Enum.map(fn {prompt, index} ->
         %{
           to: to,
           body: prompt,
-          respondent_id: respondent.id,
+          respondent_id: respondent_id,
           step_title: ReplyStep.title_with_index(step, index + 1)
         }
       end)
@@ -284,7 +284,7 @@ defmodule Ask.Runtime.NuntiumChannel do
 
     def ask(channel, respondent, token, reply) do
       to = "sms://#{respondent.sanitized_phone_number}"
-      messages = Ask.Runtime.NuntiumChannel.reply_to_messages(reply, to, respondent) |> #FIXME: only pass respondent.id
+      messages = Ask.Runtime.NuntiumChannel.reply_to_messages(reply, to, respondent.id) |>
         Enum.map(fn(msg) ->
           Map.merge(msg, %{suggested_channel: channel.settings["nuntium_channel"], channel: channel.settings["nuntium_channel"], session_token: token})
         end)
