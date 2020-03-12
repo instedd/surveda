@@ -2,7 +2,7 @@ defmodule Ask.Runtime.VerboiceChannel do
   alias __MODULE__
   use Ask.Web, :model
   alias Ask.{Repo, Respondent, Channel, SurvedaMetrics, Stats}
-  alias Ask.Runtime.{Broker, Flow, Reply, RetriesHistogram}
+  alias Ask.Runtime.{Survey, Flow, Reply, RetriesHistogram}
   alias Ask.Router.Helpers
   import Plug.Conn
   import XmlBuilder
@@ -199,39 +199,39 @@ defmodule Ask.Runtime.VerboiceChannel do
   defp match_channel(_, _), do: false
 
   defp channel_failed(respondent, "failed", %{"CallStatusReason" => "Busy", "CallStatusCode" => code}) do
-    Broker.channel_failed(respondent, "User hangup (#{code})")
+    Survey.channel_failed(respondent, "User hangup (#{code})")
   end
 
   defp channel_failed(respondent, "failed", %{"CallStatusReason" => reason, "CallStatusCode" => code}) do
-    Broker.channel_failed(respondent, "#{reason} (#{code})")
+    Survey.channel_failed(respondent, "#{reason} (#{code})")
   end
 
   defp channel_failed(respondent, status, %{"CallStatusReason" => reason, "CallStatusCode" => code}) do
-    Broker.channel_failed(respondent, "#{status}: #{reason} (#{code})")
+    Survey.channel_failed(respondent, "#{status}: #{reason} (#{code})")
   end
 
   defp channel_failed(respondent, "failed", %{"CallStatusReason" => "Busy"}) do
-    Broker.channel_failed(respondent, "User hangup")
+    Survey.channel_failed(respondent, "User hangup")
   end
 
   defp channel_failed(respondent, "failed", %{"CallStatusReason" => reason}) do
-    Broker.channel_failed(respondent, "#{reason}")
+    Survey.channel_failed(respondent, "#{reason}")
   end
 
   defp channel_failed(respondent, status, %{"CallStatusReason" => reason}) do
-    Broker.channel_failed(respondent, "#{status}: #{reason}")
+    Survey.channel_failed(respondent, "#{status}: #{reason}")
   end
 
   defp channel_failed(respondent, "failed", %{"CallStatusCode" => code}) do
-    Broker.channel_failed(respondent, "(#{code})")
+    Survey.channel_failed(respondent, "(#{code})")
   end
 
   defp channel_failed(respondent, status, %{"CallStatusCode" => code}) do
-    Broker.channel_failed(respondent, "#{status} (#{code})")
+    Survey.channel_failed(respondent, "#{status} (#{code})")
   end
 
   defp channel_failed(respondent, status, _) do
-    Broker.channel_failed(respondent, status)
+    Survey.channel_failed(respondent, status)
   end
 
   defp update_call_time_seconds(respondent, call_sid, call_time) do
@@ -253,7 +253,7 @@ defmodule Ask.Runtime.VerboiceChannel do
           case status do
             "expired" ->
               # respondent is still being considered as active in Surveda
-              Broker.contact_attempt_expired(respondent)
+              Survey.contact_attempt_expired(respondent)
             s when s in ["failed", "busy", "no-answer"] ->
               # respondent should no longer be considered as active
               respondent = RetriesHistogram.respondent_no_longer_active(respondent)
@@ -268,10 +268,10 @@ defmodule Ask.Runtime.VerboiceChannel do
   end
 
   def callback(conn, params) do
-    callback(conn, params, Broker)
+    callback(conn, params, Survey)
   end
 
-  def callback(conn, params = %{"respondent" => respondent_id}, broker) do
+  def callback(conn, params = %{"respondent" => respondent_id}, survey) do
     response_content = Respondent.with_lock(respondent_id, fn respondent ->
       case respondent do
         nil ->
@@ -286,7 +286,7 @@ defmodule Ask.Runtime.VerboiceChannel do
             digits -> Flow.Message.reply(digits)
           end
 
-          case broker.sync_step(respondent, response, "ivr") do
+          case survey.sync_step(respondent, response, "ivr") do
             {:reply, reply} ->
               prompts = Reply.prompts(reply)
               num_digits = Reply.num_digits(reply)

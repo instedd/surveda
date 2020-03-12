@@ -1,4 +1,4 @@
-defmodule Ask.Runtime.Broker do
+defmodule Ask.Runtime.Survey do
   use Timex
   import Ecto.Query
   import Ecto

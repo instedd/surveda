@@ -21,10 +21,7 @@ defmodule Ask.Survey do
     ConfigHelper,
     SystemTime
   }
-  alias Ask.Runtime.{
-    Broker,
-    ChannelStatusServer
-  }
+  alias Ask.Runtime.ChannelStatusServer
   alias Ask.Ecto.Type.JSON
 
   @max_int 2147483647
@@ -319,7 +316,7 @@ defmodule Ask.Survey do
     }
   end
 
-  def environment_variable_named(name), do: ConfigHelper.get_config(Broker, name, &String.to_integer/1)
+  def environment_variable_named(name), do: ConfigHelper.get_config(Ask.Runtime.Broker, name, &String.to_integer/1)
 
   def launched?(survey) do
     survey.state in ["running", "terminated"]
@@ -506,7 +503,6 @@ defmodule Ask.Survey do
   end
 
   def respondents_by_state(survey) do
-    #used by the broker to calculate batch size
     by_state_defaults = %{
       "active" => 0,
       "pending" => 0,

@@ -1,7 +1,7 @@
 defmodule Ask.Runtime.NuntiumChannel do
   @behaviour Ask.Runtime.ChannelProvider
   use Ask.Web, :model
-  alias Ask.Runtime.{Broker, NuntiumChannel, Flow, Reply, ReplyStep}
+  alias Ask.Runtime.{Survey, NuntiumChannel, Flow, Reply, ReplyStep}
   alias Ask.{Repo, Respondent, Channel, Stats, SurvedaMetrics}
   import Ecto.Query
   import Plug.Conn
@@ -47,10 +47,10 @@ defmodule Ask.Runtime.NuntiumChannel do
   end
 
   def callback(conn, params) do
-    callback(conn, params, Broker)
+    callback(conn, params, Survey)
   end
 
-  def callback(conn, %{"path" => ["status"], "respondent_id" => respondent_id, "state" => state} = args, broker) do
+  def callback(conn, %{"path" => ["status"], "respondent_id" => respondent_id, "state" => state} = args, survey) do
     Respondent.with_lock(respondent_id, fn respondent ->
       case respondent do
         nil ->
@@ -60,9 +60,9 @@ defmodule Ask.Runtime.NuntiumChannel do
         respondent ->
           case state do
             "failed" ->
-              broker.channel_failed(respondent)
+              survey.channel_failed(respondent)
             "delivered" ->
-              broker.delivery_confirm(respondent, args["step_title"], "sms")
+              survey.delivery_confirm(respondent, args["step_title"], "sms")
             _ -> :ok
           end
       end
@@ -71,7 +71,7 @@ defmodule Ask.Runtime.NuntiumChannel do
     conn |> send_resp(200, "")
   end
 
-  def callback(conn, %{"from" => from, "body" => body}, broker) do
+  def callback(conn, %{"from" => from, "body" => body}, survey) do
     %URI{host: phone_number} = URI.parse(from)
 
     respondent_id = Repo.one(from r in Respondent,
@@ -85,7 +85,7 @@ defmodule Ask.Runtime.NuntiumChannel do
       _ -> Respondent.with_lock(respondent_id, fn respondent ->
         case respondent do
           %Respondent{session: %{"current_mode" => %{"mode" => "sms"}}} ->
-            case broker.sync_step(respondent, Flow.Message.reply(body), "sms") do
+            case survey.sync_step(respondent, Flow.Message.reply(body), "sms") do
               {:reply, reply} ->
                 update_stats(respondent, reply)
                 reply

@@ -4,8 +4,8 @@ defmodule Ask.BrokerTest do
   use Timex
   use Ask.MockTime
   use Ask.TestHelpers
-  alias Ask.Runtime.{Broker, ProactiveBroker, Flow, SurveyLogger, ReplyHelper, ChannelStatusServer}
-  alias Ask.{Repo, Survey, Respondent, RespondentDispositionHistory, TestChannel, QuotaBucket, Questionnaire, RespondentGroupChannel, SurveyLogEntry, Schedule, StepBuilder, RetryStat}
+  alias Ask.Runtime.{Survey, ProactiveBroker, Flow, SurveyLogger, ReplyHelper, ChannelStatusServer}
+  alias Ask.{Repo, Respondent, RespondentDispositionHistory, TestChannel, QuotaBucket, Questionnaire, RespondentGroupChannel, SurveyLogEntry, Schedule, StepBuilder, RetryStat}
   alias Ask.Router.Helpers, as: Routes
   require Ask.Runtime.ReplyHelper
 
@@ -18,7 +18,7 @@ defmodule Ask.BrokerTest do
     survey = insert(:survey, %{schedule: Schedule.always()})
     ProactiveBroker.handle_info(:poll, nil)
 
-    survey = Repo.get(Survey, survey.id)
+    survey = Repo.get(Ask.Survey, survey.id)
     assert survey.state == "not_ready"
   end
 
@@ -26,8 +26,8 @@ defmodule Ask.BrokerTest do
     survey = insert(:survey, %{schedule: Schedule.always(), state: "running"})
     ProactiveBroker.handle_info(:poll, nil)
 
-    survey = Repo.get(Survey, survey.id)
-    assert Survey.completed?(survey)
+    survey = Repo.get(Ask.Survey, survey.id)
+    assert Ask.Survey.completed?(survey)
   end
 
   test "does nothing when there are no pending respondents" do
@@ -36,7 +36,7 @@ defmodule Ask.BrokerTest do
 
     ProactiveBroker.handle_info(:poll, nil)
 
-    survey = Repo.get(Survey, survey.id)
+    survey = Repo.get(Ask.Survey, survey.id)
     assert survey.state == "running"
   end
 
@@ -57,9 +57,9 @@ defmodule Ask.BrokerTest do
     ProactiveBroker.poll
 
     respondent = Repo.get(Respondent, respondent.id)
-    Broker.delivery_confirm(respondent, "Do you exercise?")
+    Survey.delivery_confirm(respondent, "Do you exercise?")
 
-    Broker.sync_step(respondent, Flow.Message.reply("Yes"))
+    Survey.sync_step(respondent, Flow.Message.reply("Yes"))
 
     :ok = logger |> GenServer.stop
     assert [do_you_exercise, disposition_changed_to_contacted, do_exercise, disposition_changed_to_started, disposition_changed_to_completed, thank_you] = (respondent |> Repo.preload(:survey_log_entries)).survey_log_entries
@@ -153,7 +153,7 @@ defmodule Ask.BrokerTest do
     respondent = Repo.get(Respondent, respondent.id)
     assert respondent.disposition == "interim partial"
 
-    reply = Broker.sync_step(respondent, Flow.Message.reply("Yes"))
+    reply = Survey.sync_step(respondent, Flow.Message.reply("Yes"))
     assert {:reply, ReplyHelper.simple("Is this the last question?")} = reply
 
     respondent = Repo.get(Respondent, respondent.id)
@@ -277,7 +277,7 @@ defmodule Ask.BrokerTest do
 
     ProactiveBroker.handle_info(:poll, nil)
 
-    survey = Repo.get(Survey, survey.id)
+    survey = Repo.get(Ask.Survey, survey.id)
     assert survey.state == "running"
     updated_respondent = Repo.get(Respondent, respondent.id)
     assert updated_respondent.state == "active"
@@ -292,7 +292,7 @@ defmodule Ask.BrokerTest do
 
     ProactiveBroker.handle_info(:poll, nil)
 
-    survey = Repo.get(Survey, survey.id)
+    survey = Repo.get(Ask.Survey, survey.id)
     assert survey.state == "running"
     updated_respondent = Repo.get(Respondent, respondent.id)
     assert updated_respondent.disposition == "queued"
@@ -309,7 +309,7 @@ defmodule Ask.BrokerTest do
     respondent = Repo.get(Respondent, respondent.id)
     assert respondent.disposition == "queued"
 
-    Broker.delivery_confirm(respondent, "Do you smoke?")
+    Survey.delivery_confirm(respondent, "Do you smoke?")
 
     updated_respondent = Repo.get(Respondent, respondent.id)
     assert updated_respondent.state == "active"
@@ -327,7 +327,7 @@ defmodule Ask.BrokerTest do
     respondent = Repo.get(Respondent, respondent.id)
     assert respondent.disposition == "queued"
 
-    reply = Broker.sync_step(respondent, Flow.Message.answer())
+    reply = Survey.sync_step(respondent, Flow.Message.answer())
     assert {:reply, ReplyHelper.ivr("Do you smoke?", "Do you smoke? Press 8 for YES, 9 for NO")} = reply
 
     updated_respondent = Repo.get(Respondent, respondent.id)
@@ -348,13 +348,13 @@ defmodule Ask.BrokerTest do
     respondent = Repo.get(Respondent, respondent.id)
     assert respondent.disposition == "queued"
 
-    Broker.delivery_confirm(respondent, "Do you smoke?")
+    Survey.delivery_confirm(respondent, "Do you smoke?")
 
     respondent = Repo.get(Respondent, respondent.id)
     assert respondent.state == "active"
     assert respondent.disposition == "contacted"
 
-    Broker.sync_step(respondent, Flow.Message.reply("Yes"))
+    Survey.sync_step(respondent, Flow.Message.reply("Yes"))
 
     updated_respondent = Repo.get(Respondent, respondent.id)
     assert updated_respondent.state == "active"
@@ -365,12 +365,12 @@ defmodule Ask.BrokerTest do
 
   test "set timeout_at according to retries if they're present" do
     [survey, _, _, respondent, _] = create_running_survey_with_channel_and_respondent()
-    survey |> Survey.changeset(%{sms_retry_configuration: "2m"}) |> Repo.update!
+    survey |> Ask.Survey.changeset(%{sms_retry_configuration: "2m"}) |> Repo.update!
 
     {:ok, broker} = ProactiveBroker.start_link
     ProactiveBroker.handle_info(:poll, nil)
     respondent = Repo.get(Respondent, respondent.id)
-    Broker.sync_step(respondent, Flow.Message.reply("Yes"))
+    Survey.sync_step(respondent, Flow.Message.reply("Yes"))
 
     retry_stat = Repo.get!(RetryStat, respondent.retry_stat_id)
     assert retry_stat.retry_time == RetryStat.retry_time(respondent.timeout_at)
@@ -391,10 +391,10 @@ defmodule Ask.BrokerTest do
     {:ok, _} = ProactiveBroker.start_link
     ProactiveBroker.handle_info(:poll, nil)
 
-    survey |> Survey.changeset(%{sms_retry_configuration: "1d", schedule: Map.merge(Schedule.always(), %{day_of_week: day_after_tomorrow_schedule_day_of_week()})}) |> Repo.update!
+    survey |> Ask.Survey.changeset(%{sms_retry_configuration: "1d", schedule: Map.merge(Schedule.always(), %{day_of_week: day_after_tomorrow_schedule_day_of_week()})}) |> Repo.update!
 
     respondent = Repo.get(Respondent, respondent.id)
-    Broker.sync_step(respondent, Flow.Message.reply("Yes"))
+    Survey.sync_step(respondent, Flow.Message.reply("Yes"))
 
     updated_respondent = Repo.get(Respondent, respondent.id)
     assert updated_respondent.state == "active"
@@ -406,7 +406,7 @@ defmodule Ask.BrokerTest do
 
   test "retry respondent (SMS mode)" do
     [survey, _group, test_channel, _respondent, phone_number] = create_running_survey_with_channel_and_respondent()
-    survey |> Survey.changeset(%{sms_retry_configuration: "10m"}) |> Repo.update
+    survey |> Ask.Survey.changeset(%{sms_retry_configuration: "10m"}) |> Repo.update
 
     # First poll, activate the respondent
     ProactiveBroker.handle_info(:poll, nil)
@@ -433,13 +433,13 @@ defmodule Ask.BrokerTest do
     respondent = Repo.get(Respondent, respondent.id)
     assert respondent.state == "stalled"
 
-    survey = Repo.get(Survey, survey.id)
+    survey = Repo.get(Ask.Survey, survey.id)
     assert survey.state == "running"
   end
 
   test "retry respondent (mobileweb mode)" do
     [survey, _group, test_channel, respondent, phone_number] = create_running_survey_with_channel_and_respondent(@mobileweb_dummy_steps, "mobileweb")
-    survey |> Survey.changeset(%{mobileweb_retry_configuration: "10m"}) |> Repo.update
+    survey |> Ask.Survey.changeset(%{mobileweb_retry_configuration: "10m"}) |> Repo.update
     sequence_mode = ["mobileweb"]
 
     {:ok, broker} = ProactiveBroker.start_link
@@ -448,7 +448,7 @@ defmodule Ask.BrokerTest do
     assert_receive [:ask, ^test_channel, %Respondent{sanitized_phone_number: ^phone_number, mode: ^sequence_mode}, _, ReplyHelper.simple("Contact", message)]
     assert message == "Please enter #{Routes.mobile_survey_url(Ask.Endpoint, :index, respondent.id, token: Respondent.token(respondent.id))}"
 
-    survey = Repo.get(Survey, survey.id)
+    survey = Repo.get(Ask.Survey, survey.id)
     assert survey.state == "running"
 
     respondent = Repo.get!(Respondent, respondent.id)
@@ -479,7 +479,7 @@ defmodule Ask.BrokerTest do
     assert respondent.state == "stalled"
     refute respondent.timeout_at
 
-    survey = Repo.get(Survey, survey.id)
+    survey = Repo.get(Ask.Survey, survey.id)
     assert survey.state == "running"
 
     :ok = broker |> GenServer.stop
@@ -488,7 +488,7 @@ defmodule Ask.BrokerTest do
   @tag :time_mock
   test "retry respondent (SMS mode) with inactivity periods" do
     [survey, _group, test_channel, _respondent, phone_number] = create_running_survey_with_channel_and_respondent(@dummy_steps, "sms", Schedule.business_day(), "3h")
-    survey |> Survey.changeset(%{sms_retry_configuration: "2h"}) |> Repo.update
+    survey |> Ask.Survey.changeset(%{sms_retry_configuration: "2h"}) |> Repo.update
 
     {:ok, edge_time, _} = DateTime.from_iso8601("2019-12-06T17:00:00Z")
     mock_time(edge_time)
@@ -533,7 +533,7 @@ defmodule Ask.BrokerTest do
     assert respondent.state == "stalled"
     assert respondent.stats.attempts["sms"] == 2
     refute respondent.timeout_at
-    survey = Repo.get(Survey, survey.id)
+    survey = Repo.get(Ask.Survey, survey.id)
     assert survey.state == "running"
   end
 
@@ -556,10 +556,10 @@ defmodule Ask.BrokerTest do
 
     respondent = Repo.get(Respondent, respondent.id)
     assert respondent.state == "stalled"
-    survey = Repo.get(Survey, survey.id)
+    survey = Repo.get(Ask.Survey, survey.id)
     assert survey.state == "running"
 
-    reply = Broker.sync_step(respondent, Flow.Message.reply("Yes"))
+    reply = Survey.sync_step(respondent, Flow.Message.reply("Yes"))
     respondent = Repo.get(Respondent, respondent.id) |> Repo.preload(:responses)
     assert {:reply, ReplyHelper.simple("Do you exercise", "Do you exercise? Reply 1 for YES, 2 for NO")} = reply
     assert survey.state == "running"
@@ -620,18 +620,18 @@ defmodule Ask.BrokerTest do
     assert_received [:setup, ^test_channel, respondent = %Respondent{sanitized_phone_number: ^phone_number}, token]
     assert_received [:ask, ^test_channel, ^respondent, ^token, ReplyHelper.simple("Do you exercise?", "Do you exercise? Reply 1 for YES, 2 for NO")]
 
-    survey = Repo.get(Survey, survey.id)
+    survey = Repo.get(Ask.Survey, survey.id)
     assert survey.state == "running"
 
     respondent = Repo.get(Respondent, respondent.id)
     assert respondent.state == "active"
 
-    Broker.delivery_confirm(respondent, "Do you exercise?")
+    Survey.delivery_confirm(respondent, "Do you exercise?")
 
     respondent = Repo.get(Respondent, respondent.id)
     assert respondent.state == "active"
     assert respondent.disposition == "interim partial"
-    survey = Repo.get(Survey, survey.id)
+    survey = Repo.get(Ask.Survey, survey.id)
     assert survey.state == "running"
 
     histories = RespondentDispositionHistory |> Repo.all
@@ -670,8 +670,8 @@ defmodule Ask.BrokerTest do
     assert_received [:ask, ^test_channel, ^respondent, ^token, ReplyHelper.simple("Do you exercise?", "Do you exercise? Reply 1 for YES, 2 for NO")]
 
     respondent = Repo.get!(Respondent, respondent.id)
-    Broker.delivery_confirm(respondent, "Do you exercise?")
-    Broker.sync_step(respondent, Flow.Message.reply("Yes"))
+    Survey.delivery_confirm(respondent, "Do you exercise?")
+    Survey.sync_step(respondent, Flow.Message.reply("Yes"))
 
     respondent = Repo.get!(Respondent, respondent.id)
     assert respondent.state == "completed"
@@ -697,7 +697,7 @@ defmodule Ask.BrokerTest do
     assert_received [:ask, ^test_channel, ^respondent, ^token, ReplyHelper.simple("Do you exercise?", "Do you exercise? Reply 1 for YES, 2 for NO")]
 
     respondent = Repo.get!(Respondent, respondent.id)
-    Broker.sync_step(respondent, Flow.Message.reply("Yes"))
+    Survey.sync_step(respondent, Flow.Message.reply("Yes"))
 
     respondent = Repo.get!(Respondent, respondent.id)
     assert respondent.state == "completed"
@@ -791,7 +791,7 @@ defmodule Ask.BrokerTest do
 
     respondent = Repo.get!(Respondent, respondent.id)
 
-    Broker.sync_step(respondent, Flow.Message.reply("Yes"))
+    Survey.sync_step(respondent, Flow.Message.reply("Yes"))
 
     respondent = Repo.get!(Respondent, respondent.id)
     assert respondent.state == "completed"
@@ -818,10 +818,10 @@ defmodule Ask.BrokerTest do
     respondent = Repo.get(Respondent, respondent.id)
     assert respondent.state == "active"
     assert respondent.disposition == "interim partial"
-    survey = Repo.get(Survey, survey.id)
+    survey = Repo.get(Ask.Survey, survey.id)
     assert survey.state == "running"
 
-    reply = Broker.sync_step(respondent, Flow.Message.reply("Yes"))
+    reply = Survey.sync_step(respondent, Flow.Message.reply("Yes"))
 
     assert {:reply, ReplyHelper.simple("Is this the last question?")} = reply
 
@@ -834,7 +834,7 @@ defmodule Ask.BrokerTest do
 
   test "contacted respondents are marked as unresponsive after 8 hours" do
     [survey, _, test_channel, respondent, phone_number] = create_running_survey_with_channel_and_respondent()
-    Repo.update(survey |> change |> Survey.changeset(%{cutoff: 1}))
+    Repo.update(survey |> change |> Ask.Survey.changeset(%{cutoff: 1}))
 
     {:ok, broker} = ProactiveBroker.start_link
     {:ok, logger} = SurveyLogger.start_link
@@ -842,13 +842,13 @@ defmodule Ask.BrokerTest do
 
     assert_received [:ask, ^test_channel, %Respondent{sanitized_phone_number: ^phone_number}, _, ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO")]
 
-    survey = Repo.get(Survey, survey.id)
+    survey = Repo.get(Ask.Survey, survey.id)
     assert survey.state == "running"
     respondent = Repo.get(Respondent, respondent.id)
     assert respondent.state == "active"
     assert respondent.disposition == "queued"
 
-    Broker.delivery_confirm(respondent, "Do you smoke?")
+    Survey.delivery_confirm(respondent, "Do you smoke?")
 
     respondent = Repo.get(Respondent, respondent.id)
     assert respondent.disposition == "contacted"
@@ -886,7 +886,7 @@ defmodule Ask.BrokerTest do
 
   test "queued respondents are marked failed after 8 hours" do
     [survey, _, test_channel, respondent, phone_number] = create_running_survey_with_channel_and_respondent()
-    Repo.update(survey |> change |> Survey.changeset(%{cutoff: 1}))
+    Repo.update(survey |> change |> Ask.Survey.changeset(%{cutoff: 1}))
 
     {:ok, broker} = ProactiveBroker.start_link
     {:ok, logger} = SurveyLogger.start_link
@@ -894,7 +894,7 @@ defmodule Ask.BrokerTest do
 
     assert_received [:ask, ^test_channel, %Respondent{sanitized_phone_number: ^phone_number}, _, ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO")]
 
-    survey = Repo.get(Survey, survey.id)
+    survey = Repo.get(Ask.Survey, survey.id)
     assert survey.state == "running"
     respondent = Repo.get(Respondent, respondent.id)
     assert respondent.state == "active"
@@ -952,7 +952,7 @@ defmodule Ask.BrokerTest do
 
   test "when the respondent does not reply anything 3 times, but there are retries left the state stays as active" do
     [survey, _, _, respondent, _] = create_running_survey_with_channel_and_respondent(@dummy_steps, "ivr")
-    survey |> Survey.changeset(%{ivr_retry_configuration: "10m"}) |> Repo.update
+    survey |> Ask.Survey.changeset(%{ivr_retry_configuration: "10m"}) |> Repo.update
     right_first_answer = "8"
 
     {:ok, broker} = ProactiveBroker.start_link
@@ -960,26 +960,26 @@ defmodule Ask.BrokerTest do
 
     respondent = Repo.get(Respondent, respondent.id)
 
-    Broker.sync_step(respondent, Flow.Message.answer())
+    Survey.sync_step(respondent, Flow.Message.answer())
 
     respondent = Repo.get(Respondent, respondent.id)
 
-    Broker.sync_step(respondent, Flow.Message.reply(right_first_answer))
+    Survey.sync_step(respondent, Flow.Message.reply(right_first_answer))
 
     respondent = Repo.get(Respondent, respondent.id)
 
-    Broker.sync_step(respondent, Flow.Message.no_reply)
+    Survey.sync_step(respondent, Flow.Message.no_reply)
 
     respondent = Repo.get(Respondent, respondent.id)
 
-    Broker.sync_step(respondent, Flow.Message.no_reply)
+    Survey.sync_step(respondent, Flow.Message.no_reply)
 
     respondent = Repo.get(Respondent, respondent.id)
 
     assert respondent.state       == "active"
     assert respondent.disposition == "started"
 
-    Broker.sync_step(respondent, Flow.Message.no_reply)
+    Survey.sync_step(respondent, Flow.Message.no_reply)
 
     respondent = Repo.get(Respondent, respondent.id)
 
@@ -995,7 +995,7 @@ defmodule Ask.BrokerTest do
 
   test "when the respondent does not reply anything 3 times or gives an incorrect answer, but there are retries left the state stays as active" do
     [survey, _, _, respondent, _] = create_running_survey_with_channel_and_respondent(@dummy_steps, "ivr")
-    survey |> Survey.changeset(%{ivr_retry_configuration: "10m"}) |> Repo.update
+    survey |> Ask.Survey.changeset(%{ivr_retry_configuration: "10m"}) |> Repo.update
     right_first_answer = "8"
     wrong_second_answer = "16"
 
@@ -1004,23 +1004,23 @@ defmodule Ask.BrokerTest do
 
     respondent = Repo.get(Respondent, respondent.id)
 
-    Broker.sync_step(respondent, Flow.Message.answer())
+    Survey.sync_step(respondent, Flow.Message.answer())
 
     respondent = Repo.get(Respondent, respondent.id)
 
-    Broker.sync_step(respondent, Flow.Message.reply(right_first_answer))
+    Survey.sync_step(respondent, Flow.Message.reply(right_first_answer))
 
     respondent = Repo.get(Respondent, respondent.id)
 
-    Broker.sync_step(respondent, Flow.Message.no_reply)
+    Survey.sync_step(respondent, Flow.Message.no_reply)
 
     respondent = Repo.get(Respondent, respondent.id)
 
-    Broker.sync_step(respondent, Flow.Message.reply(wrong_second_answer))
+    Survey.sync_step(respondent, Flow.Message.reply(wrong_second_answer))
 
     respondent = Repo.get(Respondent, respondent.id)
 
-    Broker.sync_step(respondent, Flow.Message.no_reply)
+    Survey.sync_step(respondent, Flow.Message.no_reply)
 
     respondent = Repo.get(Respondent, respondent.id)
 
@@ -1036,7 +1036,7 @@ defmodule Ask.BrokerTest do
 
   test "started respondents are marked as breakoff after 8 hours" do
     [survey, _, test_channel, respondent, phone_number] = create_running_survey_with_channel_and_respondent()
-    Repo.update(survey |> change |> Survey.changeset(%{cutoff: 1}))
+    Repo.update(survey |> change |> Ask.Survey.changeset(%{cutoff: 1}))
 
     {:ok, broker} = ProactiveBroker.start_link
     {:ok, logger} = SurveyLogger.start_link
@@ -1044,26 +1044,26 @@ defmodule Ask.BrokerTest do
 
     assert_received [:ask, ^test_channel, %Respondent{sanitized_phone_number: ^phone_number}, _, ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO")]
 
-    survey = Repo.get(Survey, survey.id)
+    survey = Repo.get(Ask.Survey, survey.id)
     assert survey.state == "running"
     respondent = Repo.get(Respondent, respondent.id)
     assert respondent.state == "active"
     assert respondent.disposition == "queued"
 
-    Broker.delivery_confirm(respondent, "Do you smoke?")
+    Survey.delivery_confirm(respondent, "Do you smoke?")
 
     respondent = Repo.get(Respondent, respondent.id)
     assert respondent.state == "active"
     assert respondent.disposition == "contacted"
 
     respondent = Repo.get(Respondent, respondent.id)
-    Broker.sync_step(respondent, Flow.Message.reply("yes"))
+    Survey.sync_step(respondent, Flow.Message.reply("yes"))
 
     respondent = Repo.get(Respondent, respondent.id)
     assert respondent.state == "active"
     assert respondent.disposition == "started"
 
-    Broker.delivery_confirm(respondent, "Do you exercise?")
+    Survey.delivery_confirm(respondent, "Do you exercise?")
 
     now = Timex.now
 
@@ -1099,33 +1099,33 @@ defmodule Ask.BrokerTest do
   test "stalled respondents are marked as failed after survey completes but disposition is kept" do
     [survey, group, test_channel, respondent, phone_number] = create_running_survey_with_channel_and_respondent()
     second_respondent = insert(:respondent, survey: survey, respondent_group: group)
-    Repo.update(survey |> change |> Survey.changeset(%{cutoff: 1}))
+    Repo.update(survey |> change |> Ask.Survey.changeset(%{cutoff: 1}))
 
     {:ok, broker} = ProactiveBroker.start_link
     ProactiveBroker.poll
 
     assert_received [:ask, ^test_channel, %Respondent{sanitized_phone_number: ^phone_number}, _, ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO")]
 
-    survey = Repo.get(Survey, survey.id)
+    survey = Repo.get(Ask.Survey, survey.id)
     assert survey.state == "running"
     respondent = Repo.get(Respondent, respondent.id)
     assert respondent.state == "active"
     assert respondent.disposition == "queued"
 
-    Broker.delivery_confirm(respondent, "Do you smoke?")
+    Survey.delivery_confirm(respondent, "Do you smoke?")
 
     respondent = Repo.get(Respondent, respondent.id)
     assert respondent.state == "active"
     assert respondent.disposition == "contacted"
 
     respondent = Repo.get(Respondent, respondent.id)
-    Broker.sync_step(respondent, Flow.Message.reply("yes"))
+    Survey.sync_step(respondent, Flow.Message.reply("yes"))
 
     respondent = Repo.get(Respondent, respondent.id)
     assert respondent.state == "active"
     assert respondent.disposition == "started"
 
-    Broker.delivery_confirm(respondent, "Do you exercise?")
+    Survey.delivery_confirm(respondent, "Do you exercise?")
 
     Respondent.changeset(respondent, %{timeout_at: Timex.now |> Timex.shift(minutes: -1)}) |> Repo.update
     ProactiveBroker.handle_info(:poll, nil)
@@ -1157,11 +1157,11 @@ defmodule Ask.BrokerTest do
     assert respondent.state == "active"
     assert respondent.disposition == "queued"
 
-    reply = Broker.sync_step(respondent, Flow.Message.answer())
+    reply = Survey.sync_step(respondent, Flow.Message.answer())
     assert {:reply, ReplyHelper.ivr("Do you smoke?", "Do you smoke? Press 8 for YES, 9 for NO")} = reply
 
     respondent = Repo.get(Respondent, respondent.id)
-    reply = Broker.sync_step(respondent, Flow.Message.reply("9"))
+    reply = Survey.sync_step(respondent, Flow.Message.reply("9"))
     assert {:reply, ReplyHelper.ivr("Do you exercise", "Do you exercise? Press 1 for YES, 2 for NO")} = reply
 
     respondent = Repo.get(Respondent, respondent.id)
@@ -1198,11 +1198,11 @@ defmodule Ask.BrokerTest do
     assert respondent.state == "active"
     assert respondent.disposition == "queued"
 
-    reply = Broker.sync_step(respondent, Flow.Message.answer())
+    reply = Survey.sync_step(respondent, Flow.Message.answer())
     assert {:reply, ReplyHelper.ivr("Do you smoke?", "Do you smoke? Press 8 for YES, 9 for NO")} = reply
 
     respondent = Repo.get(Respondent, respondent.id)
-    reply = Broker.sync_step(respondent, Flow.Message.reply("9"))
+    reply = Survey.sync_step(respondent, Flow.Message.reply("9"))
     assert {:reply, ReplyHelper.ivr("Do you exercise", "Do you exercise? Press 1 for YES, 2 for NO")} = reply
 
     respondent = Repo.get(Respondent, respondent.id)
@@ -1238,20 +1238,20 @@ defmodule Ask.BrokerTest do
     assert respondent.state == "active"
     assert respondent.disposition == "queued"
 
-    Broker.delivery_confirm(respondent, "Do you smoke?")
+    Survey.delivery_confirm(respondent, "Do you smoke?")
 
     respondent = Repo.get(Respondent, respondent.id)
     assert respondent.state == "active"
     assert respondent.disposition == "contacted"
 
     respondent = Repo.get(Respondent, respondent.id)
-    Broker.sync_step(respondent, Flow.Message.reply("Yes"))
+    Survey.sync_step(respondent, Flow.Message.reply("Yes"))
 
     respondent = Repo.get(Respondent, respondent.id)
     assert respondent.state == "active"
     assert respondent.disposition == "interim partial"
 
-    Broker.delivery_confirm(respondent, "Do you exercise?")
+    Survey.delivery_confirm(respondent, "Do you exercise?")
 
     now = Timex.now
 
@@ -1293,18 +1293,18 @@ defmodule Ask.BrokerTest do
     assert respondent.state == "active"
     assert respondent.disposition == "queued"
 
-    reply = Broker.sync_step(respondent, Flow.Message.answer())
+    reply = Survey.sync_step(respondent, Flow.Message.answer())
     assert {:reply, ReplyHelper.ivr("Do you smoke?", "Do you smoke? Press 8 for YES, 9 for NO")} = reply
 
     respondent = Repo.get(Respondent, respondent.id)
-    reply = Broker.sync_step(respondent, Flow.Message.reply("9"))
+    reply = Survey.sync_step(respondent, Flow.Message.reply("9"))
     assert {:reply, ReplyHelper.ivr("Do you exercise", "Do you exercise? Press 1 for YES, 2 for NO")} = reply
 
     respondent = Repo.get(Respondent, respondent.id)
     assert respondent.state == "active"
     assert respondent.disposition == "interim partial"
 
-    _reply = Broker.sync_step(respondent, Flow.Message.reply("1"))
+    _reply = Survey.sync_step(respondent, Flow.Message.reply("1"))
 
     respondent = Repo.get(Respondent, respondent.id)
     assert respondent.state == "active"
@@ -1331,7 +1331,7 @@ defmodule Ask.BrokerTest do
     assert respondent.state == "active"
     assert respondent.disposition == "queued"
 
-    reply = Broker.sync_step(respondent, Flow.Message.answer())
+    reply = Survey.sync_step(respondent, Flow.Message.answer())
     assert {:reply, ReplyHelper.ivr("Do you smoke?", "Do you smoke? Press 8 for YES, 9 for NO")} = reply
 
     respondent = Repo.get(Respondent, respondent.id)
@@ -1364,14 +1364,14 @@ defmodule Ask.BrokerTest do
     ProactiveBroker.poll
 
     respondent = Repo.get(Respondent, respondent.id)
-    Broker.sync_step(respondent, Flow.Message.answer())
+    Survey.sync_step(respondent, Flow.Message.answer())
 
     respondent = Repo.get(Respondent, respondent.id)
-    Broker.sync_step(respondent, Flow.Message.no_reply, "ivr")
+    Survey.sync_step(respondent, Flow.Message.no_reply, "ivr")
     respondent = Repo.get(Respondent, respondent.id)
-    Broker.sync_step(respondent, Flow.Message.no_reply, "ivr")
+    Survey.sync_step(respondent, Flow.Message.no_reply, "ivr")
     respondent = Repo.get(Respondent, respondent.id)
-    Broker.sync_step(respondent, Flow.Message.no_reply, "ivr")
+    Survey.sync_step(respondent, Flow.Message.no_reply, "ivr")
 
     :ok = logger |> GenServer.stop
 
@@ -1390,7 +1390,7 @@ defmodule Ask.BrokerTest do
     ProactiveBroker.poll
 
     respondent = Repo.get(Respondent, respondent.id)
-    reply = Broker.sync_step(respondent, Flow.Message.answer())
+    reply = Survey.sync_step(respondent, Flow.Message.answer())
     assert {:reply, ReplyHelper.ivr("Do you smoke?", "Do you smoke? Press 8 for YES, 9 for NO")} = reply
 
     respondent = Repo.get(Respondent, respondent.id)
@@ -1415,7 +1415,7 @@ defmodule Ask.BrokerTest do
 
   test "retry respondent (IVR mode)" do
     [survey, _group, test_channel, respondent, phone_number] = create_running_survey_with_channel_and_respondent(@dummy_steps, "ivr")
-    survey |> Survey.changeset(%{ivr_retry_configuration: "10m"}) |> Repo.update
+    survey |> Ask.Survey.changeset(%{ivr_retry_configuration: "10m"}) |> Repo.update
     sequence_mode = ["ivr"]
 
     # First poll, activate the respondent
@@ -1440,8 +1440,8 @@ defmodule Ask.BrokerTest do
     respondent = Repo.get(Respondent, respondent.id)
     assert respondent.state == "failed"
 
-    survey = Repo.get(Survey, survey.id)
-    assert Survey.completed?(survey)
+    survey = Repo.get(Ask.Survey, survey.id)
+    assert Ask.Survey.completed?(survey)
   end
 
   test "IVR no reply shouldn't change disposition to started (#1028)" do
@@ -1452,7 +1452,7 @@ defmodule Ask.BrokerTest do
     assert_received [:setup, ^test_channel, %Respondent{sanitized_phone_number: ^phone_number}, _token]
 
     respondent = Repo.get(Respondent, respondent.id)
-    Broker.sync_step(respondent, Flow.Message.no_reply)
+    Survey.sync_step(respondent, Flow.Message.no_reply)
 
     respondent = Repo.get(Respondent, respondent.id)
     assert respondent.disposition == "queued"
@@ -1476,8 +1476,8 @@ defmodule Ask.BrokerTest do
     respondent = insert(:respondent, survey: survey, respondent_group: group)
     phone_number = respondent.sanitized_phone_number
 
-    survey |> Survey.changeset(%{sms_retry_configuration: "1m 50m"}) |> Repo.update!
-    survey |> Survey.changeset(%{ivr_retry_configuration: "20m"}) |> Repo.update!
+    survey |> Ask.Survey.changeset(%{sms_retry_configuration: "1m 50m"}) |> Repo.update!
+    survey |> Ask.Survey.changeset(%{ivr_retry_configuration: "20m"}) |> Repo.update!
 
     # First poll, activate the respondent
     ProactiveBroker.handle_info(:poll, nil)
@@ -1535,8 +1535,8 @@ defmodule Ask.BrokerTest do
     respondent = insert(:respondent, survey: survey, respondent_group: group)
     phone_number = respondent.sanitized_phone_number
 
-    survey |> Survey.changeset(%{sms_retry_configuration: "10m"}) |> Repo.update!
-    survey |> Survey.changeset(%{ivr_retry_configuration: "2m 20m"}) |> Repo.update!
+    survey |> Ask.Survey.changeset(%{sms_retry_configuration: "10m"}) |> Repo.update!
+    survey |> Ask.Survey.changeset(%{ivr_retry_configuration: "2m 20m"}) |> Repo.update!
 
     # First poll, activate the respondent
     ProactiveBroker.handle_info(:poll, nil)
@@ -1572,11 +1572,11 @@ defmodule Ask.BrokerTest do
     [survey, group, _, _, _] = create_running_survey_with_channel_and_respondent()
     create_several_respondents(survey, group, 20)
 
-    Repo.update(survey |> change |> Survey.changeset(%{cutoff: 1}))
+    Repo.update(survey |> change |> Ask.Survey.changeset(%{cutoff: 1}))
 
     ProactiveBroker.handle_info(:poll, nil)
 
-    survey = Repo.get(Survey, survey.id)
+    survey = Repo.get(Ask.Survey, survey.id)
     assert_respondents_by_state(survey, 1, 20)
 
     r = Repo.all(from r in Respondent, where: r.state == "active") |> hd
@@ -1592,11 +1592,11 @@ defmodule Ask.BrokerTest do
     [survey, group, _, _, _] = create_running_survey_with_channel_and_respondent()
     create_several_respondents(survey, group, 20)
 
-    Repo.update(survey |> change |> Survey.changeset(%{cutoff: 1}))
+    Repo.update(survey |> change |> Ask.Survey.changeset(%{cutoff: 1}))
 
     ProactiveBroker.handle_info(:poll, nil)
 
-    survey = Repo.get(Survey, survey.id)
+    survey = Repo.get(Ask.Survey, survey.id)
     assert_respondents_by_state(survey, 1, 20)
 
     r = Repo.all(from r in Respondent, where: r.state == "active") |> hd
@@ -1609,21 +1609,21 @@ defmodule Ask.BrokerTest do
 
     ProactiveBroker.handle_info(:poll, nil)
 
-    survey = Repo.get(Survey, survey.id)
+    survey = Repo.get(Ask.Survey, survey.id)
 
     assert_respondents_by_state(survey, 0, 20)
-    assert Survey.completed?(survey)
+    assert Ask.Survey.completed?(survey)
   end
 
   test "marks survey as complete when the cutoff is reached and actives become failed" do
     [survey, group, _, _, _] = create_running_survey_with_channel_and_respondent()
     create_several_respondents(survey, group, 20)
 
-    Repo.update(survey |> change |> Survey.changeset(%{cutoff: 1}))
+    Repo.update(survey |> change |> Ask.Survey.changeset(%{cutoff: 1}))
 
     ProactiveBroker.handle_info(:poll, nil)
 
-    survey = Repo.get(Survey, survey.id)
+    survey = Repo.get(Ask.Survey, survey.id)
     assert_respondents_by_state(survey, 1, 20)
 
     r = Repo.all(from r in Respondent, where: r.state == "active") |> hd
@@ -1636,21 +1636,21 @@ defmodule Ask.BrokerTest do
 
     ProactiveBroker.handle_info(:poll, nil)
 
-    survey = Repo.get(Survey, survey.id)
+    survey = Repo.get(Ask.Survey, survey.id)
 
     assert_respondents_by_state(survey, 0, 20)
-    assert Survey.completed?(survey)
+    assert Ask.Survey.completed?(survey)
   end
 
   test "marks the survey as completed when the cutoff is reached and actives become completed" do
     [survey, group, _, _, _] = create_running_survey_with_channel_and_respondent()
     create_several_respondents(survey, group, 20)
 
-    Repo.update(survey |> change |> Survey.changeset(%{cutoff: 6}))
+    Repo.update(survey |> change |> Ask.Survey.changeset(%{cutoff: 6}))
 
     ProactiveBroker.handle_info(:poll, nil)
 
-    survey = Repo.get(Survey, survey.id)
+    survey = Repo.get(Ask.Survey, survey.id)
 
     assert survey.state == "running"
 
@@ -1674,8 +1674,8 @@ defmodule Ask.BrokerTest do
 
     assert_respondents_by_state(survey, 0, 15)
 
-    survey = Repo.get(Survey, survey.id)
-    assert Survey.completed?(survey)
+    survey = Repo.get(Ask.Survey, survey.id)
+    assert Ask.Survey.completed?(survey)
   end
 
   test "marks the survey as completed when all the quotas are reached and actives become completed" do
@@ -1710,7 +1710,7 @@ defmodule Ask.BrokerTest do
 
     survey = survey
     |> Repo.preload([:quota_buckets])
-    |> Survey.changeset(%{quotas: quotas})
+    |> Ask.Survey.changeset(%{quotas: quotas})
     |> Repo.update!
 
     qb1 = (from q in QuotaBucket, where: q.quota == 1) |> Repo.one
@@ -1721,7 +1721,7 @@ defmodule Ask.BrokerTest do
     ProactiveBroker.handle_info(:poll, nil)
 
     # In the beginning it shouldn't be completed
-    survey = Survey |> Repo.get(survey.id)
+    survey = Ask.Survey |> Repo.get(survey.id)
     assert survey.state == "running"
 
     # Not yet completed: missing fourth bucket
@@ -1731,7 +1731,7 @@ defmodule Ask.BrokerTest do
     qb4 |> QuotaBucket.changeset(%{count: 3}) |> Repo.update!
     ProactiveBroker.handle_info(:poll, nil)
 
-    survey = Survey |> Repo.get(survey.id)
+    survey = Ask.Survey |> Repo.get(survey.id)
     assert survey.state == "running"
 
     # Now it should be completed
@@ -1748,8 +1748,8 @@ defmodule Ask.BrokerTest do
     from q in QuotaBucket,
       where: q.survey_id == ^survey_id
 
-    survey = Survey |> Repo.get(survey.id)
-    assert Survey.completed?(survey)
+    survey = Ask.Survey |> Repo.get(survey.id)
+    assert Ask.Survey.completed?(survey)
   end
 
   test "should not keep setting pending to actives when all the quotas are completed" do
@@ -1784,7 +1784,7 @@ defmodule Ask.BrokerTest do
 
     survey = survey
     |> Repo.preload([:quota_buckets])
-    |> Survey.changeset(%{quotas: quotas})
+    |> Ask.Survey.changeset(%{quotas: quotas})
     |> Repo.update!
 
     qb1 = (from q in QuotaBucket, where: q.quota == 1) |> Repo.one
@@ -1794,7 +1794,7 @@ defmodule Ask.BrokerTest do
 
     ProactiveBroker.handle_info(:poll, nil)
 
-    survey = Survey |> Repo.get(survey.id)
+    survey = Ask.Survey |> Repo.get(survey.id)
     assert survey.state == "running"
 
     qb1 |> QuotaBucket.changeset(%{count: 1}) |> Repo.update!
@@ -1809,7 +1809,7 @@ defmodule Ask.BrokerTest do
 
     ProactiveBroker.handle_info(:poll, nil)
 
-    survey = Survey |> Repo.get(survey.id)
+    survey = Ask.Survey |> Repo.get(survey.id)
     assert_respondents_by_state(survey, 5, 11)
   end
 
@@ -1845,7 +1845,7 @@ defmodule Ask.BrokerTest do
 
     survey = survey
     |> Repo.preload([:quota_buckets])
-    |> Survey.changeset(%{quotas: quotas})
+    |> Ask.Survey.changeset(%{quotas: quotas})
     |> Repo.update!
 
     qb1 = (from q in QuotaBucket, where: q.quota == 1) |> Repo.one
@@ -1855,7 +1855,7 @@ defmodule Ask.BrokerTest do
 
     ProactiveBroker.handle_info(:poll, nil)
 
-    survey = Survey |> Repo.get(survey.id)
+    survey = Ask.Survey |> Repo.get(survey.id)
     assert survey.state == "running"
 
     qb1 |> QuotaBucket.changeset(%{count: 1}) |> Repo.update!
@@ -1870,9 +1870,9 @@ defmodule Ask.BrokerTest do
 
     ProactiveBroker.handle_info(:poll, nil)
 
-    survey = Survey |> Repo.get(survey.id)
+    survey = Ask.Survey |> Repo.get(survey.id)
     assert_respondents_by_state(survey, 0, 11)
-    assert Survey.completed?(survey)
+    assert Ask.Survey.completed?(survey)
   end
 
   test "marks the survey as completed when all the quotas are reached and actives become failed" do
@@ -1907,7 +1907,7 @@ defmodule Ask.BrokerTest do
 
     survey = survey
     |> Repo.preload([:quota_buckets])
-    |> Survey.changeset(%{quotas: quotas})
+    |> Ask.Survey.changeset(%{quotas: quotas})
     |> Repo.update!
 
     qb1 = (from q in QuotaBucket, where: q.quota == 1) |> Repo.one
@@ -1917,7 +1917,7 @@ defmodule Ask.BrokerTest do
 
     ProactiveBroker.handle_info(:poll, nil)
 
-    survey = Survey |> Repo.get(survey.id)
+    survey = Ask.Survey |> Repo.get(survey.id)
     assert survey.state == "running"
 
     qb1 |> QuotaBucket.changeset(%{count: 1}) |> Repo.update!
@@ -1932,9 +1932,9 @@ defmodule Ask.BrokerTest do
 
     ProactiveBroker.handle_info(:poll, nil)
 
-    survey = Survey |> Repo.get(survey.id)
+    survey = Ask.Survey |> Repo.get(survey.id)
     assert_respondents_by_state(survey, 0, 11)
-    assert Survey.completed?(survey)
+    assert Ask.Survey.completed?(survey)
   end
 
   test "always keeps batch_size number of respondents running" do
@@ -1943,7 +1943,7 @@ defmodule Ask.BrokerTest do
 
     ProactiveBroker.handle_info(:poll, nil)
 
-    survey = Repo.get(Survey, survey.id)
+    survey = Repo.get(Ask.Survey, survey.id)
 
     assert survey.state == "running"
 
@@ -1965,7 +1965,7 @@ defmodule Ask.BrokerTest do
     [survey, group, _, _, _] = create_running_survey_with_channel_and_respondent()
     create_several_respondents(survey, group, 200)
 
-    Repo.update(survey |> change |> Survey.changeset(%{cutoff: 50}))
+    Repo.update(survey |> change |> Ask.Survey.changeset(%{cutoff: 50}))
 
     ProactiveBroker.handle_info(:poll, nil)
     assert_respondents_by_state(survey, 50, 151)
@@ -1985,7 +1985,7 @@ defmodule Ask.BrokerTest do
   test "" do
     [survey, group, _, _, _] = create_running_survey_with_channel_and_respondent()
     create_several_respondents(survey, group, 10)
-    survey |> Survey.changeset(%{quota_vars: ["gender"]}) |> Repo.update
+    survey |> Ask.Survey.changeset(%{quota_vars: ["gender"]}) |> Repo.update
     insert(:quota_bucket, survey: survey, condition: %{gender: "male"}, quota: 1, count: 0)
 
     ProactiveBroker.handle_info(:poll, nil)
@@ -2000,7 +2000,7 @@ defmodule Ask.BrokerTest do
   test "continue polling respondents when one of the quotas was exceeded " do
     [survey, group, _, _, _] = create_running_survey_with_channel_and_respondent()
     create_several_respondents(survey, group, 10)
-    survey |> Survey.changeset(%{quota_vars: ["gender"]}) |> Repo.update
+    survey |> Ask.Survey.changeset(%{quota_vars: ["gender"]}) |> Repo.update
     insert(:quota_bucket, survey: survey, condition: %{gender: "male"}, quota: 1, count: 2)
     insert(:quota_bucket, survey: survey, condition: %{gender: "female"}, quota: 1, count: 0)
 
@@ -2020,8 +2020,8 @@ defmodule Ask.BrokerTest do
 
     ProactiveBroker.handle_info(:poll, nil)
 
-    survey = Repo.get(Survey, survey.id)
-    assert Survey.completed?(survey)
+    survey = Repo.get(Ask.Survey, survey.id)
+    assert Ask.Survey.completed?(survey)
   end
 
   @tag :time_mock
@@ -2037,27 +2037,27 @@ defmodule Ask.BrokerTest do
     sequence_mode = ["sms"]
     assert_received [:ask, ^test_channel, %Respondent{sanitized_phone_number: ^phone_number, mode: ^sequence_mode}, _, ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO")]
 
-    survey = Repo.get(Survey, survey.id)
+    survey = Repo.get(Ask.Survey, survey.id)
     assert survey.state == "running"
 
     respondent = Repo.get(Respondent, respondent.id)
     assert respondent.state == "active"
 
-    Broker.delivery_confirm(respondent, "Do you smoke?")
+    Survey.delivery_confirm(respondent, "Do you smoke?")
 
 
-    reply = Broker.sync_step(respondent, Flow.Message.reply("Yes"), nil)
+    reply = Survey.sync_step(respondent, Flow.Message.reply("Yes"), nil)
     assert {:reply, ReplyHelper.simple("Do you exercise", "Do you exercise? Reply 1 for YES, 2 for NO")} = reply
 
     %Respondent{ timeout_at: first_timeout} = respondent = Repo.get(Respondent, respondent.id)
     assert 1 == %{survey_id: survey.id} |> RetryStat.stats() |> RetryStat.count(%{attempt: 1, retry_time: RetryStat.retry_time(first_timeout), ivr_active: false, mode: sequence_mode})
 
-    Broker.delivery_confirm(respondent, "Do you exercise")
+    Survey.delivery_confirm(respondent, "Do you exercise")
 
     hours_passed = 3
     time_passes(hours: hours_passed)
 
-    reply = Broker.sync_step(respondent, Flow.Message.reply("Yes"), nil)
+    reply = Survey.sync_step(respondent, Flow.Message.reply("Yes"), nil)
     assert {:reply, ReplyHelper.simple("Which is the second perfect number?", "Which is the second perfect number??")} = reply
 
     # Every sent SMS resets the timeout
@@ -2067,15 +2067,15 @@ defmodule Ask.BrokerTest do
     assert 0 == stats |> RetryStat.count(%{attempt: 1, retry_time: RetryStat.retry_time(first_timeout), ivr_active: false, mode: sequence_mode})
     assert 1 == stats |> RetryStat.count(%{attempt: 1, retry_time: RetryStat.retry_time(hours_after_timeout), ivr_active: false, mode: sequence_mode})
 
-    Broker.delivery_confirm(respondent, "Which is the second perfect number?")
+    Survey.delivery_confirm(respondent, "Which is the second perfect number?")
 
-    reply = Broker.sync_step(respondent, Flow.Message.reply("99"))
+    reply = Survey.sync_step(respondent, Flow.Message.reply("99"))
     assert {:reply, ReplyHelper.simple("What's the number of this question?", "What's the number of this question??")} = reply
 
     respondent = Repo.get(Respondent, respondent.id)
-    Broker.delivery_confirm(respondent, "What's the number of this question?")
+    Survey.delivery_confirm(respondent, "What's the number of this question?")
 
-    reply = Broker.sync_step(respondent, Flow.Message.reply("11"))
+    reply = Survey.sync_step(respondent, Flow.Message.reply("11"))
     assert {:end, {:reply, ReplyHelper.simple("Thank you", "Thanks for completing this survey")}} = reply
 
     interval = Interval.new(from: Timex.shift(SystemTime.time.now, seconds: -5), until: Timex.shift(SystemTime.time.now, seconds: 5), step: [seconds: 1])
@@ -2159,29 +2159,29 @@ defmodule Ask.BrokerTest do
     {:ok, broker} = ProactiveBroker.start_link
     ProactiveBroker.poll
 
-    survey = Repo.get(Survey, survey.id)
+    survey = Repo.get(Ask.Survey, survey.id)
     assert survey.state == "running"
 
     respondent = Repo.get(Respondent, respondent.id)
     assert respondent.state == "active"
 
-    reply = Broker.sync_step(respondent, Flow.Message.answer())
+    reply = Survey.sync_step(respondent, Flow.Message.answer())
     assert {:reply, ReplyHelper.ivr("Do you smoke?", "Do you smoke? Press 8 for YES, 9 for NO")} = reply
 
     respondent = Repo.get(Respondent, respondent.id)
-    reply = Broker.sync_step(respondent, Flow.Message.reply("9"))
+    reply = Survey.sync_step(respondent, Flow.Message.reply("9"))
     assert {:reply, ReplyHelper.ivr("Do you exercise", "Do you exercise? Press 1 for YES, 2 for NO")} = reply
 
     respondent = Repo.get(Respondent, respondent.id)
-    reply = Broker.sync_step(respondent, Flow.Message.reply("1"))
+    reply = Survey.sync_step(respondent, Flow.Message.reply("1"))
     assert {:reply, ReplyHelper.ivr("Which is the second perfect number?", "Which is the second perfect number")} = reply
 
     respondent = Repo.get(Respondent, respondent.id)
-    reply = Broker.sync_step(respondent, Flow.Message.reply("99"))
+    reply = Survey.sync_step(respondent, Flow.Message.reply("99"))
     assert {:reply, ReplyHelper.ivr("What's the number of this question?", "What's the number of this question")} = reply
 
     respondent = Repo.get(Respondent, respondent.id)
-    reply = Broker.sync_step(respondent, Flow.Message.reply("11"))
+    reply = Survey.sync_step(respondent, Flow.Message.reply("11"))
     assert {:end, {:reply, ReplyHelper.ivr("Thank you", "Thanks for completing this survey (ivr)")}} = reply
 
     now = Timex.now
@@ -2279,39 +2279,39 @@ defmodule Ask.BrokerTest do
     assert_receive [:ask, ^test_channel, %Respondent{sanitized_phone_number: ^phone_number}, _, ReplyHelper.simple("Contact", message)]
     assert message == "Please enter #{Routes.mobile_survey_url(Ask.Endpoint, :index, respondent.id, token: Respondent.token(respondent.id))}"
 
-    survey = Repo.get(Survey, survey.id)
+    survey = Repo.get(Ask.Survey, survey.id)
     assert survey.state == "running"
 
     respondent = Repo.get(Respondent, respondent.id)
     assert respondent.state == "active"
 
-    reply = Broker.sync_step(respondent, Flow.Message.answer())
+    reply = Survey.sync_step(respondent, Flow.Message.answer())
     assert {:reply, ReplyHelper.simple("Let there be rock", "Welcome to the survey!")} = reply
 
-    reply = Broker.sync_step(respondent, Flow.Message.answer())
+    reply = Survey.sync_step(respondent, Flow.Message.answer())
     assert {:reply, ReplyHelper.simple("Let there be rock", "Welcome to the survey!")} = reply
 
-    reply = Broker.sync_step(respondent, Flow.Message.answer())
+    reply = Survey.sync_step(respondent, Flow.Message.answer())
     assert {:reply, ReplyHelper.simple("Let there be rock", "Welcome to the survey!")} = reply
 
     respondent = Repo.get(Respondent, respondent.id)
-    reply = Broker.sync_step(respondent, Flow.Message.reply(""))
+    reply = Survey.sync_step(respondent, Flow.Message.reply(""))
     assert {:reply, ReplyHelper.simple("Do you smoke?", "Do you smoke?")} = reply
 
     respondent = Repo.get(Respondent, respondent.id)
-    reply = Broker.sync_step(respondent, Flow.Message.reply("Yes"))
+    reply = Survey.sync_step(respondent, Flow.Message.reply("Yes"))
     assert {:reply, ReplyHelper.simple("Do you exercise", "Do you exercise?")} = reply
 
     respondent = Repo.get(Respondent, respondent.id)
-    reply = Broker.sync_step(respondent, Flow.Message.reply("Yes"))
+    reply = Survey.sync_step(respondent, Flow.Message.reply("Yes"))
     assert {:reply, ReplyHelper.simple("Which is the second perfect number?", "Which is the second perfect number??")} = reply
 
     respondent = Repo.get(Respondent, respondent.id)
-    reply = Broker.sync_step(respondent, Flow.Message.reply("99"))
+    reply = Survey.sync_step(respondent, Flow.Message.reply("99"))
     assert {:reply, ReplyHelper.simple("What's the number of this question?", "What's the number of this question??")} = reply
 
     respondent = Repo.get(Respondent, respondent.id)
-    reply = Broker.sync_step(respondent, Flow.Message.reply("11"))
+    reply = Survey.sync_step(respondent, Flow.Message.reply("11"))
     assert {:end, {:reply, ReplyHelper.simple("Thank you", "Thanks for completing this survey (mobileweb)")}} = reply
 
     now = Timex.now
@@ -2368,33 +2368,33 @@ defmodule Ask.BrokerTest do
 
     assert_received [:ask, ^test_channel, %Respondent{sanitized_phone_number: ^phone_number}, _, ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO")]
 
-    survey = Repo.get(Survey, survey.id)
+    survey = Repo.get(Ask.Survey, survey.id)
     assert survey.state == "running"
 
     respondent = Repo.get(Respondent, respondent.id)
     assert respondent.state == "active"
 
-    Broker.delivery_confirm(respondent, "Do you smoke?")
+    Survey.delivery_confirm(respondent, "Do you smoke?")
 
-    reply = Broker.sync_step(respondent, Flow.Message.reply("Yes"))
+    reply = Survey.sync_step(respondent, Flow.Message.reply("Yes"))
     assert {:reply, ReplyHelper.simple("Do you exercise", "Do you exercise? Reply 1 for YES, 2 for NO")} = reply
 
     respondent = Repo.get(Respondent, respondent.id)
-    Broker.delivery_confirm(respondent, "Do you exercise")
+    Survey.delivery_confirm(respondent, "Do you exercise")
 
-    reply = Broker.sync_step(respondent, Flow.Message.reply("Yes"))
+    reply = Survey.sync_step(respondent, Flow.Message.reply("Yes"))
     assert {:reply, ReplyHelper.simple("Which is the second perfect number?", "Which is the second perfect number??")} = reply
 
     respondent = Repo.get(Respondent, respondent.id)
-    Broker.delivery_confirm(respondent, "Which is the second perfect number?")
+    Survey.delivery_confirm(respondent, "Which is the second perfect number?")
 
-    reply = Broker.sync_step(respondent, Flow.Message.reply("99"))
+    reply = Survey.sync_step(respondent, Flow.Message.reply("99"))
     assert {:reply, ReplyHelper.simple("What's the number of this question?", "What's the number of this question??")} = reply
 
     respondent = Repo.get(Respondent, respondent.id)
-    Broker.delivery_confirm(respondent, "What's the number of this question?")
+    Survey.delivery_confirm(respondent, "What's the number of this question?")
 
-    reply = Broker.sync_step(respondent, Flow.Message.reply("11"))
+    reply = Survey.sync_step(respondent, Flow.Message.reply("11"))
     assert :end = reply
 
     now = Timex.now
@@ -2512,33 +2512,33 @@ defmodule Ask.BrokerTest do
 
     assert_received [:ask, ^test_channel, %Respondent{sanitized_phone_number: ^phone_number}, _, ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO")]
 
-    survey = Repo.get(Survey, survey.id)
+    survey = Repo.get(Ask.Survey, survey.id)
     assert survey.state == "running"
 
     respondent = Repo.get(Respondent, respondent.id)
     assert respondent.state == "active"
 
-    Broker.delivery_confirm(respondent, "Do you smoke?")
+    Survey.delivery_confirm(respondent, "Do you smoke?")
 
-    reply = Broker.sync_step(respondent, Flow.Message.reply("Yes"))
+    reply = Survey.sync_step(respondent, Flow.Message.reply("Yes"))
     assert {:reply, ReplyHelper.simple("Do you exercise", "Do you exercise? Reply 1 for YES, 2 for NO")} = reply
 
     respondent = Repo.get(Respondent, respondent.id)
-    Broker.delivery_confirm(respondent, "Do you exercise")
+    Survey.delivery_confirm(respondent, "Do you exercise")
 
-    reply = Broker.sync_step(respondent, Flow.Message.reply("Yes"))
+    reply = Survey.sync_step(respondent, Flow.Message.reply("Yes"))
     assert {:reply, ReplyHelper.simple("Which is the second perfect number?", "Which is the second perfect number??")} = reply
 
     respondent = Repo.get(Respondent, respondent.id)
-    Broker.delivery_confirm(respondent, "Which is the second perfect number?")
+    Survey.delivery_confirm(respondent, "Which is the second perfect number?")
 
-    reply = Broker.sync_step(respondent, Flow.Message.reply("99"))
+    reply = Survey.sync_step(respondent, Flow.Message.reply("99"))
     assert {:reply, ReplyHelper.simple("What's the number of this question?", "What's the number of this question??")} = reply
 
     respondent = Repo.get(Respondent, respondent.id)
-    Broker.delivery_confirm(respondent, "What's the number of this question?")
+    Survey.delivery_confirm(respondent, "What's the number of this question?")
 
-    reply = Broker.sync_step(respondent, Flow.Message.reply("11"))
+    reply = Survey.sync_step(respondent, Flow.Message.reply("11"))
     assert {:end, {:reply, ReplyHelper.simple("Bye", "This is the last question")}} = reply
 
     now = Timex.now
@@ -2648,29 +2648,29 @@ defmodule Ask.BrokerTest do
     {:ok, broker} = ProactiveBroker.start_link
     ProactiveBroker.poll
 
-    survey = Repo.get(Survey, survey.id)
+    survey = Repo.get(Ask.Survey, survey.id)
     assert survey.state == "running"
 
     respondent = Repo.get(Respondent, respondent.id)
     assert respondent.state == "active"
 
-    reply = Broker.sync_step(respondent, Flow.Message.answer())
+    reply = Survey.sync_step(respondent, Flow.Message.answer())
     assert {:reply, ReplyHelper.ivr("Do you smoke?", "Do you smoke? Press 8 for YES, 9 for NO")} = reply
 
     respondent = Repo.get(Respondent, respondent.id)
-    reply = Broker.sync_step(respondent, Flow.Message.reply("9"))
+    reply = Survey.sync_step(respondent, Flow.Message.reply("9"))
     assert {:reply, ReplyHelper.ivr("Do you exercise", "Do you exercise? Press 1 for YES, 2 for NO")} = reply
 
     respondent = Repo.get(Respondent, respondent.id)
-    reply = Broker.sync_step(respondent, Flow.Message.reply("1"))
+    reply = Survey.sync_step(respondent, Flow.Message.reply("1"))
     assert {:reply, ReplyHelper.ivr("Which is the second perfect number?", "Which is the second perfect number")} = reply
 
     respondent = Repo.get(Respondent, respondent.id)
-    reply = Broker.sync_step(respondent, Flow.Message.reply("99"))
+    reply = Survey.sync_step(respondent, Flow.Message.reply("99"))
     assert {:reply, ReplyHelper.ivr("What's the number of this question?", "What's the number of this question")} = reply
 
     respondent = Repo.get(Respondent, respondent.id)
-    reply = Broker.sync_step(respondent, Flow.Message.reply("11"))
+    reply = Survey.sync_step(respondent, Flow.Message.reply("11"))
     assert :end = reply
 
     now = Timex.now
@@ -2787,7 +2787,7 @@ defmodule Ask.BrokerTest do
 
     survey
     |> Repo.preload([:quota_buckets])
-    |> Survey.changeset(%{quotas: quotas})
+    |> Ask.Survey.changeset(%{quotas: quotas})
     |> Repo.update!
 
 
@@ -2854,31 +2854,31 @@ defmodule Ask.BrokerTest do
     assert_received [:ask, ^test_channel, %Respondent{sanitized_phone_number: ^phone_number}, _token, ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO")]
 
     respondent = Repo.get(Respondent, respondent.id)
-    Broker.delivery_confirm(respondent, "Do you smoke?")
+    Survey.delivery_confirm(respondent, "Do you smoke?")
 
-    survey = Repo.get(Survey, survey.id)
+    survey = Repo.get(Ask.Survey, survey.id)
     assert survey.state == "running"
 
     respondent = Repo.get(Respondent, respondent.id)
     assert respondent.state == "active"
-    reply = Broker.sync_step(respondent, Flow.Message.reply("Foo"))
+    reply = Survey.sync_step(respondent, Flow.Message.reply("Foo"))
     assert {:reply, ReplyHelper.error("Wrong answer", "Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO")} = reply
 
     respondent = Repo.get(Respondent, respondent.id)
-    Broker.delivery_confirm(respondent, "Error")
-    Broker.delivery_confirm(respondent, "Do you smoke?")
+    Survey.delivery_confirm(respondent, "Error")
+    Survey.delivery_confirm(respondent, "Do you smoke?")
 
-    reply = Broker.sync_step(respondent, Flow.Message.reply("No"))
+    reply = Survey.sync_step(respondent, Flow.Message.reply("No"))
     assert {:reply, ReplyHelper.simple("Satisfaction", "Did you enjoy this survey?")} = reply
 
     respondent = Repo.get(Respondent, respondent.id)
-    Broker.delivery_confirm(respondent, "Satisfaction")
+    Survey.delivery_confirm(respondent, "Satisfaction")
 
-    reply = Broker.sync_step(respondent, Flow.Message.reply("No"))
+    reply = Survey.sync_step(respondent, Flow.Message.reply("No"))
     assert {:end, {:reply, ReplyHelper.simple("Completed", "Quota completed")}} = reply
 
     respondent = Repo.get(Respondent, respondent.id)
-    Broker.delivery_confirm(respondent, "Completed")
+    Survey.delivery_confirm(respondent, "Completed")
 
     :ok = logger |> GenServer.stop
 
@@ -2963,7 +2963,7 @@ defmodule Ask.BrokerTest do
 
     survey
     |> Repo.preload([:quota_buckets])
-    |> Survey.changeset(%{quotas: quotas})
+    |> Ask.Survey.changeset(%{quotas: quotas})
     |> Repo.update!
 
 
@@ -2995,21 +2995,21 @@ defmodule Ask.BrokerTest do
     {:ok, broker} = ProactiveBroker.start_link
     ProactiveBroker.poll
 
-    survey = Repo.get(Survey, survey.id)
+    survey = Repo.get(Ask.Survey, survey.id)
     assert survey.state == "running"
 
     respondent = Repo.get(Respondent, respondent.id)
     assert respondent.state == "active"
 
-    reply = Broker.sync_step(respondent, Flow.Message.answer())
+    reply = Survey.sync_step(respondent, Flow.Message.answer())
     assert {:reply, ReplyHelper.ivr("Do you smoke?", "Do you smoke? Press 8 for YES, 9 for NO")} = reply
 
     respondent = Repo.get(Respondent, respondent.id)
-    reply = Broker.sync_step(respondent, Flow.Message.reply("3"))
+    reply = Survey.sync_step(respondent, Flow.Message.reply("3"))
     assert {:reply, ReplyHelper.error_ivr("Wrong answer", "Do you smoke?", "Do you smoke? Press 8 for YES, 9 for NO")} = reply
 
     respondent = Repo.get(Respondent, respondent.id)
-    reply = Broker.sync_step(respondent, Flow.Message.reply("9"))
+    reply = Survey.sync_step(respondent, Flow.Message.reply("9"))
     assert {:end, {:reply, ReplyHelper.ivr("Completed", "Quota completed (ivr)")}} = reply
 
     :ok = logger |> GenServer.stop
@@ -3097,9 +3097,9 @@ defmodule Ask.BrokerTest do
 
     ProactiveBroker.handle_info(:poll, nil)
 
-    survey1 = Repo.get(Survey, survey1.id)
-    survey2 = Repo.get(Survey, survey2.id)
-    assert Survey.completed?(survey1)
+    survey1 = Repo.get(Ask.Survey, survey1.id)
+    survey2 = Repo.get(Ask.Survey, survey2.id)
+    assert Ask.Survey.completed?(survey1)
     assert survey2.state == "running"
   end
 
@@ -3109,9 +3109,9 @@ defmodule Ask.BrokerTest do
 
     ProactiveBroker.handle_info(:poll, nil)
 
-    survey1 = Repo.get(Survey, survey1.id)
-    survey2 = Repo.get(Survey, survey2.id)
-    assert Survey.completed?(survey1)
+    survey1 = Repo.get(Ask.Survey, survey1.id)
+    survey2 = Repo.get(Ask.Survey, survey2.id)
+    assert Ask.Survey.completed?(survey1)
     assert survey2.state == "running"
   end
 
@@ -3126,7 +3126,7 @@ defmodule Ask.BrokerTest do
 
     ProactiveBroker.handle_info(:poll, nil, ten_oclock)
 
-    survey = Repo.get(Survey, survey.id)
+    survey = Repo.get(Ask.Survey, survey.id)
     assert survey.state == "running"
   end
 
@@ -3141,7 +3141,7 @@ defmodule Ask.BrokerTest do
 
     ProactiveBroker.handle_info(:poll, nil, twelve_oclock)
 
-    survey = Repo.get(Survey, survey.id)
+    survey = Repo.get(Ask.Survey, survey.id)
     assert survey.state == "running"
   end
 
@@ -3150,7 +3150,7 @@ defmodule Ask.BrokerTest do
 
     ProactiveBroker.handle_info(:poll, nil, Timex.parse!("2016-01-01T11:00:00Z", "{ISO:Extended}"))
 
-    survey = Repo.get(Survey, survey.id)
+    survey = Repo.get(Ask.Survey, survey.id)
     assert survey.state == "running"
   end
 
@@ -3159,8 +3159,8 @@ defmodule Ask.BrokerTest do
 
     ProactiveBroker.handle_info(:poll, nil, Timex.parse!("2016-01-01T14:00:00Z", "{ISO:Extended}"))
 
-    survey = Repo.get(Survey, survey.id)
-    assert Survey.completed?(survey)
+    survey = Repo.get(Ask.Survey, survey.id)
+    assert Ask.Survey.completed?(survey)
   end
 
   test "does poll surveys considering day of week according to timezone" do
@@ -3182,8 +3182,8 @@ defmodule Ask.BrokerTest do
     ProactiveBroker.handle_info(:poll, nil, mock_now)
 
     # The survey should have run and be completed (questionnaire is empty)
-    survey = Repo.get(Survey, survey.id)
-    assert Survey.completed?(survey)
+    survey = Repo.get(Ask.Survey, survey.id)
+    assert Ask.Survey.completed?(survey)
   end
 
   test "doesn't poll surveys considering day of week according to timezone" do
@@ -3205,13 +3205,13 @@ defmodule Ask.BrokerTest do
     ProactiveBroker.handle_info(:poll, nil, mock_now)
 
     # Survey shouldn't have started yet
-    survey = Repo.get(Survey, survey.id)
+    survey = Repo.get(Ask.Survey, survey.id)
     assert survey.state == "running"
   end
 
   test "increments quota bucket when a respondent completes the survey" do
     [survey, _group, test_channel, respondent, phone_number] = create_running_survey_with_channel_and_respondent()
-    Survey.changeset(survey, %{quota_vars: ["Exercises", "Smokes"]}) |> Repo.update()
+    Ask.Survey.changeset(survey, %{quota_vars: ["Exercises", "Smokes"]}) |> Repo.update()
 
     selected_bucket = insert(:quota_bucket, survey: survey, condition: %{Smokes: "No", Exercises: "Yes"}, quota: 10, count: 0)
     insert(:quota_bucket, survey: survey, condition: %{Smokes: "No", Exercises: "No"}, quota: 10, count: 0)
@@ -3225,19 +3225,19 @@ defmodule Ask.BrokerTest do
 
     respondent = Repo.get(Respondent, respondent.id)
 
-    reply = Broker.sync_step(respondent, Flow.Message.reply("No"))
+    reply = Survey.sync_step(respondent, Flow.Message.reply("No"))
     assert {:reply, ReplyHelper.simple("Do you exercise", "Do you exercise? Reply 1 for YES, 2 for NO")} = reply
 
     respondent = Repo.get(Respondent, respondent.id)
-    reply = Broker.sync_step(respondent, Flow.Message.reply("Yes"))
+    reply = Survey.sync_step(respondent, Flow.Message.reply("Yes"))
     assert {:reply, ReplyHelper.simple("Which is the second perfect number?", "Which is the second perfect number??")} = reply
 
     respondent = Repo.get(Respondent, respondent.id)
-    reply = Broker.sync_step(respondent, Flow.Message.reply("99"))
+    reply = Survey.sync_step(respondent, Flow.Message.reply("99"))
     assert {:reply, ReplyHelper.simple("What's the number of this question?", "What's the number of this question??")} = reply
 
     respondent = Repo.get(Respondent, respondent.id)
-    reply = Broker.sync_step(respondent, Flow.Message.reply("11"))
+    reply = Survey.sync_step(respondent, Flow.Message.reply("11"))
     assert {:end, {:reply, ReplyHelper.simple("Thank you", "Thanks for completing this survey")}} = reply
 
     selected_bucket = QuotaBucket |> Repo.get(selected_bucket.id)
@@ -3254,7 +3254,7 @@ defmodule Ask.BrokerTest do
 
   test "increments quota bucket when a respondent completes the survey, with numeric condition" do
     [survey, _group, test_channel, respondent, phone_number] = create_running_survey_with_channel_and_respondent()
-    Survey.changeset(survey, %{quota_vars: ["Exercises", "Smokes"]}) |> Repo.update()
+    Ask.Survey.changeset(survey, %{quota_vars: ["Exercises", "Smokes"]}) |> Repo.update()
 
     insert(:quota_bucket, survey: survey, condition: %{:Smokes => "No", :"Perfect Number" => [20, 30]}, quota: 10, count: 0)
     selected_bucket = insert(:quota_bucket, survey: survey, condition: %{:Smokes => "No", :"Perfect Number" => [31, 40]}, quota: 10, count: 0)
@@ -3268,19 +3268,19 @@ defmodule Ask.BrokerTest do
 
     respondent = Repo.get(Respondent, respondent.id)
 
-    reply = Broker.sync_step(respondent, Flow.Message.reply("No"))
+    reply = Survey.sync_step(respondent, Flow.Message.reply("No"))
     assert {:reply, ReplyHelper.simple("Do you exercise", "Do you exercise? Reply 1 for YES, 2 for NO")} = reply
 
     respondent = Repo.get(Respondent, respondent.id)
-    reply = Broker.sync_step(respondent, Flow.Message.reply("Yes"))
+    reply = Survey.sync_step(respondent, Flow.Message.reply("Yes"))
     assert {:reply, ReplyHelper.simple("Which is the second perfect number?", "Which is the second perfect number??")} = reply
 
     respondent = Repo.get(Respondent, respondent.id)
-    reply = Broker.sync_step(respondent, Flow.Message.reply("33"))
+    reply = Survey.sync_step(respondent, Flow.Message.reply("33"))
     assert {:reply, ReplyHelper.simple("What's the number of this question?", "What's the number of this question??")} = reply
 
     respondent = Repo.get(Respondent, respondent.id)
-    reply = Broker.sync_step(respondent, Flow.Message.reply("11"))
+    reply = Survey.sync_step(respondent, Flow.Message.reply("11"))
     assert {:end, {:reply, ReplyHelper.simple("Thank you", "Thanks for completing this survey")}} = reply
 
     respondent = Repo.get(Respondent, respondent.id)
@@ -3297,7 +3297,7 @@ defmodule Ask.BrokerTest do
 
   test "marks the respondent as rejected when the bucket is completed" do
     [survey, _group, test_channel, respondent, phone_number] = create_running_survey_with_channel_and_respondent()
-    Survey.changeset(survey, %{quota_vars: ["Exercises"]}) |> Repo.update()
+    Ask.Survey.changeset(survey, %{quota_vars: ["Exercises"]}) |> Repo.update()
 
     selected_bucket = insert(:quota_bucket, survey: survey, condition: %{:Exercises => "Yes"}, quota: 1, count: 1)
     insert(:quota_bucket, survey: survey, condition: %{:Exercises => "No"}, quota: 10, count: 0)
@@ -3309,11 +3309,11 @@ defmodule Ask.BrokerTest do
 
     respondent = Repo.get(Respondent, respondent.id)
 
-    reply = Broker.sync_step(respondent, Flow.Message.reply("No"))
+    reply = Survey.sync_step(respondent, Flow.Message.reply("No"))
     assert {:reply, ReplyHelper.simple("Do you exercise", "Do you exercise? Reply 1 for YES, 2 for NO")} = reply
 
     respondent = Repo.get(Respondent, respondent.id)
-    reply = Broker.sync_step(respondent, Flow.Message.reply("Yes"))
+    reply = Survey.sync_step(respondent, Flow.Message.reply("Yes"))
     assert :end = reply
     updated_respondent = Repo.get(Respondent, respondent.id)
     assert updated_respondent.state == "rejected"
@@ -3327,7 +3327,7 @@ defmodule Ask.BrokerTest do
 
   test "increments quota bucket when a respondent is flagged as completed" do
     [survey, _group, test_channel, respondent, phone_number] = create_running_survey_with_channel_and_respondent(@dummy_steps_with_flag)
-    Survey.changeset(survey, %{quota_vars: ["Exercises", "Smokes"]}) |> Repo.update()
+    Ask.Survey.changeset(survey, %{quota_vars: ["Exercises", "Smokes"]}) |> Repo.update()
 
     selected_bucket = insert(:quota_bucket, survey: survey, condition: %{Smokes: "No", Exercises: "Yes"}, quota: 10, count: 0)
     insert(:quota_bucket, survey: survey, condition: %{Smokes: "No", Exercises: "No"}, quota: 10, count: 0)
@@ -3341,14 +3341,14 @@ defmodule Ask.BrokerTest do
 
     respondent = Repo.get(Respondent, respondent.id)
 
-    reply = Broker.sync_step(respondent, Flow.Message.reply("No"))
+    reply = Survey.sync_step(respondent, Flow.Message.reply("No"))
     assert {:reply, ReplyHelper.simple("Do you exercise", "Do you exercise? Reply 1 for YES, 2 for NO")} = reply
 
     respondent = Repo.get(Respondent, respondent.id)
     assert respondent.disposition == "interim partial"
 
     respondent = Repo.get(Respondent, respondent.id)
-    reply = Broker.sync_step(respondent, Flow.Message.reply("Yes"))
+    reply = Survey.sync_step(respondent, Flow.Message.reply("Yes"))
     assert {:reply, ReplyHelper.simple("Which is the second perfect number?", "Which is the second perfect number??")} = reply
 
     selected_bucket = QuotaBucket |> Repo.get(selected_bucket.id)
@@ -3361,7 +3361,7 @@ defmodule Ask.BrokerTest do
     assert respondent.disposition == "completed"
 
     respondent = Repo.get(Respondent, respondent.id)
-    reply = Broker.sync_step(respondent, Flow.Message.reply("99"))
+    reply = Survey.sync_step(respondent, Flow.Message.reply("99"))
     assert {:reply, ReplyHelper.simple("What's the number of this question?", "What's the number of this question??")} = reply
 
     selected_bucket = QuotaBucket |> Repo.get(selected_bucket.id)
@@ -3374,7 +3374,7 @@ defmodule Ask.BrokerTest do
     assert respondent.disposition == "completed"
 
     respondent = Repo.get(Respondent, respondent.id)
-    reply = Broker.sync_step(respondent, Flow.Message.reply("11"))
+    reply = Survey.sync_step(respondent, Flow.Message.reply("11"))
     assert {:end, {:reply, ReplyHelper.simple("Thank you", "Thanks for completing this survey")}} = reply
 
     selected_bucket = QuotaBucket |> Repo.get(selected_bucket.id)
@@ -3391,7 +3391,7 @@ defmodule Ask.BrokerTest do
 
   test "increments quota bucket when a respondent is flagged as completed, with a numeric condition defining the bucket after the flag was already specified" do
     [survey, _group, test_channel, respondent, phone_number] = create_running_survey_with_channel_and_respondent(@dummy_steps_with_flag)
-    Survey.changeset(survey, %{quota_vars: ["Exercises", "Smokes"]}) |> Repo.update()
+    Ask.Survey.changeset(survey, %{quota_vars: ["Exercises", "Smokes"]}) |> Repo.update()
 
     insert(:quota_bucket, survey: survey, condition: %{:Smokes => "No", :"Perfect Number" => [20, 30]}, quota: 10, count: 0)
     selected_bucket = insert(:quota_bucket, survey: survey, condition: %{:Smokes => "No", :"Perfect Number" => [31, 40]}, quota: 10, count: 0)
@@ -3405,19 +3405,19 @@ defmodule Ask.BrokerTest do
 
     respondent = Repo.get(Respondent, respondent.id)
 
-    reply = Broker.sync_step(respondent, Flow.Message.reply("No"))
+    reply = Survey.sync_step(respondent, Flow.Message.reply("No"))
     assert {:reply, ReplyHelper.simple("Do you exercise", "Do you exercise? Reply 1 for YES, 2 for NO")} = reply
 
     respondent = Repo.get(Respondent, respondent.id)
-    reply = Broker.sync_step(respondent, Flow.Message.reply("Yes"))
+    reply = Survey.sync_step(respondent, Flow.Message.reply("Yes"))
     assert {:reply, ReplyHelper.simple("Which is the second perfect number?", "Which is the second perfect number??")} = reply
 
     respondent = Repo.get(Respondent, respondent.id)
-    reply = Broker.sync_step(respondent, Flow.Message.reply("33"))
+    reply = Survey.sync_step(respondent, Flow.Message.reply("33"))
     assert {:reply, ReplyHelper.simple("What's the number of this question?", "What's the number of this question??")} = reply
 
     respondent = Repo.get(Respondent, respondent.id)
-    reply = Broker.sync_step(respondent, Flow.Message.reply("11"))
+    reply = Survey.sync_step(respondent, Flow.Message.reply("11"))
     assert {:end, {:reply, ReplyHelper.simple("Thank you", "Thanks for completing this survey")}} = reply
 
     respondent = Repo.get(Respondent, respondent.id)
@@ -3444,7 +3444,7 @@ defmodule Ask.BrokerTest do
     respondent = insert(:respondent, survey: survey, respondent_group: group)
     phone_number = respondent.sanitized_phone_number
 
-    Survey.changeset(survey, %{quota_vars: ["Smokes"]}) |> Repo.update()
+    Ask.Survey.changeset(survey, %{quota_vars: ["Smokes"]}) |> Repo.update()
 
     selected_bucket = insert(:quota_bucket, survey: survey, condition: %{Smokes: "No"}, quota: 10, count: 0)
     insert(:quota_bucket, survey: survey, condition: %{Smokes: "Yes"}, quota: 10, count: 0)
@@ -3455,10 +3455,10 @@ defmodule Ask.BrokerTest do
     assert_received [:ask, ^test_channel, %Respondent{sanitized_phone_number: ^phone_number}, _token, ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO")]
 
     respondent = Repo.get(Respondent, respondent.id)
-    Broker.delivery_confirm(respondent, "Do you smoke?")
+    Survey.delivery_confirm(respondent, "Do you smoke?")
 
     respondent = Repo.get(Respondent, respondent.id)
-    reply = Broker.sync_step(respondent, Flow.Message.reply("No"))
+    reply = Survey.sync_step(respondent, Flow.Message.reply("No"))
     assert {:reply, ReplyHelper.simple("Do you exercise", "Do you exercise? Reply 1 for YES, 2 for NO")} = reply
 
     respondent = Repo.get(Respondent, respondent.id)
@@ -3472,14 +3472,14 @@ defmodule Ask.BrokerTest do
            |> Enum.all?( fn (b) -> b.count == 0 end)
 
     respondent = Repo.get(Respondent, respondent.id)
-    reply = Broker.sync_step(respondent, Flow.Message.reply("Yes"))
+    reply = Survey.sync_step(respondent, Flow.Message.reply("Yes"))
     assert {:reply, ReplyHelper.simple("Which is the second perfect number?", "Which is the second perfect number??")} = reply
 
     respondent = Repo.get(Respondent, respondent.id)
     assert respondent.disposition == "completed"
 
     respondent = Repo.get(Respondent, respondent.id)
-    reply = Broker.sync_step(respondent, Flow.Message.reply("99"))
+    reply = Survey.sync_step(respondent, Flow.Message.reply("99"))
     assert {:reply, ReplyHelper.simple("What's the number of this question?", "What's the number of this question??")} = reply
 
     selected_bucket = QuotaBucket |> Repo.get(selected_bucket.id)
@@ -3492,7 +3492,7 @@ defmodule Ask.BrokerTest do
     assert respondent.disposition == "completed"
 
     respondent = Repo.get(Respondent, respondent.id)
-    reply = Broker.sync_step(respondent, Flow.Message.reply("11"))
+    reply = Survey.sync_step(respondent, Flow.Message.reply("11"))
     assert {:end, {:reply, ReplyHelper.simple("Thank you", "Thanks for completing this survey")}} = reply
 
     selected_bucket = QuotaBucket |> Repo.get(selected_bucket.id)
@@ -3519,7 +3519,7 @@ defmodule Ask.BrokerTest do
     respondent = insert(:respondent, survey: survey, respondent_group: group)
     phone_number = respondent.sanitized_phone_number
 
-    Survey.changeset(survey, %{quota_vars: ["Exercises"]}) |> Repo.update()
+    Ask.Survey.changeset(survey, %{quota_vars: ["Exercises"]}) |> Repo.update()
 
     selected_bucket = insert(:quota_bucket, survey: survey, condition: %{Exercises: "Yes"}, quota: 10, count: 0)
     insert(:quota_bucket, survey: survey, condition: %{Exercises: "No"}, quota: 10, count: 0)
@@ -3530,14 +3530,14 @@ defmodule Ask.BrokerTest do
     assert_received [:ask, ^test_channel, %Respondent{sanitized_phone_number: ^phone_number}, _token, ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO")]
 
     respondent = Repo.get(Respondent, respondent.id)
-    reply = Broker.sync_step(respondent, Flow.Message.reply("No"))
+    reply = Survey.sync_step(respondent, Flow.Message.reply("No"))
     respondent = Repo.get(Respondent, respondent.id)
 
     assert {:reply, ReplyHelper.simple("Do you exercise", "Do you exercise? Reply 1 for YES, 2 for NO")} = reply
 
     assert respondent.disposition == "interim partial"
 
-    reply = Broker.sync_step(respondent, Flow.Message.reply("Yes"))
+    reply = Survey.sync_step(respondent, Flow.Message.reply("Yes"))
 
     assert {:reply, ReplyHelper.simple("Which is the second perfect number?", "Which is the second perfect number??")} = reply
     respondent = Repo.get(Respondent, respondent.id)
@@ -3551,7 +3551,7 @@ defmodule Ask.BrokerTest do
     assert respondent.disposition == "completed"
 
     respondent = Repo.get(Respondent, respondent.id)
-    reply = Broker.sync_step(respondent, Flow.Message.reply("99"))
+    reply = Survey.sync_step(respondent, Flow.Message.reply("99"))
     assert {:reply, ReplyHelper.simple("What's the number of this question?", "What's the number of this question??")} = reply
 
     selected_bucket = QuotaBucket |> Repo.get(selected_bucket.id)
@@ -3564,7 +3564,7 @@ defmodule Ask.BrokerTest do
     assert respondent.disposition == "completed"
 
     respondent = Repo.get(Respondent, respondent.id)
-    reply = Broker.sync_step(respondent, Flow.Message.reply("11"))
+    reply = Survey.sync_step(respondent, Flow.Message.reply("11"))
     assert {:end, {:reply, ReplyHelper.simple("Thank you", "Thanks for completing this survey")}} = reply
 
     selected_bucket = QuotaBucket |> Repo.get(selected_bucket.id)
@@ -3605,11 +3605,11 @@ defmodule Ask.BrokerTest do
     respondent = Repo.get(Respondent, respondent.id)
 
     # Respondent says 1 (i.e.: Yes), causing an invalid skip_logic to be inspected
-    Broker.sync_step(respondent, Flow.Message.reply("1"))
+    Survey.sync_step(respondent, Flow.Message.reply("1"))
 
     # If there's a problem with one respondent, continue the survey with others
     # and mark this one as failed
-    survey = Repo.get(Survey, survey.id)
+    survey = Repo.get(Ask.Survey, survey.id)
     assert survey.state == "running"
 
     respondent = Repo.get(Respondent, respondent.id)
@@ -3620,7 +3620,7 @@ defmodule Ask.BrokerTest do
 
   test "reloads respondent if stale" do
     [survey, _, _, respondent, _] = create_running_survey_with_channel_and_respondent()
-    survey |> Survey.changeset(%{sms_retry_configuration: "2m"}) |> Repo.update!
+    survey |> Ask.Survey.changeset(%{sms_retry_configuration: "2m"}) |> Repo.update!
 
     {:ok, _} = ProactiveBroker.start_link
     ProactiveBroker.handle_info(:poll, nil)
@@ -3629,7 +3629,7 @@ defmodule Ask.BrokerTest do
     session = respondent.session |> Ask.Runtime.Session.load
     ProactiveBroker.retry_respondent(respondent)
 
-    Broker.sync_step_internal(session, Flow.Message.reply("Yes"))
+    Survey.sync_step_internal(session, Flow.Message.reply("Yes"))
 
     updated_respondent = Repo.get(Respondent, respondent.id)
     assert updated_respondent.state == "active"
@@ -3645,25 +3645,25 @@ defmodule Ask.BrokerTest do
     {:ok, broker} = ProactiveBroker.start_link
     ProactiveBroker.poll
 
-    survey = Repo.get(Survey, survey.id)
+    survey = Repo.get(Ask.Survey, survey.id)
     assert survey.state == "running"
 
     respondent = Repo.get(Respondent, respondent.id)
     assert respondent.state == "active"
 
-    reply = Broker.sync_step(respondent, Flow.Message.answer())
+    reply = Survey.sync_step(respondent, Flow.Message.answer())
     assert {:reply, ReplyHelper.ivr("Do you smoke?", "Do you smoke? Press 8 for YES, 9 for NO")} = reply
 
     respondent = Repo.get(Respondent, respondent.id)
-    reply = Broker.sync_step(respondent, Flow.Message.reply("3"))
+    reply = Survey.sync_step(respondent, Flow.Message.reply("3"))
     assert {:reply, ReplyHelper.error_ivr("You have entered an invalid answer (ivr)", "Do you smoke?", "Do you smoke? Press 8 for YES, 9 for NO")} = reply
 
     respondent = Repo.get(Respondent, respondent.id)
-    reply = Broker.sync_step(respondent, Flow.Message.reply("3"))
+    reply = Survey.sync_step(respondent, Flow.Message.reply("3"))
     assert {:reply, ReplyHelper.error_ivr("You have entered an invalid answer (ivr)", "Do you smoke?", "Do you smoke? Press 8 for YES, 9 for NO")} = reply
 
     respondent = Repo.get(Respondent, respondent.id)
-    reply = Broker.sync_step(respondent, Flow.Message.reply("3"))
+    reply = Survey.sync_step(respondent, Flow.Message.reply("3"))
     assert :end = reply
 
     respondent = Repo.get(Respondent, respondent.id)
@@ -3675,30 +3675,30 @@ defmodule Ask.BrokerTest do
 
   test "does not mark as failed after 3 successive wrong replies when there are retries left" do
     [survey, _, _, respondent, _] = create_running_survey_with_channel_and_respondent(@dummy_steps, "ivr")
-    survey |> Survey.changeset(%{ivr_retry_configuration: "10m"}) |> Repo.update!
+    survey |> Ask.Survey.changeset(%{ivr_retry_configuration: "10m"}) |> Repo.update!
 
     {:ok, broker} = ProactiveBroker.start_link
     ProactiveBroker.poll
 
-    survey = Repo.get(Survey, survey.id)
+    survey = Repo.get(Ask.Survey, survey.id)
     assert survey.state == "running"
 
     respondent = Repo.get(Respondent, respondent.id)
     assert respondent.state == "active"
 
-    reply = Broker.sync_step(respondent, Flow.Message.answer())
+    reply = Survey.sync_step(respondent, Flow.Message.answer())
     assert {:reply, ReplyHelper.ivr("Do you smoke?", "Do you smoke? Press 8 for YES, 9 for NO")} = reply
 
     respondent = Repo.get(Respondent, respondent.id)
-    reply = Broker.sync_step(respondent, Flow.Message.reply("3"))
+    reply = Survey.sync_step(respondent, Flow.Message.reply("3"))
     assert {:reply, ReplyHelper.error_ivr("You have entered an invalid answer (ivr)", "Do you smoke?", "Do you smoke? Press 8 for YES, 9 for NO")} = reply
 
     respondent = Repo.get(Respondent, respondent.id)
-    reply = Broker.sync_step(respondent, Flow.Message.reply("3"))
+    reply = Survey.sync_step(respondent, Flow.Message.reply("3"))
     assert {:reply, ReplyHelper.error_ivr("You have entered an invalid answer (ivr)", "Do you smoke?", "Do you smoke? Press 8 for YES, 9 for NO")} = reply
 
     respondent = Repo.get(Respondent, respondent.id)
-    reply = Broker.sync_step(respondent, Flow.Message.reply("3"))
+    reply = Survey.sync_step(respondent, Flow.Message.reply("3"))
     assert :end = reply
 
     respondent = Repo.get(Respondent, respondent.id)
@@ -3728,7 +3728,7 @@ defmodule Ask.BrokerTest do
     ProactiveBroker.handle_info(:poll, nil)
 
     respondent = Repo.get(Respondent, respondent.id)
-    reply = Broker.sync_step(respondent, Flow.Message.reply("Yes"), "sms")
+    reply = Survey.sync_step(respondent, Flow.Message.reply("Yes"), "sms")
     assert {:reply, ReplyHelper.simple("Do you exercise", "Do you exercise? Reply 1 for YES, 2 for NO")} = reply
   end
 
@@ -3752,13 +3752,13 @@ defmodule Ask.BrokerTest do
     ProactiveBroker.handle_info(:poll, nil)
 
     respondent = Repo.get(Respondent, respondent.id)
-    reply = Broker.sync_step(respondent, Flow.Message.reply("Yes"), "mobileweb")
+    reply = Survey.sync_step(respondent, Flow.Message.reply("Yes"), "mobileweb")
     assert {:reply, ReplyHelper.simple("Do you exercise", "Do you exercise?")} = reply
   end
 
   test "ignore answers from sms when mode is not one of the survey modes" do
     [survey, _group, test_channel, respondent, phone_number] = create_running_survey_with_channel_and_respondent(@mobileweb_dummy_steps, "mobileweb")
-    survey |> Survey.changeset(%{mobileweb_retry_configuration: "10m"}) |> Repo.update
+    survey |> Ask.Survey.changeset(%{mobileweb_retry_configuration: "10m"}) |> Repo.update
 
     {:ok, broker} = ProactiveBroker.start_link
     ProactiveBroker.poll
@@ -3766,14 +3766,14 @@ defmodule Ask.BrokerTest do
     assert_receive [:ask, ^test_channel, %Respondent{sanitized_phone_number: ^phone_number}, _, ReplyHelper.simple("Contact", message)]
     assert message == "Please enter #{Routes.mobile_survey_url(Ask.Endpoint, :index, respondent.id, token: Respondent.token(respondent.id))}"
 
-    survey = Repo.get(Survey, survey.id)
+    survey = Repo.get(Ask.Survey, survey.id)
     assert survey.state == "running"
 
     respondent = Repo.get(Respondent, respondent.id)
     assert respondent.state == "active"
 
     respondent = Repo.get(Respondent, respondent.id)
-    assert :end = Broker.sync_step(respondent, Flow.Message.reply("Yes"), "sms")
+    assert :end = Survey.sync_step(respondent, Flow.Message.reply("Yes"), "sms")
 
     :ok = broker |> GenServer.stop
   end
@@ -3787,7 +3787,7 @@ defmodule Ask.BrokerTest do
     assert message == "Please enter #{Routes.mobile_survey_url(Ask.Endpoint, :index, respondent.id, token: Respondent.token(respondent.id))}"
 
     respondent = Repo.get(Respondent, respondent.id)
-    Broker.delivery_confirm(respondent, "Contact", "sms")
+    Survey.delivery_confirm(respondent, "Contact", "sms")
 
     respondent = Repo.get(Respondent, respondent.id)
     assert respondent.disposition == "contacted"
@@ -3795,7 +3795,7 @@ defmodule Ask.BrokerTest do
 
   test "it doesn't crash on channel_failed when there's no session" do
     respondent = insert(:respondent)
-    assert Broker.channel_failed(respondent) == :ok
+    assert Survey.channel_failed(respondent) == :ok
   end
 
   test "when channel fails a survey log entry is created" do
@@ -3807,7 +3807,7 @@ defmodule Ask.BrokerTest do
 
     respondent = Repo.get(Respondent, respondent.id)
 
-    Broker.channel_failed(respondent, "The channel failed")
+    Survey.channel_failed(respondent, "The channel failed")
 
     disposition_histories = Repo.all(RespondentDispositionHistory)
     assert disposition_histories |> length == 2
@@ -3849,13 +3849,13 @@ defmodule Ask.BrokerTest do
     {:ok, broker} = ProactiveBroker.start_link
     ProactiveBroker.poll
 
-    Broker.delivery_confirm(Repo.get(Respondent, respondent.id), "Do you smoke?")
+    Survey.delivery_confirm(Repo.get(Respondent, respondent.id), "Do you smoke?")
 
-    reply = Broker.sync_step(Repo.get(Respondent, respondent.id), Flow.Message.reply("1-734-555-1212"))
+    reply = Survey.sync_step(Repo.get(Respondent, respondent.id), Flow.Message.reply("1-734-555-1212"))
     assert {:reply, ReplyHelper.error("You have entered an invalid answer", "Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO")} = reply
-    reply = Broker.sync_step(Repo.get(Respondent, respondent.id), Flow.Message.reply("fooo (1-734) 555 1212 bar"))
+    reply = Survey.sync_step(Repo.get(Respondent, respondent.id), Flow.Message.reply("fooo (1-734) 555 1212 bar"))
     assert {:reply, ReplyHelper.error("You have entered an invalid answer", "Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO")} = reply
-    reply = Broker.sync_step(Repo.get(Respondent, respondent.id), Flow.Message.reply("fooo (1734) 555.1212 bar"))
+    reply = Survey.sync_step(Repo.get(Respondent, respondent.id), Flow.Message.reply("fooo (1734) 555.1212 bar"))
     assert :end = reply
 
     :ok = logger |> GenServer.stop
@@ -3935,7 +3935,7 @@ defmodule Ask.BrokerTest do
     ]
     |> Enum.each(fn {masked_response, response} ->
       assert Flow.Message.reply(masked_response)
-        == Broker.mask_phone_number(respondent, Flow.Message.reply(response))
+        == Survey.mask_phone_number(respondent, Flow.Message.reply(response))
     end)
   end
 
@@ -4010,7 +4010,7 @@ defmodule Ask.BrokerTest do
 
   defp confirm_delivery(message) do
     respondent = Repo.one!(Respondent)
-    Broker.delivery_confirm(respondent, message)
+    Survey.delivery_confirm(respondent, message)
   end
 
   defp start_test(steps) do
@@ -4024,7 +4024,7 @@ defmodule Ask.BrokerTest do
 
   defp respondent_answers(message) do
     respondent = Repo.one!(Respondent)
-    Broker.sync_step(respondent, Flow.Message.reply(message))
+    Survey.sync_step(respondent, Flow.Message.reply(message))
   end
 
   defp assert_respondent(%{current_state: current_state, previous_disposition: previous_disposition, current_disposition: current_disposition, user_stopped: user_stopped}) do

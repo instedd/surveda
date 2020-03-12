@@ -3,7 +3,7 @@ defmodule Ask.Runtime.ProactiveBroker do
   import Ecto.Query
   import Ecto
   alias Ask.{Repo, Logger, Survey, Respondent, RespondentGroup, QuotaBucket, RespondentDispositionHistory, SystemTime, Schedule, SurvedaMetrics}
-  alias Ask.Runtime.{Session, Broker, RetriesHistogram, ChannelStatusServer}
+  alias Ask.Runtime.{Session, RetriesHistogram, ChannelStatusServer}
 
   @poll_interval :timer.minutes(1)
   @server_ref {:global, __MODULE__}
@@ -57,7 +57,7 @@ defmodule Ask.Runtime.ProactiveBroker do
 
     Repo.transaction(fn ->
       try do
-        Broker.handle_session_step(Session.timeout(session), SystemTime.time.now)
+        Ask.Runtime.Survey.handle_session_step(Session.timeout(session), SystemTime.time.now)
       rescue
         e ->
           Logger.error(e, "Error retrying respondent. Rolling back transaction")
@@ -165,7 +165,7 @@ defmodule Ask.Runtime.ProactiveBroker do
     SurvedaMetrics.increment_counter_with_label(:surveda_broker_respondent_start, [survey.id])
     Session.start(questionnaire, respondent, primary_channel, primary_mode, survey.schedule, retries, fallback_channel, fallback_mode, fallback_retries, fallback_delay, survey.count_partial_results)
     |> handle_session_started
-    |> Broker.handle_session_step(SystemTime.time.now)
+    |> Ask.Runtime.Survey.handle_session_step(SystemTime.time.now)
   end
 
   defp default_batch_size do
@@ -211,7 +211,7 @@ defmodule Ask.Runtime.ProactiveBroker do
       Respondent.with_lock(respondent_id, fn respondent ->
         if(respondent.state == "stalled") do # the respondent obtained inside the lock may no longer be "stalled"
           respondent = RetriesHistogram.remove_respondent(respondent)
-          Broker.update_respondent(respondent, :failed)
+          Ask.Runtime.Survey.update_respondent(respondent, :failed)
         end
       end)
     end)
