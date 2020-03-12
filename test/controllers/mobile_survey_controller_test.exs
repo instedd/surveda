@@ -3,7 +3,7 @@ defmodule Ask.MobileSurveyControllerTest do
   use Ask.TestHelpers
   use Ask.DummySteps
   use Timex
-  alias Ask.Runtime.{ProactiveBroker, ReplyHelper, ChannelStatusServer}
+  alias Ask.Runtime.{Broker, ReplyHelper, ChannelStatusServer}
   alias Ask.{Repo, Survey, Respondent, TestChannel, RespondentGroupChannel}
   require Ask.Runtime.ReplyHelper
 
@@ -28,9 +28,9 @@ defmodule Ask.MobileSurveyControllerTest do
 
       respondent = insert(:respondent, survey: survey, respondent_group: group)
 
-      ProactiveBroker.start_link
+      Broker.start_link
       Ask.Config.start_link
-      ProactiveBroker.poll
+      Broker.poll
 
       {:ok, conn: conn, respondent: respondent}
     end
@@ -59,8 +59,8 @@ defmodule Ask.MobileSurveyControllerTest do
     token = Respondent.token(respondent.id)
     cookie_name = Respondent.mobile_web_cookie_name(respondent.id)
 
-    {:ok, broker} = ProactiveBroker.start_link
-    ProactiveBroker.poll
+    {:ok, broker} = Broker.start_link
+    Broker.poll
 
     assert_receive [:ask, ^test_channel, %Respondent{sanitized_phone_number: ^phone_number}, _, ReplyHelper.simple("Contact", message)]
     assert message == "Please enter #{mobile_survey_url(Ask.Endpoint, :index, respondent.id, token: Respondent.token(respondent.id))}"
@@ -231,9 +231,9 @@ defmodule Ask.MobileSurveyControllerTest do
     respondent = insert(:respondent, survey: survey, respondent_group: group)
     phone_number = respondent.sanitized_phone_number
 
-    {:ok, broker} = ProactiveBroker.start_link
+    {:ok, broker} = Broker.start_link
     {:ok, config} = Ask.Config.start_link
-    ProactiveBroker.poll
+    Broker.poll
 
     assert_receive [:ask, ^test_channel, %Respondent{sanitized_phone_number: ^phone_number}, _, ReplyHelper.simple("Contact", message)]
     assert message == "Please enter #{mobile_survey_url(Ask.Endpoint, :index, respondent.id, token: Respondent.token(respondent.id))}"
@@ -261,8 +261,8 @@ defmodule Ask.MobileSurveyControllerTest do
     respondent = insert(:respondent, survey: survey, respondent_group: group)
     token = Respondent.token(respondent.id)
 
-    {:ok, _} = ProactiveBroker.start_link
-    ProactiveBroker.poll
+    {:ok, _} = Broker.start_link
+    Broker.poll
 
     respondent = Repo.get(Respondent, respondent.id)
     respondent |> Respondent.changeset(%{"state" => "completed"}) |> Repo.update!
@@ -288,8 +288,8 @@ defmodule Ask.MobileSurveyControllerTest do
     respondent = insert(:respondent, survey: survey, respondent_group: group)
     token = Respondent.token(respondent.id)
 
-    {:ok, _} = ProactiveBroker.start_link
-    ProactiveBroker.poll
+    {:ok, _} = Broker.start_link
+    Broker.poll
 
     survey |> Survey.changeset(%{"state" => "terminated", "exit_code" => 0, "exit_message" => "Successfully completed"}) |> Repo.update!
 
@@ -315,8 +315,8 @@ defmodule Ask.MobileSurveyControllerTest do
     phone_number = respondent.sanitized_phone_number
     token = Respondent.token(respondent.id)
 
-    {:ok, broker} = ProactiveBroker.start_link
-    ProactiveBroker.poll
+    {:ok, broker} = Broker.start_link
+    Broker.poll
 
     assert_receive [:ask, ^test_channel, %Respondent{sanitized_phone_number: ^phone_number}, _, ReplyHelper.simple("Contact", message)]
     assert message == "Please enter #{mobile_survey_url(Ask.Endpoint, :index, respondent.id, token: Respondent.token(respondent.id))}"
@@ -359,9 +359,9 @@ defmodule Ask.MobileSurveyControllerTest do
 
     respondent = insert(:respondent, survey: survey, respondent_group: group)
 
-    ProactiveBroker.start_link
+    Broker.start_link
     Ask.Config.start_link
-    ProactiveBroker.poll
+    Broker.poll
 
     Survey |> Repo.get(survey.id) |> Repo.delete
 

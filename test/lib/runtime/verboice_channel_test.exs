@@ -4,7 +4,7 @@ defmodule Ask.Runtime.VerboiceChannelTest do
   use Timex
 
   alias Ask.{Respondent, BrokerStub, Survey, RetryStat, Stats}
-  alias Ask.Runtime.{VerboiceChannel, Flow, ReplyHelper, SurveyLogger, ProactiveBroker, ChannelStatusServer}
+  alias Ask.Runtime.{VerboiceChannel, Flow, ReplyHelper, SurveyLogger, Broker, ChannelStatusServer}
 
   require Ask.Runtime.ReplyHelper
 
@@ -193,8 +193,8 @@ defmodule Ask.Runtime.VerboiceChannelTest do
       respondent = insert(:respondent, survey: survey, respondent_group: group)
 
       {:ok, logger} = SurveyLogger.start_link
-      {:ok, broker} = ProactiveBroker.start_link
-      ProactiveBroker.poll
+      {:ok, broker} = Broker.start_link
+      Broker.poll
 
       survey = Repo.get(Survey, survey.id)
       assert survey.state == "running"
@@ -244,8 +244,8 @@ defmodule Ask.Runtime.VerboiceChannelTest do
       respondent = insert(:respondent, survey: survey, respondent_group: group)
 
       {:ok, logger} = SurveyLogger.start_link
-      {:ok, broker} = ProactiveBroker.start_link
-      ProactiveBroker.poll
+      {:ok, broker} = Broker.start_link
+      Broker.poll
 
       survey = Repo.get(Survey, survey.id)
       assert survey.state == "running"
@@ -275,8 +275,8 @@ defmodule Ask.Runtime.VerboiceChannelTest do
       respondent = insert(:respondent, survey: survey, respondent_group: group)
 
       {:ok, logger} = SurveyLogger.start_link
-      {:ok, broker} = ProactiveBroker.start_link
-      ProactiveBroker.poll
+      {:ok, broker} = Broker.start_link
+      Broker.poll
 
       survey = Repo.get(Survey, survey.id)
       assert survey.state == "running"
@@ -306,8 +306,8 @@ defmodule Ask.Runtime.VerboiceChannelTest do
       respondent = insert(:respondent, survey: survey, respondent_group: group)
 
       {:ok, logger} = SurveyLogger.start_link
-      {:ok, broker} = ProactiveBroker.start_link
-      ProactiveBroker.poll
+      {:ok, broker} = Broker.start_link
+      Broker.poll
 
       survey = Repo.get(Survey, survey.id)
       assert survey.state == "running"
@@ -337,8 +337,8 @@ defmodule Ask.Runtime.VerboiceChannelTest do
       respondent = insert(:respondent, survey: survey, respondent_group: group)
 
       {:ok, logger} = SurveyLogger.start_link
-      {:ok, broker} = ProactiveBroker.start_link
-      ProactiveBroker.poll
+      {:ok, broker} = Broker.start_link
+      Broker.poll
 
       survey = Repo.get(Survey, survey.id)
       assert survey.state == "running"
@@ -368,8 +368,8 @@ defmodule Ask.Runtime.VerboiceChannelTest do
       respondent = insert(:respondent, survey: survey, respondent_group: group)
 
       {:ok, logger} = SurveyLogger.start_link
-      {:ok, broker} = ProactiveBroker.start_link
-      ProactiveBroker.poll
+      {:ok, broker} = Broker.start_link
+      Broker.poll
 
       survey = Repo.get(Survey, survey.id)
       assert survey.state == "running"
@@ -399,7 +399,7 @@ defmodule Ask.Runtime.VerboiceChannelTest do
       respondent = insert(:respondent, survey: survey, respondent_group: group, stats: %Stats{total_call_time_seconds: 20})
 
       {:ok, logger} = SurveyLogger.start_link
-      ProactiveBroker.handle_info(:poll, nil, Timex.now)
+      Broker.handle_info(:poll, nil, Timex.now)
 
       survey = Repo.get(Survey, survey.id)
       assert survey.state == "running"
@@ -470,8 +470,8 @@ defmodule Ask.Runtime.VerboiceChannelTest do
       respondent = insert(:respondent, survey: survey, respondent_group: group)
 
       {:ok, _logger} = SurveyLogger.start_link
-      {:ok, _broker} = ProactiveBroker.start_link
-      ProactiveBroker.poll
+      {:ok, _broker} = Broker.start_link
+      Broker.poll
 
       respondent = Repo.get(Respondent, respondent.id)
       assert respondent.state == "active"

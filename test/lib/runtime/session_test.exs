@@ -247,7 +247,7 @@ defmodule Ask.SessionTest do
   defp handle_session_started(session_started, questionnaire_id, sequence_mode) do
     case session_started do
       {:ok, session, reply, timeout} ->
-        respondent = Ask.Runtime.ProactiveBroker.configure_new_respondent(session.respondent, questionnaire_id, sequence_mode)
+        respondent = Ask.Runtime.Broker.configure_new_respondent(session.respondent, questionnaire_id, sequence_mode)
         {:ok, %Session{session | respondent: Ask.Runtime.RetriesHistogram.add_new_respondent(respondent, session, timeout)}, reply, timeout}
       other -> other
     end

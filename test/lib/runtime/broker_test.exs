@@ -4,7 +4,7 @@ defmodule Ask.BrokerTest do
   use Timex
   use Ask.MockTime
   use Ask.TestHelpers
-  alias Ask.Runtime.{Survey, ProactiveBroker, Flow, SurveyLogger, ReplyHelper, ChannelStatusServer}
+  alias Ask.Runtime.{Survey, Broker, Flow, SurveyLogger, ReplyHelper, ChannelStatusServer}
   alias Ask.{Repo, Respondent, RespondentDispositionHistory, TestChannel, QuotaBucket, Questionnaire, RespondentGroupChannel, SurveyLogEntry, Schedule, StepBuilder, RetryStat}
   alias Ask.Router.Helpers, as: Routes
   require Ask.Runtime.ReplyHelper
@@ -16,7 +16,7 @@ defmodule Ask.BrokerTest do
 
   test "does nothing with 'not_ready' survey" do
     survey = insert(:survey, %{schedule: Schedule.always()})
-    ProactiveBroker.handle_info(:poll, nil)
+    Broker.handle_info(:poll, nil)
 
     survey = Repo.get(Ask.Survey, survey.id)
     assert survey.state == "not_ready"
@@ -24,7 +24,7 @@ defmodule Ask.BrokerTest do
 
   test "set as 'completed' when there are no respondents" do
     survey = insert(:survey, %{schedule: Schedule.always(), state: "running"})
-    ProactiveBroker.handle_info(:poll, nil)
+    Broker.handle_info(:poll, nil)
 
     survey = Repo.get(Ask.Survey, survey.id)
     assert Ask.Survey.completed?(survey)
@@ -34,7 +34,7 @@ defmodule Ask.BrokerTest do
     survey = insert(:survey, %{schedule: Schedule.always(), state: "running"})
     insert(:respondent, survey: survey, state: "active")
 
-    ProactiveBroker.handle_info(:poll, nil)
+    Broker.handle_info(:poll, nil)
 
     survey = Repo.get(Ask.Survey, survey.id)
     assert survey.state == "running"
@@ -43,7 +43,7 @@ defmodule Ask.BrokerTest do
   test "set the respondent as completed when the questionnaire is empty" do
     [_, _, _, respondent, _] = create_running_survey_with_channel_and_respondent([])
 
-    ProactiveBroker.handle_info(:poll, nil)
+    Broker.handle_info(:poll, nil)
 
     respondent = Repo.get(Respondent, respondent.id)
     assert respondent.state == "completed"
@@ -53,8 +53,8 @@ defmodule Ask.BrokerTest do
     [survey, _group, _test_channel, respondent, _phone_number] = create_running_survey_with_channel_and_respondent(@completed_flag_step_after_multiple_choice)
 
     {:ok, logger} = SurveyLogger.start_link
-    {:ok, broker} = ProactiveBroker.start_link
-    ProactiveBroker.poll
+    {:ok, broker} = Broker.start_link
+    Broker.poll
 
     respondent = Repo.get(Respondent, respondent.id)
     Survey.delivery_confirm(respondent, "Do you exercise?")
@@ -100,7 +100,7 @@ defmodule Ask.BrokerTest do
   test "set the respondent as completed (disposition) when the questionnaire is empty" do
     [_, _, _, respondent, _] = create_running_survey_with_channel_and_respondent([])
 
-    ProactiveBroker.handle_info(:poll, nil)
+    Broker.handle_info(:poll, nil)
 
     respondent = Repo.get(Respondent, respondent.id)
     assert respondent.disposition == "completed"
@@ -109,7 +109,7 @@ defmodule Ask.BrokerTest do
   test "don't set the respondent as completed (disposition) if disposition is ineligible" do
     [_, _, _, respondent, _] = create_running_survey_with_channel_and_respondent(@ineligible_step)
 
-    ProactiveBroker.handle_info(:poll, nil)
+    Broker.handle_info(:poll, nil)
 
     respondent = Repo.get(Respondent, respondent.id)
     assert respondent.disposition == "ineligible"
@@ -118,7 +118,7 @@ defmodule Ask.BrokerTest do
   test "don't set the respondent as completed (disposition) if disposition is refused" do
     [_, _, _, respondent, _] = create_running_survey_with_channel_and_respondent(@refused_step)
 
-    ProactiveBroker.handle_info(:poll, nil)
+    Broker.handle_info(:poll, nil)
 
     respondent = Repo.get(Respondent, respondent.id)
     assert respondent.disposition == "refused"
@@ -127,7 +127,7 @@ defmodule Ask.BrokerTest do
   test "don't set the respondent as partial (disposition) if disposition is ineligible" do
     [_, _, _, respondent, _] = create_running_survey_with_channel_and_respondent(@ineligible_step ++ @partial_step)
 
-    ProactiveBroker.handle_info(:poll, nil)
+    Broker.handle_info(:poll, nil)
 
     respondent = Repo.get(Respondent, respondent.id)
     assert respondent.disposition == "ineligible"
@@ -136,7 +136,7 @@ defmodule Ask.BrokerTest do
   test "don't set the respondent as partial (disposition) if disposition is refused" do
     [_, _, _, respondent, _] = create_running_survey_with_channel_and_respondent(@refused_step ++ @partial_step)
 
-    ProactiveBroker.handle_info(:poll, nil)
+    Broker.handle_info(:poll, nil)
 
     respondent = Repo.get(Respondent, respondent.id)
     assert respondent.disposition == "refused"
@@ -146,9 +146,9 @@ defmodule Ask.BrokerTest do
     [_, _, _, respondent, _] =
       create_running_survey_with_channel_and_respondent(@invalid_ineligible_after_partial_steps)
 
-    {:ok, _} = ProactiveBroker.start_link
+    {:ok, _} = Broker.start_link
 
-    ProactiveBroker.handle_info(:poll, nil)
+    Broker.handle_info(:poll, nil)
 
     respondent = Repo.get(Respondent, respondent.id)
     assert respondent.disposition == "interim partial"
@@ -164,7 +164,7 @@ defmodule Ask.BrokerTest do
   test "don't set the respondent as ineligible (disposition) if disposition is completed" do
     [_, _, _, respondent, _] = create_running_survey_with_channel_and_respondent(@completed_step ++ @ineligible_step)
 
-    ProactiveBroker.handle_info(:poll, nil)
+    Broker.handle_info(:poll, nil)
 
     respondent = Repo.get(Respondent, respondent.id)
     assert respondent.disposition == "completed"
@@ -173,7 +173,7 @@ defmodule Ask.BrokerTest do
   test "set the respondent as complete (disposition) if disposition is interim partial" do
     [_, _, _, respondent, _] = create_running_survey_with_channel_and_respondent(@partial_step)
 
-    ProactiveBroker.handle_info(:poll, nil)
+    Broker.handle_info(:poll, nil)
 
     respondent = Repo.get(Respondent, respondent.id)
     assert respondent.disposition == "completed"
@@ -182,7 +182,7 @@ defmodule Ask.BrokerTest do
   test "creates respondent history when the questionnaire is empty" do
     [_, _, _, respondent, _] = create_running_survey_with_channel_and_respondent([])
 
-    ProactiveBroker.handle_info(:poll, nil)
+    Broker.handle_info(:poll, nil)
 
     histories = RespondentDispositionHistory |> Repo.all
     assert length(histories) == 2
@@ -200,7 +200,7 @@ defmodule Ask.BrokerTest do
     mode = hd(survey.mode)
     questionnaire = hd(survey.questionnaires)
 
-    ProactiveBroker.handle_info(:poll, nil)
+    Broker.handle_info(:poll, nil)
 
     respondent = Repo.get(Respondent, respondent.id)
     assert respondent.mode == mode
@@ -232,7 +232,7 @@ defmodule Ask.BrokerTest do
 
     respondent = insert(:respondent, survey: survey, respondent_group: group)
 
-    ProactiveBroker.handle_info(:poll, nil)
+    Broker.handle_info(:poll, nil)
 
     respondent = Repo.get(Respondent, respondent.id)
     assert respondent.mode == ["ivr"]
@@ -265,7 +265,7 @@ defmodule Ask.BrokerTest do
 
     respondent = insert(:respondent, survey: survey, respondent_group: group)
 
-    ProactiveBroker.handle_info(:poll, nil)
+    Broker.handle_info(:poll, nil)
 
     respondent = Repo.get(Respondent, respondent.id)
     assert respondent.mode == ["ivr"]
@@ -275,7 +275,7 @@ defmodule Ask.BrokerTest do
   test "changes the respondent state from pending to running if neccessary" do
     [survey, _, _, respondent, _] = create_running_survey_with_channel_and_respondent()
 
-    ProactiveBroker.handle_info(:poll, nil)
+    Broker.handle_info(:poll, nil)
 
     survey = Repo.get(Ask.Survey, survey.id)
     assert survey.state == "running"
@@ -290,7 +290,7 @@ defmodule Ask.BrokerTest do
   test "changes the respondent disposition from registered to queued" do
     [survey, _, _, respondent, _] = create_running_survey_with_channel_and_respondent()
 
-    ProactiveBroker.handle_info(:poll, nil)
+    Broker.handle_info(:poll, nil)
 
     survey = Repo.get(Ask.Survey, survey.id)
     assert survey.state == "running"
@@ -301,8 +301,8 @@ defmodule Ask.BrokerTest do
   test "changes the respondent disposition from queued to contacted on delivery confirm (SMS)" do
     [_survey, _group, test_channel, respondent, phone_number] = create_running_survey_with_channel_and_respondent()
 
-    {:ok, broker} = ProactiveBroker.start_link
-    ProactiveBroker.poll
+    {:ok, broker} = Broker.start_link
+    Broker.poll
 
     assert_received [:ask, ^test_channel, %Respondent{sanitized_phone_number: ^phone_number}, _, ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO")]
 
@@ -321,8 +321,8 @@ defmodule Ask.BrokerTest do
   test "changes the respondent disposition from queued to contacted on answer (IVR)" do
     [_survey, _group, _test_channel, respondent, _phone_number] = create_running_survey_with_channel_and_respondent(@dummy_steps, "ivr")
 
-    {:ok, broker} = ProactiveBroker.start_link
-    ProactiveBroker.poll
+    {:ok, broker} = Broker.start_link
+    Broker.poll
 
     respondent = Repo.get(Respondent, respondent.id)
     assert respondent.disposition == "queued"
@@ -340,8 +340,8 @@ defmodule Ask.BrokerTest do
   test "changes the respondent disposition from contacted to started on first answer received" do
     [_survey, _group, test_channel, respondent, phone_number] = create_running_survey_with_channel_and_respondent()
 
-    {:ok, broker} = ProactiveBroker.start_link
-    ProactiveBroker.poll
+    {:ok, broker} = Broker.start_link
+    Broker.poll
 
     assert_received [:ask, ^test_channel, %Respondent{sanitized_phone_number: ^phone_number}, _, ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO")]
 
@@ -367,8 +367,8 @@ defmodule Ask.BrokerTest do
     [survey, _, _, respondent, _] = create_running_survey_with_channel_and_respondent()
     survey |> Ask.Survey.changeset(%{sms_retry_configuration: "2m"}) |> Repo.update!
 
-    {:ok, broker} = ProactiveBroker.start_link
-    ProactiveBroker.handle_info(:poll, nil)
+    {:ok, broker} = Broker.start_link
+    Broker.handle_info(:poll, nil)
     respondent = Repo.get(Respondent, respondent.id)
     Survey.sync_step(respondent, Flow.Message.reply("Yes"))
 
@@ -388,8 +388,8 @@ defmodule Ask.BrokerTest do
   test "set timeout_at according to retries, taking survey schedule into account" do
     [survey, _, _, respondent, _] = create_running_survey_with_channel_and_respondent()
 
-    {:ok, _} = ProactiveBroker.start_link
-    ProactiveBroker.handle_info(:poll, nil)
+    {:ok, _} = Broker.start_link
+    Broker.handle_info(:poll, nil)
 
     survey |> Ask.Survey.changeset(%{sms_retry_configuration: "1d", schedule: Map.merge(Schedule.always(), %{day_of_week: day_after_tomorrow_schedule_day_of_week()})}) |> Repo.update!
 
@@ -409,7 +409,7 @@ defmodule Ask.BrokerTest do
     survey |> Ask.Survey.changeset(%{sms_retry_configuration: "10m"}) |> Repo.update
 
     # First poll, activate the respondent
-    ProactiveBroker.handle_info(:poll, nil)
+    Broker.handle_info(:poll, nil)
     assert_received [:setup, ^test_channel, respondent = %Respondent{sanitized_phone_number: ^phone_number}, token]
     assert_received [:ask, ^test_channel, ^respondent, ^token, ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO")]
 
@@ -419,7 +419,7 @@ defmodule Ask.BrokerTest do
     Respondent.changeset(respondent, %{timeout_at: Timex.now |> Timex.shift(minutes: -1)}) |> Repo.update
 
     # Second poll, retry the question
-    ProactiveBroker.handle_info(:poll, nil)
+    Broker.handle_info(:poll, nil)
     refute_received [:setup, _, _, _, _]
     assert_received [:ask, ^test_channel, %Respondent{sanitized_phone_number: ^phone_number}, _token, ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO")]
 
@@ -428,7 +428,7 @@ defmodule Ask.BrokerTest do
     Respondent.changeset(respondent, %{timeout_at: Timex.now |> Timex.shift(minutes: -1)}) |> Repo.update
 
     # Third poll, this time it should stall
-    ProactiveBroker.handle_info(:poll, nil)
+    Broker.handle_info(:poll, nil)
 
     respondent = Repo.get(Respondent, respondent.id)
     assert respondent.state == "stalled"
@@ -442,8 +442,8 @@ defmodule Ask.BrokerTest do
     survey |> Ask.Survey.changeset(%{mobileweb_retry_configuration: "10m"}) |> Repo.update
     sequence_mode = ["mobileweb"]
 
-    {:ok, broker} = ProactiveBroker.start_link
-    ProactiveBroker.poll
+    {:ok, broker} = Broker.start_link
+    Broker.poll
 
     assert_receive [:ask, ^test_channel, %Respondent{sanitized_phone_number: ^phone_number, mode: ^sequence_mode}, _, ReplyHelper.simple("Contact", message)]
     assert message == "Please enter #{Routes.mobile_survey_url(Ask.Endpoint, :index, respondent.id, token: Respondent.token(respondent.id))}"
@@ -460,7 +460,7 @@ defmodule Ask.BrokerTest do
     Respondent.changeset(respondent, %{timeout_at: timeout_at}) |> Repo.update
 
     # Second poll, retry the question
-    ProactiveBroker.poll
+    Broker.poll
     refute_received [:setup, _, _, _, _]
     assert_receive [:ask, ^test_channel, %Respondent{sanitized_phone_number: ^phone_number}, _, ReplyHelper.simple("Contact", message)]
     assert message == "Please enter #{Routes.mobile_survey_url(Ask.Endpoint, :index, respondent.id, token: Respondent.token(respondent.id))}"
@@ -472,7 +472,7 @@ defmodule Ask.BrokerTest do
     Respondent.changeset(respondent, %{timeout_at: timeout_at}) |> Repo.update
 
     # Third poll, this time it should stall
-    ProactiveBroker.poll
+    Broker.poll
 
     respondent = Repo.get(Respondent, respondent.id)
 
@@ -494,7 +494,7 @@ defmodule Ask.BrokerTest do
     mock_time(edge_time)
 
     # First poll, activate the respondent
-    ProactiveBroker.handle_info(:poll, nil)
+    Broker.handle_info(:poll, nil)
     assert_received [:setup, ^test_channel, respondent = %Respondent{sanitized_phone_number: ^phone_number}, token]
     assert_received [:ask, ^test_channel, ^respondent, ^token, ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO")]
 
@@ -510,7 +510,7 @@ defmodule Ask.BrokerTest do
     mock_time(timeout_time)
 
     # Second poll, retry the question
-    ProactiveBroker.handle_info(:poll, nil)
+    Broker.handle_info(:poll, nil)
     refute_received [:setup, _, _, _, _]
     assert_received [:ask, ^test_channel, %Respondent{sanitized_phone_number: ^phone_number}, _token, ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO")]
 
@@ -526,7 +526,7 @@ defmodule Ask.BrokerTest do
     mock_time(timeout_time)
 
     # Third poll, this time it should stall
-    ProactiveBroker.handle_info(:poll, nil)
+    Broker.handle_info(:poll, nil)
 
     # Assert is stalled
     respondent = Repo.get(Respondent, respondent.id)
@@ -540,10 +540,10 @@ defmodule Ask.BrokerTest do
   test "respondent answers after stalled with active survey" do
     [survey, _group, test_channel, _respondent, phone_number] = create_running_survey_with_channel_and_respondent()
 
-    {:ok, _} = ProactiveBroker.start_link
+    {:ok, _} = Broker.start_link
 
     # First poll, activate the respondent
-    ProactiveBroker.handle_info(:poll, nil)
+    Broker.handle_info(:poll, nil)
     assert_received [:setup, ^test_channel, respondent = %Respondent{sanitized_phone_number: ^phone_number}, token]
     assert_received [:ask, ^test_channel, ^respondent, ^token, ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO")]
 
@@ -552,7 +552,7 @@ defmodule Ask.BrokerTest do
     Respondent.changeset(respondent, %{timeout_at: Timex.now |> Timex.shift(minutes: -1)}) |> Repo.update
 
     # This time it should stall
-    ProactiveBroker.handle_info(:poll, nil)
+    Broker.handle_info(:poll, nil)
 
     respondent = Repo.get(Respondent, respondent.id)
     assert respondent.state == "stalled"
@@ -570,10 +570,10 @@ defmodule Ask.BrokerTest do
   test "mark stalled respondent as failed after 8 hours" do
     [_survey, _group, test_channel, _respondent, phone_number] = create_running_survey_with_channel_and_respondent()
 
-    {:ok, _} = ProactiveBroker.start_link
+    {:ok, _} = Broker.start_link
 
     # First poll, activate the respondent
-    ProactiveBroker.handle_info(:poll, nil)
+    Broker.handle_info(:poll, nil)
     assert_received [:setup, ^test_channel, respondent = %Respondent{sanitized_phone_number: ^phone_number}, token]
     assert_received [:ask, ^test_channel, ^respondent, ^token, ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO")]
 
@@ -582,7 +582,7 @@ defmodule Ask.BrokerTest do
     Respondent.changeset(respondent, %{timeout_at: Timex.now |> Timex.shift(minutes: -1)}) |> Repo.update
 
     # This time it should stall
-    ProactiveBroker.handle_info(:poll, nil)
+    Broker.handle_info(:poll, nil)
 
     respondent = Repo.get(Respondent, respondent.id)
 
@@ -592,7 +592,7 @@ defmodule Ask.BrokerTest do
     seven_hours_ago = now |> Timex.shift(hours: -7) |> Timex.to_erl |> NaiveDateTime.from_erl!
     (from r in Respondent, where: r.id == ^respondent.id) |> Repo.update_all(set: [updated_at: seven_hours_ago])
 
-    ProactiveBroker.handle_info(:poll, nil)
+    Broker.handle_info(:poll, nil)
 
     respondent = Repo.get(Respondent, respondent.id)
     assert respondent.state == "stalled"
@@ -602,7 +602,7 @@ defmodule Ask.BrokerTest do
     eight_hours_ago = now |> Timex.shift(hours: -8) |> Timex.to_erl |> NaiveDateTime.from_erl!
     (from r in Respondent, where: r.id == ^respondent.id) |> Repo.update_all(set: [updated_at: eight_hours_ago])
 
-    ProactiveBroker.handle_info(:poll, nil)
+    Broker.handle_info(:poll, nil)
 
     respondent = Repo.get(Respondent, respondent.id)
     assert respondent.state == "failed"
@@ -612,11 +612,11 @@ defmodule Ask.BrokerTest do
   test "mark disposition as partial" do
     [survey, _group, test_channel, _respondent, phone_number] = create_running_survey_with_channel_and_respondent(@flag_steps)
 
-    {:ok, broker} = ProactiveBroker.start_link
+    {:ok, broker} = Broker.start_link
     {:ok, logger} = SurveyLogger.start_link
 
     # First poll, activate the respondent
-    ProactiveBroker.handle_info(:poll, nil)
+    Broker.handle_info(:poll, nil)
     assert_received [:setup, ^test_channel, respondent = %Respondent{sanitized_phone_number: ^phone_number}, token]
     assert_received [:ask, ^test_channel, ^respondent, ^token, ReplyHelper.simple("Do you exercise?", "Do you exercise? Reply 1 for YES, 2 for NO")]
 
@@ -662,10 +662,10 @@ defmodule Ask.BrokerTest do
   test "mark disposition as ineligible on end" do
     [_survey, _group, test_channel, _respondent, phone_number] = create_running_survey_with_channel_and_respondent(@flag_steps_ineligible_skip_logic)
 
-    {:ok, _} = ProactiveBroker.start_link
+    {:ok, _} = Broker.start_link
 
     # First poll, activate the respondent
-    ProactiveBroker.handle_info(:poll, nil)
+    Broker.handle_info(:poll, nil)
     assert_received [:setup, ^test_channel, respondent = %Respondent{sanitized_phone_number: ^phone_number}, token]
     assert_received [:ask, ^test_channel, ^respondent, ^token, ReplyHelper.simple("Do you exercise?", "Do you exercise? Reply 1 for YES, 2 for NO")]
 
@@ -688,11 +688,11 @@ defmodule Ask.BrokerTest do
   test "mark disposition as refused on end" do
     [survey, _group, test_channel, _respondent, phone_number] = create_running_survey_with_channel_and_respondent(@flag_steps_refused_skip_logic)
 
-    {:ok, broker} = ProactiveBroker.start_link
+    {:ok, broker} = Broker.start_link
     {:ok, logger} = SurveyLogger.start_link
 
     # First poll, activate the respondent
-    ProactiveBroker.handle_info(:poll, nil)
+    Broker.handle_info(:poll, nil)
     assert_received [:setup, ^test_channel, respondent = %Respondent{sanitized_phone_number: ^phone_number}, token]
     assert_received [:ask, ^test_channel, ^respondent, ^token, ReplyHelper.simple("Do you exercise?", "Do you exercise? Reply 1 for YES, 2 for NO")]
 
@@ -782,10 +782,10 @@ defmodule Ask.BrokerTest do
   test "mark disposition as completed when partial on end" do
     [_survey, _group, test_channel, _respondent, phone_number] = create_running_survey_with_channel_and_respondent(@flag_steps_partial_skip_logic)
 
-    {:ok, _} = ProactiveBroker.start_link
+    {:ok, _} = Broker.start_link
 
     # First poll, activate the respondent
-    ProactiveBroker.handle_info(:poll, nil)
+    Broker.handle_info(:poll, nil)
     assert_received [:setup, ^test_channel, respondent = %Respondent{sanitized_phone_number: ^phone_number}, token]
     assert_received [:ask, ^test_channel, ^respondent, ^token, ReplyHelper.simple("Do you exercise?", "Do you exercise? Reply 1 for YES, 2 for NO")]
 
@@ -808,10 +808,10 @@ defmodule Ask.BrokerTest do
   test "don't reset disposition after having set it" do
     [survey, _group, test_channel, _respondent, phone_number] = create_running_survey_with_channel_and_respondent(@flag_steps)
 
-    {:ok, _} = ProactiveBroker.start_link
+    {:ok, _} = Broker.start_link
 
     # First poll, activate the respondent
-    ProactiveBroker.handle_info(:poll, nil)
+    Broker.handle_info(:poll, nil)
     assert_received [:setup, ^test_channel, respondent = %Respondent{sanitized_phone_number: ^phone_number}, token]
     assert_received [:ask, ^test_channel, ^respondent, ^token, ReplyHelper.simple("Do you exercise?", "Do you exercise? Reply 1 for YES, 2 for NO")]
 
@@ -836,9 +836,9 @@ defmodule Ask.BrokerTest do
     [survey, _, test_channel, respondent, phone_number] = create_running_survey_with_channel_and_respondent()
     Repo.update(survey |> change |> Ask.Survey.changeset(%{cutoff: 1}))
 
-    {:ok, broker} = ProactiveBroker.start_link
+    {:ok, broker} = Broker.start_link
     {:ok, logger} = SurveyLogger.start_link
-    ProactiveBroker.poll
+    Broker.poll
 
     assert_received [:ask, ^test_channel, %Respondent{sanitized_phone_number: ^phone_number}, _, ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO")]
 
@@ -857,7 +857,7 @@ defmodule Ask.BrokerTest do
 
     # Set for immediate timeout
     Respondent.changeset(respondent, %{timeout_at: now |> Timex.shift(minutes: -1)}) |> Repo.update
-    ProactiveBroker.handle_info(:poll, nil)
+    Broker.handle_info(:poll, nil)
 
     respondent = Repo.get(Respondent, respondent.id)
     assert respondent.state == "stalled"
@@ -867,7 +867,7 @@ defmodule Ask.BrokerTest do
     eight_hours_ago = now |> Timex.shift(hours: -8) |> Timex.to_erl |> NaiveDateTime.from_erl!
     (from r in Respondent, where: r.id == ^respondent.id) |> Repo.update_all(set: [updated_at: eight_hours_ago])
 
-    ProactiveBroker.handle_info(:poll, nil)
+    Broker.handle_info(:poll, nil)
 
     :ok = logger |> GenServer.stop
     [_, _, disposition_changed_to_unresponsive] = (respondent |> Repo.preload(:survey_log_entries)).survey_log_entries
@@ -888,9 +888,9 @@ defmodule Ask.BrokerTest do
     [survey, _, test_channel, respondent, phone_number] = create_running_survey_with_channel_and_respondent()
     Repo.update(survey |> change |> Ask.Survey.changeset(%{cutoff: 1}))
 
-    {:ok, broker} = ProactiveBroker.start_link
+    {:ok, broker} = Broker.start_link
     {:ok, logger} = SurveyLogger.start_link
-    ProactiveBroker.poll
+    Broker.poll
 
     assert_received [:ask, ^test_channel, %Respondent{sanitized_phone_number: ^phone_number}, _, ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO")]
 
@@ -904,7 +904,7 @@ defmodule Ask.BrokerTest do
 
     # Set for immediate timeout
     Respondent.changeset(respondent, %{timeout_at: now |> Timex.shift(minutes: -1)}) |> Repo.update
-    ProactiveBroker.handle_info(:poll, nil)
+    Broker.handle_info(:poll, nil)
 
     respondent = Repo.get(Respondent, respondent.id)
     assert respondent.state == "stalled"
@@ -914,7 +914,7 @@ defmodule Ask.BrokerTest do
     eight_hours_ago = now |> Timex.shift(hours: -8) |> Timex.to_erl |> NaiveDateTime.from_erl!
     (from r in Respondent, where: r.id == ^respondent.id) |> Repo.update_all(set: [updated_at: eight_hours_ago])
 
-    ProactiveBroker.handle_info(:poll, nil)
+    Broker.handle_info(:poll, nil)
 
     :ok = logger |> GenServer.stop
     [disposition_changed_to_failed] = (respondent |> Repo.preload(:survey_log_entries)).survey_log_entries
@@ -933,15 +933,15 @@ defmodule Ask.BrokerTest do
 
   test "uncontacted respondents are marked as failed after all retries are met (IVR)" do
     [_, _, _, respondent, _] = create_running_survey_with_channel_and_respondent(@dummy_steps, "ivr")
-    {:ok, broker} = ProactiveBroker.start_link
-    ProactiveBroker.poll
+    {:ok, broker} = Broker.start_link
+    Broker.poll
 
     respondent = Repo.get(Respondent, respondent.id)
     assert respondent.disposition == "queued"
 
     # Set for immediate timeout
     Respondent.changeset(respondent, %{timeout_at: Timex.now |> Timex.shift(minutes: -1)}) |> Repo.update
-    ProactiveBroker.handle_info(:poll, nil)
+    Broker.handle_info(:poll, nil)
 
     respondent = Repo.get(Respondent, respondent.id)
     assert respondent.state == "failed"
@@ -955,8 +955,8 @@ defmodule Ask.BrokerTest do
     survey |> Ask.Survey.changeset(%{ivr_retry_configuration: "10m"}) |> Repo.update
     right_first_answer = "8"
 
-    {:ok, broker} = ProactiveBroker.start_link
-    ProactiveBroker.poll
+    {:ok, broker} = Broker.start_link
+    Broker.poll
 
     respondent = Repo.get(Respondent, respondent.id)
 
@@ -999,8 +999,8 @@ defmodule Ask.BrokerTest do
     right_first_answer = "8"
     wrong_second_answer = "16"
 
-    {:ok, broker} = ProactiveBroker.start_link
-    ProactiveBroker.poll
+    {:ok, broker} = Broker.start_link
+    Broker.poll
 
     respondent = Repo.get(Respondent, respondent.id)
 
@@ -1038,9 +1038,9 @@ defmodule Ask.BrokerTest do
     [survey, _, test_channel, respondent, phone_number] = create_running_survey_with_channel_and_respondent()
     Repo.update(survey |> change |> Ask.Survey.changeset(%{cutoff: 1}))
 
-    {:ok, broker} = ProactiveBroker.start_link
+    {:ok, broker} = Broker.start_link
     {:ok, logger} = SurveyLogger.start_link
-    ProactiveBroker.poll
+    Broker.poll
 
     assert_received [:ask, ^test_channel, %Respondent{sanitized_phone_number: ^phone_number}, _, ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO")]
 
@@ -1068,7 +1068,7 @@ defmodule Ask.BrokerTest do
     now = Timex.now
 
     Respondent.changeset(respondent, %{timeout_at: now |> Timex.shift(minutes: -1)}) |> Repo.update
-    ProactiveBroker.handle_info(:poll, nil)
+    Broker.handle_info(:poll, nil)
 
     respondent = Repo.get(Respondent, respondent.id)
     assert respondent.state == "stalled"
@@ -1078,7 +1078,7 @@ defmodule Ask.BrokerTest do
     eight_hours_ago = now |> Timex.shift(hours: -8) |> Timex.to_erl |> NaiveDateTime.from_erl!
     (from r in Respondent, where: r.id == ^respondent.id) |> Repo.update_all(set: [updated_at: eight_hours_ago])
 
-    ProactiveBroker.handle_info(:poll, nil)
+    Broker.handle_info(:poll, nil)
 
     respondent = Repo.get(Respondent, respondent.id)
     assert respondent.state == "failed"
@@ -1101,8 +1101,8 @@ defmodule Ask.BrokerTest do
     second_respondent = insert(:respondent, survey: survey, respondent_group: group)
     Repo.update(survey |> change |> Ask.Survey.changeset(%{cutoff: 1}))
 
-    {:ok, broker} = ProactiveBroker.start_link
-    ProactiveBroker.poll
+    {:ok, broker} = Broker.start_link
+    Broker.poll
 
     assert_received [:ask, ^test_channel, %Respondent{sanitized_phone_number: ^phone_number}, _, ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO")]
 
@@ -1128,7 +1128,7 @@ defmodule Ask.BrokerTest do
     Survey.delivery_confirm(respondent, "Do you exercise?")
 
     Respondent.changeset(respondent, %{timeout_at: Timex.now |> Timex.shift(minutes: -1)}) |> Repo.update
-    ProactiveBroker.handle_info(:poll, nil)
+    Broker.handle_info(:poll, nil)
 
     respondent = Repo.get(Respondent, respondent.id)
     assert respondent.state == "stalled"
@@ -1137,7 +1137,7 @@ defmodule Ask.BrokerTest do
     second_respondent = Repo.get(Respondent, second_respondent.id)
     Repo.update(second_respondent |> change |> Respondent.changeset(%{state: "completed"}))
 
-    ProactiveBroker.handle_info(:poll, nil)
+    Broker.handle_info(:poll, nil)
 
     respondent = Repo.get(Respondent, respondent.id)
     assert respondent.state == "failed"
@@ -1149,9 +1149,9 @@ defmodule Ask.BrokerTest do
   test "started respondents are marked as breakoff after all retries are met (IVR)" do
     [survey, _, _, respondent, _] = create_running_survey_with_channel_and_respondent(@dummy_steps, "ivr")
 
-    {:ok, broker} = ProactiveBroker.start_link
+    {:ok, broker} = Broker.start_link
     {:ok, logger} = SurveyLogger.start_link
-    ProactiveBroker.poll
+    Broker.poll
 
     respondent = Repo.get(Respondent, respondent.id)
     assert respondent.state == "active"
@@ -1169,7 +1169,7 @@ defmodule Ask.BrokerTest do
     assert respondent.disposition == "started"
 
     Respondent.changeset(respondent, %{timeout_at: Timex.now |> Timex.shift(minutes: -1)}) |> Repo.update
-    ProactiveBroker.handle_info(:poll, nil)
+    Broker.handle_info(:poll, nil)
 
     respondent = Repo.get(Respondent, respondent.id)
     assert respondent.state == "failed"
@@ -1190,9 +1190,9 @@ defmodule Ask.BrokerTest do
   test "interim partial respondents are kept as partial after all retries are met (IVR)" do
     [survey, _, _, respondent, _] = create_running_survey_with_channel_and_respondent(@dummy_steps_with_flag, "ivr")
 
-    {:ok, broker} = ProactiveBroker.start_link
+    {:ok, broker} = Broker.start_link
     {:ok, logger} = SurveyLogger.start_link
-    ProactiveBroker.poll
+    Broker.poll
 
     respondent = Repo.get(Respondent, respondent.id)
     assert respondent.state == "active"
@@ -1210,7 +1210,7 @@ defmodule Ask.BrokerTest do
     assert respondent.disposition == "interim partial"
 
     Respondent.changeset(respondent, %{timeout_at: Timex.now |> Timex.shift(minutes: -1)}) |> Repo.update
-    ProactiveBroker.handle_info(:poll, nil)
+    Broker.handle_info(:poll, nil)
 
     respondent = Repo.get(Respondent, respondent.id)
     assert respondent.state == "failed"
@@ -1230,9 +1230,9 @@ defmodule Ask.BrokerTest do
   test "interim partial respondents are kept as partial after 8 hours (SMS)" do
     [survey, _, _, respondent, _] = create_running_survey_with_channel_and_respondent(@flag_step_after_multiple_choice)
 
-    {:ok, broker} = ProactiveBroker.start_link
+    {:ok, broker} = Broker.start_link
     {:ok, logger} = SurveyLogger.start_link
-    ProactiveBroker.poll
+    Broker.poll
 
     respondent = Repo.get(Respondent, respondent.id)
     assert respondent.state == "active"
@@ -1256,7 +1256,7 @@ defmodule Ask.BrokerTest do
     now = Timex.now
 
     Respondent.changeset(respondent, %{timeout_at: now |> Timex.shift(minutes: -1)}) |> Repo.update
-    ProactiveBroker.handle_info(:poll, nil)
+    Broker.handle_info(:poll, nil)
 
     respondent = Repo.get(Respondent, respondent.id)
     assert respondent.state == "stalled"
@@ -1266,7 +1266,7 @@ defmodule Ask.BrokerTest do
     eight_hours_ago = now |> Timex.shift(hours: -8) |> Timex.to_erl |> NaiveDateTime.from_erl!
     (from r in Respondent, where: r.id == ^respondent.id) |> Repo.update_all(set: [updated_at: eight_hours_ago])
 
-    ProactiveBroker.handle_info(:poll, nil)
+    Broker.handle_info(:poll, nil)
 
     respondent = Repo.get(Respondent, respondent.id)
     assert respondent.state == "failed"
@@ -1286,8 +1286,8 @@ defmodule Ask.BrokerTest do
   test "completed respondents are kept as completed after all retries are met (IVR)" do
     [_, _, _, respondent, _] = create_running_survey_with_channel_and_respondent(@dummy_steps_with_flag, "ivr")
 
-    {:ok, broker} = ProactiveBroker.start_link
-    ProactiveBroker.poll
+    {:ok, broker} = Broker.start_link
+    Broker.poll
 
     respondent = Repo.get(Respondent, respondent.id)
     assert respondent.state == "active"
@@ -1311,7 +1311,7 @@ defmodule Ask.BrokerTest do
     assert respondent.disposition == "completed"
 
     Respondent.changeset(respondent, %{timeout_at: Timex.now |> Timex.shift(minutes: -1)}) |> Repo.update
-    ProactiveBroker.handle_info(:poll, nil)
+    Broker.handle_info(:poll, nil)
 
     respondent = Repo.get(Respondent, respondent.id)
     assert respondent.state == "failed"
@@ -1323,9 +1323,9 @@ defmodule Ask.BrokerTest do
   test "contacted respondents are marked as unresponsive after all retries are met (IVR)" do
     [survey, _, _, respondent, _] = create_running_survey_with_channel_and_respondent(@dummy_steps, "ivr")
 
-    {:ok, broker} = ProactiveBroker.start_link
+    {:ok, broker} = Broker.start_link
     {:ok, logger} = SurveyLogger.start_link
-    ProactiveBroker.poll
+    Broker.poll
 
     respondent = Repo.get(Respondent, respondent.id)
     assert respondent.state == "active"
@@ -1339,7 +1339,7 @@ defmodule Ask.BrokerTest do
     assert respondent.disposition == "contacted"
 
     Respondent.changeset(respondent, %{timeout_at: Timex.now |> Timex.shift(minutes: -1)}) |> Repo.update
-    ProactiveBroker.handle_info(:poll, nil)
+    Broker.handle_info(:poll, nil)
 
     respondent = Repo.get(Respondent, respondent.id)
     assert respondent.state == "failed"
@@ -1359,9 +1359,9 @@ defmodule Ask.BrokerTest do
   test "logs a timeout for each retry in IVR" do
     [_, _, _, respondent, _] = create_running_survey_with_channel_and_respondent(@dummy_steps, "ivr")
 
-    {:ok, broker} = ProactiveBroker.start_link
+    {:ok, broker} = Broker.start_link
     {:ok, logger} = SurveyLogger.start_link
-    ProactiveBroker.poll
+    Broker.poll
 
     respondent = Repo.get(Respondent, respondent.id)
     Survey.sync_step(respondent, Flow.Message.answer())
@@ -1386,8 +1386,8 @@ defmodule Ask.BrokerTest do
   test "contacted respondents are marked as partial after all retries are met, not breakoff (#1036)" do
     [_, _, _, respondent, _] = create_running_survey_with_channel_and_respondent(@dummy_steps, "ivr")
 
-    {:ok, broker} = ProactiveBroker.start_link
-    ProactiveBroker.poll
+    {:ok, broker} = Broker.start_link
+    Broker.poll
 
     respondent = Repo.get(Respondent, respondent.id)
     reply = Survey.sync_step(respondent, Flow.Message.answer())
@@ -1404,7 +1404,7 @@ defmodule Ask.BrokerTest do
     })
     |> Repo.update!
 
-    ProactiveBroker.handle_info(:poll, nil)
+    Broker.handle_info(:poll, nil)
 
     respondent = Repo.get(Respondent, respondent.id)
     assert respondent.state == "failed"
@@ -1419,7 +1419,7 @@ defmodule Ask.BrokerTest do
     sequence_mode = ["ivr"]
 
     # First poll, activate the respondent
-    ProactiveBroker.handle_info(:poll, nil)
+    Broker.handle_info(:poll, nil)
     assert_received [:setup, ^test_channel, %Respondent{sanitized_phone_number: ^phone_number, mode: ^sequence_mode}, _token]
 
     # Set for immediate timeout
@@ -1427,7 +1427,7 @@ defmodule Ask.BrokerTest do
     Respondent.changeset(respondent, %{timeout_at: Timex.now |> Timex.shift(minutes: -1)}) |> Repo.update
 
     # Second poll, retry the question
-    ProactiveBroker.handle_info(:poll, nil)
+    Broker.handle_info(:poll, nil)
     assert_received [:setup, ^test_channel, %Respondent{sanitized_phone_number: ^phone_number}, _token]
 
     # Set for immediate timeout
@@ -1435,7 +1435,7 @@ defmodule Ask.BrokerTest do
     Respondent.changeset(respondent, %{timeout_at: Timex.now |> Timex.shift(minutes: -1)}) |> Repo.update
 
     # Third poll, this time it should fail
-    ProactiveBroker.handle_info(:poll, nil)
+    Broker.handle_info(:poll, nil)
 
     respondent = Repo.get(Respondent, respondent.id)
     assert respondent.state == "failed"
@@ -1448,7 +1448,7 @@ defmodule Ask.BrokerTest do
     [_survey, _group, test_channel, respondent, phone_number] = create_running_survey_with_channel_and_respondent(@dummy_steps, "ivr")
 
     # First poll, activate the respondent
-    ProactiveBroker.handle_info(:poll, nil)
+    Broker.handle_info(:poll, nil)
     assert_received [:setup, ^test_channel, %Respondent{sanitized_phone_number: ^phone_number}, _token]
 
     respondent = Repo.get(Respondent, respondent.id)
@@ -1480,7 +1480,7 @@ defmodule Ask.BrokerTest do
     survey |> Ask.Survey.changeset(%{ivr_retry_configuration: "20m"}) |> Repo.update!
 
     # First poll, activate the respondent
-    ProactiveBroker.handle_info(:poll, nil)
+    Broker.handle_info(:poll, nil)
     assert_received [:setup, ^test_channel, respondent = %Respondent{sanitized_phone_number: ^phone_number}, token]
     assert_received [:ask, ^test_channel, ^respondent, ^token, ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO")]
 
@@ -1491,7 +1491,7 @@ defmodule Ask.BrokerTest do
     Respondent.changeset(respondent, %{timeout_at: timeout_at}) |> Repo.update
 
     # Second poll, retry the question
-    ProactiveBroker.handle_info(:poll, nil)
+    Broker.handle_info(:poll, nil)
 
     refute_received [:setup, _, _, _, _]
     assert_received [:ask, ^test_channel, %Respondent{sanitized_phone_number: ^phone_number}, _token, ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO")]
@@ -1503,7 +1503,7 @@ defmodule Ask.BrokerTest do
     Respondent.changeset(respondent, %{timeout_at: timeout_at}) |> Repo.update
 
     # Third poll, retry the question
-    ProactiveBroker.handle_info(:poll, nil)
+    Broker.handle_info(:poll, nil)
     refute_received [:setup, _, _, _, _]
     assert_received [:ask, ^test_channel, %Respondent{sanitized_phone_number: ^phone_number}, _token, ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO")]
 
@@ -1514,7 +1514,7 @@ defmodule Ask.BrokerTest do
     Respondent.changeset(respondent, %{timeout_at: timeout_at}) |> Repo.update
 
     # Fourth poll, this time fallback to IVR channel
-    ProactiveBroker.handle_info(:poll, nil)
+    Broker.handle_info(:poll, nil)
     assert_received [:setup, ^test_fallback_channel, %Respondent{sanitized_phone_number: ^phone_number}, _token]
   end
 
@@ -1539,7 +1539,7 @@ defmodule Ask.BrokerTest do
     survey |> Ask.Survey.changeset(%{ivr_retry_configuration: "2m 20m"}) |> Repo.update!
 
     # First poll, activate the respondent
-    ProactiveBroker.handle_info(:poll, nil)
+    Broker.handle_info(:poll, nil)
     assert_received [:setup, ^test_channel, %Respondent{sanitized_phone_number: ^phone_number}, _token]
 
     # Set for immediate timeout
@@ -1547,7 +1547,7 @@ defmodule Ask.BrokerTest do
     Respondent.changeset(respondent, %{timeout_at: Timex.now |> Timex.shift(minutes: -1)}) |> Repo.update
 
     # Second poll, retry the question
-    ProactiveBroker.handle_info(:poll, nil)
+    Broker.handle_info(:poll, nil)
     assert_received [:setup, ^test_channel, %Respondent{sanitized_phone_number: ^phone_number}, _token]
 
     # Set for immediate timeout
@@ -1555,7 +1555,7 @@ defmodule Ask.BrokerTest do
     Respondent.changeset(respondent, %{timeout_at: Timex.now |> Timex.shift(minutes: -1)}) |> Repo.update
 
     # Third poll, this time fallback to SMS channel
-    ProactiveBroker.handle_info(:poll, nil)
+    Broker.handle_info(:poll, nil)
     assert_received [:setup, ^test_channel, %Respondent{sanitized_phone_number: ^phone_number}, _token]
 
     # Set for immediate timeout
@@ -1563,7 +1563,7 @@ defmodule Ask.BrokerTest do
     Respondent.changeset(respondent, %{timeout_at: Timex.now |> Timex.shift(minutes: -1)}) |> Repo.update
 
     # Fourth poll, this time fallback to SMS channel
-    ProactiveBroker.handle_info(:poll, nil)
+    Broker.handle_info(:poll, nil)
     assert_received [:setup, ^test_fallback_channel, respondent = %Respondent{sanitized_phone_number: ^phone_number}, token]
     assert_received [:ask, ^test_fallback_channel, ^respondent, ^token, ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO")]
   end
@@ -1574,7 +1574,7 @@ defmodule Ask.BrokerTest do
 
     Repo.update(survey |> change |> Ask.Survey.changeset(%{cutoff: 1}))
 
-    ProactiveBroker.handle_info(:poll, nil)
+    Broker.handle_info(:poll, nil)
 
     survey = Repo.get(Ask.Survey, survey.id)
     assert_respondents_by_state(survey, 1, 20)
@@ -1582,7 +1582,7 @@ defmodule Ask.BrokerTest do
     r = Repo.all(from r in Respondent, where: r.state == "active") |> hd
     Repo.update(r |> change |> Respondent.changeset(%{state: "completed"}))
 
-    ProactiveBroker.handle_info(:poll, nil)
+    Broker.handle_info(:poll, nil)
 
     assert_respondents_by_state(survey, 0, 20)
     assert survey.state == "running"
@@ -1594,7 +1594,7 @@ defmodule Ask.BrokerTest do
 
     Repo.update(survey |> change |> Ask.Survey.changeset(%{cutoff: 1}))
 
-    ProactiveBroker.handle_info(:poll, nil)
+    Broker.handle_info(:poll, nil)
 
     survey = Repo.get(Ask.Survey, survey.id)
     assert_respondents_by_state(survey, 1, 20)
@@ -1607,7 +1607,7 @@ defmodule Ask.BrokerTest do
       Repo.update(respondent |> change |> Respondent.changeset(%{state: "stalled"}))
     end)
 
-    ProactiveBroker.handle_info(:poll, nil)
+    Broker.handle_info(:poll, nil)
 
     survey = Repo.get(Ask.Survey, survey.id)
 
@@ -1621,7 +1621,7 @@ defmodule Ask.BrokerTest do
 
     Repo.update(survey |> change |> Ask.Survey.changeset(%{cutoff: 1}))
 
-    ProactiveBroker.handle_info(:poll, nil)
+    Broker.handle_info(:poll, nil)
 
     survey = Repo.get(Ask.Survey, survey.id)
     assert_respondents_by_state(survey, 1, 20)
@@ -1634,7 +1634,7 @@ defmodule Ask.BrokerTest do
       Repo.update(respondent |> change |> Respondent.changeset(%{state: "failed"}))
     end)
 
-    ProactiveBroker.handle_info(:poll, nil)
+    Broker.handle_info(:poll, nil)
 
     survey = Repo.get(Ask.Survey, survey.id)
 
@@ -1648,7 +1648,7 @@ defmodule Ask.BrokerTest do
 
     Repo.update(survey |> change |> Ask.Survey.changeset(%{cutoff: 6}))
 
-    ProactiveBroker.handle_info(:poll, nil)
+    Broker.handle_info(:poll, nil)
 
     survey = Repo.get(Ask.Survey, survey.id)
 
@@ -1661,7 +1661,7 @@ defmodule Ask.BrokerTest do
       Repo.update(respondent |> change |> Respondent.changeset(%{state: "completed"}))
     end)
 
-    ProactiveBroker.handle_info(:poll, nil)
+    Broker.handle_info(:poll, nil)
 
     assert_respondents_by_state(survey, 1, 15)
 
@@ -1670,7 +1670,7 @@ defmodule Ask.BrokerTest do
       Repo.update(respondent |> change |> Respondent.changeset(%{state: "completed"}))
     end)
 
-    ProactiveBroker.handle_info(:poll, nil)
+    Broker.handle_info(:poll, nil)
 
     assert_respondents_by_state(survey, 0, 15)
 
@@ -1718,7 +1718,7 @@ defmodule Ask.BrokerTest do
     qb3 = (from q in QuotaBucket, where: q.quota == 3) |> Repo.one
     qb4 = (from q in QuotaBucket, where: q.quota == 4) |> Repo.one
 
-    ProactiveBroker.handle_info(:poll, nil)
+    Broker.handle_info(:poll, nil)
 
     # In the beginning it shouldn't be completed
     survey = Ask.Survey |> Repo.get(survey.id)
@@ -1729,7 +1729,7 @@ defmodule Ask.BrokerTest do
     qb2 |> QuotaBucket.changeset(%{count: 2}) |> Repo.update!
     qb3 |> QuotaBucket.changeset(%{count: 3}) |> Repo.update!
     qb4 |> QuotaBucket.changeset(%{count: 3}) |> Repo.update!
-    ProactiveBroker.handle_info(:poll, nil)
+    Broker.handle_info(:poll, nil)
 
     survey = Ask.Survey |> Repo.get(survey.id)
     assert survey.state == "running"
@@ -1742,7 +1742,7 @@ defmodule Ask.BrokerTest do
       Repo.update(respondent |> change |> Respondent.changeset(%{state: "completed"}))
     end)
 
-    ProactiveBroker.handle_info(:poll, nil)
+    Broker.handle_info(:poll, nil)
 
     survey_id = survey.id
     from q in QuotaBucket,
@@ -1792,7 +1792,7 @@ defmodule Ask.BrokerTest do
     qb3 = (from q in QuotaBucket, where: q.quota == 3) |> Repo.one
     qb4 = (from q in QuotaBucket, where: q.quota == 4) |> Repo.one
 
-    ProactiveBroker.handle_info(:poll, nil)
+    Broker.handle_info(:poll, nil)
 
     survey = Ask.Survey |> Repo.get(survey.id)
     assert survey.state == "running"
@@ -1807,7 +1807,7 @@ defmodule Ask.BrokerTest do
       Repo.update(respondent |> change |> Respondent.changeset(%{state: "completed"}))
     end)
 
-    ProactiveBroker.handle_info(:poll, nil)
+    Broker.handle_info(:poll, nil)
 
     survey = Ask.Survey |> Repo.get(survey.id)
     assert_respondents_by_state(survey, 5, 11)
@@ -1853,7 +1853,7 @@ defmodule Ask.BrokerTest do
     qb3 = (from q in QuotaBucket, where: q.quota == 3) |> Repo.one
     qb4 = (from q in QuotaBucket, where: q.quota == 4) |> Repo.one
 
-    ProactiveBroker.handle_info(:poll, nil)
+    Broker.handle_info(:poll, nil)
 
     survey = Ask.Survey |> Repo.get(survey.id)
     assert survey.state == "running"
@@ -1868,7 +1868,7 @@ defmodule Ask.BrokerTest do
       Repo.update(respondent |> change |> Respondent.changeset(%{state: "stalled"}))
     end)
 
-    ProactiveBroker.handle_info(:poll, nil)
+    Broker.handle_info(:poll, nil)
 
     survey = Ask.Survey |> Repo.get(survey.id)
     assert_respondents_by_state(survey, 0, 11)
@@ -1915,7 +1915,7 @@ defmodule Ask.BrokerTest do
     qb3 = (from q in QuotaBucket, where: q.quota == 3) |> Repo.one
     qb4 = (from q in QuotaBucket, where: q.quota == 4) |> Repo.one
 
-    ProactiveBroker.handle_info(:poll, nil)
+    Broker.handle_info(:poll, nil)
 
     survey = Ask.Survey |> Repo.get(survey.id)
     assert survey.state == "running"
@@ -1930,7 +1930,7 @@ defmodule Ask.BrokerTest do
       Repo.update(respondent |> change |> Respondent.changeset(%{state: "failed"}))
     end)
 
-    ProactiveBroker.handle_info(:poll, nil)
+    Broker.handle_info(:poll, nil)
 
     survey = Ask.Survey |> Repo.get(survey.id)
     assert_respondents_by_state(survey, 0, 11)
@@ -1941,7 +1941,7 @@ defmodule Ask.BrokerTest do
     [survey, group, _, _, _] = create_running_survey_with_channel_and_respondent()
     create_several_respondents(survey, group, 20)
 
-    ProactiveBroker.handle_info(:poll, nil)
+    Broker.handle_info(:poll, nil)
 
     survey = Repo.get(Ask.Survey, survey.id)
 
@@ -1956,7 +1956,7 @@ defmodule Ask.BrokerTest do
 
     assert_respondents_by_state(survey, 9, 11)
 
-    ProactiveBroker.handle_info(:poll, nil)
+    Broker.handle_info(:poll, nil)
 
     assert_respondents_by_state(survey, 10, 10)
   end
@@ -1967,18 +1967,18 @@ defmodule Ask.BrokerTest do
 
     Repo.update(survey |> change |> Ask.Survey.changeset(%{cutoff: 50}))
 
-    ProactiveBroker.handle_info(:poll, nil)
+    Broker.handle_info(:poll, nil)
     assert_respondents_by_state(survey, 50, 151)
 
     mark_n_active_respondents_as("failed", 20)
     mark_n_active_respondents_as("completed", 30)
-    ProactiveBroker.handle_info(:poll, nil)
+    Broker.handle_info(:poll, nil)
     assert_respondents_by_state(survey, 20, 131)
 
     # since all the previous ones failed the success rate decreases
     # and the batch size increases
     mark_n_active_respondents_as("failed", 26)
-    ProactiveBroker.handle_info(:poll, nil)
+    Broker.handle_info(:poll, nil)
     assert_respondents_by_state(survey, 20, 111)
   end
 
@@ -1988,12 +1988,12 @@ defmodule Ask.BrokerTest do
     survey |> Ask.Survey.changeset(%{quota_vars: ["gender"]}) |> Repo.update
     insert(:quota_bucket, survey: survey, condition: %{gender: "male"}, quota: 1, count: 0)
 
-    ProactiveBroker.handle_info(:poll, nil)
+    Broker.handle_info(:poll, nil)
     assert_respondents_by_state(survey, 1, 10)
 
     mark_n_active_respondents_as("completed", 1)
 
-    ProactiveBroker.handle_info(:poll, nil)
+    Broker.handle_info(:poll, nil)
     assert_respondents_by_state(survey, 1, 9)
   end
 
@@ -2004,21 +2004,21 @@ defmodule Ask.BrokerTest do
     insert(:quota_bucket, survey: survey, condition: %{gender: "male"}, quota: 1, count: 2)
     insert(:quota_bucket, survey: survey, condition: %{gender: "female"}, quota: 1, count: 0)
 
-    ProactiveBroker.handle_info(:poll, nil)
+    Broker.handle_info(:poll, nil)
     assert_respondents_by_state(survey, 1, 10)
   end
 
   test "changes running survey state to 'completed' when there are no more running respondents" do
     [survey, _, _, respondent, _] = create_running_survey_with_channel_and_respondent()
 
-    ProactiveBroker.handle_info(:poll, nil)
+    Broker.handle_info(:poll, nil)
 
     assert_respondents_by_state(survey, 1, 0)
 
     respondent = Repo.get(Respondent, respondent.id)
     Repo.update(respondent |> change |> Respondent.changeset(%{state: "failed"}))
 
-    ProactiveBroker.handle_info(:poll, nil)
+    Broker.handle_info(:poll, nil)
 
     survey = Repo.get(Ask.Survey, survey.id)
     assert Ask.Survey.completed?(survey)
@@ -2031,8 +2031,8 @@ defmodule Ask.BrokerTest do
     [survey, _group, test_channel, respondent, phone_number] = create_running_survey_with_channel_and_respondent()
 
     {:ok, logger} = SurveyLogger.start_link
-    {:ok, broker} = ProactiveBroker.start_link
-    ProactiveBroker.poll
+    {:ok, broker} = Broker.start_link
+    Broker.poll
 
     sequence_mode = ["sms"]
     assert_received [:ask, ^test_channel, %Respondent{sanitized_phone_number: ^phone_number, mode: ^sequence_mode}, _, ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO")]
@@ -2156,8 +2156,8 @@ defmodule Ask.BrokerTest do
     [survey, _group, _test_channel, respondent, _phone_number] = create_running_survey_with_channel_and_respondent(@dummy_steps, "ivr")
 
     {:ok, logger} = SurveyLogger.start_link
-    {:ok, broker} = ProactiveBroker.start_link
-    ProactiveBroker.poll
+    {:ok, broker} = Broker.start_link
+    Broker.poll
 
     survey = Repo.get(Ask.Survey, survey.id)
     assert survey.state == "running"
@@ -2272,9 +2272,9 @@ defmodule Ask.BrokerTest do
   test "respondent flow via mobileweb" do
     [survey, _group, test_channel, respondent, phone_number] = create_running_survey_with_channel_and_respondent(@mobileweb_dummy_steps, "mobileweb")
 
-    {:ok, broker} = ProactiveBroker.start_link
+    {:ok, broker} = Broker.start_link
     {:ok, logger} = SurveyLogger.start_link
-    ProactiveBroker.poll
+    Broker.poll
 
     assert_receive [:ask, ^test_channel, %Respondent{sanitized_phone_number: ^phone_number}, _, ReplyHelper.simple("Contact", message)]
     assert message == "Please enter #{Routes.mobile_survey_url(Ask.Endpoint, :index, respondent.id, token: Respondent.token(respondent.id))}"
@@ -2363,8 +2363,8 @@ defmodule Ask.BrokerTest do
     |> Repo.update!
 
     {:ok, logger} = SurveyLogger.start_link
-    {:ok, broker} = ProactiveBroker.start_link
-    ProactiveBroker.poll
+    {:ok, broker} = Broker.start_link
+    Broker.poll
 
     assert_received [:ask, ^test_channel, %Respondent{sanitized_phone_number: ^phone_number}, _, ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO")]
 
@@ -2507,8 +2507,8 @@ defmodule Ask.BrokerTest do
     |> Repo.update!
 
     {:ok, logger} = SurveyLogger.start_link
-    {:ok, broker} = ProactiveBroker.start_link
-    ProactiveBroker.poll
+    {:ok, broker} = Broker.start_link
+    Broker.poll
 
     assert_received [:ask, ^test_channel, %Respondent{sanitized_phone_number: ^phone_number}, _, ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO")]
 
@@ -2645,8 +2645,8 @@ defmodule Ask.BrokerTest do
     |> Repo.update!
 
     {:ok, logger} = SurveyLogger.start_link
-    {:ok, broker} = ProactiveBroker.start_link
-    ProactiveBroker.poll
+    {:ok, broker} = Broker.start_link
+    Broker.poll
 
     survey = Repo.get(Ask.Survey, survey.id)
     assert survey.state == "running"
@@ -2759,8 +2759,8 @@ defmodule Ask.BrokerTest do
     quiz = hd(survey.questionnaires)
     quiz |> Questionnaire.changeset(%{settings: %{"mobile_web_sms_message" => "One#{Questionnaire.sms_split_separator}Two"}}) |> Repo.update!
 
-    {:ok, _} = ProactiveBroker.start_link
-    ProactiveBroker.poll
+    {:ok, _} = Broker.start_link
+    Broker.poll
 
     assert_receive [:ask, ^test_channel, %Respondent{sanitized_phone_number: ^phone_number}, _, %Ask.Runtime.Reply{steps: [step]}]
     assert step == Ask.Runtime.ReplyStep.new(["One", "Two #{Routes.mobile_survey_url(Ask.Endpoint, :index, respondent.id, token: Respondent.token(respondent.id))}"], "Contact")
@@ -2848,8 +2848,8 @@ defmodule Ask.BrokerTest do
     |> Repo.update!
 
     {:ok, logger} = SurveyLogger.start_link
-    {:ok, broker} = ProactiveBroker.start_link
-    ProactiveBroker.poll
+    {:ok, broker} = Broker.start_link
+    Broker.poll
 
     assert_received [:ask, ^test_channel, %Respondent{sanitized_phone_number: ^phone_number}, _token, ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO")]
 
@@ -2992,8 +2992,8 @@ defmodule Ask.BrokerTest do
     |> Repo.update!
 
     {:ok, logger} = SurveyLogger.start_link
-    {:ok, broker} = ProactiveBroker.start_link
-    ProactiveBroker.poll
+    {:ok, broker} = Broker.start_link
+    Broker.poll
 
     survey = Repo.get(Ask.Survey, survey.id)
     assert survey.state == "running"
@@ -3095,7 +3095,7 @@ defmodule Ask.BrokerTest do
     survey1 = insert(:survey, %{schedule: Map.merge(Schedule.always(), %{day_of_week: schedule1}), state: "running"})
     survey2 = insert(:survey, %{schedule: Map.merge(Schedule.always(), %{day_of_week: schedule2}), state: "running"})
 
-    ProactiveBroker.handle_info(:poll, nil)
+    Broker.handle_info(:poll, nil)
 
     survey1 = Repo.get(Ask.Survey, survey1.id)
     survey2 = Repo.get(Ask.Survey, survey2.id)
@@ -3107,7 +3107,7 @@ defmodule Ask.BrokerTest do
     survey1 = insert(:survey, %{schedule: Schedule.always(), state: "running"})
     survey2 = insert(:survey, %{schedule: Map.merge(Schedule.always(), %{blocked_days: [Date.utc_today()]}), state: "running"})
 
-    ProactiveBroker.handle_info(:poll, nil)
+    Broker.handle_info(:poll, nil)
 
     survey1 = Repo.get(Ask.Survey, survey1.id)
     survey2 = Repo.get(Ask.Survey, survey2.id)
@@ -3124,7 +3124,7 @@ defmodule Ask.BrokerTest do
     {:ok, end_time} = Ecto.Time.cast(twelve_oclock)
     survey = insert(:survey, %{schedule: Map.merge(Schedule.always(), %{start_time: start_time, end_time: end_time}), state: "running"})
 
-    ProactiveBroker.handle_info(:poll, nil, ten_oclock)
+    Broker.handle_info(:poll, nil, ten_oclock)
 
     survey = Repo.get(Ask.Survey, survey.id)
     assert survey.state == "running"
@@ -3139,7 +3139,7 @@ defmodule Ask.BrokerTest do
     {:ok, end_time} = Ecto.Time.cast(eleven_oclock)
     survey = insert(:survey, %{schedule: Map.merge(Schedule.always(), %{start_time: start_time, end_time: end_time}), state: "running"})
 
-    ProactiveBroker.handle_info(:poll, nil, twelve_oclock)
+    Broker.handle_info(:poll, nil, twelve_oclock)
 
     survey = Repo.get(Ask.Survey, survey.id)
     assert survey.state == "running"
@@ -3148,7 +3148,7 @@ defmodule Ask.BrokerTest do
   test "doesn't poll surveys with an end time schedule smaller than the current hour considering timezone" do
     survey = insert(:survey, %{schedule: Map.merge(Schedule.always(), %{start_time: ~T[10:00:00], end_time: ~T[12:00:00], timezone: "Asia/Shanghai"}), state: "running"})
 
-    ProactiveBroker.handle_info(:poll, nil, Timex.parse!("2016-01-01T11:00:00Z", "{ISO:Extended}"))
+    Broker.handle_info(:poll, nil, Timex.parse!("2016-01-01T11:00:00Z", "{ISO:Extended}"))
 
     survey = Repo.get(Ask.Survey, survey.id)
     assert survey.state == "running"
@@ -3157,7 +3157,7 @@ defmodule Ask.BrokerTest do
   test "does poll surveys with an end time schedule higher than the current hour considering timezone" do
     survey = insert(:survey, %{schedule: Map.merge(Schedule.always(), %{start_time: ~T[10:00:00], end_time: ~T[12:00:00], timezone: "America/Buenos_Aires"}), state: "running"})
 
-    ProactiveBroker.handle_info(:poll, nil, Timex.parse!("2016-01-01T14:00:00Z", "{ISO:Extended}"))
+    Broker.handle_info(:poll, nil, Timex.parse!("2016-01-01T14:00:00Z", "{ISO:Extended}"))
 
     survey = Repo.get(Ask.Survey, survey.id)
     assert Ask.Survey.completed?(survey)
@@ -3179,7 +3179,7 @@ defmodule Ask.BrokerTest do
     # Now is Thursday 1AM UTC, so in Mexico it's still Wednesday
     mock_now = Timex.parse!("2017-04-27T01:00:00Z", "{ISO:Extended}")
 
-    ProactiveBroker.handle_info(:poll, nil, mock_now)
+    Broker.handle_info(:poll, nil, mock_now)
 
     # The survey should have run and be completed (questionnaire is empty)
     survey = Repo.get(Ask.Survey, survey.id)
@@ -3202,7 +3202,7 @@ defmodule Ask.BrokerTest do
     # Now is Thursday 6AM UTC, so in Mexico it's now Thursday
     mock_now = Timex.parse!("2017-04-27T06:00:00Z", "{ISO:Extended}")
 
-    ProactiveBroker.handle_info(:poll, nil, mock_now)
+    Broker.handle_info(:poll, nil, mock_now)
 
     # Survey shouldn't have started yet
     survey = Repo.get(Ask.Survey, survey.id)
@@ -3218,8 +3218,8 @@ defmodule Ask.BrokerTest do
     insert(:quota_bucket, survey: survey, condition: %{Smokes: "Yes", Exercises: "Yes"}, quota: 10, count: 0)
     insert(:quota_bucket, survey: survey, condition: %{Smokes: "Yes", Exercises: "No"}, quota: 10, count: 0)
 
-    {:ok, broker} = ProactiveBroker.start_link
-    ProactiveBroker.poll
+    {:ok, broker} = Broker.start_link
+    Broker.poll
 
     assert_received [:ask, ^test_channel, %Respondent{sanitized_phone_number: ^phone_number}, _token, ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO")]
 
@@ -3261,8 +3261,8 @@ defmodule Ask.BrokerTest do
     insert(:quota_bucket, survey: survey, condition: %{:Smokes => "Yes", :"Perfect Number" => [20, 30]}, quota: 10, count: 0)
     insert(:quota_bucket, survey: survey, condition: %{:Smokes => "Yes", :"Perfect Number" => [31, 40]}, quota: 10, count: 0)
 
-    {:ok, broker} = ProactiveBroker.start_link
-    ProactiveBroker.poll
+    {:ok, broker} = Broker.start_link
+    Broker.poll
 
     assert_received [:ask, ^test_channel, %Respondent{sanitized_phone_number: ^phone_number}, _token, ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO")]
 
@@ -3302,8 +3302,8 @@ defmodule Ask.BrokerTest do
     selected_bucket = insert(:quota_bucket, survey: survey, condition: %{:Exercises => "Yes"}, quota: 1, count: 1)
     insert(:quota_bucket, survey: survey, condition: %{:Exercises => "No"}, quota: 10, count: 0)
 
-    {:ok, broker} = ProactiveBroker.start_link
-    ProactiveBroker.poll
+    {:ok, broker} = Broker.start_link
+    Broker.poll
 
     assert_received [:ask, ^test_channel, %Respondent{sanitized_phone_number: ^phone_number}, _token, ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO")]
 
@@ -3334,8 +3334,8 @@ defmodule Ask.BrokerTest do
     insert(:quota_bucket, survey: survey, condition: %{Smokes: "Yes", Exercises: "Yes"}, quota: 10, count: 0)
     insert(:quota_bucket, survey: survey, condition: %{Smokes: "Yes", Exercises: "No"}, quota: 10, count: 0)
 
-    {:ok, broker} = ProactiveBroker.start_link
-    ProactiveBroker.poll
+    {:ok, broker} = Broker.start_link
+    Broker.poll
 
     assert_received [:ask, ^test_channel, %Respondent{sanitized_phone_number: ^phone_number}, _token, ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO")]
 
@@ -3398,8 +3398,8 @@ defmodule Ask.BrokerTest do
     insert(:quota_bucket, survey: survey, condition: %{:Smokes => "Yes", :"Perfect Number" => [20, 30]}, quota: 10, count: 0)
     insert(:quota_bucket, survey: survey, condition: %{:Smokes => "Yes", :"Perfect Number" => [31, 40]}, quota: 10, count: 0)
 
-    {:ok, broker} = ProactiveBroker.start_link
-    ProactiveBroker.poll
+    {:ok, broker} = Broker.start_link
+    Broker.poll
 
     assert_received [:ask, ^test_channel, %Respondent{sanitized_phone_number: ^phone_number}, _token, ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO")]
 
@@ -3449,8 +3449,8 @@ defmodule Ask.BrokerTest do
     selected_bucket = insert(:quota_bucket, survey: survey, condition: %{Smokes: "No"}, quota: 10, count: 0)
     insert(:quota_bucket, survey: survey, condition: %{Smokes: "Yes"}, quota: 10, count: 0)
 
-    {:ok, broker} = ProactiveBroker.start_link
-    ProactiveBroker.poll
+    {:ok, broker} = Broker.start_link
+    Broker.poll
 
     assert_received [:ask, ^test_channel, %Respondent{sanitized_phone_number: ^phone_number}, _token, ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO")]
 
@@ -3524,8 +3524,8 @@ defmodule Ask.BrokerTest do
     selected_bucket = insert(:quota_bucket, survey: survey, condition: %{Exercises: "Yes"}, quota: 10, count: 0)
     insert(:quota_bucket, survey: survey, condition: %{Exercises: "No"}, quota: 10, count: 0)
 
-    {:ok, broker} = ProactiveBroker.start_link
-    ProactiveBroker.poll
+    {:ok, broker} = Broker.start_link
+    Broker.poll
 
     assert_received [:ask, ^test_channel, %Respondent{sanitized_phone_number: ^phone_number}, _token, ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO")]
 
@@ -3597,8 +3597,8 @@ defmodule Ask.BrokerTest do
 
     [survey, _group, test_channel, respondent, phone_number] = create_running_survey_with_channel_and_respondent([step])
 
-    {:ok, broker} = ProactiveBroker.start_link
-    ProactiveBroker.poll
+    {:ok, broker} = Broker.start_link
+    Broker.poll
 
     assert_received [:ask, ^test_channel, %Respondent{sanitized_phone_number: ^phone_number}, _token, ReplyHelper.simple("Do you exercise", "Do you exercise? Reply 1 for YES, 2 for NO")]
 
@@ -3622,12 +3622,12 @@ defmodule Ask.BrokerTest do
     [survey, _, _, respondent, _] = create_running_survey_with_channel_and_respondent()
     survey |> Ask.Survey.changeset(%{sms_retry_configuration: "2m"}) |> Repo.update!
 
-    {:ok, _} = ProactiveBroker.start_link
-    ProactiveBroker.handle_info(:poll, nil)
+    {:ok, _} = Broker.start_link
+    Broker.handle_info(:poll, nil)
 
     respondent = Repo.get(Respondent, respondent.id)
     session = respondent.session |> Ask.Runtime.Session.load
-    ProactiveBroker.retry_respondent(respondent)
+    Broker.retry_respondent(respondent)
 
     Survey.sync_step_internal(session, Flow.Message.reply("Yes"))
 
@@ -3642,8 +3642,8 @@ defmodule Ask.BrokerTest do
   test "marks as failed after 3 successive wrong replies if there are no more retries" do
     [survey, _, _, respondent, _] = create_running_survey_with_channel_and_respondent(@dummy_steps, "ivr")
 
-    {:ok, broker} = ProactiveBroker.start_link
-    ProactiveBroker.poll
+    {:ok, broker} = Broker.start_link
+    Broker.poll
 
     survey = Repo.get(Ask.Survey, survey.id)
     assert survey.state == "running"
@@ -3677,8 +3677,8 @@ defmodule Ask.BrokerTest do
     [survey, _, _, respondent, _] = create_running_survey_with_channel_and_respondent(@dummy_steps, "ivr")
     survey |> Ask.Survey.changeset(%{ivr_retry_configuration: "10m"}) |> Repo.update!
 
-    {:ok, broker} = ProactiveBroker.start_link
-    ProactiveBroker.poll
+    {:ok, broker} = Broker.start_link
+    Broker.poll
 
     survey = Repo.get(Ask.Survey, survey.id)
     assert survey.state == "running"
@@ -3724,8 +3724,8 @@ defmodule Ask.BrokerTest do
 
     respondent = insert(:respondent, survey: survey, respondent_group: group)
 
-    {:ok, _} = ProactiveBroker.start_link
-    ProactiveBroker.handle_info(:poll, nil)
+    {:ok, _} = Broker.start_link
+    Broker.handle_info(:poll, nil)
 
     respondent = Repo.get(Respondent, respondent.id)
     reply = Survey.sync_step(respondent, Flow.Message.reply("Yes"), "sms")
@@ -3748,8 +3748,8 @@ defmodule Ask.BrokerTest do
 
     respondent = insert(:respondent, survey: survey, respondent_group: group)
 
-    {:ok, _} = ProactiveBroker.start_link
-    ProactiveBroker.handle_info(:poll, nil)
+    {:ok, _} = Broker.start_link
+    Broker.handle_info(:poll, nil)
 
     respondent = Repo.get(Respondent, respondent.id)
     reply = Survey.sync_step(respondent, Flow.Message.reply("Yes"), "mobileweb")
@@ -3760,8 +3760,8 @@ defmodule Ask.BrokerTest do
     [survey, _group, test_channel, respondent, phone_number] = create_running_survey_with_channel_and_respondent(@mobileweb_dummy_steps, "mobileweb")
     survey |> Ask.Survey.changeset(%{mobileweb_retry_configuration: "10m"}) |> Repo.update
 
-    {:ok, broker} = ProactiveBroker.start_link
-    ProactiveBroker.poll
+    {:ok, broker} = Broker.start_link
+    Broker.poll
 
     assert_receive [:ask, ^test_channel, %Respondent{sanitized_phone_number: ^phone_number}, _, ReplyHelper.simple("Contact", message)]
     assert message == "Please enter #{Routes.mobile_survey_url(Ask.Endpoint, :index, respondent.id, token: Respondent.token(respondent.id))}"
@@ -3780,8 +3780,8 @@ defmodule Ask.BrokerTest do
 
   test "accept delivery confirm when mode is mobile web" do
     [_survey, _group, test_channel, respondent, phone_number] = create_running_survey_with_channel_and_respondent(@mobileweb_dummy_steps, "mobileweb")
-    {:ok, _broker} = ProactiveBroker.start_link
-    ProactiveBroker.poll
+    {:ok, _broker} = Broker.start_link
+    Broker.poll
 
     assert_receive [:ask, ^test_channel, %Respondent{sanitized_phone_number: ^phone_number}, _, ReplyHelper.simple("Contact", message)]
     assert message == "Please enter #{Routes.mobile_survey_url(Ask.Endpoint, :index, respondent.id, token: Respondent.token(respondent.id))}"
@@ -3801,9 +3801,9 @@ defmodule Ask.BrokerTest do
   test "when channel fails a survey log entry is created" do
     [survey, _group, _test_channel, respondent, _phone_number] = create_running_survey_with_channel_and_respondent(@dummy_steps, "ivr")
 
-    {:ok, broker} = ProactiveBroker.start_link
+    {:ok, broker} = Broker.start_link
     {:ok, logger} = SurveyLogger.start_link
-    ProactiveBroker.poll
+    Broker.poll
 
     respondent = Repo.get(Respondent, respondent.id)
 
@@ -3846,8 +3846,8 @@ defmodule Ask.BrokerTest do
     respondent = insert(:respondent, survey: survey, respondent_group: group, phone_number: phone_number, sanitized_phone_number: canonical_phone_number, canonical_phone_number: canonical_phone_number)
 
     {:ok, logger} = SurveyLogger.start_link
-    {:ok, broker} = ProactiveBroker.start_link
-    ProactiveBroker.poll
+    {:ok, broker} = Broker.start_link
+    Broker.poll
 
     Survey.delivery_confirm(Repo.get(Respondent, respondent.id), "Do you smoke?")
 
@@ -3954,9 +3954,9 @@ defmodule Ask.BrokerTest do
     insert(:respondent_group_channel, channel: channel_1, respondent_group: group_1, mode: "sms")
     insert(:respondent_group_channel, channel: channel_2, respondent_group: group_2, mode: "sms")
 
-    {:ok, broker} = ProactiveBroker.start_link
+    {:ok, broker} = Broker.start_link
     ChannelStatusServer.poll(channel_status_server)
-    ProactiveBroker.poll
+    Broker.poll
 
     refute_received [:ask, ^test_channel_1, _, _, _]
     refute_received [:ask, ^test_channel_2, _, _, _]
@@ -4015,12 +4015,12 @@ defmodule Ask.BrokerTest do
 
   defp start_test(steps) do
     create_running_survey_with_channel_and_respondent(steps)
-    ProactiveBroker.start_link
+    Broker.start_link
     SurveyLogger.start_link
   end
 
   defp poll_survey(), do:
-    ProactiveBroker.handle_info(:poll, nil)
+    Broker.handle_info(:poll, nil)
 
   defp respondent_answers(message) do
     respondent = Repo.one!(Respondent)

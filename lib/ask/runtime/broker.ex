@@ -1,4 +1,4 @@
-defmodule Ask.Runtime.ProactiveBroker do
+defmodule Ask.Runtime.Broker do
   use GenServer
   import Ecto.Query
   import Ecto

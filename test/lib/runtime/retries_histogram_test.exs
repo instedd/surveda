@@ -7,7 +7,7 @@ defmodule Ask.Runtime.RetriesHistogramTest do
   use Timex
   use Ask.MockTime
   use Ask.TestHelpers
-  alias Ask.Runtime.{Survey, ProactiveBroker, Flow, ChannelStatusServer, VerboiceChannel, RetriesHistogram, Session}
+  alias Ask.Runtime.{Survey, Broker, Flow, ChannelStatusServer, VerboiceChannel, RetriesHistogram, Session}
   alias Ask.{Repo, Survey, Respondent, Stats}
   require Ask.Runtime.ReplyHelper
   alias Ask.{RespondentGroupChannel, TestChannel, Schedule}
@@ -450,7 +450,7 @@ defmodule Ask.Runtime.RetriesHistogramTest do
     assert expected_histogram == actual_histogram, "#{message}: \n\texpected histogram: #{inspect(expected_histogram)} \n\tactual histogram: #{inspect(actual_histogram)}"
   end
 
-  defp broker_poll(), do: ProactiveBroker.handle_info(:poll, nil)
+  defp broker_poll(), do: Broker.handle_info(:poll, nil)
 
   defp initialize_survey(mode, survey_configuration, steps) do
     [survey, _group, _test_channel, respondent, _phone_number] = create_running_survey_with_channel_and_respondent(steps, mode)
