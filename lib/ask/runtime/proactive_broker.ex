@@ -58,11 +58,9 @@ defmodule Ask.Runtime.ProactiveBroker do
     Repo.transaction(fn ->
       try do
         Broker.handle_session_step(Session.timeout(session), SystemTime.time.now)
-      rescue #FIXME: this should no longer happen. Remove rescue and transaction?
-        e in Ecto.StaleEntryError ->
+      rescue
+        e ->
           Logger.error(inspect e)
-          # Maybe sync_step or another action was executed while the timeout was executed,
-          # and that means the respondent reply, so we don't need to apply the timeout anymore
           Repo.rollback(e)
       end
     end)
