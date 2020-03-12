@@ -245,21 +245,25 @@ defmodule Ask.Runtime.VerboiceChannel do
 
   def callback(conn, %{"path" => ["status", respondent_id, _token], "CallStatus" => status, "CallDuration" => call_duration_seconds, "CallSid" => call_sid} = params) do
     call_duration = call_duration_seconds |> String.to_integer
-    Respondent.with_lock(respondent_id, fn respondent -> #FIXME: Before respondent was being fetch with Repo.get! that throws an exception. nil respondent should be managed (see NuntiumChannel)
-      respondent = update_call_time_seconds(respondent, call_sid, call_duration)
-      case status do
-        "expired" ->
-          # respondent is still being considered as active in Surveda
-          Broker.contact_attempt_expired(respondent)
-        s when s in ["failed", "busy", "no-answer"] ->
-          # respondent should no longer be considered as active
-          respondent = RetriesHistogram.respondent_no_longer_active(respondent)
-                       |> Respondent.call_attempted
-          channel_failed(respondent, status, params)
-        _ -> Respondent.call_attempted(respondent)
+    Respondent.with_lock(respondent_id, fn respondent ->
+      case respondent do
+        nil -> :ok # Ignore the callback if the respondent doesn't exist
+        respondent ->
+          respondent = update_call_time_seconds(respondent, call_sid, call_duration)
+          case status do
+            "expired" ->
+              # respondent is still being considered as active in Surveda
+              Broker.contact_attempt_expired(respondent)
+            s when s in ["failed", "busy", "no-answer"] ->
+              # respondent should no longer be considered as active
+              respondent = RetriesHistogram.respondent_no_longer_active(respondent)
+                           |> Respondent.call_attempted
+              channel_failed(respondent, status, params)
+            _ -> Respondent.call_attempted(respondent)
+          end
       end
-      SurvedaMetrics.increment_counter_with_label(:surveda_verboice_status_callback, [status])
     end)
+    SurvedaMetrics.increment_counter_with_label(:surveda_verboice_status_callback, [status])
     conn |> send_resp(200, "")
   end
 
