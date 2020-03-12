@@ -60,7 +60,7 @@ defmodule Ask.Runtime.ProactiveBroker do
         Broker.handle_session_step(Session.timeout(session), SystemTime.time.now)
       rescue
         e ->
-          Logger.error(inspect e)
+          Logger.error(e, "Error retrying respondent. Rolling back transaction")
           Repo.rollback(e)
       end
     end)

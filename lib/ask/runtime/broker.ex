@@ -260,6 +260,7 @@ defmodule Ask.Runtime.Broker do
         handle_session_step(session_step, now)
       rescue
         e in Ecto.StaleEntryError ->
+          Logger.error(e, "Error on sync step internal. Rolling back transaction")
           Repo.rollback(e)
         e ->
           # If we uncomment this a test will fail (the one that cheks that nothing breaks),
