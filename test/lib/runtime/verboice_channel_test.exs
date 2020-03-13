@@ -3,8 +3,8 @@ defmodule Ask.Runtime.VerboiceChannelTest do
   use Ask.DummySteps
   use Timex
 
-  alias Ask.{Respondent, BrokerStub, Survey, RetryStat, Stats}
-  alias Ask.Runtime.{VerboiceChannel, Flow, ReplyHelper, SurveyLogger, Broker, ChannelStatusServer}
+  alias Ask.{Respondent, Survey, RetryStat, Stats}
+  alias Ask.Runtime.{VerboiceChannel, Flow, ReplyHelper, SurveyLogger, Broker, ChannelStatusServer, SurveyStub}
 
   require Ask.Runtime.ReplyHelper
 
@@ -15,7 +15,7 @@ defmodule Ask.Runtime.VerboiceChannelTest do
   end
 
   setup %{conn: conn} do
-    GenServer.start_link(BrokerStub, [], name: BrokerStub.server_ref)
+    GenServer.start_link(SurveyStub, [], name: SurveyStub.server_ref)
     ChannelStatusServer.start_link
     Ask.Config.start_link()
     respondent = insert(:respondent, phone_number: "123", state: "active", session: %{"current_mode" => %{"mode" => "ivr"}})
@@ -44,7 +44,7 @@ defmodule Ask.Runtime.VerboiceChannelTest do
 
     Enum.each(twiml_map, fn
       {flow_message, step, twiml} ->
-        GenServer.cast(BrokerStub.server_ref, {:expects, fn
+        GenServer.cast(SurveyStub.server_ref, {:expects, fn
           {:sync_step, %Respondent{id: ^respondent_id}, ^flow_message, "ivr"} -> step
         end})
 
@@ -53,7 +53,7 @@ defmodule Ask.Runtime.VerboiceChannelTest do
           {:reply, digits } -> digits
         end
 
-        conn = VerboiceChannel.callback(conn, %{"respondent" => respondent_id, "Digits" => digits}, BrokerStub)
+        conn = VerboiceChannel.callback(conn, %{"respondent" => respondent_id, "Digits" => digits}, SurveyStub)
         response_twiml = response(conn, 200) |> trim_xml
         assert response_twiml =~ twiml
       end)
@@ -72,7 +72,7 @@ defmodule Ask.Runtime.VerboiceChannelTest do
   test "callback ignored if not respondent's current mode", %{conn: conn, respondent: respondent} do
     respondent |> Respondent.changeset(%{session: %{"current_mode" => %{"mode" => "sms"}}}) |> Repo.update
 
-    conn = VerboiceChannel.callback(conn, %{"respondent" => respondent.id, "Digits" => nil}, BrokerStub)
+    conn = VerboiceChannel.callback(conn, %{"respondent" => respondent.id, "Digits" => nil}, SurveyStub)
     assert response(conn, 200) |> trim_xml == "<Response><Hangup/></Response>"
   end
 
