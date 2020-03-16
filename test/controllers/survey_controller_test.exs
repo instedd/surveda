@@ -2095,15 +2095,16 @@ defmodule Ask.SurveyControllerTest do
       assert_survey_log(%{log: log, user: user, project: project, survey: survey, action: "start", remote_ip: "192.168.0.128", metadata: %{"survey_name" => survey.name}})
     end
 
-    test "generates log after stopping a survey", %{conn: conn, user: user} do
+    test "generates logs after stopping a survey", %{conn: conn, user: user} do
       project = create_project_for_user(user)
       survey = insert(:survey, project: project, state: "running")
 
       post conn, project_survey_survey_path(conn, :stop, survey.project, survey)
 
-      log = ActivityLog|> Repo.one
+      logs = Repo.all(ActivityLog)
 
-      assert_survey_log(%{log: log, user: user, project: project, survey: survey, action: "stop", remote_ip: "192.168.0.128", metadata: %{"survey_name" => survey.name}})
+      assert_survey_log(%{log: Enum.at(logs, 0), user_id: user.id, project: project, survey: survey, action: "request_cancel", remote_ip: "192.168.0.128", metadata: %{"survey_name" => survey.name}})
+      assert_survey_log(%{log: Enum.at(logs, 1), user_id: nil, project: project, survey: survey, action: "confirm_cancel", remote_ip: "0.0.0.0", metadata: %{"survey_name" => survey.name}})
     end
 
     test "generates log after updating a survey", %{conn: conn, user: user} do
@@ -2214,9 +2215,9 @@ defmodule Ask.SurveyControllerTest do
     group
   end
 
-  defp assert_log(log, user, project, survey, action, remote_ip) do
+  defp assert_log(log, user_id, project, survey, action, remote_ip) do
     assert log.project_id == project.id
-    assert log.user_id == user.id
+    assert log.user_id == user_id
     assert log.entity_id == survey.id
     assert log.entity_type == "survey"
     assert log.action == action
@@ -2224,7 +2225,7 @@ defmodule Ask.SurveyControllerTest do
   end
 
   defp assert_link_log(%{log: log, user: user, project: project, survey: survey, action: action, report_type: report_type, remote_ip: remote_ip}) do
-    assert_log(log, user, project, survey, action, remote_ip)
+    assert_log(log, user.id, project, survey, action, remote_ip)
     assert log.metadata == %{
       "survey_name" => survey.name,
       "report_type" => report_type
@@ -2232,7 +2233,11 @@ defmodule Ask.SurveyControllerTest do
   end
 
   defp assert_survey_log(%{log: log, user: user, project: project, survey: survey, action: action, remote_ip: remote_ip, metadata: metadata}) do
-    assert_log(log, user, project, survey, action, remote_ip)
+    assert_survey_log(%{log: log, user_id: user.id, project: project, survey: survey, action: action, remote_ip: remote_ip, metadata: metadata})
+  end
+
+  defp assert_survey_log(%{log: log, user_id: user_id, project: project, survey: survey, action: action, remote_ip: remote_ip, metadata: metadata}) do
+    assert_log(log, user_id, project, survey, action, remote_ip)
     assert log.metadata == metadata
   end
 
