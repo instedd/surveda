@@ -147,6 +147,10 @@ defmodule Ask.Respondent do
   def next_timeout_lowerbound(timeout, now), do:
     Timex.shift(now, minutes: timeout)
 
+  @doc """
+  This function uses Mutex. Its locks aren't reentrant
+  Avoid nesting locks to prevent deadlocks
+  """
   def with_lock(respondent_id, operation, respondent_modifier \\ fn x -> x end) do
     Mutex.under(Ask.Mutex, respondent_id, fn ->
       respondent = Respondent
