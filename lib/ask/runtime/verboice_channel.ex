@@ -2,7 +2,7 @@ defmodule Ask.Runtime.VerboiceChannel do
   alias __MODULE__
   use Ask.Web, :model
   alias Ask.{Repo, Respondent, Channel, SurvedaMetrics, Stats}
-  alias Ask.Runtime.{Broker, Flow, Reply, RetriesHistogram}
+  alias Ask.Runtime.{Survey, Flow, Reply, RetriesHistogram}
   alias Ask.Router.Helpers
   import Plug.Conn
   import XmlBuilder
@@ -199,39 +199,39 @@ defmodule Ask.Runtime.VerboiceChannel do
   defp match_channel(_, _), do: false
 
   defp channel_failed(respondent, "failed", %{"CallStatusReason" => "Busy", "CallStatusCode" => code}) do
-    Broker.channel_failed(respondent, "User hangup (#{code})")
+    Survey.channel_failed(respondent, "User hangup (#{code})")
   end
 
   defp channel_failed(respondent, "failed", %{"CallStatusReason" => reason, "CallStatusCode" => code}) do
-    Broker.channel_failed(respondent, "#{reason} (#{code})")
+    Survey.channel_failed(respondent, "#{reason} (#{code})")
   end
 
   defp channel_failed(respondent, status, %{"CallStatusReason" => reason, "CallStatusCode" => code}) do
-    Broker.channel_failed(respondent, "#{status}: #{reason} (#{code})")
+    Survey.channel_failed(respondent, "#{status}: #{reason} (#{code})")
   end
 
   defp channel_failed(respondent, "failed", %{"CallStatusReason" => "Busy"}) do
-    Broker.channel_failed(respondent, "User hangup")
+    Survey.channel_failed(respondent, "User hangup")
   end
 
   defp channel_failed(respondent, "failed", %{"CallStatusReason" => reason}) do
-    Broker.channel_failed(respondent, "#{reason}")
+    Survey.channel_failed(respondent, "#{reason}")
   end
 
   defp channel_failed(respondent, status, %{"CallStatusReason" => reason}) do
-    Broker.channel_failed(respondent, "#{status}: #{reason}")
+    Survey.channel_failed(respondent, "#{status}: #{reason}")
   end
 
   defp channel_failed(respondent, "failed", %{"CallStatusCode" => code}) do
-    Broker.channel_failed(respondent, "(#{code})")
+    Survey.channel_failed(respondent, "(#{code})")
   end
 
   defp channel_failed(respondent, status, %{"CallStatusCode" => code}) do
-    Broker.channel_failed(respondent, "#{status} (#{code})")
+    Survey.channel_failed(respondent, "#{status} (#{code})")
   end
 
   defp channel_failed(respondent, status, _) do
-    Broker.channel_failed(respondent, status)
+    Survey.channel_failed(respondent, status)
   end
 
   defp update_call_time_seconds(respondent, call_sid, call_time) do
@@ -245,59 +245,63 @@ defmodule Ask.Runtime.VerboiceChannel do
 
   def callback(conn, %{"path" => ["status", respondent_id, _token], "CallStatus" => status, "CallDuration" => call_duration_seconds, "CallSid" => call_sid} = params) do
     call_duration = call_duration_seconds |> String.to_integer
-    respondent = Repo.get!(Respondent, respondent_id)
-                 |> update_call_time_seconds(call_sid, call_duration)
-    case status do
-      "expired" ->
-        # respondent is still being considered as active in Surveda
-        Broker.contact_attempt_expired(respondent)
-      s when s in ["failed", "busy", "no-answer"] ->
-        # respondent should no longer be considered as active
-        respondent = RetriesHistogram.respondent_no_longer_active(respondent)
-                     |> Respondent.call_attempted
-        channel_failed(respondent, status, params)
-      _ -> Respondent.call_attempted(respondent)
-    end
+    Respondent.with_lock(respondent_id, fn respondent ->
+      case respondent do
+        nil -> :ok # Ignore the callback if the respondent doesn't exist
+        respondent ->
+          respondent = update_call_time_seconds(respondent, call_sid, call_duration)
+          case status do
+            "expired" ->
+              # respondent is still being considered as active in Surveda
+              Survey.contact_attempt_expired(respondent)
+            s when s in ["failed", "busy", "no-answer"] ->
+              # respondent should no longer be considered as active
+              respondent = RetriesHistogram.respondent_no_longer_active(respondent)
+                           |> Respondent.call_attempted
+              channel_failed(respondent, status, params)
+            _ -> Respondent.call_attempted(respondent)
+          end
+      end
+    end)
     SurvedaMetrics.increment_counter_with_label(:surveda_verboice_status_callback, [status])
     conn |> send_resp(200, "")
   end
 
   def callback(conn, params) do
-    callback(conn, params, Broker)
+    callback(conn, params, Survey)
   end
 
-  def callback(conn, params = %{"respondent" => respondent_id}, broker) do
-    respondent = Respondent |> Repo.get(respondent_id)
+  def callback(conn, params = %{"respondent" => respondent_id}, survey) do
+    response_content = Respondent.with_lock(respondent_id, fn respondent ->
+      case respondent do
+        nil ->
+          hangup()
 
-    response_content = case respondent do
-      nil ->
-        hangup()
+        %Respondent{session: %{"current_mode" => %{"mode" => "ivr"}}} ->
+          respondent = Respondent.call_attempted(respondent)
 
-      %Respondent{session: %{"current_mode" => %{"mode" => "ivr"}}} ->
-        respondent = Respondent.call_attempted(respondent)
+          response = case params["Digits"] do
+            nil -> Flow.Message.answer()
+            "timeout" -> Flow.Message.no_reply()
+            digits -> Flow.Message.reply(digits)
+          end
 
-        response = case params["Digits"] do
-          nil -> Flow.Message.answer()
-          "timeout" -> Flow.Message.no_reply()
-          digits -> Flow.Message.reply(digits)
-        end
+          case survey.sync_step(respondent, response, "ivr") do
+            {:reply, reply} ->
+              prompts = Reply.prompts(reply)
+              num_digits = Reply.num_digits(reply)
+              gather(respondent, prompts, num_digits)
+            {:end, {:reply, reply}} ->
+              prompts = Reply.prompts(reply)
+              say_or_play(prompts, channel_base_url(respondent)) ++ [hangup()]
+            :end ->
+              hangup()
+          end
 
-        case broker.sync_step(respondent, response, "ivr") do
-          {:reply, reply} ->
-            prompts = Reply.prompts(reply)
-            num_digits = Reply.num_digits(reply)
-            gather(respondent, prompts, num_digits)
-          {:end, {:reply, reply}} ->
-            prompts = Reply.prompts(reply)
-            say_or_play(prompts, channel_base_url(respondent)) ++ [hangup()]
-          :end ->
-            hangup()
-        end
-
-      _ ->
-        hangup()
-    end
-
+        _ ->
+          hangup()
+      end
+    end)
     reply = response(response_content) |> generate
 
     conn

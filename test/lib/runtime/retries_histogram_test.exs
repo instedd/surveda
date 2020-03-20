@@ -7,7 +7,7 @@ defmodule Ask.Runtime.RetriesHistogramTest do
   use Timex
   use Ask.MockTime
   use Ask.TestHelpers
-  alias Ask.Runtime.{Broker, Flow, ChannelStatusServer, VerboiceChannel, RetriesHistogram, Session}
+  alias Ask.Runtime.{Survey, Broker, Flow, ChannelStatusServer, VerboiceChannel, RetriesHistogram, Session}
   alias Ask.{Repo, Survey, Respondent, Stats}
   require Ask.Runtime.ReplyHelper
   alias Ask.{RespondentGroupChannel, TestChannel, Schedule}
@@ -526,7 +526,7 @@ defmodule Ask.Runtime.RetriesHistogramTest do
 
   defp respondent_reply(respondent_id, reply_message, mode) do
     respondent = Repo.get!(Respondent, respondent_id)
-    Broker.sync_step(respondent, Flow.Message.reply(reply_message), mode)
+    Ask.Runtime.Survey.sync_step(respondent, Flow.Message.reply(reply_message), mode)
   end
 end
 

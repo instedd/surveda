@@ -5,8 +5,8 @@
  * `Broker.start` -> `handle_session_started`: All respondents are started from here. 
  This is the only place where respondents are **added** to the histogram.
  
- * `Broker.sync_step` -> `handle_next_action`: All respondent interactions go through here. 
- Depending on broker response (whether is a `:reply` or an `:end`) and `mode`, 
+ * `Runtime.Survey.sync_step` -> `handle_next_action`: All respondent interactions go through here. 
+ Depending on survey response (whether is a `:reply` or an `:end`) and `mode`, 
  respondent is **reallocated** in the histogram or **removed** from it.
  This is the happy-way of removing a respondent from the histogram, because the respondent completed the survey.
  
@@ -23,7 +23,7 @@
  
  * `Session.timeout [no retries left]`: Session is terminated, so respondent is **removed** from the histogram 
  
- * `Broker.channel_failed [no retries left & no fallback mode left]`: Respondent is marked as `failed` 
+ * `Runtime.Survey.channel_failed [no retries left & no fallback mode left]`: Respondent is marked as `failed` 
  so is **removed** from the histogram.
  
  * `Broker.mark_stalled_for_eight_hours_respondents_as_failed`: the respondent ended the survey without responding, 

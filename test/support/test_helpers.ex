@@ -52,6 +52,30 @@ defmodule Ask.TestHelpers do
 
         [survey, group, test_channel, respondent, phone_number]
       end
+
+
+      def create_several_respondents(survey, group, n) when n <= 1 do
+        [insert(:respondent, survey: survey, respondent_group: group)]
+      end
+
+      def create_several_respondents(survey, group, n) do
+        [create_several_respondents(survey, group, n - 1) | insert(:respondent, survey: survey, respondent_group: group)]
+      end
+
+      def assert_respondents_by_state(survey, active, pending) do
+        [a, p] = get_respondents_by_state(survey)
+
+        assert a == active
+        assert p == pending
+      end
+
+      defp get_respondents_by_state(survey) do
+        by_state = Ask.Repo.all(
+                     from r in assoc(survey, :respondents),
+                     group_by: :state,
+                     select: {r.state, count("*")}) |> Enum.into(%{})
+        [by_state["active"] || 0, by_state["pending"] || 0]
+      end
     end
   end
 end

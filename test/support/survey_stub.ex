@@ -1,4 +1,4 @@
-defmodule Ask.BrokerStub do
+defmodule Ask.Runtime.SurveyStub do
   use GenServer
 
   @server_ref {:global, __MODULE__}

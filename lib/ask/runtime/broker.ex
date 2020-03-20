@@ -1,11 +1,9 @@
 defmodule Ask.Runtime.Broker do
   use GenServer
-  use Timex
   import Ecto.Query
   import Ecto
-  alias Ask.{Repo, Survey, Respondent, RespondentDispositionHistory, RespondentGroup, QuotaBucket, Logger, Schedule, SurvedaMetrics, SystemTime}
-  alias Ask.Runtime.{Session, Reply, Flow, SessionMode, SessionModeProvider, ChannelStatusServer, RetriesHistogram}
-  alias Ask.QuotaBucket
+  alias Ask.{Repo, Logger, Survey, Respondent, RespondentGroup, QuotaBucket, RespondentDispositionHistory, SystemTime, Schedule, SurvedaMetrics}
+  alias Ask.Runtime.{Session, RetriesHistogram, ChannelStatusServer}
 
   @poll_interval :timer.minutes(1)
   @server_ref {:global, __MODULE__}
@@ -31,13 +29,8 @@ defmodule Ask.Runtime.Broker do
   def handle_info(:poll, state, now) do
     try do
       mark_stalled_for_eight_hours_respondents_as_failed()
-
-      Repo.all(from r in Respondent, where: r.state == "active" and r.timeout_at <= ^now, limit: ^batch_limit_per_minute())
-      |> Enum.each(&retry_respondent(&1))
-
-      all_running_surveys()
-      |> Enum.filter(&Schedule.intersect?(&1.schedule, now))
-      |> Enum.each(&poll_survey/1)
+      retry_respondents(now)
+      poll_active_surveys(now)
 
       {:noreply, state}
     after
@@ -58,69 +51,28 @@ defmodule Ask.Runtime.Broker do
     {:reply, :ok, state}
   end
 
-  defp all_running_surveys do
-    Repo.all(from s in Survey, where: s.state == "running",
-      preload: [
-        respondent_groups: [respondent_group_channels: :channel]
-      ]
-    )
-  end
+  # visible for testing
+  def retry_respondent(respondent) do
+    session = respondent.session |> Session.load
 
-  defp mark_stalled_for_eight_hours_respondents_as_failed do
-    eight_hours_ago = SystemTime.time.now |> Timex.shift(hours: -8)
-
-    (from r in Respondent,
-      where: r.state == "stalled",
-      where: r.updated_at <= ^eight_hours_ago)
-    |> Repo.all
-    |> Enum.each(fn respondent ->
-      respondent = RetriesHistogram.remove_respondent(respondent)
-      update_respondent(respondent, :failed)
+    Repo.transaction(fn ->
+      try do
+        Ask.Runtime.Survey.handle_session_step(Session.timeout(session), SystemTime.time.now)
+      rescue
+        e ->
+          Logger.error(e, "Error retrying respondent. Rolling back transaction")
+          Repo.rollback(e)
+      end
     end)
   end
 
-  def channel_failed(respondent, reason \\ "failed") do
-    session = respondent.session
-    if session do
-      session = session |> Session.load
-      case Session.channel_failed(session, reason) do
-        :ok -> :ok
-        :failed ->
-          # respondent no longer participates in the survey (no attempts left)
-          respondent = RetriesHistogram.remove_respondent(respondent)
-          update_respondent(respondent, :failed)
-      end
-    else
-      :ok
-    end
-  end
-
-  def contact_attempt_expired(respondent) do
-    session = respondent.session
-    if session do
-      response = session
-        |> Session.load
-        |> Session.contact_attempt_expired
-
-      update_respondent(respondent, response, nil, SystemTime.time.now)
-    end
-    :ok
-  end
-
-  def delivery_confirm(respondent, title) do
-    delivery_confirm(respondent, title, nil)
-  end
-
-  def delivery_confirm(respondent, title, mode) do
-    unless respondent.session == nil do
-      session = respondent.session |> Session.load
-      session_mode =
-        case session_mode(respondent, session, mode) do
-          :invalid_mode -> session.current_mode
-          mode -> mode
-        end
-      Session.delivery_confirm(session, title, session_mode)
-    end
+  # visible for testing
+  def configure_new_respondent(respondent, questionnaire_id, sequence_mode) do
+    {primary_mode, _} = get_modes(sequence_mode)
+    respondent
+    |> Respondent.changeset(%{questionnaire_id: questionnaire_id, mode: sequence_mode, disposition: "queued"})
+    |> Repo.update!
+    |> RespondentDispositionHistory.create(respondent.disposition, primary_mode)
   end
 
   defp poll_survey(survey) do
@@ -175,53 +127,18 @@ defmodule Ask.Runtime.Broker do
     end
   end
 
-  defp reached_quotas?(survey) do
-    case survey.quota_vars do
-      [] -> false
-      _ ->
-        survey_id = survey.id
-        Repo.one(from q in QuotaBucket,
-          where: q.survey_id == ^survey_id,
-          where: q.count < q.quota,
-          select: count(q.id)) == 0
-    end
+  defp poll_active_surveys(now) do
+    all_running_surveys = Repo.all(from s in Survey,
+                                   where: s.state == "running",
+                                   preload: [respondent_groups: [respondent_group_channels: :channel]])
+    all_running_surveys
+    |> Enum.filter(&Schedule.intersect?(&1.schedule, now))
+    |> Enum.each(&poll_survey/1)
   end
 
-  defp complete(survey) do
-    Repo.update Survey.changeset(survey, %{state: "terminated", exit_code: 0, exit_message: "Successfully completed"})
-    set_stalled_respondents_as_failed(survey)
-  end
-
-  defp set_stalled_respondents_as_failed(survey) do
-    from(r in assoc(survey, :respondents), where: r.state == "stalled")
-    |> Repo.update_all(set: [state: "failed", session: nil, timeout_at: nil])
-  end
-
-  defp start_some(survey, count) do
-    count = Enum.min([batch_limit_per_minute(), count])
-
-    (from r in assoc(survey, :respondents),
-      where: r.state == "pending",
-      limit: ^count)
-    |> preload(respondent_group: [respondent_group_channels: :channel])
-    |> Repo.all
-    |> Enum.each(&start(survey, &1))
-  end
-
-  def retry_respondent(respondent) do
-    session = respondent.session |> Session.load
-
-    Repo.transaction(fn ->
-      try do
-        handle_session_step(Session.timeout(session), SystemTime.time.now)
-      rescue
-        e in Ecto.StaleEntryError ->
-          Logger.error(inspect e)
-          # Maybe sync_step or another action was executed while the timeout was executed,
-          # and that means the respondent reply, so we don't need to apply the timeout anymore
-          Repo.rollback(e)
-      end
-    end)
+  defp retry_respondents(now) do
+    Repo.all(from r in Respondent, select: r.id, where: r.state == "active" and r.timeout_at <= ^now, limit: ^batch_limit_per_minute())
+    |> Enum.each(fn respondent_id -> Respondent.with_lock(respondent_id, &retry_respondent(&1)) end)
   end
 
   defp start(survey, respondent) do
@@ -248,29 +165,82 @@ defmodule Ask.Runtime.Broker do
     SurvedaMetrics.increment_counter_with_label(:surveda_broker_respondent_start, [survey.id])
     Session.start(questionnaire, respondent, primary_channel, primary_mode, survey.schedule, retries, fallback_channel, fallback_mode, fallback_retries, fallback_delay, survey.count_partial_results)
     |> handle_session_started
-    |> handle_session_step(SystemTime.time.now)
+    |> Ask.Runtime.Survey.handle_session_step(SystemTime.time.now)
   end
 
-  def configure_new_respondent(respondent, questionnaire_id, sequence_mode) do
-    {primary_mode, _} = get_modes(sequence_mode)
-    respondent
-    |> Respondent.changeset(%{questionnaire_id: questionnaire_id, mode: sequence_mode, disposition: "queued"})
-    |> Repo.update!
-    |> RespondentDispositionHistory.create(respondent.disposition, primary_mode)
+  defp default_batch_size do
+    Survey.environment_variable_named(:batch_size)
   end
 
-  defp get_modes(sequence_mode) do
-    case sequence_mode do
-      [primary] -> {primary, nil}
-      [primary, fallback] -> {primary, fallback}
+  defp reached_quotas?(survey) do
+    case survey.quota_vars do
+      [] -> false
+      _ ->
+        survey_id = survey.id
+        Repo.one(from q in QuotaBucket,
+                 where: q.survey_id == ^survey_id,
+                 where: q.count < q.quota,
+                 select: count(q.id)) == 0
     end
   end
 
-  defp handle_session_started(session_started)do
-    case session_started do
-      {:ok, session, reply, timeout} -> {:ok, %Session{session | respondent: RetriesHistogram.add_new_respondent(session.respondent, session, timeout)}, reply, timeout}
-      other -> other
+  # Estimates the amount of respondents the broker will have to initiate contact with
+  # to get the completed respondents needed.
+  defp batch_size(survey, respondents_by_state) do
+    case Survey.completed_respondents_needed_by(survey) do
+      :all ->
+        default_batch_size()
+
+      respondents_target when is_integer(respondents_target) ->
+        successful = Survey.completed_state_respondents(survey, respondents_by_state)
+        estimated_success_rate = estimated_success_rate(survey, respondents_target)
+        (respondents_target - successful) / estimated_success_rate
+        |> trunc
     end
+  end
+
+  defp mark_stalled_for_eight_hours_respondents_as_failed do
+    eight_hours_ago = SystemTime.time.now |> Timex.shift(hours: -8)
+
+    (from r in Respondent,
+      select: r.id,
+      where: r.state == "stalled",
+      where: r.updated_at <= ^eight_hours_ago)
+    |> Repo.all
+    |> Enum.each(fn respondent_id ->
+      Respondent.with_lock(respondent_id, fn respondent ->
+        if(respondent.state == "stalled") do # the respondent obtained inside the lock may no longer be "stalled"
+          respondent = RetriesHistogram.remove_respondent(respondent)
+          Ask.Runtime.Survey.update_respondent(respondent, :failed)
+        end
+      end)
+    end)
+  end
+
+  defp batch_limit_per_minute do
+    Survey.environment_variable_named(:batch_limit_per_minute)
+  end
+
+  defp complete(survey) do
+    Repo.update Survey.changeset(survey, %{state: "terminated", exit_code: 0, exit_message: "Successfully completed"})
+    set_stalled_respondents_as_failed(survey)
+  end
+
+  defp set_stalled_respondents_as_failed(survey) do
+    # Bulk operation. Respondents are never brought to memory. For now without lock (stalled state may/will be removed)
+    from(r in assoc(survey, :respondents), where: r.state == "stalled")
+    |> Repo.update_all(set: [state: "failed", session: nil, timeout_at: nil])
+  end
+
+  defp start_some(survey, count) do
+    count = Enum.min([batch_limit_per_minute(), count])
+
+    (from r in assoc(survey, :respondents),
+      select: r.id,
+      where: r.state == "pending",
+      limit: ^count)
+    |> Repo.all
+    |> Enum.each(fn respondent_id -> Respondent.with_lock(respondent_id, &start(survey, &1), &Repo.preload(&1, respondent_group: [respondent_group_channels: :channel])) end)
   end
 
   defp select_questionnaire_and_mode(%Survey{comparisons: []} = survey) do
@@ -293,7 +263,7 @@ defmodule Ask.Runtime.Broker do
     # after the entry with ratio 25 the total accumulated ratio will be
     # 10 + 25 + 35 = 70 >= 45. Then we keep the first one that's true.
     {candidates, _} = comparisons
-    |> Enum.map_reduce(0, fn (comparison, total_count) ->
+                      |> Enum.map_reduce(0, fn (comparison, total_count) ->
       ratio = comparison["ratio"]
       total_count = total_count + (ratio || 0)
       included = total_count >= rand
@@ -301,12 +271,12 @@ defmodule Ask.Runtime.Broker do
     end)
 
     candidate = candidates
-    |> Enum.find(fn {_, included} -> included end)
+                |> Enum.find(fn {_, included} -> included end)
 
     if candidate do
       {comparison, _} = candidate
       questionnaire = survey.questionnaires
-      |> Enum.find(fn q -> q.id == comparison["questionnaire_id"] end)
+                      |> Enum.find(fn q -> q.id == comparison["questionnaire_id"] end)
       mode = comparison["mode"]
       {questionnaire, mode}
     else
@@ -316,344 +286,18 @@ defmodule Ask.Runtime.Broker do
     end
   end
 
-  def sync_step(respondent, reply, mode \\ nil, now \\ SystemTime.time.now) do
-    session = respondent.session |> Session.load
-    session_mode = session_mode(respondent, session, mode)
-    next_action = sync_step_internal(session, reply, session_mode, now)
-    handle_next_action(next_action, respondent.id)
-  end
-
-  defp handle_next_action(next_action, respondent_id) do
-    respondent = Repo.get(Respondent, respondent_id)
-    session = if respondent.session, do: Session.load(respondent.session), else: respondent.session
-    RetriesHistogram.next_step(respondent, session, next_action)
-    next_action
-  end
-
-  defp session_mode(_respondent, session, nil) do
-    session.current_mode
-  end
-
-  defp session_mode(respondent, session, mode) do
-    if mode == session.current_mode |> SessionMode.mode do
-      session.current_mode
-    else
-      group = (respondent |> Repo.preload(:respondent_group)).respondent_group
-      channel_group = (group |> Repo.preload([respondent_group_channels: :channel])).respondent_group_channels
-      |> Enum.find(fn c -> c.mode == mode end)
-
-      if channel_group do
-        SessionModeProvider.new(mode, channel_group.channel, [])
-      else
-        :invalid_mode
-      end
+  defp get_modes(sequence_mode) do
+    case sequence_mode do
+      [primary] -> {primary, nil}
+      [primary, fallback] -> {primary, fallback}
     end
   end
 
-  # We expose this method so we can test that if a stale respondent is
-  # passed, it's reloaded and the action is retried (this can happen
-  # if a timeout happens in between this call)
-  def sync_step_internal(session, reply) do
-    sync_step_internal(session, reply, session.current_mode, SystemTime.time.now)
-  end
-
-  def sync_step_internal(_, _, :invalid_mode, _) do
-    :end
-  end
-
-  def sync_step_internal(session, reply, session_mode, now) do
-    transaction_result = Repo.transaction(fn ->
-      try do
-        reply = mask_phone_number(session.respondent, reply)
-        session_step = Session.sync_step(session, reply, session_mode)
-        handle_session_step(session_step, now)
-      rescue
-        e in Ecto.StaleEntryError ->
-          Repo.rollback(e)
-        e ->
-          # If we uncomment this a test will fail (the one that cheks that nothing breaks),
-          # but this could help you find a bug in a particular test that is not working.
-          # if Mix.env == :test do
-          #   IO.inspect e
-          #   IO.inspect System.stacktrace()
-          #   raise e
-          # end
-          respondent = Repo.get(Respondent, session.respondent.id)
-          Logger.error(e, "Error occurred while processing sync step (survey_id: #{respondent.survey_id}, respondent_id: #{respondent.id})")
-          Sentry.capture_exception(e, [
-            stacktrace: System.stacktrace(),
-            extra: %{survey_id: respondent.survey_id, respondent_id: respondent.id}])
-
-          try do
-            handle_session_step({:failed, respondent}, now)
-          rescue
-            e ->
-              if Mix.env == :test do
-                IO.inspect e
-                IO.inspect System.stacktrace()
-                raise e
-              end
-              :end
-          end
-      end
-    end)
-
-    case transaction_result do
-      {:ok, response} ->
-        response
-      {:error, %Ecto.StaleEntryError{}} ->
-        respondent = Repo.get(Respondent, session.respondent.id)
-        # Maybe timeout or another action was executed while sync_step was executed, so we need to retry
-        sync_step(respondent, reply, session_mode)
-      value ->
-        value
+  defp handle_session_started(session_started)do
+    case session_started do
+      {:ok, session, reply, timeout} -> {:ok, %Session{session | respondent: RetriesHistogram.add_new_respondent(session.respondent, session, timeout)}, reply, timeout}
+      other -> other
     end
-  end
-
-  def mask_phone_number(%Respondent{} = respondent, {:reply, response}) do
-    pii = respondent.canonical_phone_number |> String.slice(-6..-1)
-    # pii can be empty if the sanitized_phone_number has less than 5 digits,
-    # that could be mostly to the case of a randomly generated phone number form a test
-    # String.contains? returns true for empty strings
-    masked_response = if String.length(pii) != 0 && contains_phone_number(response, pii) do
-      mask_phone_number(response, phone_number_matcher(pii), pii)
-    else
-      response
-    end
-
-    Flow.Message.reply(masked_response)
-  end
-  def mask_phone_number(_, reply), do: reply
-  def mask_phone_number(response, regex, pii) do
-    masked_response = response |> String.replace(regex, "\\1#\\3#\\5#\\7#\\9#\\11#\\13")
-
-    if contains_phone_number(masked_response, pii) do
-      mask_phone_number(masked_response, regex, pii)
-    else
-      masked_response
-    end
-  end
-
-  defp contains_phone_number(response, pii) do
-    String.contains?(Respondent.canonicalize_phone_number(response), pii)
-  end
-
-  defp phone_number_matcher(pii) do
-    String.graphemes(pii)
-      |> Enum.reduce("(.*)", fn(digit, regex) ->
-        "#{regex}(#{digit})(.*)"
-      end)
-      |> Regex.compile!
-  end
-
-  defp handle_session_step({:ok, %{respondent: respondent} = session, reply, timeout}, now) do
-    update_respondent(respondent, {:ok, session, timeout}, Reply.disposition(reply), now)
-    {:reply, reply}
-  end
-
-  defp handle_session_step({:hangup, session, reply, timeout, respondent}, _) do
-    update_respondent(respondent, {:ok, session, timeout}, Reply.disposition(reply), SystemTime.time.now)
-    :end
-  end
-
-  defp handle_session_step({:end, reply, respondent}, _) do
-    update_respondent(respondent, :end, Reply.disposition(reply), nil)
-
-    case Reply.steps(reply) do
-      [] ->
-        :end
-      _ ->
-        {:end, {:reply, reply}}
-    end
-  end
-
-  defp handle_session_step({:rejected, reply, respondent}, _) do
-    update_respondent(respondent, :rejected)
-    {:end, {:reply, reply}}
-  end
-
-  defp handle_session_step({:rejected, %{respondent: respondent} = session, reply, timeout}, _) do
-    update_respondent(respondent, {:rejected, session, timeout})
-    {:reply, reply}
-  end
-
-  defp handle_session_step({:rejected, respondent}, _) do
-    update_respondent(respondent, :rejected)
-    :end
-  end
-
-  defp handle_session_step({:stalled, session, respondent}, _) do
-    update_respondent(respondent, {:stalled, session})
-  end
-
-  defp handle_session_step({:stopped, reply, respondent}, _) do
-    update_respondent(respondent, :stopped, Reply.disposition(reply), nil)
-    :end
-  end
-
-  defp handle_session_step({:failed, respondent}, _) do
-    update_respondent(respondent, :failed)
-    :end
-  end
-
-  defp match_condition(responses, bucket) do
-    bucket_vars = Map.keys(bucket.condition)
-
-    Enum.all?(bucket_vars, fn var ->
-      Enum.any?(responses, fn res ->
-        (res.field_name == var) &&
-          res.value |> QuotaBucket.matches_condition?(Map.fetch!(bucket.condition, var))
-      end)
-    end)
-  end
-
-  defp update_respondent(%Respondent{} = respondent, :end) do
-    update_respondent(respondent, :end, nil, nil)
-  end
-
-  defp update_respondent(%Respondent{} = respondent, {:stalled, session}) do
-    respondent
-    |> Respondent.changeset(%{state: "stalled", session: Session.dump(session), timeout_at: nil})
-    |> Repo.update!
-  end
-
-  defp update_respondent(%Respondent{} = respondent, :rejected) do
-    respondent
-    |> Respondent.changeset(%{state: "rejected", session: nil, timeout_at: nil})
-    |> Repo.update!
-  end
-
-  defp update_respondent(%Respondent{} = respondent, {:rejected, session, timeout}) do
-    timeout_at = Respondent.next_actual_timeout(respondent, timeout, SystemTime.time.now)
-    respondent
-      |> Respondent.changeset(%{state: "rejected", session: Session.dump(session), timeout_at: timeout_at})
-      |> Repo.update!
-  end
-
-  defp update_respondent(%Respondent{} = respondent, :failed) do
-    session = respondent.session |> Session.load
-    mode = session.current_mode |> SessionMode.mode
-    old_disposition = respondent.disposition
-    new_disposition = Flow.failed_disposition_from(respondent.disposition)
-
-    Session.log_disposition_changed(respondent, session.current_mode.channel, mode, old_disposition, new_disposition)
-
-    respondent
-    |> Respondent.changeset(%{state: "failed", session: nil, timeout_at: nil, disposition: new_disposition})
-    |> Repo.update!
-    |> RespondentDispositionHistory.create(old_disposition, mode)
-  end
-
-  defp update_respondent(%Respondent{} = respondent, :stopped, disposition, _) do
-    session = respondent.session |> Session.load
-    update_respondent_and_set_disposition(respondent, session, nil, %{disposition: disposition, state: "failed", session: nil, timeout_at: nil, user_stopped: true})
-  end
-
-  defp update_respondent(%Respondent{} = respondent, {:ok, session, timeout}, nil, now) do
-    effective_modes = respondent.effective_modes || []
-    effective_modes =
-      if session do
-        mode = Ask.Runtime.SessionMode.mode(session.current_mode)
-        Enum.uniq(effective_modes ++ [mode])
-      else
-        effective_modes
-      end
-
-    timeout_at = Respondent.next_actual_timeout(respondent, timeout, now)
-    respondent
-    |> Respondent.changeset(%{state: "active", session: Session.dump(session), timeout_at: timeout_at, language: session.flow.language, effective_modes: effective_modes})
-    |> Repo.update!
-  end
-
-  defp update_respondent(%Respondent{} = respondent, {:ok, session, timeout}, disposition, _) do
-    timeout_at = Respondent.next_actual_timeout(respondent, timeout, SystemTime.time.now)
-    update_respondent_and_set_disposition(respondent, session, timeout, %{session: Session.dump(session), timeout_at: timeout_at, disposition: disposition, state: "active"})
-  end
-
-  defp update_respondent(%Respondent{} = respondent, :end, reply_disposition, _) do
-    [session, mode] = case respondent.session do
-      nil -> [nil, nil]
-      session ->
-        session = session |> Session.load
-        mode = session.current_mode |> SessionMode.mode
-        [session, mode]
-    end
-
-    old_disposition = respondent.disposition
-
-    new_disposition =
-      old_disposition
-      |> Flow.resulting_disposition(reply_disposition)
-      |> Flow.resulting_disposition("completed")
-
-    # If new_disposition == reply_disposition, change of disposition has already been logged during Session.sync_step
-    if session && new_disposition != old_disposition && new_disposition != reply_disposition do
-      Session.log_disposition_changed(respondent, session.current_mode.channel, mode, old_disposition, new_disposition)
-    end
-
-    respondent
-    |> Respondent.changeset(%{state: "completed", disposition: new_disposition, session: nil, completed_at: SystemTime.time.now, timeout_at: nil})
-    |> Repo.update!
-    |> RespondentDispositionHistory.create(old_disposition, mode)
-    |> update_quota_bucket(old_disposition, respondent.session["count_partial_results"])
-  end
-
-  defp update_respondent_and_set_disposition(respondent, session, timeout, %{disposition: disposition} =  changes) do
-    old_disposition = respondent.disposition
-    if Flow.should_update_disposition(old_disposition, disposition) do
-      respondent
-      |> Respondent.changeset(changes)
-      |> Repo.update!
-      |> RespondentDispositionHistory.create(old_disposition, session.current_mode |> SessionMode.mode)
-      |> update_quota_bucket(old_disposition, session.count_partial_results)
-    else
-      update_respondent(respondent, {:ok, session, timeout}, nil, SystemTime.time.now)
-    end
-  end
-
-  defp update_quota_bucket(respondent, old_disposition, count_partial_results) do
-    if should_update_quota_bucket(respondent.disposition, old_disposition, count_partial_results) do
-      responses = respondent |> assoc(:responses) |> Repo.all
-      matching_bucket = Repo.all(from b in QuotaBucket, where: b.survey_id == ^respondent.survey_id)
-                      |> Enum.find( fn bucket -> match_condition(responses, bucket) end )
-
-      if matching_bucket do
-        from(q in QuotaBucket, where: q.id == ^matching_bucket.id) |> Ask.Repo.update_all(inc: [count: 1])
-      end
-    end
-    respondent
-  end
-
-  defp should_update_quota_bucket(new_disposition, old_disposition, true) do
-    (new_disposition != old_disposition && new_disposition == "interim partial")
-    || (new_disposition == "completed" && old_disposition != "interim partial" && old_disposition != "completed")
-  end
-
-  defp should_update_quota_bucket(new_disposition, old_disposition, _) do
-    new_disposition != old_disposition && new_disposition == "completed"
-  end
-
-  # Estimates the amount of respondents the broker will have to initiate contact with
-  # to get the completed respondents needed.
-  defp batch_size(survey, respondents_by_state) do
-    case Survey.completed_respondents_needed_by(survey) do
-      :all ->
-        default_batch_size()
-
-      respondents_target when is_integer(respondents_target) ->
-        successful = Survey.completed_state_respondents(survey, respondents_by_state)
-        estimated_success_rate = estimated_success_rate(survey, respondents_target)
-        (respondents_target - successful) / estimated_success_rate
-        |> trunc
-    end
-  end
-
-  defp default_batch_size do
-    Survey.environment_variable_named(:batch_size)
-  end
-
-  defp batch_limit_per_minute do
-    Survey.environment_variable_named(:batch_limit_per_minute)
   end
 
   defp estimated_success_rate(survey, respondents_target) do
@@ -663,5 +307,4 @@ defmodule Ask.Runtime.Broker do
     initial_success_rate = Survey.initial_success_rate()
     Survey.estimated_success_rate(initial_success_rate, current_success_rate, completion_rate)
   end
-
 end
