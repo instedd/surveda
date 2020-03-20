@@ -1,5 +1,14 @@
 # InSTEDD Surveda Changelog
 
+## 0.25.0
+
+### Features
+
+* Handle respondent's `STOP` message by setting a final disposition and flagging it as `user_stopped`. [#1607](https://github.com/instedd/surveda/issues/1607)
+* More accurate retries count for IVR calls. Enqueued calls does not show as an attempt until they are started. [#1589](https://github.com/instedd/surveda/issues/1589)
+* Mobile surveys links can be visited multiple times. [#1521](https://github.com/instedd/surveda/issues/1521)
+* Allow cloud Verboice and Nuntium to be used in local surveda development by adding a `base_callback_url` configuration. [#1624](https://github.com/instedd/surveda/issues/1624)
+
 ## 0.24.1
 
 ### Bugfixes
