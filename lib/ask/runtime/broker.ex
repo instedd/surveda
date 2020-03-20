@@ -26,10 +26,21 @@ defmodule Ask.Runtime.Broker do
     {:ok, nil}
   end
 
+  @doc """
+  Respondents are locked inside this function
+  Via:
+    mark_stalled_for_eight_hours_respondents_as_failed
+    retry_respondents
+    poll_active_surveys -> poll_survey -> start_some
+  """
   def handle_info(:poll, state, now) do
     try do
+      # Respondents are locked inside this function
       mark_stalled_for_eight_hours_respondents_as_failed()
+      # Respondents are locked inside this function
       retry_respondents(now)
+      # Respondents are locked inside this function
+      # Via poll_survey -> start_some
       poll_active_surveys(now)
 
       {:noreply, state}
@@ -47,6 +58,11 @@ defmodule Ask.Runtime.Broker do
   end
 
   def handle_call(:poll, _from, state) do
+    # Respondents are locked inside this function
+    # Via:
+    #   mark_stalled_for_eight_hours_respondents_as_failed
+    #   retry_respondents
+    #   poll_active_surveys
     handle_info(:poll, state)
     {:reply, :ok, state}
   end
@@ -75,6 +91,8 @@ defmodule Ask.Runtime.Broker do
     |> RespondentDispositionHistory.create(respondent.disposition, primary_mode)
   end
 
+  # Respondents are locked inside this function
+  # Via start_some
   defp poll_survey(survey) do
     channels = survey |> Survey.survey_channels
     channel_is_down = channels |> Enum.any?(fn c ->
@@ -127,6 +145,8 @@ defmodule Ask.Runtime.Broker do
     end
   end
 
+  # Respondents are locked inside this function
+  # Via poll_survey -> start_some
   defp poll_active_surveys(now) do
     all_running_surveys = Repo.all(from s in Survey,
                                    where: s.state == "running",
@@ -136,6 +156,7 @@ defmodule Ask.Runtime.Broker do
     |> Enum.each(&poll_survey/1)
   end
 
+  # Respondents are locked inside this function
   defp retry_respondents(now) do
     Repo.all(from r in Respondent, select: r.id, where: r.state == "active" and r.timeout_at <= ^now, limit: ^batch_limit_per_minute())
     |> Enum.each(fn respondent_id -> Respondent.with_lock(respondent_id, &retry_respondent(&1)) end)
@@ -199,6 +220,7 @@ defmodule Ask.Runtime.Broker do
     end
   end
 
+  # Respondents are locked inside this function
   defp mark_stalled_for_eight_hours_respondents_as_failed do
     eight_hours_ago = SystemTime.time.now |> Timex.shift(hours: -8)
 
