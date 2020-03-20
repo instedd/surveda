@@ -31,15 +31,15 @@ See [this commit](https://github.com/instedd/surveda/pull/1667/commits/39f67f158
 
 Every time Surveda receives a callback from Verboice
 
-* `callback`
+* `callback`: both status and respondent digits
 
 See [this commit](https://github.com/instedd/surveda/pull/1667/commits/ebd136cdeec1c79eeecd61809f5f3d971c2bd895) for further details
 
 ### Nuntium channel
 
-* `callback`
+* `callback`: both status and respondent responses
 
-Every time Surveda receives a callback from Verboice
+Every time Surveda receives a callback from Nuntium
 
 See [this commit](https://github.com/instedd/surveda/pull/1667/commits/4834803363dc7173f02d16f7b20ea0a6f4204ec3) for further details
 
