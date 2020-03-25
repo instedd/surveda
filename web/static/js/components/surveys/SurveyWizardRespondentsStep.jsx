@@ -1,7 +1,7 @@
 import React, { PropTypes, Component } from 'react'
 import { bindActionCreators } from 'redux'
 import { connect } from 'react-redux'
-import { Preloader, Button } from 'react-materialize'
+import { Preloader } from 'react-materialize'
 import { ConfirmationModal, Card } from '../ui'
 import * as actions from '../../actions/respondentGroups'
 import uniq from 'lodash/uniq'
@@ -152,7 +152,6 @@ class SurveyWizardRespondentsStep extends Component {
   }
 
   renderGroup(group, channels, allModes, readOnly, surveyStarted, uploading) {
-    let removeRespondents = null
     let addMoreRespondents = null
 
     const { survey, t } = this.props
@@ -198,14 +197,14 @@ class SurveyWizardRespondentsStep extends Component {
     }
 
     return <RespondentsList key={group.id} survey={survey} group={group} add={addMoreRespondents} remove={removeRespondentsLink(group.id)} modes={allModes}
-        channels={channels} readOnly={readOnly} surveyStarted={surveyStarted}
-        onChannelChange={(e, type, allChannels) => this.channelChange(e, group, type, allChannels)}
-        onDrop={files => this.openAddOrReplaceModal(group, files)}
-        >
-        {group.sample.map((respondent, index) =>
-          <PhoneNumberRow id={respondent} phoneNumber={respondent} key={index} />
-        )}
-      </RespondentsList>
+      channels={channels} readOnly={readOnly} surveyStarted={surveyStarted}
+      onChannelChange={(e, type, allChannels) => this.channelChange(e, group, type, allChannels)}
+      onDrop={files => this.openAddOrReplaceModal(group, files)}
+      >
+      {group.sample.map((respondent, index) =>
+        <PhoneNumberRow id={respondent} phoneNumber={respondent} key={index} />
+      )}
+    </RespondentsList>
   }
 
   componentWillReceiveProps(props) {
