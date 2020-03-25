@@ -191,13 +191,13 @@ class SurveyWizardRespondentsStep extends Component {
       }
     }
 
-    const removeRespondentsButton = (groupId) => {
+    const removeRespondentsLink = (groupId) => {
       if (!surveyStarted && !uploading) {
-        return <Button className='modal-trigger' onClick={() => this.openRemoveRespondentModal(this.refs.removeRespondents, groupId)}>{t('Remove respondents')}</Button>
+        return <a href='#' className='modal-trigger' style={{marginRight: '0'}} onClick={() => this.openRemoveRespondentModal(this.refs.removeRespondents, groupId)}>{t('Remove respondents')}</a>
       }
     }
 
-    return <RespondentsList key={group.id} survey={survey} group={group} add={addMoreRespondents} remove={removeRespondentsButton(group.id)} modes={allModes}
+    return <RespondentsList key={group.id} survey={survey} group={group} add={addMoreRespondents} remove={removeRespondentsLink(group.id)} modes={allModes}
         channels={channels} readOnly={readOnly} surveyStarted={surveyStarted}
         onChannelChange={(e, type, allChannels) => this.channelChange(e, group, type, allChannels)}
         onDrop={files => this.openAddOrReplaceModal(group, files)}
