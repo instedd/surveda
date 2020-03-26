@@ -14,7 +14,7 @@ defmodule Ask.Runtime.Broker do
     GenServer.start_link(__MODULE__, [], name: @server_ref)
   end
 
-  # Makes the borker performs a poll on the surveys.
+  # Makes the broker performs a poll on the surveys.
   # This method is intended to be used by tests.
   def poll do
     GenServer.call(@server_ref, :poll)
