@@ -42,11 +42,6 @@ class SurveyWizardRespondentsStep extends Component {
     actions.replaceRespondents(survey.projectId, survey.id, groupId, file)
   }
 
-  removeRespondents(groupId) {
-    const { survey, actions } = this.props
-    actions.removeRespondentGroup(survey.projectId, survey.id, groupId)
-  }
-
   clearInvalids(e) {
     e.preventDefault()
 
@@ -144,8 +139,19 @@ class SurveyWizardRespondentsStep extends Component {
     })
   }
 
+  openRemoveRespondentModal(ref, groupId) {
+    const { survey, actions, t } = this.props
+    const modal: ConfirmationModal = ref
+
+    modal.open({
+      modalText: t('Are you sure you want to delete the respondents list? If you confirm, we won\'t be able to recover it. You will have to upload a new one.'),
+      onConfirm: () => {
+        actions.removeRespondentGroup(survey.projectId, survey.id, groupId)
+      }
+    })
+  }
+
   renderGroup(group, channels, allModes, readOnly, surveyStarted, uploading) {
-    let removeRespondents = null
     let addMoreRespondents = null
 
     const { survey, t } = this.props
@@ -182,29 +188,23 @@ class SurveyWizardRespondentsStep extends Component {
           ]
         }
       }
+    }
 
+    const removeRespondentsLink = (groupId) => {
       if (!surveyStarted && !uploading) {
-        removeRespondents = <ConfirmationModal showLink
-          modalId={`removeRespondents${group.id}`} linkText={t('Remove respondents')}
-          modalText={t('Are you sure you want to delete the respondents list? If you confirm, we won\'t be able to recover it. You will have to upload a new one.')}
-          header={t('Please confirm that you want to delete the respondents list')}
-          confirmationText={t('Delete the respondents list')}
-          style={{maxWidth: '600px'}} showCancel
-          onConfirm={() => this.removeRespondents(group.id)} />
+        return <a href='#' className='modal-trigger' style={{marginRight: '0'}} onClick={() => this.openRemoveRespondentModal(this.refs.removeRespondents, groupId)}>{t('Remove respondents')}</a>
       }
     }
 
-    return (
-      <RespondentsList key={group.id} survey={survey} group={group} add={addMoreRespondents} remove={removeRespondents} modes={allModes}
-        channels={channels} readOnly={readOnly} surveyStarted={surveyStarted}
-        onChannelChange={(e, type, allChannels) => this.channelChange(e, group, type, allChannels)}
-        onDrop={files => this.openAddOrReplaceModal(group, files)}
-        >
-        {group.sample.map((respondent, index) =>
-          <PhoneNumberRow id={respondent} phoneNumber={respondent} key={index} />
-        )}
-      </RespondentsList>
-    )
+    return <RespondentsList key={group.id} survey={survey} group={group} add={addMoreRespondents} remove={removeRespondentsLink(group.id)} modes={allModes}
+      channels={channels} readOnly={readOnly} surveyStarted={surveyStarted}
+      onChannelChange={(e, type, allChannels) => this.channelChange(e, group, type, allChannels)}
+      onDrop={files => this.openAddOrReplaceModal(group, files)}
+      >
+      {group.sample.map((respondent, index) =>
+        <PhoneNumberRow id={respondent} phoneNumber={respondent} key={index} />
+      )}
+    </RespondentsList>
   }
 
   componentWillReceiveProps(props) {
@@ -256,6 +256,12 @@ class SurveyWizardRespondentsStep extends Component {
 
         <ConfirmationModal modalId='addOrReplaceGroup' ref='addOrReplaceModal' header={t('Add or replace respondents')} />
         <ConfirmationModal modalId='invalidTypeFile' modalText={t('The system only accepts CSV files')} header={t('Invalid file type')} confirmationText={t('Accept')} style={{maxWidth: '600px'}} />
+        <ConfirmationModal
+          modalId={'remove-respondents'}
+          ref={'removeRespondents'}
+          confirmationText={t('Delete the respondents list')}
+          header={t('Please confirm that you want to delete the respondents list')}
+          showCancel />
         {invalidRespondentsCard || respondentsDropzone}
       </RespondentsContainer>
     )
