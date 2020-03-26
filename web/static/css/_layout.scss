@@ -225,6 +225,10 @@ footer {
   }
 }
 
+.white ~ footer {
+  @extend .white;
+}
+
 .undo-buttons {
   margin-left: 4px;
 
