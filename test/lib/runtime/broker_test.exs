@@ -1268,7 +1268,7 @@ defmodule Ask.Runtime.BrokerTest do
     assert_respondents_by_state(survey, 10, 10)
   end
 
-  test "" do
+  test "Calculate the batch size using the completed quotas when a survey has quotas enabled" do
     [survey, group, _, _, _] = create_running_survey_with_channel_and_respondent()
     create_several_respondents(survey, group, 10)
     survey |> Ask.Survey.changeset(%{quota_vars: ["gender"]}) |> Repo.update
