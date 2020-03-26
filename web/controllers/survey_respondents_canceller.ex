@@ -54,7 +54,7 @@ defmodule Ask.RespondentsCancellerProducer do
 
            Multi.new()
              |> Multi.update(:survey, changeset)
-             |> Multi.insert(:log, ActivityLog.confirm_cancel(project, nil, survey))
+             |> Multi.insert(:log, ActivityLog.completed_cancel(project, nil, survey))
              |> Repo.transaction
          end
        )

@@ -70,7 +70,7 @@ class ActivityDescription extends Component {
             return t('Started <i>{{surveyName}}</i> survey', {surveyName: surveyName})
           case 'request_cancel':
             return t('Cancelling <i>{{surveyName}}</i> survey', {surveyName: surveyName})
-          case 'confirm_cancel':
+          case 'completed_cancel':
             return t('Cancelled <i>{{surveyName}}</i> survey', {surveyName: surveyName})
           case 'stop':
             return t('Stopped <i>{{surveyName}}</i> survey', {surveyName: surveyName})

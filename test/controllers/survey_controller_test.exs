@@ -2104,7 +2104,7 @@ defmodule Ask.SurveyControllerTest do
       logs = Repo.all(ActivityLog)
 
       assert_survey_log(%{log: Enum.at(logs, 0), user_id: user.id, project: project, survey: survey, action: "request_cancel", remote_ip: "192.168.0.128", metadata: %{"survey_name" => survey.name}})
-      assert_survey_log(%{log: Enum.at(logs, 1), user_id: nil, project: project, survey: survey, action: "confirm_cancel", remote_ip: "0.0.0.0", metadata: %{"survey_name" => survey.name}})
+      assert_survey_log(%{log: Enum.at(logs, 1), user_id: nil, project: project, survey: survey, action: "completed_cancel", remote_ip: "0.0.0.0", metadata: %{"survey_name" => survey.name}})
     end
 
     test "generates log after updating a survey", %{conn: conn, user: user} do

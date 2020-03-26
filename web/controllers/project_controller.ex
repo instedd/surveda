@@ -306,7 +306,7 @@ defmodule Ask.ProjectController do
 
   defp sort_activities(query, sort_by, sort_asc) do
   # Here the :id is included to order the logs inserted during the same second
-  # E.g. "request_cancel" and "confirm_cancel" are often inserted very closely
+  # E.g. "request_cancel" and "completed_cancel" are often inserted very closely
   case {sort_by, sort_asc} do
       {"insertedAt", "true"} ->
         query |> order_by([asc: :inserted_at, asc: :id])
