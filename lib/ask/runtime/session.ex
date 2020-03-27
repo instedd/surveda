@@ -8,6 +8,12 @@ defmodule Ask.Runtime.Session do
 
   defstruct [:current_mode, :fallback_mode, :flow, :respondent, :token, :fallback_delay, :channel_state, :count_partial_results, :schedule]
 
+  @doc """
+    Starts a new session.
+    Possible return patterns:
+      - {:ok, session, reply, timeout}
+      - {:end, reply, respondent}
+  """
   def start(questionnaire, respondent, channel, mode, schedule, retries \\ [], fallback_channel \\ nil, fallback_mode \\ nil, fallback_retries \\ [], fallback_delay \\ nil, count_partial_results \\ false) do
     flow = Flow.start(questionnaire, mode)
     session = %Session{
@@ -22,6 +28,16 @@ defmodule Ask.Runtime.Session do
     run_flow(session)
   end
 
+  @doc """
+    Timeouts the given session.
+    This may mean: end the session, retry the current mode or switch to the fallback mode
+
+    Possible return patterns:
+      - {:ok, session, reply, timeout}
+      - {:end, reply, respondent}
+      - {:stalled, session, respondent}
+      - {:failed, respondent}
+  """
   def timeout(%{channel_state: channel_state} = session) do
     runtime_channel = Ask.Channel.runtime_channel(session.current_mode.channel)
 
@@ -61,6 +77,19 @@ defmodule Ask.Runtime.Session do
     {:ok, session, %Reply{}, best_timeout_option || current_timeout(session)}
   end
 
+  @doc """
+    Synchronizes the given session with the given respondent's response
+
+    Possible return patterns:
+      - {:ok, session, reply, timeout}
+      - {:stopped, reply, respondent}
+      - {:hangup, session, reply, timeout, respondent}
+      - {:failed, respondent}
+      - {:end, reply, respondent}
+      - {:rejected, respondent}
+      - {:rejected, session, reply, timeout}
+      - {:rejected, reply, respondent}
+  """
   def sync_step(session, response) do
     sync_step(session, response, session.current_mode)
   end
