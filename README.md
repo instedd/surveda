@@ -139,3 +139,8 @@ For editing/creating a new api-key:
 3. Select Usage-Plans 
 4. Select "Surveda Shorter" plan
 5. Edit or create under "API Keys" tab
+
+## Screen resolutions
+
+The minimum supported screen resolution is 1366x768.
+Mobile devices and screen resolutions less than 1366x768 are not supported.
