@@ -22,12 +22,216 @@ defmodule Ask.Runtime.Session do
     run_flow(session)
   end
 
+  def timeout(%{channel_state: channel_state} = session) do
+    runtime_channel = Ask.Channel.runtime_channel(session.current_mode.channel)
+
+    cond do
+      Channel.has_queued_message?(runtime_channel, channel_state) ->
+        {:ok, session, %Reply{}, current_timeout(session)}
+
+      Channel.message_expired?(runtime_channel, channel_state) ->
+        # do not retry since the respondent was never contacted, thus the retries should not be consumed
+        session = contact_respondent(session, runtime_channel)
+
+        next_available_date_time = session.schedule |> Schedule.next_available_date_time
+
+        base_timeout = Interval.new(from: DateTime.utc_now, until: next_available_date_time)
+                       |> Interval.duration(:minutes)
+
+        {:ok, session, %Reply{}, base_timeout + current_timeout(session)}
+      true ->
+        timeout(session, runtime_channel)
+    end
+  end
+
+  def timeout(%{current_mode: %{retries: []}, fallback_mode: nil} = session, _) do
+    session = %{session | respondent: RetriesHistogram.remove_respondent(session.respondent)}
+    terminate(session)
+  end
+
+  def timeout(%{current_mode: %{retries: []}} = session, _) do
+    switch_to_fallback_mode(session)
+  end
+
+  def timeout(%Session{} = session, runtime_channel) do
+    best_timeout_option = best_timeout_option(session)
+    session = retry(session, runtime_channel)
+
+    # The new session will timeout as defined by hd(retries)
+    {:ok, session, %Reply{}, best_timeout_option || current_timeout(session)}
+  end
+
+  def sync_step(session, response) do
+    sync_step(session, response, session.current_mode)
+  end
+
+  def sync_step(session, response, current_mode, want_log_response \\ true) do
+    if want_log_response do
+      log_response(response, current_mode.channel, session.flow.mode, session.respondent, session.respondent.disposition)
+    end
+
+    session = cond do
+      response == Flow.Message.no_reply ->
+        # no_reply is produced, for example, from a timeout in Verboice
+        session
+      Flow.Message.is_stop_reply(response) ->
+        # the user asked for stopping receiving messages
+        session
+      response == Flow.Message.answer ->
+        update_respondent_disposition(session, "contacted", current_mode)
+      true ->
+        update_respondent_disposition(session, "started", current_mode)
+    end
+
+    respondent = session.respondent
+    step_answer = Flow.step(session.flow, current_mode |> SessionMode.visitor, response, SessionMode.mode(current_mode), respondent.disposition)
+                  |> relevant_interim_partial_step(respondent)
+
+    reply = case step_answer do
+      {:end, _, reply} -> reply
+      {:ok, _flow, reply} -> reply
+      {:no_retries_left, _flow, reply} -> reply
+      {:stopped, _flow, reply} -> reply
+      _ -> %Reply{}
+    end
+
+    if Flow.should_update_disposition(respondent.disposition, reply.disposition) do
+      log_disposition_changed(respondent, current_mode.channel, session.flow.mode, respondent.disposition, reply.disposition)
+    end
+
+    respondent = store_responses_and_assign_bucket(respondent, step_answer, session)
+
+    session = %{session | respondent: respondent}
+    session |> handle_step_answer(step_answer, current_mode)
+  end
+
   def update_section_order(respondent, nil), do: respondent
 
   def update_section_order(respondent, section_order) do
     respondent
     |> Respondent.changeset(%{section_order: section_order})
     |> Repo.update!
+  end
+
+  def current_timeout(%Session{current_mode: %{retries: []}, fallback_delay: fallback_delay}) do
+    fallback_delay
+  end
+
+  def current_timeout(%Session{current_mode: %{retries: [next_retry | _]}}) do
+    next_retry
+  end
+
+  def log_disposition_changed(respondent, channel, mode, previous_disposition, new_disposition) do
+    SurveyLogger.log(respondent.survey_id, mode, respondent.id, respondent.hashed_number, channel.id, previous_disposition, "disposition changed", String.capitalize(new_disposition))
+  end
+
+  def contact_respondent(%{current_mode: %SMSMode{}} = session, runtime_channel) do
+    token = Ecto.UUID.generate
+
+    respondent = session.respondent
+    {:ok, _flow, reply} = Flow.retry(session.flow, TextVisitor.new("sms"), respondent.disposition)
+    log_prompts(reply, session.current_mode.channel, session.flow.mode, respondent)
+    respondent = runtime_channel |> Channel.ask(session.respondent, token, reply)
+    %{session | token: token, respondent: respondent}
+  end
+
+  def contact_respondent(%{schedule: schedule, current_mode: %IVRMode{}} = session, runtime_channel) do
+    token = Ecto.UUID.generate
+
+    next_available_date_time = schedule
+                               |> Schedule.next_available_date_time
+
+    today_end_time = schedule
+                     |> Schedule.at_end_time(next_available_date_time)
+
+    channel_state = runtime_channel
+                    |> Channel.setup(session.respondent, token, next_available_date_time, today_end_time)
+                    |> handle_setup_response()
+
+    %{session | channel_state: channel_state, token: token}
+  end
+
+  def contact_respondent(%{current_mode: %MobileWebMode{}} = session, runtime_channel) do
+    token = Ecto.UUID.generate
+
+    reply = mobile_contact_reply(session)
+    log_prompts(reply, session.current_mode.channel, session.flow.mode, session.respondent)
+    respondent = runtime_channel |> Channel.ask(session.respondent, token, reply)
+    %{session | token: token, respondent: respondent}
+  end
+
+  def channel_failed(%Session{current_mode: %{retries: []}, fallback_mode: nil} = session, reason) do
+    log_contact(reason, session.current_mode.channel, session.flow.mode, session.respondent)
+    :failed
+  end
+
+  def channel_failed(session, reason) do
+    log_contact(reason, session.current_mode.channel, session.flow.mode, session.respondent)
+    :ok
+  end
+
+  def contact_attempt_expired(session) do
+    runtime_channel = Ask.Channel.runtime_channel(session.current_mode.channel)
+
+    session = contact_respondent(session, runtime_channel)
+
+    next_available_date_time = session.schedule |> Schedule.next_available_date_time
+
+    base_timeout = Interval.new(from: DateTime.utc_now, until: next_available_date_time)
+                   |> Interval.duration(:minutes)
+
+    {:ok, session, base_timeout + current_timeout(session)}
+  end
+
+  def delivery_confirm(session, title, current_mode) do
+    log_confirmation(title, session.respondent.disposition, current_mode.channel, session.flow.mode, session.respondent)
+    update_respondent_disposition(session, "contacted", current_mode)
+  end
+
+  def cancel(session) do
+    Ask.Channel.runtime_channel(session.current_mode.channel)
+    |> Channel.cancel_message(session.channel_state)
+  end
+
+  def dump(session) do
+    %{
+      current_mode: session.current_mode |> SessionModeProvider.dump,
+      fallback_mode: session.fallback_mode |> SessionModeProvider.dump,
+      flow: session.flow |> Flow.dump,
+      respondent_id: session.respondent.id,
+      token: session.token,
+      fallback_delay: session.fallback_delay,
+      channel_state: session.channel_state,
+      count_partial_results: session.count_partial_results,
+      schedule: session.schedule |> Schedule.dump!
+    }
+  end
+
+  def load(state) do
+    %Session{
+      current_mode: SessionModeProvider.load(state["current_mode"]),
+      fallback_mode: SessionModeProvider.load(state["fallback_mode"]),
+      flow: Flow.load(state["flow"]),
+      respondent: Repo.get(Ask.Respondent, state["respondent_id"]),
+      token: state["token"],
+      fallback_delay: state["fallback_delay"],
+      channel_state: state["channel_state"],
+      count_partial_results: state["count_partial_results"],
+      schedule: state["schedule"] |> Schedule.load!
+    }
+  end
+
+  def current_step_index(session) do
+    session.flow.current_step
+  end
+
+  def current_step_id(session) do
+    flow = session.flow
+    if flow && flow.current_step do
+      Flow.current_step(flow)["id"]
+    else
+      nil
+    end
   end
 
   defp mode_start(%Session{flow: flow, respondent: respondent, token: token, current_mode: %SMSMode{channel: channel}} = session) do
@@ -89,6 +293,36 @@ defmodule Ask.Runtime.Session do
     {:ok, %{session | flow: flow, respondent: respondent}, reply, current_timeout(session)}
   end
 
+  defp retry(session, runtime_channel) do
+    session
+    |> add_session_mode_attempt!()
+    |> contact_respondent(runtime_channel)
+    |> consume_retry()
+    |> RetriesHistogram.retry
+  end
+
+  # If the respondent has answered at least `min_relevant_steps` relevant steps
+  # and the reply doesn't defines already a disposition
+  # then, 'interim partial' disposition is returned in reply
+  defp relevant_interim_partial_step({:ok, flow, %{disposition: nil} = reply} = step_answer, %{disposition: "started"} = respondent) do
+    new_step_answer = if Flow.interim_partial_by_relevant_steps?(flow) do # Filtered here to avoid fetching the responses unnecessarily
+      valid_relevant_responses = all_responses(respondent.id, reply) |> Enum.count(&Flow.relevant_response?(flow, &1))
+      if valid_relevant_responses >= Flow.min_relevant_steps(flow) do
+        {:ok, flow, %{reply | disposition: "interim partial"}}
+      end
+    end
+
+    new_step_answer || step_answer
+  end
+
+  defp relevant_interim_partial_step(step_answer, _respondent), do: step_answer
+
+  defp all_responses(respondent_id, reply) do
+    current_responses = Reply.stores(reply) |> Enum.map(fn {field_name, value} -> %Ask.Response{field_name: field_name, value: value} end)
+    stored_responses = from(r in Ask.Response, where: r.respondent_id == ^respondent_id) |> Repo.all
+    current_responses ++ stored_responses
+  end
+
   defp mobile_contact_reply(session) do
     %Reply{
       steps: [
@@ -132,14 +366,6 @@ defmodule Ask.Runtime.Session do
       :unavailable ->
         url
     end
-  end
-
-  def current_timeout(%Session{current_mode: %{retries: []}, fallback_delay: fallback_delay}) do
-    fallback_delay
-  end
-
-  def current_timeout(%Session{current_mode: %{retries: [next_retry | _]}}) do
-    next_retry
   end
 
   defp run_flow(%{current_mode: current_mode, respondent: respondent} = session) do
@@ -204,10 +430,6 @@ defmodule Ask.Runtime.Session do
     log_response({:reply, response}, channel, mode, respondent, disposition)
   end
 
-  def log_disposition_changed(respondent, channel, mode, previous_disposition, new_disposition) do
-    SurveyLogger.log(respondent.survey_id, mode, respondent.id, respondent.hashed_number, channel.id, previous_disposition, "disposition changed", String.capitalize(new_disposition))
-  end
-
   defp handle_setup_response(setup_response) do
     case setup_response do
       {:ok, new_state} ->
@@ -222,48 +444,9 @@ defmodule Ask.Runtime.Session do
     %{session | token: nil}
   end
 
-  def timeout(%{channel_state: channel_state} = session) do
-    runtime_channel = Ask.Channel.runtime_channel(session.current_mode.channel)
+  defp best_timeout_option(%{current_mode: %{retries: retries}, fallback_mode: nil}) when length(retries) == 1, do: hd(retries)
 
-    cond do
-      Channel.has_queued_message?(runtime_channel, channel_state) ->
-        {:ok, session, %Reply{}, current_timeout(session)}
-
-      Channel.message_expired?(runtime_channel, channel_state) ->
-        # do not retry since the respondent was never contacted, thus the retries should not be consumed
-        session = contact_respondent(session, runtime_channel)
-
-        next_available_date_time = session.schedule |> Schedule.next_available_date_time
-
-        base_timeout = Interval.new(from: DateTime.utc_now, until: next_available_date_time)
-          |> Interval.duration(:minutes)
-
-        {:ok, session, %Reply{}, base_timeout + current_timeout(session)}
-      true ->
-        timeout(session, runtime_channel)
-    end
-  end
-
-  def timeout(%{current_mode: %{retries: []}, fallback_mode: nil} = session, _) do
-    session = %{session | respondent: RetriesHistogram.remove_respondent(session.respondent)}
-    terminate(session)
-  end
-
-  def timeout(%{current_mode: %{retries: []}} = session, _) do
-    switch_to_fallback_mode(session)
-  end
-
-  def timeout(%Session{} = session, runtime_channel) do
-    best_timeout_option = best_timeout_option(session)
-    session = retry(session, runtime_channel)
-
-    # The new session will timeout as defined by hd(retries)
-    {:ok, session, %Reply{}, best_timeout_option || current_timeout(session)}
-  end
-
-  def best_timeout_option(%{current_mode: %{retries: retries}, fallback_mode: nil}) when length(retries) == 1, do: hd(retries)
-
-  def best_timeout_option(_), do: nil
+  defp best_timeout_option(_), do: nil
 
   defp terminate(%{current_mode: %SMSMode{}, respondent: respondent}) do
     {:failed, respondent}
@@ -296,11 +479,11 @@ defmodule Ask.Runtime.Session do
     result
   end
 
-  def consume_retry(%{current_mode: %{retries: [_ | retries]}} = session) do
+  defp consume_retry(%{current_mode: %{retries: [_ | retries]}} = session) do
     %{session | current_mode: %{session.current_mode | retries: retries}}
   end
 
-  def consume_retry(%{current_mode: %{retries: []}} = session) do
+  defp consume_retry(%{current_mode: %{retries: []}} = session) do
     session
   end
 
@@ -309,143 +492,6 @@ defmodule Ask.Runtime.Session do
   defp add_respondent_mode_attempt!(%Session{respondent: respondent, current_mode: %SMSMode{}}), do: respondent |> Respondent.add_mode_attempt!(:sms)
   defp add_respondent_mode_attempt!(%Session{respondent: respondent, current_mode: %IVRMode{}}), do: respondent |> Respondent.add_mode_attempt!(:ivr)
   defp add_respondent_mode_attempt!(%Session{respondent: respondent, current_mode: %MobileWebMode{}}), do: respondent |> Respondent.add_mode_attempt!(:mobileweb)
-
-  def retry(session, runtime_channel) do
-    session
-    |> add_session_mode_attempt!()
-    |> contact_respondent(runtime_channel)
-    |> consume_retry()
-    |> RetriesHistogram.retry
-  end
-
-  def contact_respondent(%{current_mode: %SMSMode{}} = session, runtime_channel) do
-    token = Ecto.UUID.generate
-
-    respondent = session.respondent
-    {:ok, _flow, reply} = Flow.retry(session.flow, TextVisitor.new("sms"), respondent.disposition)
-    log_prompts(reply, session.current_mode.channel, session.flow.mode, respondent)
-    respondent = runtime_channel |> Channel.ask(session.respondent, token, reply)
-    %{session | token: token, respondent: respondent}
-  end
-
-  def contact_respondent(%{schedule: schedule, current_mode: %IVRMode{}} = session, runtime_channel) do
-    token = Ecto.UUID.generate
-
-    next_available_date_time = schedule
-      |> Schedule.next_available_date_time
-
-    today_end_time = schedule
-      |> Schedule.at_end_time(next_available_date_time)
-
-    channel_state = runtime_channel
-      |> Channel.setup(session.respondent, token, next_available_date_time, today_end_time)
-      |> handle_setup_response()
-
-    %{session | channel_state: channel_state, token: token}
-  end
-
-  def contact_respondent(%{current_mode: %MobileWebMode{}} = session, runtime_channel) do
-    token = Ecto.UUID.generate
-
-    reply = mobile_contact_reply(session)
-    log_prompts(reply, session.current_mode.channel, session.flow.mode, session.respondent)
-    respondent = runtime_channel |> Channel.ask(session.respondent, token, reply)
-    %{session | token: token, respondent: respondent}
-  end
-
-  def channel_failed(%Session{current_mode: %{retries: []}, fallback_mode: nil} = session, reason) do
-    log_contact(reason, session.current_mode.channel, session.flow.mode, session.respondent)
-    :failed
-  end
-
-  def channel_failed(session, reason) do
-    log_contact(reason, session.current_mode.channel, session.flow.mode, session.respondent)
-    :ok
-  end
-
-  def contact_attempt_expired(session) do
-    runtime_channel = Ask.Channel.runtime_channel(session.current_mode.channel)
-
-    session = contact_respondent(session, runtime_channel)
-
-    next_available_date_time = session.schedule |> Schedule.next_available_date_time
-
-    base_timeout = Interval.new(from: DateTime.utc_now, until: next_available_date_time)
-      |> Interval.duration(:minutes)
-
-    {:ok, session, base_timeout + current_timeout(session)}
-  end
-
-  def delivery_confirm(session, title, current_mode) do
-    log_confirmation(title, session.respondent.disposition, current_mode.channel, session.flow.mode, session.respondent)
-    update_respondent_disposition(session, "contacted", current_mode)
-  end
-
-  def sync_step(session, response) do
-    sync_step(session, response, session.current_mode)
-  end
-
-  def sync_step(session, response, current_mode, want_log_response \\ true) do
-    if want_log_response do
-      log_response(response, current_mode.channel, session.flow.mode, session.respondent, session.respondent.disposition)
-    end
-
-    session = cond do
-      response == Flow.Message.no_reply ->
-        # no_reply is produced, for example, from a timeout in Verboice
-        session
-      Flow.Message.is_stop_reply(response) ->
-        # the user asked for stopping receiving messages
-        session
-      response == Flow.Message.answer ->
-        update_respondent_disposition(session, "contacted", current_mode)
-      true ->
-        update_respondent_disposition(session, "started", current_mode)
-    end
-
-    respondent = session.respondent
-    step_answer = Flow.step(session.flow, current_mode |> SessionMode.visitor, response, SessionMode.mode(current_mode), respondent.disposition)
-                  |> relevant_interim_partial_step(respondent)
-
-    reply = case step_answer do
-      {:end, _, reply} -> reply
-      {:ok, _flow, reply} -> reply
-      {:no_retries_left, _flow, reply} -> reply
-      {:stopped, _flow, reply} -> reply
-      _ -> %Reply{}
-    end
-
-    if Flow.should_update_disposition(respondent.disposition, reply.disposition) do
-      log_disposition_changed(respondent, current_mode.channel, session.flow.mode, respondent.disposition, reply.disposition)
-    end
-
-    respondent = store_responses_and_assign_bucket(respondent, step_answer, session)
-
-    session = %{session | respondent: respondent}
-    session |> handle_step_answer(step_answer, current_mode)
-  end
-
-  # If the respondent has answered at least `min_relevant_steps` relevant steps
-  # and the reply doesn't defines already a disposition
-  # then, 'interim partial' disposition is returned in reply
-  defp relevant_interim_partial_step({:ok, flow, %{disposition: nil} = reply} = step_answer, %{disposition: "started"} = respondent) do
-    new_step_answer = if Flow.interim_partial_by_relevant_steps?(flow) do # Filtered here to avoid fetching the responses unnecessarily
-      valid_relevant_responses = all_responses(respondent.id, reply) |> Enum.count(&Flow.relevant_response?(flow, &1))
-      if valid_relevant_responses >= Flow.min_relevant_steps(flow) do
-        {:ok, flow, %{reply | disposition: "interim partial"}}
-      end
-    end
-
-    new_step_answer || step_answer
-  end
-
-  defp relevant_interim_partial_step(step_answer, _respondent), do: step_answer
-
-  defp all_responses(respondent_id, reply) do
-    current_responses = Reply.stores(reply) |> Enum.map(fn {field_name, value} -> %Ask.Response{field_name: field_name, value: value} end)
-    stored_responses = from(r in Ask.Response, where: r.respondent_id == ^respondent_id) |> Repo.all
-    current_responses ++ stored_responses
-  end
 
   defp handle_step_answer(session, {:end, _, reply}, current_mode) do
     log_prompts(reply, current_mode.channel, session.flow.mode, session.respondent, true)
@@ -488,52 +534,6 @@ defmodule Ask.Runtime.Session do
 
   defp handle_step_answer(session, {:stopped, _, reply}, _current_mode) do
     {:stopped, reply, session.respondent}
-  end
-
-  def cancel(session) do
-    Ask.Channel.runtime_channel(session.current_mode.channel)
-    |> Channel.cancel_message(session.channel_state)
-  end
-
-  def dump(session) do
-    %{
-      current_mode: session.current_mode |> SessionModeProvider.dump,
-      fallback_mode: session.fallback_mode |> SessionModeProvider.dump,
-      flow: session.flow |> Flow.dump,
-      respondent_id: session.respondent.id,
-      token: session.token,
-      fallback_delay: session.fallback_delay,
-      channel_state: session.channel_state,
-      count_partial_results: session.count_partial_results,
-      schedule: session.schedule |> Schedule.dump!
-    }
-  end
-
-  def load(state) do
-    %Session{
-      current_mode: SessionModeProvider.load(state["current_mode"]),
-      fallback_mode: SessionModeProvider.load(state["fallback_mode"]),
-      flow: Flow.load(state["flow"]),
-      respondent: Repo.get(Ask.Respondent, state["respondent_id"]),
-      token: state["token"],
-      fallback_delay: state["fallback_delay"],
-      channel_state: state["channel_state"],
-      count_partial_results: state["count_partial_results"],
-      schedule: state["schedule"] |> Schedule.load!
-    }
-  end
-
-  def current_step_index(session) do
-    session.flow.current_step
-  end
-
-  def current_step_id(session) do
-    flow = session.flow
-    if flow && flow.current_step do
-      Flow.current_step(flow)["id"]
-    else
-      nil
-    end
   end
 
   defp store_responses_and_assign_bucket(respondent, {_, _, reply}, session) do
