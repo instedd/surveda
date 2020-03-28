@@ -15,11 +15,9 @@ defmodule Ask.Respondent do
     # * active: a communication is being held with the respondent
     # * completed: the communication finished succesfully (it reached the end)
     # * failed: communication couldn't be established or was cut, only for IVR
-    # * stalled: communication couldn't be established or was cut, only for SMS.
-    #            communication might continue if the respondent replies at any time
     # * rejected: communication ended because the respondent fell in a full quota bucket
     # * cancelled: when the survey is stopped and has "terminated" state, all the active
-    #              or stalled respondents will be updated with this state.
+    #     respondents will be updated with this state.
     field :state, :string, default: "pending"
 
     # Valid dispositions are:
@@ -68,7 +66,7 @@ defmodule Ask.Respondent do
     |> cast(params, [:phone_number, :sanitized_phone_number, :canonical_phone_number, :state, :session, :quota_bucket_id, :completed_at, :timeout_at, :questionnaire_id, :mode, :disposition, :mobile_web_cookie_code, :language, :effective_modes, :stats, :section_order, :retry_stat_id, :user_stopped])
     |> validate_required([:phone_number, :state, :user_stopped])
     |> validate_inclusion(:disposition, ["registered", "queued", "contacted", "failed", "unresponsive", "started", "ineligible", "rejected", "breakoff", "refused", "partial", "interim partial", "completed"])
-    |> validate_inclusion(:state, ["pending", "active", "completed", "failed", "stalled", "rejected", "cancelled"])
+    |> validate_inclusion(:state, ["pending", "active", "completed", "failed", "rejected", "cancelled"])
     |> Ecto.Changeset.optimistic_lock(:lock_version)
   end
 
@@ -133,7 +131,7 @@ defmodule Ask.Respondent do
   def call_attempted(%{stats: stats} = respondent), do: respondent |> changeset(%{stats: Stats.with_last_call_attempted(stats)}) |> Repo.update!
 
   @doc """
-  Computes the date-time on which the respondent should be retried or stalled given the timeout and time-window availability
+  Computes the date-time on which the respondent should be retried given the timeout and time-window availability
   """
   def next_actual_timeout(%Respondent{} = respondent, timeout, now) do
     timeout_at = next_timeout_lowerbound(timeout, now)
@@ -142,7 +140,7 @@ defmodule Ask.Respondent do
   end
 
   @doc """
-  Computes the date-time on which the respondent would be retried or stalled, ignoring their survey's inactivity windows (ie, if it Schedule was to always run)
+  Computes the date-time on which the respondent would be retried , ignoring their survey's inactivity windows (ie, if it Schedule was to always run)
   """
   def next_timeout_lowerbound(timeout, now), do:
     Timex.shift(now, minutes: timeout)

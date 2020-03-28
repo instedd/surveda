@@ -76,7 +76,7 @@ defmodule Ask.Runtime.NuntiumChannel do
 
     respondent_id = Repo.one(from r in Respondent,
       select: r.id,
-      where: r.sanitized_phone_number == ^phone_number and (r.state == "active" or r.state == "stalled"),
+      where: r.sanitized_phone_number == ^phone_number and r.state == "active",
       order_by: [desc: r.updated_at],
       limit: 1)
 

@@ -28,7 +28,6 @@ defmodule Ask.Runtime.Broker do
 
   def handle_info(:poll, state, now) do
     try do
-      mark_stalled_for_eight_hours_respondents_as_failed()
       retry_respondents(now)
       poll_active_surveys(now)
 
@@ -89,22 +88,21 @@ defmodule Ask.Runtime.Broker do
             "active" => active,
             "pending" => pending,
             "completed" => completed,
-            "stalled" => stalled,
           } = by_state
 
           reached_quotas = reached_quotas?(survey)
           survey_completed = survey.cutoff <= completed || reached_quotas
           batch_size = batch_size(survey, by_state)
-          Logger.info "Polling survey #{survey.id} (active=#{active}, pending=#{pending}, completed=#{completed}, stalled=#{stalled}, batch_size=#{batch_size})"
+          Logger.info "Polling survey #{survey.id} (active=#{active}, pending=#{pending}, completed=#{completed}, batch_size=#{batch_size})"
           SurvedaMetrics.increment_counter_with_label(:surveda_survey_poll, [survey.id])
 
           cond do
-            (active == 0 && ((pending + stalled) == 0 || survey_completed)) ->
+            (active == 0 && (pending == 0 || survey_completed)) ->
               Logger.info "Survey #{survey.id} completed"
               complete(survey)
 
-            (active + stalled) < batch_size && pending > 0 && !survey_completed ->
-              count = batch_size - (active + stalled)
+            active < batch_size && pending > 0 && !survey_completed ->
+              count = batch_size - active
               Logger.info "Survey #{survey.id}. Starting up to #{count} respondents."
               start_some(survey, count)
 
@@ -199,37 +197,12 @@ defmodule Ask.Runtime.Broker do
     end
   end
 
-  defp mark_stalled_for_eight_hours_respondents_as_failed do
-    eight_hours_ago = SystemTime.time.now |> Timex.shift(hours: -8)
-
-    (from r in Respondent,
-      select: r.id,
-      where: r.state == "stalled",
-      where: r.updated_at <= ^eight_hours_ago)
-    |> Repo.all
-    |> Enum.each(fn respondent_id ->
-      Respondent.with_lock(respondent_id, fn respondent ->
-        if(respondent.state == "stalled") do # the respondent obtained inside the lock may no longer be "stalled"
-          respondent = RetriesHistogram.remove_respondent(respondent)
-          Ask.Runtime.Survey.update_respondent(respondent, :failed)
-        end
-      end)
-    end)
-  end
-
   defp batch_limit_per_minute do
     Survey.environment_variable_named(:batch_limit_per_minute)
   end
 
   defp complete(survey) do
     Repo.update Survey.changeset(survey, %{state: "terminated", exit_code: 0, exit_message: "Successfully completed"})
-    set_stalled_respondents_as_failed(survey)
-  end
-
-  defp set_stalled_respondents_as_failed(survey) do
-    # Bulk operation. Respondents are never brought to memory. For now without lock (stalled state may/will be removed)
-    from(r in assoc(survey, :respondents), where: r.state == "stalled")
-    |> Repo.update_all(set: [state: "failed", session: nil, timeout_at: nil])
   end
 
   defp start_some(survey, count) do

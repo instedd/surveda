@@ -39,14 +39,14 @@ defmodule Ask.Runtime.BrokerTest do
       respondent = Repo.get!(Respondent, respondent.id)
       Respondent.changeset(respondent, %{timeout_at: Timex.now |> Timex.shift(minutes: -1)}) |> Repo.update
 
-      # Third poll, this time it should stall
+      # Third poll, this time it should fail
       Broker.handle_info(:poll, nil)
 
       respondent = Repo.get(Respondent, respondent.id)
-      assert respondent.state == "stalled"
+      assert respondent.state == "failed"
 
       survey = Repo.get(Survey, survey.id)
-      assert survey.state == "running"
+      assert survey.state == "terminated"
     end
 
     @tag :time_mock
@@ -89,16 +89,16 @@ defmodule Ask.Runtime.BrokerTest do
       {:ok, timeout_time, _} = DateTime.from_iso8601("2019-12-09T12:00:00Z")
       mock_time(timeout_time)
 
-      # Third poll, this time it should stall
+      # Third poll, this time it should fail
       Broker.handle_info(:poll, nil)
 
-      # Assert is stalled
+      # Assert is failed
       respondent = Repo.get(Respondent, respondent.id)
-      assert respondent.state == "stalled"
+      assert respondent.state == "failed"
       assert respondent.stats.attempts["sms"] == 2
       refute respondent.timeout_at
       survey = Repo.get(Survey, survey.id)
-      assert survey.state == "running"
+      assert survey.state == "terminated"
     end
 
     test "mobileweb mode" do
@@ -135,16 +135,16 @@ defmodule Ask.Runtime.BrokerTest do
       timeout_at = Timex.now |> Timex.shift(hours: -1)
       Respondent.changeset(respondent, %{timeout_at: timeout_at}) |> Repo.update
 
-      # Third poll, this time it should stall
+      # Third poll, this time it should fail
       Broker.poll
 
       respondent = Repo.get(Respondent, respondent.id)
 
-      assert respondent.state == "stalled"
+      assert respondent.state == "failed"
       refute respondent.timeout_at
 
       survey = Repo.get(Survey, survey.id)
-      assert survey.state == "running"
+      assert survey.state == "terminated"
 
       :ok = broker |> GenServer.stop
     end
@@ -294,33 +294,6 @@ defmodule Ask.Runtime.BrokerTest do
   end
 
   describe "mark survey as complete" do
-    test "when the cutoff is reached and actives become stalled" do
-      [survey, group, _, _, _] = create_running_survey_with_channel_and_respondent()
-      create_several_respondents(survey, group, 20)
-
-      Repo.update(survey |> change |> Ask.Survey.changeset(%{cutoff: 1}))
-
-      Broker.handle_info(:poll, nil)
-
-      survey = Repo.get(Ask.Survey, survey.id)
-      assert_respondents_by_state(survey, 1, 20)
-
-      r = Repo.all(from r in Respondent, where: r.state == "active") |> hd
-      Repo.update(r |> change |> Respondent.changeset(%{state: "completed"}))
-
-      Repo.all(from r in Respondent, where: r.state == "active")
-      |> Enum.map(fn respondent ->
-        Repo.update(respondent |> change |> Respondent.changeset(%{state: "stalled"}))
-      end)
-
-      Broker.handle_info(:poll, nil)
-
-      survey = Repo.get(Ask.Survey, survey.id)
-
-      assert_respondents_by_state(survey, 0, 20)
-      assert Ask.Survey.completed?(survey)
-    end
-
     test "when the cutoff is reached and actives become failed" do
       [survey, group, _, _, _] = create_running_survey_with_channel_and_respondent()
       create_several_respondents(survey, group, 20)
@@ -455,68 +428,6 @@ defmodule Ask.Runtime.BrokerTest do
            where: q.survey_id == ^survey_id
 
       survey = Ask.Survey |> Repo.get(survey.id)
-      assert Ask.Survey.completed?(survey)
-    end
-
-    test "when all the quotas are reached and actives become stalled" do
-      [survey, group, _, _, _] = create_running_survey_with_channel_and_respondent()
-      create_several_respondents(survey, group, 20)
-
-      quotas = %{
-        "vars" => ["Smokes", "Exercises"],
-        "buckets" => [
-          %{
-            "condition" => [%{"store" => "Smokes", "value" => "No"}, %{"store" => "Exercises", "value" => "No"}],
-            "quota" => 1,
-            "count" => 0
-          },
-          %{
-            "condition" => [%{"store" => "Smokes", "value" => "No"}, %{"store" => "Exercises", "value" => "Yes"}],
-            "quota" => 2,
-            "count" => 0
-          },
-          %{
-            "condition" => [%{"store" => "Smokes", "value" => "Yes"}, %{"store" => "Exercises", "value" => "No"}],
-            "quota" => 3,
-            "count" => 0
-          },
-          %{
-            "condition" => [%{"store" => "Smokes", "value" => "Yes"}, %{"store" => "Exercises", "value" => "Yes"}],
-            "quota" => 4,
-            "count" => 0
-          },
-        ]
-      }
-
-      survey = survey
-               |> Repo.preload([:quota_buckets])
-               |> Ask.Survey.changeset(%{quotas: quotas})
-               |> Repo.update!
-
-      qb1 = (from q in QuotaBucket, where: q.quota == 1) |> Repo.one
-      qb2 = (from q in QuotaBucket, where: q.quota == 2) |> Repo.one
-      qb3 = (from q in QuotaBucket, where: q.quota == 3) |> Repo.one
-      qb4 = (from q in QuotaBucket, where: q.quota == 4) |> Repo.one
-
-      Broker.handle_info(:poll, nil)
-
-      survey = Ask.Survey |> Repo.get(survey.id)
-      assert survey.state == "running"
-
-      qb1 |> QuotaBucket.changeset(%{count: 1}) |> Repo.update!
-      qb2 |> QuotaBucket.changeset(%{count: 2}) |> Repo.update!
-      qb3 |> QuotaBucket.changeset(%{count: 3}) |> Repo.update!
-      qb4 |> QuotaBucket.changeset(%{count: 4}) |> Repo.update!
-
-      Repo.all(from r in Respondent, where: r.state == "active")
-      |> Enum.map(fn respondent ->
-        Repo.update(respondent |> change |> Respondent.changeset(%{state: "stalled"}))
-      end)
-
-      Broker.handle_info(:poll, nil)
-
-      survey = Ask.Survey |> Repo.get(survey.id)
-      assert_respondents_by_state(survey, 0, 11)
       assert Ask.Survey.completed?(survey)
     end
 
@@ -781,55 +692,13 @@ defmodule Ask.Runtime.BrokerTest do
     end
   end
 
-  describe "after 8 hours" do
-    test "mark stalled respondent as failed" do
-      [_survey, _group, test_channel, _respondent, phone_number] = create_running_survey_with_channel_and_respondent()
-
-      {:ok, _} = Broker.start_link
-
-      # First poll, activate the respondent
-      Broker.handle_info(:poll, nil)
-      assert_received [:setup, ^test_channel, respondent = %Respondent{sanitized_phone_number: ^phone_number}, token]
-      assert_received [:ask, ^test_channel, ^respondent, ^token, ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO")]
-
-      # Set for immediate timeout
-      respondent = Repo.get!(Respondent, respondent.id)
-      Respondent.changeset(respondent, %{timeout_at: Timex.now |> Timex.shift(minutes: -1)}) |> Repo.update
-
-      # This time it should stall
-      Broker.handle_info(:poll, nil)
-
-      respondent = Repo.get(Respondent, respondent.id)
-
-      now = Timex.now
-
-      # After seven hours it's still stalled
-      seven_hours_ago = now |> Timex.shift(hours: -7) |> Timex.to_erl |> NaiveDateTime.from_erl!
-      (from r in Respondent, where: r.id == ^respondent.id) |> Repo.update_all(set: [updated_at: seven_hours_ago])
-
-      Broker.handle_info(:poll, nil)
-
-      respondent = Repo.get(Respondent, respondent.id)
-      assert respondent.state == "stalled"
-      assert respondent.disposition == "queued"
-
-      # After eight hours it should be marked as failed
-      eight_hours_ago = now |> Timex.shift(hours: -8) |> Timex.to_erl |> NaiveDateTime.from_erl!
-      (from r in Respondent, where: r.id == ^respondent.id) |> Repo.update_all(set: [updated_at: eight_hours_ago])
-
-      Broker.handle_info(:poll, nil)
-
-      respondent = Repo.get(Respondent, respondent.id)
-      assert respondent.state == "failed"
-      assert respondent.disposition == "failed"
-    end
-
+  describe "after 1 hour" do
     test "queued respondents are marked failed" do
       [survey, _, test_channel, respondent, phone_number] = create_running_survey_with_channel_and_respondent()
       Repo.update(survey |> change |> Survey.changeset(%{cutoff: 1}))
 
-      {:ok, broker} = Broker.start_link
-      {:ok, logger} = SurveyLogger.start_link
+      {:ok, _} = Broker.start_link
+      {:ok, _} = SurveyLogger.start_link
       Broker.poll
 
       assert_received [:ask, ^test_channel, %Respondent{sanitized_phone_number: ^phone_number}, _, ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO")]
@@ -842,41 +711,28 @@ defmodule Ask.Runtime.BrokerTest do
 
       now = Timex.now
 
-      # Set for immediate timeout
+      # After one hour it should be marked as failed
       Respondent.changeset(respondent, %{timeout_at: now |> Timex.shift(minutes: -1)}) |> Repo.update
-      Broker.handle_info(:poll, nil)
-
-      respondent = Repo.get(Respondent, respondent.id)
-      assert respondent.state == "stalled"
-      assert respondent.disposition == "queued"
-
-      # After eight hours it should be marked as failed
-      eight_hours_ago = now |> Timex.shift(hours: -8) |> Timex.to_erl |> NaiveDateTime.from_erl!
-      (from r in Respondent, where: r.id == ^respondent.id) |> Repo.update_all(set: [updated_at: eight_hours_ago])
 
       Broker.handle_info(:poll, nil)
-
-      :ok = logger |> GenServer.stop
-      [disposition_changed_to_failed] = (respondent |> Repo.preload(:survey_log_entries)).survey_log_entries
-
-      assert disposition_changed_to_failed.survey_id == survey.id
-      assert disposition_changed_to_failed.action_data == "Failed"
-      assert disposition_changed_to_failed.action_type == "disposition changed"
-      assert disposition_changed_to_failed.disposition == "queued"
 
       respondent = Repo.get(Respondent, respondent.id)
       assert respondent.state == "failed"
       assert respondent.disposition == "failed"
 
-      :ok = broker |> GenServer.stop
+      last_entry = ((respondent |> Repo.preload(:survey_log_entries)).survey_log_entries |> Enum.at(-1))
+      assert last_entry.survey_id == survey.id
+      assert last_entry.action_data == "Failed"
+      assert last_entry.action_type == "disposition changed"
+      assert last_entry.disposition == "queued"
     end
 
     test "contacted respondents are marked as unresponsive" do
       [survey, _, test_channel, respondent, phone_number] = create_running_survey_with_channel_and_respondent()
       Repo.update(survey |> change |> Ask.Survey.changeset(%{cutoff: 1}))
 
-      {:ok, broker} = Broker.start_link
-      {:ok, logger} = SurveyLogger.start_link
+      {:ok, _} = Broker.start_link
+      {:ok, _} = SurveyLogger.start_link
       Broker.poll
 
       assert_received [:ask, ^test_channel, %Respondent{sanitized_phone_number: ^phone_number}, _, ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO")]
@@ -894,41 +750,27 @@ defmodule Ask.Runtime.BrokerTest do
 
       now = Timex.now
 
-      # Set for immediate timeout
+      # After one hour it should be marked as failed
       Respondent.changeset(respondent, %{timeout_at: now |> Timex.shift(minutes: -1)}) |> Repo.update
       Broker.handle_info(:poll, nil)
-
-      respondent = Repo.get(Respondent, respondent.id)
-      assert respondent.state == "stalled"
-      assert respondent.disposition == "contacted"
-
-      # After eight hours it should be marked as failed
-      eight_hours_ago = now |> Timex.shift(hours: -8) |> Timex.to_erl |> NaiveDateTime.from_erl!
-      (from r in Respondent, where: r.id == ^respondent.id) |> Repo.update_all(set: [updated_at: eight_hours_ago])
-
-      Broker.handle_info(:poll, nil)
-
-      :ok = logger |> GenServer.stop
-      [_, _, disposition_changed_to_unresponsive] = (respondent |> Repo.preload(:survey_log_entries)).survey_log_entries
-
-      assert disposition_changed_to_unresponsive.survey_id == survey.id
-      assert disposition_changed_to_unresponsive.action_data == "Unresponsive"
-      assert disposition_changed_to_unresponsive.action_type == "disposition changed"
-      assert disposition_changed_to_unresponsive.disposition == "contacted"
 
       respondent = Repo.get(Respondent, respondent.id)
       assert respondent.state == "failed"
       assert respondent.disposition == "unresponsive"
 
-      :ok = broker |> GenServer.stop
+      last_entry = ((respondent |> Repo.preload(:survey_log_entries)).survey_log_entries |> Enum.at(-1))
+      assert last_entry.survey_id == survey.id
+      assert last_entry.action_data == "Unresponsive"
+      assert last_entry.action_type == "disposition changed"
+      assert last_entry.disposition == "contacted"
     end
 
     test "started respondents are marked as breakoff" do
       [survey, _, test_channel, respondent, phone_number] = create_running_survey_with_channel_and_respondent()
       Repo.update(survey |> change |> Ask.Survey.changeset(%{cutoff: 1}))
 
-      {:ok, broker} = Broker.start_link
-      {:ok, logger} = SurveyLogger.start_link
+      {:ok, _} = Broker.start_link
+      {:ok, _} = SurveyLogger.start_link
       Broker.poll
 
       assert_received [:ask, ^test_channel, %Respondent{sanitized_phone_number: ^phone_number}, _, ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO")]
@@ -956,40 +798,26 @@ defmodule Ask.Runtime.BrokerTest do
 
       now = Timex.now
 
+      # After one hour it should be marked as failed
       Respondent.changeset(respondent, %{timeout_at: now |> Timex.shift(minutes: -1)}) |> Repo.update
-      Broker.handle_info(:poll, nil)
-
-      respondent = Repo.get(Respondent, respondent.id)
-      assert respondent.state == "stalled"
-      assert respondent.disposition == "started"
-
-      # After eight hours it should be marked as failed
-      eight_hours_ago = now |> Timex.shift(hours: -8) |> Timex.to_erl |> NaiveDateTime.from_erl!
-      (from r in Respondent, where: r.id == ^respondent.id) |> Repo.update_all(set: [updated_at: eight_hours_ago])
-
       Broker.handle_info(:poll, nil)
 
       respondent = Repo.get(Respondent, respondent.id)
       assert respondent.state == "failed"
       assert respondent.disposition == "breakoff"
 
-      :ok = logger |> GenServer.stop
-
       last_entry = ((respondent |> Repo.preload(:survey_log_entries)).survey_log_entries) |> Enum.at(-1)
-
       assert last_entry.survey_id == survey.id
       assert last_entry.action_data == "Breakoff"
       assert last_entry.action_type == "disposition changed"
       assert last_entry.disposition == "started"
-
-      :ok = broker |> GenServer.stop
     end
 
     test "interim partial respondents are kept as partial (SMS)" do
       [survey, _, _, respondent, _] = create_running_survey_with_channel_and_respondent(@flag_step_after_multiple_choice)
 
-      {:ok, broker} = Broker.start_link
-      {:ok, logger} = SurveyLogger.start_link
+      {:ok, _} = Broker.start_link
+      {:ok, _} = SurveyLogger.start_link
       Broker.poll
 
       respondent = Repo.get(Respondent, respondent.id)
@@ -1013,32 +841,19 @@ defmodule Ask.Runtime.BrokerTest do
 
       now = Timex.now
 
+      # After one hour it should be marked as failed
       Respondent.changeset(respondent, %{timeout_at: now |> Timex.shift(minutes: -1)}) |> Repo.update
-      Broker.handle_info(:poll, nil)
-
-      respondent = Repo.get(Respondent, respondent.id)
-      assert respondent.state == "stalled"
-      assert respondent.disposition == "interim partial"
-
-      # After eight hours it should be marked as failed
-      eight_hours_ago = now |> Timex.shift(hours: -8) |> Timex.to_erl |> NaiveDateTime.from_erl!
-      (from r in Respondent, where: r.id == ^respondent.id) |> Repo.update_all(set: [updated_at: eight_hours_ago])
-
       Broker.handle_info(:poll, nil)
 
       respondent = Repo.get(Respondent, respondent.id)
       assert respondent.state == "failed"
       assert respondent.disposition == "partial"
 
-      :ok = logger |> GenServer.stop
       last_entry = ((respondent |> Repo.preload(:survey_log_entries)).survey_log_entries |> Enum.at(-1))
-
       assert last_entry.survey_id == survey.id
       assert last_entry.action_data == "Partial"
       assert last_entry.action_type == "disposition changed"
       assert last_entry.disposition == "interim partial"
-
-      :ok = broker |> GenServer.stop
     end
 
   end

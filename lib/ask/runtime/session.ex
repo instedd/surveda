@@ -266,7 +266,7 @@ defmodule Ask.Runtime.Session do
   def best_timeout_option(_), do: nil
 
   defp terminate(%{current_mode: %SMSMode{}, respondent: respondent} = session) do
-    {:stalled, session |> clear_token(), respondent}
+    {:failed, respondent}
   end
 
   defp terminate(%{current_mode: %IVRMode{}, respondent: respondent}) do
@@ -274,7 +274,7 @@ defmodule Ask.Runtime.Session do
   end
 
   defp terminate(%{current_mode: %MobileWebMode{}, respondent: respondent} = session) do
-    {:stalled, session |> clear_token, respondent}
+    {:failed, respondent}
   end
 
   defp switch_to_fallback_mode(%{fallback_mode: fallback_mode, flow: flow} = session) do

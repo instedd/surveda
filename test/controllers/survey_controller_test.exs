@@ -1522,7 +1522,7 @@ defmodule Ask.SurveyControllerTest do
       group = create_group(survey, channel)
       insert_list(10, :respondent, survey: survey, state: "pending")
       r1 = insert(:respondent, survey: survey, state: "active", respondent_group: group)
-      insert_list(3, :respondent, survey: survey, state: "stalled", timeout_at: Timex.now)
+      insert_list(3, :respondent, survey: survey, state: "active", timeout_at: Timex.now)
       channel_state = %{"call_id" => 123}
       session = %Session{
         current_mode: SessionModeProvider.new("sms", channel, []),
@@ -1553,9 +1553,9 @@ defmodule Ask.SurveyControllerTest do
       channel = insert(:channel, settings: test_channel |> TestChannel.settings, type: "sms")
       group = create_group(survey, channel)
       r1 = insert(:respondent, survey: survey, state: "active", respondent_group: group)
-      insert_list(3, :respondent, survey: survey, state: "stalled", respondent_group: group, timeout_at: Timex.now)
+      insert_list(3, :respondent, survey: survey, state: "active", respondent_group: group, timeout_at: Timex.now)
       insert_list(4, :respondent, survey: survey2, state: "active", session: %{})
-      insert_list(2, :respondent, survey: survey2, state: "stalled", timeout_at: Timex.now)
+      insert_list(2, :respondent, survey: survey2, state: "active", timeout_at: Timex.now)
       channel_state = %{"call_id" => 123}
       session = %Session{
         current_mode: SessionModeProvider.new("sms", channel, []),
@@ -1572,7 +1572,7 @@ defmodule Ask.SurveyControllerTest do
 
       assert json_response(conn, 200)
       assert Repo.get(Survey, survey2.id).state == "running"
-      assert length(Repo.all(from(r in Ask.Respondent, where: (r.state == "active" or r.state == "stalled" )))) == 6
+      assert length(Repo.all(from(r in Ask.Respondent, where: r.state == "active"))) == 6
       assert_receive [:cancel_message, ^test_channel, ^channel_state]
     end
 

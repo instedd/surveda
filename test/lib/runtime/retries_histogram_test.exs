@@ -208,15 +208,15 @@ defmodule Ask.Runtime.RetriesHistogramTest do
 
       time_passes(hours: 1)
 
-      # Third poll, it should stall the respondent
+      # Third poll, it should fail the respondent
       broker_poll()
 
       # Respondent should have been removed from the Histogram
       expected_histogram.([])
-      |> assert_histogram.("Respondent should have been stalled and removed from the Histogram")
+      |> assert_histogram.("Respondent should have been removed from the Histogram")
     end
 
-    test "user interactions and stalled-respondent ending", %{expected_histogram: expected_histogram, assert_histogram: assert_histogram,
+    test "user interactions and failed-respondent ending", %{expected_histogram: expected_histogram, assert_histogram: assert_histogram,
       histogram_hour: histogram_hour, respondent_reply: respondent_reply} do
       set_current_time("2019-12-23T09:00:00Z")
 
@@ -266,12 +266,12 @@ defmodule Ask.Runtime.RetriesHistogramTest do
 
       time_passes(hours: 1)
 
-      # Third poll, it should stall the respondent
+      # Third poll, it should fail the respondent
       broker_poll()
 
       # Respondent should have been removed from the Histogram
       expected_histogram.([])
-      |> assert_histogram.("Respondent should have been stalled and removed from the Histogram")
+      |> assert_histogram.("Respondent should have been removed from the Histogram")
     end
   end
 
