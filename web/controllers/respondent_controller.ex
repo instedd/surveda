@@ -151,7 +151,7 @@ defmodule Ask.RespondentController do
       Ask.RespondentStats.respondent_count(survey_id: ^survey.id, by: :disposition)
 
     # Completion percentage
-    contacted_respondents = total_respondents_by_disposition
+    attempted_respondents = total_respondents_by_disposition
       |> Enum.filter(fn {d, _} -> d not in ["queued", "registered"] end)
       |> Enum.map(fn {_, c} -> c end)
       |> Enum.sum
@@ -186,7 +186,7 @@ defmodule Ask.RespondentController do
       completion_percentage: completed_or_partial / target * 100,
       total_respondents: total_respondents,
       target: target,
-      contacted_respondents: contacted_respondents
+      attempted_respondents: attempted_respondents
     }
 
     render(conn, layout, stats: stats)
