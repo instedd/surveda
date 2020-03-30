@@ -1,12 +1,9 @@
 defmodule Ask.RespondentsCancellerProducer do
   use Ecto.Schema
   import Ecto.Query
-
-  alias Ask.Respondent
-  alias Ask.Survey
-  alias Ask.Repo
-
   use GenStage
+
+  alias Ask.{Respondent, Survey, Repo}
 
   def start_link(initial) do
     GenStage.start_link(__MODULE__, initial, name: __MODULE__)
@@ -35,18 +32,18 @@ defmodule Ask.RespondentsCancellerProducer do
   end
 
   def handle_demand(_demand, state) do
-    respondents = get_respondents_for_update(state)
-    handle_respondents(respondents, state)
+    respondent_ids = get_respondents_for_update(state)
+    handle_respondents(respondent_ids, state)
   end
 
-  def handle_respondents(respondents, state) when length(respondents) > 0 do
-    last_id = List.last(respondents).id
+  def handle_respondents(respondent_ids, state) when length(respondent_ids) > 0 do
+    last_id = List.last(respondent_ids)
     new_state = %{survey_ids: state.survey_ids, last_updated_respondent_id: last_id}
-    {:noreply, respondents, new_state}
+    {:noreply, respondent_ids, new_state}
   end
 
 
-  def handle_respondents(respondents, state) when length(respondents) == 0 do
+  def handle_respondents(respondent_ids, state) when length(respondent_ids) == 0 do
     state.survey_ids
     |> Enum.each(
          fn survey_id ->
@@ -63,6 +60,7 @@ defmodule Ask.RespondentsCancellerProducer do
   def get_respondents_for_update(state) do
     query = from(
       r in Respondent,
+      select: r.id,
       where: (
         ((r.state == "active") or (r.state == "stalled")) and (r.survey_id in ^state.survey_ids) and (
           r.id > ^state.last_updated_respondent_id)),
@@ -78,9 +76,7 @@ end
 
 defmodule Ask.RespondentsCancellerConsumer do
   use Ecto.Schema
-  alias Ask.RespondentsCancellerProducer
-  alias Ask.Respondent
-  alias Ask.Repo
+  alias Ask.{RespondentsCancellerProducer, Respondent, Repo}
   alias Ask.Runtime.Session
   use GenStage, restart: :transient
 
@@ -92,35 +88,28 @@ defmodule Ask.RespondentsCancellerConsumer do
     {:consumer, :state, subscribe_to: [{producer_pid, max_demand: 50, min_demand: 1}]}
   end
 
-  def handle_events(respondents, _from, state) do
-    sessions = respondents
-              |> Enum.map(&(&1.session))
-              |> Enum.reject(&is_nil/1)
-
-    sessions
-    |> Enum.each(
-         fn session ->
-           session
-           |> Session.load
-           |> Session.cancel
-         end
-       )
-
-    respondents
-    |> Enum.each(
-         fn respondent ->
-           respondent
-           |> Respondent.changeset(%{state: "cancelled", session: nil, timeout_at: nil})
-           |> Repo.update!
-         end
-       )
+  def handle_events(respondent_ids, _from, state) do
+    respondent_ids
+    |> Enum.each(fn respondent_id -> Respondent.with_lock(respondent_id, &cancel_respondent/1) end)
 
     {:noreply, [], state}
+  end
+
+  defp cancel_respondent(respondent) do
+    if (respondent.session != nil) do
+      respondent.session
+      |> Session.load
+      |> Session.cancel
+    end
+
+    respondent
+    |> Respondent.changeset(%{state: "cancelled", session: nil, timeout_at: nil})
+    |> Repo.update!
   end
 end
 
 defmodule Ask.SurveyCanceller do
-  alias Ask.{RespondentsCancellerConsumer, RespondentsCancellerProducer}
+  alias Ask.{RespondentsCancellerConsumer, RespondentsCancellerProducer, Logger}
   @default_number_consumers 3
 
   defstruct [:processes, :consumers_pids]
@@ -141,6 +130,7 @@ defmodule Ask.SurveyCanceller do
     # returns a SurveyCanceller where
     # * processes is the list of processes started (two-element tuples)
     # * consumers_pids are only the pids of the consumers
+    Logger.info("Start cancelling survey (id: #{survey_id})")
     producer = start_producer(survey_id)
     case producer do
       {:ok, producer_pid } ->
