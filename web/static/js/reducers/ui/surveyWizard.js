@@ -55,7 +55,7 @@ const surveyCutOffConfigValid = (state, action) => {
 const setInitialCutOffConfig = (state, action) => {
   const survey = action.survey
   const hasQuotaBuckets = survey.quotas.buckets.length > 0
-  const hasCutoff = survey.cutoff != null && survey.cutoff != '' && !hasQuotaBuckets
+  const hasCutoff = survey.cutoff !== null && !hasQuotaBuckets
   let cutOffConfigValid = true
   let quotasSum
   if (hasQuotaBuckets) {

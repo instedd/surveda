@@ -35,6 +35,10 @@ defmodule Ask.Survey do
     field :locked, :boolean, default: false
     field :exit_code, :integer
     field :exit_message, :string
+    # Cutoff options:
+    # cutoff == null -> (valid and default value) the user selected "No cutoff" radio button or didn't select any cutoff option
+    # cutoff == 0 -> (invalid value) the user selected "Number of completes" radio button and filled it with no value
+    # cutoff > 0 -> (valid value) the user selected "Number of completes" radio button and filled it with a positive number
     field :cutoff, :integer
     field :count_partial_results, :boolean, default: false
     field :schedule, Schedule, default: Schedule.default()
