@@ -494,7 +494,7 @@ defmodule Ask.RespondentControllerTest do
       assert data["respondents_by_disposition"] == %{}
       assert data["cumulative_percentages"] == %{}
       assert data["completion_percentage"] == 0
-      assert data["contacted_respondents"] == 0
+      assert data["attempted_respondents"] == 0
       assert data["total_respondents"] == 0
       assert data["target"] == 0
     end
@@ -546,7 +546,7 @@ defmodule Ask.RespondentControllerTest do
         "cumulative_percentages" => %{},
         "total_respondents" => 5,
         "target" => 5,
-        "contacted_respondents" => 0,
+        "attempted_respondents" => 0,
         "completion_percentage" => 0,
         "reference" => []
       }
@@ -593,7 +593,7 @@ defmodule Ask.RespondentControllerTest do
           %{"name" => "Smokes: No - Exercises: Yes", "id" => qb4.id}
         ],
         "completion_percentage" => 0.0,
-        "contacted_respondents" => 0,
+        "attempted_respondents" => 0,
         "cumulative_percentages" => %{
           to_string(qb1.id) => [%{"date" => "2016-01-01", "percent" => 0.0}],
           to_string(qb4.id) => [%{"date" => "2016-01-01", "percent" => 0.0}]
@@ -690,7 +690,7 @@ defmodule Ask.RespondentControllerTest do
           %{"name" => "Smokes: Yes - Exercises: Yes", "id" => qb4.id}
         ],
         "completion_percentage" => 30.0,
-        "contacted_respondents" => 4,
+        "attempted_respondents" => 4,
         "cumulative_percentages" => %{
           to_string(qb2.id) => [%{"date" => "2016-01-01", "percent" => 0.0}],
           to_string(qb4.id) => [%{"date" => "2016-01-01", "percent" => 40.0}]

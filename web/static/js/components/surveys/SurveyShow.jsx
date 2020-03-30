@@ -36,7 +36,7 @@ class SurveyShow extends Component<any, State> {
     respondentsByDisposition: PropTypes.object,
     reference: PropTypes.array,
     completedByDate: PropTypes.object,
-    contactedRespondents: PropTypes.number,
+    attemptedRespondents: PropTypes.number,
     totalRespondents: PropTypes.number,
     target: PropTypes.number,
     completionPercentage: PropTypes.number,
@@ -133,7 +133,7 @@ class SurveyShow extends Component<any, State> {
   }
 
   render() {
-    const { questionnaires, survey, respondentsByDisposition, reference, contactedRespondents, cumulativePercentages, target, project, t, projectId, surveyId,
+    const { questionnaires, survey, respondentsByDisposition, reference, attemptedRespondents, cumulativePercentages, target, project, t, projectId, surveyId,
       estimatedSuccessRate, initialSuccessRate, successRate, completionRate, exhausted, available, neededToComplete, additionalCompletes, additionalRespondents } = this.props
     const { stopUnderstood } = this.state
 
@@ -182,7 +182,7 @@ class SurveyShow extends Component<any, State> {
       {value: target, label: t('Target')},
       {value: respondentsByDisposition.responsive.detail.completed.count, label: t('Completes')},
       {value: respondentsByDisposition.responsive.detail.partial.count, label: t('Partials')},
-      {value: contactedRespondents, label: t('Attempted Respondents')}
+      {value: attemptedRespondents, label: t('Attempted Respondents')}
     ]
     let colors = referenceColors(reference.length)
 
@@ -448,7 +448,7 @@ const mapStateToProps = (state, ownProps) => {
 
   let respondentsByDisposition = null
   let cumulativePercentages = {}
-  let contactedRespondents = 0
+  let attemptedRespondents = 0
   let totalRespondents = 0
   let target = 0
   let completionPercentage = 0
@@ -457,7 +457,7 @@ const mapStateToProps = (state, ownProps) => {
   if (respondentsStatsRoot) {
     respondentsByDisposition = respondentsStatsRoot.respondentsByDisposition
     cumulativePercentages = respondentsStatsRoot.cumulativePercentages
-    contactedRespondents = respondentsStatsRoot.contactedRespondents
+    attemptedRespondents = respondentsStatsRoot.attemptedRespondents
     totalRespondents = respondentsStatsRoot.totalRespondents
     target = respondentsStatsRoot.target
     completionPercentage = respondentsStatsRoot.completionPercentage
@@ -472,7 +472,7 @@ const mapStateToProps = (state, ownProps) => {
     questionnaires: !state.survey.data ? {} : state.survey.data.questionnaires,
     respondentsByDisposition: respondentsByDisposition,
     cumulativePercentages: cumulativePercentages,
-    contactedRespondents: contactedRespondents,
+    attemptedRespondents: attemptedRespondents,
     totalRespondents: totalRespondents,
     target: target,
     reference: reference,

@@ -66,14 +66,14 @@ defmodule Ask.RespondentView do
         respondents_by_disposition: %{},
         cumulative_percentages: %{},
         completion_percentage: 0,
-        contacted_respondents: 0,
+        attempted_respondents: 0,
         total_respondents: 0,
         target: 0
       }
     }
   end
 
-  def render("stats.json", %{stats: %{id: id, respondents_by_disposition: respondents_by_disposition, reference: reference, cumulative_percentages: cumulative_percentages, contacted_respondents: contacted_respondents, total_respondents: total_respondents, target: target, completion_percentage: completion_percentage}}) do
+  def render("stats.json", %{stats: %{id: id, respondents_by_disposition: respondents_by_disposition, reference: reference, cumulative_percentages: cumulative_percentages, attempted_respondents: attempted_respondents, total_respondents: total_respondents, target: target, completion_percentage: completion_percentage}}) do
     %{
       data: %{
         id: id,
@@ -86,14 +86,14 @@ defmodule Ask.RespondentView do
           end)
           |> Enum.into(%{}),
         completion_percentage: completion_percentage,
-        contacted_respondents: contacted_respondents,
+        attempted_respondents: attempted_respondents,
         total_respondents: total_respondents,
         target: target
       }
     }
   end
 
-  def render("quotas_stats.json", %{stats: %{id: id, reference: buckets, respondents_by_disposition: respondents_by_disposition, cumulative_percentages: cumulative_percentages, contacted_respondents: contacted_respondents, total_respondents: total_respondents, target: target, completion_percentage: completion_percentage}}) do
+  def render("quotas_stats.json", %{stats: %{id: id, reference: buckets, respondents_by_disposition: respondents_by_disposition, cumulative_percentages: cumulative_percentages, attempted_respondents: attempted_respondents, total_respondents: total_respondents, target: target, completion_percentage: completion_percentage}}) do
     %{
       data: %{
         id: id,
@@ -106,7 +106,7 @@ defmodule Ask.RespondentView do
           end)
           |> Enum.into(%{}),
         completion_percentage: completion_percentage,
-        contacted_respondents: contacted_respondents,
+        attempted_respondents: attempted_respondents,
         total_respondents: total_respondents,
         target: target
       }
