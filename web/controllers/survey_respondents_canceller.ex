@@ -1,12 +1,9 @@
 defmodule Ask.RespondentsCancellerProducer do
   use Ecto.Schema
   import Ecto.Query
-
-  alias Ask.Respondent
-  alias Ask.Survey
-  alias Ask.Repo
-
   use GenStage
+
+  alias Ask.{Respondent, Survey, Repo}
 
   def start_link(initial) do
     GenStage.start_link(__MODULE__, initial, name: __MODULE__)
@@ -79,9 +76,7 @@ end
 
 defmodule Ask.RespondentsCancellerConsumer do
   use Ecto.Schema
-  alias Ask.RespondentsCancellerProducer
-  alias Ask.Respondent
-  alias Ask.Repo
+  alias Ask.{RespondentsCancellerProducer, Respondent, Repo}
   alias Ask.Runtime.Session
   use GenStage, restart: :transient
 
@@ -114,7 +109,7 @@ defmodule Ask.RespondentsCancellerConsumer do
 end
 
 defmodule Ask.SurveyCanceller do
-  alias Ask.{RespondentsCancellerConsumer, RespondentsCancellerProducer}
+  alias Ask.{RespondentsCancellerConsumer, RespondentsCancellerProducer, Logger}
   @default_number_consumers 3
 
   defstruct [:processes, :consumers_pids]
@@ -135,6 +130,7 @@ defmodule Ask.SurveyCanceller do
     # returns a SurveyCanceller where
     # * processes is the list of processes started (two-element tuples)
     # * consumers_pids are only the pids of the consumers
+    Logger.info("Start cancelling survey (id: #{survey_id})")
     producer = start_producer(survey_id)
     case producer do
       {:ok, producer_pid } ->
