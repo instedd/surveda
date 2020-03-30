@@ -661,16 +661,16 @@ defmodule Ask.SurveyController do
           |> load_project_for_change(survey.project_id)
 
         changeset = Survey.changeset(survey, %{"state": "cancelling", "exit_code": 1, "exit_message": "Cancelled by user"})
-        cancellers_pids = cancel_messages_and_respondents(id)
 
         multi = Multi.new
         |> Multi.update(:survey, changeset)
-        |> Multi.insert(:log, ActivityLog.stop(project, conn, survey))
+        |> Multi.insert(:log, ActivityLog.request_cancel(project, conn, survey))
         |> Repo.transaction
 
         case multi do
           {:ok, %{survey: survey}} ->
             project |> Project.touch!
+            cancellers_pids = cancel_messages_and_respondents(id)
             conn = conn |> assign(:processors_pids, cancellers_pids)
             render(conn, "show.json", survey: survey |> Repo.preload(:questionnaires) |> Survey.with_links(user_level(survey.project_id, current_user(conn).id)))
           {:error, _, changeset, _} ->

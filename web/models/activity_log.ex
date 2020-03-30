@@ -19,7 +19,7 @@ defmodule Ask.ActivityLog do
     ["create_invite", "edit_invite", "delete_invite", "edit_collaborator", "remove_collaborator"]
 
   def valid_actions("survey"), do:
-    ["create", "edit", "rename", "change_description", "lock", "unlock", "delete", "start", "stop", "download", "enable_public_link", "regenerate_public_link", "disable_public_link", "change_folder"]
+    ["create", "edit", "rename", "change_description", "lock", "unlock", "delete", "start", "request_cancel", "completed_cancel", "download", "enable_public_link", "regenerate_public_link", "disable_public_link", "change_folder"]
 
   def valid_actions("questionnaire"), do:
     ["create", "edit", "rename", "delete", "add_mode", "remove_mode", "add_language", "remove_language", "create_step", "delete_step", "rename_step", "edit_step", "edit_settings", "create_section", "rename_section", "delete_section", "edit_section"]
@@ -42,9 +42,14 @@ defmodule Ask.ActivityLog do
   defp typeof(%Folder{}), do: "folder"
 
   defp create(action, project, conn, entity, metadata) do
-    user_id = case current_user(conn) do
-      nil -> nil
-      user -> user.id
+    {user_id, remote_ip} = case conn do
+      nil -> {nil, "0.0.0.0"}
+      conn ->
+        remote_ip = to_string(:inet_parse.ntoa(conn.remote_ip))
+        case current_user(conn) do
+          nil -> {nil, remote_ip}
+          user -> {user.id, remote_ip}
+      end
     end
 
     ActivityLog.changeset(%ActivityLog{}, %{
@@ -52,7 +57,7 @@ defmodule Ask.ActivityLog do
       user_id: user_id,
       entity_type: typeof(entity),
       entity_id: entity.id,
-      remote_ip: :inet_parse.ntoa(conn.remote_ip) |> to_string,
+      remote_ip: remote_ip,
       action: action,
       metadata: metadata
     })
@@ -194,8 +199,12 @@ defmodule Ask.ActivityLog do
     create("start", project, conn, survey, %{survey_name: survey.name})
   end
 
-  def stop(project, conn, survey) do
-    create("stop", project, conn, survey, %{survey_name: survey.name})
+  def request_cancel(project, conn, survey) do
+    create("request_cancel", project, conn, survey, %{survey_name: survey.name})
+  end
+
+  def completed_cancel(project, conn, survey) do
+    create("completed_cancel", project, conn, survey, %{survey_name: survey.name})
   end
 
   def create_questionnaire(project, conn, questionnaire) do

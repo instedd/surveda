@@ -1,9 +1,9 @@
 defmodule Ask.RespondentsCancellerProducer do
   use Ecto.Schema
   import Ecto.Query
+  alias Ask.{Respondent, Survey, Repo, ActivityLog, Project}
+  alias Ecto.Multi
   use GenStage
-
-  alias Ask.{Respondent, Survey, Repo}
 
   def start_link(initial) do
     GenStage.start_link(__MODULE__, initial, name: __MODULE__)
@@ -48,9 +48,14 @@ defmodule Ask.RespondentsCancellerProducer do
     |> Enum.each(
          fn survey_id ->
            survey = Repo.get(Survey, survey_id)
-           survey
-           |> Survey.changeset(%{"state": "terminated", "exit_code": 1, "exit_message": "Cancelled by user"})
-           |> Repo.update!
+           project = Repo.get!(Project, survey.project_id)
+
+           changeset = Survey.changeset(survey, %{"state": "terminated", "exit_code": 1, "exit_message": "Cancelled by user"})
+
+           Multi.new()
+             |> Multi.update(:survey, changeset)
+             |> Multi.insert(:log, ActivityLog.completed_cancel(project, nil, survey))
+             |> Repo.transaction
          end
        )
 
@@ -141,5 +146,3 @@ defmodule Ask.SurveyCanceller do
     end
   end
 end
-
-
