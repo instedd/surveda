@@ -142,7 +142,11 @@ defmodule Ask.Runtime.Survey do
   end
 
   def handle_session_step({:failed, respondent}, _, offline) do
-#    update_respondent(respondent, :failed)
+    failed_session(respondent, offline)
+    :end
+  end
+
+  def failed_session(respondent, offline) do
     session = respondent.session |> Session.load
     mode = session.current_mode |> SessionMode.mode
     old_disposition = respondent.disposition
@@ -152,7 +156,6 @@ defmodule Ask.Runtime.Survey do
     disposition_changed(updated_respondent, session, old_disposition, offline) #TODO: this knows that the line before changed the disposition
     Session.log_disposition_changed(updated_respondent, session.current_mode.channel, mode, old_disposition, new_disposition)
 
-    :end
   end
 
   defp disposition_changed?(original_respondent, updated_respondent), do:
@@ -245,7 +248,7 @@ defmodule Ask.Runtime.Survey do
         :failed ->
           # respondent no longer participates in the survey (no attempts left)
           respondent = RetriesHistogram.remove_respondent(respondent)
-          respondent_updates(:failed, respondent, offline)
+          failed_session(respondent, offline)
       end
     else
       :ok
