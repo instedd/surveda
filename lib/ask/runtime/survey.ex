@@ -147,7 +147,6 @@ defmodule Ask.Runtime.Survey do
     updated_respondent = respondent_updates(:failed, respondent, offline)
     disposition_changed(updated_respondent, session, old_disposition, offline) #TODO: this knows that the line before changed the disposition
     Session.log_disposition_changed(updated_respondent, session.current_mode.channel, mode, old_disposition, new_disposition)
-
   end
 
   defp disposition_changed?(original_respondent, updated_respondent), do:
@@ -210,7 +209,8 @@ defmodule Ask.Runtime.Survey do
 
   defp respondent_updates(:ok, respondent, session, disposition, timeout_at, offline) do #6 set_disposition
     if disposition do
-      changes = %{session: Session.dump(session), timeout_at: timeout_at, disposition: disposition, state: "active"}
+      intended_changes = %{session: Session.dump(session), timeout_at: timeout_at, disposition: disposition, state: "active"}
+      changes = respondent_updates_with_disposition(respondent, session, timeout_at, intended_changes)
       do_update_respondent(respondent, changes, offline) #TODO: update_respondent_and_set_disposition
     else
       respondent_updates(:no_disposition, respondent, session, timeout_at, offline)
@@ -253,8 +253,7 @@ defmodule Ask.Runtime.Survey do
                  |> Session.load
                  |> Session.contact_attempt_expired
 
-#      update_respondent(respondent, response, nil, SystemTime.time.now)
-      {:ok, _session, timeout} = response
+      {:ok, session, timeout} = response
       timeout_at = Respondent.next_actual_timeout(respondent, timeout, SystemTime.time.now)
       respondent_updates(:no_disposition, respondent, session, timeout_at, offline)
     end
@@ -357,22 +356,6 @@ defmodule Ask.Runtime.Survey do
       changes
     else
       no_disposition_changes(respondent, session, timeout)
-    end
-  end
-
-  defp update_respondent_and_set_disposition(respondent, session, timeout, %{disposition: disposition} =  changes, offline) do
-    old_disposition = respondent.disposition
-    if Flow.should_update_disposition(old_disposition, disposition) do
-      #TODO:
-      #     Session.log_disposition_changed(respondent, session.current_mode.channel, mode, old_disposition, new_disposition)
-      respondent
-      |> Respondent.changeset(changes)
-      |> Repo.update!
-      |> RespondentDispositionHistory.create(old_disposition, session.current_mode |> SessionMode.mode)
-      |> update_quota_bucket(old_disposition, session.count_partial_results)
-    else
-#      update_respondent(respondent, {:ok, session, timeout}, nil, SystemTime.time.now)
-      respondent_updates(:no_disposition, respondent, session, timeout, offline)
     end
   end
 
