@@ -6,7 +6,7 @@ defmodule Ask.Runtime.Survey do
   alias Ask.Runtime.{Session, Reply, Flow, SessionMode, SessionModeProvider, RetriesHistogram}
 
   def sync_step(respondent, reply, mode \\ nil, now \\ SystemTime.time.now, offline \\ true) do
-    session = respondent.session |> Session.load
+    session = Session.load_respondent_session(respondent, offline)
     session_mode = session_mode(respondent, session, mode)
     next_action = sync_step_internal(session, reply, session_mode, now)
     handle_next_action(next_action, respondent.id)
@@ -198,16 +198,6 @@ defmodule Ask.Runtime.Survey do
   defp disposition_changed?(original_respondent, updated_respondent), do:
     original_respondent.disposition != updated_respondent.disposition
 
-  defp do_update_respondent(respondent, changes, offline) do
-    if(offline) do
-      respondent
-      |> Respondent.changeset(changes)
-      |> Repo.update!
-    else
-      Map.merge(respondent, changes)
-    end
-  end
-
   defp disposition_changed(respondent, session, old_disposition, offline) do
     if(offline) do
       mode = if session && session.current_mode do session.current_mode |> SessionMode.mode else nil end
@@ -224,40 +214,40 @@ defmodule Ask.Runtime.Survey do
   defp respondent_updates(:failed, respondent, offline) do #5
     new_disposition = Flow.failed_disposition_from(respondent.disposition)
     changes = %{state: "failed", session: nil, timeout_at: nil, disposition: new_disposition}
-    do_update_respondent(respondent, changes, offline)
+    Respondent.update(respondent, changes, offline)
   end
 
   defp respondent_updates(:stalled, respondent, session, offline) do #1
     changes = %{state: "stalled", session: Session.dump(session), timeout_at: nil}
-    do_update_respondent(respondent, changes, offline)
+    Respondent.update(respondent, changes, offline)
   end
 
   defp respondent_updates(:end, respondent, disposition, offline) do #3
     changes = %{state: "completed", disposition: disposition, session: nil, completed_at: SystemTime.time.now, timeout_at: nil}
-    do_update_respondent(respondent, changes, offline)
+    Respondent.update(respondent, changes, offline)
   end
 
   defp respondent_updates(:stopped, respondent, disposition, offline) do #4
     changes = %{disposition: disposition, state: "failed", session: nil, timeout_at: nil, user_stopped: true}
-    do_update_respondent(respondent, changes, offline)
+    Respondent.update(respondent, changes, offline)
   end
 
   defp respondent_updates(:rejected, respondent, session, timeout_at, offline) do #2
     session = if session != nil, do: Session.dump(session), else: nil
     changes = %{state: "rejected", session: session, timeout_at: timeout_at}
-    do_update_respondent(respondent, changes, offline)
+    Respondent.update(respondent, changes, offline)
   end
 
   defp respondent_updates(:no_disposition, respondent, session, timeout_at, offline) do #7 end
     changes = no_disposition_changes(respondent, session, timeout_at)
-    do_update_respondent(respondent, changes, offline)
+    Respondent.update(respondent, changes, offline)
   end
 
   defp respondent_updates(:ok, respondent, session, disposition, timeout_at, offline) do #6 set_disposition
     if disposition do
       intended_changes = %{session: Session.dump(session), timeout_at: timeout_at, disposition: disposition, state: "active"}
       changes = respondent_updates_with_disposition(respondent, session, timeout_at, intended_changes)
-      do_update_respondent(respondent, changes, offline) #TODO: update_respondent_and_set_disposition
+      Respondent.update(respondent, changes, offline)
     else
       respondent_updates(:no_disposition, respondent, session, timeout_at, offline)
     end

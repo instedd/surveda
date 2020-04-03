@@ -94,7 +94,7 @@ defmodule Ask.Runtime.Session do
     sync_step(session, response, session.current_mode)
   end
 
-  def sync_step(session, response, current_mode, want_log_response \\ true) do
+  def sync_step(session, response, current_mode, offline \\ true, want_log_response \\ true) do
     if want_log_response do
       log_response(response, current_mode.channel, session.flow.mode, session.respondent, session.respondent.disposition)
     end
@@ -107,9 +107,9 @@ defmodule Ask.Runtime.Session do
         # the user asked for stopping receiving messages
         session
       response == Flow.Message.answer ->
-        update_respondent_disposition(session, "contacted", current_mode)
+        update_respondent_disposition(session, "contacted", current_mode, offline)
       true ->
-        update_respondent_disposition(session, "started", current_mode)
+        update_respondent_disposition(session, "started", current_mode, offline)
     end
 
     respondent = session.respondent
@@ -236,18 +236,26 @@ defmodule Ask.Runtime.Session do
     }
   end
 
-  def load(state) do
+  def load(state, respondent \\ nil) do
     %Session{
       current_mode: SessionModeProvider.load(state["current_mode"]),
       fallback_mode: SessionModeProvider.load(state["fallback_mode"]),
       flow: Flow.load(state["flow"]),
-      respondent: Repo.get(Ask.Respondent, state["respondent_id"]),
+      respondent: respondent || Repo.get(Ask.Respondent, state["respondent_id"]),
       token: state["token"],
       fallback_delay: state["fallback_delay"],
       channel_state: state["channel_state"],
       count_partial_results: state["count_partial_results"],
       schedule: state["schedule"] |> Schedule.load!
     }
+  end
+
+  def load_respondent_session(%Ask.Respondent{} = respondent, offline) do
+    if(offline) do
+      load(respondent.session)
+    else
+      load(respondent.session, respondent)
+    end
   end
 
   def current_step_index(session) do
@@ -535,7 +543,7 @@ defmodule Ask.Runtime.Session do
         if flow.questionnaire.quota_completed_steps && length(flow.questionnaire.quota_completed_steps) > 0 do
           flow = %{flow | current_step: nil, in_quota_completed_steps: true}
           session = %{session | flow: flow}
-          case sync_step(session, :answer, session.current_mode, false) do
+          case sync_step(session, :answer, session.current_mode, true, false) do #TODO: change true for offline variable
             {:ok, session, reply, timeout} ->
               {:rejected, session, reply, timeout}
             {:end, reply, respondent} ->
@@ -661,16 +669,16 @@ defmodule Ask.Runtime.Session do
     end
   end
 
-  defp update_respondent_disposition(session, disposition, current_mode) do
+  defp update_respondent_disposition(session, disposition, current_mode, offline \\ true) do
     respondent = session.respondent
     old_disposition = respondent.disposition
     if Flow.should_update_disposition(old_disposition, disposition) do
-      respondent = respondent
-      |> Respondent.changeset(%{disposition: disposition})
-      |> Repo.update!
+      respondent = Respondent.update(respondent, %{disposition: disposition}, offline)
 
-      log_disposition_changed(respondent, current_mode.channel, session.flow.mode, old_disposition, disposition)
-      RespondentDispositionHistory.create(respondent, old_disposition, session.current_mode |> SessionMode.mode)
+      if(offline) do
+        log_disposition_changed(respondent, current_mode.channel, session.flow.mode, old_disposition, disposition)
+        RespondentDispositionHistory.create(respondent, old_disposition, session.current_mode |> SessionMode.mode)
+      end
 
       %{session | respondent: respondent}
     else

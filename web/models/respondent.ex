@@ -157,4 +157,14 @@ defmodule Ask.Respondent do
       operation.(respondent)
     end)
   end
+
+  def update(respondent, changes, offline) do
+    if(offline) do
+      respondent
+      |> Respondent.changeset(changes)
+      |> Repo.update!
+    else
+      Map.merge(respondent, changes)
+    end
+  end
 end
