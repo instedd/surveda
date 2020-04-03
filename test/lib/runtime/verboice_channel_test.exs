@@ -469,41 +469,48 @@ defmodule Ask.Runtime.VerboiceChannelTest do
 
       respondent = insert(:respondent, survey: survey, respondent_group: group)
 
-      {:ok, _logger} = SurveyLogger.start_link
-      {:ok, _broker} = Broker.start_link
+      {:ok, logger} = SurveyLogger.start_link
+      {:ok, broker} = Broker.start_link
       Broker.poll
 
       respondent = Repo.get(Respondent, respondent.id)
       assert respondent.state == "active"
 
-      {:ok, %{conn: conn, respondent: respondent}}
+      {:ok, %{conn: conn, respondent: respondent, logger: logger, broker: broker}}
     end
 
-    test "counts attempt upon non-expired status callback", %{conn: conn, respondent: respondent} do
+    test "counts attempt upon non-expired status callback", %{conn: conn, respondent: respondent, logger: logger, broker: broker} do
       assert Stats.attempts(respondent.stats, :ivr) == 0
-
       VerboiceChannel.callback(conn, %{"path" => ["status", respondent.id, "token"], "CallStatus" => "failed", "CallDuration" => "0", "CallSid" => "6B8F5B7B-E412-46D3-96E1-688215F43CC3", "CallStatusReason" => "some random reason", "CallStatusCode" => "42"})
-
       respondent = Repo.get(Respondent, respondent.id)
       assert Stats.attempts(respondent.stats, :ivr) == 1
+
+      logger |> GenServer.stop
+      broker |> GenServer.stop
     end
 
-    test "doesn't count attempts upon expired status callback", %{conn: conn, respondent: respondent} do
+    test "doesn't count attempts upon expired status callback", %{conn: conn, respondent: respondent, logger: logger, broker: broker} do
       assert Stats.attempts(respondent.stats, :ivr) == 0
 
       VerboiceChannel.callback(conn, %{"path" => ["status", respondent.id, "token"], "CallStatus" => "expired", "CallDuration" => "0", "CallSid" => "6B8F5B7B-E412-46D3-96E1-688215F43CC3", "CallStatusReason" => "expired", "CallStatusCode" => "2"})
 
       respondent = Repo.get(Respondent, respondent.id)
       assert Stats.attempts(respondent.stats, :ivr) == 0
+
+      logger |> GenServer.stop
+      broker |> GenServer.stop
     end
     
-    test "counts attempt upon respondent interaction callback", %{conn: conn, respondent: respondent} do
+    test "counts attempt upon respondent interaction callback", %{conn: conn, respondent: respondent, logger: logger, broker: broker} do
       assert Stats.attempts(respondent.stats, :ivr) == 0
 
       VerboiceChannel.callback(conn, %{"respondent" => respondent.id, "Digits" => "3"})
 
       respondent = Repo.get(Respondent, respondent.id)
       assert Stats.attempts(respondent.stats, :ivr) == 1
+
+      logger |> GenServer.stop
+      broker |> GenServer.stop
     end
   end
 
@@ -532,4 +539,5 @@ defmodule Ask.Runtime.VerboiceChannelTest do
     assert respondent.stats.call_durations[call_id] == expected_call_duration
     assert Stats.total_call_time_seconds(respondent.stats) == expected_call_duration
   end
+
 end
