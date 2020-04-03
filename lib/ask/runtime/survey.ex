@@ -5,7 +5,7 @@ defmodule Ask.Runtime.Survey do
   alias Ask.{Repo, Respondent, RespondentDispositionHistory, QuotaBucket, Logger, SystemTime}
   alias Ask.Runtime.{Session, Reply, Flow, SessionMode, SessionModeProvider, RetriesHistogram}
 
-  def sync_step(respondent, reply, mode \\ nil, now \\ SystemTime.time.now) do
+  def sync_step(respondent, reply, mode \\ nil, now \\ SystemTime.time.now, offline \\ true) do
     session = respondent.session |> Session.load
     session_mode = session_mode(respondent, session, mode)
     next_action = sync_step_internal(session, reply, session_mode, now)
@@ -149,6 +149,52 @@ defmodule Ask.Runtime.Survey do
     Session.log_disposition_changed(updated_respondent, session.current_mode.channel, mode, old_disposition, new_disposition)
   end
 
+  def channel_failed(respondent, reason \\ "failed", offline \\ true) do
+    session = respondent.session
+    if session do
+      session = session |> Session.load
+      case Session.channel_failed(session, reason) do
+        :ok -> :ok
+        :failed ->
+          # respondent no longer participates in the survey (no attempts left)
+          respondent = RetriesHistogram.remove_respondent(respondent)
+          failed_session(respondent, offline)
+      end
+    else
+      :ok
+    end
+  end
+
+  def contact_attempt_expired(respondent, offline \\ true) do
+    session = respondent.session
+    if session do
+      response = session
+                 |> Session.load
+                 |> Session.contact_attempt_expired
+
+      {:ok, session, timeout} = response
+      timeout_at = Respondent.next_actual_timeout(respondent, timeout, SystemTime.time.now)
+      respondent_updates(:no_disposition, respondent, session, timeout_at, offline)
+    end
+    :ok
+  end
+
+  def delivery_confirm(respondent, title) do
+    delivery_confirm(respondent, title, nil)
+  end
+
+  def delivery_confirm(respondent, title, mode) do
+    unless respondent.session == nil do
+      session = respondent.session |> Session.load
+      session_mode =
+        case session_mode(respondent, session, mode) do
+          :invalid_mode -> session.current_mode
+          mode -> mode
+        end
+      Session.delivery_confirm(session, title, session_mode)
+    end
+  end
+
   defp disposition_changed?(original_respondent, updated_respondent), do:
     original_respondent.disposition != updated_respondent.disposition
 
@@ -228,52 +274,6 @@ defmodule Ask.Runtime.Survey do
       end
 
     %{state: "active", session: Session.dump(session), timeout_at: timeout_at, language: session.flow.language, effective_modes: effective_modes}
-  end
-
-  def channel_failed(respondent, reason \\ "failed", offline \\ true) do
-    session = respondent.session
-    if session do
-      session = session |> Session.load
-      case Session.channel_failed(session, reason) do
-        :ok -> :ok
-        :failed ->
-          # respondent no longer participates in the survey (no attempts left)
-          respondent = RetriesHistogram.remove_respondent(respondent)
-          failed_session(respondent, offline)
-      end
-    else
-      :ok
-    end
-  end
-
-  def contact_attempt_expired(respondent, offline \\ true) do
-    session = respondent.session
-    if session do
-      response = session
-                 |> Session.load
-                 |> Session.contact_attempt_expired
-
-      {:ok, session, timeout} = response
-      timeout_at = Respondent.next_actual_timeout(respondent, timeout, SystemTime.time.now)
-      respondent_updates(:no_disposition, respondent, session, timeout_at, offline)
-    end
-    :ok
-  end
-
-  def delivery_confirm(respondent, title) do
-    delivery_confirm(respondent, title, nil)
-  end
-
-  def delivery_confirm(respondent, title, mode) do
-    unless respondent.session == nil do
-      session = respondent.session |> Session.load
-      session_mode =
-        case session_mode(respondent, session, mode) do
-          :invalid_mode -> session.current_mode
-          mode -> mode
-        end
-      Session.delivery_confirm(session, title, session_mode)
-    end
   end
 
   defp session_mode(_respondent, session, nil) do
