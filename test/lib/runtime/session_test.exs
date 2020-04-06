@@ -438,7 +438,7 @@ defmodule Ask.SessionTest do
     assert elem(result, 0) == :failed
   end
 
-  test "timesout a respondent with fallback and retries list", %{quiz: quiz, respondent: respondent, test_channel: test_channel, channel: channel} do
+  test "timeouts a respondent with fallback and retries list", %{quiz: quiz, respondent: respondent, test_channel: test_channel, channel: channel} do
     fallback_runtime_channel = TestChannel.new
     fallback_channel = build(:channel, settings: fallback_runtime_channel |> TestChannel.settings, type: "ivr")
     fallback_retries = [8]
