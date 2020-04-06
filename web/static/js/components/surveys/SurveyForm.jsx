@@ -75,7 +75,7 @@ class SurveyForm extends Component {
       })
 
     const modeStepCompleted = survey.mode != null && survey.mode.length > 0 && this.questionnairesMatchModes(survey.mode, survey.questionnaireIds, questionnaires)
-    const cutoffStepCompleted = cutOffConfigValid
+    const cutoffStepCompleted = cutOffConfigValid && questionnaireStepCompleted
     const validRetryConfiguration = !errors || (!errors.smsRetryConfiguration && !errors.ivrRetryConfiguration && !errors.fallbackDelay)
     const scheduleStepCompleted =
       survey.schedule != null &&
