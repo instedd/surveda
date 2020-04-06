@@ -139,9 +139,11 @@ class SurveyWizardRespondentsStep extends Component {
     })
   }
 
-  openRemoveRespondentModal(ref, groupId) {
+  openRemoveRespondentModal(e, ref, groupId) {
     const { survey, actions, t } = this.props
     const modal: ConfirmationModal = ref
+
+    e.preventDefault()
 
     modal.open({
       modalText: t('Are you sure you want to delete the respondents list? If you confirm, we won\'t be able to recover it. You will have to upload a new one.'),
@@ -192,7 +194,7 @@ class SurveyWizardRespondentsStep extends Component {
 
     const removeRespondentsLink = (groupId) => {
       if (!surveyStarted && !uploading) {
-        return <a href='#' className='modal-trigger' style={{marginRight: '0'}} onClick={() => this.openRemoveRespondentModal(this.refs.removeRespondents, groupId)}>{t('Remove respondents')}</a>
+        return <a href='#' className='modal-trigger' style={{marginRight: '0'}} onClick={(e) => this.openRemoveRespondentModal(e, this.refs.removeRespondents, groupId)}>{t('Remove respondents')}</a>
       }
     }
 
