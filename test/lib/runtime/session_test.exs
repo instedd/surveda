@@ -416,13 +416,14 @@ defmodule Ask.SessionTest do
     assert_receive [:ask, ^test_channel, ^respondent_received, ^token, ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO")]
     assert 1 == respondent_received.stats |> Stats.attempts(:sms)
 
-    {:ok, session = %Session{token: token, respondent: respondent}, _, 3} = Session.timeout(session)
+    {:ok, session = %Session{token: token, respondent: respondent}, _, 3} = Session.timeout(session) # first retry
     refute_receive [:setup, _, _, _, _]
     assert_receive [:ask, ^test_channel, respondent_received, ^token, ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO")]
     assert respondent.id == respondent_received.id
     assert 2 == respondent_received.stats |> Stats.attempts(:sms)
 
-    result = Session.timeout(session)
+    {:ok, session, _, _} = Session.timeout(session) # second retry
+    result = Session.timeout(session) # no more attempts -> finish session
     assert elem(result, 0) == :failed
   end
 
