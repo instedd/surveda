@@ -274,7 +274,7 @@ class QuestionnaireEditor extends Component<any, State> {
   }
 
   render() {
-    const { questionnaire, errors, project, readOnly, userSettings, errorsByPath, selectedSteps, selectedQuotaCompletedSteps, uploadId, uploadError, uploadProgress, t } = this.props
+    const { questionnaire, errors, project, readOnly, userSettings, errorsByPath, selectedSteps, selectedQuotaCompletedSteps, uploadId, uploadError, uploadProgress, userLevel, t } = this.props
 
     if (questionnaire == null || project == null || userSettings.settings == null) {
       return <div>Loading...</div>
@@ -287,7 +287,7 @@ class QuestionnaireEditor extends Component<any, State> {
     }
 
     const settings = userSettings.settings
-    const skipOnboarding = settings.onboarding && settings.onboarding.questionnaire
+    const skipOnboarding = (settings.onboarding && settings.onboarding.questionnaire) || userLevel == 'reader'
     const hasQuotaCompletedSteps = !!questionnaire.quotaCompletedSteps
 
     let testControls = null
@@ -412,7 +412,8 @@ QuestionnaireEditor.propTypes = {
   selectedQuotaCompletedSteps: PropTypes.object,
   uploadId: PropTypes.string,
   uploadError: PropTypes.oneOfType([PropTypes.array, PropTypes.string]),
-  uploadProgress: PropTypes.number
+  uploadProgress: PropTypes.number,
+  userLevel: PropTypes.string
 }
 
 const mapStateToProps = (state, ownProps) => ({
@@ -431,7 +432,8 @@ const mapStateToProps = (state, ownProps) => ({
   selectedQuotaCompletedSteps: state.ui.data.questionnaireEditor.quotaCompletedSteps,
   uploadId: state.ui.data.questionnaireEditor.upload.uploadId,
   uploadError: state.ui.data.questionnaireEditor.upload.error,
-  uploadProgress: state.ui.data.questionnaireEditor.upload.progress
+  uploadProgress: state.ui.data.questionnaireEditor.upload.progress,
+  userLevel: state.project.data ? state.project.data.level : ''
 })
 
 const mapDispatchToProps = (dispatch) => ({
