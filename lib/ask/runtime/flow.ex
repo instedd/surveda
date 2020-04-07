@@ -8,6 +8,11 @@ defmodule Ask.Runtime.Flow do
 
   @max_retries 2
 
+  # If starting a "sms_simulator" the "sms" mode questionnaire setting must be used
+  def start(quiz, "sms_simulator") do
+    start(quiz, "sms")
+  end
+
   def start(quiz, mode) do
     has_sections = questionnaire_has_sections(quiz)
     section_order = if(has_sections) do
