@@ -43,20 +43,6 @@ defmodule Ask.Runtime.Survey do
     end
   end
 
-#  def respondent_by() do
-#
-#  end
-#
-#  def save_respondent(respondent, changes) do
-#    respondent
-#    |> Respondent.changeset(changes)
-#    |> Repo.update!
-#  end
-#
-#  def reply(status, reply) do
-#
-#  end
-
   def handle_session_step(session_step, now, offline \\ true)
 
   def handle_session_step({:ok, %{respondent: respondent} = session, reply, timeout}, now, offline) do
