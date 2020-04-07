@@ -133,7 +133,7 @@ defmodule Ask.Respondent do
   @doc """
   Computes the date-time on which the respondent should be retried given the timeout and time-window availability
   """
-  def next_actual_timeout(%Respondent{} = respondent, timeout, now, offline) do
+  def next_actual_timeout(%Respondent{} = respondent, timeout, now, offline \\ true) do
     timeout_at = next_timeout_lowerbound(timeout, now)
     respondent
     |> survey(offline)
