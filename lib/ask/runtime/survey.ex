@@ -46,7 +46,7 @@ defmodule Ask.Runtime.Survey do
   def handle_session_step(session_step, now, offline \\ true)
 
   def handle_session_step({:ok, %{respondent: respondent} = session, reply, timeout}, now, offline) do
-    timeout_at = Respondent.next_actual_timeout(respondent, timeout, now)
+    timeout_at = Respondent.next_actual_timeout(respondent, timeout, now, offline)
     updated_respondent = respondent_updates(:ok, respondent, session, Reply.disposition(reply), timeout_at, offline)
     if(disposition_changed?(respondent, updated_respondent)) do
       disposition_changed(updated_respondent, session, respondent.disposition, offline)
@@ -55,7 +55,7 @@ defmodule Ask.Runtime.Survey do
   end
 
   def handle_session_step({:hangup, session, reply, timeout, respondent}, _, offline) do
-    timeout_at = Respondent.next_actual_timeout(respondent, timeout, SystemTime.time.now)
+    timeout_at = Respondent.next_actual_timeout(respondent, timeout, SystemTime.time.now, offline)
     updated_respondent = respondent_updates(:ok, respondent, session, Reply.disposition(reply), timeout_at, offline)
     if(disposition_changed?(respondent, updated_respondent)) do
       disposition_changed(updated_respondent, session, respondent.disposition, offline)
@@ -101,7 +101,7 @@ defmodule Ask.Runtime.Survey do
   end
 
   def handle_session_step({:rejected, %{respondent: respondent} = session, reply, timeout}, _, offline) do
-    timeout_at = Respondent.next_actual_timeout(respondent, timeout, SystemTime.time.now)
+    timeout_at = Respondent.next_actual_timeout(respondent, timeout, SystemTime.time.now, offline)
     respondent_updates(:rejected, respondent, session, timeout_at, offline)
     {:reply, reply}
   end
@@ -159,7 +159,7 @@ defmodule Ask.Runtime.Survey do
                  |> Session.contact_attempt_expired
 
       {:ok, session, timeout} = response
-      timeout_at = Respondent.next_actual_timeout(respondent, timeout, SystemTime.time.now)
+      timeout_at = Respondent.next_actual_timeout(respondent, timeout, SystemTime.time.now, offline)
       respondent_updates(:no_disposition, respondent, session, timeout_at, offline)
     end
     :ok

@@ -3,7 +3,7 @@ defmodule Ask.Runtime.Session do
   import Ecto
   alias Ask.{Repo, QuotaBucket, Respondent, Schedule, RespondentDispositionHistory, Survey}
   alias Ask.Runtime.Flow.TextVisitor
-  alias Ask.Runtime.{Flow, Channel, Session, Reply, SurveyLogger, ReplyStep, SessionMode, SessionModeProvider, SMSMode, IVRMode, MobileWebMode, ChannelPatterns, RetriesHistogram}
+  alias Ask.Runtime.{Flow, Channel, Session, Reply, SurveyLogger, ReplyStep, SessionMode, SessionModeProvider, SMSMode, IVRMode, MobileWebMode, SMSSimulatorMode, ChannelPatterns, RetriesHistogram}
   use Timex
 
   defstruct [:current_mode, :fallback_mode, :flow, :respondent, :token, :fallback_delay, :channel_state, :count_partial_results, :schedule]
@@ -14,18 +14,18 @@ defmodule Ask.Runtime.Session do
       - {:ok, session, reply, timeout}
       - {:end, reply, respondent}
   """
-  def start(questionnaire, respondent, channel, mode, schedule, retries \\ [], fallback_channel \\ nil, fallback_mode \\ nil, fallback_retries \\ [], fallback_delay \\ nil, count_partial_results \\ false) do
+  def start(questionnaire, respondent, channel, mode, schedule, retries \\ [], fallback_channel \\ nil, fallback_mode \\ nil, fallback_retries \\ [], fallback_delay \\ nil, count_partial_results \\ false, offline \\ true) do
     flow = Flow.start(questionnaire, mode)
     session = %Session{
       current_mode: SessionModeProvider.new(mode, channel, retries),
       fallback_mode: SessionModeProvider.new(fallback_mode, fallback_channel, fallback_retries),
       flow: flow,
-      respondent: update_section_order(respondent, flow.section_order),
+      respondent: update_section_order(respondent, flow.section_order, offline),
       fallback_delay: fallback_delay || Survey.default_fallback_delay(),
       count_partial_results: count_partial_results,
       schedule: schedule
     }
-    run_flow(session)
+    run_flow(session, offline)
   end
 
   @doc """
@@ -134,12 +134,10 @@ defmodule Ask.Runtime.Session do
     session |> handle_step_answer(step_answer, current_mode)
   end
 
-  def update_section_order(respondent, nil), do: respondent
+  def update_section_order(respondent, nil, _), do: respondent
 
-  def update_section_order(respondent, section_order) do
-    respondent
-    |> Respondent.changeset(%{section_order: section_order})
-    |> Repo.update!
+  def update_section_order(respondent, section_order, offline) do
+    Respondent.update(respondent, %{section_order: section_order}, offline)
   end
 
   def current_timeout(%Session{current_mode: %{retries: []}, fallback_delay: fallback_delay}) do
@@ -296,6 +294,13 @@ defmodule Ask.Runtime.Session do
     end
   end
 
+  defp mode_start(%Session{flow: flow, respondent: respondent, token: _token, current_mode: %SMSSimulatorMode{}} = session) do
+    IO.puts "starting SMS Simulator mode"
+    IO.inspect(flow, label: "Flow")
+    IO.inspect(respondent.id, label: "Respondent id")
+    {:ok, session, %Reply{}, current_timeout(session)}
+  end
+
   defp mode_start(%Session{flow: flow, current_mode: %IVRMode{channel: channel}, respondent: respondent, token: token, schedule: schedule} = session) do
     next_available_date_time = schedule
       |> Schedule.next_available_date_time
@@ -405,10 +410,12 @@ defmodule Ask.Runtime.Session do
     end
   end
 
-  defp run_flow(%{current_mode: current_mode, respondent: respondent} = session) do
+  defp run_flow(%{current_mode: current_mode, respondent: respondent} = session, offline) do
     respondent = apply_patterns_if_match(current_mode.channel.patterns, respondent)
+    add_mode_attempt = fn session -> if(offline) do add_session_mode_attempt!(session) else session end end
+
     session = %{session | token: Ecto.UUID.generate, respondent: respondent}
-    |> add_session_mode_attempt!()
+              |> add_mode_attempt.()
     mode_start(session)
   end
 
@@ -508,7 +515,7 @@ defmodule Ask.Runtime.Session do
         flow |
         mode: fallback_mode |> SessionMode.mode
       }
-    })
+    }, true) #TODO: always offline: true since timeouts only happens in real flow?
     result = case run_flow_result do
       {:ok, session, _, _} -> put_elem(run_flow_result, 1, RetriesHistogram.retry(session))
       _ -> run_flow_result
