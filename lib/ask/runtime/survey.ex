@@ -8,15 +8,15 @@ defmodule Ask.Runtime.Survey do
   def sync_step(respondent, reply, mode \\ nil, now \\ SystemTime.time.now, offline \\ true) do
     session = Session.load_respondent_session(respondent, offline)
     session_mode = session_mode(respondent, session, mode)
-    next_action = sync_step_internal(session, reply, session_mode, now)
+    next_action = sync_step_internal(session, reply, session_mode, now, offline)
     handle_next_action(next_action, respondent.id)
   end
 
   # We expose this method so we can test that if a stale respondent is
   # passed, it's reloaded and the action is retried (this can happen
   # if a timeout happens in between this call)
-  def sync_step_internal(session, reply) do
-    sync_step_internal(session, reply, session.current_mode, SystemTime.time.now)
+  def sync_step_internal(session, reply, offline \\ true) do
+    sync_step_internal(session, reply, session.current_mode, SystemTime.time.now, offline)
   end
 
   def mask_phone_number(%Respondent{} = respondent, {:reply, response}) do
@@ -286,16 +286,16 @@ defmodule Ask.Runtime.Survey do
     end
   end
 
-  defp sync_step_internal(_, _, :invalid_mode, _) do
+  defp sync_step_internal(_, _, :invalid_mode, _, _) do
     :end
   end
 
-  defp sync_step_internal(session, reply, session_mode, now) do
+  defp sync_step_internal(session, reply, session_mode, now, offline) do
     transaction_result = Repo.transaction(fn ->
       try do
         reply = mask_phone_number(session.respondent, reply)
-        session_step = Session.sync_step(session, reply, session_mode)
-        handle_session_step(session_step, now)
+        session_step = Session.sync_step(session, reply, session_mode, offline)
+        handle_session_step(session_step, now, offline)
       rescue
         e in Ecto.StaleEntryError ->
           Logger.error(e, "Error on sync step internal. Rolling back transaction")
@@ -315,7 +315,7 @@ defmodule Ask.Runtime.Survey do
             extra: %{survey_id: respondent.survey_id, respondent_id: respondent.id}])
 
           try do
-            handle_session_step({:failed, respondent}, now)
+            handle_session_step({:failed, respondent}, now, offline)
           rescue
             e ->
               if Mix.env == :test do
