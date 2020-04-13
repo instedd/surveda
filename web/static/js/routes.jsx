@@ -28,7 +28,7 @@ import * as questionnaireActions from './actions/questionnaire'
 import ChannelTabs from './components/channels/ChannelTabs'
 import ChannelNew from './components/channels/ChannelNew'
 import ChannelSettings from './components/channels/ChannelSettings'
-import SmsSimulator from './components/simulator/SmsSimulator'
+import SmsSimulator from './components/questionnaires/SmsSimulator'
 
 const k = (s) => s
 
@@ -63,6 +63,7 @@ export default (
             <IndexRedirect to='edit' />
           </Route>
           <Route path=':questionnaireId/edit' component={QuestionnaireEditor} title={QuestionnaireTitle} showSavingStatus undo={{state: (state) => state.questionnaire, actions: questionnaireActions}} />
+          <Route path=':questionnaireId/simulator' component={SmsSimulator} title={QuestionnaireTitle} />
         </Route>
 
         <Route path='collaborators' >
@@ -90,8 +91,6 @@ export default (
         <Route path='settings' components={{ body: ChannelSettings, tabs: ChannelTabs }} />
       </Route>
     </Route>
-
-    <Route path='/simulator' title={k('Sms Simulator')} component={SmsSimulator} />
   </Route>
 )
 
