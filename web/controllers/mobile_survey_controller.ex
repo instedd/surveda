@@ -81,11 +81,11 @@ defmodule Ask.MobileSurveyController do
           {end_step(msg), end_progress(), nil}
         respondent.state in ["pending", "active", "rejected"] ->
           case Survey.sync_step(respondent, value, "mobileweb") do
-            {:reply, reply} ->
+            {:reply, reply, _} ->
               {first_step(reply), progress(reply), reply.error_message}
-            {:end, {:reply, reply}} ->
+            {:end, {:reply, reply}, _} ->
               {first_step(reply), progress(reply), reply.error_message}
-            :end ->
+            {:end, _} ->
               {end_step(), end_progress(), nil}
           end
         true ->

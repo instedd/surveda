@@ -146,19 +146,19 @@ defmodule Ask.Runtime.RetriesHistogramTest do
       assert_respondent_active_in_first_attempt.()
 
       # "Do you smoke? Press 8 for YES, 9 for NO"
-      {:reply, _} = respondent_reply.("8")
+      {:reply, _, _} = respondent_reply.("8")
       assert_respondent_active_in_first_attempt.()
 
       # "Do you exercise? Press 1 for YES, 2 for NO"
-      {:reply, _} = respondent_reply.("1")
+      {:reply, _, _} = respondent_reply.("1")
       assert_respondent_active_in_first_attempt.()
 
       #"Which is the second perfect number"
-      {:reply, _} = respondent_reply.("23")
+      {:reply, _, _} = respondent_reply.("23")
       assert_respondent_active_in_first_attempt.()
 
       # "What's the number of this question?"
-      {:end, _} = respondent_reply.("4")
+      {:end, _, _} = respondent_reply.("4")
 
       expected_histogram.([])
       |> assert_histogram.("The respondent should have ended the survey, thus the histogram should be empty")

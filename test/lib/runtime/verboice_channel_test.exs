@@ -26,15 +26,15 @@ defmodule Ask.Runtime.VerboiceChannelTest do
       tts_step: {:prompts, [Ask.StepBuilder.tts_prompt("Do you exercise?")]},
       # Triple of "digits", step spec, and expected TwiML output
       twiml_map: [
-        {Flow.Message.answer, {:reply, ReplyHelper.simple("Step", Ask.StepBuilder.tts_prompt("Do you exercise?"))}, "<Say>Do you exercise?</Say>"},
-        {Flow.Message.reply("8"), {:reply, ReplyHelper.simple("Step", Ask.StepBuilder.tts_prompt("Do you exercise?"))}, "<Say>Do you exercise?</Say>"},
-        {Flow.Message.answer, {:reply, ReplyHelper.multiple([{"Hello!", Ask.StepBuilder.tts_prompt("Hello!")}, {"Do you exercise", Ask.StepBuilder.tts_prompt("Do you exercise?")}])}, "<Response><Say>Hello!</Say><Gather action=\"#{Ask.Endpoint.url}/callbacks/verboice?respondent=#{respondent.id}\" finishOnKey=\"\"><Say>Do you exercise?</Say></Gather><Redirect>#{Ask.Endpoint.url}/callbacks/verboice?respondent=#{respondent.id}&amp;Digits=timeout</Redirect></Response>"},
-        {Flow.Message.answer, {:reply, ReplyHelper.simple("Step", Ask.StepBuilder.audio_prompt(uuid: "foo", text: "Do you exercise?"))}, "<Response><Gather action=\"#{Ask.Endpoint.url}/callbacks/verboice?respondent=#{respondent.id}\" finishOnKey=\"\"><Play>#{Ask.Endpoint.url}/audio/foo.mp3</Play></Gather><Redirect>#{Ask.Endpoint.url}/callbacks/verboice?respondent=#{respondent.id}&amp;Digits=timeout</Redirect></Response>"},
-        {Flow.Message.answer, {:reply, ReplyHelper.simple_with_num_digits("Step", Ask.StepBuilder.audio_prompt(uuid: "foo", text: "Do you exercise?"), 3)}, "<Response><Gather action=\"#{Ask.Endpoint.url}/callbacks/verboice?respondent=#{respondent.id}\" finishOnKey=\"\" numDigits=\"3\"><Play>#{Ask.Endpoint.url}/audio/foo.mp3</Play></Gather><Redirect>#{Ask.Endpoint.url}/callbacks/verboice?respondent=#{respondent.id}&amp;Digits=timeout</Redirect></Response>"},
+        {Flow.Message.answer, {:reply, ReplyHelper.simple("Step", Ask.StepBuilder.tts_prompt("Do you exercise?")), nil}, "<Say>Do you exercise?</Say>"},
+        {Flow.Message.reply("8"), {:reply, ReplyHelper.simple("Step", Ask.StepBuilder.tts_prompt("Do you exercise?")), nil}, "<Say>Do you exercise?</Say>"},
+        {Flow.Message.answer, {:reply, ReplyHelper.multiple([{"Hello!", Ask.StepBuilder.tts_prompt("Hello!")}, {"Do you exercise", Ask.StepBuilder.tts_prompt("Do you exercise?")}]), nil}, "<Response><Say>Hello!</Say><Gather action=\"#{Ask.Endpoint.url}/callbacks/verboice?respondent=#{respondent.id}\" finishOnKey=\"\"><Say>Do you exercise?</Say></Gather><Redirect>#{Ask.Endpoint.url}/callbacks/verboice?respondent=#{respondent.id}&amp;Digits=timeout</Redirect></Response>"},
+        {Flow.Message.answer, {:reply, ReplyHelper.simple("Step", Ask.StepBuilder.audio_prompt(uuid: "foo", text: "Do you exercise?")), nil}, "<Response><Gather action=\"#{Ask.Endpoint.url}/callbacks/verboice?respondent=#{respondent.id}\" finishOnKey=\"\"><Play>#{Ask.Endpoint.url}/audio/foo.mp3</Play></Gather><Redirect>#{Ask.Endpoint.url}/callbacks/verboice?respondent=#{respondent.id}&amp;Digits=timeout</Redirect></Response>"},
+        {Flow.Message.answer, {:reply, ReplyHelper.simple_with_num_digits("Step", Ask.StepBuilder.audio_prompt(uuid: "foo", text: "Do you exercise?"), 3), nil}, "<Response><Gather action=\"#{Ask.Endpoint.url}/callbacks/verboice?respondent=#{respondent.id}\" finishOnKey=\"\" numDigits=\"3\"><Play>#{Ask.Endpoint.url}/audio/foo.mp3</Play></Gather><Redirect>#{Ask.Endpoint.url}/callbacks/verboice?respondent=#{respondent.id}&amp;Digits=timeout</Redirect></Response>"},
         {Flow.Message.answer, :end, "<Response><Hangup/></Response>"},
-        {Flow.Message.answer, {:end, {:reply, ReplyHelper.quota_completed(Ask.StepBuilder.tts_prompt("Bye!"))}}, "<Response><Say>Bye!</Say><Hangup/></Response>"},
-        {Flow.Message.answer, {:reply, ReplyHelper.simple("Step", Ask.StepBuilder.audio_prompt(uuid: "foo", text: "Do you exercise?"))}, "<Play>#{Ask.Endpoint.url}/audio/foo.mp3</Play>"},
-        {Flow.Message.reply("8"), {:reply, ReplyHelper.simple("Step", Ask.StepBuilder.audio_prompt(uuid: "foo", text: "Do you exercise?"))}, "<Play>#{Ask.Endpoint.url}/audio/foo.mp3</Play>"},
+        {Flow.Message.answer, {:end, {:reply, ReplyHelper.quota_completed(Ask.StepBuilder.tts_prompt("Bye!"))}, nil}, "<Response><Say>Bye!</Say><Hangup/></Response>"},
+        {Flow.Message.answer, {:reply, ReplyHelper.simple("Step", Ask.StepBuilder.audio_prompt(uuid: "foo", text: "Do you exercise?")), nil}, "<Play>#{Ask.Endpoint.url}/audio/foo.mp3</Play>"},
+        {Flow.Message.reply("8"), {:reply, ReplyHelper.simple("Step", Ask.StepBuilder.audio_prompt(uuid: "foo", text: "Do you exercise?")), nil}, "<Play>#{Ask.Endpoint.url}/audio/foo.mp3</Play>"},
       ]
     }
   end
@@ -50,7 +50,7 @@ defmodule Ask.Runtime.VerboiceChannelTest do
 
         digits = case flow_message do
           :answer -> nil
-          {:reply, digits } -> digits
+          {:reply, digits} -> digits
         end
 
         conn = VerboiceChannel.callback(conn, %{"respondent" => respondent_id, "Digits" => digits}, SurveyStub)

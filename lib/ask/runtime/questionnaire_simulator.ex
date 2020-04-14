@@ -50,9 +50,9 @@ defmodule Ask.QuestionnaireSimulator do
 
     IO.inspect(respondent.id, label: "Starting session for respondent id")
     session = Session.start(questionnaire, respondent, %Ask.SimulatorChannel{}, mode, Ask.Schedule.always(), [], nil, nil, [], nil, false, false)
-              |> Runtime.Survey.handle_session_step(SystemTime.time.now, false)
+    respondent = Runtime.Survey.handle_session_step(session, SystemTime.time.now, false)
 
-    Ask.QuestionnaireSimulator.add_respondent_simulation(respondent.id, %Ask.QuestionnaireSimulation{questionnaire: questionnaire, respondent: respondent, session: session})
+    Ask.QuestionnaireSimulator.add_respondent_simulation(respondent.id, %Ask.QuestionnaireSimulation{questionnaire: questionnaire, respondent: respondent, session: respondent.session})
     session
   end
 

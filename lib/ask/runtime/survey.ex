@@ -48,19 +48,23 @@ defmodule Ask.Runtime.Survey do
   def handle_session_step({:ok, %{respondent: respondent} = session, reply, timeout}, now, offline) do
     timeout_at = Respondent.next_actual_timeout(respondent, timeout, now, offline)
     updated_respondent = respondent_updates(:ok, respondent, session, Reply.disposition(reply), timeout_at, offline)
-    if(disposition_changed?(respondent, updated_respondent)) do
+    updated_respondent = if(disposition_changed?(respondent, updated_respondent)) do
       disposition_changed(updated_respondent, session, respondent.disposition, offline)
+    else
+      updated_respondent
     end
-    {:reply, reply}
+    {:reply, reply, updated_respondent}
   end
 
   def handle_session_step({:hangup, session, reply, timeout, respondent}, _, offline) do
     timeout_at = Respondent.next_actual_timeout(respondent, timeout, SystemTime.time.now, offline)
     updated_respondent = respondent_updates(:ok, respondent, session, Reply.disposition(reply), timeout_at, offline)
-    if(disposition_changed?(respondent, updated_respondent)) do
+    updated_respondent = if(disposition_changed?(respondent, updated_respondent)) do
       disposition_changed(updated_respondent, session, respondent.disposition, offline)
+    else
+      updated_respondent
     end
-    :end
+    {:end, updated_respondent}
   end
 
   def handle_session_step({:end, reply, respondent}, _, offline) do
@@ -80,7 +84,7 @@ defmodule Ask.Runtime.Survey do
                       |> Flow.resulting_disposition("completed")
 
     updated_respondent = respondent_updates(:end, respondent, new_disposition, offline)
-    disposition_changed(updated_respondent, session, old_disposition, offline)
+                         |> disposition_changed(session, old_disposition, offline)
 
     # If new_disposition == reply_disposition, change of disposition has already been logged during Session.sync_step
     if session && new_disposition != old_disposition && new_disposition != reply_disposition do
@@ -89,39 +93,41 @@ defmodule Ask.Runtime.Survey do
 
     case Reply.steps(reply) do
       [] ->
-        :end
+        {:end, updated_respondent}
       _ ->
-        {:end, {:reply, reply}}
+        {:end, {:reply, reply}, updated_respondent}
     end
   end
 
   def handle_session_step({:rejected, reply, respondent}, _, offline) do
-    respondent_updates(:rejected, respondent, nil, nil, offline)
-    {:end, {:reply, reply}}
+    updated_respondent =respondent_updates(:rejected, respondent, nil, nil, offline)
+    {:end, {:reply, reply}, updated_respondent}
   end
 
   def handle_session_step({:rejected, %{respondent: respondent} = session, reply, timeout}, _, offline) do
     timeout_at = Respondent.next_actual_timeout(respondent, timeout, SystemTime.time.now, offline)
-    respondent_updates(:rejected, respondent, session, timeout_at, offline)
-    {:reply, reply}
+    updated_respondent = respondent_updates(:rejected, respondent, session, timeout_at, offline)
+    {:reply, reply, updated_respondent}
   end
 
   def handle_session_step({:rejected, respondent}, _, offline) do
-    respondent_updates(:rejected, respondent, nil, nil, offline)
-    :end
+    updated_respondent = respondent_updates(:rejected, respondent, nil, nil, offline)
+    {:end, updated_respondent}
   end
 
   def handle_session_step({:stopped, reply, respondent}, _, offline) do
     updated_respondent = respondent_updates(:stopped, respondent, Reply.disposition(reply), offline) # TODO: update_respondent_and_set_disposition
-    if(disposition_changed?(respondent, updated_respondent)) do
+    updated_respondent = if(disposition_changed?(respondent, updated_respondent)) do
       disposition_changed(updated_respondent, respondent.session |> Session.load, respondent.disposition, offline)
+    else
+      updated_respondent
     end
-    :end
+    {:end, updated_respondent}
   end
 
   def handle_session_step({:failed, respondent}, _, offline) do
-    failed_session(respondent, offline)
-    :end
+    updated_respondent = failed_session(respondent, offline)
+    {:end, updated_respondent}
   end
 
   def failed_session(respondent, offline) do
@@ -131,8 +137,8 @@ defmodule Ask.Runtime.Survey do
     new_disposition = Flow.failed_disposition_from(respondent.disposition)
 
     updated_respondent = respondent_updates(:failed, respondent, offline)
-    disposition_changed(updated_respondent, session, old_disposition, offline) #TODO: this knows that the line before changed the disposition
     Session.log_disposition_changed(updated_respondent, session.current_mode.channel, mode, old_disposition, new_disposition)
+    disposition_changed(updated_respondent, session, old_disposition, offline) #TODO: this knows that the line before changed the disposition
   end
 
   def channel_failed(respondent, reason \\ "failed", offline \\ true) do

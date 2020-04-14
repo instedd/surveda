@@ -104,23 +104,23 @@ defmodule Ask.Runtime.RetriesHistogram do
     %Session{ session | respondent: update_respondent(respondent, retry_stat.id)}
   end
 
-  defp do_next_step(%Respondent{} = respondent, %Session{current_mode: %Ask.Runtime.SMSMode{}} = session, {:reply, _reply}) do
+  defp do_next_step(%Respondent{} = respondent, %Session{current_mode: %Ask.Runtime.SMSMode{}} = session, {:reply, _reply, _}) do
     # sms -> transition to active RetryStat
     if respondent.retry_stat_id, do:
       reallocate_respondent(session, respondent, false, Session.current_timeout(session))
   end
 
-  defp do_next_step(_respondent, _session, {:reply, _reply}) do
+  defp do_next_step(_respondent, _session, {:reply, _reply, _}) do
     # ivr -> do nothing, respondent is on call
     # mobile-web -> do nothing
   end
 
-  defp do_next_step(%Respondent{} = respondent, _session, {:end, _reply}) do
+  defp do_next_step(%Respondent{} = respondent, _session, {:end, _reply, _}) do
     # remove respondent from histogram
     remove_respondent(respondent)
   end
 
-  defp do_next_step(%Respondent{} = respondent, _session, :end) do
+  defp do_next_step(%Respondent{} = respondent, _session, {:end, _}) do
     # remove respondent from histogram
     remove_respondent(respondent)
   end

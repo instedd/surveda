@@ -287,13 +287,15 @@ defmodule Ask.Runtime.VerboiceChannel do
           end
 
           case survey.sync_step(respondent, response, "ivr") do
-            {:reply, reply} ->
+            {:reply, reply, _} ->
               prompts = Reply.prompts(reply)
               num_digits = Reply.num_digits(reply)
               gather(respondent, prompts, num_digits)
-            {:end, {:reply, reply}} ->
+            {:end, {:reply, reply}, _} ->
               prompts = Reply.prompts(reply)
               say_or_play(prompts, channel_base_url(respondent)) ++ [hangup()]
+            {:end, _} ->
+              hangup()
             :end ->
               hangup()
           end
