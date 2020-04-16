@@ -405,6 +405,7 @@ defmodule Ask.Runtime.Session do
 
     respondent = session.respondent
     step_answer = Flow.step(session.flow, current_mode |> SessionMode.visitor, response, SessionMode.mode(current_mode), respondent.disposition)
+                  |> relevant_interim_partial_step(respondent)
 
     reply = case step_answer do
       {:end, _, reply} -> reply
@@ -422,6 +423,29 @@ defmodule Ask.Runtime.Session do
 
     session = %{session | respondent: respondent}
     session |> handle_step_answer(step_answer, current_mode)
+  end
+
+  # If the respondent has answered at least min_relevant_questions relevant questions
+  # then, 'interim partial' disposition is returned in reply
+  defp relevant_interim_partial_step(step_answer, respondent) do
+    case step_answer do
+      {:ok, flow, reply} ->
+        if reply.disposition == nil && respondent.disposition == "started" && Flow.interim_partial_by_relevant_steps?(flow) do
+          current_responses = Reply.stores(reply) |> Enum.map(fn {field_name, value} -> %Ask.Response{field_name: field_name, value: value} end)
+          stored_responses = from(r in Ask.Response, where: r.respondent_id == ^respondent.id) |> Repo.all
+          responses = current_responses ++ stored_responses
+
+          valid_relevant_responses = responses |> Enum.count(fn response -> Flow.relevant_response?(flow, response) end)
+          if valid_relevant_responses >= Flow.min_relevant_questions(flow) do
+            {:ok, flow, %{reply | disposition: "interim partial"}}
+          else
+            step_answer
+          end
+        else
+          step_answer
+        end
+      _ -> step_answer
+    end
   end
 
   defp handle_step_answer(session, {:end, _, reply}, current_mode) do

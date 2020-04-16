@@ -244,16 +244,6 @@ defmodule Ask.SessionTest do
     assert respondent_received.id == respondent.id
   end
 
-  defp handle_session_started(session_started, questionnaire_id, sequence_mode) do
-    case session_started do
-      {:ok, session, reply, timeout} ->
-        respondent = Ask.Runtime.Broker.configure_new_respondent(session.respondent, questionnaire_id, sequence_mode)
-        {:ok, %Session{session | respondent: Ask.Runtime.RetriesHistogram.add_new_respondent(respondent, session, timeout)}, reply, timeout}
-      other -> other
-    end
-  end
-
-
   test "last retry", %{quiz: quiz, respondent: respondent, test_channel: test_channel, channel: channel} do
     {:ok, session = %Session{token: token, respondent: respondent}, _, 120} = Session.start(quiz, respondent, channel, "sms", Schedule.always())
     assert_receive [:setup, ^test_channel, ^respondent, ^token]
@@ -1102,4 +1092,34 @@ defmodule Ask.SessionTest do
       assert fourth_entry.action_data == "Do you exercise?"
     end
   end
+
+  describe "sync_step" do
+    test "returns reply with disposition: interim partial if respondent answered the min_relevant_questions", %{quiz: quiz, respondent: respondent, channel: channel} do
+      steps = quiz.steps |> Enum.map(fn step -> Map.put(step, "relevant", true) end)
+      quiz = quiz |> Questionnaire.changeset(%{partial_config: %{"min_relevant_questions" => 2, "ignored_values" => []}, steps: steps}) |> Repo.update!
+      respondent = Ask.Runtime.Broker.configure_new_respondent(respondent, quiz.id, ["sms"])
+
+      {:ok, %{respondent: respondent} = session, _, _timeout} = Session.start(quiz, respondent, channel, "sms", Schedule.always())
+      Session.sync_step(session, Flow.Message.answer())
+
+      respondent = Repo.get(Respondent, respondent.id)
+      {:ok, session, reply, _timeout} = Session.sync_step(%{session | respondent: respondent}, Flow.Message.reply("Yes"))
+      assert nil == reply.disposition
+
+      respondent = Repo.get(Respondent, respondent.id)
+      {:ok, _session, reply, _timeout} = Session.sync_step(%{session | respondent: respondent}, Flow.Message.reply("Yes"))
+
+      assert "interim partial" == reply.disposition
+    end
+  end
+
+  defp handle_session_started(session_started, questionnaire_id, sequence_mode) do
+    case session_started do
+      {:ok, session, reply, timeout} ->
+        respondent = Ask.Runtime.Broker.configure_new_respondent(session.respondent, questionnaire_id, sequence_mode)
+        {:ok, %Session{session | respondent: Ask.Runtime.RetriesHistogram.add_new_respondent(respondent, session, timeout)}, reply, timeout}
+      other -> other
+    end
+  end
+
 end

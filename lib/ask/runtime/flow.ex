@@ -501,6 +501,21 @@ defmodule Ask.Runtime.Flow do
       flow.questionnaire.steps
     end
   end
+
+  def interim_partial_by_relevant_steps?(flow) do
+    is_relevant_step = fn step -> step["relevant"] end
+    steps(flow) |> Enum.any?(is_relevant_step)
+  end
+
+  def min_relevant_questions(%{questionnaire: questionnaire} = _flow) do
+    questionnaire.partial_config["min_relevant_questions"]
+  end
+
+  def relevant_response?(%{questionnaire: questionnaire} = _flow, response) do
+    ignored_values = questionnaire.partial_config["ignored_values"] || []
+    quiz_step = questionnaire.steps |> Enum.find(fn step -> step["store"] == response.field_name end)
+    quiz_step["relevant"] && response.value not in ignored_values
+  end
 end
 
 defmodule Ask.Runtime.Flow.Message do

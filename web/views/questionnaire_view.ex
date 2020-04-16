@@ -22,6 +22,7 @@ defmodule Ask.QuestionnaireView do
       languages: questionnaire.languages,
       settings: questionnaire.settings,
       valid: questionnaire.valid,
+      partial_config: questionnaire.partial_config,
     }
   end
 end
