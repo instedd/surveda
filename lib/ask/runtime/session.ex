@@ -425,7 +425,7 @@ defmodule Ask.Runtime.Session do
     session |> handle_step_answer(step_answer, current_mode)
   end
 
-  # If the respondent has answered at least min_relevant_questions relevant questions
+  # If the respondent has answered at least `min_relevant_questions` relevant steps
   # then, 'interim partial' disposition is returned in reply
   defp relevant_interim_partial_step(step_answer, respondent) do
     case step_answer do

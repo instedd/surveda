@@ -10,19 +10,28 @@ defmodule Ask.StepBuilder do
     }
   end
 
-  def multiple_choice_step(id: id, title: title, prompt: prompt, store: store, choices: choices) do
+  def multiple_choice_step(id: id, title: title, prompt: prompt, store: store, choices: choices), do:
+    multiple_choice_step(id: id, title: title, prompt: prompt, store: store, choices: choices, relevant: false)
+
+  def multiple_choice_step(id: id, title: title, prompt: prompt, store: store, choices: choices, relevant: relevant) do
     %{
       "id" => id,
       "type" => "multiple-choice",
       "title" => title,
       "prompt" => prompt,
       "store" => store,
-      "choices" => choices
+      "choices" => choices,
+      "relevant" => relevant
     }
   end
 
   def numeric_step(id: id, title: title, prompt: prompt, store: store,
-    skip_logic: skip_logic, alphabetical_answers: alphabetical_answers, refusal: refusal) do
+        skip_logic: skip_logic, alphabetical_answers: alphabetical_answers, refusal: refusal), do:
+    numeric_step(id: id, title: title, prompt: prompt, store: store, skip_logic: skip_logic,
+      alphabetical_answers: alphabetical_answers, refusal: refusal, relevant: false)
+
+  def numeric_step(id: id, title: title, prompt: prompt, store: store,
+        skip_logic: skip_logic, alphabetical_answers: alphabetical_answers, refusal: refusal, relevant: relevant) do
     base = %{
       "id" => id,
       "type" => "numeric",
@@ -30,6 +39,7 @@ defmodule Ask.StepBuilder do
       "prompt" => prompt,
       "store" => store,
       "refusal" => refusal,
+      "relevant" => relevant,
       "alphabetical_answers" => alphabetical_answers
     }
     Map.merge(base, skip_logic)

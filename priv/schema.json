@@ -77,7 +77,8 @@
         "title": {"type": "string"},
         "prompt": {"$ref": "#/definitions/localized_prompt"},
         "choices": {"$ref": "#/definitions/choices"},
-        "store": {"type": "string"}
+        "store": {"type": "string"},
+        "relevant": {"type": "boolean"}
       },
       "additionalProperties": false,
       "required": ["id", "type", "title", "prompt", "choices", "store"]
@@ -96,7 +97,8 @@
         "ranges": {"$ref": "#/definitions/ranges"},
         "store": {"type": "string"},
         "alphabetical_answers": {"type": "boolean"},
-        "refusal": {"oneOf": [{"$ref": "#/definitions/refusal"}, {"type":"null"}]}
+        "refusal": {"oneOf": [{"$ref": "#/definitions/refusal"}, {"type":"null"}]},
+        "relevant": {"type": "boolean"}
       },
       "additionalProperties": false,
       "required": ["id", "type", "title", "prompt", "store"]
