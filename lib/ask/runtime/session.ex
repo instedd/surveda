@@ -426,7 +426,7 @@ defmodule Ask.Runtime.Session do
   end
 
   # If the respondent has answered at least `min_relevant_questions` relevant steps
-  # and the reply doesn't defines a disposition already
+  # and the reply doesn't defines already a disposition
   # then, 'interim partial' disposition is returned in reply
   defp relevant_interim_partial_step({:ok, flow, %{disposition: nil} = reply} = step_answer, %{disposition: "started"} = respondent) do
     new_step_answer = if Flow.interim_partial_by_relevant_steps?(flow) do # Filtered here to avoid fetching the responses unnecessarily
