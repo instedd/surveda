@@ -9,7 +9,8 @@
       "type": "object",
       "properties": {
         "steps": {"$ref": "#/definitions/steps-and-sections"},
-        "settings": {"$ref": "#/definitions/settings"}
+        "settings": {"$ref": "#/definitions/settings"},
+        "partial_config": {"$ref": "#/definitions/partial_config"}
       },
       "required": ["steps", "settings"]
     },
@@ -241,6 +242,15 @@
       },
       "additionalProperties": false,
       "required": ["text", "audio_source"]
+    },
+
+    "partial_config": {
+      "type": "object",
+      "properties": {
+        "min_relevant_steps": {"type": "integer"},
+        "ignored_values": {"type": "string"}
+      },
+      "required": ["min_relevant_steps"]
     }
   }
 }
