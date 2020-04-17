@@ -426,26 +426,25 @@ defmodule Ask.Runtime.Session do
   end
 
   # If the respondent has answered at least `min_relevant_questions` relevant steps
+  # and the reply doesn't defines a disposition already
   # then, 'interim partial' disposition is returned in reply
-  defp relevant_interim_partial_step(step_answer, respondent) do
-    case step_answer do
-      {:ok, flow, reply} ->
-        if reply.disposition == nil && respondent.disposition == "started" && Flow.interim_partial_by_relevant_steps?(flow) do
-          current_responses = Reply.stores(reply) |> Enum.map(fn {field_name, value} -> %Ask.Response{field_name: field_name, value: value} end)
-          stored_responses = from(r in Ask.Response, where: r.respondent_id == ^respondent.id) |> Repo.all
-          responses = current_responses ++ stored_responses
-
-          valid_relevant_responses = responses |> Enum.count(fn response -> Flow.relevant_response?(flow, response) end)
-          if valid_relevant_responses >= Flow.min_relevant_questions(flow) do
-            {:ok, flow, %{reply | disposition: "interim partial"}}
-          else
-            step_answer
-          end
-        else
-          step_answer
-        end
-      _ -> step_answer
+  defp relevant_interim_partial_step({:ok, flow, %{disposition: nil} = reply} = step_answer, %{disposition: "started"} = respondent) do
+    new_step_answer = if Flow.interim_partial_by_relevant_steps?(flow) do # Filtered here to avoid fetching the responses unnecessarily
+      valid_relevant_responses = all_responses(respondent.id, reply) |> Enum.count(&Flow.relevant_response?(flow, &1))
+      if valid_relevant_responses >= Flow.min_relevant_questions(flow) do
+        {:ok, flow, %{reply | disposition: "interim partial"}}
+      end
     end
+
+    new_step_answer || step_answer
+  end
+
+  defp relevant_interim_partial_step(step_answer, _respondent), do: step_answer
+
+  defp all_responses(respondent_id, reply) do
+    current_responses = Reply.stores(reply) |> Enum.map(fn {field_name, value} -> %Ask.Response{field_name: field_name, value: value} end)
+    stored_responses = from(r in Ask.Response, where: r.respondent_id == ^respondent_id) |> Repo.all
+    current_responses ++ stored_responses
   end
 
   defp handle_step_answer(session, {:end, _, reply}, current_mode) do
