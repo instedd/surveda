@@ -17,6 +17,16 @@ export const roleDisplayName = (role) => {
   }
 }
 
+export const appliesRelevant = stepType => {
+  switch (stepType) {
+    case 'multiple-choice':
+    case 'numeric':
+      return true
+    default:
+      return false
+  }
+}
+
 export const dayLabel = (day) => {
   switch (day) {
     case 'sun': return i18n.t('Sun')

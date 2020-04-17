@@ -50,6 +50,7 @@ const dataReducer = (state: Questionnaire, action): Questionnaire => {
     case actions.MOVE_STEP_TO_TOP: return moveStepToTop(state, action)
     case actions.MOVE_STEP_TO_TOP_OF_SECTION: return moveStepToTopOfSection(state, action)
     case actions.CHANGE_STEP_TITLE: return changeStepTitle(state, action)
+    case actions.CHANGE_STEP_RELEVANT: return changeStepRelevant(state, action)
     case actions.CHANGE_STEP_TYPE: return changeStepType(state, action)
     case actions.CHANGE_STEP_PROMPT_SMS: return changeStepSmsPrompt(state, action)
     case actions.CHANGE_STEP_PROMPT_IVR: return changeStepIvrPrompt(state, action)
@@ -723,6 +724,13 @@ const changeStepTitle = (state, action) => {
   return changeStep(state, action.stepId, step => ({
     ...step,
     title: action.newTitle.trim()
+  }))
+}
+
+const changeStepRelevant = (state, action) => {
+  return changeStep(state, action.stepId, step => ({
+    ...step,
+    relevant: action.relevant
   }))
 }
 

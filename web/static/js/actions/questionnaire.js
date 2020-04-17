@@ -23,6 +23,7 @@ export const MOVE_SECTION = 'QUESTIONNAIRE_MOVE_SECTION'
 export const MOVE_STEP_TO_TOP = 'QUESTIONNAIRE_MOVE_STEP_TO_TOP'
 export const MOVE_STEP_TO_TOP_OF_SECTION = 'QUESTIONNAIRE_MOVE_STEP_TO_TOP_OF_SECTION'
 export const CHANGE_STEP_TITLE = 'QUESTIONNAIRE_CHANGE_STEP_TITLE'
+export const CHANGE_STEP_RELEVANT = 'QUESTIONNAIRE_CHANGE_STEP_RELEVANT'
 export const CHANGE_STEP_TYPE = 'QUESTIONNAIRE_CHANGE_STEP_TYPE'
 export const CHANGE_STEP_PROMPT_SMS = 'QUESTIONNAIRE_CHANGE_STEP_PROMPT_SMS'
 export const AUTOCOMPLETE_STEP_PROMPT_SMS = 'QUESTIONNAIRE_AUTOCOMPLETE_STEP_PROMPT_SMS'
@@ -208,6 +209,12 @@ export const changeStepTitle = (stepId, newTitle) => ({
   type: CHANGE_STEP_TITLE,
   stepId,
   newTitle
+})
+
+export const changeStepRelevant = (stepId, relevant) => ({
+  type: CHANGE_STEP_RELEVANT,
+  stepId,
+  relevant
 })
 
 export const changeSectionTitle = (sectionId, newTitle) => ({

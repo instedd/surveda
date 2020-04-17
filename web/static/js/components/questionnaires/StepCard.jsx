@@ -2,8 +2,9 @@ import React, { Component, PropTypes } from 'react'
 import { bindActionCreators } from 'redux'
 import { connect } from 'react-redux'
 import * as questionnaireActions from '../../actions/questionnaire'
-import { EditableTitleLabel, Card } from '../ui'
+import { EditableTitleLabel, Card, appliesRelevant } from '../ui'
 import { translate } from 'react-i18next'
+import { Button } from 'react-materialize'
 
 class StepCard extends Component {
   stepTitleSubmit(value) {
@@ -11,8 +12,14 @@ class StepCard extends Component {
     this.props.questionnaireActions.changeStepTitle(stepId, value)
   }
 
+  stepRelevantSubmit(value) {
+    const { stepId } = this.props
+    this.props.questionnaireActions.changeStepRelevant(stepId, value)
+  }
+
   render() {
-    const { onCollapse, stepId, children, icon, stepTitle, readOnly, t } = this.props
+    const { onCollapse, stepId, children, icon, stepTitle, readOnly, t, relevant, stepType } = this.props
+    const renderRelevant = relevant => <Button onClick={value => this.stepRelevantSubmit(!relevant)}>{relevant ? 'Relevant' : 'No relevant'}</Button>
 
     return (
       <Card key={stepId}>
@@ -22,6 +29,8 @@ class StepCard extends Component {
               <div className='col s12'>
                 {icon}
                 <EditableTitleLabel className='editable-field' title={stepTitle} readOnly={readOnly} emptyText={t('Untitled question')} onSubmit={value => this.stepTitleSubmit(value)} />
+                {/* <Button onClick={value => this.stepRelevantSubmit(!relevant)}>{relevant ? "Relevant" : "No relevant"}</Button> */}
+                {appliesRelevant(stepType) ? renderRelevant(relevant) : null}
                 <a href='#!'
                   className='collapse right'
                   onClick={e => {
@@ -48,7 +57,9 @@ StepCard.propTypes = {
   children: PropTypes.node,
   onCollapse: PropTypes.func.isRequired,
   questionnaireActions: PropTypes.any,
-  readOnly: PropTypes.bool
+  readOnly: PropTypes.bool,
+  relevant: PropTypes.bool,
+  stepType: PropTypes.string
 }
 
 const mapDispatchToProps = (dispatch) => ({
