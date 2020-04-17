@@ -425,13 +425,13 @@ defmodule Ask.Runtime.Session do
     session |> handle_step_answer(step_answer, current_mode)
   end
 
-  # If the respondent has answered at least `min_relevant_questions` relevant steps
+  # If the respondent has answered at least `min_relevant_steps` relevant steps
   # and the reply doesn't defines already a disposition
   # then, 'interim partial' disposition is returned in reply
   defp relevant_interim_partial_step({:ok, flow, %{disposition: nil} = reply} = step_answer, %{disposition: "started"} = respondent) do
     new_step_answer = if Flow.interim_partial_by_relevant_steps?(flow) do # Filtered here to avoid fetching the responses unnecessarily
       valid_relevant_responses = all_responses(respondent.id, reply) |> Enum.count(&Flow.relevant_response?(flow, &1))
-      if valid_relevant_responses >= Flow.min_relevant_questions(flow) do
+      if valid_relevant_responses >= Flow.min_relevant_steps(flow) do
         {:ok, flow, %{reply | disposition: "interim partial"}}
       end
     end
