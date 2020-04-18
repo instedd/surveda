@@ -17,12 +17,13 @@ type Props = {
   onClick: Function,
   hasErrors: boolean,
   readOnly: boolean,
-  quotaCompletedSteps: boolean
+  quotaCompletedSteps: boolean,
+  partialRelevantEnabled: boolean
 };
 
 class QuestionnaireClosedStep extends Component<Props> {
   render() {
-    const { step, onClick, hasErrors, readOnly, quotaCompletedSteps, t } = this.props
+    const { step, onClick, hasErrors, readOnly, quotaCompletedSteps, partialRelevantEnabled, t } = this.props
 
     const stepIconClass = classNames({
       'material-icons left': true,
@@ -45,7 +46,7 @@ class QuestionnaireClosedStep extends Component<Props> {
               }}>
                 <i className={stepIconClass}>{stepIconFont}</i>
                 <UntitledIfEmpty className={classNames({'text-error': hasErrors})} text={step.title} emptyText={t('Untitled question')} />
-                {appliesRelevant(step.type) ? renderRelevant(step.relevant) : null}
+                {partialRelevantEnabled && appliesRelevant(step.type) ? renderRelevant(step.relevant) : null}
                 <i className={classNames({'material-icons right grey-text': true, 'text-error': hasErrors})}>expand_more</i>
               </a>
             </div>
@@ -63,8 +64,10 @@ const mapStateToProps = (state, ownProps) => {
   if (ownProps.step.type == 'language-selection') {
     lang = null
   }
+  const questionnaire = state.questionnaire && state.questionnaire.data
   return {
-    hasErrors: hasErrorsInPrefixWithModeAndLanguage(state.questionnaire.errors, ownProps.errorPath, mode, lang)
+    hasErrors: hasErrorsInPrefixWithModeAndLanguage(state.questionnaire.errors, ownProps.errorPath, mode, lang),
+    partialRelevantEnabled: questionnaire && questionnaire.partialRelevantConfig && questionnaire.partialRelevantConfig.enabled
   }
 }
 

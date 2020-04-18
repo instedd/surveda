@@ -11,7 +11,8 @@ export type Questionnaire = {
   activeMode: ?string,
   settings: Settings,
   projectId: number,
-  valid: ?boolean
+  valid: ?boolean,
+  partialRelevantConfig: Object
 };
 
 export type Settings = {

@@ -18,7 +18,7 @@ class StepCard extends Component {
   }
 
   render() {
-    const { onCollapse, stepId, children, icon, stepTitle, readOnly, t, relevant, stepType } = this.props
+    const { onCollapse, stepId, children, icon, stepTitle, readOnly, t, relevant, stepType, partialRelevantEnabled } = this.props
     const renderRelevant = relevant => <Button onClick={value => this.stepRelevantSubmit(!relevant)}>{relevant ? 'Relevant' : 'No relevant'}</Button>
 
     return (
@@ -30,7 +30,7 @@ class StepCard extends Component {
                 {icon}
                 <EditableTitleLabel className='editable-field' title={stepTitle} readOnly={readOnly} emptyText={t('Untitled question')} onSubmit={value => this.stepTitleSubmit(value)} />
                 {/* <Button onClick={value => this.stepRelevantSubmit(!relevant)}>{relevant ? "Relevant" : "No relevant"}</Button> */}
-                {appliesRelevant(stepType) ? renderRelevant(relevant) : null}
+                {partialRelevantEnabled && appliesRelevant(stepType) ? renderRelevant(relevant) : null}
                 <a href='#!'
                   className='collapse right'
                   onClick={e => {
@@ -59,11 +59,19 @@ StepCard.propTypes = {
   questionnaireActions: PropTypes.any,
   readOnly: PropTypes.bool,
   relevant: PropTypes.bool,
-  stepType: PropTypes.string
+  stepType: PropTypes.string,
+  partialRelevantEnabled: PropTypes.bool
 }
 
-const mapDispatchToProps = (dispatch) => ({
+const mapStateToProps = state => {
+  const questionnaire = state.questionnaire && state.questionnaire.data
+  return {
+    partialRelevantEnabled: questionnaire && questionnaire.partialRelevantConfig && questionnaire.partialRelevantConfig.enabled
+  }
+}
+
+const mapDispatchToProps = dispatch => ({
   questionnaireActions: bindActionCreators(questionnaireActions, dispatch)
 })
 
-export default translate()(connect(null, mapDispatchToProps)(StepCard))
+export default translate()(connect(mapStateToProps, mapDispatchToProps)(StepCard))

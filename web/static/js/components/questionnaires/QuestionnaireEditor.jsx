@@ -77,6 +77,10 @@ class QuestionnaireEditor extends Component<any, State> {
     this.props.questionnaireActions.toggleQuotaCompletedSteps()
   }
 
+  changePartialRelevantEnabled(enabled) {
+    this.props.questionnaireActions.changePartialRelevantEnabled(enabled)
+  }
+
   questionnaireAddStep(e) {
     e.preventDefault()
 
@@ -289,6 +293,7 @@ class QuestionnaireEditor extends Component<any, State> {
     const settings = userSettings.settings
     const skipOnboarding = (settings.onboarding && settings.onboarding.questionnaire) || userLevel == 'reader'
     const hasQuotaCompletedSteps = !!questionnaire.quotaCompletedSteps
+    const partialRelevantEnabled = questionnaire.partialRelevantConfig && questionnaire.partialRelevantConfig.enabled
 
     let testControls = null
     if (!readOnly && errors.length == 0) {
@@ -348,6 +353,13 @@ class QuestionnaireEditor extends Component<any, State> {
                       <span className='lever' />
                     </label>
                     {t('Quota completed steps')}
+                  </div>
+                  <div className='switch'>
+                    <label>
+                      <input type='checkbox' checked={partialRelevantEnabled} onChange={() => this.changePartialRelevantEnabled(!partialRelevantEnabled)} disabled={readOnly} />
+                      <span className='lever' />
+                    </label>
+                    {t('Partial relevant')}
                   </div>
                 </div>
               </div>

@@ -24,6 +24,7 @@ const dataReducer = (state: Questionnaire, action): Questionnaire => {
     case actions.ADD_MODE: return addMode(state, action)
     case actions.REMOVE_MODE: return removeMode(state, action)
     case actions.TOGGLE_QUOTA_COMPLETED_STEPS: return toggleQuotaCompletedSteps(state, action)
+    case actions.CHANGE_PARTIAL_RELEVANT_ENABLED: return changePartialRelevantEnabled(state, action)
     case actions.ADD_LANGUAGE: return addLanguage(state, action)
     case actions.REMOVE_LANGUAGE: return removeLanguage(state, action)
     case actions.SET_DEFAULT_LANGUAGE: return setDefaultLanguage(state, action)
@@ -1007,6 +1008,16 @@ const toggleQuotaCompletedSteps = (state, action) => {
     return {
       ...state,
       quotaCompletedSteps: [newExplanationStep()]
+    }
+  }
+}
+
+const changePartialRelevantEnabled = (state, action) => {
+  return {
+    ...state,
+    partialRelevantConfig: {
+      ...state.partialRelevantConfig,
+      enabled: action.enabled
     }
   }
 }
