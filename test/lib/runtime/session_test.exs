@@ -1099,7 +1099,7 @@ defmodule Ask.SessionTest do
       quiz = quiz |> Questionnaire.changeset(%{partial_relevant_config: %{"min_relevant_steps" => 2, "ignored_values" => ""}, steps: steps}) |> Repo.update!
       session = start_session(respondent, quiz, channel)
 
-      {:ok, session, reply, _timeout} = Session.sync_step(updated_session(respondent.id, session), Flow.Message.reply("Yes"))
+      {:ok, session, reply, _timeout} = Session.sync_step(session, Flow.Message.reply("Yes"))
       assert nil == reply.disposition
 
       {:ok, _session, reply, _timeout} = Session.sync_step(updated_session(respondent.id, session), Flow.Message.reply("Yes"))
@@ -1113,7 +1113,7 @@ defmodule Ask.SessionTest do
       quiz = quiz |> Questionnaire.changeset(%{partial_relevant_config: %{"min_relevant_steps" => 2, "ignored_values" => ""}, steps: steps}) |> Repo.update!
       session = start_session(respondent, quiz, channel)
 
-      {:ok, session, reply, _timeout} = Session.sync_step(updated_session(respondent.id, session), Flow.Message.reply("Yes"))
+      {:ok, session, reply, _timeout} = Session.sync_step(session, Flow.Message.reply("Yes"))
       assert nil == reply.disposition
 
       {:ok, session, reply, _timeout} = Session.sync_step(updated_session(respondent.id, session), Flow.Message.reply("Yes"))
@@ -1129,7 +1129,7 @@ defmodule Ask.SessionTest do
       quiz = quiz |> Questionnaire.changeset(%{partial_relevant_config: %{"min_relevant_steps" => 2, "ignored_values" => "refused"}, steps: steps}) |> Repo.update!
       session = start_session(respondent, quiz, channel)
 
-      {:ok, session, reply, _timeout} = Session.sync_step(updated_session(respondent.id, session), Flow.Message.reply("Yes"))
+      {:ok, session, reply, _timeout} = Session.sync_step(session, Flow.Message.reply("Yes"))
       assert nil == reply.disposition
 
       {:ok, session, reply, _timeout} = Session.sync_step(updated_session(respondent.id, session), Flow.Message.reply("Yes"))
@@ -1145,7 +1145,7 @@ defmodule Ask.SessionTest do
       quiz = quiz |> Questionnaire.changeset(%{partial_relevant_config: %{"min_relevant_steps" => 2, "ignored_values" => "refused, SKIP"}, steps: steps}) |> Repo.update!
       session = start_session(respondent, quiz, channel)
 
-      {:ok, session, reply, _timeout} = Session.sync_step(updated_session(respondent.id, session), Flow.Message.reply("S")) # skip response
+      {:ok, session, reply, _timeout} = Session.sync_step(session, Flow.Message.reply("S")) # skip response
       assert nil == reply.disposition
 
       {:ok, session, reply, _timeout} = Session.sync_step(updated_session(respondent.id, session), Flow.Message.reply("Yes"))
@@ -1155,12 +1155,24 @@ defmodule Ask.SessionTest do
       assert nil == reply.disposition # third response, second relevant response, but no interim partial since first relevant response was ignored
     end
 
+    test "if questionnaire has configure min_relevant_steps: 1, then, the first relevant response should indicate 'interim partial' disposition", %{quiz: quiz, respondent: respondent, channel: channel} do
+      steps = QuestionnaireSteps.odd_relevant_steps()
+      quiz = quiz |> Questionnaire.changeset(%{partial_relevant_config: %{"min_relevant_steps" => 1}, steps: steps}) |> Repo.update!
+      session = start_session(respondent, quiz, channel)
+      assert "contacted" == session.respondent.disposition
+
+      {:ok, _session, reply, _timeout} = Session.sync_step(session, Flow.Message.reply("Yes"))
+      assert "interim partial" == reply.disposition
+      histories = Ask.RespondentDispositionHistory |> Repo.all |> Enum.map(fn hist -> hist.disposition end)
+      assert ["queued", "contacted", "started"] == histories, "Although is never \"seen\", respondent passed through started disposition and must be logged"
+    end
+
     test "if respondent refused to answer but 'refused' is not in ignored_values, then the response should be consider valid", %{quiz: quiz, respondent: respondent, channel: channel} do
       steps = QuestionnaireSteps.odd_relevant_with_numeric_refusal()
       quiz = quiz |> Questionnaire.changeset(%{partial_relevant_config: %{"min_relevant_steps" => 2, "ignored_values" => ""}, steps: steps}) |> Repo.update!
       session = start_session(respondent, quiz, channel)
 
-      {:ok, session, reply, _timeout} = Session.sync_step(updated_session(respondent.id, session), Flow.Message.reply("Yes"))
+      {:ok, session, reply, _timeout} = Session.sync_step(session, Flow.Message.reply("Yes"))
       assert nil == reply.disposition
 
       {:ok, session, reply, _timeout} = Session.sync_step(updated_session(respondent.id, session), Flow.Message.reply("Yes"))
@@ -1174,7 +1186,7 @@ defmodule Ask.SessionTest do
          %{quiz: quiz, respondent: respondent, channel: channel} do
 
       session = start_session(respondent, quiz, channel)
-      {:ok, session, reply, _timeout} = Session.sync_step(updated_session(respondent.id, session), Flow.Message.reply("Yes"))
+      {:ok, session, reply, _timeout} = Session.sync_step(session, Flow.Message.reply("Yes"))
       assert nil == reply.disposition
       {:ok, session, reply, _timeout} = Session.sync_step(updated_session(respondent.id, session), Flow.Message.reply("Yes"))
       assert nil == reply.disposition
@@ -1190,7 +1202,7 @@ defmodule Ask.SessionTest do
       quiz = quiz |> Questionnaire.changeset(%{partial_relevant_config: %{"min_relevant_steps" => 2, "ignored_values" => ""}, steps: steps}) |> Repo.update!
       session = start_session(respondent, quiz, channel)
 
-      {:ok, session, reply, _timeout} = Session.sync_step(updated_session(respondent.id, session), Flow.Message.reply("Yes"))
+      {:ok, session, reply, _timeout} = Session.sync_step(session, Flow.Message.reply("Yes"))
       assert nil == reply.disposition
 
       {:ok, session, reply, _timeout} = Session.sync_step(updated_session(respondent.id, session), Flow.Message.reply("Yes"))
@@ -1211,7 +1223,7 @@ defmodule Ask.SessionTest do
       quiz = quiz |> Questionnaire.changeset(%{partial_relevant_config: %{"min_relevant_steps" => 2, "ignored_values" => ""}, steps: steps}) |> Repo.update!
       session = start_session(respondent, quiz, channel)
 
-      {:ok, session, reply, _timeout} = Session.sync_step(updated_session(respondent.id, session), Flow.Message.reply("Yes"))
+      {:ok, session, reply, _timeout} = Session.sync_step(session, Flow.Message.reply("Yes"))
       assert nil == reply.disposition
 
       {:stopped, reply, _respondent} = Session.sync_step(updated_session(respondent.id, session), Flow.Message.reply("stop"))
@@ -1220,9 +1232,9 @@ defmodule Ask.SessionTest do
 
     defp start_session(respondent, quiz, channel) do
       respondent = Ask.Runtime.Broker.configure_new_respondent(respondent, quiz.id, ["sms"])
-      {:ok, session, _, _timeout} = Session.start(quiz, respondent, channel, "sms", Schedule.always())
-      Session.sync_step(session, Flow.Message.answer())
-      session
+      {:ok, started_session, _, _} = Session.start(quiz, respondent, channel, "sms", Schedule.always())
+      {:ok, session, _, _} = Session.sync_step(started_session, Flow.Message.answer())
+      updated_session(respondent.id, session)
     end
 
     defp updated_session(respondent_id, session), do: %{session | respondent:  Repo.get(Respondent, respondent_id)}
