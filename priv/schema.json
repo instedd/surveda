@@ -10,7 +10,7 @@
       "properties": {
         "steps": {"$ref": "#/definitions/steps-and-sections"},
         "settings": {"$ref": "#/definitions/settings"},
-        "partial_relevant_config": {"$ref": "#/definitions/partial_relevant_config"}
+        "partial_relevant_config": {"oneOf": [{"$ref": "#/definitions/partial_relevant_config"}, {"type": "null"}]}
       },
       "required": ["steps", "settings"]
     },

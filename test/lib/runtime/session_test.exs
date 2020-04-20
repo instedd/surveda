@@ -1182,6 +1182,22 @@ defmodule Ask.SessionTest do
       assert "interim partial" == reply.disposition # third response, second relevant response, but ignored value since is refusal response
     end
 
+    test "if questionnaire hasn't got partial_relevant_config, no response should trigger an 'interim partial' disposition even if all steps are relevant",
+         %{quiz: quiz, respondent: respondent, channel: channel} do
+      steps = QuestionnaireSteps.all_relevant_steps()
+      quiz = quiz |> Questionnaire.changeset(%{partial_relevant_config: nil, steps: steps}) |> Repo.update!
+
+      session = start_session(respondent, quiz, channel)
+      {:ok, session, reply, _timeout} = Session.sync_step(session, Flow.Message.reply("Yes"))
+      assert nil == reply.disposition
+      {:ok, session, reply, _timeout} = Session.sync_step(updated_session(respondent.id, session), Flow.Message.reply("Yes"))
+      assert nil == reply.disposition
+      {:ok, session, reply, _timeout} = Session.sync_step(updated_session(respondent.id, session), Flow.Message.reply("3"))
+      assert nil == reply.disposition
+      {:end, reply, _respondent} = Session.sync_step(updated_session(respondent.id, session), Flow.Message.reply("4"))
+      assert nil == reply.disposition
+    end
+
     test "if questionnaire has `partial_relevant_config.enabled: false`, no response should trigger an 'interim partial' disposition even if all steps are relevant",
          %{quiz: quiz, respondent: respondent, channel: channel} do
       steps = QuestionnaireSteps.all_relevant_steps()
