@@ -1,6 +1,6 @@
 defmodule Ask.Runtime.Flow do
   # current_step: step_index | {section_index, step_index}
-  defstruct current_step: nil, questionnaire: nil, mode: nil, language: nil, retries: 0, in_quota_completed_steps: false, has_sections: false, section_order: nil
+  defstruct current_step: nil, questionnaire: nil, mode: nil, language: nil, retries: 0, in_quota_completed_steps: false, has_sections: false, section_order: nil, ignored_values_from_relevant_steps: []
   alias Ask.{Repo, Questionnaire}
   alias Ask.Runtime.{Reply, Step}
   alias Ask.Runtime.Flow.{Visitor, Message}
@@ -15,7 +15,7 @@ defmodule Ask.Runtime.Flow do
     else
       nil
     end
-    %Flow{questionnaire: quiz, mode: mode, language: quiz.default_language, has_sections: has_sections, section_order: section_order}
+    %Flow{questionnaire: quiz, mode: mode, language: quiz.default_language, has_sections: has_sections, section_order: section_order, ignored_values_from_relevant_steps: ignored_values_from_relevant_steps(quiz)}
   end
 
   def step(flow, visitor, reply, old_disposition) do
@@ -47,7 +47,7 @@ defmodule Ask.Runtime.Flow do
 
   def load(state) do
     quiz = Repo.get(Questionnaire, state["questionnaire_id"])
-    %Flow{questionnaire: quiz, current_step: load_current_step(state["current_step"]), mode: state["mode"], language: state["language"], retries: state["retries"], in_quota_completed_steps: state["in_quota_completed_steps"], has_sections: questionnaire_has_sections(quiz), section_order: state["section_order"]}
+    %Flow{questionnaire: quiz, current_step: load_current_step(state["current_step"]), mode: state["mode"], language: state["language"], retries: state["retries"], in_quota_completed_steps: state["in_quota_completed_steps"], has_sections: questionnaire_has_sections(quiz), section_order: state["section_order"], ignored_values_from_relevant_steps: ignored_values_from_relevant_steps(quiz)}
   end
 
   def load_current_step([first, second]) do
@@ -511,9 +511,9 @@ defmodule Ask.Runtime.Flow do
     questionnaire.partial_relevant_config["min_relevant_steps"]
   end
 
-  def relevant_response?(%{questionnaire: questionnaire} = _flow, response) do
+  def relevant_response?(%{questionnaire: questionnaire, ignored_values_from_relevant_steps: ignored_values} = _flow, response) do
     quiz_step = questionnaire.steps |> Enum.find(fn step -> step["store"] == response.field_name end)
-    not_ignored = fn value -> String.upcase(value) not in ignored_values_from_relevant_steps(questionnaire) end
+    not_ignored = fn value -> String.upcase(value) not in ignored_values end
 
     quiz_step["relevant"] && not_ignored.(response.value)
   end
