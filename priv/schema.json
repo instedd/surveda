@@ -247,10 +247,11 @@
     "partial_relevant_config": {
       "type": "object",
       "properties": {
+        "enabled": {"type": "boolean"},
         "min_relevant_steps": {"type": "integer"},
         "ignored_values": {"type": "string"}
       },
-      "required": ["min_relevant_steps"]
+      "required": ["enabled"]
     }
   }
 }

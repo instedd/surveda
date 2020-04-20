@@ -502,9 +502,9 @@ defmodule Ask.Runtime.Flow do
     end
   end
 
-  def interim_partial_by_relevant_steps?(flow) do
-    is_relevant_step = fn step -> step["relevant"] end
-    steps(flow) |> Enum.any?(is_relevant_step)
+  def interim_partial_by_relevant_steps?(%{questionnaire: questionnaire} = _flow) do
+    partial_relevant_config = questionnaire.partial_relevant_config
+    partial_relevant_config["enabled"] && is_number(partial_relevant_config["min_relevant_steps"])
   end
 
   def min_relevant_steps(%{questionnaire: questionnaire} = _flow) do
