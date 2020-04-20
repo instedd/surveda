@@ -10,7 +10,7 @@
       "properties": {
         "steps": {"$ref": "#/definitions/steps-and-sections"},
         "settings": {"$ref": "#/definitions/settings"},
-        "partial_config": {"$ref": "#/definitions/partial_config"}
+        "partial_relevant_config": {"$ref": "#/definitions/partial_relevant_config"}
       },
       "required": ["steps", "settings"]
     },
@@ -244,7 +244,7 @@
       "required": ["text", "audio_source"]
     },
 
-    "partial_config": {
+    "partial_relevant_config": {
       "type": "object",
       "properties": {
         "min_relevant_steps": {"type": "integer"},

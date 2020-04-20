@@ -1096,7 +1096,7 @@ defmodule Ask.SessionTest do
   describe "sync_step - interim partial by responses" do
     test "indicates 'interim partial' disposition if respondent answers the min_relevant_steps", %{quiz: quiz, respondent: respondent, channel: channel} do
       steps = QuestionnaireSteps.all_relevant_steps()
-      quiz = quiz |> Questionnaire.changeset(%{partial_config: %{"min_relevant_steps" => 2, "ignored_values" => ""}, steps: steps}) |> Repo.update!
+      quiz = quiz |> Questionnaire.changeset(%{partial_relevant_config: %{"min_relevant_steps" => 2, "ignored_values" => ""}, steps: steps}) |> Repo.update!
       session = start_session(respondent, quiz, channel)
 
       {:ok, session, reply, _timeout} = Session.sync_step(updated_session(respondent.id, session), Flow.Message.reply("Yes"))
@@ -1110,7 +1110,7 @@ defmodule Ask.SessionTest do
          %{quiz: quiz, respondent: respondent, channel: channel} do
 
       steps = QuestionnaireSteps.odd_relevant_steps()
-      quiz = quiz |> Questionnaire.changeset(%{partial_config: %{"min_relevant_steps" => 2, "ignored_values" => ""}, steps: steps}) |> Repo.update!
+      quiz = quiz |> Questionnaire.changeset(%{partial_relevant_config: %{"min_relevant_steps" => 2, "ignored_values" => ""}, steps: steps}) |> Repo.update!
       session = start_session(respondent, quiz, channel)
 
       {:ok, session, reply, _timeout} = Session.sync_step(updated_session(respondent.id, session), Flow.Message.reply("Yes"))
@@ -1126,7 +1126,7 @@ defmodule Ask.SessionTest do
     test "does not indicates 'interim partial' disposition if respondent answers the min_relevant_steps but one is ignored answer (numeric refusal)",
          %{quiz: quiz, respondent: respondent, channel: channel} do
       steps = QuestionnaireSteps.odd_relevant_with_numeric_refusal()
-      quiz = quiz |> Questionnaire.changeset(%{partial_config: %{"min_relevant_steps" => 2, "ignored_values" => "refused"}, steps: steps}) |> Repo.update!
+      quiz = quiz |> Questionnaire.changeset(%{partial_relevant_config: %{"min_relevant_steps" => 2, "ignored_values" => "refused"}, steps: steps}) |> Repo.update!
       session = start_session(respondent, quiz, channel)
 
       {:ok, session, reply, _timeout} = Session.sync_step(updated_session(respondent.id, session), Flow.Message.reply("Yes"))
@@ -1142,7 +1142,7 @@ defmodule Ask.SessionTest do
     test "does not indicates 'interim partial' disposition if respondent answers the min_relevant_steps but one is ignored answer (multiple-choice)",
          %{quiz: quiz, respondent: respondent, channel: channel} do
       steps = QuestionnaireSteps.odd_relevant_with_multiple_choice_refusal()
-      quiz = quiz |> Questionnaire.changeset(%{partial_config: %{"min_relevant_steps" => 2, "ignored_values" => "refused, SKIP"}, steps: steps}) |> Repo.update!
+      quiz = quiz |> Questionnaire.changeset(%{partial_relevant_config: %{"min_relevant_steps" => 2, "ignored_values" => "refused, SKIP"}, steps: steps}) |> Repo.update!
       session = start_session(respondent, quiz, channel)
 
       {:ok, session, reply, _timeout} = Session.sync_step(updated_session(respondent.id, session), Flow.Message.reply("S")) # skip response
@@ -1157,7 +1157,7 @@ defmodule Ask.SessionTest do
 
     test "if respondent refused to answer but 'refused' is not in ignored_values, then the response should be consider valid", %{quiz: quiz, respondent: respondent, channel: channel} do
       steps = QuestionnaireSteps.odd_relevant_with_numeric_refusal()
-      quiz = quiz |> Questionnaire.changeset(%{partial_config: %{"min_relevant_steps" => 2, "ignored_values" => ""}, steps: steps}) |> Repo.update!
+      quiz = quiz |> Questionnaire.changeset(%{partial_relevant_config: %{"min_relevant_steps" => 2, "ignored_values" => ""}, steps: steps}) |> Repo.update!
       session = start_session(respondent, quiz, channel)
 
       {:ok, session, reply, _timeout} = Session.sync_step(updated_session(respondent.id, session), Flow.Message.reply("Yes"))
@@ -1187,7 +1187,7 @@ defmodule Ask.SessionTest do
     test "if respondent already has 'disposition: interim partial' response should not trigger an 'interim partial' disposition",
          %{quiz: quiz, respondent: respondent, channel: channel} do
       steps = QuestionnaireSteps.all_relevant_steps()
-      quiz = quiz |> Questionnaire.changeset(%{partial_config: %{"min_relevant_steps" => 2, "ignored_values" => ""}, steps: steps}) |> Repo.update!
+      quiz = quiz |> Questionnaire.changeset(%{partial_relevant_config: %{"min_relevant_steps" => 2, "ignored_values" => ""}, steps: steps}) |> Repo.update!
       session = start_session(respondent, quiz, channel)
 
       {:ok, session, reply, _timeout} = Session.sync_step(updated_session(respondent.id, session), Flow.Message.reply("Yes"))
@@ -1208,7 +1208,7 @@ defmodule Ask.SessionTest do
 
     test "'interim partial' disposition should not override stop-disposition", %{quiz: quiz, respondent: respondent, channel: channel} do
       steps = QuestionnaireSteps.all_relevant_steps()
-      quiz = quiz |> Questionnaire.changeset(%{partial_config: %{"min_relevant_steps" => 2, "ignored_values" => ""}, steps: steps}) |> Repo.update!
+      quiz = quiz |> Questionnaire.changeset(%{partial_relevant_config: %{"min_relevant_steps" => 2, "ignored_values" => ""}, steps: steps}) |> Repo.update!
       session = start_session(respondent, quiz, channel)
 
       {:ok, session, reply, _timeout} = Session.sync_step(updated_session(respondent.id, session), Flow.Message.reply("Yes"))

@@ -91,7 +91,7 @@ defmodule Ask.QuestionnaireControllerTest do
         "updated_at" => DateTime.to_iso8601(questionnaire.updated_at),
         "valid" => true,
         "description" => nil,
-        "partial_config" => nil,
+        "partial_relevant_config" => nil,
         "settings" => %{
           "error_message" => %{
             "en" => %{

@@ -508,7 +508,7 @@ defmodule Ask.Runtime.Flow do
   end
 
   def min_relevant_steps(%{questionnaire: questionnaire} = _flow) do
-    questionnaire.partial_config["min_relevant_steps"]
+    questionnaire.partial_relevant_config["min_relevant_steps"]
   end
 
   def relevant_response?(%{questionnaire: questionnaire} = _flow, response) do
@@ -520,7 +520,7 @@ defmodule Ask.Runtime.Flow do
 
   defp ignored_values_from_relevant_steps(questionnaire) do
     not_empty = fn str -> str != "" end
-    (questionnaire.partial_config["ignored_values"] || "")
+    (questionnaire.partial_relevant_config["ignored_values"] || "")
     |> String.split(",")
     |> Enum.map(&String.trim/1)
     |> Enum.filter(not_empty)
