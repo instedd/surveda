@@ -244,16 +244,6 @@ defmodule Ask.SessionTest do
     assert respondent_received.id == respondent.id
   end
 
-  defp handle_session_started(session_started, questionnaire_id, sequence_mode) do
-    case session_started do
-      {:ok, session, reply, timeout} ->
-        respondent = Ask.Runtime.Broker.configure_new_respondent(session.respondent, questionnaire_id, sequence_mode)
-        {:ok, %Session{session | respondent: Ask.Runtime.RetriesHistogram.add_new_respondent(respondent, session, timeout)}, reply, timeout}
-      other -> other
-    end
-  end
-
-
   test "last retry", %{quiz: quiz, respondent: respondent, test_channel: test_channel, channel: channel} do
     {:ok, session = %Session{token: token, respondent: respondent}, _, 120} = Session.start(quiz, respondent, channel, "sms", Schedule.always())
     assert_receive [:setup, ^test_channel, ^respondent, ^token]
@@ -1102,4 +1092,326 @@ defmodule Ask.SessionTest do
       assert fourth_entry.action_data == "Do you exercise?"
     end
   end
+
+  describe "sync_step - interim partial by responses" do
+    test "indicates 'interim partial' disposition if respondent answers the min_relevant_steps", %{quiz: quiz, respondent: respondent, channel: channel} do
+      steps = QuestionnaireSteps.all_relevant_steps()
+      quiz = quiz |> Questionnaire.changeset(%{partial_relevant_config: %{"enabled" => true, "min_relevant_steps" => 2, "ignored_values" => ""}, steps: steps}) |> Repo.update!
+      session = start_session(respondent, quiz, channel)
+
+      {:ok, session, reply, _timeout} = Session.sync_step(session, Flow.Message.reply("Yes"))
+      assert nil == reply.disposition
+
+      {:ok, _session, reply, _timeout} = Session.sync_step(updated_session(respondent.id, session), Flow.Message.reply("Yes"))
+      assert "interim partial" == reply.disposition
+    end
+
+    test "indicates 'interim partial' disposition if respondent answers the min_relevant_steps even if are not followed",
+         %{quiz: quiz, respondent: respondent, channel: channel} do
+
+      steps = QuestionnaireSteps.odd_relevant_steps()
+      quiz = quiz |> Questionnaire.changeset(%{partial_relevant_config: %{"enabled" => true, "min_relevant_steps" => 2, "ignored_values" => ""}, steps: steps}) |> Repo.update!
+      session = start_session(respondent, quiz, channel)
+
+      {:ok, session, reply, _timeout} = Session.sync_step(session, Flow.Message.reply("Yes"))
+      assert nil == reply.disposition
+
+      {:ok, session, reply, _timeout} = Session.sync_step(updated_session(respondent.id, session), Flow.Message.reply("Yes"))
+      assert nil == reply.disposition # second response but this is not a relevant question
+
+      {:ok, _session, reply, _timeout} = Session.sync_step(updated_session(respondent.id, session), Flow.Message.reply("3"))
+      assert "interim partial" == reply.disposition # third response, but second relevant response
+    end
+
+    test "does not indicates 'interim partial' disposition if respondent answers the min_relevant_steps but one is ignored answer (numeric refusal)",
+         %{quiz: quiz, respondent: respondent, channel: channel} do
+      steps = QuestionnaireSteps.odd_relevant_with_numeric_refusal()
+      quiz = quiz |> Questionnaire.changeset(%{partial_relevant_config: %{"enabled" => true, "min_relevant_steps" => 2, "ignored_values" => "refused"}, steps: steps}) |> Repo.update!
+      session = start_session(respondent, quiz, channel)
+
+      {:ok, session, reply, _timeout} = Session.sync_step(session, Flow.Message.reply("Yes"))
+      assert nil == reply.disposition
+
+      {:ok, session, reply, _timeout} = Session.sync_step(updated_session(respondent.id, session), Flow.Message.reply("Yes"))
+      assert nil == reply.disposition # second response but this is not a relevant question
+
+      {:ok, _session, reply, _timeout} = Session.sync_step(updated_session(respondent.id, session), Flow.Message.reply("#")) # refuse response
+      assert nil == reply.disposition # third response, second relevant response, but ignored value since is refusal response
+    end
+
+    test "does not indicates 'interim partial' disposition if respondent answers the min_relevant_steps but one is ignored answer (multiple-choice)",
+         %{quiz: quiz, respondent: respondent, channel: channel} do
+      steps = QuestionnaireSteps.odd_relevant_with_multiple_choice_refusal()
+      quiz = quiz |> Questionnaire.changeset(%{partial_relevant_config: %{"enabled" => true, "min_relevant_steps" => 2, "ignored_values" => "refused, SKIP"}, steps: steps}) |> Repo.update!
+      session = start_session(respondent, quiz, channel)
+
+      {:ok, session, reply, _timeout} = Session.sync_step(session, Flow.Message.reply("S")) # skip response
+      assert nil == reply.disposition
+
+      {:ok, session, reply, _timeout} = Session.sync_step(updated_session(respondent.id, session), Flow.Message.reply("Yes"))
+      assert nil == reply.disposition # second response but this is not a relevant question
+
+      {:ok, _session, reply, _timeout} = Session.sync_step(updated_session(respondent.id, session), Flow.Message.reply("3"))
+      assert nil == reply.disposition # third response, second relevant response, but no interim partial since first relevant response was ignored
+    end
+
+    test "if questionnaire has configure min_relevant_steps: 1, then, the first relevant response should indicate 'interim partial' disposition", %{quiz: quiz, respondent: respondent, channel: channel} do
+      steps = QuestionnaireSteps.odd_relevant_steps()
+      quiz = quiz |> Questionnaire.changeset(%{partial_relevant_config: %{"enabled" => true, "min_relevant_steps" => 1}, steps: steps}) |> Repo.update!
+      session = start_session(respondent, quiz, channel)
+      assert "contacted" == session.respondent.disposition
+
+      {:ok, _session, reply, _timeout} = Session.sync_step(session, Flow.Message.reply("Yes"))
+      assert "interim partial" == reply.disposition
+      histories = Ask.RespondentDispositionHistory |> Repo.all |> Enum.map(fn hist -> hist.disposition end)
+      assert ["queued", "contacted", "started"] == histories, "Although is never \"seen\", respondent passed through started disposition and must be logged"
+    end
+
+    test "if respondent refused to answer but 'refused' is not in ignored_values, then the response should be consider valid", %{quiz: quiz, respondent: respondent, channel: channel} do
+      steps = QuestionnaireSteps.odd_relevant_with_numeric_refusal()
+      quiz = quiz |> Questionnaire.changeset(%{partial_relevant_config: %{"enabled" => true, "min_relevant_steps" => 2, "ignored_values" => ""}, steps: steps}) |> Repo.update!
+      session = start_session(respondent, quiz, channel)
+
+      {:ok, session, reply, _timeout} = Session.sync_step(session, Flow.Message.reply("Yes"))
+      assert nil == reply.disposition
+
+      {:ok, session, reply, _timeout} = Session.sync_step(updated_session(respondent.id, session), Flow.Message.reply("Yes"))
+      assert nil == reply.disposition # second response but this is not a relevant question
+
+      {:ok, _session, reply, _timeout} = Session.sync_step(updated_session(respondent.id, session), Flow.Message.reply("#")) # refuse response
+      assert "interim partial" == reply.disposition # third response, second relevant response, but ignored value since is refusal response
+    end
+
+    test "if questionnaire has `partial_relevant_config.enabled: false`, no response should trigger an 'interim partial' disposition even if all steps are relevant",
+         %{quiz: quiz, respondent: respondent, channel: channel} do
+      steps = QuestionnaireSteps.all_relevant_steps()
+      quiz = quiz |> Questionnaire.changeset(%{partial_relevant_config: %{"enabled" => false, "min_relevant_steps" => 2}, steps: steps}) |> Repo.update!
+
+      session = start_session(respondent, quiz, channel)
+      {:ok, session, reply, _timeout} = Session.sync_step(session, Flow.Message.reply("Yes"))
+      assert nil == reply.disposition
+      {:ok, session, reply, _timeout} = Session.sync_step(updated_session(respondent.id, session), Flow.Message.reply("Yes"))
+      assert nil == reply.disposition
+      {:ok, session, reply, _timeout} = Session.sync_step(updated_session(respondent.id, session), Flow.Message.reply("3"))
+      assert nil == reply.disposition
+      {:end, reply, _respondent} = Session.sync_step(updated_session(respondent.id, session), Flow.Message.reply("4"))
+      assert nil == reply.disposition
+    end
+
+    test "if questionnaire hasn't got min_relevant_steps configured, no response should trigger an 'interim partial' disposition even if all steps are relevant",
+         %{quiz: quiz, respondent: respondent, channel: channel} do
+      steps = QuestionnaireSteps.all_relevant_steps()
+      quiz = quiz |> Questionnaire.changeset(%{partial_relevant_config: %{"enabled" => true}, steps: steps}) |> Repo.update!
+
+      session = start_session(respondent, quiz, channel)
+      {:ok, session, reply, _timeout} = Session.sync_step(session, Flow.Message.reply("Yes"))
+      assert nil == reply.disposition
+      {:ok, session, reply, _timeout} = Session.sync_step(updated_session(respondent.id, session), Flow.Message.reply("Yes"))
+      assert nil == reply.disposition
+      {:ok, session, reply, _timeout} = Session.sync_step(updated_session(respondent.id, session), Flow.Message.reply("3"))
+      assert nil == reply.disposition
+      {:end, reply, _respondent} = Session.sync_step(updated_session(respondent.id, session), Flow.Message.reply("4"))
+      assert nil == reply.disposition
+    end
+
+    test "if questionnaire hasn't got any relevant question, no response should trigger an 'interim partial' disposition",
+         %{quiz: quiz, respondent: respondent, channel: channel} do
+      quiz = quiz |> Questionnaire.changeset(%{partial_relevant_config: %{"enabled" => true, "min_relevant_steps" => 2}}) |> Repo.update!
+
+      session = start_session(respondent, quiz, channel)
+      {:ok, session, reply, _timeout} = Session.sync_step(session, Flow.Message.reply("Yes"))
+      assert nil == reply.disposition
+      {:ok, session, reply, _timeout} = Session.sync_step(updated_session(respondent.id, session), Flow.Message.reply("Yes"))
+      assert nil == reply.disposition
+      {:ok, session, reply, _timeout} = Session.sync_step(updated_session(respondent.id, session), Flow.Message.reply("3"))
+      assert nil == reply.disposition
+      {:end, reply, _respondent} = Session.sync_step(updated_session(respondent.id, session), Flow.Message.reply("4"))
+      assert nil == reply.disposition
+    end
+
+    test "if respondent already has 'disposition: interim partial' response should not trigger an 'interim partial' disposition",
+         %{quiz: quiz, respondent: respondent, channel: channel} do
+      steps = QuestionnaireSteps.all_relevant_steps()
+      quiz = quiz |> Questionnaire.changeset(%{partial_relevant_config: %{"enabled" => true, "min_relevant_steps" => 2, "ignored_values" => ""}, steps: steps}) |> Repo.update!
+      session = start_session(respondent, quiz, channel)
+
+      {:ok, session, reply, _timeout} = Session.sync_step(session, Flow.Message.reply("Yes"))
+      assert nil == reply.disposition
+
+      {:ok, session, reply, _timeout} = Session.sync_step(updated_session(respondent.id, session), Flow.Message.reply("Yes"))
+      assert "interim partial" == reply.disposition
+
+      # update respondent with new disposition
+      Respondent |> Repo.get(respondent.id) |> Respondent.changeset(%{disposition: reply.disposition}) |> Repo.update!
+
+      {:ok, session, reply, _timeout} = Session.sync_step(updated_session(respondent.id, session), Flow.Message.reply("3"))
+      assert nil == reply.disposition
+
+      {:end, reply, _respondent} = Session.sync_step(updated_session(respondent.id, session), Flow.Message.reply("4"))
+      assert nil == reply.disposition
+    end
+
+    test "'interim partial' disposition should not override stop-disposition", %{quiz: quiz, respondent: respondent, channel: channel} do
+      steps = QuestionnaireSteps.all_relevant_steps()
+      quiz = quiz |> Questionnaire.changeset(%{partial_relevant_config: %{"enabled" => true, "min_relevant_steps" => 2}, steps: steps}) |> Repo.update!
+      session = start_session(respondent, quiz, channel)
+
+      {:ok, session, reply, _timeout} = Session.sync_step(session, Flow.Message.reply("Yes"))
+      assert nil == reply.disposition
+
+      {:stopped, reply, _respondent} = Session.sync_step(updated_session(respondent.id, session), Flow.Message.reply("stop"))
+      assert "breakoff" == reply.disposition
+    end
+
+    defp start_session(respondent, quiz, channel) do
+      respondent = Ask.Runtime.Broker.configure_new_respondent(respondent, quiz.id, ["sms"])
+      {:ok, started_session, _, _} = Session.start(quiz, respondent, channel, "sms", Schedule.always())
+      {:ok, session, _, _} = Session.sync_step(started_session, Flow.Message.answer())
+      updated_session(respondent.id, session)
+    end
+
+    defp updated_session(respondent_id, session), do: %{session | respondent:  Repo.get(Respondent, respondent_id)}
+  end
+
+  defp handle_session_started(session_started, questionnaire_id, sequence_mode) do
+    case session_started do
+      {:ok, session, reply, timeout} ->
+        respondent = Ask.Runtime.Broker.configure_new_respondent(session.respondent, questionnaire_id, sequence_mode)
+        {:ok, %Session{session | respondent: Ask.Runtime.RetriesHistogram.add_new_respondent(respondent, session, timeout)}, reply, timeout}
+      other -> other
+    end
+  end
+
+end
+
+defmodule QuestionnaireSteps do
+  use Ask.DummySteps
+  import Ask.StepBuilder
+
+  def all_relevant_steps(), do: @dummy_steps |> Enum.map(fn step -> Map.put(step, "relevant", true) end)
+
+  def odd_relevant_steps(), do: @dummy_steps |> Enum.map_every(2, fn step -> Map.put(step, "relevant", true) end) # Only the odd steps are relevant
+
+  def odd_relevant_with_numeric_refusal(), do: [
+        multiple_choice_step(
+          id: Ecto.UUID.generate,
+          title: "Do you smoke?",
+          prompt: prompt(
+            sms: sms_prompt("Do you smoke? Reply 1 for YES, 2 for NO"),
+            ivr: tts_prompt("Do you smoke? Press 8 for YES, 9 for NO")
+          ),
+          store: "Smokes",
+          choices: [
+            choice(value: "Yes", responses: responses(sms: ["Yes", "Y", "1"], ivr: ["8"])),
+            choice(value: "No", responses: responses(sms: ["No", "N", "2"], ivr: ["9"]))
+          ],
+          relevant: true
+        ),
+        multiple_choice_step(
+          id: Ecto.UUID.generate,
+          title: "Do you exercise",
+          prompt: prompt(
+            sms: sms_prompt("Do you exercise? Reply 1 for YES, 2 for NO"),
+            ivr: tts_prompt("Do you exercise? Press 1 for YES, 2 for NO")
+          ),
+          store: "Exercises",
+          choices: [
+            choice(value: "Yes", responses: responses(sms: ["Yes", "Y", "1"], ivr: ["1"])),
+            choice(value: "No", responses: responses(sms: ["No", "N", "2"], ivr: ["2"]))
+          ]
+        ),
+        numeric_step(
+          id: Ecto.UUID.generate,
+          title: "Which is the second perfect number?",
+          prompt: prompt(
+            sms: sms_prompt("Which is the second perfect number??"),
+            ivr: tts_prompt("Which is the second perfect number")
+          ),
+          store: "Perfect Number",
+          skip_logic: default_numeric_skip_logic(),
+          alphabetical_answers: false,
+          refusal: %{
+            "enabled" => true,
+            "responses" => %{
+              "sms" => %{
+                "en" => ["#", "0"],
+                "skip_logic" => nil
+              },
+              "ivr" => %{
+                "en" => ["#", "0"],
+                "skip_logic" => nil
+              }
+            }
+          },
+          relevant: true
+        ),
+        numeric_step(
+          id: Ecto.UUID.generate,
+          title: "What's the number of this question?",
+          prompt: prompt(
+            sms: sms_prompt("What's the number of this question??"),
+            ivr: tts_prompt("What's the number of this question")
+          ),
+          store: "Question",
+          skip_logic: default_numeric_skip_logic(),
+          alphabetical_answers: false,
+          refusal: nil
+        )
+      ]
+
+  def odd_relevant_with_multiple_choice_refusal(), do: [
+    multiple_choice_step(
+     id: Ecto.UUID.generate,
+     title: "Do you smoke?",
+     prompt: prompt(
+       sms: sms_prompt("Do you smoke? Reply 1 for YES, 2 for NO"),
+       ivr: tts_prompt("Do you smoke? Press 8 for YES, 9 for NO")
+     ),
+     store: "Smokes",
+     choices: [
+       choice(value: "Yes", responses: responses(sms: ["Yes", "Y", "1"], ivr: ["8"])),
+       choice(value: "No", responses: responses(sms: ["No", "N", "2"], ivr: ["9"])),
+       choice(value: "Skip", responses: responses(sms: ["skip", "S", "#"], ivr: ["#"]))
+     ],
+     relevant: true
+    ),
+    multiple_choice_step(
+     id: Ecto.UUID.generate,
+     title: "Do you exercise",
+     prompt: prompt(
+       sms: sms_prompt("Do you exercise? Reply 1 for YES, 2 for NO"),
+       ivr: tts_prompt("Do you exercise? Press 1 for YES, 2 for NO")
+     ),
+     store: "Exercises",
+     choices: [
+       choice(value: "Yes", responses: responses(sms: ["Yes", "Y", "1"], ivr: ["1"])),
+       choice(value: "No", responses: responses(sms: ["No", "N", "2"], ivr: ["2"]))
+     ]
+    ),
+    numeric_step(
+     id: Ecto.UUID.generate,
+     title: "Which is the second perfect number?",
+     prompt: prompt(
+       sms: sms_prompt("Which is the second perfect number??"),
+       ivr: tts_prompt("Which is the second perfect number")
+     ),
+     store: "Perfect Number",
+     skip_logic: default_numeric_skip_logic(),
+     alphabetical_answers: false,
+     refusal: nil,
+     relevant: true
+    ),
+    numeric_step(
+     id: Ecto.UUID.generate,
+     title: "What's the number of this question?",
+     prompt: prompt(
+       sms: sms_prompt("What's the number of this question??"),
+       ivr: tts_prompt("What's the number of this question")
+     ),
+     store: "Question",
+     skip_logic: default_numeric_skip_logic(),
+     alphabetical_answers: false,
+     refusal: nil
+    )
+  ]
 end

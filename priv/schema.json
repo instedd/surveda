@@ -9,7 +9,8 @@
       "type": "object",
       "properties": {
         "steps": {"$ref": "#/definitions/steps-and-sections"},
-        "settings": {"$ref": "#/definitions/settings"}
+        "settings": {"$ref": "#/definitions/settings"},
+        "partial_relevant_config": {"$ref": "#/definitions/partial_relevant_config"}
       },
       "required": ["steps", "settings"]
     },
@@ -77,7 +78,8 @@
         "title": {"type": "string"},
         "prompt": {"$ref": "#/definitions/localized_prompt"},
         "choices": {"$ref": "#/definitions/choices"},
-        "store": {"type": "string"}
+        "store": {"type": "string"},
+        "relevant": {"type": "boolean"}
       },
       "additionalProperties": false,
       "required": ["id", "type", "title", "prompt", "choices", "store"]
@@ -96,7 +98,8 @@
         "ranges": {"$ref": "#/definitions/ranges"},
         "store": {"type": "string"},
         "alphabetical_answers": {"type": "boolean"},
-        "refusal": {"oneOf": [{"$ref": "#/definitions/refusal"}, {"type":"null"}]}
+        "refusal": {"oneOf": [{"$ref": "#/definitions/refusal"}, {"type":"null"}]},
+        "relevant": {"type": "boolean"}
       },
       "additionalProperties": false,
       "required": ["id", "type", "title", "prompt", "store"]
@@ -239,6 +242,16 @@
       },
       "additionalProperties": false,
       "required": ["text", "audio_source"]
+    },
+
+    "partial_relevant_config": {
+      "type": "object",
+      "properties": {
+        "enabled": {"type": "boolean"},
+        "min_relevant_steps": {"type": "integer"},
+        "ignored_values": {"type": "string"}
+      },
+      "required": ["enabled"]
     }
   }
 }
