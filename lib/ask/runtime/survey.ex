@@ -209,11 +209,6 @@ defmodule Ask.Runtime.Survey do
     Respondent.update(respondent, changes, offline)
   end
 
-  defp respondent_updates(:stalled, respondent, session, offline) do #1
-    changes = %{state: "stalled", session: Session.dump(session), timeout_at: nil}
-    Respondent.update(respondent, changes, offline)
-  end
-
   defp respondent_updates(:end, respondent, disposition, offline) do #3
     changes = %{state: "completed", disposition: disposition, session: nil, completed_at: SystemTime.time.now, timeout_at: nil}
     Respondent.update(respondent, changes, offline)
