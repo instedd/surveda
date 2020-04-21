@@ -11,6 +11,7 @@ import QuestionnaireOnboarding from './QuestionnaireOnboarding'
 import QuestionnaireSteps from './QuestionnaireSteps'
 import QuestionnaireImport from './QuestionnaireImport'
 import QuestionnaireImportError from './QuestionnaireImportError'
+import PartialRelevantEditor from './PartialRelevantEditor'
 import LanguagesList from './LanguagesList'
 import SmsSettings from './SmsSettings'
 import PhoneCallSettings from './PhoneCallSettings'
@@ -294,6 +295,8 @@ class QuestionnaireEditor extends Component<any, State> {
     const skipOnboarding = (settings.onboarding && settings.onboarding.questionnaire) || userLevel == 'reader'
     const hasQuotaCompletedSteps = !!questionnaire.quotaCompletedSteps
     const partialRelevantEnabled = questionnaire.partialRelevantConfig && questionnaire.partialRelevantConfig.enabled
+    const partialRelevantMinRelevantSteps = partialRelevantEnabled && questionnaire.partialRelevantConfig.minRelevantSteps
+    const partialRelevantIgnoredValues = partialRelevantEnabled && questionnaire.partialRelevantConfig.ignoredValues
 
     let testControls = null
     if (!readOnly && errors.length == 0) {
@@ -310,6 +313,20 @@ class QuestionnaireEditor extends Component<any, State> {
     const sms = questionnaire.modes.indexOf('sms') != -1
     const ivr = questionnaire.modes.indexOf('ivr') != -1
     const mobileweb = questionnaire.modes.indexOf('mobileweb') != -1
+
+    const renderSwitchInTable = ({ checked, onChange, disabled, text }) => {
+      return <div className='row'>
+        <div className='col s12'>
+          <div className='switch'>
+            <label>
+              <input type='checkbox' checked={checked} onChange={onChange} disabled={disabled} />
+              <span className='lever' />
+            </label>
+            {text}
+          </div>
+        </div>
+      </div>
+    }
 
     return (
       <div>
@@ -345,24 +362,12 @@ class QuestionnaireEditor extends Component<any, State> {
                 selectedSteps={selectedSteps}
             />
               {this.addStepComponent()}
-              <div className='row'>
-                <div className='col s12'>
-                  <div className='switch'>
-                    <label>
-                      <input type='checkbox' checked={hasQuotaCompletedSteps} onChange={e => this.toggleQuotaCompletedSteps(e)} disabled={readOnly} />
-                      <span className='lever' />
-                    </label>
-                    {t('Quota completed steps')}
-                  </div>
-                  <div className='switch'>
-                    <label>
-                      <input type='checkbox' checked={partialRelevantEnabled} onChange={() => this.changePartialRelevantEnabled(!partialRelevantEnabled)} disabled={readOnly} />
-                      <span className='lever' />
-                    </label>
-                    {t('Partial relevant')}
-                  </div>
-                </div>
-              </div>
+              {renderSwitchInTable({
+                checked: hasQuotaCompletedSteps,
+                onChange: e => this.toggleQuotaCompletedSteps(e),
+                disabled: readOnly,
+                text: t('Quota completed steps')
+              })}
               {hasQuotaCompletedSteps
                 ? <QuestionnaireSteps
                   ref='quotaCompletedStepsComponent'
@@ -385,6 +390,24 @@ class QuestionnaireEditor extends Component<any, State> {
                 </div>
                 : null
               }
+              {renderSwitchInTable({
+                checked: partialRelevantEnabled,
+                onChange: () => this.changePartialRelevantEnabled(!partialRelevantEnabled),
+                disabled: readOnly,
+                text: t('Partial relevant')
+              })}
+              {
+                partialRelevantEnabled
+                ? <PartialRelevantEditor
+                  readOnly={readOnly}
+                  minRelevantSteps={partialRelevantMinRelevantSteps}
+                  changeMinRelevantSteps={changed => this.props.questionnaireActions.changePartialRelevantMinRelevantSteps(changed)}
+                  ignoredValues={partialRelevantIgnoredValues}
+                  changeIgnoredValues={changed => this.props.questionnaireActions.changePartialRelevantIgnoredValues(changed)}
+                  />
+                : null
+              }
+
               { questionnaire.activeMode == 'sms'
                 ? <SmsSettings readOnly={readOnly} />
                 : null }

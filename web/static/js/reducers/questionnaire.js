@@ -25,6 +25,8 @@ const dataReducer = (state: Questionnaire, action): Questionnaire => {
     case actions.REMOVE_MODE: return removeMode(state, action)
     case actions.TOGGLE_QUOTA_COMPLETED_STEPS: return toggleQuotaCompletedSteps(state, action)
     case actions.CHANGE_PARTIAL_RELEVANT_ENABLED: return changePartialRelevantEnabled(state, action)
+    case actions.CHANGE_PARTIAL_RELEVANT_MIN_RELEVANT_STEPS: return changePartialRelevantMinRelevantSteps(state, action)
+    case actions.CHANGE_PARTIAL_RELEVANT_IGNORED_VALUES: return changePartialRelevantIgnoredValues(state, action)
     case actions.ADD_LANGUAGE: return addLanguage(state, action)
     case actions.REMOVE_LANGUAGE: return removeLanguage(state, action)
     case actions.SET_DEFAULT_LANGUAGE: return setDefaultLanguage(state, action)
@@ -1018,6 +1020,35 @@ const changePartialRelevantEnabled = (state, action) => {
     partialRelevantConfig: {
       ...state.partialRelevantConfig,
       enabled: action.enabled
+    }
+  }
+}
+
+const changePartialRelevantMinRelevantSteps = (state, action) => {
+  const partialRelevantConfig = { ...state.partialRelevantConfig }
+  if (action.minRelevantSteps) {
+    return {
+      ...state,
+      partialRelevantConfig: {
+        ...partialRelevantConfig,
+        minRelevantSteps: action.minRelevantSteps
+      }
+    }
+  } else {
+    delete partialRelevantConfig.minRelevantSteps
+    return {
+      ...state,
+      partialRelevantConfig
+    }
+  }
+}
+
+const changePartialRelevantIgnoredValues = (state, action) => {
+  return {
+    ...state,
+    partialRelevantConfig: {
+      ...state.partialRelevantConfig,
+      ignoredValues: action.ignoredValues
     }
   }
 }
