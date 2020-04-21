@@ -228,7 +228,8 @@ defmodule Ask.SessionTest do
     assert_receive [:ask, ^test_channel, respondent_received, ^token2, ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO")]
     assert respondent.id == respondent_received.id
 
-    assert {:stalled, _, _} = Session.timeout(session)
+    result = Session.timeout(session)
+    assert elem(result, 0) == :failed
   end
 
   test "retry with IVR channel", %{quiz: quiz, respondent: respondent} do
@@ -249,7 +250,8 @@ defmodule Ask.SessionTest do
     assert_receive [:setup, ^test_channel, ^respondent, ^token]
     assert_receive [:ask, ^test_channel, ^respondent, ^token, ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO")]
 
-    assert {:stalled, _, _} = Session.timeout(session)
+    result = Session.timeout(session)
+    assert elem(result, 0) == :failed
   end
 
   test "doesn't retry if has queued message" do
@@ -408,23 +410,27 @@ defmodule Ask.SessionTest do
   end
 
   test "timeouts a respondent with retries list and no fallback", %{quiz: quiz, respondent: respondent, test_channel: test_channel, channel: channel} do
+
     {:ok, session = %Session{token: token, respondent: respondent}, _, 2} = handle_session_started(Session.start(quiz, respondent, channel, "sms", Schedule.always(), [2, 3], nil, nil, nil), quiz.id, ["sms", "ivr"])
     assert_receive [:setup, ^test_channel, respondent_received, ^token]
     assert respondent.id == respondent_received.id
     assert_receive [:ask, ^test_channel, ^respondent_received, ^token, ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO")]
     assert 1 == respondent_received.stats |> Stats.attempts(:sms)
 
-    {:ok, session = %Session{token: token, respondent: respondent}, _, 3} = Session.timeout(session)
+    {:ok, session = %Session{token: token, respondent: respondent}, _, 3} = Session.timeout(session) # first retry
     refute_receive [:setup, _, _, _, _]
     assert_receive [:ask, ^test_channel, respondent_received, ^token, ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO")]
     assert respondent.id == respondent_received.id
     assert 2 == respondent_received.stats |> Stats.attempts(:sms)
 
-    {:ok, session, _, before_stalled_wait_time} = Session.timeout(session)
-    assert 3 == before_stalled_wait_time
+    {:ok, session = %Session{token: token, respondent: respondent}, _, 3} = Session.timeout(session) # second retry
+    refute_receive [:setup, _, _, _, _]
+    assert_receive [:ask, ^test_channel, respondent_received, ^token, ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO")]
+    assert respondent.id == respondent_received.id
+    assert 3 == respondent_received.stats |> Stats.attempts(:sms)
 
-    {state, _, _} = Session.timeout(session)
-    assert :stalled == state
+    result = Session.timeout(session) # no more attempts -> finish session
+    assert elem(result, 0) == :failed
   end
 
   test "timeouts a respondent with no fallback and no retries list", %{quiz: quiz, respondent: respondent, test_channel: test_channel, channel: channel} do
@@ -434,11 +440,11 @@ defmodule Ask.SessionTest do
     default_fallback_delay = Survey.default_fallback_delay()
     assert fallback_delay == default_fallback_delay
 
-    {state, _, _} = Session.timeout(session)
-    assert :stalled == state
+    result = Session.timeout(session)
+    assert elem(result, 0) == :failed
   end
 
-  test "timesout a respondent with fallback and retries list", %{quiz: quiz, respondent: respondent, test_channel: test_channel, channel: channel} do
+  test "timeouts a respondent with fallback and retries list", %{quiz: quiz, respondent: respondent, test_channel: test_channel, channel: channel} do
     fallback_runtime_channel = TestChannel.new
     fallback_channel = build(:channel, settings: fallback_runtime_channel |> TestChannel.settings, type: "ivr")
     fallback_retries = [8]

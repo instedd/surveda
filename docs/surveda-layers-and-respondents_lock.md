@@ -21,7 +21,6 @@ Below the places where the respondent locks are done
 
 Every time the broker is being proactive
 
-* `mark_stalled_for_eight_hours_respondents_as_failed`
 * `retry_respondents`
 * `poll_active_surveys`
 

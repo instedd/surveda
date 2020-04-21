@@ -67,7 +67,7 @@ defmodule Ask.RespondentsCancellerProducer do
       r in Respondent,
       select: r.id,
       where: (
-        ((r.state == "active") or (r.state == "stalled")) and (r.survey_id in ^state.survey_ids) and (
+        r.state == "active" and (r.survey_id in ^state.survey_ids) and (
           r.id > ^state.last_updated_respondent_id)),
       limit: 100,
       order_by: [

@@ -63,22 +63,6 @@ defmodule Ask.Runtime.NuntiumChannelTest do
     assert json_response(conn, 200) == []
   end
 
-  test "callback with stalled respondent", %{conn: conn} do
-    respondent = insert(:respondent, phone_number: "123 457", sanitized_phone_number: "123457", canonical_phone_number: "123457", state: "stalled", session: %{"current_mode" => %{"mode" => "sms"}})
-    respondent_id = respondent.id
-    GenServer.cast(SurveyStub.server_ref, {:expects, fn
-      {:sync_step, %Respondent{id: ^respondent_id}, {:reply, "yes"}, "sms"} ->
-        {:reply, ReplyHelper.simple("Do you exercise?")}
-    end})
-    conn = NuntiumChannel.callback(conn, %{"channel" => "chan1", "from" => "sms://123457", "body" => "yes"}, SurveyStub)
-    assert [%{"to" => "sms://123457", "body" => "Do you exercise?", "step_title" => "Do you exercise?"}] = json_response(conn, 200)
-
-    assert Repo.get(Respondent, respondent.id).stats == %Ask.Stats{
-      total_received_sms: 1,
-      total_sent_sms: 1
-    }
-  end
-
   test "unknown callback is replied with OK", %{conn: conn} do
     conn = NuntiumChannel.callback(conn, %{"channel" => "foo", "guid" => Ecto.UUID.generate, "state" => "delivered"})
     assert response(conn, 200) == "OK"

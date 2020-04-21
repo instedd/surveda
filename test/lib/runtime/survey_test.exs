@@ -1581,36 +1581,6 @@ defmodule Ask.Runtime.SurveyTest do
     assert updated_respondent.timeout_at == time
   end
 
-  test "respondent answers after stalled with active survey" do
-    [survey, _group, test_channel, _respondent, phone_number] = create_running_survey_with_channel_and_respondent()
-
-    {:ok, _} = Broker.start_link
-
-    # First poll, activate the respondent
-    Broker.handle_info(:poll, nil)
-    assert_received [:setup, ^test_channel, respondent = %Respondent{sanitized_phone_number: ^phone_number}, token]
-    assert_received [:ask, ^test_channel, ^respondent, ^token, ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO")]
-
-    # Set for immediate timeout
-    respondent = Repo.get!(Respondent, respondent.id)
-    Respondent.changeset(respondent, %{timeout_at: Timex.now |> Timex.shift(minutes: -1)}) |> Repo.update
-
-    # This time it should stall
-    Broker.handle_info(:poll, nil)
-
-    respondent = Repo.get(Respondent, respondent.id)
-    assert respondent.state == "stalled"
-    survey = Repo.get(Ask.Survey, survey.id)
-    assert survey.state == "running"
-
-    reply = Survey.sync_step(respondent, Flow.Message.reply("Yes"))
-    respondent = Repo.get(Respondent, respondent.id) |> Repo.preload(:responses)
-    assert {:reply, ReplyHelper.simple("Do you exercise", "Do you exercise? Reply 1 for YES, 2 for NO")} = reply
-    assert survey.state == "running"
-    assert respondent.state == "active"
-    assert hd(respondent.responses).value == "Yes"
-  end
-
   test "mark disposition as partial" do
     [survey, _group, test_channel, _respondent, phone_number] = create_running_survey_with_channel_and_respondent(@flag_steps)
 
@@ -1914,56 +1884,6 @@ defmodule Ask.Runtime.SurveyTest do
     now = Timex.now
     interval = Interval.new(from: Timex.shift(now, minutes: 9), until: Timex.shift(now, minutes: 11), step: [seconds: 1])
     assert respondent.timeout_at in interval
-
-    :ok = broker |> GenServer.stop
-  end
-
-  test "stalled respondents are marked as failed after survey completes but disposition is kept" do
-    [survey, group, test_channel, respondent, phone_number] = create_running_survey_with_channel_and_respondent()
-    second_respondent = insert(:respondent, survey: survey, respondent_group: group)
-    Repo.update(survey |> change |> Ask.Survey.changeset(%{cutoff: 1}))
-
-    {:ok, broker} = Broker.start_link
-    Broker.poll
-
-    assert_received [:ask, ^test_channel, %Respondent{sanitized_phone_number: ^phone_number}, _, ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO")]
-
-    survey = Repo.get(Ask.Survey, survey.id)
-    assert survey.state == "running"
-    respondent = Repo.get(Respondent, respondent.id)
-    assert respondent.state == "active"
-    assert respondent.disposition == "queued"
-
-    Survey.delivery_confirm(respondent, "Do you smoke?")
-
-    respondent = Repo.get(Respondent, respondent.id)
-    assert respondent.state == "active"
-    assert respondent.disposition == "contacted"
-
-    respondent = Repo.get(Respondent, respondent.id)
-    Survey.sync_step(respondent, Flow.Message.reply("yes"))
-
-    respondent = Repo.get(Respondent, respondent.id)
-    assert respondent.state == "active"
-    assert respondent.disposition == "started"
-
-    Survey.delivery_confirm(respondent, "Do you exercise?")
-
-    Respondent.changeset(respondent, %{timeout_at: Timex.now |> Timex.shift(minutes: -1)}) |> Repo.update
-    Broker.handle_info(:poll, nil)
-
-    respondent = Repo.get(Respondent, respondent.id)
-    assert respondent.state == "stalled"
-    assert respondent.disposition == "started"
-
-    second_respondent = Repo.get(Respondent, second_respondent.id)
-    Repo.update(second_respondent |> change |> Respondent.changeset(%{state: "completed"}))
-
-    Broker.handle_info(:poll, nil)
-
-    respondent = Repo.get(Respondent, respondent.id)
-    assert respondent.state == "failed"
-    assert respondent.disposition == "started"
 
     :ok = broker |> GenServer.stop
   end

@@ -351,7 +351,7 @@ defmodule Ask.Survey do
   end
 
   def cancel_respondents(survey) do
-    from(r in Respondent, where: (((r.state == "active") or (r.state == "stalled")) and (r.survey_id == ^survey.id)))
+    from(r in Respondent, where: ((r.state == "active") and (r.survey_id == ^survey.id)))
     |> Repo.update_all(set: [state: "cancelled", session: nil, timeout_at: nil])
   end
 
@@ -511,7 +511,6 @@ defmodule Ask.Survey do
       "active" => 0,
       "pending" => 0,
       "completed" => 0,
-      "stalled" => 0,
       "rejected" => 0,
       "failed" => 0,
     }

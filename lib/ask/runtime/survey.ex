@@ -79,10 +79,6 @@ defmodule Ask.Runtime.Survey do
     :end
   end
 
-  def handle_session_step({:stalled, session, respondent}, _) do
-    update_respondent(respondent, {:stalled, session})
-  end
-
   def handle_session_step({:stopped, reply, respondent}, _) do
     update_respondent(respondent, :stopped, Reply.disposition(reply), nil)
     :end
@@ -95,12 +91,6 @@ defmodule Ask.Runtime.Survey do
 
   def update_respondent(%Respondent{} = respondent, :end) do
     update_respondent(respondent, :end, nil, nil)
-  end
-
-  def update_respondent(%Respondent{} = respondent, {:stalled, session}) do
-    respondent
-    |> Respondent.changeset(%{state: "stalled", session: Session.dump(session), timeout_at: nil})
-    |> Repo.update!
   end
 
   def update_respondent(%Respondent{} = respondent, :rejected) do

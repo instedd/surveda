@@ -248,7 +248,7 @@ defmodule Ask.MobileSurveyControllerTest do
     :ok = config |> GenServer.stop
   end
 
-  test "respondent flow via mobileweb when respondent state is not active nor stalled nor pending", %{conn: conn} do
+  test "respondent flow via mobileweb when respondent state is not active nor pending", %{conn: conn} do
     test_channel = TestChannel.new(false, true)
 
     channel = insert(:channel, settings: test_channel |> TestChannel.settings, type: "sms")

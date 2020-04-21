@@ -42,7 +42,7 @@ defmodule Ask.SurveyCancellerTest do
       )
       group = create_group(survey_1, channel)
       r1 = insert(:respondent, survey: survey_1, state: "active", respondent_group: group)
-      insert_list(3, :respondent, survey: survey_1, state: "stalled", timeout_at: Timex.now)
+      insert_list(3, :respondent, survey: survey_1, state: "active", timeout_at: Timex.now)
       channel_state = %{"call_id" => 123}
       session = %Session{
         current_mode: SessionModeProvider.new("sms", channel, []),
@@ -90,8 +90,8 @@ defmodule Ask.SurveyCancellerTest do
       )
       group = create_group(survey_1, channel)
       r1 = insert(:respondent, survey: survey_1, state: "active", respondent_group: group)
-      insert_list(3, :respondent, survey: survey_1, state: "stalled", timeout_at: Timex.now)
-      insert_list(3, :respondent, survey: survey_2, state: "stalled", timeout_at: Timex.now)
+      insert_list(3, :respondent, survey: survey_1, state: "active", timeout_at: Timex.now)
+      insert_list(3, :respondent, survey: survey_2, state: "active", timeout_at: Timex.now)
       channel_state = %{"call_id" => 123}
       session = %Session{
         current_mode: SessionModeProvider.new("sms", channel, []),
@@ -142,9 +142,9 @@ defmodule Ask.SurveyCancellerTest do
       )
       group_1 = create_group(survey_1, channel)
       r1 = insert(:respondent, survey: survey_1, state: "active", respondent_group: group_1)
-      insert_list(3, :respondent, survey: survey_1, state: "stalled", timeout_at: Timex.now)
+      insert_list(3, :respondent, survey: survey_1, state: "active", timeout_at: Timex.now)
       insert_list(4, :respondent, survey: survey_2, state: "active", timeout_at: Timex.now)
-      insert_list(3, :respondent, survey: survey_3, state: "stalled", timeout_at: Timex.now)
+      insert_list(3, :respondent, survey: survey_3, state: "active", timeout_at: Timex.now)
       channel_state = %{"call_id" => 123}
       session = %Session{
         current_mode: SessionModeProvider.new("sms", channel, []),
@@ -225,5 +225,3 @@ defmodule Ask.SurveyCancellerTest do
     end
   end
 end
-
-
