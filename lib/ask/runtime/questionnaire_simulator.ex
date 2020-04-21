@@ -48,17 +48,21 @@ defmodule Ask.QuestionnaireSimulator do
       sanitized_phone_number: ""
     }
 
-    IO.inspect(respondent.id, label: "Starting session for respondent id")
-    session = Session.start(questionnaire, respondent, %Ask.SimulatorChannel{}, mode, Ask.Schedule.always(), [], nil, nil, [], nil, false, false)
-    {:reply, reply, respondent} = Runtime.Survey.handle_session_step(session, SystemTime.time.now, false)
+    {:ok, session, _reply, _timeout} = session_started = Session.start(questionnaire, respondent, %Ask.SimulatorChannel{}, mode, Ask.Schedule.always(), [], nil, nil, [], nil, false, false)
+
+    {:reply, reply, respondent} = Runtime.Survey.handle_session_step(session_started, SystemTime.time.now, false)
+
     reply_messages = reply_to_messages(reply)
     messages = AOMessage.new(reply_messages)
-    Ask.QuestionnaireSimulator.add_respondent_simulation(respondent.id, %Ask.QuestionnaireSimulation{questionnaire: questionnaire, respondent: respondent, messages: messages})
+    updated_respondent = %Respondent{respondent | session: session |> Map.put(:questionnaire_id, questionnaire.id)}
+
+    Ask.QuestionnaireSimulator.add_respondent_simulation(respondent.id, %Ask.QuestionnaireSimulation{questionnaire: questionnaire, respondent: updated_respondent, messages: messages})
     %{id: respondent.id, disposition: respondent.disposition, reply_messages: reply_messages, messages_history:  messages}
   end
 
   def process_respondent_response(respondent_id, response) do
     %{respondent: respondent, messages: messages} = simulation = Ask.QuestionnaireSimulator.get_respondent_status(respondent_id)
+#    respondent = prepare_respondent(respondent)
     updated_messages = messages ++ [ATMessage.new(response)]
     Ask.QuestionnaireSimulator.add_respondent_simulation(respondent.id, %Ask.QuestionnaireSimulation{simulation | messages: updated_messages})
     simulation = Ask.QuestionnaireSimulator.get_respondent_status(respondent_id)
@@ -80,8 +84,8 @@ defmodule Ask.QuestionnaireSimulator do
     end
   end
 
-  defp prepare_respondent( %{respondent: respondent} = _simulation) do
-    respondent
+  defp prepare_respondent(respondent) do
+    %Respondent{respondent | session: Session.load(respondent.session)}
   end
 
   def reply_to_messages(reply) do

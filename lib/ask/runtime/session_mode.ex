@@ -60,7 +60,7 @@ defmodule Ask.Runtime.SMSSimulatorMode do
     end
 
     def mode(_) do
-      "sms"
+      "sms_simulator"
     end
   end
 end

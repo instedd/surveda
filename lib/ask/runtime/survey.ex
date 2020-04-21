@@ -9,7 +9,7 @@ defmodule Ask.Runtime.Survey do
     session = Session.load_respondent_session(respondent, offline)
     session_mode = session_mode(respondent, session, mode)
     next_action = sync_step_internal(session, reply, session_mode, now, offline)
-    handle_next_action(next_action, respondent.id)
+    handle_next_action(next_action, respondent.id, offline)
   end
 
   # We expose this method so we can test that if a stale respondent is
@@ -281,7 +281,7 @@ defmodule Ask.Runtime.Survey do
     transaction_result = Repo.transaction(fn ->
       try do
         reply = mask_phone_number(session.respondent, reply)
-        session_step = Session.sync_step(session, reply, session_mode, offline)
+        session_step = Session.sync_step(session, reply, session_mode, offline, offline)
         handle_session_step(session_step, now, offline)
       rescue
         e in Ecto.StaleEntryError ->
@@ -381,10 +381,12 @@ defmodule Ask.Runtime.Survey do
     |> Regex.compile!
   end
 
-  defp handle_next_action(next_action, respondent_id) do
-    respondent = Repo.get(Respondent, respondent_id)
-    session = if respondent.session, do: Session.load(respondent.session), else: respondent.session
-    RetriesHistogram.next_step(respondent, session, next_action)
+  defp handle_next_action(next_action, respondent_id, offline) do
+    if offline do
+      respondent = Repo.get(Respondent, respondent_id)
+      session = if respondent.session, do: Session.load(respondent.session), else: respondent.session
+      RetriesHistogram.next_step(respondent, session, next_action)
+    end
     next_action
   end
 end

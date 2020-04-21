@@ -98,7 +98,6 @@ defmodule Ask.Runtime.Session do
     if want_log_response do
       log_response(response, current_mode.channel, session.flow.mode, session.respondent, session.respondent.disposition)
     end
-
     session = cond do
       response == Flow.Message.no_reply ->
         # no_reply is produced, for example, from a timeout in Verboice
@@ -111,7 +110,6 @@ defmodule Ask.Runtime.Session do
       true ->
         update_respondent_disposition(session, "started", current_mode, offline)
     end
-
     respondent = session.respondent
     step_answer = Flow.step(session.flow, current_mode |> SessionMode.visitor, response, SessionMode.mode(current_mode), respondent.disposition)
                   |> relevant_interim_partial_step(respondent)
@@ -125,13 +123,13 @@ defmodule Ask.Runtime.Session do
     end
 
     if Flow.should_update_disposition(respondent.disposition, reply.disposition) do
-      log_disposition_changed(respondent, current_mode.channel, session.flow.mode, respondent.disposition, reply.disposition)
+      log_disposition_changed(respondent, current_mode.channel, session.flow.mode, respondent.disposition, reply.disposition, offline)
     end
 
-    respondent = store_responses_and_assign_bucket(respondent, step_answer, session)
+    respondent = store_responses_and_assign_bucket(respondent, step_answer, session, offline)
 
     session = %{session | respondent: respondent}
-    session |> handle_step_answer(step_answer, current_mode)
+    session |> handle_step_answer(step_answer, current_mode, offline)
   end
 
   def update_section_order(respondent, nil, _), do: respondent
@@ -148,8 +146,10 @@ defmodule Ask.Runtime.Session do
     next_retry
   end
 
-  def log_disposition_changed(respondent, channel, mode, previous_disposition, new_disposition) do
-    SurveyLogger.log(respondent.survey_id, mode, respondent.id, respondent.hashed_number, channel.id, previous_disposition, "disposition changed", String.capitalize(new_disposition))
+  def log_disposition_changed(respondent, channel, mode, previous_disposition, new_disposition, offline \\ true) do
+    if offline do
+      SurveyLogger.log(respondent.survey_id, mode, respondent.id, respondent.hashed_number, channel.id, previous_disposition, "disposition changed", String.capitalize(new_disposition))
+    end
   end
 
   def contact_respondent(%{current_mode: %SMSMode{}} = session, runtime_channel) do
@@ -234,12 +234,12 @@ defmodule Ask.Runtime.Session do
     }
   end
 
-  def load(state, respondent \\ nil) do
+  def load(state) do
     %Session{
       current_mode: SessionModeProvider.load(state["current_mode"]),
       fallback_mode: SessionModeProvider.load(state["fallback_mode"]),
       flow: Flow.load(state["flow"]),
-      respondent: respondent || Repo.get(Ask.Respondent, state["respondent_id"]),
+      respondent: Repo.get(Ask.Respondent, state["respondent_id"]),
       token: state["token"],
       fallback_delay: state["fallback_delay"],
       channel_state: state["channel_state"],
@@ -252,7 +252,7 @@ defmodule Ask.Runtime.Session do
     if(offline) do
       load(respondent.session)
     else
-      load(respondent.session, respondent)
+      respondent.session
     end
   end
 
@@ -433,21 +433,23 @@ defmodule Ask.Runtime.Session do
     end
   end
 
-  defp log_prompts(reply, channel, mode, respondent, force \\ false) do
-    if force || !(channel |> Ask.Channel.runtime_channel |> Channel.has_delivery_confirmation?) do
-      disposition = Reply.disposition(reply) || respondent.disposition
-      Enum.each Reply.steps(reply), fn(step) ->
-        step.prompts |> Enum.with_index |> Enum.each(fn {_prompt, index} ->
-          SurveyLogger.log(
-            respondent.survey_id,
-            mode,
-            respondent.id,
-            respondent.hashed_number,
-            channel.id,
-            disposition,
-            :prompt,
-            ReplyStep.title_with_index(step, index + 1))
-        end)
+  defp log_prompts(reply, channel, mode, respondent, force \\ false, offline \\ true) do
+    if offline do
+      if force || !(channel |> Ask.Channel.runtime_channel |> Channel.has_delivery_confirmation?) do
+        disposition = Reply.disposition(reply) || respondent.disposition
+        Enum.each Reply.steps(reply), fn(step) ->
+          step.prompts |> Enum.with_index |> Enum.each(fn {_prompt, index} ->
+            SurveyLogger.log(
+              respondent.survey_id,
+              mode,
+              respondent.id,
+              respondent.hashed_number,
+              channel.id,
+              disposition,
+              :prompt,
+              ReplyStep.title_with_index(step, index + 1))
+          end)
+        end
       end
     end
   end
@@ -539,12 +541,12 @@ defmodule Ask.Runtime.Session do
   defp add_respondent_mode_attempt!(%Session{respondent: respondent, current_mode: %IVRMode{}}), do: respondent |> Respondent.add_mode_attempt!(:ivr)
   defp add_respondent_mode_attempt!(%Session{respondent: respondent, current_mode: %MobileWebMode{}}), do: respondent |> Respondent.add_mode_attempt!(:mobileweb)
 
-  defp handle_step_answer(session, {:end, _, reply}, current_mode) do
-    log_prompts(reply, current_mode.channel, session.flow.mode, session.respondent, true)
+  defp handle_step_answer(session, {:end, _, reply}, current_mode, offline) do
+    log_prompts(reply, current_mode.channel, session.flow.mode, session.respondent, true, offline)
     {:end, reply, session.respondent}
   end
 
-  defp handle_step_answer(session, {:ok, flow, reply}, current_mode) do
+  defp handle_step_answer(session, {:ok, flow, reply}, current_mode, offline) do
     case falls_in_quota_already_completed?(session.respondent, flow) do
       true ->
         session = update_respondent_disposition(session, "rejected", current_mode)
@@ -564,12 +566,12 @@ defmodule Ask.Runtime.Session do
           {:rejected, session.respondent}
         end
       false ->
-        log_prompts(reply, current_mode.channel, flow.mode, session.respondent)
+        log_prompts(reply, current_mode.channel, flow.mode, session.respondent, false, offline)
         {:ok, %{session | flow: flow}, reply, current_timeout(session)}
     end
   end
 
-  defp handle_step_answer(session, {:no_retries_left, flow, reply}, _) do
+  defp handle_step_answer(session, {:no_retries_left, flow, reply}, _, _) do
     case session do
       %{current_mode: %{retries: []}, fallback_mode: nil} ->
         {:failed, session.respondent}
@@ -578,14 +580,17 @@ defmodule Ask.Runtime.Session do
     end
   end
 
-  defp handle_step_answer(session, {:stopped, _, reply}, _current_mode) do
+  defp handle_step_answer(session, {:stopped, _, reply}, _current_mode, _) do
     {:stopped, reply, session.respondent}
   end
 
-  defp store_responses_and_assign_bucket(respondent, {_, _, reply}, session) do
-    store_response(respondent, reply)
-
-    try_to_assign_bucket(respondent, session)
+  defp store_responses_and_assign_bucket(respondent, {_, _, reply}, session, offline) do
+    if offline do
+      store_response(respondent, reply)
+      try_to_assign_bucket(respondent, session)
+    else
+      respondent
+    end
   end
 
   defp store_response(respondent, reply) do
