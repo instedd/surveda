@@ -295,11 +295,7 @@ defmodule Ask.Runtime.Session do
   end
 
   defp mode_start(%Session{flow: flow, respondent: respondent, current_mode: %SMSSimulatorMode{}} = session) do
-    IO.puts "starting SMS Simulator mode"
-    IO.inspect(flow, label: "Flow")
-    IO.inspect(respondent.id, label: "Respondent id")
-
-    case flow |> Flow.step(session.current_mode |> SessionMode.visitor, :answer, respondent.disposition |> IO.inspect(label: "Respondent disposition")) do
+    case flow |> Flow.step(session.current_mode  |> SessionMode.visitor, :answer, respondent.disposition) do
       {:end, _, reply} ->
         {:end, reply, respondent}
       {:ok, flow, reply} ->
