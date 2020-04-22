@@ -68,12 +68,9 @@ defmodule Ask.Runtime.Survey do
   end
 
   def handle_session_step({:end, reply, respondent}, _, offline) do
-    {session, mode} = case respondent.session do
-      nil -> {nil, nil}
-      session ->
-        session = session |> Session.load
-        mode = session.current_mode |> SessionMode.mode
-        {session, mode}
+    session = case respondent.session do
+      nil -> nil
+      _ -> Session.load_respondent_session(respondent, offline)
     end
 
     old_disposition = respondent.disposition
@@ -87,8 +84,9 @@ defmodule Ask.Runtime.Survey do
                          |> disposition_changed(session, old_disposition, offline)
 
     # If new_disposition == reply_disposition, change of disposition has already been logged during Session.sync_step
-    if session && new_disposition != old_disposition && new_disposition != reply_disposition do
-      Session.log_disposition_changed(updated_respondent, session.current_mode.channel, mode, old_disposition, new_disposition)
+    if offline && session && new_disposition != old_disposition && new_disposition != reply_disposition do
+      mode = session.current_mode |> SessionMode.mode
+      Session.log_disposition_changed(updated_respondent, session.current_mode.channel, mode, old_disposition, new_disposition, offline)
     end
 
     case Reply.steps(reply) do

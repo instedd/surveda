@@ -8,11 +8,6 @@ defmodule Ask.Runtime.Flow do
 
   @max_retries 2
 
-  # If starting a "sms_simulator" the "sms" mode questionnaire setting must be used
-  def start(quiz, "sms_simulator") do
-    start(quiz, "sms")
-  end
-
   def start(quiz, mode) do
     has_sections = questionnaire_has_sections(quiz)
     section_order = if(has_sections) do
@@ -523,7 +518,7 @@ defmodule Ask.Runtime.Flow do
     quiz_step["relevant"] && not_ignored.(response.value)
   end
 
-  defp ignored_values_from_relevant_steps(questionnaire) do
+  def ignored_values_from_relevant_steps(questionnaire) do
     not_empty = fn str -> str != "" end
     (questionnaire.partial_relevant_config["ignored_values"] || "")
     |> String.split(",")

@@ -113,7 +113,6 @@ defmodule Ask.Runtime.Session do
     respondent = session.respondent
     step_answer = Flow.step(session.flow, current_mode |> SessionMode.visitor, response, SessionMode.mode(current_mode), respondent.disposition)
                   |> relevant_interim_partial_step(respondent)
-
     reply = case step_answer do
       {:end, _, reply} -> reply
       {:ok, _flow, reply} -> reply
@@ -554,7 +553,7 @@ defmodule Ask.Runtime.Session do
         if flow.questionnaire.quota_completed_steps && length(flow.questionnaire.quota_completed_steps) > 0 do
           flow = %{flow | current_step: nil, in_quota_completed_steps: true}
           session = %{session | flow: flow}
-          case sync_step(session, :answer, session.current_mode, true, false) do #TODO: change true for offline variable
+          case sync_step(session, :answer, session.current_mode, offline, false) do
             {:ok, session, reply, timeout} ->
               {:rejected, session, reply, timeout}
             {:end, reply, respondent} ->

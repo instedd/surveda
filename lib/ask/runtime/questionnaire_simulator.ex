@@ -27,7 +27,7 @@ defmodule Ask.Runtime.QuestionnaireSimulator do
   # Replicates all 'sms' configurations under 'sms_simulator' key
   defp adapt_questionnaire(questionnaire) do
     adapted_steps = questionnaire.steps |> Enum.map(fn step ->
-      prompts = step["prompt"] |> Enum.map(fn {lang, prompt} -> {lang, Map.put(prompt, "sms_simulator", prompt["sms"])} end)
+      prompts = (step["prompt"] || %{})|> Enum.map(fn {lang, prompt} -> {lang, Map.put(prompt, "sms_simulator", prompt["sms"])} end)
       choices = (step["choices"] || []) |> Enum.map(fn choice ->
         sms_simulator_responses = choice["responses"]["sms"]
         Map.put(choice, "responses", Map.put(choice["responses"], "sms_simulator", sms_simulator_responses)) end)
@@ -72,7 +72,7 @@ defmodule Ask.Runtime.QuestionnaireSimulator do
     {:ok, session, _reply, _timeout} = session_started = Session.start(questionnaire, respondent, %Ask.Runtime.SimulatorChannel{}, mode, Ask.Schedule.always(), [], nil, nil, [], nil, false, false)
 
     {:reply, reply, respondent} = Runtime.Survey.handle_session_step(session_started, SystemTime.time.now, false)
-
+    respondent = %{respondent | session: inflate_session(respondent, respondent.session, questionnaire)}
     reply_messages = reply_to_messages(reply)
     messages = AOMessage.new(reply_messages)
     updated_respondent = %Respondent{respondent | session: session}
@@ -81,31 +81,44 @@ defmodule Ask.Runtime.QuestionnaireSimulator do
     %{id: respondent.id, disposition: respondent.disposition, reply_messages: reply_messages, messages_history:  messages}
   end
 
+  def inflate_session(respondent, session, questionnaire) do
+      state = session.flow
+      flow = %Flow{questionnaire: questionnaire, current_step: state.current_step, mode: state.mode, language: state.language, retries: state.retries, in_quota_completed_steps: state.in_quota_completed_steps, has_sections: Ask.Runtime.Flow.questionnaire_has_sections(questionnaire), section_order: state.section_order, ignored_values_from_relevant_steps: Ask.Runtime.Flow.ignored_values_from_relevant_steps(questionnaire)}
+
+      session = %Session{
+        current_mode: Ask.Runtime.SessionModeProvider.new("sms_simulator", %Ask.Runtime.SimulatorChannel{}, []),
+        fallback_mode: nil,
+        flow: flow,
+        respondent: Ask.Runtime.Session.update_section_order(respondent, flow.section_order, false),
+        fallback_delay: Survey.default_fallback_delay(),
+        count_partial_results: false,
+        schedule: Ask.Schedule.always()
+      }
+      session
+  end
+
   def process_respondent_response(respondent_id, response) do
     %{respondent: respondent, messages: messages} = simulation = get_respondent_status(respondent_id)
     updated_messages = messages ++ [ATMessage.new(response)]
     add_respondent_simulation(respondent.id, %Ask.QuestionnaireSimulation{simulation | messages: updated_messages})
     simulation = get_respondent_status(respondent_id)
-    session = simulation.respondent.session
+#    session = simulation.respondent.session
     reply = Flow.Message.reply(response)
 
     case Runtime.Survey.sync_step(respondent, reply, "sms_simulator", SystemTime.time.now, false) do
       {:reply, reply, respondent} ->
         reply_messages = reply_to_messages(reply)
         messages = simulation.messages ++ AOMessage.new(reply_messages)
-        updated_respondent = %Respondent{respondent | session: session}
-        add_respondent_simulation(respondent.id, %Ask.QuestionnaireSimulation{simulation | respondent: updated_respondent, messages: messages})
+        respondent = %{respondent | session: inflate_session(respondent, respondent.session, simulation.questionnaire)}
+        add_respondent_simulation(respondent.id, %Ask.QuestionnaireSimulation{simulation | respondent: respondent, messages: messages})
         %{id: respondent.id, disposition: respondent.disposition, reply_messages: reply_messages, messages_history:  messages}
       {:end, {:reply, reply}, respondent} ->
         reply_messages = reply_to_messages(reply)
         messages = simulation.messages ++ AOMessage.new(reply_messages)
-        updated_respondent = %Respondent{respondent | session: session}
-        add_respondent_simulation(respondent.id, %Ask.QuestionnaireSimulation{simulation | respondent: updated_respondent, messages: messages})
+        add_respondent_simulation(respondent.id, %Ask.QuestionnaireSimulation{simulation | respondent: respondent, messages: messages})
         %{id: respondent.id, disposition: respondent.disposition, reply_messages: reply_messages, messages_history:  messages}
       {:end, respondent} ->
-        updated_respondent = %Respondent{respondent | session: session}
-        add_respondent_simulation(respondent.id, %Ask.QuestionnaireSimulation{simulation | respondent: updated_respondent})
-
+        add_respondent_simulation(respondent.id, %Ask.QuestionnaireSimulation{simulation | respondent: respondent})
         %{id: respondent.id, disposition: respondent.disposition, reply_messages: nil, messages_history:  simulation.messages}
     end
   end
