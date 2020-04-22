@@ -8,7 +8,7 @@ type State = {
   ignoredValues: string
 };
 
-class PartialRelevantEditor extends Component<any, State> {
+class PartialRelevantSettings extends Component<any, State> {
   constructor(props) {
     super(props)
     this.state = this.stateFromProps(props)
@@ -64,7 +64,7 @@ class PartialRelevantEditor extends Component<any, State> {
   }
 }
 
-PartialRelevantEditor.propTypes = {
+PartialRelevantSettings.propTypes = {
   t: PropTypes.func.isRequired,
   readOnly: PropTypes.bool.isRequired,
   changeMinRelevantSteps: PropTypes.func.isRequired,
@@ -73,4 +73,4 @@ PartialRelevantEditor.propTypes = {
   ignoredValues: PropTypes.string.isRequired
 }
 
-export default translate()(PartialRelevantEditor)
+export default translate()(PartialRelevantSettings)

@@ -11,7 +11,7 @@ import QuestionnaireOnboarding from './QuestionnaireOnboarding'
 import QuestionnaireSteps from './QuestionnaireSteps'
 import QuestionnaireImport from './QuestionnaireImport'
 import QuestionnaireImportError from './QuestionnaireImportError'
-import PartialRelevantEditor from './PartialRelevantEditor'
+import PartialRelevantSettings from './PartialRelevantSettings'
 import LanguagesList from './LanguagesList'
 import SmsSettings from './SmsSettings'
 import PhoneCallSettings from './PhoneCallSettings'
@@ -398,7 +398,7 @@ class QuestionnaireEditor extends Component<any, State> {
               })}
               {
                 partialRelevantEnabled
-                ? <PartialRelevantEditor
+                ? <PartialRelevantSettings
                   readOnly={readOnly}
                   minRelevantSteps={partialRelevantMinRelevantSteps}
                   changeMinRelevantSteps={changed => this.props.questionnaireActions.changePartialRelevantMinRelevantSteps(changed)}
