@@ -4,7 +4,6 @@ import { connect } from 'react-redux'
 import * as questionnaireActions from '../../actions/questionnaire'
 import { EditableTitleLabel, Card, appliesRelevant } from '../ui'
 import { translate } from 'react-i18next'
-import { Button } from 'react-materialize'
 
 class StepCard extends Component {
   stepTitleSubmit(value) {
@@ -19,7 +18,15 @@ class StepCard extends Component {
 
   render() {
     const { onCollapse, stepId, children, icon, stepTitle, readOnly, t, relevant, stepType, partialRelevantEnabled } = this.props
-    const renderRelevant = relevant => <Button onClick={value => this.stepRelevantSubmit(!relevant)}>{relevant ? 'Relevant' : 'No relevant'}</Button>
+    const renderRelevant = relevant =>
+      <a href='#!'
+        className=''
+        onClick={e => {
+          e.preventDefault()
+          this.stepRelevantSubmit(!relevant)
+        }}>
+        <i className={`material-icons right ${relevant ? 'green-text darken-2' : 'grey-text darken-3'}`}>star</i>
+      </a>
 
     return (
       <Card key={stepId}>
@@ -29,8 +36,6 @@ class StepCard extends Component {
               <div className='col s12'>
                 {icon}
                 <EditableTitleLabel className='editable-field' title={stepTitle} readOnly={readOnly} emptyText={t('Untitled question')} onSubmit={value => this.stepTitleSubmit(value)} />
-                {/* <Button onClick={value => this.stepRelevantSubmit(!relevant)}>{relevant ? "Relevant" : "No relevant"}</Button> */}
-                {partialRelevantEnabled && appliesRelevant(stepType) ? renderRelevant(relevant) : null}
                 <a href='#!'
                   className='collapse right'
                   onClick={e => {
@@ -39,6 +44,7 @@ class StepCard extends Component {
                   }}>
                   <i className='material-icons'>expand_less</i>
                 </a>
+                {partialRelevantEnabled && appliesRelevant(stepType) ? renderRelevant(relevant) : null}
               </div>
             </div>
           </li>

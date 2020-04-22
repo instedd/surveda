@@ -31,7 +31,8 @@ class QuestionnaireClosedStep extends Component<Props> {
       'text-error': hasErrors
     })
 
-    const renderRelevant = relevant => relevant ? 'Relevant' : 'No relevant'
+    const renderRelevant = relevant =>
+      <i className={`material-icons right ${relevant ? 'green-text darken-2' : 'grey-text darken-3'}`}>star</i>
 
     const stepIconFont = icon(step.type)
 
@@ -46,8 +47,8 @@ class QuestionnaireClosedStep extends Component<Props> {
               }}>
                 <i className={stepIconClass}>{stepIconFont}</i>
                 <UntitledIfEmpty className={classNames({'text-error': hasErrors})} text={step.title} emptyText={t('Untitled question')} />
-                {partialRelevantEnabled && appliesRelevant(step.type) ? renderRelevant(step.relevant) : null}
                 <i className={classNames({'material-icons right grey-text': true, 'text-error': hasErrors})}>expand_more</i>
+                {partialRelevantEnabled && appliesRelevant(step.type) ? renderRelevant(step.relevant) : null}
               </a>
             </div>
           </div>
