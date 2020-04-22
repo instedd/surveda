@@ -2,7 +2,7 @@ import React, { Component, PropTypes } from 'react'
 import { bindActionCreators } from 'redux'
 import { connect } from 'react-redux'
 import * as questionnaireActions from '../../actions/questionnaire'
-import { EditableTitleLabel, Card, appliesRelevant } from '../ui'
+import { EditableTitleLabel, Card, appliesRelevant, Tooltip } from '../ui'
 import { translate } from 'react-i18next'
 
 class StepCard extends Component {
@@ -25,7 +25,9 @@ class StepCard extends Component {
           e.preventDefault()
           this.stepRelevantSubmit(!relevant)
         }}>
-        <i className={`material-icons right ${relevant ? 'green-text darken-2' : 'grey-text darken-3'}`}>star</i>
+        <Tooltip text={relevant ? 'Partial relevant' : 'Not partial relevant'}>
+          <i className={`material-icons right ${relevant ? 'green-text darken-2' : 'grey-text darken-3'}`}>star</i>
+        </Tooltip>
       </a>
 
     return (

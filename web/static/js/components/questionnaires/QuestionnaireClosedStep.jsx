@@ -1,7 +1,7 @@
 // @flow
 import React, { Component } from 'react'
 import classNames from 'classnames'
-import { UntitledIfEmpty, Card, appliesRelevant } from '../ui'
+import { UntitledIfEmpty, Card, appliesRelevant, Tooltip } from '../ui'
 import { icon } from '../../step'
 import DraggableStep from './DraggableStep'
 import { connect } from 'react-redux'
@@ -32,7 +32,9 @@ class QuestionnaireClosedStep extends Component<Props> {
     })
 
     const renderRelevant = relevant =>
-      <i className={`material-icons right ${relevant ? 'green-text darken-2' : 'grey-text darken-3'}`}>star</i>
+      <Tooltip text={relevant ? 'Partial relevant' : 'Not partial relevant'}>
+        <i className={`material-icons right ${relevant ? 'green-text darken-2' : 'grey-text darken-3'}`}>star</i>
+      </Tooltip>
 
     const stepIconFont = icon(step.type)
 
