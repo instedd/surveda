@@ -24,7 +24,26 @@ defmodule Ask.QuestionnaireSimulator do
     Agent.get(Ask.QuestionnaireSimulator, &Map.get(&1, respondent_id))
   end
 
+  defp adapt_questionnaire(questionnaire) do
+    adapted_steps = questionnaire.steps |> Enum.map(fn step ->
+      prompts = step["prompt"] |> Enum.map(fn {lang, prompt} -> {lang, Map.put(prompt, "sms_simulator", prompt["sms"])} end)
+      choices = step["choices"] |> Enum.map(fn choice ->
+        sms_simulator_responses = choice["responses"]["sms"]
+        Map.put(choice, "responses", Map.put(choice["responses"], "sms_simulator", sms_simulator_responses)) end)
+      step
+      |> Map.put("prompt", prompts |> Enum.into(%{}))
+      |> Map.put("choices", choices)
+    end)
+
+    adapted_settings = questionnaire.settings
+                       |> Map.put("thank_you_message", questionnaire.settings["thank_you_message"] |> Enum.map(fn {lang, msg} -> {lang, Map.put(msg, "sms_simulator", msg["sms"])} end) |> Enum.into(%{}))
+                       |> Map.put("error_message", questionnaire.settings["error_message"] |> Enum.map(fn {lang, msg} -> {lang, Map.put(msg, "sms_simulator", msg["sms"])} end) |> Enum.into(%{}))
+
+    %{questionnaire | steps: adapted_steps, settings: adapted_settings}
+  end
+
   def start_simulation(%Project{} = project, %Questionnaire{} = questionnaire, mode \\ "sms_simulator") do
+    questionnaire = adapt_questionnaire(questionnaire)
     survey = %Survey{
       simulation: true,
       project_id: project.id,
@@ -62,7 +81,6 @@ defmodule Ask.QuestionnaireSimulator do
 
   def process_respondent_response(respondent_id, response) do
     %{respondent: respondent, messages: messages} = simulation = Ask.QuestionnaireSimulator.get_respondent_status(respondent_id)
-#    respondent = prepare_respondent(respondent)
     updated_messages = messages ++ [ATMessage.new(response)]
     Ask.QuestionnaireSimulator.add_respondent_simulation(respondent.id, %Ask.QuestionnaireSimulation{simulation | messages: updated_messages})
     simulation = Ask.QuestionnaireSimulator.get_respondent_status(respondent_id)
@@ -80,12 +98,8 @@ defmodule Ask.QuestionnaireSimulator do
         messages = simulation.messages ++ AOMessage.new(reply_messages)
         Ask.QuestionnaireSimulator.add_respondent_simulation(respondent.id, %Ask.QuestionnaireSimulation{simulation | respondent: respondent, messages: messages})
         %{id: respondent.id, disposition: respondent.disposition, reply_messages: reply_messages, messages_history:  messages}
-      {:end, respondent} -> nil
+      {:end, respondent} -> %{id: respondent.id, disposition: respondent.disposition, reply_messages: nil, messages_history:  simulation.messages}
     end
-  end
-
-  defp prepare_respondent(respondent) do
-    %Respondent{respondent | session: Session.load(respondent.session)}
   end
 
   def reply_to_messages(reply) do

@@ -56,7 +56,7 @@ defmodule Ask.Runtime.SMSSimulatorMode do
     end
 
     def visitor(_) do
-      TextVisitor.new("sms")
+      TextVisitor.new("sms_simulator")
     end
 
     def mode(_) do
