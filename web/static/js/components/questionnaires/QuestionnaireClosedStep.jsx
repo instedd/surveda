@@ -21,7 +21,7 @@ type Props = {
   readOnly: boolean,
   quotaCompletedSteps: boolean,
   partialRelevantEnabled: boolean,
-  questionnaireActionsL: any
+  questionnaireActions: any
 };
 
 class QuestionnaireClosedStep extends Component<Props> {
