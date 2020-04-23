@@ -17,7 +17,7 @@ export const roleDisplayName = (role) => {
   }
 }
 
-export const appliesRelevant = stepType => {
+export const canBeRelevant = stepType => {
   switch (stepType) {
     case 'multiple-choice':
     case 'numeric':

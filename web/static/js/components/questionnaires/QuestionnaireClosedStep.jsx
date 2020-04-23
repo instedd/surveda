@@ -1,7 +1,7 @@
 // @flow
 import React, { Component } from 'react'
 import classNames from 'classnames'
-import { UntitledIfEmpty, Card, appliesRelevant, Tooltip } from '../ui'
+import { UntitledIfEmpty, Card, canBeRelevant, Tooltip } from '../ui'
 import { icon } from '../../step'
 import DraggableStep from './DraggableStep'
 import { connect } from 'react-redux'
@@ -64,7 +64,7 @@ class QuestionnaireClosedStep extends Component<Props> {
                 <i className={stepIconClass}>{stepIconFont}</i>
                 <UntitledIfEmpty className={classNames({'text-error': hasErrors})} text={step.title} emptyText={t('Untitled question')} />
                 <i className={classNames({'material-icons right grey-text': true, 'text-error': hasErrors})}>expand_more</i>
-                {partialRelevantEnabled && appliesRelevant(step.type) ? renderRelevant(step.relevant) : null}
+                {partialRelevantEnabled && canBeRelevant(step.type) ? renderRelevant(step.relevant) : null}
               </a>
             </div>
           </div>

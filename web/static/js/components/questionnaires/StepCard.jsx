@@ -2,7 +2,7 @@ import React, { Component, PropTypes } from 'react'
 import { bindActionCreators } from 'redux'
 import { connect } from 'react-redux'
 import * as questionnaireActions from '../../actions/questionnaire'
-import { EditableTitleLabel, Card, appliesRelevant, Tooltip } from '../ui'
+import { EditableTitleLabel, Card, canBeRelevant, Tooltip } from '../ui'
 import { translate } from 'react-i18next'
 
 class StepCard extends Component {
@@ -46,7 +46,7 @@ class StepCard extends Component {
                   }}>
                   <i className='material-icons collapse right'>expand_less</i>
                 </a>
-                {partialRelevantEnabled && appliesRelevant(stepType) ? renderRelevant(relevant) : null}
+                {partialRelevantEnabled && canBeRelevant(stepType) ? renderRelevant(relevant) : null}
               </div>
             </div>
           </li>
