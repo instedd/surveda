@@ -957,6 +957,10 @@ label + .tooltipped {
             width: 75%;
             float: left;
           }
+          a {
+            display: inline;
+            padding: 0;
+          }
         }
       }
     }

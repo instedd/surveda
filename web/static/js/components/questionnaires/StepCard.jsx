@@ -39,12 +39,12 @@ class StepCard extends Component {
                 {icon}
                 <EditableTitleLabel className='editable-field' title={stepTitle} readOnly={readOnly} emptyText={t('Untitled question')} onSubmit={value => this.stepTitleSubmit(value)} />
                 <a href='#!'
-                  className='collapse right'
+                  className=''
                   onClick={e => {
                     e.preventDefault()
                     onCollapse()
                   }}>
-                  <i className='material-icons'>expand_less</i>
+                  <i className='material-icons collapse right'>expand_less</i>
                 </a>
                 {partialRelevantEnabled && appliesRelevant(stepType) ? renderRelevant(relevant) : null}
               </div>
