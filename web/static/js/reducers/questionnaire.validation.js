@@ -435,13 +435,16 @@ const validateThankYouMessage = (msg: ?LocalizedPrompt, context: ValidationConte
 }
 
 const validatePartialRelevantMinRelevantSteps = (data: Questionnaire, context: ValidationContext) => {
+  const partialRelevantEnabled = data.partialRelevantConfig && data.partialRelevantConfig.enabled
   const relevantStepsQuantity = data.steps.filter(({ relevant }) => relevant).length
   const minRelevantSteps = data.partialRelevantConfig.minRelevantSteps
 
-  if (!minRelevantSteps) {
-    addError(context, 'partialRelevant.minRelevantSteps', k('Min relevant steps must not be blank'))
-  } else if (minRelevantSteps > relevantStepsQuantity) {
-    addError(context, 'partialRelevant.minRelevantSteps', k('Min relevant steps must not be greater than the total amount of relevant questions'))
+  if (partialRelevantEnabled) {
+    if (!minRelevantSteps) {
+      addError(context, 'partialRelevant.minRelevantSteps', k('Min relevant steps must not be blank'))
+    } else if (minRelevantSteps > relevantStepsQuantity) {
+      addError(context, 'partialRelevant.minRelevantSteps', k('Min relevant steps must not be greater than the total amount of relevant questions'))
+    }
   }
 }
 
