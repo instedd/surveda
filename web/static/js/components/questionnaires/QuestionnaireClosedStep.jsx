@@ -32,7 +32,7 @@ class QuestionnaireClosedStep extends Component<Props> {
     })
 
     const renderRelevant = relevant =>
-      <Tooltip text={relevant ? 'Partial relevant' : 'Not partial relevant'}>
+      <Tooltip text={relevant ? 'This question is relevant for partial flag' : 'This question is not relevant for partial flag'}>
         <i className={`material-icons right ${relevant ? 'green-text darken-2' : 'grey-text darken-3'}`}>star</i>
       </Tooltip>
 
