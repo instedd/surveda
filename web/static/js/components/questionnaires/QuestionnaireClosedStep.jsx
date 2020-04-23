@@ -5,6 +5,8 @@ import { UntitledIfEmpty, Card, appliesRelevant, Tooltip } from '../ui'
 import { icon } from '../../step'
 import DraggableStep from './DraggableStep'
 import { connect } from 'react-redux'
+import { bindActionCreators } from 'redux'
+import * as questionnaireActions from '../../actions/questionnaire'
 import { hasErrorsInPrefixWithModeAndLanguage } from '../../questionnaireErrors'
 import withQuestionnaire from './withQuestionnaire'
 import { translate } from 'react-i18next'
@@ -18,10 +20,15 @@ type Props = {
   hasErrors: boolean,
   readOnly: boolean,
   quotaCompletedSteps: boolean,
-  partialRelevantEnabled: boolean
+  partialRelevantEnabled: boolean,
+  questionnaireActionsL: any
 };
 
 class QuestionnaireClosedStep extends Component<Props> {
+  stepRelevantSubmit(value) {
+    this.props.questionnaireActions.changeStepRelevant(this.props.step.id, value)
+  }
+
   render() {
     const { step, onClick, hasErrors, readOnly, quotaCompletedSteps, partialRelevantEnabled, t } = this.props
 
@@ -32,9 +39,16 @@ class QuestionnaireClosedStep extends Component<Props> {
     })
 
     const renderRelevant = relevant =>
-      <Tooltip text={relevant ? 'This question is relevant for partial flag' : 'This question is not relevant for partial flag'}>
-        <i className={`material-icons right ${relevant ? 'green-text darken-2' : 'grey-text darken-3'}`}>star</i>
-      </Tooltip>
+      <a href='#!'
+        className=''
+        onClick={e => {
+          e.preventDefault()
+          this.stepRelevantSubmit(!relevant)
+        }}>
+        <Tooltip text={relevant ? 'This question is relevant for partial flag' : 'This question is not relevant for partial flag'}>
+          <i className={`material-icons right ${relevant ? 'green-text darken-2' : 'grey-text darken-3'}`}>star</i>
+        </Tooltip>
+      </a>
 
     const stepIconFont = icon(step.type)
 
@@ -74,4 +88,8 @@ const mapStateToProps = (state, ownProps) => {
   }
 }
 
-export default translate()(withQuestionnaire(connect(mapStateToProps)(QuestionnaireClosedStep)))
+const mapDispatchToProps = dispatch => ({
+  questionnaireActions: bindActionCreators(questionnaireActions, dispatch)
+})
+
+export default translate()(withQuestionnaire(connect(mapStateToProps, mapDispatchToProps)(QuestionnaireClosedStep)))
