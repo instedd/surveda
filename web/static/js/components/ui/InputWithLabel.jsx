@@ -1,7 +1,6 @@
 import React, { PropTypes, Component } from 'react'
 import uuidv4 from 'uuid/v4'
 import classNames from 'classnames/bind'
-import map from 'lodash/map'
 import { translate } from 'react-i18next'
 
 class InputWithLabelComponent extends Component {
@@ -19,7 +18,7 @@ class InputWithLabelComponent extends Component {
   }
 
   render() {
-    const { children, className, value, label, errors, readOnly, t } = this.props
+    const { children, className, value, label, errors, readOnly } = this.props
     const id = this.props.id || uuidv4()
 
     var childrenWithProps = React.Children.map(children, function(child) {
@@ -33,16 +32,21 @@ class InputWithLabelComponent extends Component {
       }
     })
 
-    let errorMessage = null
+    const hasErrors = errors && errors.length > 0
+    const active = value != null && value !== ''
 
-    if (errors && errors.length > 0) {
-      errorMessage = map(errors, (error) => t(...error)).join(', ')
+    const renderErrors = () => {
+      const errorMessage = errors.join(', ')
+      return <div className={classNames({'active': active, 'error': true})}>{errorMessage}</div>
     }
+
+    const renderLabel = () => <label htmlFor={id} className={classNames({'active': active})}>{label}</label>
 
     return (
       <div className={className}>
+        {hasErrors ? renderLabel() : null}
         {childrenWithProps}
-        <label htmlFor={id} className={classNames({'active': (value != null && value !== '')})} data-error={errorMessage}>{label}</label>
+        {hasErrors ? renderErrors() : renderLabel()}
       </div>
     )
   }

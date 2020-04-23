@@ -40,12 +40,33 @@ class PartialRelevantSettings extends Component<any, State> {
     this.setState({ ignoredValues: changed })
   }
 
+  errorsByPath(path) {
+    return this.props.errorsByPath[path]
+  }
+
+  minRelevantStepsErrors() {
+    return this.errorsByPath('partialRelevant.minRelevantSteps')
+  }
+
+  ignoredValuesErrors() {
+    return this.errorsByPath('partialRelevant.ignoredValuesErrors')
+  }
+
+  hasErrors() {
+    return !!this.minRelevantStepsErrors() ||
+      !!this.ignoredValuesErrors()
+  }
+
   render() {
     const { readOnly, changeMinRelevantSteps, changeIgnoredValues, t } = this.props
     const { minRelevantSteps, ignoredValues } = this.state
 
     return <div>
-      <InputWithLabel id='partial_relevant_min_relevant_steps' value={minRelevantSteps} label={t('Min Relevant Steps')}>
+      <InputWithLabel
+        id='partial_relevant_min_relevant_steps'
+        value={minRelevantSteps}
+        label={t('Min Relevant Steps')}
+        errors={this.minRelevantStepsErrors()}>
         <input
           type='text'
           onChange={e => this.handleMinRelevantStepsChange(e.target.value)}
@@ -68,8 +89,9 @@ PartialRelevantSettings.propTypes = {
   readOnly: PropTypes.bool.isRequired,
   changeMinRelevantSteps: PropTypes.func.isRequired,
   changeIgnoredValues: PropTypes.func.isRequired,
-  minRelevantSteps: PropTypes.number,
-  ignoredValues: PropTypes.string
+  minRelevantSteps: PropTypes.string,
+  ignoredValues: PropTypes.string,
+  errorsByPath: PropTypes.object
 }
 
 export default translate()(PartialRelevantSettings)

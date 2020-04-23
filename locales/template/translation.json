@@ -221,6 +221,8 @@
   "Message": "",
   "Messages": "",
   "Min Relevant Steps": "",
+  "Min relevant steps must not be blank": "",
+  "Min relevant steps must not be greater than the total amount of relevant questions": "",
   "Min value": "",
   "Min value must be less than or equal to the first delimiter ({{first}})": "",
   "Mobile Web": "",

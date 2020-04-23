@@ -23,6 +23,7 @@ export const validate = (state: DataStore<Questionnaire>) => {
     sms: data.modes.indexOf('sms') != -1,
     ivr: data.modes.indexOf('ivr') != -1,
     mobileweb: data.modes.indexOf('mobileweb') != -1,
+    partialRelevant: data.partialRelevantConfig && data.partialRelevantConfig.enabled,
     activeLanguage: data.activeLanguage,
     languages: data.languages,
     errors: state.errors,
@@ -46,6 +47,8 @@ export const validate = (state: DataStore<Questionnaire>) => {
   validateMobileWebRequiredField(data, context, 'title', k('Title must not be blank'), 'multilingual')
   validateMobileWebRequiredField(data, context, 'surveyAlreadyTakenMessage', k('"Survey already taken" message must not be blank'), 'multilingual')
   validateMobileWebColorStyle(data, context)
+
+  validatePartialRelevantMinRelevantSteps(data, context)
 
   state.errorsByPath = errorsByPath(state.errors)
   state.errorsByLang = errorsByLang(state.errors)
@@ -428,6 +431,17 @@ const validateThankYouMessage = (msg: ?LocalizedPrompt, context: ValidationConte
         validateMobileWebLangPrompt(msg[lang], context, lang, `${path}['${lang}']`)
       }
     })
+  }
+}
+
+const validatePartialRelevantMinRelevantSteps = (data: Questionnaire, context: ValidationContext) => {
+  const relevantStepsQuantity = data.steps.filter(({ relevant }) => relevant).length
+  const minRelevantSteps = data.partialRelevantConfig.minRelevantSteps
+
+  if (!minRelevantSteps) {
+    addError(context, 'partialRelevant.minRelevantSteps', k('Min relevant steps must not be blank'))
+  } else if (minRelevantSteps > relevantStepsQuantity) {
+    addError(context, 'partialRelevant.minRelevantSteps', k('Min relevant steps must not be greater than the total amount of relevant questions'))
   }
 }
 

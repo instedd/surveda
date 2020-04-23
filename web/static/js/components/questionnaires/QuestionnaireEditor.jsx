@@ -404,6 +404,7 @@ class QuestionnaireEditor extends Component<any, State> {
                   changeMinRelevantSteps={changed => this.props.questionnaireActions.changePartialRelevantMinRelevantSteps(changed)}
                   ignoredValues={partialRelevantIgnoredValues}
                   changeIgnoredValues={changed => this.props.questionnaireActions.changePartialRelevantIgnoredValues(changed)}
+                  errorsByPath={errorsByPath}
                   />
                 : null
               }
