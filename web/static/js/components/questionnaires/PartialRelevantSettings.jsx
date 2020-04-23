@@ -4,7 +4,7 @@ import { translate } from 'react-i18next'
 import { InputWithLabel } from '../ui'
 
 type State = {
-  minRelevantSteps: ?number,
+  minRelevantSteps: string,
   ignoredValues: string
 };
 
@@ -28,7 +28,7 @@ class PartialRelevantSettings extends Component<any, State> {
       if (onlyNumbers) {
         const parsed = parseInt(changed)
         if (parsed > 0) {
-          this.setState({ minRelevantSteps: parsed })
+          this.setState({ minRelevantSteps: parsed.toString() })
         }
       }
     } else {
@@ -49,7 +49,7 @@ class PartialRelevantSettings extends Component<any, State> {
         <input
           type='text'
           onChange={e => this.handleMinRelevantStepsChange(e.target.value)}
-          onBlur={() => changeMinRelevantSteps(minRelevantSteps || null)}
+          onBlur={() => changeMinRelevantSteps(parseInt(minRelevantSteps) || null)}
         />
       </InputWithLabel>
       <InputWithLabel id='partial_relevant_ignored_values' value={ignoredValues} label={t('Ignored Values')} readOnly={readOnly}>
