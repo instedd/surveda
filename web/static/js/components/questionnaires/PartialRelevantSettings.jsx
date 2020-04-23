@@ -17,19 +17,22 @@ class PartialRelevantSettings extends Component<any, State> {
   stateFromProps(props) {
     const { minRelevantSteps, ignoredValues } = this.props
     return {
-      minRelevantSteps,
+      minRelevantSteps: minRelevantSteps || '',
       ignoredValues
     }
   }
 
   handleMinRelevantStepsChange(changed) {
     if (changed) {
-      const parsed = parseInt(changed)
-      if (parsed > 0) {
-        this.setState({ minRelevantSteps: parsed })
+      const onlyNumbers = /^\d+$/.test(changed)
+      if (onlyNumbers) {
+        const parsed = parseInt(changed)
+        if (parsed > 0) {
+          this.setState({ minRelevantSteps: parsed })
+        }
       }
     } else {
-      this.setState({ minRelevantSteps: null })
+      this.setState({ minRelevantSteps: '' })
     }
   }
 
@@ -44,18 +47,14 @@ class PartialRelevantSettings extends Component<any, State> {
     return <div>
       <InputWithLabel id='partial_relevant_min_relevant_steps' value={minRelevantSteps} label={t('Min Relevant Steps')}>
         <input
-          type='number'
-          value={minRelevantSteps}
-          disabled={readOnly}
+          type='text'
           onChange={e => this.handleMinRelevantStepsChange(e.target.value)}
-          onBlur={() => changeMinRelevantSteps(minRelevantSteps)}
+          onBlur={() => changeMinRelevantSteps(minRelevantSteps || null)}
         />
       </InputWithLabel>
-      <InputWithLabel id='partial_relevant_ignored_values' value={ignoredValues} label={t('Ignored Values')}>
+      <InputWithLabel id='partial_relevant_ignored_values' value={ignoredValues} label={t('Ignored Values')} readOnly={readOnly}>
         <input
           type='text'
-          value={ignoredValues}
-          disabled={readOnly}
           onChange={e => this.handleIgnoredValuesChange(e.target.value)}
           onBlur={() => changeIgnoredValues(ignoredValues)}
         />
@@ -69,8 +68,8 @@ PartialRelevantSettings.propTypes = {
   readOnly: PropTypes.bool.isRequired,
   changeMinRelevantSteps: PropTypes.func.isRequired,
   changeIgnoredValues: PropTypes.func.isRequired,
-  minRelevantSteps: PropTypes.number.isRequired,
-  ignoredValues: PropTypes.string.isRequired
+  minRelevantSteps: PropTypes.number,
+  ignoredValues: PropTypes.string
 }
 
 export default translate()(PartialRelevantSettings)
