@@ -2,12 +2,12 @@ defmodule QuestionnaireSimulatorTest do
   use Ask.ModelCase
   use Ask.DummySteps
   import Ask.Factory
-  alias Ask.Runtime.QuestionnaireSimulator
+  alias Ask.Runtime.{QuestionnaireSimulator, QuestionnaireSimulatorStore}
   alias Ask.{Questionnaire, Repo}
 
   setup do
     project = insert(:project)
-    QuestionnaireSimulator.start_link()
+    QuestionnaireSimulatorStore.start_link()
     {:ok, project: project}
   end
 

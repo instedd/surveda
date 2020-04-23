@@ -6,23 +6,58 @@ defmodule Ask.Runtime.SimulatorChannel do
   defstruct patterns: []
 end
 
-defmodule Ask.Runtime.QuestionnaireSimulator do
-  use Agent
+defmodule Ask.Runtime.QuestionnaireSimulatorStore do
+  use GenServer
+  alias Ask.Logger
 
-  alias Ask.{Survey, Respondent, Questionnaire, Project, SystemTime, Runtime}
-  alias Ask.Runtime.{Session, Flow}
+  @ttl_minutes Ask.ConfigHelper.get_config(__MODULE__, :simulation_ttl, &String.to_integer/1)
 
-  def start_link() do
-    Agent.start_link(fn -> %{} end, name: __MODULE__)
+  def start_link do
+    GenServer.start_link(__MODULE__, [], name: __MODULE__)
+  end
+
+  def init(_args) do
+    Logger.info("Starting questionnaire simulator with simulation_ttl: #{@ttl_minutes}")
+    :timer.send_after(1000, :clean)
+    {:ok, %{}}
+  end
+
+  defp ttl_expired?({_key, {ts, _}}) do
+    ttl_minutes_ago = Timex.shift(Ask.SystemTime.time().now, minutes: -@ttl_minutes)
+    Timex.before?(ts, ttl_minutes_ago)
+  end
+
+  def handle_info(:clean, state) do
+    old_keys = state |> Enum.filter(&ttl_expired?/1) |> Enum.map(fn {key, _} -> key end)
+    new_state = old_keys |> Enum.reduce(state, fn key, accum -> Map.delete(accum, key) end)
+    if(old_keys != []) do Logger.debug("Cleaning old simulations. Respondent ids: #{inspect old_keys}") end
+
+    :timer.send_after(:timer.minutes(1), :clean)
+    {:noreply, new_state}
+  end
+
+  def handle_call({:get_status, respondent_id}, _from, state) do
+    status = state |> Map.get(respondent_id)
+    {:reply, if status do elem(status, 1) else nil end, state}
+  end
+
+  def handle_call({:add_status, respondent_id, status}, _from, state) do
+    new_state = state |> Map.put(respondent_id, {Ask.SystemTime.time().now, status})
+    {:reply, status, new_state}
   end
 
   def add_respondent_simulation(respondent_id, simulation_status) do
-    Agent.update(Ask.Runtime.QuestionnaireSimulator, &Map.put(&1, respondent_id, simulation_status))
+    GenServer.call(__MODULE__, {:add_status, respondent_id, simulation_status})
   end
 
-  def get_respondent_status(respondent_id) do
-    Agent.get(Ask.Runtime.QuestionnaireSimulator, &Map.get(&1, respondent_id))
+  def get_respondent_simulation(respondent_id) do
+    GenServer.call(__MODULE__, {:get_status, respondent_id})
   end
+end
+
+defmodule Ask.Runtime.QuestionnaireSimulator do
+  alias Ask.{Survey, Respondent, Questionnaire, Project, SystemTime, Runtime}
+  alias Ask.Runtime.{Session, Flow, QuestionnaireSimulatorStore}
 
   # Replicates all 'sms' configurations under 'sms_simulator' key
   defp adapt_questionnaire(questionnaire) do
@@ -77,7 +112,7 @@ defmodule Ask.Runtime.QuestionnaireSimulator do
     messages = AOMessage.new(reply_messages)
     updated_respondent = %Respondent{respondent | session: session}
 
-    add_respondent_simulation(respondent.id, %Ask.QuestionnaireSimulation{questionnaire: questionnaire, respondent: updated_respondent, messages: messages})
+    QuestionnaireSimulatorStore.add_respondent_simulation(respondent.id, %Ask.QuestionnaireSimulation{questionnaire: questionnaire, respondent: updated_respondent, messages: messages})
     %{id: respondent.id, disposition: respondent.disposition, reply_messages: reply_messages, messages_history:  messages}
   end
 
@@ -98,28 +133,31 @@ defmodule Ask.Runtime.QuestionnaireSimulator do
   end
 
   def process_respondent_response(respondent_id, response) do
-    %{respondent: respondent, messages: messages} = simulation = get_respondent_status(respondent_id)
-    updated_messages = messages ++ [ATMessage.new(response)]
-    add_respondent_simulation(respondent.id, %Ask.QuestionnaireSimulation{simulation | messages: updated_messages})
-    simulation = get_respondent_status(respondent_id)
-#    session = simulation.respondent.session
-    reply = Flow.Message.reply(response)
+    simulation = QuestionnaireSimulatorStore.get_respondent_simulation(respondent_id)
+    if(simulation) do
+      %{respondent: respondent, messages: messages} = simulation
+      updated_messages = messages ++ [ATMessage.new(response)]
+      simulation = QuestionnaireSimulatorStore.add_respondent_simulation(respondent.id, %Ask.QuestionnaireSimulation{simulation | messages: updated_messages})
+      reply = Flow.Message.reply(response)
 
-    case Runtime.Survey.sync_step(respondent, reply, "sms_simulator", SystemTime.time.now, false) do
-      {:reply, reply, respondent} ->
-        reply_messages = reply_to_messages(reply)
-        messages = simulation.messages ++ AOMessage.new(reply_messages)
-        respondent = %{respondent | session: inflate_session(respondent, respondent.session, simulation.questionnaire)}
-        add_respondent_simulation(respondent.id, %Ask.QuestionnaireSimulation{simulation | respondent: respondent, messages: messages})
-        %{id: respondent.id, disposition: respondent.disposition, reply_messages: reply_messages, messages_history:  messages}
-      {:end, {:reply, reply}, respondent} ->
-        reply_messages = reply_to_messages(reply)
-        messages = simulation.messages ++ AOMessage.new(reply_messages)
-        add_respondent_simulation(respondent.id, %Ask.QuestionnaireSimulation{simulation | respondent: respondent, messages: messages})
-        %{id: respondent.id, disposition: respondent.disposition, reply_messages: reply_messages, messages_history:  messages}
-      {:end, respondent} ->
-        add_respondent_simulation(respondent.id, %Ask.QuestionnaireSimulation{simulation | respondent: respondent})
-        %{id: respondent.id, disposition: respondent.disposition, reply_messages: nil, messages_history:  simulation.messages}
+      case Runtime.Survey.sync_step(respondent, reply, "sms_simulator", SystemTime.time.now, false) do
+        {:reply, reply, respondent} ->
+          reply_messages = reply_to_messages(reply)
+          messages = simulation.messages ++ AOMessage.new(reply_messages)
+          respondent = %{respondent | session: inflate_session(respondent, respondent.session, simulation.questionnaire)}
+          QuestionnaireSimulatorStore.add_respondent_simulation(respondent.id, %Ask.QuestionnaireSimulation{simulation | respondent: respondent, messages: messages})
+          %{id: respondent.id, disposition: respondent.disposition, reply_messages: reply_messages, messages_history:  messages}
+        {:end, {:reply, reply}, respondent} ->
+          reply_messages = reply_to_messages(reply)
+          messages = simulation.messages ++ AOMessage.new(reply_messages)
+          QuestionnaireSimulatorStore.add_respondent_simulation(respondent.id, %Ask.QuestionnaireSimulation{simulation | respondent: respondent, messages: messages})
+          %{id: respondent.id, disposition: respondent.disposition, reply_messages: reply_messages, messages_history:  messages}
+        {:end, respondent} ->
+          QuestionnaireSimulatorStore.add_respondent_simulation(respondent.id, %Ask.QuestionnaireSimulation{simulation | respondent: respondent})
+          %{id: respondent.id, disposition: respondent.disposition, reply_messages: nil, messages_history:  simulation.messages}
+      end
+    else
+      :simulation_expired
     end
   end
 
