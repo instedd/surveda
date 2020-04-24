@@ -3,6 +3,7 @@ defmodule Ask.QuestionnaireController do
 
   alias Ask.{Questionnaire, SurveyQuestionnaire, Survey, Project, JsonSchema, Audio, Logger, ActivityLog}
   alias Ecto.Multi
+  alias Ask.Runtime.QuestionnaireSimulator
 
   plug :validate_params when action in [:create, :update]
 
@@ -289,6 +290,24 @@ defmodule Ask.QuestionnaireController do
     |> Repo.update!
 
     render(conn, "show.json", questionnaire: questionnaire)
+  end
+
+  def start_simulation(conn, %{"project_id" => project_id, "questionnaire_id" => id}) do
+    project = conn |> load_project(project_id)
+    questionnaire = load_questionnaire(project, id)
+
+    simulation = QuestionnaireSimulator.start_simulation(project, questionnaire)
+    render(conn, "simulation.json", simulation: simulation)
+  end
+
+  def sync_simulation(conn, %{"project_id" => project_id}) do
+    # Load project to authorize connection
+    project = conn |> load_project(project_id)
+
+    respondent_id = conn.params["respondent_id"]
+    response = conn.params["response"]
+    simulation = QuestionnaireSimulator.process_respondent_response(respondent_id, response)
+    render(conn, "simulation.json", simulation: simulation)
   end
 
   defp validate_params(conn, _params) do

@@ -25,4 +25,8 @@ defmodule Ask.QuestionnaireView do
       partial_relevant_config: questionnaire.partial_relevant_config,
     }
   end
+
+  def render("simulation.json", %{simulation: simulation}) do
+    simulation
+  end
 end

@@ -17,7 +17,7 @@ defmodule Ask.Runtime.QuestionnaireSimulatorStore do
   end
 
   def init(_args) do
-    Logger.info("Starting questionnaire simulator with simulation_ttl: #{@ttl_minutes}")
+    Logger.info("QuestionnaireSimulator started with simulation_ttl: #{@ttl_minutes}")
     :timer.send_after(1000, :clean)
     {:ok, %{}}
   end
@@ -113,7 +113,7 @@ defmodule Ask.Runtime.QuestionnaireSimulator do
     updated_respondent = %Respondent{respondent | session: session}
 
     QuestionnaireSimulatorStore.add_respondent_simulation(respondent.id, %Ask.QuestionnaireSimulation{questionnaire: questionnaire, respondent: updated_respondent, messages: messages})
-    %{id: respondent.id, disposition: respondent.disposition, reply_messages: reply_messages, messages_history:  messages}
+    %{respondent_id: respondent.id, disposition: respondent.disposition, reply_messages: reply_messages, messages_history:  messages, simulation_status: "active"}
   end
 
   def inflate_session(respondent, session, questionnaire) do
@@ -146,15 +146,15 @@ defmodule Ask.Runtime.QuestionnaireSimulator do
           messages = simulation.messages ++ AOMessage.new(reply_messages)
           respondent = %{respondent | session: inflate_session(respondent, respondent.session, simulation.questionnaire)}
           QuestionnaireSimulatorStore.add_respondent_simulation(respondent.id, %Ask.QuestionnaireSimulation{simulation | respondent: respondent, messages: messages})
-          %{id: respondent.id, disposition: respondent.disposition, reply_messages: reply_messages, messages_history:  messages}
+          %{respondent_id: respondent.id, disposition: respondent.disposition, reply_messages: reply_messages, messages_history:  messages, simulation_status: "active"}
         {:end, {:reply, reply}, respondent} ->
           reply_messages = reply_to_messages(reply)
           messages = simulation.messages ++ AOMessage.new(reply_messages)
           QuestionnaireSimulatorStore.add_respondent_simulation(respondent.id, %Ask.QuestionnaireSimulation{simulation | respondent: respondent, messages: messages})
-          %{id: respondent.id, disposition: respondent.disposition, reply_messages: reply_messages, messages_history:  messages}
+          %{respondent_id: respondent.id, disposition: respondent.disposition, reply_messages: reply_messages, messages_history:  messages, simulation_status: "ended"}
         {:end, respondent} ->
           QuestionnaireSimulatorStore.add_respondent_simulation(respondent.id, %Ask.QuestionnaireSimulation{simulation | respondent: respondent})
-          %{id: respondent.id, disposition: respondent.disposition, reply_messages: nil, messages_history:  simulation.messages}
+          %{respondent_id: respondent.id, disposition: respondent.disposition, reply_messages: nil, messages_history:  simulation.messages, simulation_status: "ended"}
       end
     else
       :simulation_expired
