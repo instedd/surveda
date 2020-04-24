@@ -400,7 +400,7 @@ class QuestionnaireEditor extends Component<any, State> {
                 partialRelevantEnabled
                 ? <PartialRelevantSettings
                   readOnly={readOnly}
-                  minRelevantSteps={partialRelevantMinRelevantSteps ? partialRelevantMinRelevantSteps.toString() : null}
+                  minRelevantSteps={partialRelevantMinRelevantSteps}
                   changeMinRelevantSteps={changed => this.props.questionnaireActions.changePartialRelevantMinRelevantSteps(changed)}
                   ignoredValues={partialRelevantIgnoredValues}
                   changeIgnoredValues={changed => this.props.questionnaireActions.changePartialRelevantIgnoredValues(changed)}

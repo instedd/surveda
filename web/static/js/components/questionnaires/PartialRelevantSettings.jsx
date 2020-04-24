@@ -1,44 +1,33 @@
 // @flow
-import React, { Component, PropTypes } from 'react'
+import React, { Component } from 'react'
 import Draft from './Draft'
 import { translate } from 'react-i18next'
 import { Card } from '../ui'
 
-type State = {
-  minRelevantSteps: string,
-  ignoredValues: string
-};
+type Props = {
+  t: Function,
+  readOnly: boolean,
+  changeMinRelevantSteps: Function,
+  changeIgnoredValues: Function,
+  minRelevantSteps: number,
+  ignoredValues: string,
+  errorsByPath: Object
+}
 
-class PartialRelevantSettings extends Component<any, State> {
-  constructor(props) {
-    super(props)
-    this.state = this.stateFromProps(props)
-  }
-
-  stateFromProps(props) {
-    const { minRelevantSteps, ignoredValues } = this.props
-    return {
-      minRelevantSteps: minRelevantSteps || '',
-      ignoredValues: ignoredValues || ''
-    }
-  }
-
-  handleMinRelevantStepsChange(changed) {
+class PartialRelevantSettings extends Component<Props> {
+  handleMinRelevantStepsOnBlur(changed) {
+    const { changeMinRelevantSteps } = this.props
+    let nextValue = null
     if (changed) {
       const onlyNumbers = /^\d+$/.test(changed)
       if (onlyNumbers) {
         const parsed = parseInt(changed)
         if (parsed > 0) {
-          this.setState({ minRelevantSteps: parsed.toString() })
+          nextValue = parsed
         }
       }
-    } else {
-      this.setState({ minRelevantSteps: '' })
     }
-  }
-
-  handleIgnoredValuesChange(changed) {
-    this.setState({ ignoredValues: changed })
+    changeMinRelevantSteps(nextValue)
   }
 
   errorsByPath(path) {
@@ -59,34 +48,30 @@ class PartialRelevantSettings extends Component<any, State> {
   }
 
   minRelevantStepsComponent() {
-    const { readOnly, changeMinRelevantSteps, t } = this.props
-    const { minRelevantSteps } = this.state
+    const { minRelevantSteps, readOnly, t } = this.props
 
     return <Draft
       id='partial_relevant_min_relevant_steps'
-      value={minRelevantSteps}
+      value={(minRelevantSteps || '').toString()}
       label={t('Min Relevant Steps')}
       errors={this.minRelevantStepsErrors()}
       readOnly={readOnly}
       plainText
-      onBlur={() => changeMinRelevantSteps(parseInt(minRelevantSteps) || null)}
-      onChange={e => this.handleMinRelevantStepsChange(e.target.value)}
+      onBlur={inputText => this.handleMinRelevantStepsOnBlur(inputText)}
     />
   }
 
   ignoredRelevantValuesComponent() {
-    const { readOnly, changeIgnoredValues, t } = this.props
-    const { ignoredValues } = this.state
+    const { readOnly, ignoredValues, changeIgnoredValues, t } = this.props
 
     return <Draft
       id='partial_relevant_ignored_values'
-      value={ignoredValues}
+      value={ignoredValues || ''}
       label={t('Ignored Values')}
       errors={this.ignoredValuesErrors()}
       readOnly={readOnly}
       plainText
-      onBlur={() => changeIgnoredValues(parseInt(ignoredValues) || null)}
-      onChange={e => this.handleIgnoredValuesChange(e.target.value)}
+      onBlur={inputText => changeIgnoredValues(inputText || null)}
     />
   }
 
@@ -116,16 +101,6 @@ class PartialRelevantSettings extends Component<any, State> {
       </div>
     )
   }
-}
-
-PartialRelevantSettings.propTypes = {
-  t: PropTypes.func.isRequired,
-  readOnly: PropTypes.bool.isRequired,
-  changeMinRelevantSteps: PropTypes.func.isRequired,
-  changeIgnoredValues: PropTypes.func.isRequired,
-  minRelevantSteps: PropTypes.string,
-  ignoredValues: PropTypes.string,
-  errorsByPath: PropTypes.object
 }
 
 export default translate()(PartialRelevantSettings)
