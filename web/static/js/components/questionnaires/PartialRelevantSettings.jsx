@@ -19,7 +19,7 @@ class PartialRelevantSettings extends Component<any, State> {
     const { minRelevantSteps, ignoredValues } = this.props
     return {
       minRelevantSteps: minRelevantSteps || '',
-      ignoredValues: ignoredValues  || ''
+      ignoredValues: ignoredValues || ''
     }
   }
 
