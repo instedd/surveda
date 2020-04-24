@@ -43,6 +43,7 @@ class QuestionnaireClosedStep extends Component<Props> {
         className=''
         onClick={e => {
           e.preventDefault()
+          e.stopPropagation()
           this.stepRelevantSubmit(!relevant)
         }}>
         <Tooltip text={relevant ? 'This question is relevant for partial flag' : 'This question is not relevant for partial flag'}>
