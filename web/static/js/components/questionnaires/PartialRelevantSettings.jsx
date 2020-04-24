@@ -1,7 +1,8 @@
 // @flow
 import React, { Component, PropTypes } from 'react'
+import Draft from './Draft'
 import { translate } from 'react-i18next'
-import { InputWithLabel } from '../ui'
+import { Card } from '../ui'
 
 type State = {
   minRelevantSteps: string,
@@ -18,7 +19,7 @@ class PartialRelevantSettings extends Component<any, State> {
     const { minRelevantSteps, ignoredValues } = this.props
     return {
       minRelevantSteps: minRelevantSteps || '',
-      ignoredValues
+      ignoredValues: ignoredValues  || ''
     }
   }
 
@@ -57,30 +58,63 @@ class PartialRelevantSettings extends Component<any, State> {
       !!this.ignoredValuesErrors()
   }
 
-  render() {
-    const { readOnly, changeMinRelevantSteps, changeIgnoredValues, t } = this.props
-    const { minRelevantSteps, ignoredValues } = this.state
+  minRelevantStepsComponent() {
+    const { readOnly, changeMinRelevantSteps, t } = this.props
+    const { minRelevantSteps } = this.state
 
-    return <div>
-      <InputWithLabel
-        id='partial_relevant_min_relevant_steps'
-        value={minRelevantSteps}
-        label={t('Min Relevant Steps')}
-        errors={this.minRelevantStepsErrors()}>
-        <input
-          type='text'
-          onChange={e => this.handleMinRelevantStepsChange(e.target.value)}
-          onBlur={() => changeMinRelevantSteps(parseInt(minRelevantSteps) || null)}
-        />
-      </InputWithLabel>
-      <InputWithLabel id='partial_relevant_ignored_values' value={ignoredValues} label={t('Ignored Values')} readOnly={readOnly}>
-        <input
-          type='text'
-          onChange={e => this.handleIgnoredValuesChange(e.target.value)}
-          onBlur={() => changeIgnoredValues(ignoredValues)}
-        />
-      </InputWithLabel>
-    </div>
+    return <Draft
+      id='partial_relevant_min_relevant_steps'
+      value={minRelevantSteps}
+      label={t('Min Relevant Steps')}
+      errors={this.minRelevantStepsErrors()}
+      readOnly={readOnly}
+      plainText
+      onBlur={() => changeMinRelevantSteps(parseInt(minRelevantSteps) || null)}
+      onChange={e => this.handleMinRelevantStepsChange(e.target.value)}
+    />
+  }
+
+  ignoredRelevantValuesComponent() {
+    const { readOnly, changeIgnoredValues, t } = this.props
+    const { ignoredValues } = this.state
+
+    return <Draft
+      id='partial_relevant_ignored_values'
+      value={ignoredValues}
+      label={t('Ignored Values')}
+      errors={this.ignoredValuesErrors()}
+      readOnly={readOnly}
+      plainText
+      onBlur={() => changeIgnoredValues(parseInt(ignoredValues) || null)}
+      onChange={e => this.handleIgnoredValuesChange(e.target.value)}
+    />
+  }
+
+  render() {
+    return (
+      <div className='row' ref='self'>
+        <Card className='z-depth-0'>
+          <ul className='collection collection-card dark'>
+            <li className='collection-item header'>
+              <div className='row'>
+                <div className='col s12'>
+                  <i className='material-icons left'>build</i>
+                  <a className='page-title truncate'>
+                    <span>{this.props.t('Partial relevant settings')}</span>
+                  </a>
+                </div>
+              </div>
+            </li>
+            <li className='collection-item'>
+              {this.minRelevantStepsComponent()}
+            </li>
+            <li className='collection-item'>
+              {this.ignoredRelevantValuesComponent()}
+            </li>
+          </ul>
+        </Card>
+      </div>
+    )
   }
 }
 
