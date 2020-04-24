@@ -302,7 +302,7 @@ defmodule Ask.QuestionnaireController do
 
   def sync_simulation(conn, %{"project_id" => project_id}) do
     # Load project to authorize connection
-    project = conn |> load_project(project_id)
+    conn |> load_project(project_id)
 
     respondent_id = conn.params["respondent_id"]
     response = conn.params["response"]

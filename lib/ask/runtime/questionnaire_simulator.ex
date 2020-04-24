@@ -1,5 +1,21 @@
 defmodule Ask.QuestionnaireSimulation do
-  defstruct [:respondent, :questionnaire, :messages]
+  defstruct [:respondent, :questionnaire, messages: [], checklist: []]
+end
+
+defmodule Ask.QuestionnaireSimulationStep do
+  alias Ask.QuestionnaireSimulation
+  alias Ask.Simulation.Status
+  alias __MODULE__
+
+  defstruct [:respondent_id, :simulation_status, :disposition, messages_history: [], checklist: []]
+
+  def build(%QuestionnaireSimulation{respondent: respondent, messages: all_messages, checklist: checklist}, status) do
+    %QuestionnaireSimulationStep{respondent_id: respondent.id, disposition: respondent.disposition, messages_history: all_messages, simulation_status: status, checklist: checklist}
+  end
+
+  def expired(respondent_id) do
+    %QuestionnaireSimulationStep{respondent_id: respondent_id, simulation_status: Status.expired}
+  end
 end
 
 defmodule Ask.Runtime.SimulatorChannel do
@@ -56,30 +72,13 @@ defmodule Ask.Runtime.QuestionnaireSimulatorStore do
 end
 
 defmodule Ask.Runtime.QuestionnaireSimulator do
-  alias Ask.{Survey, Respondent, Questionnaire, Project, SystemTime, Runtime}
+  alias Ask.{Survey, Respondent, Questionnaire, Project, SystemTime, Runtime, QuestionnaireSimulationStep}
+  alias Ask.Simulation.{Status, ATMessage, AOMessage, StepCheck}
   alias Ask.Runtime.{Session, Flow, QuestionnaireSimulatorStore}
 
-  # Replicates all 'sms' configurations under 'sms_simulator' key
-  defp adapt_questionnaire(questionnaire) do
-    adapted_steps = questionnaire.steps |> Enum.map(fn step ->
-      prompts = (step["prompt"] || %{})|> Enum.map(fn {lang, prompt} -> {lang, Map.put(prompt, "sms_simulator", prompt["sms"])} end)
-      choices = (step["choices"] || []) |> Enum.map(fn choice ->
-        sms_simulator_responses = choice["responses"]["sms"]
-        Map.put(choice, "responses", Map.put(choice["responses"], "sms_simulator", sms_simulator_responses)) end)
-      step
-      |> Map.put("prompt", prompts |> Enum.into(%{}))
-      |> Map.put("choices", choices)
-    end)
+  @sms_simulator "sms_simulator"
 
-    modes = questionnaire.modes ++ ["sms_simulator"]
-    adapted_settings = questionnaire.settings
-                       |> Map.put("thank_you_message", (questionnaire.settings["thank_you_message"] || []) |> Enum.map(fn {lang, msg} -> {lang, Map.put(msg, "sms_simulator", msg["sms"])} end) |> Enum.into(%{}))
-                       |> Map.put("error_message", (questionnaire.settings["error_message"] || [] )|> Enum.map(fn {lang, msg} -> {lang, Map.put(msg, "sms_simulator", msg["sms"])} end) |> Enum.into(%{}))
-
-    %{questionnaire | steps: adapted_steps, settings: adapted_settings, modes: modes}
-  end
-
-  def start_simulation(%Project{} = project, %Questionnaire{} = questionnaire, mode \\ "sms_simulator") do
+  def start_simulation(%Project{} = project, %Questionnaire{} = questionnaire, mode \\ @sms_simulator) do
     questionnaire = adapt_questionnaire(questionnaire)
     survey = %Survey{
       simulation: true,
@@ -105,31 +104,16 @@ defmodule Ask.Runtime.QuestionnaireSimulator do
     }
 
     {:ok, session, _reply, _timeout} = session_started = Session.start(questionnaire, respondent, %Ask.Runtime.SimulatorChannel{}, mode, Ask.Schedule.always(), [], nil, nil, [], nil, false, false)
-
     {:reply, reply, respondent} = Runtime.Survey.handle_session_step(session_started, SystemTime.time.now, false)
+
     respondent = %{respondent | session: inflate_session(respondent, respondent.session, questionnaire)}
     reply_messages = reply_to_messages(reply)
-    messages = AOMessage.new(reply_messages)
+    messages = AOMessage.create_all(reply_messages)
     updated_respondent = %Respondent{respondent | session: session}
+    checked_steps = StepCheck.build_from(reply, questionnaire)
 
-    QuestionnaireSimulatorStore.add_respondent_simulation(respondent.id, %Ask.QuestionnaireSimulation{questionnaire: questionnaire, respondent: updated_respondent, messages: messages})
-    %{respondent_id: respondent.id, disposition: respondent.disposition, reply_messages: reply_messages, messages_history:  messages, simulation_status: "active"}
-  end
-
-  def inflate_session(respondent, session, questionnaire) do
-      state = session.flow
-      flow = %Flow{questionnaire: questionnaire, current_step: state.current_step, mode: state.mode, language: state.language, retries: state.retries, in_quota_completed_steps: state.in_quota_completed_steps, has_sections: Ask.Runtime.Flow.questionnaire_has_sections(questionnaire), section_order: state.section_order, ignored_values_from_relevant_steps: Ask.Runtime.Flow.ignored_values_from_relevant_steps(questionnaire)}
-
-      session = %Session{
-        current_mode: Ask.Runtime.SessionModeProvider.new("sms_simulator", %Ask.Runtime.SimulatorChannel{}, []),
-        fallback_mode: nil,
-        flow: flow,
-        respondent: Ask.Runtime.Session.update_section_order(respondent, flow.section_order, false),
-        fallback_delay: Survey.default_fallback_delay(),
-        count_partial_results: false,
-        schedule: Ask.Schedule.always()
-      }
-      session
+    QuestionnaireSimulatorStore.add_respondent_simulation(respondent.id, %Ask.QuestionnaireSimulation{questionnaire: questionnaire, respondent: updated_respondent, messages: messages, checklist: checked_steps})
+    |> QuestionnaireSimulationStep.build(Status.active)
   end
 
   def process_respondent_response(respondent_id, response) do
@@ -140,47 +124,113 @@ defmodule Ask.Runtime.QuestionnaireSimulator do
       simulation = QuestionnaireSimulatorStore.add_respondent_simulation(respondent.id, %Ask.QuestionnaireSimulation{simulation | messages: updated_messages})
       reply = Flow.Message.reply(response)
 
-      case Runtime.Survey.sync_step(respondent, reply, "sms_simulator", SystemTime.time.now, false) do
+      case Runtime.Survey.sync_step(respondent, reply, @sms_simulator, SystemTime.time.now, false) do
         {:reply, reply, respondent} ->
-          reply_messages = reply_to_messages(reply)
-          messages = simulation.messages ++ AOMessage.new(reply_messages)
-          respondent = %{respondent | session: inflate_session(respondent, respondent.session, simulation.questionnaire)}
-          QuestionnaireSimulatorStore.add_respondent_simulation(respondent.id, %Ask.QuestionnaireSimulation{simulation | respondent: respondent, messages: messages})
-          %{respondent_id: respondent.id, disposition: respondent.disposition, reply_messages: reply_messages, messages_history:  messages, simulation_status: "active"}
+          handle_app_reply(simulation, respondent, reply, Status.active)
         {:end, {:reply, reply}, respondent} ->
-          reply_messages = reply_to_messages(reply)
-          messages = simulation.messages ++ AOMessage.new(reply_messages)
-          QuestionnaireSimulatorStore.add_respondent_simulation(respondent.id, %Ask.QuestionnaireSimulation{simulation | respondent: respondent, messages: messages})
-          %{respondent_id: respondent.id, disposition: respondent.disposition, reply_messages: reply_messages, messages_history:  messages, simulation_status: "ended"}
+          handle_app_reply(simulation, respondent, reply, Status.ended)
         {:end, respondent} ->
-          QuestionnaireSimulatorStore.add_respondent_simulation(respondent.id, %Ask.QuestionnaireSimulation{simulation | respondent: respondent})
-          %{respondent_id: respondent.id, disposition: respondent.disposition, reply_messages: nil, messages_history:  simulation.messages, simulation_status: "ended"}
+          handle_app_reply(simulation, respondent, nil, Status.ended)
       end
     else
-      :simulation_expired
+      QuestionnaireSimulationStep.expired(respondent_id)
     end
   end
 
-  def reply_to_messages(reply) do
+  def handle_app_reply(simulation, respondent, reply, status) do
+    reply_messages = reply_to_messages(reply) |> AOMessage.create_all
+    messages = simulation.messages ++ reply_messages
+
+    checked_steps = simulation.checklist ++ StepCheck.build_from(reply, simulation.questionnaire)
+
+    respondent = %{respondent | session: inflate_session(respondent, respondent.session, simulation.questionnaire)}
+    QuestionnaireSimulatorStore.add_respondent_simulation(respondent.id, %Ask.QuestionnaireSimulation{simulation | respondent: respondent, messages: messages, checklist: checked_steps})
+    |> QuestionnaireSimulationStep.build(status)
+  end
+
+  # Replicates all 'sms' configurations under 'sms_simulator' key
+  defp adapt_questionnaire(questionnaire) do
+    adapted_steps = questionnaire.steps |> Enum.map(fn step ->
+      prompts = (step["prompt"] || %{})|> Enum.map(fn {lang, prompt} -> {lang, Map.put(prompt, @sms_simulator, prompt["sms"])} end)
+      choices = (step["choices"] || []) |> Enum.map(fn choice ->
+        sms_simulator_responses = choice["responses"]["sms"]
+        Map.put(choice, "responses", Map.put(choice["responses"], @sms_simulator, sms_simulator_responses)) end)
+      step
+      |> Map.put("prompt", prompts |> Enum.into(%{}))
+      |> Map.put("choices", choices)
+    end)
+
+    modes = questionnaire.modes ++ [@sms_simulator]
+    adapted_settings = questionnaire.settings
+                       |> Map.put("thank_you_message", (questionnaire.settings["thank_you_message"] || []) |> Enum.map(fn {lang, msg} -> {lang, Map.put(msg, @sms_simulator, msg["sms"])} end) |> Enum.into(%{}))
+                       |> Map.put("error_message", (questionnaire.settings["error_message"] || [] )|> Enum.map(fn {lang, msg} -> {lang, Map.put(msg, @sms_simulator, msg["sms"])} end) |> Enum.into(%{}))
+
+    %{questionnaire | steps: adapted_steps, settings: adapted_settings, modes: modes}
+  end
+
+  defp inflate_session(_respondent, nil, _questionnaire), do: nil
+  defp inflate_session(respondent, session, questionnaire) do
+    state = session.flow
+    flow = %Flow{questionnaire: questionnaire, current_step: state.current_step, mode: state.mode, language: state.language, retries: state.retries, in_quota_completed_steps: state.in_quota_completed_steps, has_sections: Ask.Runtime.Flow.questionnaire_has_sections(questionnaire), section_order: state.section_order, ignored_values_from_relevant_steps: Ask.Runtime.Flow.ignored_values_from_relevant_steps(questionnaire)}
+
+    session = %Session{
+      current_mode: Ask.Runtime.SessionModeProvider.new(@sms_simulator, %Ask.Runtime.SimulatorChannel{}, []),
+      fallback_mode: nil,
+      flow: flow,
+      respondent: Ask.Runtime.Session.update_section_order(respondent, flow.section_order, false),
+      fallback_delay: Survey.default_fallback_delay(),
+      count_partial_results: false,
+      schedule: Ask.Schedule.always()
+    }
+    session
+  end
+
+  defp reply_to_messages(nil), do: []
+  defp reply_to_messages(reply) do
     Enum.flat_map Ask.Runtime.Reply.steps(reply), fn step ->
       step.prompts |> Enum.with_index |> Enum.map(fn {prompt, index} ->
         %{
           body: prompt,
-          title: Ask.Runtime.ReplyStep.title_with_index(step, index + 1)
+          title: Ask.Runtime.ReplyStep.title_with_index(step, index + 1),
+          id: step.id
         }
       end)
     end
   end
 end
 
-defmodule AOMessage do
-  def new(messages) do
+defmodule Ask.Simulation.StepCheck do
+  alias Ask.Runtime.Reply
+  def build_from(reply, questionnaire) do
+    responses = Reply.stores(reply)
+                |> Enum.map(fn {step_name, value} ->
+                  [id] = questionnaire.steps |> Enum.filter(fn step -> step["store"] == step_name end) |> Enum.map(fn step -> step["id"] end)
+                  %{step: step_name, response: value, id: id}
+    end)
+
+
+    explanation_steps = Reply.steps(reply)
+                        |> Enum.filter(fn step -> step.type == "explanation" end)
+                        |> Enum.filter(fn step -> step.title not in ["Thank you", "Error"] end)
+                        |> Enum.map(fn step -> %{step: step.title, id: step.id} end)
+    responses ++ explanation_steps
+  end
+end
+
+defmodule Ask.Simulation.AOMessage do
+  def create_all(messages) do
     messages |> Enum.map(fn msg -> msg |> Map.put(:type, "ao") end)
   end
 end
 
-defmodule ATMessage do
+defmodule Ask.Simulation.ATMessage do
   def new(response) do
     %{body: response, type: "at"}
   end
+end
+
+defmodule Ask.Simulation.Status do
+  def active, do: "active"
+  def ended, do: "ended"
+  def expired, do: "expired"
 end

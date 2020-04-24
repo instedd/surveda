@@ -19,46 +19,49 @@ defmodule QuestionnaireSimulatorTest do
 
   test "simple case", %{project: project} do
     quiz = questionnaire_with_steps(@dummy_steps)
-    %{id: respondent_id, disposition: disposition, reply_messages: reply} = QuestionnaireSimulator.start_simulation(project, quiz)
+    %{respondent_id: respondent_id, disposition: disposition, messages_history: messages, simulation_status: status} = QuestionnaireSimulator.start_simulation(project, quiz)
     assert "queued" == disposition #TODO: is ok queued? should be contacted?
-    assert [%{body: "Do you smoke? Reply 1 for YES, 2 for NO", title: "Do you smoke?"}] == reply
+    assert "Do you smoke? Reply 1 for YES, 2 for NO" == List.last(messages).body
+    assert Ask.Simulation.Status.active == status
 
-    %{disposition: disposition, reply_messages: reply} = QuestionnaireSimulator.process_respondent_response(respondent_id, "No")
+    %{disposition: disposition, messages_history: messages} = QuestionnaireSimulator.process_respondent_response(respondent_id, "No")
     assert "started" == disposition
-    assert [%{body: "Do you exercise? Reply 1 for YES, 2 for NO", title: "Do you exercise"}] == reply
+    assert "Do you exercise? Reply 1 for YES, 2 for NO" == List.last(messages).body
 
-    %{disposition: disposition, reply_messages: reply} = QuestionnaireSimulator.process_respondent_response(respondent_id, "Yes")
+    %{disposition: disposition, messages_history: messages} = QuestionnaireSimulator.process_respondent_response(respondent_id, "Yes")
     assert "started" == disposition
-    assert [%{body: "Which is the second perfect number??", title: "Which is the second perfect number?"}] == reply
+    assert  "Which is the second perfect number??" == List.last(messages).body
 
-    %{disposition: disposition, reply_messages: reply} = QuestionnaireSimulator.process_respondent_response(respondent_id, "7")
+    %{disposition: disposition, messages_history: messages} = QuestionnaireSimulator.process_respondent_response(respondent_id, "7")
     assert "started" == disposition
-    assert [%{body: "What's the number of this question??", title: "What's the number of this question?"}] == reply
+    assert  "What's the number of this question??" == List.last(messages).body
 
-    %{disposition: disposition, reply_messages: reply} = QuestionnaireSimulator.process_respondent_response(respondent_id, "4")
+    %{disposition: disposition, messages_history: messages, simulation_status: status} = QuestionnaireSimulator.process_respondent_response(respondent_id, "4")
     assert "completed" == disposition
-    assert [%{body: "Thank you for taking the survey", title: "Thank you"}] == reply
+    assert "Thank you for taking the survey" == List.last(messages).body
+    assert Ask.Simulation.Status.ended == status
   end
 
   test "with partial flag", %{project: project} do
     quiz = questionnaire_with_steps(SimulatorQuestionnaireSteps.with_interim_partial_flag)
-    %{id: respondent_id, disposition: disposition, reply_messages: reply} = QuestionnaireSimulator.start_simulation(project, quiz)
+    %{respondent_id: respondent_id, disposition: disposition, messages_history: messages, simulation_status: status} = QuestionnaireSimulator.start_simulation(project, quiz)
     assert "queued" == disposition #TODO: is ok queued? should be contacted?
-    assert [%{body: "Do you smoke? Reply 1 for YES, 2 for NO", title: "Do you smoke?"}] == reply
+    assert  "Do you smoke? Reply 1 for YES, 2 for NO" == List.last(messages).body
+    assert Ask.Simulation.Status.active == status
 
-    %{disposition: disposition, reply_messages: reply} = QuestionnaireSimulator.process_respondent_response(respondent_id, "No")
+    %{disposition: disposition, messages_history: messages} = QuestionnaireSimulator.process_respondent_response(respondent_id, "No")
     assert "started" == disposition
-    assert [%{body: "Do you exercise? Reply 1 for YES, 2 for NO", title: "Do you exercise?"}] == reply
+    assert  "Do you exercise? Reply 1 for YES, 2 for NO" == List.last(messages).body
 
-    %{disposition: disposition, reply_messages: reply} = QuestionnaireSimulator.process_respondent_response(respondent_id, "Yes")
+    %{disposition: disposition, messages_history: messages} = QuestionnaireSimulator.process_respondent_response(respondent_id, "Yes")
     assert "interim partial" == disposition
-    assert [%{body: "Is this the last question?", title: "Is this the last question?"}] == reply
+    assert  "Is this the last question?" == List.last(messages).body
 
-    %{disposition: disposition, reply_messages: reply} = QuestionnaireSimulator.process_respondent_response(respondent_id, "Yes")
+    %{disposition: disposition, messages_history: messages, simulation_status: status} = QuestionnaireSimulator.process_respondent_response(respondent_id, "Yes")
     assert "completed" == disposition
-    assert [%{body: "Thank you for taking the survey", title: "Thank you"}] == reply
+    assert  "Thank you for taking the survey" == List.last(messages).body
+    assert Ask.Simulation.Status.ended == status
   end
-
 end
 
 defmodule SimulatorQuestionnaireSteps do
