@@ -514,6 +514,15 @@ export const hasSections = (steps: Array<Step>) => {
   })
 }
 
+export const countRelevantSteps = (steps: Array<Step>) => {
+  const filterAndCount = steps => steps.filter(({ relevant }) => relevant).length
+  const sections = steps.filter(s => s.type == 'section')
+  return sections.reduce(
+    (relevantSteps, section) => relevantSteps + filterAndCount(section.steps),
+    filterAndCount(steps)
+  )
+}
+
 function changeStep<T: Step>(state, stepId, func: (step: Object) => T): Object {
   // First try to find the step in 'steps'
   let inSteps = findAndUpdateStep(state.steps, stepId, state, func, 'steps')

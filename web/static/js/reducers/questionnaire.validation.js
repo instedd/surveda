@@ -1,6 +1,6 @@
 // @flow
 import { getStepPrompt, newStepPrompt, newIvrPrompt } from '../step'
-import { hasSections } from './questionnaire'
+import { hasSections, countRelevantSteps } from './questionnaire'
 
 const k = (...args: any) => args
 
@@ -435,11 +435,14 @@ const validateThankYouMessage = (msg: ?LocalizedPrompt, context: ValidationConte
 }
 
 const validatePartialRelevantMinRelevantSteps = (data: Questionnaire, context: ValidationContext) => {
-  const partialRelevantEnabled = data.partialRelevantConfig && data.partialRelevantConfig.enabled
-  const relevantStepsQuantity = data.steps.filter(({ relevant }) => relevant).length
-  const minRelevantSteps = data.partialRelevantConfig.minRelevantSteps
+  const partialRelevantConfig = data.partialRelevantConfig
+  const partialRelevantEnabled = partialRelevantConfig && partialRelevantConfig.enabled
 
   if (partialRelevantEnabled) {
+    const steps = data.steps
+    const relevantStepsQuantity = countRelevantSteps(steps)
+    const minRelevantSteps = partialRelevantConfig.minRelevantSteps
+
     if (!minRelevantSteps) {
       addError(context, 'partialRelevant.minRelevantSteps', k('Min relevant steps must not be blank'))
     } else if (minRelevantSteps > relevantStepsQuantity) {
