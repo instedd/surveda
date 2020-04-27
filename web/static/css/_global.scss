@@ -967,10 +967,6 @@ label + .tooltipped {
             width: 75%;
             float: left;
           }
-          a {
-            display: inline;
-            padding: 0;
-          }
         }
       }
     }
@@ -1185,6 +1181,14 @@ label + .tooltipped {
 
 .collection.collection-card {
   overflow: visible;
+}
+
+// This is for the star toggle in partial respondents
+button.partial-relevant-button {
+  display: inline;
+  padding: 0;
+  background: none;
+  border: none;
 }
 
 // -----------------------------------------------------------------------------
