@@ -523,6 +523,16 @@ export const countRelevantSteps = (steps: Array<Step>) => {
   )
 }
 
+export const canBeRelevant = stepType => {
+  switch (stepType) {
+    case 'multiple-choice':
+    case 'numeric':
+      return true
+    default:
+      return false
+  }
+}
+
 function changeStep<T: Step>(state, stepId, func: (step: Object) => T): Object {
   // First try to find the step in 'steps'
   let inSteps = findAndUpdateStep(state.steps, stepId, state, func, 'steps')

@@ -1,7 +1,7 @@
 // @flow
 import React, { Component } from 'react'
 import classNames from 'classnames'
-import { UntitledIfEmpty, Card, canBeRelevant, Tooltip } from '../ui'
+import { UntitledIfEmpty, Card, Tooltip } from '../ui'
 import { icon } from '../../step'
 import DraggableStep from './DraggableStep'
 import { connect } from 'react-redux'
@@ -10,6 +10,7 @@ import * as questionnaireActions from '../../actions/questionnaire'
 import { hasErrorsInPrefixWithModeAndLanguage } from '../../questionnaireErrors'
 import withQuestionnaire from './withQuestionnaire'
 import { translate } from 'react-i18next'
+import { canBeRelevant } from '../../reducers/questionnaire'
 
 type Props = {
   t: Function,

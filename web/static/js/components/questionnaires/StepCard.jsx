@@ -2,8 +2,9 @@ import React, { Component, PropTypes } from 'react'
 import { bindActionCreators } from 'redux'
 import { connect } from 'react-redux'
 import * as questionnaireActions from '../../actions/questionnaire'
-import { EditableTitleLabel, Card, canBeRelevant, Tooltip } from '../ui'
+import { EditableTitleLabel, Card, Tooltip } from '../ui'
 import { translate } from 'react-i18next'
+import { canBeRelevant } from '../../reducers/questionnaire'
 
 class StepCard extends Component {
   stepTitleSubmit(value) {
