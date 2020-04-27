@@ -21,6 +21,7 @@ import { Dropdown, DropdownItem, PositionFixer, Tooltip } from '../ui'
 import { hasErrorsInModeWithLanguage } from '../../questionnaireErrors'
 import classNames from 'classnames/bind'
 import { translate } from 'react-i18next'
+import { countRelevantSteps } from '../../reducers/questionnaire'
 
 type State = {
   isNew: boolean
@@ -297,6 +298,7 @@ class QuestionnaireEditor extends Component<any, State> {
     const partialRelevantEnabled = questionnaire.partialRelevantConfig && questionnaire.partialRelevantConfig.enabled
     const partialRelevantMinRelevantSteps = partialRelevantEnabled && questionnaire.partialRelevantConfig.minRelevantSteps
     const partialRelevantIgnoredValues = partialRelevantEnabled && questionnaire.partialRelevantConfig.ignoredValues
+    const relevantStepsQuantity = partialRelevantEnabled && countRelevantSteps(questionnaire.steps)
 
     let testControls = null
     if (!readOnly && errors.length == 0) {
@@ -405,6 +407,7 @@ class QuestionnaireEditor extends Component<any, State> {
                   ignoredValues={partialRelevantIgnoredValues}
                   changeIgnoredValues={changed => this.props.questionnaireActions.changePartialRelevantIgnoredValues(changed)}
                   errorsByPath={errorsByPath}
+                  relevantStepsQuantity={relevantStepsQuantity}
                   />
                 : null
               }

@@ -11,7 +11,8 @@ type Props = {
   changeIgnoredValues: Function,
   minRelevantSteps: number,
   ignoredValues: string,
-  errorsByPath: Object
+  errorsByPath: Object,
+  relevantStepsQuantity: number
 }
 
 class PartialRelevantSettings extends Component<Props> {
@@ -92,6 +93,9 @@ class PartialRelevantSettings extends Component<Props> {
             </li>
             <li className='collection-item'>
               {this.minRelevantStepsComponent()}
+            </li>
+            <li>
+              {this.props.relevantStepsQuantity}
             </li>
             <li className='collection-item'>
               {this.ignoredRelevantValuesComponent()}
