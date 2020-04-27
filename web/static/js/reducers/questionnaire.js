@@ -1036,8 +1036,14 @@ const toggleQuotaCompletedSteps = (state, action) => {
 const changePartialRelevantEnabled = (state, action) => {
   return {
     ...state,
-    partialRelevantConfig: {
+    partialRelevantConfig: state.partialRelevantConfig
+    ? {
       ...state.partialRelevantConfig,
+      enabled: action.enabled
+    }
+    : {
+      ...state.partialRelevantConfig,
+      ignoredValues: 'Refused',
       enabled: action.enabled
     }
   }
