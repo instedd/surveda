@@ -514,7 +514,7 @@ export const hasSections = (steps: Array<Step>) => {
   })
 }
 
-export const countRelevantSteps = (steps: Array<Step>) => {
+export const countRelevantSteps = (steps: Array<any>) => {
   const filterAndCount = steps => steps.filter(({ relevant }) => relevant).length
   const sections = steps.filter(s => s.type == 'section')
   return sections.reduce(
@@ -523,7 +523,7 @@ export const countRelevantSteps = (steps: Array<Step>) => {
   )
 }
 
-export const canBeRelevant = stepType => {
+export const canBeRelevant = (stepType: string) => {
   switch (stepType) {
     case 'multiple-choice':
     case 'numeric':
