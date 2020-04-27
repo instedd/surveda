@@ -27,6 +27,12 @@ defmodule Ask.QuestionnaireView do
   end
 
   def render("simulation.json", %{simulation: simulation}) do
-    simulation
+    %{
+      respondent_id: simulation.respondent_id,
+      simulation_status: simulation.simulation_status,
+      disposition: simulation.disposition,
+      messges_history: simulation.messages_history,
+      submissions: simulation.submissions
+    }
   end
 end

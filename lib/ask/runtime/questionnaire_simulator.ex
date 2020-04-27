@@ -1,5 +1,5 @@
 defmodule Ask.QuestionnaireSimulation do
-  defstruct [:respondent, :questionnaire, messages: [], checklist: []]
+  defstruct [:respondent, :questionnaire, messages: [], submissions: []]
 end
 
 defmodule Ask.QuestionnaireSimulationStep do
@@ -7,10 +7,10 @@ defmodule Ask.QuestionnaireSimulationStep do
   alias Ask.Simulation.Status
   alias __MODULE__
 
-  defstruct [:respondent_id, :simulation_status, :disposition, messages_history: [], checklist: []]
+  defstruct [:respondent_id, :simulation_status, :disposition, messages_history: [], submissions: []]
 
-  def build(%QuestionnaireSimulation{respondent: respondent, messages: all_messages, checklist: checklist}, status) do
-    %QuestionnaireSimulationStep{respondent_id: respondent.id, disposition: respondent.disposition, messages_history: all_messages, simulation_status: status, checklist: checklist}
+  def build(%QuestionnaireSimulation{respondent: respondent, messages: all_messages, submissions: submissions}, status) do
+    %QuestionnaireSimulationStep{respondent_id: respondent.id, disposition: respondent.disposition, messages_history: all_messages, simulation_status: status, submissions: submissions}
   end
 
   def expired(respondent_id) do
@@ -73,7 +73,7 @@ end
 
 defmodule Ask.Runtime.QuestionnaireSimulator do
   alias Ask.{Survey, Respondent, Questionnaire, Project, SystemTime, Runtime, QuestionnaireSimulationStep}
-  alias Ask.Simulation.{Status, ATMessage, AOMessage, StepCheck}
+  alias Ask.Simulation.{Status, ATMessage, AOMessage, SubmittedStep}
   alias Ask.Runtime.{Session, Flow, QuestionnaireSimulatorStore}
 
   @sms_simulator "sms_simulator"
@@ -110,9 +110,9 @@ defmodule Ask.Runtime.QuestionnaireSimulator do
     reply_messages = reply_to_messages(reply)
     messages = AOMessage.create_all(reply_messages)
     updated_respondent = %Respondent{respondent | session: session}
-    checked_steps = StepCheck.build_from(reply, questionnaire)
+    submitted_steps = SubmittedStep.build_from(reply, questionnaire)
 
-    QuestionnaireSimulatorStore.add_respondent_simulation(respondent.id, %Ask.QuestionnaireSimulation{questionnaire: questionnaire, respondent: updated_respondent, messages: messages, checklist: checked_steps})
+    QuestionnaireSimulatorStore.add_respondent_simulation(respondent.id, %Ask.QuestionnaireSimulation{questionnaire: questionnaire, respondent: updated_respondent, messages: messages, submissions: submitted_steps})
     |> QuestionnaireSimulationStep.build(Status.active)
   end
 
@@ -141,10 +141,10 @@ defmodule Ask.Runtime.QuestionnaireSimulator do
     reply_messages = reply_to_messages(reply) |> AOMessage.create_all
     messages = simulation.messages ++ reply_messages
 
-    checked_steps = simulation.checklist ++ StepCheck.build_from(reply, simulation.questionnaire)
+    submitted_steps = simulation.submissions ++ SubmittedStep.build_from(reply, simulation.questionnaire)
 
     respondent = %{respondent | session: inflate_session(respondent, respondent.session, simulation.questionnaire)}
-    QuestionnaireSimulatorStore.add_respondent_simulation(respondent.id, %Ask.QuestionnaireSimulation{simulation | respondent: respondent, messages: messages, checklist: checked_steps})
+    QuestionnaireSimulatorStore.add_respondent_simulation(respondent.id, %Ask.QuestionnaireSimulation{simulation | respondent: respondent, messages: messages, submissions: submitted_steps})
     |> QuestionnaireSimulationStep.build(status)
   end
 
@@ -199,7 +199,7 @@ defmodule Ask.Runtime.QuestionnaireSimulator do
   end
 end
 
-defmodule Ask.Simulation.StepCheck do
+defmodule Ask.Simulation.SubmittedStep do
   alias Ask.Runtime.Reply
   def build_from(reply, questionnaire) do
     responses = Reply.stores(reply)
