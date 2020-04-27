@@ -72,7 +72,7 @@ class PartialRelevantSettings extends Component<Props> {
       errors={this.ignoredValuesErrors()}
       readOnly={readOnly}
       plainText
-      onBlur={inputText => changeIgnoredValues(inputText || null)}
+      onBlur={inputText => changeIgnoredValues(inputText)}
     />
   }
 
