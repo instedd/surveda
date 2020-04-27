@@ -55,6 +55,7 @@ class PartialRelevantSettings extends Component<Props> {
       id='partial_relevant_min_relevant_steps'
       value={(minRelevantSteps || '').toString()}
       label={t('Min Relevant Steps')}
+      textBelow={`out of ${this.props.relevantStepsQuantity} relevant questions selected`}
       errors={this.minRelevantStepsErrors()}
       readOnly={readOnly}
       plainText
@@ -69,6 +70,7 @@ class PartialRelevantSettings extends Component<Props> {
       id='partial_relevant_ignored_values'
       value={ignoredValues || ''}
       label={t('Ignored Values')}
+      textBelow='Refused, Skip, etc.'
       errors={this.ignoredValuesErrors()}
       readOnly={readOnly}
       plainText
@@ -80,7 +82,7 @@ class PartialRelevantSettings extends Component<Props> {
     return (
       <div className='row' ref='self'>
         <Card className='z-depth-0'>
-          <ul className='collection collection-card dark'>
+          <ul className='collection collection-card dark partial-relevant'>
             <li className='collection-item header'>
               <div className='row'>
                 <div className='col s12'>
@@ -93,9 +95,6 @@ class PartialRelevantSettings extends Component<Props> {
             </li>
             <li className='collection-item'>
               {this.minRelevantStepsComponent()}
-            </li>
-            <li>
-              {this.props.relevantStepsQuantity}
             </li>
             <li className='collection-item'>
               {this.ignoredRelevantValuesComponent()}

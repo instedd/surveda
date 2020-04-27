@@ -316,10 +316,10 @@ class QuestionnaireEditor extends Component<any, State> {
     const ivr = questionnaire.modes.indexOf('ivr') != -1
     const mobileweb = questionnaire.modes.indexOf('mobileweb') != -1
 
-    const renderSwitchInTable = ({ checked, onChange, disabled, text }) => {
+    const renderSwitchInTable = ({ checked, onChange, disabled, text, classes }: renderSwitchProps) => {
       return <div className='row'>
         <div className='col s12'>
-          <div className='switch'>
+          <div className={classNames('switch', classes)}>
             <label>
               <input type='checkbox' checked={checked} onChange={onChange} disabled={disabled} />
               <span className='lever' />
@@ -395,6 +395,7 @@ class QuestionnaireEditor extends Component<any, State> {
               {renderSwitchInTable({
                 checked: partialRelevantEnabled,
                 onChange: () => this.changePartialRelevantEnabled(!partialRelevantEnabled),
+                classes: 'partial-relevant',
                 disabled: readOnly,
                 text: t('Partial relevant')
               })}
@@ -454,6 +455,14 @@ QuestionnaireEditor.propTypes = {
   uploadProgress: PropTypes.number,
   userLevel: PropTypes.string
 }
+
+type renderSwitchProps = {
+  checked: boolean,
+  onChange: Function,
+  disabled: boolean,
+  text: string,
+  classes?: string
+};
 
 const mapStateToProps = (state, ownProps) => ({
   projectId: ownProps.params.projectId,

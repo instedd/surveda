@@ -638,6 +638,16 @@ i.survey-status { // icon for survey status on index
   }
 }
 
+.partial-relevant {
+  &.switch {
+    margin-top: 1rem;
+    margin-bottom: 1.5rem;
+  }
+  & li:last-of-type{
+    padding-bottom: 2rem;
+  }
+}
+
 .survey-questionnaires {
   .tooltip-error {
     position: relative;
@@ -1298,6 +1308,10 @@ label + .tooltipped {
 
 // -----------------------------------------------------------------------------
 // ------- Helper classes  -----------------------------------------------------
+
+.margin-top-bottom {
+  margin: 1rem 0;
+}
 
 .mtop {
   margin-top: -8rem;
