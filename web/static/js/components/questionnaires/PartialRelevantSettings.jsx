@@ -72,7 +72,7 @@ class PartialRelevantSettings extends Component<Props, State> {
   }
 
   minRelevantStepsComponent() {
-    const { readOnly, t } = this.props
+    const { readOnly, t, relevantStepsQuantity } = this.props
     const { minRelevantSteps, minRelevantStepsKey } = this.state
 
     return <Draft
@@ -80,7 +80,7 @@ class PartialRelevantSettings extends Component<Props, State> {
       key={minRelevantStepsKey}
       value={(minRelevantSteps || '').toString()}
       label={t('Min Relevant Steps')}
-      textBelow={`out of ${this.props.relevantStepsQuantity} relevant questions selected`}
+      textBelow={t('out of {{relevantStepsQuantity}} relevant questions selected', {relevantStepsQuantity})}
       errors={this.minRelevantStepsErrors()}
       readOnly={readOnly}
       plainText

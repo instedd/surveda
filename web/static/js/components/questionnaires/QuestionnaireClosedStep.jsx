@@ -47,7 +47,7 @@ class QuestionnaireClosedStep extends Component<Props> {
           e.stopPropagation()
           this.stepRelevantSubmit(!relevant)
         }}>
-        <Tooltip text={relevant ? 'This question is relevant for partial flag' : 'This question is not relevant for partial flag'}>
+        <Tooltip text={relevant ? t('This question is relevant for partial flag') : t('This question is not relevant for partial flag')}>
           <i className={`material-icons ${relevant ? 'green-text darken-2' : 'grey-text darken-3'}`}>star</i>
         </Tooltip>
       </button>
