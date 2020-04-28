@@ -23,6 +23,7 @@ export const MOVE_SECTION = 'QUESTIONNAIRE_MOVE_SECTION'
 export const MOVE_STEP_TO_TOP = 'QUESTIONNAIRE_MOVE_STEP_TO_TOP'
 export const MOVE_STEP_TO_TOP_OF_SECTION = 'QUESTIONNAIRE_MOVE_STEP_TO_TOP_OF_SECTION'
 export const CHANGE_STEP_TITLE = 'QUESTIONNAIRE_CHANGE_STEP_TITLE'
+export const CHANGE_STEP_RELEVANT = 'QUESTIONNAIRE_CHANGE_STEP_RELEVANT'
 export const CHANGE_STEP_TYPE = 'QUESTIONNAIRE_CHANGE_STEP_TYPE'
 export const CHANGE_STEP_PROMPT_SMS = 'QUESTIONNAIRE_CHANGE_STEP_PROMPT_SMS'
 export const AUTOCOMPLETE_STEP_PROMPT_SMS = 'QUESTIONNAIRE_AUTOCOMPLETE_STEP_PROMPT_SMS'
@@ -62,6 +63,9 @@ export const SET_SECONDARY_COLOR = 'QUESTIONNAIRE_SET_SECONDARY_COLOR'
 export const SET_DISPLAYED_TITLE = 'QUESTIONNAIRE_SET_DISPLAYED_TITLE'
 export const SET_SURVEY_ALREADY_TAKEN_MESSAGE = 'QUESTIONNAIRE_SET_SURVEY_ALREADY_TAKEN_MESSAGE'
 export const TOGGLE_QUOTA_COMPLETED_STEPS = 'QUESTIONNAIRE_TOGGLE_QUOTA_COMPLETED_STEPS'
+export const CHANGE_PARTIAL_RELEVANT_ENABLED = 'QUESTIONNAIRE_CHANGE_PARTIAL_RELEVANT_ENABLED'
+export const CHANGE_PARTIAL_RELEVANT_MIN_RELEVANT_STEPS = 'QUESTIONNAIRE_CHANGE_PARTIAL_RELEVANT_MIN_RELEVANT_STEPS'
+export const CHANGE_PARTIAL_RELEVANT_IGNORED_VALUES = 'QUESTIONNAIRE_CHANGE_PARTIAL_RELEVANT_IGNORED_VALUES'
 export const TOGGLE_ACCEPTS_ALPHABETICAL_ANSWERS = 'QUESTIONNAIRE_TOGGLE_ACCEPTS_ALPHABETICAL_ANSWERS'
 export const SET_DIRTY = 'QUESTIONNAIRE_SET_DIRTY'
 export const UNDO = 'QUESTIONNAIRE_UNDO'
@@ -210,6 +214,12 @@ export const changeStepTitle = (stepId, newTitle) => ({
   newTitle
 })
 
+export const changeStepRelevant = (stepId, relevant) => ({
+  type: CHANGE_STEP_RELEVANT,
+  stepId,
+  relevant
+})
+
 export const changeSectionTitle = (sectionId, newTitle) => ({
   type: CHANGE_SECTION_TITLE,
   sectionId,
@@ -315,6 +325,21 @@ export const removeMode = (mode) => ({
 
 export const toggleQuotaCompletedSteps = () => ({
   type: TOGGLE_QUOTA_COMPLETED_STEPS
+})
+
+export const changePartialRelevantEnabled = enabled => ({
+  type: CHANGE_PARTIAL_RELEVANT_ENABLED,
+  enabled
+})
+
+export const changePartialRelevantMinRelevantSteps = minRelevantSteps => ({
+  type: CHANGE_PARTIAL_RELEVANT_MIN_RELEVANT_STEPS,
+  minRelevantSteps
+})
+
+export const changePartialRelevantIgnoredValues = ignoredValues => ({
+  type: CHANGE_PARTIAL_RELEVANT_IGNORED_VALUES,
+  ignoredValues
 })
 
 export const saving = () => ({

@@ -24,6 +24,9 @@ const dataReducer = (state: Questionnaire, action): Questionnaire => {
     case actions.ADD_MODE: return addMode(state, action)
     case actions.REMOVE_MODE: return removeMode(state, action)
     case actions.TOGGLE_QUOTA_COMPLETED_STEPS: return toggleQuotaCompletedSteps(state, action)
+    case actions.CHANGE_PARTIAL_RELEVANT_ENABLED: return changePartialRelevantEnabled(state, action)
+    case actions.CHANGE_PARTIAL_RELEVANT_MIN_RELEVANT_STEPS: return changePartialRelevantMinRelevantSteps(state, action)
+    case actions.CHANGE_PARTIAL_RELEVANT_IGNORED_VALUES: return changePartialRelevantIgnoredValues(state, action)
     case actions.ADD_LANGUAGE: return addLanguage(state, action)
     case actions.REMOVE_LANGUAGE: return removeLanguage(state, action)
     case actions.SET_DEFAULT_LANGUAGE: return setDefaultLanguage(state, action)
@@ -50,6 +53,7 @@ const dataReducer = (state: Questionnaire, action): Questionnaire => {
     case actions.MOVE_STEP_TO_TOP: return moveStepToTop(state, action)
     case actions.MOVE_STEP_TO_TOP_OF_SECTION: return moveStepToTopOfSection(state, action)
     case actions.CHANGE_STEP_TITLE: return changeStepTitle(state, action)
+    case actions.CHANGE_STEP_RELEVANT: return changeStepRelevant(state, action)
     case actions.CHANGE_STEP_TYPE: return changeStepType(state, action)
     case actions.CHANGE_STEP_PROMPT_SMS: return changeStepSmsPrompt(state, action)
     case actions.CHANGE_STEP_PROMPT_IVR: return changeStepIvrPrompt(state, action)
@@ -510,6 +514,25 @@ export const hasSections = (steps: Array<Step>) => {
   })
 }
 
+export const countRelevantSteps = (steps: Array<any>) => {
+  const filterAndCount = steps => steps.filter(({ relevant }) => relevant).length
+  const sections = steps.filter(s => s.type == 'section')
+  return sections.reduce(
+    (relevantSteps, section) => relevantSteps + filterAndCount(section.steps),
+    filterAndCount(steps)
+  )
+}
+
+export const canBeRelevant = (stepType: string) => {
+  switch (stepType) {
+    case 'multiple-choice':
+    case 'numeric':
+      return true
+    default:
+      return false
+  }
+}
+
 function changeStep<T: Step>(state, stepId, func: (step: Object) => T): Object {
   // First try to find the step in 'steps'
   let inSteps = findAndUpdateStep(state.steps, stepId, state, func, 'steps')
@@ -723,6 +746,13 @@ const changeStepTitle = (state, action) => {
   return changeStep(state, action.stepId, step => ({
     ...step,
     title: action.newTitle.trim()
+  }))
+}
+
+const changeStepRelevant = (state, action) => {
+  return changeStep(state, action.stepId, step => ({
+    ...step,
+    relevant: action.relevant
   }))
 }
 
@@ -999,6 +1029,51 @@ const toggleQuotaCompletedSteps = (state, action) => {
     return {
       ...state,
       quotaCompletedSteps: [newExplanationStep()]
+    }
+  }
+}
+
+const changePartialRelevantEnabled = (state, action) => {
+  return {
+    ...state,
+    partialRelevantConfig: state.partialRelevantConfig
+    ? {
+      ...state.partialRelevantConfig,
+      enabled: action.enabled
+    }
+    : {
+      ...state.partialRelevantConfig,
+      ignoredValues: 'Refused',
+      enabled: action.enabled
+    }
+  }
+}
+
+const changePartialRelevantMinRelevantSteps = (state, action) => {
+  const partialRelevantConfig = { ...state.partialRelevantConfig }
+  if (action.minRelevantSteps) {
+    return {
+      ...state,
+      partialRelevantConfig: {
+        ...partialRelevantConfig,
+        minRelevantSteps: action.minRelevantSteps
+      }
+    }
+  } else {
+    delete partialRelevantConfig.minRelevantSteps
+    return {
+      ...state,
+      partialRelevantConfig
+    }
+  }
+}
+
+const changePartialRelevantIgnoredValues = (state, action) => {
+  return {
+    ...state,
+    partialRelevantConfig: {
+      ...state.partialRelevantConfig,
+      ignoredValues: action.ignoredValues
     }
   }
 }

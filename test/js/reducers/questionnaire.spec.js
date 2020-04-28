@@ -2398,6 +2398,7 @@ describe('questionnaire reducer', () => {
           title: {},
           surveyAlreadyTakenMessage: {}
         },
+        partialRelevantConfig: {},
         steps: [
           {
             type: 'multiple-choice',

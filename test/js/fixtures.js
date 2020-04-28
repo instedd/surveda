@@ -143,7 +143,8 @@ const questionnaireCommonFields = {
     mobileWebColorStyle: {},
     surveyAlreadyTakenMessage: {}
   },
-  valid: true
+  valid: true,
+  partialRelevantConfig: {}
 }
 
 const bareQuestionnaire: Questionnaire = {

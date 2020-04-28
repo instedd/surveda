@@ -11,6 +11,7 @@ import QuestionnaireOnboarding from './QuestionnaireOnboarding'
 import QuestionnaireSteps from './QuestionnaireSteps'
 import QuestionnaireImport from './QuestionnaireImport'
 import QuestionnaireImportError from './QuestionnaireImportError'
+import PartialRelevantSettings from './PartialRelevantSettings'
 import LanguagesList from './LanguagesList'
 import SmsSettings from './SmsSettings'
 import PhoneCallSettings from './PhoneCallSettings'
@@ -20,6 +21,7 @@ import { Dropdown, DropdownItem, PositionFixer, Tooltip } from '../ui'
 import { hasErrorsInModeWithLanguage } from '../../questionnaireErrors'
 import classNames from 'classnames/bind'
 import { translate } from 'react-i18next'
+import { countRelevantSteps } from '../../reducers/questionnaire'
 
 type State = {
   isNew: boolean
@@ -75,6 +77,10 @@ class QuestionnaireEditor extends Component<any, State> {
 
   toggleQuotaCompletedSteps(e) {
     this.props.questionnaireActions.toggleQuotaCompletedSteps()
+  }
+
+  changePartialRelevantEnabled(enabled) {
+    this.props.questionnaireActions.changePartialRelevantEnabled(enabled)
   }
 
   questionnaireAddStep(e) {
@@ -289,6 +295,10 @@ class QuestionnaireEditor extends Component<any, State> {
     const settings = userSettings.settings
     const skipOnboarding = (settings.onboarding && settings.onboarding.questionnaire) || userLevel == 'reader'
     const hasQuotaCompletedSteps = !!questionnaire.quotaCompletedSteps
+    const partialRelevantEnabled = questionnaire.partialRelevantConfig && questionnaire.partialRelevantConfig.enabled
+    const partialRelevantMinRelevantSteps = partialRelevantEnabled && questionnaire.partialRelevantConfig.minRelevantSteps
+    const partialRelevantIgnoredValues = partialRelevantEnabled && questionnaire.partialRelevantConfig.ignoredValues
+    const relevantStepsQuantity = partialRelevantEnabled && countRelevantSteps(questionnaire.steps)
 
     let testControls = null
     if (!readOnly && errors.length == 0) {
@@ -305,6 +315,20 @@ class QuestionnaireEditor extends Component<any, State> {
     const sms = questionnaire.modes.indexOf('sms') != -1
     const ivr = questionnaire.modes.indexOf('ivr') != -1
     const mobileweb = questionnaire.modes.indexOf('mobileweb') != -1
+
+    const renderSwitchInTable = ({ checked, onChange, disabled, text, classes }: renderSwitchProps) => {
+      return <div className='row'>
+        <div className='col s12'>
+          <div className={classNames('switch', classes)}>
+            <label>
+              <input type='checkbox' checked={checked} onChange={onChange} disabled={disabled} />
+              <span className='lever' />
+            </label>
+            {text}
+          </div>
+        </div>
+      </div>
+    }
 
     return (
       <div>
@@ -340,17 +364,12 @@ class QuestionnaireEditor extends Component<any, State> {
                 selectedSteps={selectedSteps}
             />
               {this.addStepComponent()}
-              <div className='row'>
-                <div className='col s12'>
-                  <div className='switch'>
-                    <label>
-                      <input type='checkbox' checked={hasQuotaCompletedSteps} onChange={e => this.toggleQuotaCompletedSteps(e)} disabled={readOnly} />
-                      <span className='lever' />
-                    </label>
-                    {t('Quota completed steps')}
-                  </div>
-                </div>
-              </div>
+              {renderSwitchInTable({
+                checked: hasQuotaCompletedSteps,
+                onChange: e => this.toggleQuotaCompletedSteps(e),
+                disabled: readOnly,
+                text: t('Quota completed steps')
+              })}
               {hasQuotaCompletedSteps
                 ? <QuestionnaireSteps
                   ref='quotaCompletedStepsComponent'
@@ -373,6 +392,27 @@ class QuestionnaireEditor extends Component<any, State> {
                 </div>
                 : null
               }
+              {renderSwitchInTable({
+                checked: partialRelevantEnabled,
+                onChange: () => this.changePartialRelevantEnabled(!partialRelevantEnabled),
+                classes: 'partial-relevant',
+                disabled: readOnly,
+                text: t('Partial relevant')
+              })}
+              {
+                partialRelevantEnabled
+                ? <PartialRelevantSettings
+                  readOnly={readOnly}
+                  minRelevantSteps={partialRelevantMinRelevantSteps}
+                  changeMinRelevantSteps={changed => this.props.questionnaireActions.changePartialRelevantMinRelevantSteps(changed)}
+                  ignoredValues={partialRelevantIgnoredValues}
+                  changeIgnoredValues={changed => this.props.questionnaireActions.changePartialRelevantIgnoredValues(changed)}
+                  errorsByPath={errorsByPath}
+                  relevantStepsQuantity={relevantStepsQuantity}
+                  />
+                : null
+              }
+
               { questionnaire.activeMode == 'sms'
                 ? <SmsSettings readOnly={readOnly} />
                 : null }
@@ -415,6 +455,14 @@ QuestionnaireEditor.propTypes = {
   uploadProgress: PropTypes.number,
   userLevel: PropTypes.string
 }
+
+type renderSwitchProps = {
+  checked: boolean,
+  onChange: Function,
+  disabled: boolean,
+  text: string,
+  classes?: string
+};
 
 const mapStateToProps = (state, ownProps) => ({
   projectId: ownProps.params.projectId,

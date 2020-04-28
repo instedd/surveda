@@ -1,13 +1,16 @@
 // @flow
 import React, { Component } from 'react'
 import classNames from 'classnames'
-import { UntitledIfEmpty, Card } from '../ui'
+import { UntitledIfEmpty, Card, Tooltip } from '../ui'
 import { icon } from '../../step'
 import DraggableStep from './DraggableStep'
 import { connect } from 'react-redux'
+import { bindActionCreators } from 'redux'
+import * as questionnaireActions from '../../actions/questionnaire'
 import { hasErrorsInPrefixWithModeAndLanguage } from '../../questionnaireErrors'
 import withQuestionnaire from './withQuestionnaire'
 import { translate } from 'react-i18next'
+import { canBeRelevant } from '../../reducers/questionnaire'
 
 type Props = {
   t: Function,
@@ -17,18 +20,37 @@ type Props = {
   onClick: Function,
   hasErrors: boolean,
   readOnly: boolean,
-  quotaCompletedSteps: boolean
+  quotaCompletedSteps: boolean,
+  partialRelevantEnabled: boolean,
+  questionnaireActions: any
 };
 
 class QuestionnaireClosedStep extends Component<Props> {
+  stepRelevantSubmit(value) {
+    this.props.questionnaireActions.changeStepRelevant(this.props.step.id, value)
+  }
+
   render() {
-    const { step, onClick, hasErrors, readOnly, quotaCompletedSteps, t } = this.props
+    const { step, onClick, hasErrors, readOnly, quotaCompletedSteps, partialRelevantEnabled, t } = this.props
 
     const stepIconClass = classNames({
       'material-icons left': true,
       'sharp': step.type === 'numeric' || step.type == 'explanation',
       'text-error': hasErrors
     })
+
+    const renderRelevant = relevant =>
+      <button type='button'
+        className='partial-relevant-button right'
+        onClick={e => {
+          e.preventDefault()
+          e.stopPropagation()
+          this.stepRelevantSubmit(!relevant)
+        }}>
+        <Tooltip text={relevant ? t('This question is relevant for partial flag') : t('This question is not relevant for partial flag')}>
+          <i className={`material-icons ${relevant ? 'green-text darken-2' : 'grey-text darken-3'}`}>star</i>
+        </Tooltip>
+      </button>
 
     const stepIconFont = icon(step.type)
 
@@ -44,6 +66,7 @@ class QuestionnaireClosedStep extends Component<Props> {
                 <i className={stepIconClass}>{stepIconFont}</i>
                 <UntitledIfEmpty className={classNames({'text-error': hasErrors})} text={step.title} emptyText={t('Untitled question')} />
                 <i className={classNames({'material-icons right grey-text': true, 'text-error': hasErrors})}>expand_more</i>
+                {partialRelevantEnabled && canBeRelevant(step.type) ? renderRelevant(step.relevant) : null}
               </a>
             </div>
           </div>
@@ -60,9 +83,15 @@ const mapStateToProps = (state, ownProps) => {
   if (ownProps.step.type == 'language-selection') {
     lang = null
   }
+  const questionnaire = state.questionnaire && state.questionnaire.data
   return {
-    hasErrors: hasErrorsInPrefixWithModeAndLanguage(state.questionnaire.errors, ownProps.errorPath, mode, lang)
+    hasErrors: hasErrorsInPrefixWithModeAndLanguage(state.questionnaire.errors, ownProps.errorPath, mode, lang),
+    partialRelevantEnabled: questionnaire && questionnaire.partialRelevantConfig && questionnaire.partialRelevantConfig.enabled
   }
 }
 
-export default translate()(withQuestionnaire(connect(mapStateToProps)(QuestionnaireClosedStep)))
+const mapDispatchToProps = dispatch => ({
+  questionnaireActions: bindActionCreators(questionnaireActions, dispatch)
+})
+
+export default translate()(withQuestionnaire(connect(mapStateToProps, mapDispatchToProps)(QuestionnaireClosedStep)))

@@ -11,7 +11,8 @@ export type Questionnaire = {
   activeMode: ?string,
   settings: Settings,
   projectId: number,
-  valid: ?boolean
+  valid: ?boolean,
+  partialRelevantConfig: Object
 };
 
 export type Settings = {
@@ -112,7 +113,8 @@ export type Step = LanguageSelectionStep | MultipleChoiceStep | NumericStep | Ex
 export type BaseStep = {
   delete?: boolean,
   id: string,
-  title: string
+  title: string,
+  relevant?: boolean
 };
 
 export type StoreStep = {
