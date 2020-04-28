@@ -45,7 +45,7 @@ defmodule QuestionnaireSimulatorTest do
   test "with partial flag", %{project: project} do
     quiz = questionnaire_with_steps(SimulatorQuestionnaireSteps.with_interim_partial_flag)
     %{respondent_id: respondent_id, disposition: disposition, messages_history: messages, simulation_status: status} = QuestionnaireSimulator.start_simulation(project, quiz)
-    assert "queued" == disposition #TODO: is ok queued? should be contacted?
+    assert "queued" == disposition
     assert  "Do you smoke? Reply 1 for YES, 2 for NO" == List.last(messages).body
     assert Ask.Simulation.Status.active == status
 
@@ -62,7 +62,15 @@ defmodule QuestionnaireSimulatorTest do
     assert  "Thank you for taking the survey" == List.last(messages).body
     assert Ask.Simulation.Status.ended == status
   end
+
+  test "process_respondent_response of non-present simulation should return a SimulationStep with status: expires" do
+    respondent_id =  Ecto.UUID.generate()
+    %{simulation_status: status, respondent_id: rid} = QuestionnaireSimulator.process_respondent_response(respondent_id, "No")
+    assert Ask.Simulation.Status.expired == status
+    assert respondent_id == rid
+  end
 end
+
 
 defmodule SimulatorQuestionnaireSteps do
   import Ask.StepBuilder
