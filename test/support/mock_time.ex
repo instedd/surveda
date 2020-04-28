@@ -30,6 +30,8 @@ defmodule Ask.MockTime do
       alias Ask.SystemTime
 
       setup :verify_on_exit!
+      setup :set_mox_from_context
+
       defp mock_time(time) do
         Ask.TimeMock
         |> stub(:now, fn () -> time end)
