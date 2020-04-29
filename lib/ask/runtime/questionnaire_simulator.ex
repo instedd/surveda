@@ -155,8 +155,10 @@ defmodule Ask.Simulation.SubmittedStep do
   def build_from(reply, questionnaire) do
     responses = Reply.stores(reply)
                 |> Enum.map(fn {step_name, value} ->
-                  [id] = questionnaire.steps |> Enum.filter(fn step -> step["store"] == step_name end) |> Enum.map(fn step -> step["id"] end)
-                  %{step: step_name, response: value, id: id}
+                  referred_step = questionnaire.steps |> Enum.filter(fn step -> step["store"] == step_name end)
+                  [id] = referred_step |> Enum.map(fn step -> step["id"] end)
+                  [title] = referred_step |> Enum.map(fn step -> step["title"] end)
+                  %{step: title, response: value, id: id}
     end)
 
 
