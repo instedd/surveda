@@ -201,29 +201,29 @@ defmodule Ask.Runtime.Survey do
     end
   end
 
-  defp respondent_updates(:failed, respondent, offline) do #5
+  defp respondent_updates(:failed, respondent, offline) do
     new_disposition = Flow.failed_disposition_from(respondent.disposition)
     changes = %{state: "failed", session: nil, timeout_at: nil, disposition: new_disposition}
     Respondent.update(respondent, changes, offline)
   end
 
-  defp respondent_updates(:end, respondent, disposition, offline) do #3
+  defp respondent_updates(:end, respondent, disposition, offline) do
     changes = %{state: "completed", disposition: disposition, session: nil, completed_at: SystemTime.time.now, timeout_at: nil}
     Respondent.update(respondent, changes, offline)
   end
 
-  defp respondent_updates(:stopped, respondent, disposition, offline) do #4
+  defp respondent_updates(:stopped, respondent, disposition, offline) do
     changes = %{disposition: disposition, state: "failed", session: nil, timeout_at: nil, user_stopped: true}
     Respondent.update(respondent, changes, offline)
   end
 
-  defp respondent_updates(:rejected, respondent, session, timeout_at, offline) do #2
+  defp respondent_updates(:rejected, respondent, session, timeout_at, offline) do
     session = if session != nil, do: Session.dump(session), else: nil
     changes = %{state: "rejected", session: session, timeout_at: timeout_at}
     Respondent.update(respondent, changes, offline)
   end
 
-  defp respondent_updates(:no_disposition, respondent, session, timeout_at, offline) do #7 end
+  defp respondent_updates(:no_disposition, respondent, session, timeout_at, offline) do
     changes = no_disposition_changes(respondent, session, timeout_at)
     Respondent.update(respondent, changes, offline)
   end

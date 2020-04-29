@@ -162,6 +162,14 @@ defmodule Ask.StepBuilder do
     }
   end
 
+  def responses(sms: sms) do
+    %{
+      "sms" => %{
+        "en" => sms
+      }
+    }
+  end
+
   def responses(sms: sms, ivr: ivr) do
     %{
       "sms" => %{
