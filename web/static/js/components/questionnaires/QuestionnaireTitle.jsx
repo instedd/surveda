@@ -41,7 +41,13 @@ class QuestionnaireTitle extends Component {
 }
 
 const mapStateToProps = (state, ownProps) => ({
-  readOnly: state.project && state.project.data ? state.project.data.readOnly : true
+  readOnly: typeof ownProps.readOnly === 'boolean'
+  ? ownProps.readOnly
+  : (
+    state.project && state.project.data
+    ? state.project.data.readOnly
+    : true
+  )
 })
 
 export default translate()(connect(mapStateToProps)(withQuestionnaire(QuestionnaireTitle)))

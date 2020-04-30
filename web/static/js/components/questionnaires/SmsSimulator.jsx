@@ -1,11 +1,22 @@
 import React, { Component, PropTypes } from 'react'
 import { withRouter } from 'react-router'
 import * as test from './testMessages'
+import * as questionnaireActions from '../../actions/questionnaire'
+import { connect } from 'react-redux'
+import { bindActionCreators } from 'redux'
 
 class SmsSimulator extends Component {
 
   state = {
     messages: test.baseMessages()
+  }
+
+  componentWillMount() {
+    const { projectId, questionnaireId } = this.props
+
+    if (projectId && questionnaireId) {
+      this.props.questionnaireActions.fetchQuestionnaireIfNeeded(projectId, questionnaireId)
+    }
   }
 
   handleATMessage = message => {
@@ -49,6 +60,12 @@ class SmsSimulator extends Component {
       </div>
     )
   }
+}
+
+SmsSimulator.propTypes = {
+  projectId: PropTypes.number,
+  questionnaireId: PropTypes.number,
+  questionnaireActions: PropTypes.object
 }
 
 class ChatWindow extends Component {
@@ -206,5 +223,13 @@ class ChatFooter extends Component {
 ChatFooter.propTypes = {
   onSendMessage: PropTypes.func.isRequired
 }
+const mapStateToProps = (state, ownProps) => ({
+  projectId: parseInt(ownProps.params.projectId),
+  questionnaireId: parseInt(ownProps.params.questionnaireId)
+})
 
-export default withRouter(SmsSimulator)
+const mapDispatchToProps = (dispatch) => ({
+  questionnaireActions: bindActionCreators(questionnaireActions, dispatch)
+})
+
+export default withRouter(connect(mapStateToProps, mapDispatchToProps)(SmsSimulator))
