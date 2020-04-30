@@ -1,14 +1,15 @@
 import React, { Component, PropTypes } from 'react'
 import { withRouter } from 'react-router'
-import * as test from './testMessages'
 import * as questionnaireActions from '../../actions/questionnaire'
 import { connect } from 'react-redux'
 import { bindActionCreators } from 'redux'
+import { startSmsSimulation, messageSmsSimulation } from '../../api.js'
 
 class SmsSimulator extends Component {
 
   state = {
-    messages: test.baseMessages()
+    messages: [],
+    respondentId: ''
   }
 
   componentWillMount() {
@@ -16,49 +17,37 @@ class SmsSimulator extends Component {
 
     if (projectId && questionnaireId) {
       this.props.questionnaireActions.fetchQuestionnaireIfNeeded(projectId, questionnaireId)
+      startSmsSimulation(projectId, questionnaireId).then(result => {
+        this.setState({ messages: result.messgesHistory, respondentId: result.respondentId })
+      })
     }
   }
 
   handleATMessage = message => {
-    const msg = { messageBody: message.messageBody, messageType: 'AT' }
-    this.addMessage(msg)
-  }
+    const { projectId, questionnaireId } = this.props
+    const { respondentId } = this.state
 
-  handleAOMessage = message => {
-    const msg = { messageBody: message.messageBody, messageType: 'AO' }
-    this.addMessage(msg)
+    this.addMessage(message)
+    messageSmsSimulation(projectId, questionnaireId, respondentId, message.body).then(result => {
+      this.setState({ messages: result.messgesHistory })
+    })
   }
 
   addMessage = msg => {
     this.setState({ messages: [...this.state.messages, msg] })
   }
 
-  lastMessage = () => {
-    if (this.state.messages.length) {
-      return this.state.messages.slice(-1)[0]
-    } else {
-      return null
-    }
-  }
-
-  // test code: respond on user sent message
-  componentDidUpdate() {
-    const lastMessage = this.lastMessage()
-    if (lastMessage && lastMessage.messageType === 'AT') {
-      this.handleAOMessage({ messageBody: 'why you are asking: ' + lastMessage.messageBody + '?' })
-    }
-  }
-
   render() {
     const { messages } = this.state
-    this.lastMessage()
-    return (
-      <div className='simulator-container'>
+    if (messages.length) {
+      return <div className='simulator-container'>
         <div className='col s4 offset-s8'>
           <ChatWindow messages={messages} onSendMessage={this.handleATMessage} chatTitle={'SMS mode'} />
         </div>
       </div>
-    )
+    } else {
+      return <div>Loading</div>
+    }
   }
 }
 
@@ -102,13 +91,13 @@ ChatTitle.propTypes = {
 
 const MessageBulk = props => {
   const { messages } = props
-  const ATMessage = messages[0].messageType === 'AT'
+  const ATMessage = messages[0].type === 'at'
   return (
     <div className={'message-bubble'}>
       {messages.map((message, ix) =>
         <li key={ix} className={ATMessage ? 'at-message' : 'ao-message'}>
           <div className='content-text'>
-            {message.messageBody.trim()}
+            {message.body.trim()}
           </div>
         </li>
       )}
@@ -149,7 +138,7 @@ class MessagesList extends Component {
     }
 
     const { messages } = this.props
-    const groupedMessages = groupBy(messages, (message) => (message.messageType))
+    const groupedMessages = groupBy(messages, (message) => (message.type))
 
     return (
       <div className='chat-window-body'>
@@ -176,7 +165,8 @@ class ChatFooter extends Component {
     super(props)
 
     this.initialState = {
-      messageBody: ''
+      body: '',
+      type: 'at'
     }
 
     this.state = this.initialState
@@ -201,13 +191,13 @@ class ChatFooter extends Component {
   }
 
   render() {
-    const { messageBody } = this.state
+    const { body } = this.state
     return (
       <div className='chat-window-input'>
         <input className='chat-input'
           type='text'
-          name='messageBody'
-          value={messageBody}
+          name='body'
+          value={body}
           onChange={this.handleChange}
           placeholder='Write your message here'
           onKeyPress={this.sendMessageIfEnterPressed}
