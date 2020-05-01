@@ -34,7 +34,7 @@ class QuestionnaireTitle extends Component {
     return (
       <div className='title-container'>
         <EditableTitleLabel title={questionnaire.name} onSubmit={(value) => { this.handleSubmit(value) }} emptyText={t('Untitled questionnaire')} readOnly={readOnly} more={<QuestionnaireMenu />} />
-        <EditableDescriptionLabel description={questionnaire.description} emptyText={t('Add description')} onSubmit={(value) => { this.handleSubmitDescription(value) }} readOnly={readOnly} />
+        <EditableDescriptionLabel description={questionnaire.description} emptyText={readOnly ? '' : t('Add description')} onSubmit={(value) => { this.handleSubmitDescription(value) }} readOnly={readOnly} />
       </div>
     )
   }
