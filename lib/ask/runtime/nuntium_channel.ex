@@ -127,6 +127,7 @@ defmodule Ask.Runtime.NuntiumChannel do
   end
 
   def update_stats(respondent, reply \\ %Reply{}) do
+    respondent = Repo.get(Respondent, respondent.id)
     stats = respondent.stats
     stats = stats
       |> Stats.add_received_sms()
