@@ -296,8 +296,6 @@ defmodule Ask.Runtime.VerboiceChannel do
               say_or_play(prompts, channel_base_url(respondent)) ++ [hangup()]
             {:end, _} ->
               hangup()
-            :end ->
-              hangup()
           end
 
         _ ->

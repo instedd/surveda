@@ -271,8 +271,8 @@ defmodule Ask.Runtime.Survey do
     end
   end
 
-  defp sync_step_internal(_, _, :invalid_mode, _, _) do
-    :end
+  defp sync_step_internal(session, _, :invalid_mode, _, _) do
+    {:end, session.respondent}
   end
 
   defp sync_step_internal(session, reply, session_mode, now, offline) do
@@ -308,7 +308,7 @@ defmodule Ask.Runtime.Survey do
                 IO.inspect System.stacktrace()
                 raise e
               end
-              :end
+              {:end, respondent}
           end
       end
     end)

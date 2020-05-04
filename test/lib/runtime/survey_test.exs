@@ -2337,7 +2337,7 @@ defmodule Ask.Runtime.SurveyTest do
     assert respondent.state == "active"
 
     respondent = Repo.get(Respondent, respondent.id)
-    assert :end = Survey.sync_step(respondent, Flow.Message.reply("Yes"), "sms")
+    assert {:end, ^respondent} = Survey.sync_step(respondent, Flow.Message.reply("Yes"), "sms")
 
     :ok = broker |> GenServer.stop
   end
