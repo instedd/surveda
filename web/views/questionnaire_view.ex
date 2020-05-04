@@ -31,7 +31,7 @@ defmodule Ask.QuestionnaireView do
       respondent_id: simulation.respondent_id,
       simulation_status: simulation.simulation_status,
       disposition: simulation.disposition,
-      messges_history: simulation.messages_history,
+      messages_history: simulation.messages_history,
       submissions: simulation.submissions
     }
   end
