@@ -114,7 +114,7 @@ defmodule Ask.Runtime.Survey do
   end
 
   def handle_session_step({:stopped, reply, respondent}, _, offline) do
-    updated_respondent = respondent_updates(:stopped, respondent, Reply.disposition(reply), offline) # TODO: update_respondent_and_set_disposition
+    updated_respondent = respondent_updates(:stopped, respondent, Reply.disposition(reply), offline)
     updated_respondent = if(disposition_changed?(respondent, updated_respondent)) do
       disposition_changed(updated_respondent, respondent.session |> Session.load, respondent.disposition, offline)
     else
@@ -136,7 +136,7 @@ defmodule Ask.Runtime.Survey do
 
     updated_respondent = respondent_updates(:failed, respondent, offline)
     Session.log_disposition_changed(updated_respondent, session.current_mode.channel, mode, old_disposition, new_disposition)
-    disposition_changed(updated_respondent, session, old_disposition, offline) #TODO: this knows that the line before changed the disposition
+    disposition_changed(updated_respondent, session, old_disposition, offline)
   end
 
   def channel_failed(respondent, reason \\ "failed", offline \\ true) do

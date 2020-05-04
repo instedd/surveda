@@ -518,7 +518,7 @@ defmodule Ask.Runtime.Session do
         flow |
         mode: fallback_mode |> SessionMode.mode
       }
-    }, true) #TODO: always offline: true since timeouts only happens in real flow?
+    }, true) # always persist changes since timeouts only happens in real flow
     result = case run_flow_result do
       {:ok, session, _, _} -> put_elem(run_flow_result, 1, RetriesHistogram.retry(session))
       _ -> run_flow_result
