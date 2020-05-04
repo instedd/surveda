@@ -1,6 +1,6 @@
 $aoMessageBackground: color("grey", "darken-3");
 $atMessageBackground: color("grey", "darken-4");
-$chatWindowBodyBackground: color("grey", "darken-2");
+$chatWindowBodyBackground: #999999;
 $chatBorderBackground: color("grey", "darken-3");
 
 .simulator-container {
@@ -150,4 +150,3 @@ $chatBorderBackground: color("grey", "darken-3");
     }
   }
 }
-
