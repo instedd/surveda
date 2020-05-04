@@ -512,7 +512,7 @@ defmodule Ask.Runtime.Flow do
   end
 
   def relevant_response?(%{questionnaire: questionnaire, ignored_values_from_relevant_steps: ignored_values} = _flow, response) do
-    quiz_step = questionnaire.steps |> Enum.find(fn step -> step["store"] == response.field_name end)
+    quiz_step = questionnaire |> Questionnaire.all_steps |> Enum.find(fn step -> step["store"] == response.field_name end)
     not_ignored = fn value -> String.upcase(value) not in ignored_values end
 
     quiz_step["relevant"] && not_ignored.(response.value)

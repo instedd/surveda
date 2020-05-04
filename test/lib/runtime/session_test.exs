@@ -1112,6 +1112,18 @@ defmodule Ask.SessionTest do
       assert "interim partial" == reply.disposition
     end
 
+    test "indicates 'interim partial' disposition if respondent answers the min_relevant_steps and the quiz has sections", %{quiz: quiz, respondent: respondent, channel: channel} do
+      steps = [section(id: "section 1", title: "First section", randomize: false, steps: QuestionnaireSteps.all_relevant_steps())]
+      quiz = quiz |> Questionnaire.changeset(%{partial_relevant_config: %{"enabled" => true, "min_relevant_steps" => 2, "ignored_values" => ""}, steps: steps}) |> Repo.update!
+      session = start_session(respondent, quiz, channel)
+
+      {:ok, session, reply, _timeout} = Session.sync_step(session, Flow.Message.reply("Yes"))
+      assert nil == reply.disposition
+
+      {:ok, _session, reply, _timeout} = Session.sync_step(updated_session(respondent.id, session), Flow.Message.reply("Yes"))
+      assert "interim partial" == reply.disposition
+    end
+
     test "indicates 'interim partial' disposition if respondent answers the min_relevant_steps even if are not followed",
          %{quiz: quiz, respondent: respondent, channel: channel} do
 
@@ -1126,6 +1138,53 @@ defmodule Ask.SessionTest do
       assert nil == reply.disposition # second response but this is not a relevant question
 
       {:ok, _session, reply, _timeout} = Session.sync_step(updated_session(respondent.id, session), Flow.Message.reply("3"))
+      assert "interim partial" == reply.disposition # third response, but second relevant response
+    end
+
+    test "indicates 'interim partial' disposition if respondent answers the min_relevant_steps even if are in different sections",
+         %{quiz: quiz, respondent: respondent, channel: channel} do
+      steps = [
+        section(id: "section 1", title: "First section", randomize: false, steps: [
+          multiple_choice_step(
+          id: Ecto.UUID.generate,
+          title: "Do you sleep well?",
+          prompt: prompt(
+            sms: sms_prompt("Do you sleep well? Reply 1 for YES, 2 for NO"),
+            ivr: tts_prompt("Do you sleep well? Press 8 for YES, 9 for NO")
+          ),
+          store: "Sleep",
+          choices: [
+            choice(value: "Yes", responses: responses(sms: ["Yes", "Y", "1"], ivr: ["8"])),
+            choice(value: "No", responses: responses(sms: ["No", "N", "2"], ivr: ["9"]))
+          ],
+          relevant: true
+        ),
+        numeric_step(
+         id: Ecto.UUID.generate,
+         title: "What's the number of this question?",
+         prompt: prompt(
+           sms: sms_prompt("What's the number of this question??"),
+           ivr: tts_prompt("What's the number of this question")
+         ),
+         store: "Question",
+         skip_logic: default_numeric_skip_logic(),
+         alphabetical_answers: false,
+         refusal: nil
+        )
+        ]),
+        section(id: "section 2", title: "Second section", randomize: false, steps: QuestionnaireSteps.all_relevant_steps()),
+      ]
+
+      quiz = quiz |> Questionnaire.changeset(%{partial_relevant_config: %{"enabled" => true, "min_relevant_steps" => 2, "ignored_values" => ""}, steps: steps}) |> Repo.update!
+      session = start_session(respondent, quiz, channel)
+
+      {:ok, session, reply, _timeout} = Session.sync_step(session, Flow.Message.reply("Yes"))
+      assert nil == reply.disposition # first relevant response
+
+      {:ok, session, reply, _timeout} = Session.sync_step(updated_session(respondent.id, session), Flow.Message.reply("2"))
+      assert nil == reply.disposition # second response but this is not a relevant question
+
+      {:ok, _session, reply, _timeout} = Session.sync_step(updated_session(respondent.id, session), Flow.Message.reply("Yes"))
       assert "interim partial" == reply.disposition # third response, but second relevant response
     end
 
