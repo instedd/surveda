@@ -33,7 +33,7 @@ class SmsSimulator extends Component<Props, State> {
     if (projectId && questionnaireId) {
       this.props.questionnaireActions.fetchQuestionnaireIfNeeded(projectId, questionnaireId)
       startSmsSimulation(projectId, questionnaireId).then(result => {
-        this.setState({ messages: result.messgesHistory, respondentId: result.respondentId })
+        this.setState({ messages: result.messagesHistory, respondentId: result.respondentId })
       })
     }
   }
@@ -44,7 +44,7 @@ class SmsSimulator extends Component<Props, State> {
 
     this.addMessage(message)
     messageSmsSimulation(projectId, questionnaireId, respondentId, message.body).then(result => {
-      this.setState({ messages: result.messgesHistory })
+      this.setState({ messages: result.messagesHistory })
     })
   }
 
