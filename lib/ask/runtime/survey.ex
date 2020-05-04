@@ -5,18 +5,18 @@ defmodule Ask.Runtime.Survey do
   alias Ask.{Repo, Respondent, RespondentDispositionHistory, QuotaBucket, Logger, SystemTime}
   alias Ask.Runtime.{Session, Reply, Flow, SessionMode, SessionModeProvider, RetriesHistogram}
 
-  def sync_step(respondent, reply, mode \\ nil, now \\ SystemTime.time.now, offline \\ true) do
-    session = Session.load_respondent_session(respondent, offline)
+  def sync_step(respondent, reply, mode \\ nil, now \\ SystemTime.time.now, persist \\ true) do
+    session = Session.load_respondent_session(respondent, persist)
     session_mode = session_mode(respondent, session, mode)
-    next_action = sync_step_internal(session, reply, session_mode, now, offline)
-    handle_next_action(next_action, respondent.id, offline)
+    next_action = sync_step_internal(session, reply, session_mode, now, persist)
+    handle_next_action(next_action, respondent.id, persist)
   end
 
   # We expose this method so we can test that if a stale respondent is
   # passed, it's reloaded and the action is retried (this can happen
   # if a timeout happens in between this call)
-  def sync_step_internal(session, reply, offline \\ true) do
-    sync_step_internal(session, reply, session.current_mode, SystemTime.time.now, offline)
+  def sync_step_internal(session, reply, persist \\ true) do
+    sync_step_internal(session, reply, session.current_mode, SystemTime.time.now, persist)
   end
 
   def mask_phone_number(%Respondent{} = respondent, {:reply, response}) do
@@ -43,34 +43,34 @@ defmodule Ask.Runtime.Survey do
     end
   end
 
-  def handle_session_step(session_step, now, offline \\ true)
+  def handle_session_step(session_step, now, persist \\ true)
 
-  def handle_session_step({:ok, %{respondent: respondent} = session, reply, timeout}, now, offline) do
-    timeout_at = Respondent.next_actual_timeout(respondent, timeout, now, offline)
-    updated_respondent = respondent_updates(:ok, respondent, session, Reply.disposition(reply), timeout_at, offline)
+  def handle_session_step({:ok, %{respondent: respondent} = session, reply, timeout}, now, persist) do
+    timeout_at = Respondent.next_actual_timeout(respondent, timeout, now, persist)
+    updated_respondent = respondent_updates(:ok, respondent, session, Reply.disposition(reply), timeout_at, persist)
     updated_respondent = if(disposition_changed?(respondent, updated_respondent)) do
-      disposition_changed(updated_respondent, session, respondent.disposition, offline)
+      disposition_changed(updated_respondent, session, respondent.disposition, persist)
     else
       updated_respondent
     end
     {:reply, reply, updated_respondent}
   end
 
-  def handle_session_step({:hangup, session, reply, timeout, respondent}, _, offline) do
-    timeout_at = Respondent.next_actual_timeout(respondent, timeout, SystemTime.time.now, offline)
-    updated_respondent = respondent_updates(:ok, respondent, session, Reply.disposition(reply), timeout_at, offline)
+  def handle_session_step({:hangup, session, reply, timeout, respondent}, _, persist) do
+    timeout_at = Respondent.next_actual_timeout(respondent, timeout, SystemTime.time.now, persist)
+    updated_respondent = respondent_updates(:ok, respondent, session, Reply.disposition(reply), timeout_at, persist)
     updated_respondent = if(disposition_changed?(respondent, updated_respondent)) do
-      disposition_changed(updated_respondent, session, respondent.disposition, offline)
+      disposition_changed(updated_respondent, session, respondent.disposition, persist)
     else
       updated_respondent
     end
     {:end, updated_respondent}
   end
 
-  def handle_session_step({:end, reply, respondent}, _, offline) do
+  def handle_session_step({:end, reply, respondent}, _, persist) do
     session = case respondent.session do
       nil -> nil
-      _ -> Session.load_respondent_session(respondent, offline)
+      _ -> Session.load_respondent_session(respondent, persist)
     end
 
     old_disposition = respondent.disposition
@@ -80,13 +80,13 @@ defmodule Ask.Runtime.Survey do
                       |> Flow.resulting_disposition(reply_disposition)
                       |> Flow.resulting_disposition("completed")
 
-    updated_respondent = respondent_updates(:end, respondent, new_disposition, offline)
-                         |> disposition_changed(session, old_disposition, offline)
+    updated_respondent = respondent_updates(:end, respondent, new_disposition, persist)
+                         |> disposition_changed(session, old_disposition, persist)
 
     # If new_disposition == reply_disposition, change of disposition has already been logged during Session.sync_step
-    if offline && session && new_disposition != old_disposition && new_disposition != reply_disposition do
+    if persist && session && new_disposition != old_disposition && new_disposition != reply_disposition do
       mode = session.current_mode |> SessionMode.mode
-      Session.log_disposition_changed(updated_respondent, session.current_mode.channel, mode, old_disposition, new_disposition, offline)
+      Session.log_disposition_changed(updated_respondent, session.current_mode.channel, mode, old_disposition, new_disposition, persist)
     end
 
     case Reply.steps(reply) do
@@ -97,49 +97,49 @@ defmodule Ask.Runtime.Survey do
     end
   end
 
-  def handle_session_step({:rejected, reply, respondent}, _, offline) do
-    updated_respondent =respondent_updates(:rejected, respondent, nil, nil, offline)
+  def handle_session_step({:rejected, reply, respondent}, _, persist) do
+    updated_respondent =respondent_updates(:rejected, respondent, nil, nil, persist)
     {:end, {:reply, reply}, updated_respondent}
   end
 
-  def handle_session_step({:rejected, %{respondent: respondent} = session, reply, timeout}, _, offline) do
-    timeout_at = Respondent.next_actual_timeout(respondent, timeout, SystemTime.time.now, offline)
-    updated_respondent = respondent_updates(:rejected, respondent, session, timeout_at, offline)
+  def handle_session_step({:rejected, %{respondent: respondent} = session, reply, timeout}, _, persist) do
+    timeout_at = Respondent.next_actual_timeout(respondent, timeout, SystemTime.time.now, persist)
+    updated_respondent = respondent_updates(:rejected, respondent, session, timeout_at, persist)
     {:reply, reply, updated_respondent}
   end
 
-  def handle_session_step({:rejected, respondent}, _, offline) do
-    updated_respondent = respondent_updates(:rejected, respondent, nil, nil, offline)
+  def handle_session_step({:rejected, respondent}, _, persist) do
+    updated_respondent = respondent_updates(:rejected, respondent, nil, nil, persist)
     {:end, updated_respondent}
   end
 
-  def handle_session_step({:stopped, reply, respondent}, _, offline) do
-    updated_respondent = respondent_updates(:stopped, respondent, Reply.disposition(reply), offline)
+  def handle_session_step({:stopped, reply, respondent}, _, persist) do
+    updated_respondent = respondent_updates(:stopped, respondent, Reply.disposition(reply), persist)
     updated_respondent = if(disposition_changed?(respondent, updated_respondent)) do
-      disposition_changed(updated_respondent, respondent.session |> Session.load, respondent.disposition, offline)
+      disposition_changed(updated_respondent, respondent.session |> Session.load, respondent.disposition, persist)
     else
       updated_respondent
     end
     {:end, updated_respondent}
   end
 
-  def handle_session_step({:failed, respondent}, _, offline) do
-    updated_respondent = failed_session(respondent, offline)
+  def handle_session_step({:failed, respondent}, _, persist) do
+    updated_respondent = failed_session(respondent, persist)
     {:end, updated_respondent}
   end
 
-  def failed_session(respondent, offline) do
+  def failed_session(respondent, persist) do
     session = respondent.session |> Session.load
     mode = session.current_mode |> SessionMode.mode
     old_disposition = respondent.disposition
     new_disposition = Flow.failed_disposition_from(respondent.disposition)
 
-    updated_respondent = respondent_updates(:failed, respondent, offline)
+    updated_respondent = respondent_updates(:failed, respondent, persist)
     Session.log_disposition_changed(updated_respondent, session.current_mode.channel, mode, old_disposition, new_disposition)
-    disposition_changed(updated_respondent, session, old_disposition, offline)
+    disposition_changed(updated_respondent, session, old_disposition, persist)
   end
 
-  def channel_failed(respondent, reason \\ "failed", offline \\ true) do
+  def channel_failed(respondent, reason \\ "failed", persist \\ true) do
     session = respondent.session
     if session do
       session = session |> Session.load
@@ -148,14 +148,14 @@ defmodule Ask.Runtime.Survey do
         :failed ->
           # respondent no longer participates in the survey (no attempts left)
           respondent = RetriesHistogram.remove_respondent(respondent)
-          failed_session(respondent, offline)
+          failed_session(respondent, persist)
       end
     else
       :ok
     end
   end
 
-  def contact_attempt_expired(respondent, offline \\ true) do
+  def contact_attempt_expired(respondent, persist \\ true) do
     session = respondent.session
     if session do
       response = session
@@ -163,8 +163,8 @@ defmodule Ask.Runtime.Survey do
                  |> Session.contact_attempt_expired
 
       {:ok, session, timeout} = response
-      timeout_at = Respondent.next_actual_timeout(respondent, timeout, SystemTime.time.now, offline)
-      respondent_updates(:no_disposition, respondent, session, timeout_at, offline)
+      timeout_at = Respondent.next_actual_timeout(respondent, timeout, SystemTime.time.now, persist)
+      respondent_updates(:no_disposition, respondent, session, timeout_at, persist)
     end
     :ok
   end
@@ -188,8 +188,8 @@ defmodule Ask.Runtime.Survey do
   defp disposition_changed?(original_respondent, updated_respondent), do:
     original_respondent.disposition != updated_respondent.disposition
 
-  defp disposition_changed(respondent, session, old_disposition, offline) do
-    if(offline) do
+  defp disposition_changed(respondent, session, old_disposition, persist) do
+    if(persist) do
       mode = if session && session.current_mode do session.current_mode |> SessionMode.mode else nil end
       respondent
       |> RespondentDispositionHistory.create(old_disposition, mode)
@@ -201,40 +201,40 @@ defmodule Ask.Runtime.Survey do
     end
   end
 
-  defp respondent_updates(:failed, respondent, offline) do
+  defp respondent_updates(:failed, respondent, persist) do
     new_disposition = Flow.failed_disposition_from(respondent.disposition)
     changes = %{state: "failed", session: nil, timeout_at: nil, disposition: new_disposition}
-    Respondent.update(respondent, changes, offline)
+    Respondent.update(respondent, changes, persist)
   end
 
-  defp respondent_updates(:end, respondent, disposition, offline) do
+  defp respondent_updates(:end, respondent, disposition, persist) do
     changes = %{state: "completed", disposition: disposition, session: nil, completed_at: SystemTime.time.now, timeout_at: nil}
-    Respondent.update(respondent, changes, offline)
+    Respondent.update(respondent, changes, persist)
   end
 
-  defp respondent_updates(:stopped, respondent, disposition, offline) do
+  defp respondent_updates(:stopped, respondent, disposition, persist) do
     changes = %{disposition: disposition, state: "failed", session: nil, timeout_at: nil, user_stopped: true}
-    Respondent.update(respondent, changes, offline)
+    Respondent.update(respondent, changes, persist)
   end
 
-  defp respondent_updates(:rejected, respondent, session, timeout_at, offline) do
+  defp respondent_updates(:rejected, respondent, session, timeout_at, persist) do
     session = if session != nil, do: Session.dump(session), else: nil
     changes = %{state: "rejected", session: session, timeout_at: timeout_at}
-    Respondent.update(respondent, changes, offline)
+    Respondent.update(respondent, changes, persist)
   end
 
-  defp respondent_updates(:no_disposition, respondent, session, timeout_at, offline) do
+  defp respondent_updates(:no_disposition, respondent, session, timeout_at, persist) do
     changes = no_disposition_changes(respondent, session, timeout_at)
-    Respondent.update(respondent, changes, offline)
+    Respondent.update(respondent, changes, persist)
   end
 
-  defp respondent_updates(:ok, respondent, session, disposition, timeout_at, offline) do #6 set_disposition
+  defp respondent_updates(:ok, respondent, session, disposition, timeout_at, persist) do
     if disposition do
       intended_changes = %{session: Session.dump(session), timeout_at: timeout_at, disposition: disposition, state: "active"}
       changes = respondent_updates_with_disposition(respondent, session, timeout_at, intended_changes)
-      Respondent.update(respondent, changes, offline)
+      Respondent.update(respondent, changes, persist)
     else
-      respondent_updates(:no_disposition, respondent, session, timeout_at, offline)
+      respondent_updates(:no_disposition, respondent, session, timeout_at, persist)
     end
   end
 
@@ -275,12 +275,12 @@ defmodule Ask.Runtime.Survey do
     {:end, session.respondent}
   end
 
-  defp sync_step_internal(session, reply, session_mode, now, offline) do
+  defp sync_step_internal(session, reply, session_mode, now, persist) do
     transaction_result = Repo.transaction(fn ->
       try do
         reply = mask_phone_number(session.respondent, reply)
-        session_step = Session.sync_step(session, reply, session_mode, offline, offline)
-        handle_session_step(session_step, now, offline)
+        session_step = Session.sync_step(session, reply, session_mode, persist, persist) # if don't want to persist, makes no sense to log the response
+        handle_session_step(session_step, now, persist)
       rescue
         e in Ecto.StaleEntryError ->
           Logger.error(e, "Error on sync step internal. Rolling back transaction")
@@ -300,7 +300,7 @@ defmodule Ask.Runtime.Survey do
             extra: %{survey_id: respondent.survey_id, respondent_id: respondent.id}])
 
           try do
-            handle_session_step({:failed, respondent}, now, offline)
+            handle_session_step({:failed, respondent}, now, persist)
           rescue
             e ->
               if Mix.env == :test do
@@ -379,8 +379,8 @@ defmodule Ask.Runtime.Survey do
     |> Regex.compile!
   end
 
-  defp handle_next_action(next_action, respondent_id, offline) do
-    if offline do
+  defp handle_next_action(next_action, respondent_id, persist) do
+    if persist do
       respondent = Repo.get(Respondent, respondent_id)
       session = if respondent.session, do: Session.load(respondent.session), else: respondent.session
       RetriesHistogram.next_step(respondent, session, next_action)
