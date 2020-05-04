@@ -386,7 +386,7 @@ defmodule Ask.Runtime.SurveyTest do
       Survey.delivery_confirm(respondent, "What's the number of this question?")
 
       reply = Survey.sync_step(respondent, Flow.Message.reply("11"))
-      {:end, _} = reply
+      assert {:end, _} = reply
 
       now = Timex.now
       interval = Interval.new(from: Timex.shift(now, seconds: -5), until: Timex.shift(now, seconds: 5), step: [seconds: 1])
@@ -662,7 +662,7 @@ defmodule Ask.Runtime.SurveyTest do
 
       respondent = Repo.get(Respondent, respondent.id)
       reply = Survey.sync_step(respondent, Flow.Message.reply("11"))
-      {:end, _} = reply
+      assert {:end, _} = reply
 
       now = Timex.now
       interval = Interval.new(from: Timex.shift(now, seconds: -5), until: Timex.shift(now, seconds: 5), step: [seconds: 1])
@@ -2132,7 +2132,7 @@ defmodule Ask.Runtime.SurveyTest do
 
     respondent = Repo.get(Respondent, respondent.id)
     reply = Survey.sync_step(respondent, Flow.Message.reply("Yes"))
-    {:end, _} = reply
+    assert {:end, _} = reply
     updated_respondent = Repo.get(Respondent, respondent.id)
     assert updated_respondent.state == "rejected"
     assert updated_respondent.disposition == "rejected"
@@ -2228,7 +2228,7 @@ defmodule Ask.Runtime.SurveyTest do
 
     respondent = Repo.get(Respondent, respondent.id)
     reply = Survey.sync_step(respondent, Flow.Message.reply("3"))
-    {:end, _} = reply
+    assert {:end, _} = reply
 
     respondent = Repo.get(Respondent, respondent.id)
     assert respondent.state == "failed"
@@ -2263,7 +2263,7 @@ defmodule Ask.Runtime.SurveyTest do
 
     respondent = Repo.get(Respondent, respondent.id)
     reply = Survey.sync_step(respondent, Flow.Message.reply("3"))
-    {:end, _} = reply
+    assert {:end, _} = reply
 
     respondent = Repo.get(Respondent, respondent.id)
     assert respondent.state == "active"
@@ -2337,7 +2337,7 @@ defmodule Ask.Runtime.SurveyTest do
     assert respondent.state == "active"
 
     respondent = Repo.get(Respondent, respondent.id)
-    :end = Survey.sync_step(respondent, Flow.Message.reply("Yes"), "sms")
+    assert :end = Survey.sync_step(respondent, Flow.Message.reply("Yes"), "sms")
 
     :ok = broker |> GenServer.stop
   end
@@ -2420,7 +2420,7 @@ defmodule Ask.Runtime.SurveyTest do
     reply = Survey.sync_step(Repo.get(Respondent, respondent.id), Flow.Message.reply("fooo (1-734) 555 1212 bar"))
     assert {:reply, ReplyHelper.error("You have entered an invalid answer", "Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO"), _} = reply
     reply = Survey.sync_step(Repo.get(Respondent, respondent.id), Flow.Message.reply("fooo (1734) 555.1212 bar"))
-    {:end, _} = reply
+    assert {:end, _} = reply
 
     :ok = logger |> GenServer.stop
 
