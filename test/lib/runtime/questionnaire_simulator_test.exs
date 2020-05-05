@@ -20,27 +20,8 @@ defmodule QuestionnaireSimulatorTest do
   describe "simulation messages_history field" do
     test "simple case", %{project: project} do
       quiz = questionnaire_with_steps(@dummy_steps)
-      %{respondent_id: respondent_id, disposition: disposition, messages_history: messages, simulation_status: status} = QuestionnaireSimulator.start_simulation(project, quiz)
-      assert "queued" == disposition
-      assert "Do you smoke? Reply 1 for YES, 2 for NO" == List.last(messages).body
-      assert Ask.Simulation.Status.active == status
 
-      %{disposition: disposition, messages_history: messages} = QuestionnaireSimulator.process_respondent_response(respondent_id, "No")
-      assert "started" == disposition
-      assert "Do you exercise? Reply 1 for YES, 2 for NO" == List.last(messages).body
-
-      %{disposition: disposition, messages_history: messages} = QuestionnaireSimulator.process_respondent_response(respondent_id, "Yes")
-      assert "started" == disposition
-      assert  "Which is the second perfect number??" == List.last(messages).body
-
-      %{disposition: disposition, messages_history: messages} = QuestionnaireSimulator.process_respondent_response(respondent_id, "7")
-      assert "started" == disposition
-      assert  "What's the number of this question??" == List.last(messages).body
-
-      %{disposition: disposition, messages_history: messages, simulation_status: status} = QuestionnaireSimulator.process_respondent_response(respondent_id, "4")
-      assert "completed" == disposition
-      assert "Thank you for taking the survey" == List.last(messages).body
-      assert Ask.Simulation.Status.ended == status
+      assert_dummy_steps(project, quiz)
     end
 
     test "with partial flag", %{project: project} do
@@ -117,11 +98,65 @@ defmodule QuestionnaireSimulatorTest do
     assert Ask.Simulation.Status.expired == status
     assert respondent_id == rid
   end
+
+  test "the simulator supports questionnaires with section", %{project: project} do
+    quiz = questionnaire_with_steps(SimulatorQuestionnaireSteps.one_section_dummy_steps)
+    # The flow should be the same as without section
+    assert_dummy_steps(project, quiz)
+  end
+
+  test "the simulator supports questionnaires with multiple sections", %{project: project} do
+    quiz = questionnaire_with_steps(SimulatorQuestionnaireSteps.two_sections_dummy_steps)
+    # The flow should be the same as without sections since are not randomized
+    assert_dummy_steps(project, quiz)
+  end
+
+  test "start_simulation with ivr mode returns :not_implemented", %{project: project} do
+    quiz = questionnaire_with_steps(@dummy_steps)
+    assert :not_implemented == QuestionnaireSimulator.start_simulation(project, quiz, "ivr")
+  end
+
+  test "start_simulation with mobile_web mode returns :not_implemented", %{project: project} do
+    quiz = questionnaire_with_steps(@dummy_steps)
+    assert :not_implemented == QuestionnaireSimulator.start_simulation(project, quiz, "mobile-web")
+  end
+
+  defp assert_dummy_steps(project, quiz) do
+    %{respondent_id: respondent_id, disposition: disposition, messages_history: messages, simulation_status: status} = QuestionnaireSimulator.start_simulation(project, quiz)
+    assert "queued" == disposition
+    assert "Do you smoke? Reply 1 for YES, 2 for NO" == List.last(messages).body
+    assert Ask.Simulation.Status.active == status
+
+    %{disposition: disposition, messages_history: messages} = QuestionnaireSimulator.process_respondent_response(respondent_id, "No")
+    assert "started" == disposition
+    assert "Do you exercise? Reply 1 for YES, 2 for NO" == List.last(messages).body
+
+    %{disposition: disposition, messages_history: messages} = QuestionnaireSimulator.process_respondent_response(respondent_id, "Yes")
+    assert "started" == disposition
+    assert  "Which is the second perfect number??" == List.last(messages).body
+
+    %{disposition: disposition, messages_history: messages} = QuestionnaireSimulator.process_respondent_response(respondent_id, "7")
+    assert "started" == disposition
+    assert  "What's the number of this question??" == List.last(messages).body
+
+    %{disposition: disposition, messages_history: messages, simulation_status: status} = QuestionnaireSimulator.process_respondent_response(respondent_id, "4")
+    assert "completed" == disposition
+    assert "Thank you for taking the survey" == List.last(messages).body
+    assert Ask.Simulation.Status.ended == status
+  end
 end
 
 
 defmodule SimulatorQuestionnaireSteps do
   import Ask.StepBuilder
+  use Ask.DummySteps
+
+  def one_section_dummy_steps, do: [section(id: "Section1", title: "First Section", randomize: false, steps: @dummy_steps)]
+
+  def two_sections_dummy_steps do
+    steps = @dummy_steps
+    [section(id: "Section1", title: "First Section", randomize: false, steps: steps |> Enum.take(2)), section(id: "Section2", title: "Second Section", randomize: false, steps: steps |> Enum.drop(2))]
+  end
 
   def with_explanation_first_step, do: [
     explanation_step(

@@ -518,7 +518,7 @@ defmodule Ask.Runtime.Flow do
     quiz_step["relevant"] && not_ignored.(response.value)
   end
 
-  def ignored_values_from_relevant_steps(questionnaire) do
+  defp ignored_values_from_relevant_steps(questionnaire) do
     not_empty = fn str -> str != "" end
     (questionnaire.partial_relevant_config["ignored_values"] || "")
     |> String.split(",")

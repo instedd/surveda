@@ -27,15 +27,16 @@ defmodule Ask.Runtime.QuestionnaireSimulator do
   alias Ask.Simulation.{Status, ATMessage, AOMessage, SubmittedStep}
   alias Ask.Runtime.{Session, Flow, QuestionnaireSimulatorStore}
 
-  @sms_simulator "sms_simulator"
+  @sms_mode "sms"
 
-  def start_simulation(%Project{} = project, %Questionnaire{} = questionnaire, mode \\ @sms_simulator) do
-    questionnaire = adapt_questionnaire(questionnaire)
+  def start_simulation(project, questionnaire, mode \\ @sms_mode)
+
+  def start_simulation(%Project{} = project, %Questionnaire{} = questionnaire, @sms_mode) do
     survey = %Survey{
       simulation: true,
       project_id: project.id,
       name: questionnaire.name,
-      mode: [[mode]],
+      mode: [[@sms_mode]],
       state: "running",
       cutoff: 1,
       schedule: Ask.Schedule.always(),
@@ -47,17 +48,16 @@ defmodule Ask.Runtime.QuestionnaireSimulator do
       survey_id: survey.id,
       survey: survey,
       questionnaire_id: questionnaire.id,
-      mode: [mode],
+      mode: [@sms_mode],
       disposition: "queued",
       phone_number: "",
       canonical_phone_number: "",
       sanitized_phone_number: ""
     }
 
-    {:ok, session, _reply, _timeout} = session_started = Session.start(questionnaire, respondent, %Ask.Runtime.SimulatorChannel{}, mode, Ask.Schedule.always(), [], nil, nil, [], nil, false, false)
+    {:ok, session, _reply, _timeout} = session_started = Session.start(questionnaire, respondent, %Ask.Runtime.SimulatorChannel{}, @sms_mode, Ask.Schedule.always(), [], nil, nil, [], nil, false, false)
     {:reply, reply, respondent} = Runtime.Survey.handle_session_step(session_started, SystemTime.time.now, false)
 
-    respondent = %{respondent | session: inflate_session(respondent, respondent.session, questionnaire)}
     reply_messages = reply_to_messages(reply)
     messages = AOMessage.create_all(reply_messages)
     updated_respondent = %Respondent{respondent | session: session}
@@ -65,6 +65,10 @@ defmodule Ask.Runtime.QuestionnaireSimulator do
 
     QuestionnaireSimulatorStore.add_respondent_simulation(respondent.id, %Ask.QuestionnaireSimulation{questionnaire: questionnaire, respondent: updated_respondent, messages: messages, submissions: submitted_steps})
     |> QuestionnaireSimulationStep.build(Status.active)
+  end
+
+  def start_simulation(_project, _questionnaire, _mode) do
+    :not_implemented
   end
 
   def process_respondent_response(respondent_id, response) do
@@ -75,7 +79,7 @@ defmodule Ask.Runtime.QuestionnaireSimulator do
       simulation = QuestionnaireSimulatorStore.add_respondent_simulation(respondent.id, %Ask.QuestionnaireSimulation{simulation | messages: updated_messages})
       reply = Flow.Message.reply(response)
 
-      case Runtime.Survey.sync_step(respondent, reply, @sms_simulator, SystemTime.time.now, false) do
+      case Runtime.Survey.sync_step(respondent, reply, @sms_mode, SystemTime.time.now, false) do
         {:reply, reply, respondent} ->
           handle_app_reply(simulation, respondent, reply, Status.active)
         {:end, {:reply, reply}, respondent} ->
@@ -94,46 +98,8 @@ defmodule Ask.Runtime.QuestionnaireSimulator do
 
     submitted_steps = simulation.submissions ++ SubmittedStep.build_from(reply, simulation.questionnaire)
 
-    respondent = %{respondent | session: inflate_session(respondent, respondent.session, simulation.questionnaire)}
     QuestionnaireSimulatorStore.add_respondent_simulation(respondent.id, %Ask.QuestionnaireSimulation{simulation | respondent: respondent, messages: messages, submissions: submitted_steps})
     |> QuestionnaireSimulationStep.build(status)
-  end
-
-  # Replicates all 'sms' configurations under 'sms_simulator' key
-  defp adapt_questionnaire(questionnaire) do
-    adapted_steps = questionnaire.steps |> Enum.map(fn step ->
-      prompts = (step["prompt"] || %{})|> Enum.map(fn {lang, prompt} -> {lang, Map.put(prompt, @sms_simulator, prompt["sms"])} end)
-      choices = (step["choices"] || []) |> Enum.map(fn choice ->
-        sms_simulator_responses = choice["responses"]["sms"]
-        Map.put(choice, "responses", Map.put(choice["responses"], @sms_simulator, sms_simulator_responses)) end)
-      step
-      |> Map.put("prompt", prompts |> Enum.into(%{}))
-      |> Map.put("choices", choices)
-    end)
-
-    modes = questionnaire.modes ++ [@sms_simulator]
-    adapted_settings = questionnaire.settings
-                       |> Map.put("thank_you_message", (questionnaire.settings["thank_you_message"] || []) |> Enum.map(fn {lang, msg} -> {lang, Map.put(msg, @sms_simulator, msg["sms"])} end) |> Enum.into(%{}))
-                       |> Map.put("error_message", (questionnaire.settings["error_message"] || [] )|> Enum.map(fn {lang, msg} -> {lang, Map.put(msg, @sms_simulator, msg["sms"])} end) |> Enum.into(%{}))
-
-    %{questionnaire | steps: adapted_steps, settings: adapted_settings, modes: modes}
-  end
-
-  defp inflate_session(_respondent, nil, _questionnaire), do: nil
-  defp inflate_session(respondent, session, questionnaire) do
-    state = session.flow
-    flow = %Flow{questionnaire: questionnaire, current_step: state.current_step, mode: state.mode, language: state.language, retries: state.retries, in_quota_completed_steps: state.in_quota_completed_steps, has_sections: Ask.Runtime.Flow.questionnaire_has_sections(questionnaire), section_order: state.section_order, ignored_values_from_relevant_steps: Ask.Runtime.Flow.ignored_values_from_relevant_steps(questionnaire)}
-
-    session = %Session{
-      current_mode: Ask.Runtime.SessionModeProvider.new(@sms_simulator, %Ask.Runtime.SimulatorChannel{}, []),
-      fallback_mode: nil,
-      flow: flow,
-      respondent: Ask.Runtime.Session.update_section_order(respondent, flow.section_order, false),
-      fallback_delay: Survey.default_fallback_delay(),
-      count_partial_results: false,
-      schedule: Ask.Schedule.always()
-    }
-    session
   end
 
   defp reply_to_messages(nil), do: []
@@ -152,10 +118,12 @@ end
 
 defmodule Ask.Simulation.SubmittedStep do
   alias Ask.Runtime.Reply
+  alias Ask.Questionnaire
+
   def build_from(reply, questionnaire) do
     responses = Reply.stores(reply)
                 |> Enum.map(fn {step_name, value} ->
-                  referred_step = questionnaire.steps |> Enum.filter(fn step -> step["store"] == step_name end)
+                  referred_step = questionnaire |> Questionnaire.all_steps |> Enum.filter(fn step -> step["store"] == step_name end)
                   [id] = referred_step |> Enum.map(fn step -> step["id"] end)
                   [title] = referred_step |> Enum.map(fn step -> step["title"] end)
                   %{step: title, response: value, id: id}
