@@ -43,6 +43,20 @@ defmodule Ask.Runtime.Survey do
     end
   end
 
+  @doc """
+  Performs all updates and changes according the given session_step
+  Indicates weather:
+    - the session is still active and reply must be given to the respondent
+    - the session ends with the current step, but a last reply must be given to the respondent
+    - the session ends with the current step
+
+  Respondent is returned so that there is visibility of the changes that were made to it
+
+  Possible return patterns:
+    - {:reply, reply, respondent}
+    - {:end, reply, respondent}
+    - {:end, respondent}
+  """
   def handle_session_step(session_step, now, persist \\ true)
 
   def handle_session_step({:ok, %{respondent: respondent} = session, reply, timeout}, now, persist) do
