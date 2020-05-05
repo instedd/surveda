@@ -19,7 +19,6 @@ class SurveySimulation extends Component {
     this.state = {
       state: 'pending',
       disposition: 'registered',
-      dispositionHistory: ['registered'],
       sectionHistory: [],
       stepId: null,
       sectionIndex: null,
@@ -56,14 +55,9 @@ class SurveySimulation extends Component {
 
     api.fetchSurveySimulationStatus(projectId, surveyId)
     .then(status => {
-      let dispositionHistory = this.state.dispositionHistory
       let sectionHistory = this.state.sectionHistory
       let sectionIndex = null
       let stepIndex = status.step_index
-
-      if (status.disposition != this.state.disposition) {
-        dispositionHistory = [...dispositionHistory, status.disposition]
-      }
 
       if (questionnaire && status.step_index && hasSections(questionnaire.steps)) {
         sectionIndex = status.step_index[0]
@@ -76,7 +70,6 @@ class SurveySimulation extends Component {
       this.setState({
         state: status.state,
         disposition: status.disposition,
-        dispositionHistory: dispositionHistory,
         sectionHistory: sectionHistory,
         stepId: status.step_id,
         stepIndex: stepIndex,
@@ -221,7 +214,7 @@ class SurveySimulation extends Component {
 
   render() {
     const { t } = this.props
-    const { disposition, dispositionHistory } = this.state
+    const { disposition } = this.state
     return (
       <div>
         <Tooltip text={t('Stop simulation')}>
@@ -233,7 +226,7 @@ class SurveySimulation extends Component {
 
         <div className='row'>
           <div className='col s12 m4'>
-            <DispositionChart disposition={disposition} dispositionHistory={dispositionHistory} />
+            <DispositionChart disposition={disposition} />
           </div>
           <div className='col s12 m8'>
             {this.stepsComponent()}

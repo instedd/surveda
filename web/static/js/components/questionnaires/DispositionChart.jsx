@@ -10,8 +10,39 @@ type Props = {
 }
 
 class DispositionChart extends Component<Props> {
+
+  checkDisposition = toBeChechedDisposition => {
+    const { disposition: currentDisposition } = this.props
+    return currentDisposition == toBeChechedDisposition ||
+      this.isPastDisposition(toBeChechedDisposition, currentDisposition)
+  }
+
+  isPastDisposition = (past: string, current: string) => {
+    const inmmediatePast = {
+      'registered': null,
+      'queued': 'registered',
+      'started': 'contacted',
+      'interim partial': 'started',
+      'completed': 'interim partial',
+      'failed': 'queued',
+      'contacted': 'queued',
+      'unresponsive': 'contacted',
+      'refused': 'started',
+      'inteligible': 'started',
+      'rejected': 'started',
+      'breakoff': 'started',
+      'partial': 'interim partial'
+    }[current]
+
+    if (inmmediatePast) {
+      return (inmmediatePast == past) || this.isPastDisposition(past, inmmediatePast)
+    } else {
+      return false
+    }
+  }
+
   render() {
-    const {disposition, dispositionHistory, t} = this.props
+    const {disposition, t} = this.props
     return <div>
       <h4>{t('Disposition')}</h4>
       <ul className='disposition radio-no-pointer'>
@@ -29,7 +60,7 @@ class DispositionChart extends Component<Props> {
                     name='registered'
                     value='default'
                     readOnly
-                    checked={dispositionHistory.includes('registered')}
+                    checked={this.checkDisposition('registered')}
                     className='with-gap'
                   />
                   <label htmlFor='registered'>{t('Registered')}</label>
@@ -41,7 +72,7 @@ class DispositionChart extends Component<Props> {
                     name='queued'
                     value='default'
                     readOnly
-                    checked={dispositionHistory.includes('queued')}
+                    checked={this.checkDisposition('queued')}
                     className='with-gap'
                   />
                   <label htmlFor='queued'>{t('Queued')}</label>
@@ -53,7 +84,7 @@ class DispositionChart extends Component<Props> {
                         name='failed'
                         value='default'
                         readOnly
-                        checked={dispositionHistory.includes('failed')}
+                        checked={this.checkDisposition('failed')}
                         className='with-gap'
                       />
                       <label htmlFor='failed'>{t('Failed')}</label>
@@ -78,7 +109,7 @@ class DispositionChart extends Component<Props> {
                     name='contacted'
                     value='default'
                     readOnly
-                    checked={dispositionHistory.includes('contacted')}
+                    checked={this.checkDisposition('contacted')}
                     className='with-gap'
                   />
                   <label htmlFor='contacted'>{t('Contacted')}</label>
@@ -90,7 +121,7 @@ class DispositionChart extends Component<Props> {
                         name='unresponsive'
                         value='default'
                         readOnly
-                        checked={dispositionHistory.includes('unresponsive')}
+                        checked={this.checkDisposition('unresponsive')}
                         className='with-gap'
                       />
                       <label htmlFor='unresponsive'>{t('Unresponsive')}</label>
@@ -115,7 +146,7 @@ class DispositionChart extends Component<Props> {
                     name='started'
                     value='default'
                     readOnly
-                    checked={dispositionHistory.includes('started')}
+                    checked={this.checkDisposition('started')}
                     className='with-gap'
                   />
                   <label htmlFor='started'>{t('Started')}</label>
@@ -127,7 +158,7 @@ class DispositionChart extends Component<Props> {
                         name='refused'
                         value='default'
                         readOnly
-                        checked={dispositionHistory.includes('refused')}
+                        checked={this.checkDisposition('refused')}
                         className='with-gap'
                       />
                       <label htmlFor='refused'>{t('Refused')}</label>
@@ -139,7 +170,7 @@ class DispositionChart extends Component<Props> {
                         name='ineligible'
                         value='default'
                         readOnly
-                        checked={dispositionHistory.includes('ineligible')}
+                        checked={this.checkDisposition('ineligible')}
                         className='with-gap'
                       />
                       <label htmlFor='ineligible'>{t('Ineligible')}</label>
@@ -151,7 +182,7 @@ class DispositionChart extends Component<Props> {
                         name='rejected'
                         value='default'
                         readOnly
-                        checked={dispositionHistory.includes('rejected')}
+                        checked={this.checkDisposition('rejected')}
                         className='with-gap'
                       />
                       <label htmlFor='rejected'>{t('Rejected')}</label>
@@ -163,7 +194,7 @@ class DispositionChart extends Component<Props> {
                         name='breakoff'
                         value='default'
                         readOnly
-                        checked={dispositionHistory.includes('breakoff')}
+                        checked={this.checkDisposition('breakoff')}
                         className='with-gap'
                       />
                       <label htmlFor='breakoff'>{t('Breakoff')}</label>
@@ -177,7 +208,7 @@ class DispositionChart extends Component<Props> {
                     name='interim partial'
                     value='default'
                     readOnly
-                    checked={dispositionHistory.includes('interim partial')}
+                    checked={this.checkDisposition('interim partial')}
                     className='with-gap'
                   />
                   <label htmlFor='partial'>{t('Interim Partial')}</label>
@@ -189,7 +220,7 @@ class DispositionChart extends Component<Props> {
                         name='partial'
                         value='default'
                         readOnly
-                        checked={dispositionHistory.includes('partial')}
+                        checked={this.checkDisposition('partial')}
                         className='with-gap'
                       />
                       <label htmlFor='partial'>{t('Partial')}</label>
@@ -203,7 +234,7 @@ class DispositionChart extends Component<Props> {
                     name='completed'
                     value='default'
                     readOnly
-                    checked={dispositionHistory.includes('completed')}
+                    checked={this.checkDisposition('completed')}
                     className='with-gap'
                   />
                   <label htmlFor='completed'>{t('Completed')}</label>
