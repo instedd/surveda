@@ -8,10 +8,9 @@ import * as api from '../../api'
 import * as routes from '../../routes'
 import { icon } from '../../step'
 import { Tooltip, ConfirmationModal, Card, UntitledIfEmpty } from '../ui'
-import includes from 'lodash/includes'
-import classNames from 'classnames'
 import { translate } from 'react-i18next'
 import flatten from 'lodash/flatten'
+import DispositionChart from '../questionnaires/DispositionChart'
 
 class SurveySimulation extends Component {
   constructor(props) {
@@ -222,6 +221,7 @@ class SurveySimulation extends Component {
 
   render() {
     const { t } = this.props
+    const { disposition, dispositionHistory } = this.state
     return (
       <div>
         <Tooltip text={t('Stop simulation')}>
@@ -233,206 +233,7 @@ class SurveySimulation extends Component {
 
         <div className='row'>
           <div className='col s12 m4'>
-            <h4>{t('Disposition')}</h4>
-            <ul className='disposition radio-no-pointer'>
-              <li>
-                <div className='row'>
-                  <div className='col s3'>
-                    <p>{t('Uncontacted')}</p>
-                  </div>
-                  <div className='col s9'>
-                    <ul>
-                      <li className={classNames({'active': this.state.disposition == 'registered'})}>
-                        <input
-                          id='registered'
-                          type='radio'
-                          name='registered'
-                          value='default'
-                          readOnly
-                          checked={includes(this.state.dispositionHistory, 'registered')}
-                          className='with-gap'
-                        />
-                        <label htmlFor='registered'>{t('Registered')}</label>
-                      </li>
-                      <li className={classNames({'active': this.state.disposition == 'queued'})}>
-                        <input
-                          id='queued'
-                          type='radio'
-                          name='queued'
-                          value='default'
-                          readOnly
-                          checked={includes(this.state.dispositionHistory, 'queued')}
-                          className='with-gap'
-                        />
-                        <label htmlFor='queued'>{t('Queued')}</label>
-                        <ul>
-                          <li className={classNames({'active': this.state.disposition == 'failed'})}>
-                            <input
-                              id='failed'
-                              type='radio'
-                              name='failed'
-                              value='default'
-                              readOnly
-                              checked={includes(this.state.dispositionHistory, 'failed')}
-                              className='with-gap'
-                            />
-                            <label htmlFor='failed'>{t('Failed')}</label>
-                          </li>
-                        </ul>
-                      </li>
-                    </ul>
-                  </div>
-                </div>
-              </li>
-              <li>
-                <div className='row'>
-                  <div className='col s3'>
-                    <p>{t('Contacted')}</p>
-                  </div>
-                  <div className='col s9'>
-                    <ul>
-                      <li className={classNames({'active': this.state.disposition == 'contacted'})}>
-                        <input
-                          id='contacted'
-                          type='radio'
-                          name='contacted'
-                          value='default'
-                          readOnly
-                          checked={includes(this.state.dispositionHistory, 'contacted')}
-                          className='with-gap'
-                        />
-                        <label htmlFor='contacted'>{t('Contacted')}</label>
-                        <ul>
-                          <li className={classNames({'active': this.state.disposition == 'unresponsive'})}>
-                            <input
-                              id='unresponsive'
-                              type='radio'
-                              name='unresponsive'
-                              value='default'
-                              readOnly
-                              checked={includes(this.state.dispositionHistory, 'unresponsive')}
-                              className='with-gap'
-                            />
-                            <label htmlFor='unresponsive'>{t('Unresponsive')}</label>
-                          </li>
-                        </ul>
-                      </li>
-                    </ul>
-                  </div>
-                </div>
-              </li>
-              <li>
-                <div className='row'>
-                  <div className='col s3'>
-                    <p>{t('Responsive')}</p>
-                  </div>
-                  <div className='col s9'>
-                    <ul className='last'>
-                      <li className={classNames({'active': this.state.disposition == 'started'})}>
-                        <input
-                          id='started'
-                          type='radio'
-                          name='started'
-                          value='default'
-                          readOnly
-                          checked={includes(this.state.dispositionHistory, 'started')}
-                          className='with-gap'
-                        />
-                        <label htmlFor='started'>{t('Started')}</label>
-                        <ul>
-                          <li className={classNames({'active': this.state.disposition == 'refused'})}>
-                            <input
-                              id='refused'
-                              type='radio'
-                              name='refused'
-                              value='default'
-                              readOnly
-                              checked={includes(this.state.dispositionHistory, 'refused')}
-                              className='with-gap'
-                            />
-                            <label htmlFor='refused'>{t('Refused')}</label>
-                          </li>
-                          <li className={classNames({'active': this.state.disposition == 'ineligible'})}>
-                            <input
-                              id='ineligible'
-                              type='radio'
-                              name='ineligible'
-                              value='default'
-                              readOnly
-                              checked={includes(this.state.dispositionHistory, 'ineligible')}
-                              className='with-gap'
-                            />
-                            <label htmlFor='ineligible'>{t('Ineligible')}</label>
-                          </li>
-                          <li className={classNames({'active': this.state.disposition == 'rejected'})}>
-                            <input
-                              id='rejected'
-                              type='radio'
-                              name='rejected'
-                              value='default'
-                              readOnly
-                              checked={includes(this.state.dispositionHistory, 'rejected')}
-                              className='with-gap'
-                            />
-                            <label htmlFor='rejected'>{t('Rejected')}</label>
-                          </li>
-                          <li className={classNames({'active': this.state.disposition == 'breakoff'})}>
-                            <input
-                              id='breakoff'
-                              type='radio'
-                              name='breakoff'
-                              value='default'
-                              readOnly
-                              checked={includes(this.state.dispositionHistory, 'breakoff')}
-                              className='with-gap'
-                            />
-                            <label htmlFor='breakoff'>{t('Breakoff')}</label>
-                          </li>
-                        </ul>
-                      </li>
-                      <li className={classNames({'active': this.state.disposition == 'interim partial'})}>
-                        <input
-                          id='interim partial'
-                          type='radio'
-                          name='interim partial'
-                          value='default'
-                          readOnly
-                          checked={includes(this.state.dispositionHistory, 'interim partial')}
-                          className='with-gap'
-                        />
-                        <label htmlFor='partial'>{t('Interim Partial')}</label>
-                        <ul>
-                          <li className={classNames({'active': this.state.disposition == 'partial'})}>
-                            <input
-                              id='partial'
-                              type='radio'
-                              name='partial'
-                              value='default'
-                              readOnly
-                              checked={includes(this.state.dispositionHistory, 'partial')}
-                              className='with-gap'
-                            />
-                            <label htmlFor='partial'>{t('Partial')}</label>
-                          </li>
-                        </ul>
-                      </li>
-                      <li className={classNames({'active': this.state.disposition == 'completed'})}>
-                        <input
-                          id='completed'
-                          type='radio'
-                          name='completed'
-                          value='default'
-                          readOnly
-                          checked={includes(this.state.dispositionHistory, 'completed')}
-                          className='with-gap'
-                        />
-                        <label htmlFor='completed'>{t('Completed')}</label>
-                      </li>
-                    </ul>
-                  </div>
-                </div>
-              </li>
-            </ul>
+            <DispositionChart disposition={disposition} dispositionHistory={dispositionHistory} />
           </div>
           <div className='col s12 m8'>
             {this.stepsComponent()}
