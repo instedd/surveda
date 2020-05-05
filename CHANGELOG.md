@@ -1,5 +1,22 @@
 # InSTEDD Surveda Changelog
 
+## 0.26.0
+
+### Features
+
+* Mark respondent as partial if the selected _partial relevant_ questions were answered. [#1689](https://github.com/instedd/surveda/issues/1689), [#1692](https://github.com/instedd/surveda/pull/1692), [#1693](https://github.com/instedd/surveda/pull/1693)
+* Remove stalled respondent state since it's no longer needed due to [last retry time policy](https://github.com/instedd/surveda/issues/452). [#1684](https://github.com/instedd/surveda/pull/1684)
+
+### Bugfixes
+
+* Fix concurrency issue due to missing lock over respondents when cancelling survey. [#1683](https://github.com/instedd/surveda/pull/1683)
+* Improve cutoff rules section when creating a survey. [#1666](https://github.com/instedd/surveda/issues/1666), [#1686](https://github.com/instedd/surveda/pull/1686)
+* Add missing log entry when cancelling survey completes. [#1668](https://github.com/instedd/surveda/pull/1668)
+* Avoid showing onboarding pages to readers of a projects. [#1107](https://github.com/instedd/surveda/issues/1107), [#1687](https://github.com/instedd/surveda/pull/1687)
+* Removing a respondent no longer triggers a client-side error. [#1677](https://github.com/instedd/surveda/pull/1677), [1685](https://github.com/instedd/surveda/pull/1685)
+* Improve styling. [#1679](https://github.com/instedd/surveda/pull/1679)
+* Clarify expected screen resolutions for admin pages. [#1680](https://github.com/instedd/surveda/pull/1680)
+
 ## 0.25.0
 
 ### Features
