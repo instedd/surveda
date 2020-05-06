@@ -6,6 +6,7 @@ import { connect } from 'react-redux'
 import { bindActionCreators } from 'redux'
 import { startSmsSimulation, messageSmsSimulation } from '../../api.js'
 import ChatWindow from './ChatWindow'
+import DispositionChart from './DispositionChart'
 
 type Props = {
   respondentId: string,
@@ -17,6 +18,7 @@ type Props = {
 
 type State = {
   messages: Array<Object>,
+  disposition: string,
   respondentId: string
 }
 
@@ -24,6 +26,7 @@ class SmsSimulator extends Component<Props, State> {
 
   state = {
     messages: [],
+    disposition: '',
     respondentId: ''
   }
 
@@ -33,7 +36,7 @@ class SmsSimulator extends Component<Props, State> {
     if (projectId && questionnaireId) {
       this.props.questionnaireActions.fetchQuestionnaireIfNeeded(projectId, questionnaireId)
       startSmsSimulation(projectId, questionnaireId).then(result => {
-        this.setState({ messages: result.messagesHistory, respondentId: result.respondentId })
+        this.setState({ messages: result.messagesHistory, respondentId: result.respondentId, disposition: result.disposition })
       })
     }
   }
@@ -44,7 +47,7 @@ class SmsSimulator extends Component<Props, State> {
 
     this.addMessage(message)
     messageSmsSimulation(projectId, questionnaireId, respondentId, message.body).then(result => {
-      this.setState({ messages: result.messagesHistory })
+      this.setState({ messages: result.messagesHistory, disposition: result.disposition })
     })
   }
 
@@ -53,10 +56,14 @@ class SmsSimulator extends Component<Props, State> {
   }
 
   render() {
-    const { messages } = this.state
+    const { messages, disposition } = this.state
     if (messages.length) {
       return <div className='simulator-container'>
-        <div className='col s4 offset-s8'>
+        <div className='col s12 m4'>
+          <DispositionChart disposition={disposition} />
+        </div>
+        <div className='col s12 m4' />
+        <div className='col s12 m4'>
           <ChatWindow messages={messages} onSendMessage={this.handleATMessage} chatTitle={'SMS mode'} />
         </div>
       </div>

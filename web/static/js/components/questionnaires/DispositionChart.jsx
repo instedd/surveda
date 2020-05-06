@@ -5,7 +5,6 @@ import classNames from 'classnames'
 
 type Props = {
   disposition: string,
-  dispositionHistory: Array<string>,
   t: Function
 }
 
