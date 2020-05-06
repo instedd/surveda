@@ -59,22 +59,30 @@ defmodule Ask.Runtime.QuestionnaireSimulator do
     session_started = Session.start(questionnaire, new_respondent, %Ask.Runtime.SimulatorChannel{}, @sms_mode, Ask.Schedule.always(), [], nil, nil, [], nil, false, false)
     {:reply, reply, respondent} = Runtime.Survey.handle_session_step(session_started, SystemTime.time.now, false)
 
-    # Must nest respondent in respondent.session since this is the one updated
-    # If not respondent data would be loss for simulation
-    respondent_for_confirmation = %{respondent | session: %{respondent.session | respondent: respondent}}
-
     # Simulating Nuntium confirmation on message delivery
-    %{respondent: respondent} = Runtime.Survey.delivery_confirm(respondent_for_confirmation, "", @sms_mode, false)
+    %{respondent: respondent} = Runtime.Survey.delivery_confirm(sync_respondent(respondent), "", @sms_mode, false)
 
     messages = reply |> reply_to_messages |> AOMessage.create_all
     submitted_steps = SubmittedStep.build_from(reply, questionnaire)
 
-    QuestionnaireSimulatorStore.add_respondent_simulation(respondent.id, %Ask.QuestionnaireSimulation{questionnaire: questionnaire, respondent: respondent, messages: messages, submissions: submitted_steps})
+    QuestionnaireSimulatorStore.add_respondent_simulation(respondent.id, %Ask.QuestionnaireSimulation{questionnaire: questionnaire, respondent: sync_respondent(respondent), messages: messages, submissions: submitted_steps})
     |> QuestionnaireSimulationStep.build(Status.active)
   end
 
   def start_simulation(_project, _questionnaire, _mode) do
     :not_implemented
+  end
+
+  # Must update the respondent.session's respondent since if not will be outdated from respondent
+  # This is necessary since some flows:
+  #  - start using the respondent,
+  #  - then use the respondent.session
+  #  - and after that use the session.respondent
+  #
+  # If not synced, respondent data would be loss during simulation and the simulation could behave inaccurately
+  defp sync_respondent(respondent) do
+    synced_session = if respondent.session, do: %{respondent.session | respondent: respondent}, else: respondent.session
+    %{respondent | session: synced_session}
   end
 
   def process_respondent_response(respondent_id, response) do
@@ -104,7 +112,7 @@ defmodule Ask.Runtime.QuestionnaireSimulator do
 
     submitted_steps = simulation.submissions ++ SubmittedStep.build_from(reply, simulation.questionnaire)
 
-    QuestionnaireSimulatorStore.add_respondent_simulation(respondent.id, %Ask.QuestionnaireSimulation{simulation | respondent: respondent, messages: messages, submissions: submitted_steps})
+    QuestionnaireSimulatorStore.add_respondent_simulation(respondent.id, %Ask.QuestionnaireSimulation{simulation | respondent: sync_respondent(respondent), messages: messages, submissions: submitted_steps})
     |> QuestionnaireSimulationStep.build(status)
   end
 
