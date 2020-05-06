@@ -9,25 +9,30 @@ import ChatWindow from './ChatWindow'
 import DispositionChart from './DispositionChart'
 
 type Props = {
-  respondentId: string,
-  messages: Array<string>,
   projectId: number,
   questionnaireId: number,
   questionnaireActions: Object
 }
 
-type State = {
-  messages: Array<Object>,
+type ChatMessage = {
+  type: string,
+  body: string
+}
+
+type SmsSimulation = {
+  messagesHistory: Array<ChatMessage>,
+  simulationStatus: string,
   disposition: string,
   respondentId: string
 }
 
-class SmsSimulator extends Component<Props, State> {
+type State = {
+  smsSimulation: ?SmsSimulation
+}
 
+class SmsSimulator extends Component<Props, State> {
   state = {
-    messages: [],
-    disposition: '',
-    respondentId: ''
+    smsSimulation: null
   }
 
   componentWillMount() {
@@ -36,40 +41,74 @@ class SmsSimulator extends Component<Props, State> {
     if (projectId && questionnaireId) {
       this.props.questionnaireActions.fetchQuestionnaireIfNeeded(projectId, questionnaireId)
       startSmsSimulation(projectId, questionnaireId).then(result => {
-        this.setState({ messages: result.messagesHistory, respondentId: result.respondentId, disposition: result.disposition })
+        this.setState({ smsSimulation: result })
       })
     }
   }
 
   handleATMessage = message => {
     const { projectId, questionnaireId } = this.props
-    const { respondentId } = this.state
-
-    this.addMessage(message)
-    messageSmsSimulation(projectId, questionnaireId, respondentId, message.body).then(result => {
-      this.setState({ messages: result.messagesHistory, disposition: result.disposition })
-    })
+    const { smsSimulation } = this.state
+    if (smsSimulation) {
+      this.addMessage(message)
+      messageSmsSimulation(projectId, questionnaireId, smsSimulation.respondentId, message.body).then(result => {
+        this.setState({ smsSimulation: result })
+      })
+    }
   }
 
-  addMessage = msg => {
-    this.setState({ messages: [...this.state.messages, msg] })
+  addMessage = message => {
+    const { smsSimulation } = this.state
+    if (smsSimulation) {
+      this.setState({
+        smsSimulation: {
+          ...smsSimulation,
+          messagesHistory: [
+            ...smsSimulation.messagesHistory,
+            message
+          ]
+        }
+      })
+    }
   }
 
   render() {
-    const { messages, disposition } = this.state
-    if (messages.length) {
-      return <div className='simulator-container'>
-        <div className='col s12 m4'>
-          <DispositionChart disposition={disposition} />
+    const { smsSimulation } = this.state
+    const simulationIsAvailable = smsSimulation && ['active', 'ended', 'expired'].includes(smsSimulation.simulationStatus)
+    const simulationIsExpired = smsSimulation && smsSimulation.simulationStatus == 'expired'
+    const simulationIsActive = smsSimulation && smsSimulation.simulationStatus == 'active'
+    const renderError = msg => <div className='error'>{msg}</div>
+    const header = <header>
+      {
+        smsSimulation
+        ? simulationIsAvailable
+          ? simulationIsExpired
+            ? renderError('This simulation is expired. Please refresh to start a new one')
+            : null
+          : renderError('This simulation isn\'t available. Please refresh')
+        : 'Loading'
+      }
+    </header>
+    const main = <main>
+      {
+        smsSimulation && simulationIsAvailable
+        ? <div>
+          <div className='col s12 m4'>
+            <DispositionChart disposition={smsSimulation.disposition} />
+          </div>
+          <div className='col s12 m4' />
+          <div className='col s12 m4'>
+            <ChatWindow messages={smsSimulation.messagesHistory} onSendMessage={this.handleATMessage} chatTitle={'SMS mode'} readOnly={!simulationIsActive} />
+          </div>
         </div>
-        <div className='col s12 m4' />
-        <div className='col s12 m4'>
-          <ChatWindow messages={messages} onSendMessage={this.handleATMessage} chatTitle={'SMS mode'} />
-        </div>
-      </div>
-    } else {
-      return <div>Loading</div>
-    }
+        : null
+      }
+    </main>
+
+    return <div className='simulator-container'>
+      {header}
+      {main}
+    </div>
   }
 }
 

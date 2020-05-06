@@ -10,17 +10,18 @@ type ChatMessage = {
 type ChatWindowProps = {
   messages: Array<ChatMessage>,
   chatTitle: string,
-  onSendMessage: Function
+  onSendMessage: Function,
+  readOnly: boolean
 }
 
 class ChatWindow extends Component<ChatWindowProps> {
   render() {
-    const { messages, onSendMessage, chatTitle } = this.props
+    const { messages, onSendMessage, chatTitle, readOnly } = this.props
 
     return <div className='chat-window'>
       <ChatTitle title={chatTitle} />
       <MessagesList messages={messages} />
-      <ChatFooter onSendMessage={onSendMessage} />
+      <ChatFooter onSendMessage={onSendMessage} readOnly={readOnly} />
     </div>
   }
 }
@@ -64,7 +65,9 @@ class MessagesList extends Component<MessagesListProps> {
   messagesBottomDivRef: any
 
   scrollToBottom = () => {
-    window.setTimeout(() => this.messagesBottomDivRef.scrollIntoView({ behavior: 'smooth' }), 0)
+    window.setTimeout(() => {
+      this.messagesBottomDivRef.scrollIntoView({ behavior: 'smooth' })
+    }, 0)
   }
 
   componentDidMount() {
@@ -111,7 +114,8 @@ class MessagesList extends Component<MessagesListProps> {
 
 type ChatFooterProps = {
   t: Function,
-  onSendMessage: Function
+  onSendMessage: Function,
+  readOnly: boolean
 }
 
 type ChatFooterState = {
@@ -144,7 +148,7 @@ const ChatFooter = translate()(class extends Component<ChatFooterProps, ChatFoot
 
   render() {
     const { chatInput } = this.state
-    const { t } = this.props
+    const { t, readOnly } = this.props
     return (
       <div className='chat-window-input'>
         <input className='chat-input'
@@ -153,6 +157,8 @@ const ChatFooter = translate()(class extends Component<ChatFooterProps, ChatFoot
           onChange={event => this.setState({ chatInput: event.target.value })}
           placeholder={t('Write your message here')}
           onKeyPress={this.sendMessageIfEnterPressed}
+          readOnly={readOnly}
+          autoFocus
         />
         <a onClick={this.sendMessage} className='chat-button'>
           <i className='material-icons'>send</i>

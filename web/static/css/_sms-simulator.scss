@@ -5,6 +5,9 @@ $chatBorderBackground: color("grey", "darken-3");
 
 .simulator-container {
   @extend .row;
+  header {
+    background-color: inherit;
+  }
 }
 .chat-window {
   @extend .z-depth-5;
