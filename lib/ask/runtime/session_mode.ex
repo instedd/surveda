@@ -11,7 +11,6 @@ defmodule Ask.Runtime.SessionModeProvider do
   defp mode_provider("sms"), do: SMSMode
   defp mode_provider("ivr"), do: IVRMode
   defp mode_provider("mobileweb"), do: MobileWebMode
-  defp mode_provider("sms_simulator"), do: SMSSimulatorMode
 
   def new(nil, _channel, _retries), do: nil
 
