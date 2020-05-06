@@ -187,15 +187,15 @@ defmodule Ask.Runtime.Survey do
     delivery_confirm(respondent, title, nil)
   end
 
-  def delivery_confirm(respondent, title, mode) do
+  def delivery_confirm(respondent, title, mode, persist \\ true) do
     unless respondent.session == nil do
-      session = respondent.session |> Session.load
+      session = Session.load_respondent_session(respondent, persist)
       session_mode =
         case session_mode(respondent, session, mode) do
           :invalid_mode -> session.current_mode
           mode -> mode
         end
-      Session.delivery_confirm(session, title, session_mode)
+      Session.delivery_confirm(session, title, session_mode, persist)
     end
   end
 

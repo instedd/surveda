@@ -209,9 +209,9 @@ defmodule Ask.Runtime.Session do
     {:ok, session, base_timeout + current_timeout(session)}
   end
 
-  def delivery_confirm(session, title, current_mode) do
-    log_confirmation(title, session.respondent.disposition, current_mode.channel, session.flow.mode, session.respondent)
-    update_respondent_disposition(session, "contacted", current_mode)
+  def delivery_confirm(session, title, current_mode, persist) do
+    if persist, do: log_confirmation(title, session.respondent.disposition, current_mode.channel, session.flow.mode, session.respondent)
+    update_respondent_disposition(session, "contacted", current_mode, persist)
   end
 
   def cancel(session) do

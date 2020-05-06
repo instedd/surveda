@@ -27,7 +27,7 @@ defmodule QuestionnaireSimulatorTest do
     test "with partial flag", %{project: project} do
       quiz = questionnaire_with_steps(SimulatorQuestionnaireSteps.with_interim_partial_flag)
       %{respondent_id: respondent_id, disposition: disposition, messages_history: messages, simulation_status: status} = QuestionnaireSimulator.start_simulation(project, quiz)
-      assert "queued" == disposition
+      assert "contacted" == disposition
       assert  "Do you smoke? Reply 1 for YES, 2 for NO" == List.last(messages).body
       assert Ask.Simulation.Status.active == status
 
@@ -123,7 +123,7 @@ defmodule QuestionnaireSimulatorTest do
 
   defp assert_dummy_steps(project, quiz) do
     %{respondent_id: respondent_id, disposition: disposition, messages_history: messages, simulation_status: status} = QuestionnaireSimulator.start_simulation(project, quiz)
-    assert "queued" == disposition
+    assert "contacted" == disposition
     assert "Do you smoke? Reply 1 for YES, 2 for NO" == List.last(messages).body
     assert Ask.Simulation.Status.active == status
 
