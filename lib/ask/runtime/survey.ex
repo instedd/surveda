@@ -130,7 +130,7 @@ defmodule Ask.Runtime.Survey do
   def handle_session_step({:stopped, reply, respondent}, _, persist) do
     updated_respondent = respondent_updates(:stopped, respondent, Reply.disposition(reply), persist)
     updated_respondent = if(disposition_changed?(respondent, updated_respondent)) do
-      disposition_changed(updated_respondent, respondent.session |> Session.load, respondent.disposition, persist)
+      disposition_changed(updated_respondent, Session.load_respondent_session(respondent, persist), respondent.disposition, persist)
     else
       updated_respondent
     end

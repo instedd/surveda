@@ -16,6 +16,10 @@ defmodule Ask.Runtime.Reply do
     steps
   end
 
+  def steps(_) do
+    []
+  end
+
   def stores(%Reply{stores: stores}) do
     stores
   end
