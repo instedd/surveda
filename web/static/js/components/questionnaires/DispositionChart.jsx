@@ -8,36 +8,31 @@ type Props = {
   t: Function
 }
 
+const immediatePast = {
+  'registered': null,
+  'queued': 'registered',
+  'started': 'contacted',
+  'interim partial': 'started',
+  'completed': 'interim partial',
+  'failed': 'queued',
+  'contacted': 'queued',
+  'unresponsive': 'contacted',
+  'refused': 'started',
+  'inteligible': 'started',
+  'rejected': 'started',
+  'breakoff': 'started',
+  'partial': 'interim partial'
+}
+
 class DispositionChart extends Component<Props> {
+  checkDisposition = (toBeChechedDisposition: string): boolean => {
+    let { disposition: current } = this.props
 
-  checkDisposition = toBeChechedDisposition => {
-    const { disposition: currentDisposition } = this.props
-    return currentDisposition == toBeChechedDisposition ||
-      this.isPastDisposition(toBeChechedDisposition, currentDisposition)
-  }
-
-  isPastDisposition = (past: string, current: string) => {
-    const inmmediatePast = {
-      'registered': null,
-      'queued': 'registered',
-      'started': 'contacted',
-      'interim partial': 'started',
-      'completed': 'interim partial',
-      'failed': 'queued',
-      'contacted': 'queued',
-      'unresponsive': 'contacted',
-      'refused': 'started',
-      'inteligible': 'started',
-      'rejected': 'started',
-      'breakoff': 'started',
-      'partial': 'interim partial'
-    }[current]
-
-    if (inmmediatePast) {
-      return (inmmediatePast == past) || this.isPastDisposition(past, inmmediatePast)
-    } else {
-      return false
+    while (current != null && toBeChechedDisposition != current) {
+      current = immediatePast[current]
     }
+
+    return toBeChechedDisposition == current
   }
 
   render() {
