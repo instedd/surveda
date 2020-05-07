@@ -52,7 +52,8 @@ defmodule Ask.Runtime.QuestionnaireSimulator do
       disposition: "queued",
       phone_number: "",
       canonical_phone_number: "",
-      sanitized_phone_number: ""
+      sanitized_phone_number: "",
+      responses: []
     }
 
     # Simulating what Broker does when starting a respondent: Session.start and then Survey.handle_session_step
@@ -109,7 +110,6 @@ defmodule Ask.Runtime.QuestionnaireSimulator do
   def handle_app_reply(simulation, respondent, reply, status) do
     reply_messages = reply_to_messages(reply) |> AOMessage.create_all
     messages = simulation.messages ++ reply_messages
-
     submitted_steps = simulation.submissions ++ SubmittedStep.build_from(reply, simulation.questionnaire)
 
     QuestionnaireSimulatorStore.add_respondent_simulation(respondent.id, %Ask.QuestionnaireSimulation{simulation | respondent: sync_respondent(respondent), messages: messages, submissions: submitted_steps})
@@ -138,8 +138,9 @@ defmodule Ask.Simulation.SubmittedStep do
     responses = Reply.stores(reply)
                 |> Enum.map(fn {step_name, value} ->
                   referred_step = questionnaire |> Questionnaire.all_steps |> Enum.filter(fn step -> step["store"] == step_name end)
-                  [id] = referred_step |> Enum.map(fn step -> step["id"] end)
-                  [title] = referred_step |> Enum.map(fn step -> step["title"] end)
+                  # hd function is used since there is a restriction that two steps cannot have the same store variable name
+                  id = referred_step |> Enum.map(fn step -> step["id"] end) |> hd
+                  title = referred_step |> Enum.map(fn step -> step["title"] end) |> hd
                   %{step: title, response: value, id: id}
     end)
 

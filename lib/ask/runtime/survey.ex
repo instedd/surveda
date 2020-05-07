@@ -143,13 +143,13 @@ defmodule Ask.Runtime.Survey do
   end
 
   def failed_session(respondent, persist) do
-    session = respondent.session |> Session.load
+    session = Session.load_respondent_session(respondent, persist)
     mode = session.current_mode |> SessionMode.mode
     old_disposition = respondent.disposition
     new_disposition = Flow.failed_disposition_from(respondent.disposition)
 
     updated_respondent = respondent_updates(:failed, respondent, persist)
-    Session.log_disposition_changed(updated_respondent, session.current_mode.channel, mode, old_disposition, new_disposition)
+    Session.log_disposition_changed(updated_respondent, session.current_mode.channel, mode, old_disposition, new_disposition, persist)
     disposition_changed(updated_respondent, session, old_disposition, persist)
   end
 

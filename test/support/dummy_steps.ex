@@ -1074,3 +1074,167 @@ defmodule Ask.DummySteps do
     end
   end
 end
+
+defmodule Ask.QuestionnaireRelevantSteps do
+  use Ask.DummySteps
+  import Ask.StepBuilder
+
+  def all_relevant_steps(), do: @dummy_steps |> Enum.map(fn step -> Map.put(step, "relevant", true) end)
+
+  def odd_relevant_steps(), do: @dummy_steps |> Enum.map_every(2, fn step -> Map.put(step, "relevant", true) end) # Only the odd steps are relevant
+
+  def odd_relevant_with_numeric_refusal(), do: [
+        multiple_choice_step(
+          id: Ecto.UUID.generate,
+          title: "Do you smoke?",
+          prompt: prompt(
+            sms: sms_prompt("Do you smoke? Reply 1 for YES, 2 for NO"),
+            ivr: tts_prompt("Do you smoke? Press 8 for YES, 9 for NO")
+          ),
+          store: "Smokes",
+          choices: [
+            choice(value: "Yes", responses: responses(sms: ["Yes", "Y", "1"], ivr: ["8"])),
+            choice(value: "No", responses: responses(sms: ["No", "N", "2"], ivr: ["9"]))
+          ],
+          relevant: true
+        ),
+        multiple_choice_step(
+          id: Ecto.UUID.generate,
+          title: "Do you exercise",
+          prompt: prompt(
+            sms: sms_prompt("Do you exercise? Reply 1 for YES, 2 for NO"),
+            ivr: tts_prompt("Do you exercise? Press 1 for YES, 2 for NO")
+          ),
+          store: "Exercises",
+          choices: [
+            choice(value: "Yes", responses: responses(sms: ["Yes", "Y", "1"], ivr: ["1"])),
+            choice(value: "No", responses: responses(sms: ["No", "N", "2"], ivr: ["2"]))
+          ]
+        ),
+        numeric_step(
+          id: Ecto.UUID.generate,
+          title: "Which is the second perfect number?",
+          prompt: prompt(
+            sms: sms_prompt("Which is the second perfect number??"),
+            ivr: tts_prompt("Which is the second perfect number")
+          ),
+          store: "Perfect Number",
+          skip_logic: default_numeric_skip_logic(),
+          alphabetical_answers: false,
+          refusal: %{
+            "enabled" => true,
+            "responses" => %{
+              "sms" => %{
+                "en" => ["#", "0"],
+                "skip_logic" => nil
+              },
+              "ivr" => %{
+                "en" => ["#", "0"],
+                "skip_logic" => nil
+              }
+            }
+          },
+          relevant: true
+        ),
+        numeric_step(
+          id: Ecto.UUID.generate,
+          title: "What's the number of this question?",
+          prompt: prompt(
+            sms: sms_prompt("What's the number of this question??"),
+            ivr: tts_prompt("What's the number of this question")
+          ),
+          store: "Question",
+          skip_logic: default_numeric_skip_logic(),
+          alphabetical_answers: false,
+          refusal: nil
+        )
+      ]
+
+  def odd_relevant_with_multiple_choice_refusal(), do: [
+    multiple_choice_step(
+     id: Ecto.UUID.generate,
+     title: "Do you smoke?",
+     prompt: prompt(
+       sms: sms_prompt("Do you smoke? Reply 1 for YES, 2 for NO"),
+       ivr: tts_prompt("Do you smoke? Press 8 for YES, 9 for NO")
+     ),
+     store: "Smokes",
+     choices: [
+       choice(value: "Yes", responses: responses(sms: ["Yes", "Y", "1"], ivr: ["8"])),
+       choice(value: "No", responses: responses(sms: ["No", "N", "2"], ivr: ["9"])),
+       choice(value: "Skip", responses: responses(sms: ["skip", "S", "#"], ivr: ["#"]))
+     ],
+     relevant: true
+    ),
+    multiple_choice_step(
+     id: Ecto.UUID.generate,
+     title: "Do you exercise",
+     prompt: prompt(
+       sms: sms_prompt("Do you exercise? Reply 1 for YES, 2 for NO"),
+       ivr: tts_prompt("Do you exercise? Press 1 for YES, 2 for NO")
+     ),
+     store: "Exercises",
+     choices: [
+       choice(value: "Yes", responses: responses(sms: ["Yes", "Y", "1"], ivr: ["1"])),
+       choice(value: "No", responses: responses(sms: ["No", "N", "2"], ivr: ["2"]))
+     ]
+    ),
+    numeric_step(
+     id: Ecto.UUID.generate,
+     title: "Which is the second perfect number?",
+     prompt: prompt(
+       sms: sms_prompt("Which is the second perfect number??"),
+       ivr: tts_prompt("Which is the second perfect number")
+     ),
+     store: "Perfect Number",
+     skip_logic: default_numeric_skip_logic(),
+     alphabetical_answers: false,
+     refusal: nil,
+     relevant: true
+    ),
+    numeric_step(
+     id: Ecto.UUID.generate,
+     title: "What's the number of this question?",
+     prompt: prompt(
+       sms: sms_prompt("What's the number of this question??"),
+       ivr: tts_prompt("What's the number of this question")
+     ),
+     store: "Question",
+     skip_logic: default_numeric_skip_logic(),
+     alphabetical_answers: false,
+     refusal: nil
+    )
+  ]
+
+  def relevant_steps_in_multiple_sections(), do: [
+    section(id: "section 1", title: "First section", randomize: false, steps: [
+      multiple_choice_step(
+      id: Ecto.UUID.generate,
+      title: "Do you sleep well?",
+      prompt: prompt(
+        sms: sms_prompt("Do you sleep well? Reply 1 for YES, 2 for NO"),
+        ivr: tts_prompt("Do you sleep well? Press 8 for YES, 9 for NO")
+      ),
+      store: "Sleep",
+      choices: [
+        choice(value: "Yes", responses: responses(sms: ["Yes", "Y", "1"], ivr: ["8"])),
+        choice(value: "No", responses: responses(sms: ["No", "N", "2"], ivr: ["9"]))
+      ],
+      relevant: true
+    ),
+    numeric_step(
+     id: Ecto.UUID.generate,
+     title: "How many hours do you sleep?",
+     prompt: prompt(
+       sms: sms_prompt("How many hours do you sleep??"),
+       ivr: tts_prompt("How many hours do you sleep")
+     ),
+     store: "SleepHours",
+     skip_logic: default_numeric_skip_logic(),
+     alphabetical_answers: false,
+     refusal: nil
+    )
+    ]),
+    section(id: "section 2", title: "Second section", randomize: false, steps: all_relevant_steps()),
+  ]
+end

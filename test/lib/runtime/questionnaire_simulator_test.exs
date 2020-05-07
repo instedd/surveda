@@ -4,6 +4,7 @@ defmodule QuestionnaireSimulatorTest do
   import Ask.Factory
   alias Ask.Runtime.{QuestionnaireSimulator, QuestionnaireSimulatorStore}
   alias Ask.{Questionnaire, Repo, Simulation}
+  alias Ask.QuestionnaireRelevantSteps
 
   setup do
     project = insert(:project)
@@ -158,6 +159,57 @@ defmodule QuestionnaireSimulatorTest do
 
       assert Simulation.Status.ended == status
       assert "partial" == disposition
+    end
+  end
+
+  describe "questionnaire with relevant steps" do
+    test "if respondent answers min_relevant_steps, disposition should be 'interim partial'", %{project: project} do
+      steps = QuestionnaireRelevantSteps.all_relevant_steps()
+      quiz = questionnaire_with_steps(steps) |> Questionnaire.changeset(%{partial_relevant_config: %{"enabled" => true, "min_relevant_steps" => 2, "ignored_values" => ""}}) |> Repo.update!
+      %{respondent_id: respondent_id, disposition: disposition} = QuestionnaireSimulator.start_simulation(project, quiz)
+      assert "contacted" == disposition
+
+      %{disposition: disposition} = QuestionnaireSimulator.process_respondent_response(respondent_id, "No")
+      assert "started" == disposition
+
+      %{disposition: disposition} = QuestionnaireSimulator.process_respondent_response(respondent_id, "Yes")
+      assert "interim partial" == disposition
+    end
+
+    test "once the respondent reaches 'interim partial', simulation should return such disposition until completes the survey", %{project: project} do
+      steps = QuestionnaireRelevantSteps.all_relevant_steps()
+      quiz = questionnaire_with_steps(steps) |> Questionnaire.changeset(%{partial_relevant_config: %{"enabled" => true, "min_relevant_steps" => 2, "ignored_values" => ""}}) |> Repo.update!
+      %{respondent_id: respondent_id, disposition: disposition} = QuestionnaireSimulator.start_simulation(project, quiz)
+      assert "contacted" == disposition
+
+      %{disposition: disposition} = QuestionnaireSimulator.process_respondent_response(respondent_id, "No")
+      assert "started" == disposition
+
+      %{disposition: disposition} = QuestionnaireSimulator.process_respondent_response(respondent_id, "Yes")
+      assert "interim partial" == disposition
+
+      %{disposition: disposition} = QuestionnaireSimulator.process_respondent_response(respondent_id, "7")
+      assert "interim partial" == disposition
+
+      %{disposition: disposition, simulation_status: status} = QuestionnaireSimulator.process_respondent_response(respondent_id, "4")
+      assert "completed" == disposition
+      assert Simulation.Status.ended == status
+    end
+
+    test "if respondent answer min_relevant_steps, even of different sections, disposition should be 'interim partial'", %{project: project} do
+      steps = QuestionnaireRelevantSteps.relevant_steps_in_multiple_sections()
+      quiz = questionnaire_with_steps(steps) |> Questionnaire.changeset(%{partial_relevant_config: %{"enabled" => true, "min_relevant_steps" => 2, "ignored_values" => ""}}) |> Repo.update!
+      %{respondent_id: respondent_id, disposition: disposition} = QuestionnaireSimulator.start_simulation(project, quiz)
+      assert "contacted" == disposition
+
+      %{disposition: disposition} = QuestionnaireSimulator.process_respondent_response(respondent_id, "No") # First relevant
+      assert "started" == disposition
+
+      %{disposition: disposition} = QuestionnaireSimulator.process_respondent_response(respondent_id, "5")
+      assert "started" == disposition
+
+      %{disposition: disposition} = QuestionnaireSimulator.process_respondent_response(respondent_id, "No") # Second relevant, in different section
+      assert "interim partial" == disposition
     end
   end
 
