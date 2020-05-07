@@ -14,7 +14,7 @@ defmodule Ask.Runtime.SessionModeProvider do
 
   def new(nil, _channel, _retries), do: nil
 
-  def new(_mode, %Ask.Runtime.SimulatorChannel{} = channel, retries) do
+  def new("sms", %Ask.Runtime.SimulatorChannel{} = channel, retries) do
     SMSSimulatorMode.new(channel, retries)
   end
 
