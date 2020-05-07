@@ -232,27 +232,28 @@ defmodule Ask.Runtime.Survey do
   end
 
   defp respondent_updates(:rejected, respondent, session, timeout_at, persist) do
-    session = if session != nil, do: Session.dump(session), else: nil
-    changes = %{state: "rejected", session: session, timeout_at: timeout_at}
+    session_dump = if session != nil && persist, do: Session.dump(session), else: session
+    changes = %{state: "rejected", session: session_dump, timeout_at: timeout_at}
     Respondent.update(respondent, changes, persist)
   end
 
   defp respondent_updates(:no_disposition, respondent, session, timeout_at, persist) do
-    changes = no_disposition_changes(respondent, session, timeout_at)
+    changes = no_disposition_changes(respondent, session, timeout_at, persist)
     Respondent.update(respondent, changes, persist)
   end
 
   defp respondent_updates(:ok, respondent, session, disposition, timeout_at, persist) do
     if disposition do
-      intended_changes = %{session: Session.dump(session), timeout_at: timeout_at, disposition: disposition, state: "active"}
-      changes = respondent_updates_with_disposition(respondent, session, timeout_at, intended_changes)
+      session_dump = if persist, do: Session.dump(session), else: session
+      intended_changes = %{session: session_dump, timeout_at: timeout_at, disposition: disposition, state: "active"}
+      changes = respondent_updates_with_disposition(respondent, session, timeout_at, intended_changes, persist)
       Respondent.update(respondent, changes, persist)
     else
       respondent_updates(:no_disposition, respondent, session, timeout_at, persist)
     end
   end
 
-  defp no_disposition_changes(respondent, session, timeout_at) do
+  defp no_disposition_changes(respondent, session, timeout_at, persist) do
     effective_modes = respondent.effective_modes || []
     effective_modes =
       if session do
@@ -261,8 +262,8 @@ defmodule Ask.Runtime.Survey do
       else
         effective_modes
       end
-
-    %{state: "active", session: Session.dump(session), timeout_at: timeout_at, language: session.flow.language, effective_modes: effective_modes}
+    session_dump = if persist, do: Session.dump(session), else: session
+    %{state: "active", session: session_dump, timeout_at: timeout_at, language: session.flow.language, effective_modes: effective_modes}
   end
 
   defp session_mode(_respondent, session, nil) do
@@ -307,7 +308,7 @@ defmodule Ask.Runtime.Survey do
           #   IO.inspect System.stacktrace()
           #   raise e
           # end
-          respondent = Repo.get(Respondent, session.respondent.id)
+          respondent = if persist, do: Repo.get(Respondent, session.respondent.id), else: session.respondent
           Logger.error(e, "Error occurred while processing sync step (survey_id: #{respondent.survey_id}, respondent_id: #{respondent.id})")
           Sentry.capture_exception(e, [
             stacktrace: System.stacktrace(),
@@ -339,12 +340,12 @@ defmodule Ask.Runtime.Survey do
     end
   end
 
-  defp respondent_updates_with_disposition(respondent, session, timeout, %{disposition: disposition} =  changes) do
+  defp respondent_updates_with_disposition(respondent, session, timeout, %{disposition: disposition} =  changes, persist) do
     old_disposition = respondent.disposition
     if Flow.should_update_disposition(old_disposition, disposition) do
       changes
     else
-      no_disposition_changes(respondent, session, timeout)
+      no_disposition_changes(respondent, session, timeout, persist)
     end
   end
 

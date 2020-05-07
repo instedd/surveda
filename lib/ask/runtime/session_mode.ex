@@ -11,9 +11,13 @@ defmodule Ask.Runtime.SessionModeProvider do
   defp mode_provider("sms"), do: SMSMode
   defp mode_provider("ivr"), do: IVRMode
   defp mode_provider("mobileweb"), do: MobileWebMode
-  defp mode_provider("sms_simulator"), do: SMSSimulatorMode
 
   def new(nil, _channel, _retries), do: nil
+
+  def new("sms", %Ask.Runtime.SimulatorChannel{} = channel, retries) do
+    SMSSimulatorMode.new(channel, retries)
+  end
+
   def new(mode, channel, retries) when not is_nil(channel) and is_list(retries) do
     mode_provider(mode).new(channel, retries)
   end
@@ -45,22 +49,22 @@ defmodule Ask.Runtime.SMSSimulatorMode do
 
   defstruct [:channel, :retries]
 
-  def new(channel, _retries), do: %SMSSimulatorMode{channel: channel, retries: []}
+  def new(channel, retries), do: %SMSSimulatorMode{channel: channel, retries: retries}
   def load(_mode_dump), do: %SMSSimulatorMode{}
 
   defimpl Ask.Runtime.SessionMode, for: Ask.Runtime.SMSSimulatorMode do
     def dump(%SMSSimulatorMode{}) do
       %{
-        mode: "sms_simulator",
+        mode: "sms",
       }
     end
 
     def visitor(_) do
-      TextVisitor.new("sms_simulator")
+      TextVisitor.new("sms")
     end
 
     def mode(_) do
-      "sms_simulator"
+      "sms"
     end
   end
 end
