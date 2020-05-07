@@ -86,13 +86,13 @@ defmodule Ask.Runtime.NuntiumChannel do
         case respondent do
           %Respondent{session: %{"current_mode" => %{"mode" => "sms"}}} ->
             case survey.sync_step(respondent, Flow.Message.reply(body), "sms") do
-              {:reply, reply} ->
+              {:reply, reply, respondent} ->
                 update_stats(respondent, reply)
                 reply
-              {:end, {:reply, reply}} ->
+              {:end, {:reply, reply}, respondent} ->
                 update_stats(respondent, reply)
                 reply
-              :end ->
+              {:end, respondent} ->
                 update_stats(respondent)
                 nil
             end

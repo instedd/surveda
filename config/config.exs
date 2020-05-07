@@ -49,6 +49,8 @@ config :ask, Ask.UrlShortener,
   url_shortener_api_key: {:system, "URL_SHORTENER_API_KEY"},
   url_shortener_service: {:system, "URL_SHORTENER_SERVICE", "https://svy.in"}
 
+config :ask, Ask.Runtime.QuestionnaireSimulatorStore, simulation_ttl: {:system, "SIMULATION_TTL", 5}
+
 config :ask, Ask.Email,
   smtp_from_address: {:system, "SMTP_FROM_ADDRESS", "InSTEDD Surveda <noreply@instedd.org>"}
 

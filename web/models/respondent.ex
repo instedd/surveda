@@ -133,10 +133,19 @@ defmodule Ask.Respondent do
   @doc """
   Computes the date-time on which the respondent should be retried given the timeout and time-window availability
   """
-  def next_actual_timeout(%Respondent{} = respondent, timeout, now) do
+  def next_actual_timeout(%Respondent{} = respondent, timeout, now, persist \\ true) do
     timeout_at = next_timeout_lowerbound(timeout, now)
-    (respondent |> Repo.preload(:survey)).survey
+    respondent
+    |> survey(persist)
     |> Survey.next_available_date_time(timeout_at)
+  end
+
+  defp survey(respondent, persist) do
+    if(persist) do
+      (respondent |> Repo.preload(:survey)).survey
+    else
+      respondent.survey
+    end
   end
 
   @doc """
@@ -156,5 +165,15 @@ defmodule Ask.Respondent do
                    |> respondent_modifier.()
       operation.(respondent)
     end)
+  end
+
+  def update(respondent, changes, persist) do
+    if(persist) do
+      respondent
+      |> Respondent.changeset(changes)
+      |> Repo.update!
+    else
+      Map.merge(respondent, changes)
+    end
   end
 end
