@@ -46,13 +46,27 @@ class SmsSimulator extends Component<Props, State> {
     }
   }
 
+  handleMessageResult = result => {
+    const { smsSimulation } = this.state
+    // When the simulation expires we avoid refreshing (and so, erasing) the current state
+    // So we only update the simulation status to expired
+    // This allow us to handle this particular situation properly
+    const newSmsSimulation = result.simulationStatus == 'expired'
+      ? {
+        ...smsSimulation,
+        simulationStatus: 'expired'
+      }
+      : result
+    this.setState({ smsSimulation: newSmsSimulation })
+  }
+
   handleATMessage = message => {
     const { projectId, questionnaireId } = this.props
     const { smsSimulation } = this.state
     if (smsSimulation) {
       this.addMessage(message)
       messageSmsSimulation(projectId, questionnaireId, smsSimulation.respondentId, message.body).then(result => {
-        this.setState({ smsSimulation: result })
+        this.handleMessageResult(result)
       })
     }
   }
