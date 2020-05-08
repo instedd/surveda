@@ -234,22 +234,22 @@ defmodule Ask.Runtime.VerboiceChannel do
     Survey.channel_failed(respondent, status)
   end
 
-  defp update_call_time_seconds(respondent, call_sid, call_time) do
+  defp update_call_time_seconds(respondent, call_sid, call_uuid, call_time) do
     stats = respondent.stats
-    |> Stats.with_call_time(call_sid, call_time)
+    |> Stats.with_call_time("#{call_sid}:#{call_uuid}", call_time)
 
     respondent
     |> Respondent.changeset(%{stats: stats})
     |> Repo.update!
   end
 
-  def callback(conn, %{"path" => ["status", respondent_id, _token], "CallStatus" => status, "CallDuration" => call_duration_seconds, "CallSid" => call_sid} = params) do
+  def callback(conn, %{"path" => ["status", respondent_id, call_uuid], "CallStatus" => status, "CallDuration" => call_duration_seconds, "CallSid" => call_sid} = params) do
     call_duration = call_duration_seconds |> String.to_integer
     Respondent.with_lock(respondent_id, fn respondent ->
       case respondent do
         nil -> :ok # Ignore the callback if the respondent doesn't exist
         respondent ->
-          respondent = update_call_time_seconds(respondent, call_sid, call_duration)
+          respondent = update_call_time_seconds(respondent, call_sid, call_uuid, call_duration)
           case status do
             "expired" ->
               # respondent is still being considered as active in Surveda
