@@ -137,10 +137,10 @@ defmodule Ask.Simulation.SubmittedStep do
   def build_from(reply, questionnaire) do
     responses = Reply.stores(reply)
                 |> Enum.map(fn {step_name, value} ->
-                  referred_step = questionnaire |> Questionnaire.all_steps |> Enum.filter(fn step -> step["store"] == step_name end)
-                  # hd function is used since there is a restriction that two steps cannot have the same store variable name
-                  id = referred_step |> Enum.map(fn step -> step["id"] end) |> hd
-                  title = referred_step |> Enum.map(fn step -> step["title"] end) |> hd
+                  # find function is used since there is a restriction that two steps cannot have the same store variable name
+                  %{"title" => title, "id" => id} = questionnaire
+                                                    |> Questionnaire.all_steps
+                                                    |> Enum.find(fn step -> step["store"] == step_name end)
                   %{step: title, response: value, id: id}
     end)
 
