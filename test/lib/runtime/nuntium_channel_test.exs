@@ -28,6 +28,21 @@ defmodule Ask.Runtime.NuntiumChannelTest do
     }
   end
 
+  test "callback with {:end, reply, respondent} without reply.steps", %{conn: conn, respondent: respondent} do
+    respondent_id = respondent.id
+    GenServer.cast(SurveyStub.server_ref, {:expects, fn
+      {:sync_step, %Respondent{id: ^respondent_id}, {:reply, "yes"}, "sms"} ->
+        {:end, {:reply, %Ask.Runtime.Reply{}}, respondent}
+    end})
+    conn = NuntiumChannel.callback(conn, %{"channel" => "chan1", "from" => "sms://123456", "body" => "yes"}, SurveyStub)
+    assert json_response(conn, 200) == []
+
+    assert Repo.get(Respondent, respondent.id).stats == %Ask.Stats{
+      total_received_sms: 1,
+      total_sent_sms: 0
+    }
+  end
+
   test "callback with {:end, respondent}", %{conn: conn, respondent: respondent} do
     respondent_id = respondent.id
     GenServer.cast(SurveyStub.server_ref, {:expects, fn
@@ -38,9 +53,9 @@ defmodule Ask.Runtime.NuntiumChannelTest do
     assert json_response(conn, 200) == []
 
     assert Repo.get(Respondent, respondent.id).stats == %Ask.Stats{
-      total_received_sms: 1,
-      total_sent_sms: 0
-    }
+             total_received_sms: 1,
+             total_sent_sms: 0
+           }
   end
 
   test "callback with :end, :prompt", %{conn: conn, respondent: respondent} do

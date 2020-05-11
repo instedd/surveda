@@ -12,9 +12,9 @@ defmodule QuestionnaireSimulatorTest do
     {:ok, project: project}
   end
 
-  def questionnaire_with_steps(steps) do
+  def questionnaire_with_steps(steps, thank_you_message \\ %{"en" => %{"sms" => "Thank you for taking the survey"}}) do
     insert(:questionnaire, steps: steps)
-    |> Questionnaire.changeset(%{settings: %{"thank_you_message" => %{"en" => %{"sms" => "Thank you for taking the survey"}}, "error_message" => %{"en" => %{"sms" => "Sorry, that was not a valid response"}}}})
+    |> Questionnaire.changeset(%{settings: %{"thank_you_message" => thank_you_message, "error_message" => %{"en" => %{"sms" => "Sorry, that was not a valid response"}}}})
     |> Repo.update!
   end
 
@@ -90,6 +90,46 @@ defmodule QuestionnaireSimulatorTest do
       %{respondent_id: respondent_id} = QuestionnaireSimulator.start_simulation(project, quiz)
       %{submissions: submissions} = QuestionnaireSimulator.process_respondent_response(respondent_id, "perhaps")
       assert [] == submissions
+    end
+
+    test "should include all the responses", %{project: project} do
+      steps = @dummy_steps
+      quiz = questionnaire_with_steps(steps)
+      %{respondent_id: respondent_id} = QuestionnaireSimulator.start_simulation(project, quiz)
+
+      QuestionnaireSimulator.process_respondent_response(respondent_id, "1") # 1 is a yes response
+      QuestionnaireSimulator.process_respondent_response(respondent_id, "Y") # Y is a yes response
+      QuestionnaireSimulator.process_respondent_response(respondent_id, "7") # numeric response
+      %{submissions: submissions} = QuestionnaireSimulator.process_respondent_response(respondent_id, "4") # numeric response
+
+      [first, second, third, fourth] = steps
+      expected_submissions = [
+        expected_submission(first, "Yes"),
+        expected_submission(second, "Yes"),
+        expected_submission(third, "7"),
+        expected_submission(fourth, "4")
+      ]
+      assert expected_submissions == submissions
+    end
+
+    test "should include all the responses even if the quiz doesn't have a thank-you-message", %{project: project} do
+      steps = @dummy_steps
+      quiz = questionnaire_with_steps(steps, nil)
+      %{respondent_id: respondent_id} = QuestionnaireSimulator.start_simulation(project, quiz)
+
+      QuestionnaireSimulator.process_respondent_response(respondent_id, "1") # 1 is a yes response
+      QuestionnaireSimulator.process_respondent_response(respondent_id, "Y") # Y is a yes response
+      QuestionnaireSimulator.process_respondent_response(respondent_id, "7") # numeric response
+      %{submissions: submissions} = QuestionnaireSimulator.process_respondent_response(respondent_id, "4") # numeric response
+
+      [first, second, third, fourth] = steps
+      expected_submissions = [
+        expected_submission(first, "Yes"),
+        expected_submission(second, "Yes"),
+        expected_submission(third, "7"),
+        expected_submission(fourth, "4")
+      ]
+      assert expected_submissions == submissions
     end
   end
 
@@ -236,6 +276,9 @@ defmodule QuestionnaireSimulatorTest do
     assert "Thank you for taking the survey" == List.last(messages).body
     assert Ask.Simulation.Status.ended == status
   end
+
+  defp expected_submission(step, response), do: %{step: step["title"], id: step["id"], response: response}
+
 end
 
 

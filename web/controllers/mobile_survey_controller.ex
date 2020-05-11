@@ -84,7 +84,10 @@ defmodule Ask.MobileSurveyController do
             {:reply, reply, _} ->
               {first_step(reply), progress(reply), reply.error_message}
             {:end, {:reply, reply}, _} ->
-              {first_step(reply), progress(reply), reply.error_message}
+              case Reply.steps(reply) do
+                [] -> {end_step(), end_progress(), nil}
+                _ -> {first_step(reply), progress(reply), reply.error_message}
+              end
             {:end, _} ->
               {end_step(), end_progress(), nil}
           end

@@ -50,11 +50,13 @@ defmodule Ask.Runtime.Survey do
     - the session ends with the current step, but a last reply must be given to the respondent
     - the session ends with the current step
 
-  Respondent is returned so that there is visibility of the changes that were made to it
+  * Keep in mind that the returned reply may or may not contain steps to send to the respondent
+
+  * Respondent is returned so that there is visibility of the changes that were made to it
 
   Possible return patterns:
     - {:reply, reply, respondent}
-    - {:end, reply, respondent}
+    - {:end, {:reply, reply}, respondent}
     - {:end, respondent}
   """
   def handle_session_step(session_step, now, persist \\ true)
@@ -78,7 +80,7 @@ defmodule Ask.Runtime.Survey do
     else
       updated_respondent
     end
-    {:end, updated_respondent}
+    {:end, {:reply, reply}, updated_respondent}
   end
 
   def handle_session_step({:end, reply, respondent}, _, persist) do
@@ -103,12 +105,7 @@ defmodule Ask.Runtime.Survey do
       Session.log_disposition_changed(updated_respondent, session.current_mode.channel, mode, old_disposition, new_disposition, persist)
     end
 
-    case Reply.steps(reply) do
-      [] ->
-        {:end, updated_respondent}
-      _ ->
-        {:end, {:reply, reply}, updated_respondent}
-    end
+    {:end, {:reply, reply}, updated_respondent}
   end
 
   def handle_session_step({:rejected, reply, respondent}, _, persist) do
@@ -134,7 +131,7 @@ defmodule Ask.Runtime.Survey do
     else
       updated_respondent
     end
-    {:end, updated_respondent}
+    {:end, {:reply, reply}, updated_respondent}
   end
 
   def handle_session_step({:failed, respondent}, _, persist) do

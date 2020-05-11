@@ -35,6 +35,8 @@ defmodule Ask.Runtime.VerboiceChannelTest do
         {Flow.Message.answer, {:end, {:reply, ReplyHelper.quota_completed(Ask.StepBuilder.tts_prompt("Bye!"))}, nil}, "<Response><Say>Bye!</Say><Hangup/></Response>"},
         {Flow.Message.answer, {:reply, ReplyHelper.simple("Step", Ask.StepBuilder.audio_prompt(uuid: "foo", text: "Do you exercise?")), nil}, "<Play>#{Ask.Endpoint.url}/audio/foo.mp3</Play>"},
         {Flow.Message.reply("8"), {:reply, ReplyHelper.simple("Step", Ask.StepBuilder.audio_prompt(uuid: "foo", text: "Do you exercise?")), nil}, "<Play>#{Ask.Endpoint.url}/audio/foo.mp3</Play>"},
+        {Flow.Message.reply("8"), {:end, {:reply, %Ask.Runtime.Reply{}}, nil}, "<Response><Hangup/></Response>"},
+
       ]
     }
   end
