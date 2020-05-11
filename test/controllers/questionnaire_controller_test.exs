@@ -134,9 +134,8 @@ defmodule Ask.QuestionnaireControllerTest do
     test "don't show deleted questionnaire", %{conn: conn, user: user} do
       project = create_project_for_user(user)
       questionnaire = insert(:questionnaire, project: project, deleted: true)
-      assert_error_sent 404, fn ->
-        get conn, project_questionnaire_path(conn, :show, questionnaire.project, questionnaire)
-      end
+      conn = get conn, project_questionnaire_path(conn, :show, questionnaire.project, questionnaire)
+      assert json_response(conn, 404) == %{"error" => "Not found"}
     end
   end
 

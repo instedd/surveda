@@ -10,11 +10,11 @@ defmodule Ask.QuestionnaireSimulationStep do
   defstruct [:respondent_id, :simulation_status, :disposition, messages_history: [], submissions: []]
 
   def build(%QuestionnaireSimulation{respondent: respondent, messages: all_messages, submissions: submissions}, status) do
-    %QuestionnaireSimulationStep{respondent_id: respondent.id, disposition: respondent.disposition, messages_history: all_messages, simulation_status: status, submissions: submissions}
+    {:ok, %QuestionnaireSimulationStep{respondent_id: respondent.id, disposition: respondent.disposition, messages_history: all_messages, simulation_status: status, submissions: submissions}}
   end
 
   def expired(respondent_id) do
-    %QuestionnaireSimulationStep{respondent_id: respondent_id, simulation_status: Status.expired}
+    {:ok, %QuestionnaireSimulationStep{respondent_id: respondent_id, simulation_status: Status.expired}}
   end
 end
 
@@ -71,7 +71,7 @@ defmodule Ask.Runtime.QuestionnaireSimulator do
   end
 
   def start_simulation(_project, _questionnaire, _mode) do
-    :not_implemented
+    {:error, :not_implemented}
   end
 
   # Must update the respondent.session's respondent since if not will be outdated from respondent
