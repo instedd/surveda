@@ -130,7 +130,7 @@ defmodule Ask.Runtime.Survey do
   def handle_session_step({:stopped, reply, respondent}, _, persist) do
     updated_respondent = respondent_updates(:stopped, respondent, Reply.disposition(reply), persist)
     updated_respondent = if(disposition_changed?(respondent, updated_respondent)) do
-      disposition_changed(updated_respondent, respondent.session |> Session.load, respondent.disposition, persist)
+      disposition_changed(updated_respondent, Session.load_respondent_session(respondent, persist), respondent.disposition, persist)
     else
       updated_respondent
     end
@@ -143,13 +143,13 @@ defmodule Ask.Runtime.Survey do
   end
 
   def failed_session(respondent, persist) do
-    session = respondent.session |> Session.load
+    session = Session.load_respondent_session(respondent, persist)
     mode = session.current_mode |> SessionMode.mode
     old_disposition = respondent.disposition
     new_disposition = Flow.failed_disposition_from(respondent.disposition)
 
     updated_respondent = respondent_updates(:failed, respondent, persist)
-    Session.log_disposition_changed(updated_respondent, session.current_mode.channel, mode, old_disposition, new_disposition)
+    Session.log_disposition_changed(updated_respondent, session.current_mode.channel, mode, old_disposition, new_disposition, persist)
     disposition_changed(updated_respondent, session, old_disposition, persist)
   end
 
@@ -187,15 +187,15 @@ defmodule Ask.Runtime.Survey do
     delivery_confirm(respondent, title, nil)
   end
 
-  def delivery_confirm(respondent, title, mode) do
+  def delivery_confirm(respondent, title, mode, persist \\ true) do
     unless respondent.session == nil do
-      session = respondent.session |> Session.load
+      session = Session.load_respondent_session(respondent, persist)
       session_mode =
         case session_mode(respondent, session, mode) do
           :invalid_mode -> session.current_mode
           mode -> mode
         end
-      Session.delivery_confirm(session, title, session_mode)
+      Session.delivery_confirm(session, title, session_mode, persist)
     end
   end
 

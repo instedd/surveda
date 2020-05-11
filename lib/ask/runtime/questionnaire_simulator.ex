@@ -43,7 +43,7 @@ defmodule Ask.Runtime.QuestionnaireSimulator do
       started_at: Timex.now
     }
 
-    respondent = %Respondent{
+    new_respondent = %Respondent{
       id: Ecto.UUID.generate(),
       survey_id: survey.id,
       survey: survey,
@@ -52,23 +52,38 @@ defmodule Ask.Runtime.QuestionnaireSimulator do
       disposition: "queued",
       phone_number: "",
       canonical_phone_number: "",
-      sanitized_phone_number: ""
+      sanitized_phone_number: "",
+      responses: []
     }
 
-    {:ok, session, _reply, _timeout} = session_started = Session.start(questionnaire, respondent, %Ask.Runtime.SimulatorChannel{}, @sms_mode, Ask.Schedule.always(), [], nil, nil, [], nil, false, false)
+    # Simulating what Broker does when starting a respondent: Session.start and then Survey.handle_session_step
+    session_started = Session.start(questionnaire, new_respondent, %Ask.Runtime.SimulatorChannel{}, @sms_mode, Ask.Schedule.always(), [], nil, nil, [], nil, false, false)
     {:reply, reply, respondent} = Runtime.Survey.handle_session_step(session_started, SystemTime.time.now, false)
 
-    reply_messages = reply_to_messages(reply)
-    messages = AOMessage.create_all(reply_messages)
-    updated_respondent = %Respondent{respondent | session: session}
+    # Simulating Nuntium confirmation on message delivery
+    %{respondent: respondent} = Runtime.Survey.delivery_confirm(sync_respondent(respondent), "", @sms_mode, false)
+
+    messages = reply |> reply_to_messages |> AOMessage.create_all
     submitted_steps = SubmittedStep.build_from(reply, questionnaire)
 
-    QuestionnaireSimulatorStore.add_respondent_simulation(respondent.id, %Ask.QuestionnaireSimulation{questionnaire: questionnaire, respondent: updated_respondent, messages: messages, submissions: submitted_steps})
+    QuestionnaireSimulatorStore.add_respondent_simulation(respondent.id, %Ask.QuestionnaireSimulation{questionnaire: questionnaire, respondent: sync_respondent(respondent), messages: messages, submissions: submitted_steps})
     |> QuestionnaireSimulationStep.build(Status.active)
   end
 
   def start_simulation(_project, _questionnaire, _mode) do
     :not_implemented
+  end
+
+  # Must update the respondent.session's respondent since if not will be outdated from respondent
+  # This is necessary since some flows:
+  #  - start using the respondent,
+  #  - then use the respondent.session
+  #  - and after that use the session.respondent
+  #
+  # If not synced, respondent data would be loss during simulation and the simulation could behave inaccurately
+  defp sync_respondent(respondent) do
+    synced_session = if respondent.session, do: %{respondent.session | respondent: respondent}, else: respondent.session
+    %{respondent | session: synced_session}
   end
 
   def process_respondent_response(respondent_id, response) do
@@ -95,10 +110,9 @@ defmodule Ask.Runtime.QuestionnaireSimulator do
   def handle_app_reply(simulation, respondent, reply, status) do
     reply_messages = reply_to_messages(reply) |> AOMessage.create_all
     messages = simulation.messages ++ reply_messages
-
     submitted_steps = simulation.submissions ++ SubmittedStep.build_from(reply, simulation.questionnaire)
 
-    QuestionnaireSimulatorStore.add_respondent_simulation(respondent.id, %Ask.QuestionnaireSimulation{simulation | respondent: respondent, messages: messages, submissions: submitted_steps})
+    QuestionnaireSimulatorStore.add_respondent_simulation(respondent.id, %Ask.QuestionnaireSimulation{simulation | respondent: sync_respondent(respondent), messages: messages, submissions: submitted_steps})
     |> QuestionnaireSimulationStep.build(status)
   end
 
@@ -123,9 +137,10 @@ defmodule Ask.Simulation.SubmittedStep do
   def build_from(reply, questionnaire) do
     responses = Reply.stores(reply)
                 |> Enum.map(fn {step_name, value} ->
-                  referred_step = questionnaire |> Questionnaire.all_steps |> Enum.filter(fn step -> step["store"] == step_name end)
-                  [id] = referred_step |> Enum.map(fn step -> step["id"] end)
-                  [title] = referred_step |> Enum.map(fn step -> step["title"] end)
+                  # find function is used since there is a restriction that two steps cannot have the same store variable name
+                  %{"title" => title, "id" => id} = questionnaire
+                                                    |> Questionnaire.all_steps
+                                                    |> Enum.find(fn step -> step["store"] == step_name end)
                   %{step: title, response: value, id: id}
     end)
 
