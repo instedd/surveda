@@ -7,11 +7,13 @@ import { bindActionCreators } from 'redux'
 import { startSmsSimulation, messageSmsSimulation } from '../../api.js'
 import ChatWindow from './ChatWindow'
 import DispositionChart from './DispositionChart'
+import SimulationSteps from './SimulationSteps'
 
 type Props = {
   projectId: number,
   questionnaireId: number,
-  questionnaireActions: Object
+  questionnaireActions: Object,
+  questionnaire: Object
 }
 
 type ChatMessage = {
@@ -19,11 +21,18 @@ type ChatMessage = {
   body: string
 }
 
+type Submission = {
+  id: string, // stepId
+  response: ?string
+}
+
 type SmsSimulation = {
   messagesHistory: Array<ChatMessage>,
+  submissions: Array<Submission>,
   simulationStatus: string,
   disposition: string,
-  respondentId: string
+  respondentId: string,
+  currentStep: string
 }
 
 type State = {
@@ -87,6 +96,7 @@ class SmsSimulator extends Component<Props, State> {
   }
 
   render() {
+    const { questionnaire } = this.props
     const { smsSimulation } = this.state
     const simulationIsAvailable = smsSimulation && ['active', 'ended', 'expired'].includes(smsSimulation.simulationStatus)
     const simulationIsExpired = smsSimulation && smsSimulation.simulationStatus == 'expired'
@@ -94,7 +104,7 @@ class SmsSimulator extends Component<Props, State> {
     const renderError = msg => <div className='error'>{msg}</div>
     const header = <header>
       {
-        smsSimulation
+        smsSimulation && questionnaire
         ? simulationIsAvailable
           ? simulationIsExpired
             ? renderError('This simulation is expired. Please refresh to start a new one')
@@ -105,12 +115,17 @@ class SmsSimulator extends Component<Props, State> {
     </header>
     const main = <main>
       {
-        smsSimulation && simulationIsAvailable
+        smsSimulation && questionnaire && simulationIsAvailable
         ? <div>
           <div className='col s12 m4'>
             <DispositionChart disposition={smsSimulation.disposition} />
           </div>
-          <div className='col s12 m4' />
+          <div className='col s12 m4'>
+            <SimulationSteps steps={questionnaire.steps}
+              currentStepId={smsSimulation.currentStep}
+              submissions={smsSimulation.submissions}
+            />
+          </div>
           <div className='col s12 m4'>
             <ChatWindow messages={smsSimulation.messagesHistory} onSendMessage={this.handleATMessage} chatTitle={'SMS mode'} readOnly={!simulationIsActive} />
           </div>
@@ -128,7 +143,8 @@ class SmsSimulator extends Component<Props, State> {
 
 const mapStateToProps = (state, ownProps) => ({
   projectId: parseInt(ownProps.params.projectId),
-  questionnaireId: parseInt(ownProps.params.questionnaireId)
+  questionnaireId: parseInt(ownProps.params.questionnaireId),
+  questionnaire: state.questionnaire.data
 })
 
 const mapDispatchToProps = (dispatch) => ({
