@@ -227,7 +227,7 @@ defmodule Ask.Runtime.VerboiceChannelTest do
       refute respondent.stats.total_call_time
       refute respondent.stats.total_call_time_seconds
       assert respondent.stats.call_durations
-      assert respondent.stats.call_durations["6B8F5B7B-E412-46D3-96E1-688215F43CC3:token"] == 10
+      assert respondent.stats.call_durations["6B8F5B7B-E412-46D3-96E1-688215F43CC3"] == 10
 
       :ok = broker |> GenServer.stop
     end
@@ -257,7 +257,7 @@ defmodule Ask.Runtime.VerboiceChannelTest do
 
       :ok = logger |> GenServer.stop
 
-      respondent |> assert_respondent_state("some-id", "token", 11, "(42)")
+      respondent |> assert_respondent_state("some-id", 11, "(42)")
 
       :ok = broker |> GenServer.stop
     end
@@ -288,7 +288,7 @@ defmodule Ask.Runtime.VerboiceChannelTest do
 
       :ok = logger |> GenServer.stop
 
-      respondent |> assert_respondent_state("id with spaces", "token", 12, "some random reason")
+      respondent |> assert_respondent_state("id with spaces", 12, "some random reason")
 
       :ok = broker |> GenServer.stop
     end
@@ -319,7 +319,7 @@ defmodule Ask.Runtime.VerboiceChannelTest do
 
       :ok = logger |> GenServer.stop
 
-      respondent |> assert_respondent_state("12345", "token", 13, "failed")
+      respondent |> assert_respondent_state("12345", 13, "failed")
 
       :ok = broker |> GenServer.stop
     end
@@ -350,7 +350,7 @@ defmodule Ask.Runtime.VerboiceChannelTest do
 
       :ok = logger |> GenServer.stop
 
-      respondent |> assert_respondent_state("1515", "token", 14, "no-answer: another reason (foo)")
+      respondent |> assert_respondent_state("1515", 14, "no-answer: another reason (foo)")
 
       :ok = broker |> GenServer.stop
     end
@@ -381,7 +381,7 @@ defmodule Ask.Runtime.VerboiceChannelTest do
 
       :ok = logger |> GenServer.stop
 
-      respondent |> assert_respondent_state("1", "token", 15, "busy: yet another reason (bar)")
+      respondent |> assert_respondent_state("1", 15, "busy: yet another reason (bar)")
 
       :ok = broker |> GenServer.stop
     end
@@ -426,7 +426,7 @@ defmodule Ask.Runtime.VerboiceChannelTest do
       refute respondent.stats.total_call_time
       assert respondent.stats.total_call_time_seconds == 20
       assert respondent.stats.call_durations
-      assert respondent.stats.call_durations["b1eca8c0-9b77-4273-848f-c821b3dbbabf:token"] == 16
+      assert respondent.stats.call_durations["b1eca8c0-9b77-4273-848f-c821b3dbbabf"] == 16
       assert Stats.total_call_time_seconds(respondent.stats) == 36
 
       VerboiceChannel.callback(conn, %{"path" => ["status", respondent.id, "token"], "CallStatus" => "expired", "CallDuration" => "16"})
@@ -514,7 +514,7 @@ defmodule Ask.Runtime.VerboiceChannelTest do
     end
   end
 
-  defp assert_respondent_state(respondent, call_id, call_token, expected_call_duration, call_fail_reason) do
+  defp assert_respondent_state(respondent, call_id, expected_call_duration, call_fail_reason) do
     assert [enqueueing, call_failed, disposition_changed_to_failed] = (respondent |> Repo.preload(:survey_log_entries)).survey_log_entries
 
     assert enqueueing.survey_id == respondent.survey_id
@@ -536,7 +536,7 @@ defmodule Ask.Runtime.VerboiceChannelTest do
     refute respondent.stats.total_call_time
     refute respondent.stats.total_call_time_seconds
     assert respondent.stats.call_durations
-    assert respondent.stats.call_durations["#{call_id}:#{call_token}"] == expected_call_duration
+    assert respondent.stats.call_durations[call_id] == expected_call_duration
     assert Stats.total_call_time_seconds(respondent.stats) == expected_call_duration
   end
 
