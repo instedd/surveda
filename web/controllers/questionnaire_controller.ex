@@ -6,6 +6,7 @@ defmodule Ask.QuestionnaireController do
   alias Ask.Runtime.QuestionnaireSimulator
 
   plug :validate_params when action in [:create, :update]
+  action_fallback Ask.FallbackController
 
   def index(conn, %{"project_id" => project_id}) do
     project = conn
@@ -294,10 +295,14 @@ defmodule Ask.QuestionnaireController do
 
   def start_simulation(conn, %{"project_id" => project_id, "questionnaire_id" => id}) do
     project = conn |> load_project(project_id)
-    questionnaire = load_questionnaire(project, id)
-
-    simulation = QuestionnaireSimulator.start_simulation(project, questionnaire)
-    render(conn, "simulation.json", simulation: simulation)
+    try do
+        questionnaire = load_questionnaire(project, id)
+        simulation = QuestionnaireSimulator.start_simulation(project, questionnaire)
+        render(conn, "simulation.json", simulation: simulation)
+    rescue
+        _e in Ecto.NoResultsError -> # Questionnaire does not belong to project
+          {:error, :not_found}
+    end
   end
 
   def sync_simulation(conn, %{"project_id" => project_id}) do
