@@ -32,7 +32,8 @@ defmodule Ask.QuestionnaireView do
       simulation_status: simulation.simulation_status,
       disposition: simulation.disposition,
       messages_history: simulation.messages_history,
-      submissions: simulation.submissions
+      submissions: simulation.submissions,
+      current_step: simulation.current_step
     }
   end
 end

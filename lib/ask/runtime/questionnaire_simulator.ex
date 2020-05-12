@@ -7,10 +7,10 @@ defmodule Ask.QuestionnaireSimulationStep do
   alias Ask.Simulation.Status
   alias __MODULE__
 
-  defstruct [:respondent_id, :simulation_status, :disposition, messages_history: [], submissions: []]
+  defstruct [:respondent_id, :simulation_status, :disposition, :current_step, messages_history: [], submissions: []]
 
-  def build(%QuestionnaireSimulation{respondent: respondent, messages: all_messages, submissions: submissions}, status) do
-    {:ok, %QuestionnaireSimulationStep{respondent_id: respondent.id, disposition: respondent.disposition, messages_history: all_messages, simulation_status: status, submissions: submissions}}
+  def build(%QuestionnaireSimulation{respondent: respondent, messages: all_messages, submissions: submissions}, current_step, status) do
+    {:ok, %QuestionnaireSimulationStep{respondent_id: respondent.id, disposition: respondent.disposition, messages_history: all_messages, simulation_status: status, submissions: submissions, current_step: current_step}}
   end
 
   def expired(respondent_id) do
@@ -65,9 +65,10 @@ defmodule Ask.Runtime.QuestionnaireSimulator do
 
     messages = reply |> reply_to_messages |> AOMessage.create_all
     submitted_steps = SubmittedStep.build_from(reply, questionnaire)
+    current_step = current_step(reply)
 
     QuestionnaireSimulatorStore.add_respondent_simulation(respondent.id, %Ask.QuestionnaireSimulation{questionnaire: questionnaire, respondent: sync_respondent(respondent), messages: messages, submissions: submitted_steps})
-    |> QuestionnaireSimulationStep.build(Status.active)
+    |> QuestionnaireSimulationStep.build(current_step, Status.active)
   end
 
   def start_simulation(_project, _questionnaire, _mode) do
@@ -111,9 +112,17 @@ defmodule Ask.Runtime.QuestionnaireSimulator do
     reply_messages = reply_to_messages(reply) |> AOMessage.create_all
     messages = simulation.messages ++ reply_messages
     submitted_steps = simulation.submissions ++ SubmittedStep.build_from(reply, simulation.questionnaire)
+    current_step = current_step(reply)
 
     QuestionnaireSimulatorStore.add_respondent_simulation(respondent.id, %Ask.QuestionnaireSimulation{simulation | respondent: sync_respondent(respondent), messages: messages, submissions: submitted_steps})
-    |> QuestionnaireSimulationStep.build(status)
+    |> QuestionnaireSimulationStep.build(current_step, status)
+  end
+
+  defp current_step(reply) do
+    case Ask.Runtime.Reply.steps(reply) |> List.last do
+      nil -> nil
+      step -> step.id
+    end
   end
 
   defp reply_to_messages(nil), do: []
