@@ -263,26 +263,31 @@ defmodule QuestionnaireSimulatorTest do
   end
 
   defp assert_dummy_steps(project, quiz) do
-    {:ok, %{respondent_id: respondent_id, disposition: disposition, messages_history: messages, simulation_status: status}} = QuestionnaireSimulator.start_simulation(project, quiz)
+    {:ok, %{respondent_id: respondent_id, disposition: disposition, messages_history: messages, simulation_status: status, current_step: current_step}} = QuestionnaireSimulator.start_simulation(project, quiz)
     assert "contacted" == disposition
     assert "Do you smoke? Reply 1 for YES, 2 for NO" == List.last(messages).body
+    assert current_step == List.last(messages).id
     assert Ask.Simulation.Status.active == status
 
-    %{disposition: disposition, messages_history: messages} = process_respondent_response(respondent_id, "No")
+    %{disposition: disposition, messages_history: messages, current_step: current_step} = process_respondent_response(respondent_id, "No")
     assert "started" == disposition
     assert "Do you exercise? Reply 1 for YES, 2 for NO" == List.last(messages).body
+    assert current_step == List.last(messages).id
 
-    %{disposition: disposition, messages_history: messages} = process_respondent_response(respondent_id, "Yes")
+    %{disposition: disposition, messages_history: messages, current_step: current_step} = process_respondent_response(respondent_id, "Yes")
     assert "started" == disposition
     assert  "Which is the second perfect number??" == List.last(messages).body
+    assert current_step == List.last(messages).id
 
-    %{disposition: disposition, messages_history: messages} = process_respondent_response(respondent_id, "7")
+    %{disposition: disposition, messages_history: messages, current_step: current_step} = process_respondent_response(respondent_id, "7")
     assert "started" == disposition
     assert  "What's the number of this question??" == List.last(messages).body
+    assert current_step == List.last(messages).id
 
-    %{disposition: disposition, messages_history: messages, simulation_status: status} = process_respondent_response(respondent_id, "4")
+    %{disposition: disposition, messages_history: messages, simulation_status: status, current_step: current_step} = process_respondent_response(respondent_id, "4")
     assert "completed" == disposition
     assert "Thank you for taking the survey" == List.last(messages).body
+    assert current_step == List.last(messages).id
     assert Ask.Simulation.Status.ended == status
   end
 
