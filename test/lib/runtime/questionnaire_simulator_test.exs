@@ -161,14 +161,23 @@ defmodule QuestionnaireSimulatorTest do
     assert_dummy_steps(project, quiz)
   end
 
-  test "start_simulation with ivr mode returns :not_implemented", %{project: project} do
-    quiz = questionnaire_with_steps(@dummy_steps)
-    assert {:error, :not_implemented} == QuestionnaireSimulator.start_simulation(project, quiz, "ivr")
-  end
+  describe "simulator responses invalid_simulation" do
+    test "when start_simulation with ivr mode", %{project: project} do
+      quiz = questionnaire_with_steps(@dummy_steps)
+      assert {:error, :invalid_simulation} == QuestionnaireSimulator.start_simulation(project, quiz, "ivr")
+    end
 
-  test "start_simulation with mobile_web mode returns :not_implemented", %{project: project} do
-    quiz = questionnaire_with_steps(@dummy_steps)
-    assert {:error, :not_implemented} == QuestionnaireSimulator.start_simulation(project, quiz, "mobile-web")
+    test "when start_simulation with mobile_web mode", %{project: project} do
+      quiz = questionnaire_with_steps(@dummy_steps)
+      assert {:error, :invalid_simulation} == QuestionnaireSimulator.start_simulation(project, quiz, "mobile-web")
+    end
+
+    test "when start_simulation with sms mode but questionnaire doesn't have sms mode", %{project: project}  do
+      quiz = questionnaire_with_steps(SimulatorQuestionnaireSteps.only_ivr_steps())
+             |> Questionnaire.changeset(%{modes: ["ivr"]})
+             |> Repo.update!
+      assert {:error, :invalid_simulation} == QuestionnaireSimulator.start_simulation(project, quiz, "sms")
+    end
   end
 
   describe "stop messages ends the simulation" do
@@ -338,7 +347,7 @@ defmodule SimulatorQuestionnaireSteps do
       )
   ]
 
-  def with_interim_partial_flag(), do: [
+  def with_interim_partial_flag, do: [
     multiple_choice_step(
       id: Ecto.UUID.generate,
       title: "Do you smoke?",
@@ -384,4 +393,31 @@ defmodule SimulatorQuestionnaireSteps do
       ]
     )
   ]
+  def only_ivr_steps, do: [
+    multiple_choice_step(
+      id: Ecto.UUID.generate,
+      title: "Do you smoke?",
+      prompt: prompt(
+        ivr: tts_prompt("Do you smoke? Press 8 for YES, 9 for NO")
+      ),
+      store: "Smokes",
+      choices: [
+        choice(value: "Yes", responses: responses(ivr: ["8"])),
+        choice(value: "No", responses: responses(ivr: ["9"]))
+      ]
+    ),
+    multiple_choice_step(
+      id: Ecto.UUID.generate,
+      title: "Do you exercise",
+      prompt: prompt(
+        ivr: tts_prompt("Do you exercise? Press 1 for YES, 2 for NO")
+      ),
+      store: "Exercises",
+      choices: [
+        choice(value: "Yes", responses: responses(ivr: ["1"])),
+        choice(value: "No", responses: responses(ivr: ["2"]))
+      ]
+    )
+  ]
+
 end

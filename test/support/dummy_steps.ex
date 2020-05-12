@@ -179,6 +179,12 @@ defmodule Ask.StepBuilder do
     }
   end
 
+  def responses(ivr: ivr) do
+    %{
+      "ivr" => ivr
+    }
+  end
+
   def default_numeric_skip_logic() do
     %{
       "min_value" => nil,

@@ -10,11 +10,11 @@ defmodule Ask.QuestionnaireSimulationStep do
   defstruct [:respondent_id, :simulation_status, :disposition, :current_step, messages_history: [], submissions: []]
 
   def build(%QuestionnaireSimulation{respondent: respondent, messages: all_messages, submissions: submissions}, current_step, status) do
-    {:ok, %QuestionnaireSimulationStep{respondent_id: respondent.id, disposition: respondent.disposition, messages_history: all_messages, simulation_status: status, submissions: submissions, current_step: current_step}}
+    %QuestionnaireSimulationStep{respondent_id: respondent.id, disposition: respondent.disposition, messages_history: all_messages, simulation_status: status, submissions: submissions, current_step: current_step}
   end
 
   def expired(respondent_id) do
-    {:ok, %QuestionnaireSimulationStep{respondent_id: respondent_id, simulation_status: Status.expired}}
+    %QuestionnaireSimulationStep{respondent_id: respondent_id, simulation_status: Status.expired}
   end
 end
 
@@ -24,14 +24,45 @@ end
 
 defmodule Ask.Runtime.QuestionnaireSimulator do
   alias Ask.{Survey, Respondent, Questionnaire, Project, SystemTime, Runtime, QuestionnaireSimulationStep}
-  alias Ask.Simulation.{Status, ATMessage, AOMessage, SubmittedStep}
+  alias Ask.Simulation.{Status, ATMessage, AOMessage, SubmittedStep, Response}
   alias Ask.Runtime.{Session, Flow, QuestionnaireSimulatorStore}
 
   @sms_mode "sms"
 
-  def start_simulation(project, questionnaire, mode \\ @sms_mode)
+  def start_simulation(project, questionnaire, mode \\ @sms_mode) do
+    if valid_questionnaire?(questionnaire, mode) do
+      start(project, questionnaire, mode)
+    else
+      Response.invalid_simulation
+    end
+  end
 
-  def start_simulation(%Project{} = project, %Questionnaire{} = questionnaire, @sms_mode) do
+  def process_respondent_response(respondent_id, response) do
+    simulation = QuestionnaireSimulatorStore.get_respondent_simulation(respondent_id)
+    if(simulation) do
+      %{respondent: respondent, messages: messages} = simulation
+      updated_messages = messages ++ [ATMessage.new(response)]
+      simulation = QuestionnaireSimulatorStore.add_respondent_simulation(respondent.id, %Ask.QuestionnaireSimulation{simulation | messages: updated_messages})
+      reply = Flow.Message.reply(response)
+
+      case Runtime.Survey.sync_step(respondent, reply, @sms_mode, SystemTime.time.now, false) do
+        {:reply, reply, respondent} ->
+          handle_app_reply(simulation, respondent, reply, Status.active)
+        {:end, {:reply, reply}, respondent} ->
+          handle_app_reply(simulation, respondent, reply, Status.ended)
+        {:end, respondent} ->
+          handle_app_reply(simulation, respondent, nil, Status.ended)
+      end
+    else
+      respondent_id
+      |> QuestionnaireSimulationStep.expired
+      |> Response.success
+    end
+  end
+
+  defp valid_questionnaire?(quiz, mode), do: quiz.modes |> Enum.member?(mode)
+
+  defp start(%Project{} = project, %Questionnaire{} = questionnaire, @sms_mode) do
     survey = %Survey{
       simulation: true,
       project_id: project.id,
@@ -69,10 +100,11 @@ defmodule Ask.Runtime.QuestionnaireSimulator do
 
     QuestionnaireSimulatorStore.add_respondent_simulation(respondent.id, %Ask.QuestionnaireSimulation{questionnaire: questionnaire, respondent: sync_respondent(respondent), messages: messages, submissions: submitted_steps})
     |> QuestionnaireSimulationStep.build(current_step, Status.active)
+    |> Response.success
   end
 
-  def start_simulation(_project, _questionnaire, _mode) do
-    {:error, :not_implemented}
+  defp start(_project, _questionnaire, _mode) do
+    Response.invalid_simulation
   end
 
   # Must update the respondent.session's respondent since if not will be outdated from respondent
@@ -87,34 +119,14 @@ defmodule Ask.Runtime.QuestionnaireSimulator do
     %{respondent | session: synced_session}
   end
 
-  def process_respondent_response(respondent_id, response) do
-    simulation = QuestionnaireSimulatorStore.get_respondent_simulation(respondent_id)
-    if(simulation) do
-      %{respondent: respondent, messages: messages} = simulation
-      updated_messages = messages ++ [ATMessage.new(response)]
-      simulation = QuestionnaireSimulatorStore.add_respondent_simulation(respondent.id, %Ask.QuestionnaireSimulation{simulation | messages: updated_messages})
-      reply = Flow.Message.reply(response)
-
-      case Runtime.Survey.sync_step(respondent, reply, @sms_mode, SystemTime.time.now, false) do
-        {:reply, reply, respondent} ->
-          handle_app_reply(simulation, respondent, reply, Status.active)
-        {:end, {:reply, reply}, respondent} ->
-          handle_app_reply(simulation, respondent, reply, Status.ended)
-        {:end, respondent} ->
-          handle_app_reply(simulation, respondent, nil, Status.ended)
-      end
-    else
-      QuestionnaireSimulationStep.expired(respondent_id)
-    end
-  end
-
-  def handle_app_reply(simulation, respondent, reply, status) do
+  defp handle_app_reply(simulation, respondent, reply, status) do
     messages = simulation.messages ++ AOMessage.create_all(reply)
     submitted_steps = simulation.submissions ++ SubmittedStep.build_from(reply, simulation.questionnaire)
     current_step = current_step(reply)
 
     QuestionnaireSimulatorStore.add_respondent_simulation(respondent.id, %Ask.QuestionnaireSimulation{simulation | respondent: sync_respondent(respondent), messages: messages, submissions: submitted_steps})
     |> QuestionnaireSimulationStep.build(current_step, status)
+    |> Response.success
   end
 
   defp current_step(reply) do
@@ -174,4 +186,9 @@ defmodule Ask.Simulation.Status do
   def active, do: "active"
   def ended, do: "ended"
   def expired, do: "expired"
+end
+
+defmodule Ask.Simulation.Response do
+  def success(simulation_step), do: {:ok, simulation_step}
+  def invalid_simulation, do: {:error, :invalid_simulation}
 end
