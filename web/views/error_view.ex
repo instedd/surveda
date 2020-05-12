@@ -9,6 +9,10 @@ defmodule Ask.ErrorView do
     %{error: "Not found"}
   end
 
+  def render("400.json", _assigns) do
+    %{error: "Bad request"}
+  end
+
   def render("500.html", _assigns) do
     "There was an error. Please try again later"
   end

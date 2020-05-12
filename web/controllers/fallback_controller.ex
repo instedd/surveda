@@ -8,6 +8,10 @@ defmodule Ask.FallbackController do
     |> render(:"404")
   end
 
-  def call(conn, {:error, :not_implemented}), do: call(conn, {:error, :not_found})
+  def call(conn, {:error, :not_implemented}), do:
+    conn
+    |> put_status(:bad_request)
+    |> put_view(Ask.ErrorView)
+    |> render(:"400")
 
 end
