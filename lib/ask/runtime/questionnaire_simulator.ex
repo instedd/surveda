@@ -63,7 +63,7 @@ defmodule Ask.Runtime.QuestionnaireSimulator do
     # Simulating Nuntium confirmation on message delivery
     %{respondent: respondent} = Runtime.Survey.delivery_confirm(sync_respondent(respondent), "", @sms_mode, false)
 
-    messages = reply |> reply_to_messages |> AOMessage.create_all
+    messages = AOMessage.create_all(reply)
     submitted_steps = SubmittedStep.build_from(reply, questionnaire)
     current_step = current_step(reply)
 
@@ -109,8 +109,7 @@ defmodule Ask.Runtime.QuestionnaireSimulator do
   end
 
   def handle_app_reply(simulation, respondent, reply, status) do
-    reply_messages = reply_to_messages(reply) |> AOMessage.create_all
-    messages = simulation.messages ++ reply_messages
+    messages = simulation.messages ++ AOMessage.create_all(reply)
     submitted_steps = simulation.submissions ++ SubmittedStep.build_from(reply, simulation.questionnaire)
     current_step = current_step(reply)
 
@@ -122,19 +121,6 @@ defmodule Ask.Runtime.QuestionnaireSimulator do
     case Ask.Runtime.Reply.steps(reply) |> List.last do
       nil -> nil
       step -> step.id
-    end
-  end
-
-  defp reply_to_messages(nil), do: []
-  defp reply_to_messages(reply) do
-    Enum.flat_map Ask.Runtime.Reply.steps(reply), fn step ->
-      step.prompts |> Enum.with_index |> Enum.map(fn {prompt, index} ->
-        %{
-          body: prompt,
-          title: Ask.Runtime.ReplyStep.title_with_index(step, index + 1),
-          id: step.id
-        }
-      end)
     end
   end
 end
@@ -163,8 +149,18 @@ defmodule Ask.Simulation.SubmittedStep do
 end
 
 defmodule Ask.Simulation.AOMessage do
-  def create_all(messages) do
-    messages |> Enum.map(fn msg -> msg |> Map.put(:type, "ao") end)
+  def create_all(nil), do: []
+  def create_all(reply) do
+    Enum.flat_map Ask.Runtime.Reply.steps(reply), fn step ->
+      step.prompts |> Enum.with_index |> Enum.map(fn {prompt, index} ->
+        %{
+          body: prompt,
+          title: Ask.Runtime.ReplyStep.title_with_index(step, index + 1),
+          id: step.id,
+          type: "ao"
+        }
+      end)
+    end
   end
 end
 
