@@ -17,7 +17,7 @@ defmodule QuestionnaireSimulatorTest do
   end
 
   def questionnaire_with_steps(steps, thank_you_message \\ %{"en" => %{"sms" => "Thank you for taking the survey"}}) do
-    insert(:questionnaire, steps: steps)
+    insert(:questionnaire, steps: steps, quota_completed_steps: [])
     |> Questionnaire.changeset(%{settings: %{"thank_you_message" => thank_you_message, "error_message" => %{"en" => %{"sms" => "Sorry, that was not a valid response"}}}})
     |> Repo.update!
   end
@@ -77,9 +77,9 @@ defmodule QuestionnaireSimulatorTest do
 
       [first, second, third] = steps
       expected_submissions = [
-        %{step: first["title"], id: first["id"]},
-        %{step: second["title"], id: second["id"], response: "No"},
-        %{step: third["title"], id: third["id"]},
+        %{id: first["id"]},
+        %{id: second["id"], response: "No"},
+        %{id: third["id"]},
       ]
       assert expected_submissions == submissions
     end
@@ -90,7 +90,7 @@ defmodule QuestionnaireSimulatorTest do
       %{respondent_id: respondent_id} = start_simulation.(quiz)
       %{submissions: submissions} = process_respondent_response(respondent_id, "1") # 1 is a yes response
       first = hd(steps)
-      assert [%{step: first["title"], id: first["id"], response: "Yes"}] == submissions
+      assert [%{id: first["id"], response: "Yes"}] == submissions
     end
 
     test "should not include the non-valid responses (since the step is not completed)", %{start_simulation: start_simulation} do
@@ -273,34 +273,35 @@ defmodule QuestionnaireSimulatorTest do
 
   defp assert_dummy_steps(project, quiz) do
     {:ok, %{respondent_id: respondent_id, disposition: disposition, messages_history: messages, simulation_status: status, current_step: current_step}} = QuestionnaireSimulator.start_simulation(project, quiz)
+    [first, second, third, fourth] = quiz |> Questionnaire.all_steps|> Enum.map(fn step -> step["id"] end)
     assert "contacted" == disposition
     assert "Do you smoke? Reply 1 for YES, 2 for NO" == List.last(messages).body
-    assert current_step == List.last(messages).id
+    assert current_step == first
     assert Ask.Simulation.Status.active == status
 
     %{disposition: disposition, messages_history: messages, current_step: current_step} = process_respondent_response(respondent_id, "No")
     assert "started" == disposition
     assert "Do you exercise? Reply 1 for YES, 2 for NO" == List.last(messages).body
-    assert current_step == List.last(messages).id
+    assert current_step == second
 
     %{disposition: disposition, messages_history: messages, current_step: current_step} = process_respondent_response(respondent_id, "Yes")
     assert "started" == disposition
     assert  "Which is the second perfect number??" == List.last(messages).body
-    assert current_step == List.last(messages).id
+    assert current_step == third
 
     %{disposition: disposition, messages_history: messages, current_step: current_step} = process_respondent_response(respondent_id, "7")
     assert "started" == disposition
     assert  "What's the number of this question??" == List.last(messages).body
-    assert current_step == List.last(messages).id
+    assert current_step == fourth
 
     %{disposition: disposition, messages_history: messages, simulation_status: status, current_step: current_step} = process_respondent_response(respondent_id, "4")
     assert "completed" == disposition
     assert "Thank you for taking the survey" == List.last(messages).body
-    assert current_step == List.last(messages).id
+    assert current_step == nil
     assert Ask.Simulation.Status.ended == status
   end
 
-  defp expected_submission(step, response), do: %{step: step["title"], id: step["id"], response: response}
+  defp expected_submission(step, response), do: %{id: step["id"], response: response}
 
 end
 

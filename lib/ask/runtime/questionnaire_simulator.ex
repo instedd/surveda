@@ -145,17 +145,14 @@ defmodule Ask.Simulation.SubmittedStep do
     responses = Reply.stores(reply)
                 |> Enum.map(fn {step_name, value} ->
                   # find function is used since there is a restriction that two steps cannot have the same store variable name
-                  %{"title" => title, "id" => id} = questionnaire
-                                                    |> Questionnaire.all_steps
-                                                    |> Enum.find(fn step -> step["store"] == step_name end)
-                  %{step: title, response: value, id: id}
+                  %{"id" => id} = questionnaire |> Questionnaire.all_steps |> Enum.find(fn step -> step["store"] == step_name end)
+                  %{response: value, id: id}
     end)
-
 
     explanation_steps = Reply.steps(reply)
                         |> Enum.filter(fn step -> step.type == "explanation" end)
                         |> Enum.filter(fn step -> step.title not in ["Thank you", "Error"] end)
-                        |> Enum.map(fn step -> %{step: step.title, id: step.id} end)
+                        |> Enum.map(fn step -> %{id: step.id} end)
     responses ++ explanation_steps
   end
 end
@@ -163,16 +160,9 @@ end
 defmodule Ask.Simulation.AOMessage do
   def create_all(nil), do: []
   def create_all(reply) do
-    Enum.flat_map Ask.Runtime.Reply.steps(reply), fn step ->
-      step.prompts |> Enum.with_index |> Enum.map(fn {prompt, index} ->
-        %{
-          body: prompt,
-          title: Ask.Runtime.ReplyStep.title_with_index(step, index + 1),
-          id: step.id,
-          type: "ao"
-        }
-      end)
-    end
+    Enum.map Ask.Runtime.Reply.prompts(reply), fn prompt ->
+        %{body: prompt, type: "ao"}
+      end
   end
 end
 

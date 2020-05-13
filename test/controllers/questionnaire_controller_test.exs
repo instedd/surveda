@@ -909,8 +909,6 @@ defmodule Ask.QuestionnaireControllerTest do
        "submissions" => [],
        "messages_history" => [%{
          "type" => "ao",
-         "title" => "Do you smoke?",
-         "id" => ^first_step_id,
          "body" => "Do you smoke? Reply 1 for YES, 2 for NO"
        },
        ],
@@ -935,18 +933,13 @@ defmodule Ask.QuestionnaireControllerTest do
       assert %{
        "respondent_id" => _respondent_id,
        "submissions" => [%{
-         "step" => "Explanation",
          "id" => "1"
        }],
        "messages_history" => [%{
          "type" => "ao",
-         "title" => "Explanation",
-         "id" => "1",
          "body" => "Welcome to the survey"
        }, %{
          "type" => "ao",
-         "title" => "Do you smoke?",
-         "id" => ^first_dummy_step_id,
          "body" => "Do you smoke? Reply 1 for YES, 2 for NO"
        },
        ],
@@ -1010,22 +1003,17 @@ defmodule Ask.QuestionnaireControllerTest do
       assert %{
        "respondent_id" => ^respondent_id,
        "submissions" => [%{
-         "step" => "Do you smoke?",
          "id" => ^first_step_id,
          "response" => "No"
        }],
        "messages_history" => [%{
          "type" => "ao",
-         "title" => "Do you smoke?",
-         "id" => ^first_step_id,
          "body" => "Do you smoke? Reply 1 for YES, 2 for NO"
        }, %{
          "type" => "at",
          "body" => "2"
        }, %{
          "type" => "ao",
-         "title" => "Do you exercise",
-         "id" => ^second_step_id,
          "body" => "Do you exercise? Reply 1 for YES, 2 for NO"
        }
        ],
@@ -1068,22 +1056,17 @@ defmodule Ask.QuestionnaireControllerTest do
       assert %{
        "respondent_id" => ^respondent_id,
        "submissions" => [%{
-         "step" => "Do you smoke?",
          "id" => ^first_step_id,
          "response" => "No"
        }],
        "messages_history" => [%{
          "type" => "ao",
-         "title" => "Do you smoke?",
-         "id" => ^first_step_id,
          "body" => "Do you smoke? Reply 1 for YES, 2 for NO"
        }, %{
          "type" => "at",
          "body" => "2"
        }, %{
          "type" => "ao",
-         "title" => "Thank you",
-         "id" => nil,
          "body" => "Thanks for completing this survey"
        }
        ],
