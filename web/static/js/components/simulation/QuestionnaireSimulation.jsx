@@ -4,7 +4,7 @@ import { withRouter } from 'react-router'
 import * as questionnaireActions from '../../actions/questionnaire'
 import { connect } from 'react-redux'
 import { bindActionCreators } from 'redux'
-import { startSmsSimulation, messageSmsSimulation } from '../../api.js'
+import { startSimulation, messageSimulation } from '../../api.js'
 import ChatWindow from './ChatWindow'
 import DispositionChart from './DispositionChart'
 import SimulationSteps from './SimulationSteps'
@@ -26,7 +26,7 @@ type Submission = {
   response: ?string
 }
 
-type SmsSimulation = {
+type Simulation = {
   messagesHistory: Array<ChatMessage>,
   submissions: Array<Submission>,
   simulationStatus: string,
@@ -36,12 +36,12 @@ type SmsSimulation = {
 }
 
 type State = {
-  smsSimulation: ?SmsSimulation
+  simulation: ?Simulation
 }
 
-class SmsSimulator extends Component<Props, State> {
+class QuestionnaireSimulation extends Component<Props, State> {
   state = {
-    smsSimulation: null
+    simulation: null
   }
 
   componentWillMount() {
@@ -49,45 +49,45 @@ class SmsSimulator extends Component<Props, State> {
 
     if (projectId && questionnaireId) {
       this.props.questionnaireActions.fetchQuestionnaireIfNeeded(projectId, questionnaireId)
-      startSmsSimulation(projectId, questionnaireId).then(result => {
-        this.setState({ smsSimulation: result })
+      startSimulation(projectId, questionnaireId).then(result => {
+        this.setState({ simulation: result })
       })
     }
   }
 
   handleMessageResult = result => {
-    const { smsSimulation } = this.state
+    const { simulation } = this.state
     // When the simulation expires we avoid refreshing (and so, erasing) the current state
     // So we only update the simulation status to expired
     // This allow us to handle this particular situation properly
-    const newSmsSimulation = result.simulationStatus == 'expired'
+    const newSimulation = result.simulationStatus == 'expired'
       ? {
-        ...smsSimulation,
+        ...simulation,
         simulationStatus: 'expired'
       }
       : result
-    this.setState({ smsSimulation: newSmsSimulation })
+    this.setState({ simulation: newSimulation })
   }
 
   handleATMessage = message => {
     const { projectId, questionnaireId } = this.props
-    const { smsSimulation } = this.state
-    if (smsSimulation) {
+    const { simulation } = this.state
+    if (simulation) {
       this.addMessage(message)
-      messageSmsSimulation(projectId, questionnaireId, smsSimulation.respondentId, message.body).then(result => {
+      messageSimulation(projectId, questionnaireId, simulation.respondentId, message.body).then(result => {
         this.handleMessageResult(result)
       })
     }
   }
 
   addMessage = message => {
-    const { smsSimulation } = this.state
-    if (smsSimulation) {
+    const { simulation } = this.state
+    if (simulation) {
       this.setState({
-        smsSimulation: {
-          ...smsSimulation,
+        simulation: {
+          ...simulation,
           messagesHistory: [
-            ...smsSimulation.messagesHistory,
+            ...simulation.messagesHistory,
             message
           ]
         }
@@ -97,14 +97,14 @@ class SmsSimulator extends Component<Props, State> {
 
   render() {
     const { questionnaire } = this.props
-    const { smsSimulation } = this.state
-    const simulationIsAvailable = smsSimulation && ['active', 'ended', 'expired'].includes(smsSimulation.simulationStatus)
-    const simulationIsExpired = smsSimulation && smsSimulation.simulationStatus == 'expired'
-    const simulationIsActive = smsSimulation && smsSimulation.simulationStatus == 'active'
+    const { simulation } = this.state
+    const simulationIsAvailable = simulation && ['active', 'ended', 'expired'].includes(simulation.simulationStatus)
+    const simulationIsExpired = simulation && simulation.simulationStatus == 'expired'
+    const simulationIsActive = simulation && simulation.simulationStatus == 'active'
     const renderError = msg => <div className='error'>{msg}</div>
     const header = <header>
       {
-        smsSimulation && questionnaire
+        simulation && questionnaire
         ? simulationIsAvailable
           ? simulationIsExpired
             ? renderError('This simulation is expired. Please refresh to start a new one')
@@ -115,19 +115,19 @@ class SmsSimulator extends Component<Props, State> {
     </header>
     const main = <main>
       {
-        smsSimulation && questionnaire && simulationIsAvailable
+        simulation && questionnaire && simulationIsAvailable
         ? <div>
           <div className='col s12 m4'>
-            <DispositionChart disposition={smsSimulation.disposition} />
+            <DispositionChart disposition={simulation.disposition} />
           </div>
           <div className='col s12 m4'>
             <SimulationSteps steps={questionnaire.steps}
-              currentStepId={smsSimulation.currentStep}
-              submissions={smsSimulation.submissions}
+              currentStepId={simulation.currentStep}
+              submissions={simulation.submissions}
             />
           </div>
           <div className='col s12 m4'>
-            <ChatWindow messages={smsSimulation.messagesHistory} onSendMessage={this.handleATMessage} chatTitle={'SMS mode'} readOnly={!simulationIsActive} />
+            <ChatWindow messages={simulation.messagesHistory} onSendMessage={this.handleATMessage} chatTitle={'SMS mode'} readOnly={!simulationIsActive} />
           </div>
         </div>
         : null
@@ -151,4 +151,4 @@ const mapDispatchToProps = (dispatch) => ({
   questionnaireActions: bindActionCreators(questionnaireActions, dispatch)
 })
 
-export default withRouter(connect(mapStateToProps, mapDispatchToProps)(SmsSimulator))
+export default withRouter(connect(mapStateToProps, mapDispatchToProps)(QuestionnaireSimulation))

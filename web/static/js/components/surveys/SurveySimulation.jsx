@@ -10,7 +10,7 @@ import { icon } from '../../step'
 import { Tooltip, ConfirmationModal, Card, UntitledIfEmpty } from '../ui'
 import { translate } from 'react-i18next'
 import flatten from 'lodash/flatten'
-import DispositionChart from '../questionnaires/DispositionChart'
+import DispositionChart from '../simulation/DispositionChart'
 
 class SurveySimulation extends Component {
   constructor(props) {
