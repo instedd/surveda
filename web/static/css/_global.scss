@@ -1556,6 +1556,10 @@ a.disabled {
       color: #000000;
     }
 
+    &.section {
+      text-transform: uppercase;
+    }
+
     &.active {
       color: black;
       background-color: #E0E0E0;
