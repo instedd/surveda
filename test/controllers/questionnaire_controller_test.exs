@@ -933,7 +933,7 @@ defmodule Ask.QuestionnaireControllerTest do
       assert %{
        "respondent_id" => _respondent_id,
        "submissions" => [%{
-         "id" => "1"
+         "step_id" => "1"
        }],
        "messages_history" => [%{
          "type" => "ao",
@@ -1003,7 +1003,7 @@ defmodule Ask.QuestionnaireControllerTest do
       assert %{
        "respondent_id" => ^respondent_id,
        "submissions" => [%{
-         "id" => ^first_step_id,
+         "step_id" => ^first_step_id,
          "response" => "No"
        }],
        "messages_history" => [%{
@@ -1056,7 +1056,7 @@ defmodule Ask.QuestionnaireControllerTest do
       assert %{
        "respondent_id" => ^respondent_id,
        "submissions" => [%{
-         "id" => ^first_step_id,
+         "step_id" => ^first_step_id,
          "response" => "No"
        }],
        "messages_history" => [%{

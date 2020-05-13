@@ -146,13 +146,13 @@ defmodule Ask.Simulation.SubmittedStep do
                 |> Enum.map(fn {step_name, value} ->
                   # find function is used since there is a restriction that two steps cannot have the same store variable name
                   %{"id" => id} = questionnaire |> Questionnaire.all_steps |> Enum.find(fn step -> step["store"] == step_name end)
-                  %{response: value, id: id}
+                  %{response: value, step_id: id}
     end)
 
     explanation_steps = Reply.steps(reply)
                         |> Enum.filter(fn step -> step.type == "explanation" end)
                         |> Enum.filter(fn step -> step.title not in ["Thank you", "Error"] end)
-                        |> Enum.map(fn step -> %{id: step.id} end)
+                        |> Enum.map(fn step -> %{step_id: step.id} end)
     responses ++ explanation_steps
   end
 end

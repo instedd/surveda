@@ -77,9 +77,9 @@ defmodule QuestionnaireSimulatorTest do
 
       [first, second, third] = steps
       expected_submissions = [
-        %{id: first["id"]},
-        %{id: second["id"], response: "No"},
-        %{id: third["id"]},
+        %{step_id: first["id"]},
+        %{step_id: second["id"], response: "No"},
+        %{step_id: third["id"]},
       ]
       assert expected_submissions == submissions
     end
@@ -90,7 +90,7 @@ defmodule QuestionnaireSimulatorTest do
       %{respondent_id: respondent_id} = start_simulation.(quiz)
       %{submissions: submissions} = process_respondent_response(respondent_id, "1") # 1 is a yes response
       first = hd(steps)
-      assert [%{id: first["id"], response: "Yes"}] == submissions
+      assert [%{step_id: first["id"], response: "Yes"}] == submissions
     end
 
     test "should not include the non-valid responses (since the step is not completed)", %{start_simulation: start_simulation} do
@@ -301,7 +301,7 @@ defmodule QuestionnaireSimulatorTest do
     assert Ask.Simulation.Status.ended == status
   end
 
-  defp expected_submission(step, response), do: %{id: step["id"], response: response}
+  defp expected_submission(step, response), do: %{step_id: step["id"], response: response}
 
 end
 
