@@ -3,10 +3,11 @@ $atMessageBackground: color("grey", "darken-4");
 $chatWindowBodyBackground: #999999;
 $chatBorderBackground: color("grey", "darken-3");
 
-.simulator-container {
+.wrapper .simulator-container {
   @extend .row;
-  header {
-    background-color: inherit;
+  padding-top: 60px;
+  & main > div {
+    padding-top: 0;
   }
 }
 .chat-window {

@@ -126,8 +126,8 @@ class QuestionnaireSimulation extends Component<Props, State> {
     const simulationIsAvailable = simulation && ['active', 'ended', 'expired'].includes(simulation.simulationStatus)
     const simulationIsExpired = simulation && simulation.simulationStatus == 'expired'
     const simulationIsActive = simulation && simulation.simulationStatus == 'active'
-    const renderError = msg => <div className='error'>{msg}</div>
-    const header = <header>
+    const renderError = msg => window.Materialize.toast(msg)
+    const simulationStatus = <div>
       {
         simulation
         ? simulationIsAvailable
@@ -137,7 +137,7 @@ class QuestionnaireSimulation extends Component<Props, State> {
           : renderError('This simulation isn\'t available. Please refresh')
         : 'Loading'
       }
-    </header>
+    </div>
     const main = <main>
       {
         simulation && simulationIsAvailable
@@ -160,7 +160,7 @@ class QuestionnaireSimulation extends Component<Props, State> {
     </main>
 
     return <div className='simulator-container'>
-      {header}
+      {simulationStatus}
       {main}
     </div>
   }
