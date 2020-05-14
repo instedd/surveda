@@ -26,8 +26,13 @@ type Props = {
   t: Function
 }
 
+type StepResponses = {
+  [stepId: string]: string
+}
+
 type State = {
-  headedBySectionSteps: Array<Step>
+  headedBySectionSteps: Array<Step>,
+  stepResponses: StepResponses
 }
 
 const SimulationSteps = translate()(class extends Component<Props, State> {
@@ -42,18 +47,27 @@ const SimulationSteps = translate()(class extends Component<Props, State> {
   }
 
   stateFromProps(props) {
-    const { steps } = props
+    const { steps, submissions } = props
+    const headedBySectionSteps = flatMapDepth(steps, step => {
+      if (step.type == 'section') {
+        return [
+          step,
+          step.steps
+        ]
+      } else {
+        return step
+      }
+    }, 2)
+    const stepResponses = submissions.reduce(
+      (stepResponses, submission) => {
+        if (submission.response) stepResponses[submission.stepId] = submission.response
+        return stepResponses
+      },
+      {}
+    )
     return {
-      headedBySectionSteps: flatMapDepth(steps, step => {
-        if (step.type == 'section') {
-          return [
-            step,
-            step.steps
-          ]
-        } else {
-          return step
-        }
-      }, 2)
+      headedBySectionSteps,
+      stepResponses
     }
   }
 
@@ -80,7 +94,7 @@ const SimulationSteps = translate()(class extends Component<Props, State> {
   }
 
   render() {
-    const { headedBySectionSteps } = this.state
+    const { headedBySectionSteps, stepResponses } = this.state
     return <Card>
       <ul className='collection simulation'>
         {
@@ -91,6 +105,7 @@ const SimulationSteps = translate()(class extends Component<Props, State> {
             completed={this.isCompleted(step.id)}
             skipped={this.wasSkipped(step.id)}
             key={`step-item-${index}`}
+            response={stepResponses[step.id]}
           />)
         }
       </ul>

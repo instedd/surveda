@@ -135,8 +135,10 @@ const ChatFooter = translate()(class extends Component<ChatFooterProps, ChatFoot
   sendMessage = () => {
     const { chatInput } = this.state
     const { onSendMessage } = this.props
-    onSendMessage({ body: chatInput, type: 'at' })
-    this.setState(this.initialState)
+    if (chatInput) {
+      onSendMessage({ body: chatInput, type: 'at' })
+      this.setState(this.initialState)
+    }
   }
 
   sendMessageIfEnterPressed = (event) => {
@@ -155,12 +157,12 @@ const ChatFooter = translate()(class extends Component<ChatFooterProps, ChatFoot
           type='text'
           value={chatInput}
           onChange={event => this.setState({ chatInput: event.target.value })}
-          placeholder={t('Write your message here')}
-          onKeyPress={this.sendMessageIfEnterPressed}
+          placeholder={readOnly ? null : t('Write your message here')}
+          onKeyPress={readOnly ? null : this.sendMessageIfEnterPressed}
           readOnly={readOnly}
           autoFocus
         />
-        <a onClick={this.sendMessage} className='chat-button'>
+        <a onClick={readOnly ? null : this.sendMessage} className='chat-button'>
           <i className='material-icons'>send</i>
         </a>
       </div>
