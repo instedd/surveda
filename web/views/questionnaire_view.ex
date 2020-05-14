@@ -9,6 +9,8 @@ defmodule Ask.QuestionnaireView do
     %{data: render_one(questionnaire, Ask.QuestionnaireView, "questionnaire.json")}
   end
 
+  def render("questionnaire.json", %{questionnaire: nil}), do: nil
+
   def render("questionnaire.json", %{questionnaire: questionnaire}) do
     %{id: questionnaire.id,
       name: questionnaire.name,
@@ -33,7 +35,10 @@ defmodule Ask.QuestionnaireView do
       disposition: simulation.disposition,
       messages_history: simulation.messages_history,
       submissions: simulation.submissions,
-      current_step: simulation.current_step
+      current_step: simulation.current_step,
+      questionnaire: render("questionnaire.json", %{questionnaire: simulation.questionnaire})
     }
+    |> Enum.filter(fn {_, value} -> value end)
+    |> Map.new()
   end
 end

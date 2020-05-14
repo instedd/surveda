@@ -1,5 +1,5 @@
 defmodule Ask.QuestionnaireSimulation do
-  defstruct [:respondent, :questionnaire, messages: [], submissions: []]
+  defstruct [:respondent, :questionnaire, :section_order, messages: [], submissions: []]
 end
 
 defmodule Ask.QuestionnaireSimulationStep do
@@ -7,14 +7,20 @@ defmodule Ask.QuestionnaireSimulationStep do
   alias Ask.Simulation.Status
   alias __MODULE__
 
-  defstruct [:respondent_id, :simulation_status, :disposition, :current_step, messages_history: [], submissions: []]
+  defstruct [:respondent_id, :simulation_status, :disposition, :current_step, :questionnaire, messages_history: [], submissions: []]
 
-  def build(%QuestionnaireSimulation{respondent: respondent, messages: all_messages, submissions: submissions}, current_step, status) do
-    %QuestionnaireSimulationStep{respondent_id: respondent.id, disposition: respondent.disposition, messages_history: all_messages, simulation_status: status, submissions: submissions, current_step: current_step}
+  def build(%QuestionnaireSimulation{respondent: respondent, messages: all_messages, submissions: submissions, questionnaire: quiz, section_order: section_order}, current_step, status) do
+    %QuestionnaireSimulationStep{respondent_id: respondent.id, disposition: respondent.disposition, messages_history: all_messages, simulation_status: status, submissions: submissions, current_step: current_step, questionnaire: sort_quiz_sections(quiz, section_order)}
   end
 
   def expired(respondent_id) do
     %QuestionnaireSimulationStep{respondent_id: respondent_id, simulation_status: Status.expired}
+  end
+
+  defp sort_quiz_sections(quiz, nil), do: quiz
+  defp sort_quiz_sections(quiz, section_order) do
+    sorted_steps = section_order |> Enum.reduce([], fn index, acc -> acc ++ [quiz.steps |> Enum.at(index)] end)
+    %{quiz | steps: sorted_steps}
   end
 end
 
@@ -90,6 +96,7 @@ defmodule Ask.Runtime.QuestionnaireSimulator do
     # Simulating what Broker does when starting a respondent: Session.start and then Survey.handle_session_step
     session_started = Session.start(questionnaire, new_respondent, %Ask.Runtime.SimulatorChannel{}, @sms_mode, Ask.Schedule.always(), [], nil, nil, [], nil, false, false)
     {:reply, reply, respondent} = Runtime.Survey.handle_session_step(session_started, SystemTime.time.now, false)
+    section_order = respondent.session.flow.section_order
 
     # Simulating Nuntium confirmation on message delivery
     %{respondent: respondent} = Runtime.Survey.delivery_confirm(sync_respondent(respondent), "", @sms_mode, false)
@@ -98,7 +105,7 @@ defmodule Ask.Runtime.QuestionnaireSimulator do
     submitted_steps = SubmittedStep.build_from(reply, questionnaire)
     current_step = current_step(reply)
 
-    QuestionnaireSimulatorStore.add_respondent_simulation(respondent.id, %Ask.QuestionnaireSimulation{questionnaire: questionnaire, respondent: sync_respondent(respondent), messages: messages, submissions: submitted_steps})
+    QuestionnaireSimulatorStore.add_respondent_simulation(respondent.id, %Ask.QuestionnaireSimulation{questionnaire: questionnaire, respondent: sync_respondent(respondent), messages: messages, submissions: submitted_steps, section_order: section_order})
     |> QuestionnaireSimulationStep.build(current_step, Status.active)
     |> Response.success
   end

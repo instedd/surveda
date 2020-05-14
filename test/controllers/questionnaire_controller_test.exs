@@ -1033,8 +1033,6 @@ defmodule Ask.QuestionnaireControllerTest do
         "respondent_id" => ^respondent_id,
         "submissions" => [],
         "messages_history" => [],
-        "current_step" => nil,
-        "disposition" => nil,
         "simulation_status" => "expired"
       } = json_response(conn, 200)
     end
@@ -1070,7 +1068,6 @@ defmodule Ask.QuestionnaireControllerTest do
          "body" => "Thanks for completing this survey"
        }
        ],
-       "current_step" => nil,
        "disposition" => "completed",
        "simulation_status" => "ended"
      } = json_response(conn, 200)
