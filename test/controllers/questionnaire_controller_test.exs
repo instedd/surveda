@@ -914,8 +914,10 @@ defmodule Ask.QuestionnaireControllerTest do
        ],
        "current_step" => ^first_step_id,
        "disposition" => "contacted",
-       "simulation_status" => "active"
-     } = json_response(conn, 200)
+       "simulation_status" => "active",
+       "questionnaire" => quiz
+      } = json_response(conn, 200)
+      assert questionnaire.steps == quiz["steps"]
     end
 
     test "renders json with submissions if questionnaire starts with an explanation step", %{conn: conn, user: user} do
@@ -945,8 +947,10 @@ defmodule Ask.QuestionnaireControllerTest do
        ],
        "current_step" => ^first_dummy_step_id,
        "disposition" => "contacted",
-       "simulation_status" => "active"
+       "simulation_status" => "active",
+       "questionnaire" => quiz
        } = json_response(conn, 200)
+      assert questionnaire.steps == quiz["steps"]
     end
 
     test "doesn't start if questionnaire doesn't belong to project", %{conn: conn, user: user} do
@@ -999,7 +1003,7 @@ defmodule Ask.QuestionnaireControllerTest do
       conn = post conn, project_questionnaire_questionnaires_sync_simulation_path(conn, :sync_simulation, questionnaire.project, questionnaire), respondent_id: respondent_id, response: "2"
       first_step_id = hd(steps)["id"]
       second_step_id = (steps |> Enum.at(1))["id"]
-
+      response = json_response(conn, 200)
       assert %{
        "respondent_id" => ^respondent_id,
        "submissions" => [%{
@@ -1020,7 +1024,8 @@ defmodule Ask.QuestionnaireControllerTest do
        "current_step" => ^second_step_id,
        "disposition" => "started",
        "simulation_status" => "active"
-     } = json_response(conn, 200)
+      } = response
+      assert not (response |> Map.has_key?("questionnaire"))
     end
 
     test "renders json for expired simulation", %{conn: conn, user: user} do

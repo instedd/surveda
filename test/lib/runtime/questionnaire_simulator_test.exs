@@ -271,6 +271,55 @@ defmodule QuestionnaireSimulatorTest do
     end
   end
 
+  describe "questionnaire field" do
+    test "should be included in start_simulation", %{start_simulation: start_simulation} do
+      quiz = questionnaire_with_steps(@dummy_steps)
+      assert %{questionnaire: _quex} = start_simulation.(quiz)
+    end
+
+    test "should not be included in process_respondent_response", %{start_simulation: start_simulation} do
+      quiz = questionnaire_with_steps(@dummy_steps)
+      %{respondent_id: respondent_id} = start_simulation.(quiz)
+      assert %{questionnaire: nil} = process_respondent_response(respondent_id, "No")
+    end
+
+    test "if quiz doesn't have sections, steps should be in the same order", %{start_simulation: start_simulation} do
+      quiz = questionnaire_with_steps(@dummy_steps)
+      %{questionnaire: quex} = start_simulation.(quiz)
+      assert quiz.steps == quex.steps
+    end
+
+    test "if quiz has sections but not randomized, steps should be in the same order", %{start_simulation: start_simulation} do
+      quiz = questionnaire_with_steps(SimulatorQuestionnaireSteps.two_sections_dummy_steps)
+      %{questionnaire: quex} = start_simulation.(quiz)
+      assert quiz.steps == quex.steps
+    end
+
+    test "if quiz has randomized sections, steps should be in the order it will be send to respondent", %{start_simulation: start_simulation} do
+      quiz = questionnaire_with_steps(SimulatorQuestionnaireSteps.four_sections_randomized_dummy_steps)
+      %{section_order: section_order, questionnaire: quex} = randomized_section_order(quiz, start_simulation)
+
+      assert quex.steps != quiz.steps
+      assert length(quex.steps) == length(quiz.steps)
+      quex.steps |> Enum.with_index |> Enum.each(fn {step, index} ->
+        original_step_index = section_order |> Enum.at(index)
+        assert step == (quiz.steps |> Enum.at(original_step_index))
+      end)
+    end
+  end
+
+  # Starts different simulations until one has a shuffled section order
+  defp randomized_section_order(quiz, start_simulation) do
+    %{questionnaire: quex, respondent_id: respondent_id} = start_simulation.(quiz)
+    %{section_order: section_order} = Ask.Runtime.QuestionnaireSimulatorStore.get_respondent_simulation(respondent_id)
+    if section_order == Enum.sort(section_order) do
+      # Sections where not shuffled
+      randomized_section_order(quiz, start_simulation)
+    else
+      %{section_order: section_order, questionnaire: quex}
+    end
+  end
+
   defp assert_dummy_steps(project, quiz) do
     {:ok, %{respondent_id: respondent_id, disposition: disposition, messages_history: messages, simulation_status: status, current_step: current_step}} = QuestionnaireSimulator.start_simulation(project, quiz)
     [first, second, third, fourth] = quiz |> Questionnaire.all_steps|> Enum.map(fn step -> step["id"] end)
@@ -315,6 +364,16 @@ defmodule SimulatorQuestionnaireSteps do
   def two_sections_dummy_steps do
     steps = @dummy_steps
     [section(id: "Section1", title: "First Section", randomize: false, steps: steps |> Enum.take(2)), section(id: "Section2", title: "Second Section", randomize: false, steps: steps |> Enum.drop(2))]
+  end
+
+  def four_sections_randomized_dummy_steps do
+    [first, second, third, fourth] = @dummy_steps
+    [
+      section(id: "Section1", title: "First Section", randomize: true, steps: [first]),
+      section(id: "Section2", title: "Second Section", randomize: true, steps: [second]),
+      section(id: "Section3", title: "Third Section", randomize: true, steps: [third]),
+      section(id: "Section4", title: "Fourth Section", randomize: true, steps: [fourth])
+    ]
   end
 
   def with_explanation_first_step, do: [

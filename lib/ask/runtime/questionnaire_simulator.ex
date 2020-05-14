@@ -9,12 +9,23 @@ defmodule Ask.QuestionnaireSimulationStep do
 
   defstruct [:respondent_id, :simulation_status, :disposition, :current_step, :questionnaire, messages_history: [], submissions: []]
 
-  def build(%QuestionnaireSimulation{respondent: respondent, messages: all_messages, submissions: submissions, questionnaire: quiz, section_order: section_order}, current_step, status) do
-    %QuestionnaireSimulationStep{respondent_id: respondent.id, disposition: respondent.disposition, messages_history: all_messages, simulation_status: status, submissions: submissions, current_step: current_step, questionnaire: sort_quiz_sections(quiz, section_order)}
-  end
+  def start_build(simulation, current_step, status), do: build(simulation, current_step, status, true)
+  def sync_build(simulation, current_step, status), do: build(simulation, current_step, status, false)
 
   def expired(respondent_id) do
     %QuestionnaireSimulationStep{respondent_id: respondent_id, simulation_status: Status.expired}
+  end
+
+  defp build(%QuestionnaireSimulation{respondent: respondent, messages: all_messages, submissions: submissions, questionnaire: quiz, section_order: section_order}, current_step, status, with_quiz) do
+    step = %QuestionnaireSimulationStep{
+      respondent_id: respondent.id,
+      simulation_status: status,
+      disposition: respondent.disposition,
+      current_step: current_step,
+      messages_history: all_messages,
+      submissions: submissions
+    }
+    if with_quiz, do: %{step | questionnaire: sort_quiz_sections(quiz, section_order)}, else: step
   end
 
   defp sort_quiz_sections(quiz, nil), do: quiz
@@ -106,7 +117,7 @@ defmodule Ask.Runtime.QuestionnaireSimulator do
     current_step = current_step(reply)
 
     QuestionnaireSimulatorStore.add_respondent_simulation(respondent.id, %Ask.QuestionnaireSimulation{questionnaire: questionnaire, respondent: sync_respondent(respondent), messages: messages, submissions: submitted_steps, section_order: section_order})
-    |> QuestionnaireSimulationStep.build(current_step, Status.active)
+    |> QuestionnaireSimulationStep.start_build(current_step, Status.active)
     |> Response.success
   end
 
@@ -132,7 +143,7 @@ defmodule Ask.Runtime.QuestionnaireSimulator do
     current_step = current_step(reply)
 
     QuestionnaireSimulatorStore.add_respondent_simulation(respondent.id, %Ask.QuestionnaireSimulation{simulation | respondent: sync_respondent(respondent), messages: messages, submissions: submitted_steps})
-    |> QuestionnaireSimulationStep.build(current_step, status)
+    |> QuestionnaireSimulationStep.sync_build(current_step, status)
     |> Response.success
   end
 
