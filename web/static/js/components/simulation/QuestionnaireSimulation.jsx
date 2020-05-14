@@ -45,11 +45,11 @@ class QuestionnaireSimulation extends Component<Props, State> {
   }
 
   componentWillMount() {
-    const { projectId, questionnaireId } = this.props
+    const { projectId, questionnaireId, mode } = this.props
 
     if (projectId && questionnaireId) {
       this.props.questionnaireActions.fetchQuestionnaireIfNeeded(projectId, questionnaireId)
-      startSimulation(projectId, questionnaireId).then(result => {
+      startSimulation(projectId, questionnaireId, mode).then(result => {
         this.setState({ simulation: result })
       })
     }
@@ -144,6 +144,7 @@ class QuestionnaireSimulation extends Component<Props, State> {
 const mapStateToProps = (state, ownProps) => ({
   projectId: parseInt(ownProps.params.projectId),
   questionnaireId: parseInt(ownProps.params.questionnaireId),
+  mode: ownProps.params.mode,
   questionnaire: state.questionnaire.data
 })
 

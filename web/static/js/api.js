@@ -495,8 +495,8 @@ export const refreshDispositionHistoryLink = (projectId, surveyId) => {
   return apiPutOrPostJSONWithCallback(`projects/${projectId}/surveys/${surveyId}/links/disposition_history`, arrayOf(referenceSchema), 'PUT', {}, passthroughCallback)
 }
 
-export const startSimulation = (projectId, questionnaireId) => {
-  return apiPutOrPostJSONWithCallback(`projects/${projectId}/questionnaires/${questionnaireId}/simulation`, arrayOf(referenceSchema), 'POST', {}, passthroughCallback)
+export const startSimulation = (projectId, questionnaireId, mode) => {
+  return apiPutOrPostJSONWithCallback(`projects/${projectId}/questionnaires/${questionnaireId}/simulation`, arrayOf(referenceSchema), 'POST', { mode }, passthroughCallback)
 }
 
 export const messageSimulation = (projectId, questionnaireId, respondentId, message) => {
