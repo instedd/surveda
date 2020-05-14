@@ -9,20 +9,13 @@ import ChatWindow from './ChatWindow'
 import DispositionChart from './DispositionChart'
 import SimulationSteps from './SimulationSteps'
 
-type Props = {
-  projectId: number,
-  questionnaireId: number,
-  questionnaireActions: Object,
-  questionnaire: Object
-}
-
 type ChatMessage = {
   type: string,
   body: string
 }
 
 type Submission = {
-  id: string, // stepId
+  stepId: string,
   response: ?string
 }
 
@@ -32,7 +25,15 @@ type Simulation = {
   simulationStatus: string,
   disposition: string,
   respondentId: string,
-  currentStep: string
+  currentStep: string,
+  questionnaire: Questionnaire
+}
+
+type Props = {
+  projectId: number,
+  questionnaireId: number,
+  questionnaireActions: Object,
+  mode: string
 }
 
 type State = {
@@ -50,7 +51,15 @@ class QuestionnaireSimulation extends Component<Props, State> {
     if (projectId && questionnaireId) {
       this.props.questionnaireActions.fetchQuestionnaireIfNeeded(projectId, questionnaireId)
       startSimulation(projectId, questionnaireId, mode).then(result => {
-        this.setState({ simulation: result })
+        this.setState({ simulation: {
+          messagesHistory: result.messagesHistory,
+          submissions: result.submissions,
+          simulationStatus: result.simulationStatus,
+          disposition: result.disposition,
+          respondentId: result.respondentId,
+          currentStep: result.currentStep,
+          questionnaire: result.questionnaire
+        }})
       })
     }
   }
@@ -65,7 +74,14 @@ class QuestionnaireSimulation extends Component<Props, State> {
         ...simulation,
         simulationStatus: 'expired'
       }
-      : result
+      : {
+        ...simulation,
+        messagesHistory: result.messagesHistory,
+        submissions: result.submissions,
+        simulationStatus: result.simulationStatus,
+        disposition: result.disposition,
+        currentStep: result.currentStep
+      }
     this.setState({ simulation: newSimulation })
   }
 
@@ -96,7 +112,6 @@ class QuestionnaireSimulation extends Component<Props, State> {
   }
 
   render() {
-    const { questionnaire } = this.props
     const { simulation } = this.state
     const simulationIsAvailable = simulation && ['active', 'ended', 'expired'].includes(simulation.simulationStatus)
     const simulationIsExpired = simulation && simulation.simulationStatus == 'expired'
@@ -104,7 +119,7 @@ class QuestionnaireSimulation extends Component<Props, State> {
     const renderError = msg => <div className='error'>{msg}</div>
     const header = <header>
       {
-        simulation && questionnaire
+        simulation
         ? simulationIsAvailable
           ? simulationIsExpired
             ? renderError('This simulation is expired. Please refresh to start a new one')
@@ -115,13 +130,13 @@ class QuestionnaireSimulation extends Component<Props, State> {
     </header>
     const main = <main>
       {
-        simulation && questionnaire && simulationIsAvailable
+        simulation && simulationIsAvailable
         ? <div>
           <div className='col s12 m4'>
             <DispositionChart disposition={simulation.disposition} />
           </div>
           <div className='col s12 m4'>
-            <SimulationSteps steps={questionnaire.steps}
+            <SimulationSteps steps={simulation.questionnaire.steps}
               currentStepId={simulation.currentStep}
               submissions={simulation.submissions}
             />
@@ -144,8 +159,7 @@ class QuestionnaireSimulation extends Component<Props, State> {
 const mapStateToProps = (state, ownProps) => ({
   projectId: parseInt(ownProps.params.projectId),
   questionnaireId: parseInt(ownProps.params.questionnaireId),
-  mode: ownProps.params.mode,
-  questionnaire: state.questionnaire.data
+  mode: ownProps.params.mode
 })
 
 const mapDispatchToProps = (dispatch) => ({
