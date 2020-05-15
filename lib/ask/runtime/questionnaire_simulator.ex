@@ -113,7 +113,7 @@ defmodule Ask.Runtime.QuestionnaireSimulator do
     %{respondent: respondent} = Runtime.Survey.delivery_confirm(sync_respondent(respondent), "", @sms_mode, false)
 
     messages = AOMessage.create_all(reply)
-    submitted_steps = SubmittedStep.build_from(reply, questionnaire)
+    submitted_steps = SubmittedStep.new_explanations(reply)
     current_step = current_step(reply)
 
     QuestionnaireSimulatorStore.add_respondent_simulation(respondent.id, %Ask.QuestionnaireSimulation{questionnaire: questionnaire, respondent: sync_respondent(respondent), messages: messages, submissions: submitted_steps, section_order: section_order})
@@ -139,7 +139,7 @@ defmodule Ask.Runtime.QuestionnaireSimulator do
 
   defp handle_app_reply(simulation, respondent, reply, status) do
     messages = simulation.messages ++ AOMessage.create_all(reply)
-    submitted_steps = simulation.submissions ++ SubmittedStep.build_from(reply, simulation.questionnaire)
+    submitted_steps = simulation.submissions ++ SubmittedStep.build_from_responses(respondent, simulation) ++ SubmittedStep.new_explanations(reply)
     current_step = current_step(reply)
 
     QuestionnaireSimulatorStore.add_respondent_simulation(respondent.id, %Ask.QuestionnaireSimulation{simulation | respondent: sync_respondent(respondent), messages: messages, submissions: submitted_steps})
@@ -159,20 +159,28 @@ defmodule Ask.Simulation.SubmittedStep do
   alias Ask.Runtime.Reply
   alias Ask.Questionnaire
 
-  def build_from(reply, questionnaire) do
-    responses = Reply.stores(reply)
-                |> Enum.map(fn {step_name, value} ->
-                  # find function is used since there is a restriction that two steps cannot have the same store variable name
-                  %{"id" => id} = questionnaire |> Questionnaire.all_steps |> Enum.find(fn step -> step["store"] == step_name end)
-                  %{response: value, step_id: id}
+  # Extract new responses from respondent
+  def build_from_responses(respondent, %{submissions: submissions, questionnaire: quiz}) do
+    present_submissions = submissions |> Enum.map(fn submitted_step -> submitted_step.step_name end)
+    new_responses = respondent.responses |> Enum.filter(fn response -> not (present_submissions |> Enum.member?(response.field_name)) end)
+
+    new_responses
+    |> Enum.map(fn %{field_name: step_name, value: value} ->
+      # find function is used since there is a restriction that two steps cannot have the same store variable name
+      %{"id" => id} = quiz |> Questionnaire.all_steps |> Enum.find(fn step -> step["store"] == step_name end)
+      %{response: value, step_id: id, step_name: step_name}
     end)
 
-    explanation_steps = Reply.steps(reply)
-                        |> Enum.filter(fn step -> step.type == "explanation" end)
-                        |> Enum.filter(fn step -> step.title not in ["Thank you", "Error"] end)
-                        |> Enum.map(fn step -> %{step_id: step.id} end)
-    responses ++ explanation_steps
   end
+
+  # Explanation submitted-steps must be extracted from reply since aren't stored as responses
+  def new_explanations(reply) do
+    Reply.steps(reply)
+    |> Enum.filter(fn step -> step.type == "explanation" end)
+    |> Enum.filter(fn step -> step.title not in ["Thank you", "Error"] end)
+    |> Enum.map(fn step -> %{step_id: step.id, step_name: step.title} end)
+  end
+
 end
 
 defmodule Ask.Simulation.AOMessage do
