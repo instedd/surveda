@@ -76,23 +76,32 @@ class QuestionnaireSimulation extends Component<Props, State> {
 
   handleMessageResult = result => {
     const { simulation } = this.state
-    // When the simulation expires we avoid refreshing (and so, erasing) the current state
-    // So we only update the simulation status to expired
-    // This allow us to handle this particular situation properly
-    const newSimulation = result.simulationStatus == 'expired'
-      ? {
-        ...simulation,
-        simulationStatus: 'expired'
+    if (result.simulationStatus == 'expired') {
+      // When the simulation expires we avoid refreshing (and so, erasing) the current state
+      // So we only update the simulation status and we send a message to the end user
+      // This allow us to handle this particular situation properly
+      window.Materialize.toast('This simulation is expired. Please refresh to start a new one')
+      this.setState({
+        simulation: {
+          ...simulation,
+          simulationStatus: result.simulationStatus
+        }
+      })
+    } else {
+      if (result.simulationStatus == 'ended') {
+        window.Materialize.toast('This simulation is ended. Please refresh to start a new one')
       }
-      : {
-        ...simulation,
-        messagesHistory: result.messagesHistory,
-        submissions: result.submissions,
-        simulationStatus: result.simulationStatus,
-        disposition: result.disposition,
-        currentStep: result.currentStep
-      }
-    this.setState({ simulation: newSimulation })
+      this.setState({
+        simulation: {
+          ...simulation,
+          messagesHistory: result.messagesHistory,
+          submissions: result.submissions,
+          simulationStatus: result.simulationStatus,
+          disposition: result.disposition,
+          currentStep: result.currentStep
+        }
+      })
+    }
   }
 
   handleATMessage = message => {
@@ -123,24 +132,10 @@ class QuestionnaireSimulation extends Component<Props, State> {
 
   render() {
     const { simulation } = this.state
-    const simulationIsAvailable = simulation && ['active', 'ended', 'expired'].includes(simulation.simulationStatus)
-    const simulationIsExpired = simulation && simulation.simulationStatus == 'expired'
     const simulationIsActive = simulation && simulation.simulationStatus == 'active'
-    const renderError = msg => window.Materialize.toast(msg)
-    const simulationStatus = <div>
+    return <div className='simulator-container'>
       {
         simulation
-        ? simulationIsAvailable
-          ? simulationIsExpired
-            ? renderError('This simulation is expired. Please refresh to start a new one')
-            : null
-          : renderError('This simulation isn\'t available. Please refresh')
-        : 'Loading'
-      }
-    </div>
-    const main = <main>
-      {
-        simulation && simulationIsAvailable
         ? <div>
           <div className='col s12 m4'>
             <DispositionChart disposition={simulation.disposition} />
@@ -155,13 +150,8 @@ class QuestionnaireSimulation extends Component<Props, State> {
             <ChatWindow messages={simulation.messagesHistory} onSendMessage={this.handleATMessage} chatTitle={'SMS mode'} readOnly={!simulationIsActive} />
           </div>
         </div>
-        : null
+        : 'Loading'
       }
-    </main>
-
-    return <div className='simulator-container'>
-      {simulationStatus}
-      {main}
     </div>
   }
 }
