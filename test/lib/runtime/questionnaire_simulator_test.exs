@@ -21,7 +21,7 @@ defmodule QuestionnaireSimulatorTest do
     |> Questionnaire.changeset(%{settings: %{"thank_you_message" => thank_you_message, "error_message" => %{"en" => %{"sms" => "Sorry, that was not a valid response"}}}})
     |> Repo.update!
   end
-  
+
   def process_respondent_response(respondent_id, response) do
     {:ok, simulation_step} = QuestionnaireSimulator.process_respondent_response(respondent_id, response)
     simulation_step

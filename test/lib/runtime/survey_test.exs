@@ -4,7 +4,7 @@ defmodule Ask.Runtime.SurveyTest do
   use Timex
   use Ask.MockTime
   use Ask.TestHelpers
-  alias Ask.Runtime.{Survey, Broker, Flow, SurveyLogger, ReplyHelper, ChannelStatusServer, Reply}
+  alias Ask.Runtime.{Survey, Broker, Flow, SurveyLogger, ReplyHelper, ChannelStatusServer}
   alias Ask.{Repo, Respondent, RespondentDispositionHistory, TestChannel, QuotaBucket, Questionnaire, RespondentGroupChannel, SurveyLogEntry, Schedule, StepBuilder, RetryStat}
   alias Ask.Router.Helpers, as: Routes
   require Ask.Runtime.ReplyHelper
@@ -386,7 +386,7 @@ defmodule Ask.Runtime.SurveyTest do
       Survey.delivery_confirm(respondent, "What's the number of this question?")
 
       reply = Survey.sync_step(respondent, Flow.Message.reply("11"))
-      assert {:end, {:reply, %Reply{stores: %{"Question" => "11"}}}, _} = reply
+      assert {:end, _} = reply
 
       now = Timex.now
       interval = Interval.new(from: Timex.shift(now, seconds: -5), until: Timex.shift(now, seconds: 5), step: [seconds: 1])
@@ -662,7 +662,7 @@ defmodule Ask.Runtime.SurveyTest do
 
       respondent = Repo.get(Respondent, respondent.id)
       reply = Survey.sync_step(respondent, Flow.Message.reply("11"))
-      assert {:end, {:reply, %Reply{stores: %{"Question" => "11"}}}, _} = reply
+      assert {:end, _} = reply
 
       now = Timex.now
       interval = Interval.new(from: Timex.shift(now, seconds: -5), until: Timex.shift(now, seconds: 5), step: [seconds: 1])
@@ -2263,7 +2263,7 @@ defmodule Ask.Runtime.SurveyTest do
 
     respondent = Repo.get(Respondent, respondent.id)
     reply = Survey.sync_step(respondent, Flow.Message.reply("3"))
-    assert {:end, {:reply, %Reply{}}, _} = reply
+    assert {:end, _} = reply
 
     respondent = Repo.get(Respondent, respondent.id)
     assert respondent.state == "active"
