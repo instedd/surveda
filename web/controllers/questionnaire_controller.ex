@@ -211,6 +211,7 @@ defmodule Ask.QuestionnaireController do
       steps: questionnaire.steps,
       quota_completed_steps: questionnaire.quota_completed_steps,
       settings: questionnaire.settings,
+      partial_relevant_config: questionnaire.partial_relevant_config,
       languages: questionnaire.languages,
       default_language: questionnaire.default_language,
       audio_files: audio_files_data
@@ -284,6 +285,7 @@ defmodule Ask.QuestionnaireController do
       steps: Map.get(manifest, "steps"),
       quota_completed_steps: Map.get(manifest, "quota_completed_steps"),
       settings: Map.get(manifest, "settings"),
+      partial_relevant_config: Map.get(manifest, "partial_relevant_config"),
       languages: Map.get(manifest, "languages"),
       default_language: Map.get(manifest, "default_language"),
     })
