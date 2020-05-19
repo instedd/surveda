@@ -134,9 +134,8 @@ defmodule Ask.QuestionnaireControllerTest do
     test "don't show deleted questionnaire", %{conn: conn, user: user} do
       project = create_project_for_user(user)
       questionnaire = insert(:questionnaire, project: project, deleted: true)
-      assert_error_sent 404, fn ->
-        get conn, project_questionnaire_path(conn, :show, questionnaire.project, questionnaire)
-      end
+      conn = get conn, project_questionnaire_path(conn, :show, questionnaire.project, questionnaire)
+      assert json_response(conn, 404) == %{"error" => "Not found"}
     end
   end
 
@@ -892,6 +891,194 @@ defmodule Ask.QuestionnaireControllerTest do
 
   end
 
+  describe "start_simulation:" do
+    setup [:start_simulator_store]
+
+    test "renders json with the started simulation", %{conn: conn, user: user} do
+      project = create_project_for_user(user)
+      steps = @dummy_steps
+      questionnaire = insert(:questionnaire, project: project)
+      |> Questionnaire.changeset(%{steps: steps})
+      |> Repo.update!
+      |> Repo.preload(:project)
+      conn = post conn, project_questionnaire_questionnaires_start_simulation_path(conn, :start_simulation, questionnaire.project, questionnaire), mode: "sms"
+      first_step_id = hd(steps)["id"]
+
+      assert %{
+       "respondent_id" => _respondent_id,
+       "submissions" => [],
+       "messages_history" => [%{
+         "type" => "ao",
+         "body" => "Do you smoke? Reply 1 for YES, 2 for NO"
+       },
+       ],
+       "current_step" => ^first_step_id,
+       "disposition" => "contacted",
+       "simulation_status" => "active",
+       "questionnaire" => quiz
+      } = json_response(conn, 200)
+      assert questionnaire.steps == quiz["steps"]
+    end
+
+    test "renders json with submissions if questionnaire starts with an explanation step", %{conn: conn, user: user} do
+      project = create_project_for_user(user)
+      dummy_steps = @dummy_steps
+      explanation_step = explanation_step(id: "1", title: "Explanation", prompt: prompt(sms: sms_prompt("Welcome to the survey")), skip_logic: nil)
+      steps = [explanation_step] ++ dummy_steps
+      questionnaire = insert(:questionnaire, project: project)
+                      |> Questionnaire.changeset(%{steps: steps})
+                      |> Repo.update!
+                      |> Repo.preload(:project)
+      conn = post conn, project_questionnaire_questionnaires_start_simulation_path(conn, :start_simulation, questionnaire.project, questionnaire), mode: "sms"
+      first_dummy_step_id = hd(dummy_steps)["id"]
+
+      assert %{
+       "respondent_id" => _respondent_id,
+       "submissions" => [%{
+         "step_id" => "1"
+       }],
+       "messages_history" => [%{
+         "type" => "ao",
+         "body" => "Welcome to the survey"
+       }, %{
+         "type" => "ao",
+         "body" => "Do you smoke? Reply 1 for YES, 2 for NO"
+       },
+       ],
+       "current_step" => ^first_dummy_step_id,
+       "disposition" => "contacted",
+       "simulation_status" => "active",
+       "questionnaire" => quiz
+       } = json_response(conn, 200)
+      assert questionnaire.steps == quiz["steps"]
+    end
+
+    test "doesn't start if questionnaire doesn't belong to project", %{conn: conn, user: user} do
+      project = create_project_for_user(user)
+      steps = @dummy_steps
+      questionnaire = insert(:questionnaire)
+                      |> Questionnaire.changeset(%{steps: steps})
+                      |> Repo.update!
+      conn = post conn, project_questionnaire_questionnaires_start_simulation_path(conn, :start_simulation, project, questionnaire), mode: "sms"
+      assert %{"error" => "Not found"} == json_response(conn, 404)
+    end
+
+    test "doesn't start if mode is not specified", %{conn: conn, user: user} do
+      project = create_project_for_user(user)
+      steps = @dummy_steps
+      questionnaire = insert(:questionnaire, project: project)
+                      |> Questionnaire.changeset(%{steps: steps})
+                      |> Repo.update!
+                      |> Repo.preload(:project)
+      conn = post conn, project_questionnaire_questionnaires_start_simulation_path(conn, :start_simulation, questionnaire.project, questionnaire)
+      assert %{"error" => "Bad request"} == json_response(conn, 400)
+    end
+
+    test "doesn't start if mode is not supported", %{conn: conn, user: user} do
+      project = create_project_for_user(user)
+      steps = @dummy_steps
+      questionnaire = insert(:questionnaire, project: project)
+                      |> Questionnaire.changeset(%{steps: steps})
+                      |> Repo.update!
+                      |> Repo.preload(:project)
+      conn = post conn, project_questionnaire_questionnaires_start_simulation_path(conn, :start_simulation, questionnaire.project, questionnaire), mode: "ivr"
+      assert %{"error" => "Bad request"} == json_response(conn, 400)
+    end
+  end
+
+  describe "sync_simulation:" do
+    setup [:start_simulator_store]
+
+    test "renders json for started simulation", %{conn: conn, user: user} do
+      project = create_project_for_user(user)
+      steps = @dummy_steps
+      questionnaire = insert(:questionnaire, project: project)
+                      |> Questionnaire.changeset(%{steps: steps})
+                      |> Repo.update!
+                      |> Repo.preload(:project)
+
+      conn_ = post conn, project_questionnaire_questionnaires_start_simulation_path(conn, :start_simulation, questionnaire.project, questionnaire), mode: "sms"
+      respondent_id = json_response(conn_, 200)["respondent_id"]
+
+      conn = post conn, project_questionnaire_questionnaires_sync_simulation_path(conn, :sync_simulation, questionnaire.project, questionnaire), respondent_id: respondent_id, response: "2"
+      first_step_id = hd(steps)["id"]
+      second_step_id = (steps |> Enum.at(1))["id"]
+      response = json_response(conn, 200)
+      assert %{
+       "respondent_id" => ^respondent_id,
+       "submissions" => [%{
+         "step_id" => ^first_step_id,
+         "response" => "No"
+       }],
+       "messages_history" => [%{
+         "type" => "ao",
+         "body" => "Do you smoke? Reply 1 for YES, 2 for NO"
+       }, %{
+         "type" => "at",
+         "body" => "2"
+       }, %{
+         "type" => "ao",
+         "body" => "Do you exercise? Reply 1 for YES, 2 for NO"
+       }
+       ],
+       "current_step" => ^second_step_id,
+       "disposition" => "started",
+       "simulation_status" => "active"
+      } = response
+      assert not (response |> Map.has_key?("questionnaire"))
+    end
+
+    test "renders json for expired simulation", %{conn: conn, user: user} do
+      project = create_project_for_user(user)
+      questionnaire = insert(:questionnaire, project: project) |> Repo.preload(:project)
+      respondent_id = Ecto.UUID.generate()
+
+      conn = post conn, project_questionnaire_questionnaires_sync_simulation_path(conn, :sync_simulation, questionnaire.project, questionnaire), respondent_id: respondent_id, response: "2"
+      %{
+        "respondent_id" => ^respondent_id,
+        "submissions" => [],
+        "messages_history" => [],
+        "simulation_status" => "expired"
+      } = json_response(conn, 200)
+    end
+
+    test "renders ended simulation if last response", %{conn: conn, user: user} do
+      project = create_project_for_user(user)
+      step = hd(@dummy_steps)
+      questionnaire = insert(:questionnaire, project: project)
+                      |> Questionnaire.changeset(%{steps: [step]})
+                      |> Repo.update!
+                      |> Repo.preload(:project)
+
+      conn_ = post conn, project_questionnaire_questionnaires_start_simulation_path(conn, :start_simulation, questionnaire.project, questionnaire), mode: "sms"
+      respondent_id = json_response(conn_, 200)["respondent_id"]
+
+      conn = post conn, project_questionnaire_questionnaires_sync_simulation_path(conn, :sync_simulation, questionnaire.project, questionnaire), respondent_id: respondent_id, response: "2"
+      first_step_id = step["id"]
+
+      assert %{
+       "respondent_id" => ^respondent_id,
+       "submissions" => [%{
+         "step_id" => ^first_step_id,
+         "response" => "No"
+       }],
+       "messages_history" => [%{
+         "type" => "ao",
+         "body" => "Do you smoke? Reply 1 for YES, 2 for NO"
+       }, %{
+         "type" => "at",
+         "body" => "2"
+       }, %{
+         "type" => "ao",
+         "body" => "Thanks for completing this survey"
+       }
+       ],
+       "disposition" => "completed",
+       "simulation_status" => "ended"
+     } = json_response(conn, 200)
+    end
+  end
+
   defp assert_log(log, user, project, questionnaire, action, remote_ip) do
     assert log.project_id == project.id
     assert log.user_id == user.id
@@ -906,4 +1093,8 @@ defmodule Ask.QuestionnaireControllerTest do
     assert log.metadata == metadata
   end
 
+  defp start_simulator_store(_context) do
+    Ask.Runtime.QuestionnaireSimulatorStore.start_link()
+    :ok
+  end
 end

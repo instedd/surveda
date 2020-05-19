@@ -6,6 +6,7 @@ defmodule Ask.QuestionnaireController do
   alias Ask.Runtime.QuestionnaireSimulator
 
   plug :validate_params when action in [:create, :update]
+  action_fallback Ask.FallbackController
 
   def index(conn, %{"project_id" => project_id}) do
     project = conn
@@ -59,9 +60,8 @@ defmodule Ask.QuestionnaireController do
     project = conn
     |> load_project(project_id)
 
-    questionnaire = load_questionnaire(project, id)
-
-    render(conn, "show.json", questionnaire: questionnaire)
+    with {:ok, questionnaire} <- load_questionnaire(project, id), do:
+      render(conn, "show.json", questionnaire: questionnaire)
   end
 
   def update(conn, %{"project_id" => project_id, "id" => id}) do
@@ -296,10 +296,12 @@ defmodule Ask.QuestionnaireController do
 
   def start_simulation(conn, %{"project_id" => project_id, "questionnaire_id" => id}) do
     project = conn |> load_project(project_id)
-    questionnaire = load_questionnaire(project, id)
-
-    simulation = QuestionnaireSimulator.start_simulation(project, questionnaire)
-    render(conn, "simulation.json", simulation: simulation)
+    mode = conn.params["mode"]
+    with {:ok, questionnaire} <- load_questionnaire(project, id),
+         {:ok, simulation} <- QuestionnaireSimulator.start_simulation(project, questionnaire, mode)
+    do
+      render(conn, "simulation.json", simulation: simulation)
+    end
   end
 
   def sync_simulation(conn, %{"project_id" => project_id}) do
@@ -308,8 +310,8 @@ defmodule Ask.QuestionnaireController do
 
     respondent_id = conn.params["respondent_id"]
     response = conn.params["response"]
-    simulation = QuestionnaireSimulator.process_respondent_response(respondent_id, response)
-    render(conn, "simulation.json", simulation: simulation)
+    with {:ok, simulation} <- QuestionnaireSimulator.process_respondent_response(respondent_id, response), do:
+      render(conn, "simulation.json", simulation: simulation)
   end
 
   defp validate_params(conn, _params) do
@@ -364,10 +366,15 @@ defmodule Ask.QuestionnaireController do
   end
 
   defp load_questionnaire(project, id) do
-    project
+    questionnaire = project
     |> assoc(:questionnaires)
     |> where([q], q.deleted == false)
-    |> Repo.get!(id)
+    |> Repo.get(id)
+
+    case questionnaire do
+      nil -> {:error, :not_found}
+      _ -> {:ok, questionnaire}
+    end
   end
 
   defp load_questionnaire_not_snapshot(project, id) do
