@@ -114,6 +114,7 @@ export const questionnaireIndex = (projectId) => `${project(projectId)}/question
 export const collaboratorIndex = (projectId) => `${project(projectId)}/collaborators`
 export const activityIndex = (projectId) => `${project(projectId)}/activity`
 export const questionnaire = (projectId, questionnaireId) => `${questionnaireIndex(projectId)}/${questionnaireId}`
+export const questionnaireSimulation = (projectId, questionnaireId, mode) => `${questionnaireIndex(projectId)}/${questionnaireId}/simulation/${mode}`
 export const editQuestionnaire = (projectId, questionnaireId) => `${questionnaire(projectId, questionnaireId)}/edit`
 export const exportQuestionnaireZip = (projectId, questionnaireId) => `/api/v1${questionnaire(projectId, questionnaireId)}/export_zip`
 export const channelNew = (providerType, providerIndex) => `/channels/new?providerType=${providerType}&providerIndex=${providerIndex}`
