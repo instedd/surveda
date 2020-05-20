@@ -433,6 +433,8 @@
   "The system only accepts CSV files": "",
   "This question is not relevant for partial flag": "",
   "This question is relevant for partial flag": "",
+  "This simulation is ended. Please refresh to start a new one": "",
+  "This simulation is expired. Please refresh to start a new one": "",
   "This will finalize the survey execution": "",
   "Thu": "",
   "Time at selected timezone: {{time}}": "",

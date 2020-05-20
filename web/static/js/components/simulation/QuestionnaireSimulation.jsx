@@ -1,6 +1,6 @@
 // @flow
 import React, { Component } from 'react'
-import { withRouter } from 'react-router'
+import { withRouter, browserHistory } from 'react-router'
 import * as questionnaireActions from '../../actions/questionnaire'
 import { connect } from 'react-redux'
 import { bindActionCreators } from 'redux'
@@ -8,6 +8,7 @@ import { startSimulation, messageSimulation } from '../../api.js'
 import ChatWindow from './ChatWindow'
 import DispositionChart from './DispositionChart'
 import SimulationSteps from './SimulationSteps'
+import { translate } from 'react-i18next'
 
 type ChatMessage = {
   type: string,
@@ -33,16 +34,25 @@ type Props = {
   projectId: number,
   questionnaireId: number,
   mode: string,
-  questionnaireActions: Object
+  questionnaireActions: Object,
+  t: Function
 }
 
 type State = {
   simulation: ?Simulation
 }
 
-class QuestionnaireSimulation extends Component<Props, State> {
+const QuestionnaireSimulation = translate()(class extends Component<Props, State> {
   state = {
     simulation: null
+  }
+
+  componentDidMount = () => {
+    browserHistory.listen(this.onRouteChange)
+  }
+
+  onRouteChange = () => {
+    document.querySelectorAll('.toast').forEach(t => t.remove())
   }
 
   fetchQuestionnaireForTitle = () => {
@@ -76,11 +86,12 @@ class QuestionnaireSimulation extends Component<Props, State> {
 
   handleMessageResult = result => {
     const { simulation } = this.state
+    const { t } = this.props
     if (result.simulationStatus == 'expired') {
       // When the simulation expires we avoid refreshing (and so, erasing) the current state
       // So we only update the simulation status and we send a message to the end user
       // This allow us to handle this particular situation properly
-      window.Materialize.toast('This simulation is expired. Please refresh to start a new one')
+      window.Materialize.toast(t('This simulation is expired. Please refresh to start a new one'))
       this.setState({
         simulation: {
           ...simulation,
@@ -89,7 +100,7 @@ class QuestionnaireSimulation extends Component<Props, State> {
       })
     } else {
       if (result.simulationStatus == 'ended') {
-        window.Materialize.toast('This simulation is ended. Please refresh to start a new one')
+        window.Materialize.toast(t('This simulation is ended. Please refresh to start a new one'))
       }
       this.setState({
         simulation: {
@@ -154,7 +165,7 @@ class QuestionnaireSimulation extends Component<Props, State> {
       }
     </div>
   }
-}
+})
 
 const mapStateToProps = (state, ownProps) => ({
   projectId: parseInt(ownProps.params.projectId),
