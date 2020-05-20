@@ -1,9 +1,7 @@
 // @flow
 import React, { Component } from 'react'
 import { withRouter, browserHistory } from 'react-router'
-import * as questionnaireActions from '../../actions/questionnaire'
 import { connect } from 'react-redux'
-import { bindActionCreators } from 'redux'
 import { startSimulation, messageSimulation } from '../../api.js'
 import ChatWindow from './ChatWindow'
 import DispositionChart from './DispositionChart'
@@ -34,7 +32,6 @@ type Props = {
   projectId: number,
   questionnaireId: number,
   mode: string,
-  questionnaireActions: Object,
   t: Function
 }
 
@@ -55,18 +52,9 @@ const QuestionnaireSimulation = translate()(class extends Component<Props, State
     document.querySelectorAll('.toast').forEach(t => t.remove())
   }
 
-  fetchQuestionnaireForTitle = () => {
-    const { projectId, questionnaireId } = this.props
-    // TODO: this component doesn't do this fetch for itself
-    // It does it just because the title component above needs the questionnaire being in the redux store to render properly
-    // But for some reason that component isn't able to get the projectId and questionnaireId params properly from the url
-    this.props.questionnaireActions.fetchQuestionnaireIfNeeded(projectId, questionnaireId)
-  }
-
   componentWillMount() {
     const { projectId, questionnaireId, mode } = this.props
     if (projectId && questionnaireId) {
-      this.fetchQuestionnaireForTitle()
       // We only support SMS for now
       if (mode == 'sms') {
         startSimulation(projectId, questionnaireId, mode).then(result => {
@@ -173,8 +161,4 @@ const mapStateToProps = (state, ownProps) => ({
   mode: ownProps.params.mode
 })
 
-const mapDispatchToProps = (dispatch) => ({
-  questionnaireActions: bindActionCreators(questionnaireActions, dispatch)
-})
-
-export default withRouter(connect(mapStateToProps, mapDispatchToProps)(QuestionnaireSimulation))
+export default withRouter(connect(mapStateToProps)(QuestionnaireSimulation))
