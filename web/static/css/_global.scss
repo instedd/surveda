@@ -1558,18 +1558,20 @@ a.disabled {
 
     &.section {
       text-transform: uppercase;
+      background-color: inherit;
+      color: inherit;
     }
 
-    &.active {
+    &.active:not(.section) {
       color: black;
       background-color: #E0E0E0;
     }
 
-    &.done {
+    &.done:not(.section) {
       color: #3FA43E;
     }
 
-    &.skipped {
+    &.skipped:not(.section) {
       color: #C2C2C2;
     }
   }

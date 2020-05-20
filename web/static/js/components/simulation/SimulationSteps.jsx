@@ -11,7 +11,9 @@ type Step = {
   type: string,
   title: string,
   id: string,
-  steps: ?Array<Step>
+  steps: ?Array<Step>,
+  status: string,
+  response: ?string
 }
 
 type Submission = {
@@ -23,16 +25,12 @@ type Props = {
   submissions: Array<Submission>,
   steps: Array<Step>,
   currentStepId: string,
-  t: Function
-}
-
-type StepResponses = {
-  [stepId: string]: string
+  t: Function,
+  simulationIsEnded: boolean
 }
 
 type State = {
-  headedBySectionSteps: Array<Step>,
-  stepResponses: StepResponses
+  headedBySectionSteps: Array<Step>
 }
 
 const SimulationSteps = translate()(class extends Component<Props, State> {
@@ -47,7 +45,39 @@ const SimulationSteps = translate()(class extends Component<Props, State> {
   }
 
   stateFromProps(props) {
-    const { steps, submissions } = props
+    const { steps, submissions, simulationIsEnded, currentStepId } = props
+
+    const isActive = (step: Step): boolean => {
+      return step.type == 'section'
+        ? !!step.steps && step.steps.some(s => s.id == currentStepId)
+        : currentStepId == step.id
+    }
+
+    const isCompleted = (step: Step, isActive: boolean): boolean => {
+      if (isActive) return false
+      return step.type == 'section'
+        ? !!step.steps && step.steps.some(st => submissions.some(su => su.stepId == st.id))
+        : submissions.some(su => su.stepId == step.id)
+    }
+
+    const wasSkipped = (step: Step, isActive: boolean, isCompleted: boolean, headedBySectionSteps: Array<Step>): boolean => {
+      if (isActive || isCompleted) return false
+      if (simulationIsEnded) {
+        // if the simulation is ended (and the step is neither active nor completed)
+        // then, it was skipped
+        return true
+      } else {
+        return headedBySectionSteps.findIndex(s => s.id == step.id) < headedBySectionSteps.findIndex(s => s.id == currentStepId)
+      }
+    }
+
+    const stepResponses = submissions.reduce(
+      (stepResponses, submission) => {
+        if (submission.response) stepResponses[submission.stepId] = submission.response
+        return stepResponses
+      },
+      {}
+    )
     const headedBySectionSteps = flatMapDepth(steps, step => {
       if (step.type == 'section') {
         return [
@@ -58,54 +88,31 @@ const SimulationSteps = translate()(class extends Component<Props, State> {
         return step
       }
     }, 2)
-    const stepResponses = submissions.reduce(
-      (stepResponses, submission) => {
-        if (submission.response) stepResponses[submission.stepId] = submission.response
-        return stepResponses
-      },
-      {}
-    )
     return {
-      headedBySectionSteps,
-      stepResponses
-    }
-  }
-
-  isActive = (stepId: string): boolean => {
-    const { currentStepId } = this.props
-    return currentStepId == stepId
-  }
-
-  isCompleted = (stepId: string): boolean => {
-    if (this.isActive(stepId)) return false
-    const { submissions } = this.props
-    return submissions.some(submission => submission.stepId == stepId)
-  }
-
-  wasSkipped = (stepId: string): boolean => {
-    if (this.isActive(stepId) || this.isCompleted(stepId)) return false
-    const { currentStepId } = this.props
-    if (currentStepId) {
-      const { headedBySectionSteps } = this.state
-      return headedBySectionSteps.findIndex(step => step.id == stepId) < headedBySectionSteps.findIndex(step => step.id == currentStepId)
-    } else {
-      return true
+      headedBySectionSteps: headedBySectionSteps.map(step => ({
+        ...step,
+        status: (
+          isActive(step)
+          ? 'active'
+          : isCompleted(step, false)
+            ? 'completed'
+            : wasSkipped(step, false, false, headedBySectionSteps)
+              ? 'skipped'
+              : 'pending'
+        ),
+        response: stepResponses[step.id]
+      }))
     }
   }
 
   render() {
-    const { headedBySectionSteps, stepResponses } = this.state
+    const { headedBySectionSteps } = this.state
     return <Card>
       <ul className='collection simulation'>
         {
           headedBySectionSteps.map((step, index) => <StepItem
-            stepType={step.type}
-            title={step.title}
-            active={this.isActive(step.id)}
-            completed={this.isCompleted(step.id)}
-            skipped={this.wasSkipped(step.id)}
+            step={step}
             key={`step-item-${index}`}
-            response={stepResponses[step.id]}
           />)
         }
       </ul>
@@ -114,21 +121,28 @@ const SimulationSteps = translate()(class extends Component<Props, State> {
 })
 
 type StepItemProps = {
-  stepType: string,
-  title: string,
-  response: ?string,
-  active: ?boolean,
-  completed: ?boolean,
-  skipped: ?boolean,
+  step: Step,
   t: Function
 }
 
 const StepItem = translate()(class extends Component<StepItemProps> {
   render() {
-    const { stepType, title, response, active, completed, skipped, t } = this.props
-    const isSection = stepType == 'section'
-    return <li className={classNames('collection-item', { done: completed, skipped, active, section: isSection })}>
-      <i className='material-icons left sharp'>{completed ? 'check_circle' : icon(stepType)}</i>
+    const { step, t } = this.props
+    const { type, title, response, status } = step
+    const isSection = type == 'section'
+    const isCompleted = status == 'completed'
+    const itemClassNames = classNames(
+      'collection-item',
+      {
+        done: isCompleted,
+        skipped: status == 'skipped',
+        active: status == 'active',
+        pending: status == 'pending',
+        section: isSection
+      }
+    )
+    return <li className={itemClassNames}>
+      <i className='material-icons left sharp'>{!isSection && isCompleted ? 'check_circle' : icon(type)}</i>
       <UntitledIfEmpty className='title' text={title} emptyText={isSection ? t('Untitled section') : t('Untitled question')} />
       <br />
       <span className='value'>{response}</span>

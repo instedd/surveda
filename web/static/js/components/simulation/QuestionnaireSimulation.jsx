@@ -143,6 +143,7 @@ const QuestionnaireSimulation = translate()(class extends Component<Props, State
             <SimulationSteps steps={simulation.questionnaire.steps}
               currentStepId={simulation.currentStep}
               submissions={simulation.submissions}
+              simulationIsEnded={simulation.simulationStatus == 'ended'}
             />
           </div>
           <div className='col s12 m4'>
