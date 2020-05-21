@@ -1,0 +1,156 @@
+$aoMessageBackground: color("grey", "darken-3");
+$atMessageBackground: color("grey", "darken-4");
+$chatWindowBodyBackground: #999999;
+$chatBorderBackground: color("grey", "darken-3");
+
+.wrapper .simulator-container {
+  @extend .row;
+  padding-top: 60px;
+  & main > div {
+    padding-top: 0;
+  }
+}
+.chat-window {
+  @extend .z-depth-5;
+  width: 100%;
+  border-radius: 5px;
+  padding: 0;
+}
+.chat-window-body {
+  height: 500px;
+  overflow: auto;
+  padding: 15px 15px;
+  position: relative;
+  background: $chatWindowBodyBackground;
+
+  ul {
+    list-style-type: none;
+    margin: 0;
+
+    li {
+      padding: 7px 5px 7px 15px;
+      border-radius: 5px;
+      border-bottom: 3px solid; // separation betweeen same-origin messages
+      border-top: 3px solid;
+      border-color: $chatWindowBodyBackground;
+      width: fit-content;
+    }
+    li:first-child {
+      border-top: none;
+    }
+    li:last-child {
+      border-bottom: none;
+      margin-bottom: 10px; // space between bubbles of different origin
+    }
+    .message-bubble {
+      border-radius: 4px;
+      margin-left: 5px;
+      margin-right: 5px;
+      position: relative;
+      clear:both; //for maintaining a one bubble per row
+
+      .content-text {
+        display: inline-block;
+        overflow-wrap: break-word;
+        -webkit-hyphens: auto;
+        -moz-hyphens: auto;
+        hyphens: auto;
+        font-size: 1.14rem;
+        max-width: 200px;
+        width: fit-content;
+        padding-right: 10px;
+      }
+
+      .content-timestamp {
+        color: #9E9E9E; //$md-grey-500;
+        display: inline-block;
+        text-align: right;
+        margin-left: 25px;
+      }
+    }
+    .at-message {
+      @extend .white-text;
+      background: $atMessageBackground;
+      width: fit-content;
+      margin-left: calc(100% - width);
+      float: right;
+      clear: both;
+    }
+    .ao-message {
+      color: color("grey", "lighten-2");
+      background: $aoMessageBackground;
+      width: fit-content;
+      float: left;
+      margin-right: calc(100% - width);
+      clear: both;
+    }
+
+    // properties for bubble start mark
+    .at-message:after, .ao-message:after {
+      border: solid transparent;
+      border-width: 7px;
+      content: "";
+      height: 0;
+      margin-left: -7px;
+      position: absolute;
+      top: 0;
+      width: 0;
+    }
+    .at-message:after {
+      border-top-color: $atMessageBackground;
+      left: 100%;
+    }
+    .ao-message:after {
+      border-top-color: $aoMessageBackground;
+      left: 0;
+    }
+  }
+}
+.chat-header{
+  @extend .white-text;
+  background: $chatBorderBackground;
+  text-align: center;
+  height: 90px;
+  font-size: 24px;
+  font-style: normal;
+  line-height: 90px;
+  border-top-left-radius: 5px;
+  border-top-right-radius: 5px;
+  border-bottom: 1px solid $chatWindowBodyBackground;
+}
+
+.chat-window-input {
+  background: $chatBorderBackground;
+  padding: 10px 10px 10px 25px;
+  display: grid;
+  grid-template-columns: auto max-content;
+  grid-template-rows: auto;
+  grid-template-areas: "input button";
+  border-bottom-left-radius: 5px;
+  border-bottom-right-radius: 5px;
+  border-color: transparent;
+  border-top: 1px solid $chatWindowBodyBackground;
+  input:focus::placeholder {
+    color:transparent;
+  }
+
+  .chat-input {
+    grid-area: input;
+    color: color("grey", "lighten-2");
+    .md-text-field {
+      font-size: 1.14rem;
+    }
+    margin: 0px;
+  }
+  .chat-button {
+    grid-area: button;
+    padding: 15px;
+    cursor: pointer;
+    button:hover {
+      background: transparent;
+    }
+    .material-icons{
+      color: color("grey", "lighten-2");
+    }
+  }
+}

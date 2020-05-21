@@ -34,14 +34,20 @@ class QuestionnaireTitle extends Component {
     return (
       <div className='title-container'>
         <EditableTitleLabel title={questionnaire.name} onSubmit={(value) => { this.handleSubmit(value) }} emptyText={t('Untitled questionnaire')} readOnly={readOnly} more={<QuestionnaireMenu />} />
-        <EditableDescriptionLabel description={questionnaire.description} emptyText={t('Add description')} onSubmit={(value) => { this.handleSubmitDescription(value) }} readOnly={readOnly} />
+        <EditableDescriptionLabel description={questionnaire.description} emptyText={readOnly ? '' : t('Add description')} onSubmit={(value) => { this.handleSubmitDescription(value) }} readOnly={readOnly} />
       </div>
     )
   }
 }
 
 const mapStateToProps = (state, ownProps) => ({
-  readOnly: state.project && state.project.data ? state.project.data.readOnly : true
+  readOnly: typeof ownProps.readOnly === 'boolean'
+  ? ownProps.readOnly
+  : (
+    state.project && state.project.data
+    ? state.project.data.readOnly
+    : true
+  )
 })
 
 export default translate()(connect(mapStateToProps)(withQuestionnaire(QuestionnaireTitle)))

@@ -73,6 +73,7 @@
     "jsdom": "^9.8.3",
     "jsdom-global": "^2.1.0",
     "lodash": "^4.0.0",
+    "lodash.flatmapdepth": "^4.10.0",
     "mocha": "^3.1.0",
     "node-sass": "^4.11.0",
     "normalizr": "^2.2.1",

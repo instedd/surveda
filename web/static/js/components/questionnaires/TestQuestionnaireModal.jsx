@@ -89,6 +89,8 @@ class TestQuestionnaireModal extends Component {
     let channelOptions = []
     channelOptions.push(<option key={0} value=''>{t('Select a channel...')}</option>)
 
+    if (mode == 'sms') channelOptions.push(<option key='simulation' value='simulation'>{t('Simulation')}</option>)
+
     for (const channelId in channels) {
       const channel = channels[channelId]
       if (channel.type == type) {
@@ -112,18 +114,26 @@ class TestQuestionnaireModal extends Component {
   }
 
   render() {
-    const { modalId, t } = this.props
-
+    const { modalId, questionnaire, router, t } = this.props
+    const { mode } = this.state
+    const activeButton = ({ onClick }) => <a className='btn-large waves-effect waves-light blue modal-action' onClick={onClick}>Send</a>
     let sendButton = null
     let cancelButton = <a href='#!' className='modal-action modal-close btn-flat grey-text'>Cancel</a>
-    if (this.state.sending) {
+    if (this.state.channelId == 'simulation') {
+      sendButton = activeButton({
+        onClick: () => {
+          this.refs.modal.close()
+          router.push(routes.questionnaireSimulation(questionnaire.projectId, questionnaire.id, mode))
+        }
+      })
+    } else if (this.state.sending) {
       sendButton = <a className='btn-medium disabled'>{t('Sending...')}</a>
       cancelButton = null
     } else if (this.state.phoneNumber.trim().length != 0 &&
-      this.state.mode != '' &&
+      mode != '' &&
       this.state.channelId != '' &&
       this.state.channelOptions.length > 1) {
-      sendButton = <a className='btn-large waves-effect waves-light blue modal-action' onClick={e => this.send(e)}>Send</a>
+      sendButton = activeButton({ onClick: e => this.send(e) })
     } else {
       sendButton = <a className='btn-medium disabled'>{t('Send')}</a>
     }

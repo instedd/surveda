@@ -28,6 +28,7 @@ import * as questionnaireActions from './actions/questionnaire'
 import ChannelTabs from './components/channels/ChannelTabs'
 import ChannelNew from './components/channels/ChannelNew'
 import ChannelSettings from './components/channels/ChannelSettings'
+import QuestionnaireSimulation from './components/simulation/QuestionnaireSimulation'
 
 const k = (s) => s
 
@@ -62,6 +63,7 @@ export default (
             <IndexRedirect to='edit' />
           </Route>
           <Route path=':questionnaireId/edit' component={QuestionnaireEditor} title={QuestionnaireTitle} showSavingStatus undo={{state: (state) => state.questionnaire, actions: questionnaireActions}} />
+          <Route path=':questionnaireId/simulation/:mode' component={QuestionnaireSimulation} title={<QuestionnaireTitle readOnly />} />
         </Route>
 
         <Route path='collaborators' >
@@ -112,6 +114,7 @@ export const questionnaireIndex = (projectId) => `${project(projectId)}/question
 export const collaboratorIndex = (projectId) => `${project(projectId)}/collaborators`
 export const activityIndex = (projectId) => `${project(projectId)}/activity`
 export const questionnaire = (projectId, questionnaireId) => `${questionnaireIndex(projectId)}/${questionnaireId}`
+export const questionnaireSimulation = (projectId, questionnaireId, mode) => `${questionnaireIndex(projectId)}/${questionnaireId}/simulation/${mode}`
 export const editQuestionnaire = (projectId, questionnaireId) => `${questionnaire(projectId, questionnaireId)}/edit`
 export const exportQuestionnaireZip = (projectId, questionnaireId) => `/api/v1${questionnaire(projectId, questionnaireId)}/export_zip`
 export const channelNew = (providerType, providerIndex) => `/channels/new?providerType=${providerType}&providerIndex=${providerIndex}`
