@@ -33,7 +33,7 @@ type State = {
   headedBySectionSteps: Array<Step>
 }
 
-const SimulationSteps = translate()(class extends Component<Props, State> {
+class SimulationSteps extends Component<Props, State> {
   constructor(props) {
     super(props)
     this.state = this.stateFromProps(props)
@@ -118,7 +118,7 @@ const SimulationSteps = translate()(class extends Component<Props, State> {
       </ul>
     </Card>
   }
-})
+}
 
 type StepItemProps = {
   step: Step,
@@ -150,4 +150,4 @@ const StepItem = translate()(class extends Component<StepItemProps> {
   }
 })
 
-export default SimulationSteps
+export default translate()(SimulationSteps)

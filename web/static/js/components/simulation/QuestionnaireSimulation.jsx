@@ -39,7 +39,7 @@ type State = {
   simulation: ?Simulation
 }
 
-const QuestionnaireSimulation = translate()(class extends Component<Props, State> {
+class QuestionnaireSimulation extends Component<Props, State> {
   state = {
     simulation: null
   }
@@ -154,7 +154,7 @@ const QuestionnaireSimulation = translate()(class extends Component<Props, State
       }
     </div>
   }
-})
+}
 
 const mapStateToProps = (state, ownProps) => ({
   projectId: parseInt(ownProps.params.projectId),
@@ -162,4 +162,4 @@ const mapStateToProps = (state, ownProps) => ({
   mode: ownProps.params.mode
 })
 
-export default withRouter(connect(mapStateToProps)(QuestionnaireSimulation))
+export default translate()(withRouter(connect(mapStateToProps)(QuestionnaireSimulation)))
