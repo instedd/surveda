@@ -5,13 +5,15 @@ import { translate } from 'react-i18next'
 import { Card, UntitledIfEmpty } from '../ui'
 import classNames from 'classnames/bind'
 import { flatMapDepth } from 'lodash'
-import propsAreEqual from '../../propsAreEqual'
 
 type Step = {
   type: string,
   title: string,
   id: string,
-  steps: ?Array<Step>,
+  steps: ?Array<Step>
+}
+
+type PreparedStep = Step & {
   status: string,
   response: ?string
 }
@@ -29,55 +31,10 @@ type Props = {
   simulationIsEnded: boolean
 }
 
-type State = {
-  headedBySectionSteps: Array<Step>
-}
+class SimulationSteps extends Component<Props> {
+  render() {
+    const { steps, submissions, simulationIsEnded, currentStepId } = this.props
 
-class SimulationSteps extends Component<Props, State> {
-  constructor(props) {
-    super(props)
-    this.state = this.stateFromProps(props)
-  }
-
-  componentWillReceiveProps(newProps) {
-    if (propsAreEqual(this.props, newProps)) return
-    this.setState(this.stateFromProps(newProps))
-  }
-
-  stateFromProps(props) {
-    const { steps, submissions, simulationIsEnded, currentStepId } = props
-
-    const isActive = (step: Step): boolean => {
-      return step.type == 'section'
-        ? !!step.steps && step.steps.some(s => s.id == currentStepId)
-        : currentStepId == step.id
-    }
-
-    const isCompleted = (step: Step, isActive: boolean): boolean => {
-      if (isActive) return false
-      return step.type == 'section'
-        ? !!step.steps && step.steps.some(st => submissions.some(su => su.stepId == st.id))
-        : submissions.some(su => su.stepId == step.id)
-    }
-
-    const wasSkipped = (step: Step, isActive: boolean, isCompleted: boolean, headedBySectionSteps: Array<Step>): boolean => {
-      if (isActive || isCompleted) return false
-      if (simulationIsEnded) {
-        // if the simulation is ended (and the step is neither active nor completed)
-        // then, it was skipped
-        return true
-      } else {
-        return headedBySectionSteps.findIndex(s => s.id == step.id) < headedBySectionSteps.findIndex(s => s.id == currentStepId)
-      }
-    }
-
-    const stepResponses = submissions.reduce(
-      (stepResponses, submission) => {
-        if (submission.response) stepResponses[submission.stepId] = submission.response
-        return stepResponses
-      },
-      {}
-    )
     const headedBySectionSteps = flatMapDepth(steps, step => {
       if (step.type == 'section') {
         return [
@@ -88,29 +45,44 @@ class SimulationSteps extends Component<Props, State> {
         return step
       }
     }, 2)
-    return {
-      headedBySectionSteps: headedBySectionSteps.map(step => ({
-        ...step,
-        status: (
-          isActive(step)
-          ? 'active'
-          : isCompleted(step, false)
-            ? 'completed'
-            : wasSkipped(step, false, false, headedBySectionSteps)
-              ? 'skipped'
-              : 'pending'
-        ),
-        response: stepResponses[step.id]
-      }))
-    }
-  }
 
-  render() {
-    const { headedBySectionSteps } = this.state
+    const stepStatus = (step) => {
+      const active = step.type == 'section'
+        ? !!step.steps && step.steps.some(s => s.id == currentStepId)
+        : currentStepId == step.id
+      if (active) return 'active'
+
+      const completed = step.type == 'section'
+        ? !!step.steps && step.steps.some(st => submissions.some(su => su.stepId == st.id))
+        : submissions.some(su => su.stepId == step.id)
+      if (completed) return 'completed'
+
+      const skipped = simulationIsEnded
+        ? true
+        : headedBySectionSteps.findIndex(s => s.id == step.id) < headedBySectionSteps.findIndex(s => s.id == currentStepId)
+      if (skipped) return 'skipped'
+
+      return 'pending'
+    }
+
+    const stepResponses = submissions.reduce(
+      (stepResponses, submission) => {
+        if (submission.response) stepResponses[submission.stepId] = submission.response
+        return stepResponses
+      },
+      {}
+    )
+
+    const preparedSteps = headedBySectionSteps.map((step: Step): PreparedStep => ({
+      ...step,
+      status: stepStatus(step),
+      response: stepResponses[step.id]
+    }))
+
     return <Card>
       <ul className='collection simulation'>
         {
-          headedBySectionSteps.map((step, index) => <StepItem
+          preparedSteps.map((step, index) => <StepItem
             step={step}
             key={`step-item-${index}`}
           />)
@@ -121,7 +93,7 @@ class SimulationSteps extends Component<Props, State> {
 }
 
 type StepItemProps = {
-  step: Step,
+  step: PreparedStep,
   t: Function
 }
 
