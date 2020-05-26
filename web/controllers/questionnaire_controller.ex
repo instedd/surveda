@@ -169,6 +169,10 @@ defmodule Ask.QuestionnaireController do
     end
   end
 
+  defp exported_audio_file_name(uuid) do
+    uuid <> ".#{Audio.stored_audio_extension()}"
+  end
+
   def export_zip(conn, %{"project_id" => project_id, "questionnaire_id" => id}) do
     project = conn
     |> load_project(project_id)
@@ -191,18 +195,18 @@ defmodule Ask.QuestionnaireController do
       end,
       fn _ -> [] end
     )
-    audio_files_data = %{}
+    # Link the audio file to its corresponding step
+    audio_files = Stream.map(audio_resource, fn audio ->
+      %{
+        "uuid" => audio.uuid,
+        "original_filename" => audio.filename,
+        "source" => audio.source,
+        "duration" => audio.duration
+      }
+    end)
     audio_entries = Stream.map(audio_resource, fn audio ->
-      Stream.into(audio, audio_files_data, fn audio ->
-        %{
-          "uuid" => audio.uuid,
-          "filename" => audio.filename,
-          "source" => audio.source,
-          "duration" => audio.duration,
-        }
-      end)
       #Zstream needs to recieve audio.data as enumerable in order to work, otherwise it throws Protocol.undefined error.
-      Zstream.entry("audios/" <> audio.filename, [audio.data])
+      Zstream.entry("audios/" <> exported_audio_file_name(audio.uuid), [audio.data])
     end)
 
     manifest = %{
@@ -214,7 +218,7 @@ defmodule Ask.QuestionnaireController do
       partial_relevant_config: questionnaire.partial_relevant_config,
       languages: questionnaire.languages,
       default_language: questionnaire.default_language,
-      audio_files: audio_files_data
+      audio_files: audio_files
     }
     {:ok, json} = Poison.encode(manifest)
     json_entry = Stream.map([json], fn json ->

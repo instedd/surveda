@@ -84,7 +84,7 @@ defmodule Ask.AudioControllerTest do
       file = %Plug.Upload{path: "test/fixtures/invalid_audio.csv", filename: "test1.csv"}
       conn = post conn, audio_path(conn, :create), file: file
 
-      assert Enum.at(json_response(conn, 422)["errors"]["filename"], 0) == "Invalid file type. Allowed types are MPEG and WAV."
+      assert Enum.at(json_response(conn, 422)["errors"]["filename"], 0) == "Invalid file type. Allowed types are MP3 and WAV."
     end
 
   end
