@@ -63,7 +63,7 @@ export default (
             <IndexRedirect to='edit' />
           </Route>
           <Route path=':questionnaireId/edit' component={QuestionnaireEditor} title={QuestionnaireTitle} showSavingStatus undo={{state: (state) => state.questionnaire, actions: questionnaireActions}} />
-          <Route path=':questionnaireId/simulation/:mode' component={QuestionnaireSimulation} title={<QuestionnaireTitle readOnly />} />
+          <Route path=':questionnaireId/simulation/:mode' component={QuestionnaireSimulation} title={<QuestionnaireTitle readOnly noMenu />} />
         </Route>
 
         <Route path='collaborators' >
