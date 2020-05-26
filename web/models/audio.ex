@@ -16,7 +16,7 @@ defmodule Ask.Audio do
   end
 
   @stored_audio_extension "mp3"
-  def stored_audio_extension(), do: @stored_audio_extension
+  def exported_audio_file_name(uuid), do: uuid <> ".#{@stored_audio_extension()}"
 
   @doc """
   Builds a changeset based on the `struct` and `params`.

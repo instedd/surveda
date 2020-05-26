@@ -169,10 +169,6 @@ defmodule Ask.QuestionnaireController do
     end
   end
 
-  defp exported_audio_file_name(uuid) do
-    uuid <> ".#{Audio.stored_audio_extension()}"
-  end
-
   def export_zip(conn, %{"project_id" => project_id, "questionnaire_id" => id}) do
     project = conn
     |> load_project(project_id)
@@ -206,7 +202,7 @@ defmodule Ask.QuestionnaireController do
     end)
     audio_entries = Stream.map(audio_resource, fn audio ->
       #Zstream needs to recieve audio.data as enumerable in order to work, otherwise it throws Protocol.undefined error.
-      Zstream.entry("audios/" <> exported_audio_file_name(audio.uuid), [audio.data])
+      Zstream.entry("audios/" <> Audio.exported_audio_file_name(audio.uuid), [audio.data])
     end)
 
     manifest = %{
@@ -274,11 +270,11 @@ defmodule Ask.QuestionnaireController do
     {:ok, manifest} = Poison.decode(json)
 
     audio_files = manifest |> Map.get("audio_files")
-    audio_files |> Enum.each(fn %{"uuid" => uuid, "filename" => filename, "source" => source, "duration" => duration} ->
+    audio_files |> Enum.each(fn %{"uuid" => uuid, "original_filename" => original_filename, "source" => source, "duration" => duration} ->
       # Only create audio if it doesn't exist already
       unless Audio |> Repo.get_by(uuid: uuid) do
-        data = files |> Map.get("audios/#{uuid}")
-        %Audio{uuid: uuid, data: data, filename: filename, source: source, duration: duration} |> Repo.insert!
+        data = files |> Map.get("audios/#{Audio.exported_audio_file_name(uuid)}")
+        %Audio{uuid: uuid, data: data, filename: original_filename, source: source, duration: duration} |> Repo.insert!
       end
     end)
 
