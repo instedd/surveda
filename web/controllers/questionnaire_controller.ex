@@ -191,7 +191,9 @@ defmodule Ask.QuestionnaireController do
       end,
       fn _ -> [] end
     )
-    # Link the audio file to its corresponding step
+
+    # The audio file import is based on this list
+    # If it's empty, nothing will be imported
     audio_files = Stream.map(audio_resource, fn audio ->
       %{
         "uuid" => audio.uuid,
@@ -199,6 +201,7 @@ defmodule Ask.QuestionnaireController do
         "source" => audio.source
       }
     end)
+
     audio_entries = Stream.map(audio_resource, fn audio ->
       #Zstream needs to recieve audio.data as enumerable in order to work, otherwise it throws Protocol.undefined error.
       Zstream.entry("audios/" <> Audio.exported_audio_file_name(audio.uuid), [audio.data])
