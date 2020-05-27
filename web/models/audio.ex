@@ -10,10 +10,14 @@ defmodule Ask.Audio do
     field :data, :binary
     field :filename, :string
     field :source, :string, default: "upload"
+    # :duration is unused. We should remove it from the model (and DB)
     field :duration, :integer, default: 0 # seconds
 
     timestamps()
   end
+
+  @stored_audio_extension "mp3"
+  def exported_audio_file_name(uuid), do: uuid <> ".#{@stored_audio_extension()}"
 
   @doc """
   Builds a changeset based on the `struct` and `params`.
@@ -38,14 +42,15 @@ defmodule Ask.Audio do
 
   def params_from_converted_upload(upload) do
     case Path.extname(upload.filename) do
-      ".wav" -> case Sox.convert("wav", upload.path, "mp3") do
+      ".wav" -> case Sox.convert("wav", upload.path, @stored_audio_extension) do
                   {:ok, data} ->
-                    %{"uuid" => Ecto.UUID.generate, "data" => data, "filename" => "#{Path.basename(upload.filename, ".wav")}.mp3"}
+                    %{"uuid" => Ecto.UUID.generate, "data" => data, "filename" => "#{Path.basename(upload.filename, ".wav")}.#{@stored_audio_extension}"}
                   {:error, error} ->
                     Logger.warn("Error converting file #{upload.path}: #{error}")
                     params_from_upload(upload)
                 end
-      _ -> params_from_upload(upload)
+      ".#{@stored_audio_extension}"
+        -> params_from_upload(upload)
     end
   end
 
@@ -62,7 +67,7 @@ defmodule Ask.Audio do
     if valid_type do
       []
     else
-      [filename: "Invalid file type. Allowed types are MPEG and WAV."]
+      [filename: "Invalid file type. Allowed types are MP3 and WAV."]
     end
   end
 
