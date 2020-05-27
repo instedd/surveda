@@ -10,6 +10,7 @@ defmodule Ask.Audio do
     field :data, :binary
     field :filename, :string
     field :source, :string, default: "upload"
+    # :duration is unused. We should remove it from the model (and DB)
     field :duration, :integer, default: 0 # seconds
 
     timestamps()

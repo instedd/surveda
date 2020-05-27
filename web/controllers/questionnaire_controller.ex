@@ -196,8 +196,7 @@ defmodule Ask.QuestionnaireController do
       %{
         "uuid" => audio.uuid,
         "original_filename" => audio.filename,
-        "source" => audio.source,
-        "duration" => audio.duration
+        "source" => audio.source
       }
     end)
     audio_entries = Stream.map(audio_resource, fn audio ->
@@ -270,11 +269,11 @@ defmodule Ask.QuestionnaireController do
     {:ok, manifest} = Poison.decode(json)
 
     audio_files = manifest |> Map.get("audio_files")
-    audio_files |> Enum.each(fn %{"uuid" => uuid, "original_filename" => original_filename, "source" => source, "duration" => duration} ->
+    audio_files |> Enum.each(fn %{"uuid" => uuid, "original_filename" => original_filename, "source" => source} ->
       # Only create audio if it doesn't exist already
       unless Audio |> Repo.get_by(uuid: uuid) do
         data = files |> Map.get("audios/#{Audio.exported_audio_file_name(uuid)}")
-        %Audio{uuid: uuid, data: data, filename: original_filename, source: source, duration: duration} |> Repo.insert!
+        %Audio{uuid: uuid, data: data, filename: original_filename, source: source} |> Repo.insert!
       end
     end)
 
