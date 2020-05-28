@@ -42,8 +42,20 @@ defmodule Ask.ProjectView do
     %{data: %{activities: render_many(activities, Ask.ProjectView, "activity.json", as: :activity)}, meta: %{count: activities_count}}
   end
 
+  def render("activity.json", %{activity: %{user: %{name: name, email: email}} = activity}) do
+    render_basic("activity.json", %{activity: activity})
+    |> Map.merge(%{
+      user_name: name,
+      user_email: email
+    })
+  end
+
   def render("activity.json", %{activity: activity}) do
-    %{user_name: (if activity.user, do: activity.user.name, else: nil),
+    render_basic("activity.json", %{activity: activity})
+  end
+
+  defp render_basic("activity.json", %{activity: activity}) do
+    %{
       remote_ip: activity.remote_ip,
       action: activity.action,
       entity_type: activity.entity_type,

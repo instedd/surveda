@@ -422,6 +422,7 @@ defmodule Ask.ProjectControllerTest do
       conn = get conn, project_activities_path(conn, :activities, project.id)
       assert json_response(conn, 200)["data"]["activities"] == [
         %{"user_name" => user.name,
+          "user_email" => user.email,
           "action" => "create_invite",
           "entity_type" => "project",
           "id" => create_invite_id,
@@ -434,6 +435,7 @@ defmodule Ask.ProjectControllerTest do
           }
         },
         %{"user_name" => user.name,
+          "user_email" => user.email,
           "action" => "enable_public_link",
           "entity_type" => "survey",
           "id" => enable_link_id,
@@ -512,6 +514,7 @@ defmodule Ask.ProjectControllerTest do
       conn = get conn, project_activities_path(conn, :activities, project.id)
       assert json_response(conn, 200)["data"]["activities"] == [
         %{"user_name" => user.name,
+          "user_email" => user.email,
           "action" => "create_invite",
           "entity_type" => "project",
           "id" => create_invite_log.id,

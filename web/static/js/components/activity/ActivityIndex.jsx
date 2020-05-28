@@ -48,14 +48,11 @@ class ActivityIndex extends Component {
       onPreviousPage={() => this.previousPage()}
       onNextPage={() => this.nextPage()} />
 
-    const userContent = (userName, remoteIp) => {
-      if (userName) {
-        return userName
-      } else if (remoteIp == '0.0.0.0') {
-        return t('Background process')
-      } else {
-        return remoteIp
-      }
+    const userContent = (userName, userEmail, remoteIp) => {
+      if (userName) return userName
+      if (userEmail) return userEmail
+      if (remoteIp == '0.0.0.0') return t('Background process')
+      return remoteIp
     }
 
     return (<div>
@@ -71,7 +68,7 @@ class ActivityIndex extends Component {
           {activities.map(activity => {
             return (
               <tr key={activity.id}>
-                <td>{userContent(activity.userName, activity.remoteIp)}</td>
+                <td>{userContent(activity.userName, activity.userEmail, activity.remoteIp)}</td>
                 <td>
                   <ActivityDescription activity={activity} />
                 </td>
