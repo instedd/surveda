@@ -11,7 +11,8 @@ class QuestionnaireTitle extends Component {
     t: PropTypes.func,
     dispatch: PropTypes.func.isRequired,
     questionnaire: PropTypes.object,
-    readOnly: PropTypes.bool
+    readOnly: PropTypes.bool,
+    hideMenu: PropTypes.bool
   }
 
   handleSubmit(newName) {
@@ -29,11 +30,11 @@ class QuestionnaireTitle extends Component {
   }
 
   render() {
-    const { questionnaire, readOnly, t } = this.props
+    const { questionnaire, readOnly, hideMenu, t } = this.props
 
     return (
       <div className='title-container'>
-        <EditableTitleLabel title={questionnaire.name} onSubmit={(value) => { this.handleSubmit(value) }} emptyText={t('Untitled questionnaire')} readOnly={readOnly} more={<QuestionnaireMenu />} />
+        <EditableTitleLabel title={questionnaire.name} onSubmit={(value) => { this.handleSubmit(value) }} emptyText={t('Untitled questionnaire')} readOnly={readOnly} more={hideMenu ? '' : <QuestionnaireMenu />} />
         <EditableDescriptionLabel description={questionnaire.description} emptyText={readOnly ? '' : t('Add description')} onSubmit={(value) => { this.handleSubmitDescription(value) }} readOnly={readOnly} />
       </div>
     )
