@@ -294,8 +294,8 @@ class QuestionnaireEditor extends Component<any, State> {
 
     const settings = userSettings.settings
     // emptyQuestionnaire is to show onboarding to fresh users with write level in new or empty questionnaires. As questionnaires are created with an empty step, all this conditions are necessary to check if it is actually empty
-    const emptyChoices = questionnaire.steps[0].choices && questionnaire.steps[0].choices.length == 0
-    const emptyQuestionnaire = !questionnaireHasSections && !questionnaire.name && questionnaire.steps.length == 1 && questionnaire.steps[0].title == '' && emptyChoices
+    const emptyChoices = questionnaire.steps.length == 0 || (questionnaire.steps[0].choices && questionnaire.steps[0].choices.length == 0)
+    const emptyQuestionnaire = !questionnaireHasSections && !questionnaire.name && (questionnaire.steps.length == 0 || (questionnaire.steps[0].title == '' && emptyChoices))
     const skipOnboarding = !emptyQuestionnaire || (settings.onboarding && settings.onboarding.questionnaire) || userLevel == 'reader'
     const hasQuotaCompletedSteps = !!questionnaire.quotaCompletedSteps
     const partialRelevantEnabled = questionnaire.partialRelevantConfig && questionnaire.partialRelevantConfig.enabled
