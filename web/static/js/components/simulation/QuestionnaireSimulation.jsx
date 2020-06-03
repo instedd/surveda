@@ -4,6 +4,8 @@ import { withRouter, browserHistory } from 'react-router'
 import * as questionnaireActions from '../../actions/questionnaire'
 import { connect } from 'react-redux'
 import { bindActionCreators } from 'redux'
+import * as routes from '../../routes'
+import { Tooltip } from '../ui'
 import { startSimulation, messageSimulation } from '../../api.js'
 import ChatWindow from './ChatWindow'
 import DispositionChart from './DispositionChart'
@@ -35,7 +37,8 @@ type Props = {
   questionnaireId: number,
   mode: string,
   questionnaireActions: Object,
-  t: Function
+  t: Function,
+  router: Object
 }
 
 type State = {
@@ -144,11 +147,23 @@ class QuestionnaireSimulation extends Component<Props, State> {
 
   render() {
     const { simulation } = this.state
+    const { router, projectId, questionnaireId } = this.props
     const simulationIsActive = simulation && simulation.simulationStatus == 'active'
+    const closeSimulationButton = (
+      <div>
+        <Tooltip text='Close Simulation'>
+          <a key='one' className='btn-floating btn-large waves-effect waves-light red right' style={{marginTop: '-6.1rem'}} href='#' onClick={() => router.push(routes.editQuestionnaire(projectId, questionnaireId))}>
+            <i className='material-icons'>close</i>
+          </a>
+        </Tooltip>
+      </div>
+    )
+
     return <div className='simulator-container'>
       {
         simulation
         ? <div>
+          {closeSimulationButton}
           <div className='col s12 m4'>
             <DispositionChart disposition={simulation.disposition} />
           </div>
