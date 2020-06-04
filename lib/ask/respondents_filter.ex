@@ -1,6 +1,6 @@
 defmodule Ask.RespondentsFilter do
+  import Ecto.Query
   defstruct [:disposition, :since]
-
   @date_format_string "{YYYY}-{0M}-{0D}"
 
   def parse(q) do
@@ -26,5 +26,20 @@ defmodule Ask.RespondentsFilter do
     {:ok, exp} = Regex.compile("(^|[ ])#{key}:(?<#{key}>[^ ]+)")
     capture = Regex.named_captures(exp, q)
     if capture, do: Map.get(capture, key), else: nil
+  end
+
+  def filter_where(filter) do
+    filter = Map.from_struct(filter)
+    Enum.reduce(filter, dynamic(true), fn
+      {:disposition, value}, dynamic when value != nil ->
+        dynamic([r], ^dynamic and r.disposition == ^value)
+
+      {:since, value}, dynamic when value != nil ->
+        dynamic([r], ^dynamic and r.updated_at > ^value)
+
+      {_, _}, dynamic ->
+        # Not a where parameter
+        dynamic
+    end)
   end
 end

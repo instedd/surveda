@@ -11,7 +11,8 @@ defmodule Ask.RespondentController do
     RespondentDispositionHistory,
     Stats,
     Survey,
-    SurveyLogEntry
+    SurveyLogEntry,
+    RespondentsFilter
   }
 
   def index(conn, %{"project_id" => project_id, "survey_id" => survey_id} = params) do
@@ -19,6 +20,10 @@ defmodule Ask.RespondentController do
     page = Map.get(params, "page", "")
     sort_by = Map.get(params, "sort_by", "")
     sort_asc = Map.get(params, "sort_asc", "")
+    q = Map.get(params, "q", "")
+
+    filter = RespondentsFilter.parse(q)
+    filter_where = RespondentsFilter.filter_where(filter)
 
     respondents = conn
     |> load_project(project_id)
@@ -26,6 +31,7 @@ defmodule Ask.RespondentController do
     |> Repo.get!(survey_id)
     |> assoc(:respondents)
     |> preload(:responses)
+    |> where(^filter_where)
     |> conditional_limit(limit)
     |> conditional_page(limit, page)
     |> sort_respondents(sort_by, sort_asc)
@@ -552,6 +558,9 @@ defmodule Ask.RespondentController do
         dynamic
       end
 
+    filter = RespondentsFilter.parse(Map.get(params, "q", ""))
+    filter_where = RespondentsFilter.filter_where(filter)
+
     respondents = Stream.resource(
       fn -> 0 end,
       fn last_seen_id ->
@@ -559,6 +568,7 @@ defmodule Ask.RespondentController do
           from r1 in Respondent,
           join: r2 in Respondent, on: r1.id == r2.id,
           where: r2.survey_id == ^survey.id and r2.id > ^last_seen_id,
+          where: ^filter_where,
           where: ^dynamic,
           order_by: r2.id,
           limit: 1000,
