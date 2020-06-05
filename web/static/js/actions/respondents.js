@@ -8,10 +8,10 @@ export const RECEIVE_RESPONDENTS_ERROR = 'RECEIVE_RESPONDENTS_ERROR'
 export const RECEIVE_RESPONDENTS_STATS = 'RECEIVE_RESPONDENTS_STATS'
 export const SORT = 'RESPONDENTS_SORT'
 
-export const fetchRespondents = (projectId, surveyId, limit, page = 1) => (dispatch, getState) => {
+export const fetchRespondents = (projectId, surveyId, limit, page = 1, q) => (dispatch, getState) => {
   const state = getState().respondents
   dispatch(startFetchingRespondents(surveyId, page))
-  api.fetchRespondents(projectId, surveyId, limit, page, state.sortBy, state.sortAsc)
+  api.fetchRespondents(projectId, surveyId, limit, page, state.sortBy, state.sortAsc, q)
     .then(response => dispatch(receiveRespondents(surveyId, page, response.entities.respondents || {}, response.respondentsCount, response.result)))
 }
 
@@ -57,10 +57,10 @@ export const startFetchingRespondents = (surveyId, page) => ({
   page
 })
 
-export const sortRespondentsBy = (projectId, surveyId, property) => (dispatch, getState) => {
+export const sortRespondentsBy = (projectId, surveyId, property, q) => (dispatch, getState) => {
   const state = getState().respondents
   const sortAsc = state.sortBy == property ? !state.sortAsc : true
-  api.fetchRespondents(projectId, surveyId, state.page.size, 1, property, sortAsc)
+  api.fetchRespondents(projectId, surveyId, state.page.size, 1, property, sortAsc, q)
     .then(response => dispatch(receiveRespondents(surveyId, 1, response.entities.respondents || {}, response.respondentsCount, response.result)))
 
   dispatch({

@@ -15,6 +15,7 @@ import find from 'lodash/find'
 import flatten from 'lodash/flatten'
 import { translate } from 'react-i18next'
 import classNames from 'classnames/bind'
+import RespondentsFilter from './RespondentsFilter'
 
 type Props = {
   t: Function,
@@ -40,7 +41,8 @@ type Props = {
 };
 
 type State = {
-  csvType: string
+  csvType: string,
+  filterInput: string
 };
 
 class RespondentIndex extends Component<Props, State> {
@@ -55,7 +57,7 @@ class RespondentIndex extends Component<Props, State> {
 
   constructor(props) {
     super(props)
-    this.state = {csvType: ''}
+    this.state = {csvType: '', filterInput: ''}
     this.toggleResultsLink = this.toggleResultsLink.bind(this)
     this.toggleIncentivesLink = this.toggleIncentivesLink.bind(this)
     this.toggleInteractionsLink = this.toggleInteractionsLink.bind(this)
@@ -67,28 +69,35 @@ class RespondentIndex extends Component<Props, State> {
   }
 
   componentDidMount() {
-    const { projectId, surveyId, pageSize } = this.props
+    const { projectId, surveyId } = this.props
     if (projectId && surveyId) {
       this.props.projectActions.fetchProject(projectId)
       this.props.surveyActions.fetchSurvey(projectId, surveyId)
       this.props.questionnairesActions.fetchQuestionnaires(projectId)
-      this.props.actions.fetchRespondents(projectId, surveyId, pageSize, 1)
+      this.fetchRespondents()
     }
   }
 
+  fetchRespondents(pageNumber = 1) {
+    const { projectId, surveyId, pageSize } = this.props
+    const { filterInput } = this.state
+    this.props.actions.fetchRespondents(projectId, surveyId, pageSize, pageNumber, filterInput)
+  }
+
   nextPage() {
-    const { projectId, surveyId, pageNumber, pageSize } = this.props
-    this.props.actions.fetchRespondents(projectId, surveyId, pageSize, pageNumber + 1)
+    const { pageNumber } = this.props
+    this.fetchRespondents(pageNumber + 1)
   }
 
   previousPage() {
-    const { projectId, surveyId, pageNumber, pageSize } = this.props
-    this.props.actions.fetchRespondents(projectId, surveyId, pageSize, pageNumber - 1)
+    const { pageNumber } = this.props
+    this.fetchRespondents(pageNumber - 1)
   }
 
   downloadCSV() {
     const { projectId, surveyId } = this.props
-    window.location = routes.respondentsResultsCSV(projectId, surveyId)
+    const { filterInput } = this.state
+    window.location = routes.respondentsResultsCSV(projectId, surveyId, filterInput)
   }
 
   downloadDispositionHistoryCSV() {
@@ -108,7 +117,8 @@ class RespondentIndex extends Component<Props, State> {
 
   sortBy(name) {
     const { projectId, surveyId } = this.props
-    this.props.actions.sortRespondentsBy(projectId, surveyId, name)
+    const { filterInput } = this.state
+    this.props.actions.sortRespondentsBy(projectId, surveyId, name, filterInput)
   }
 
   getModes(surveyModes) {
@@ -292,7 +302,9 @@ class RespondentIndex extends Component<Props, State> {
   }
 
   render() {
-    const { survey, questionnaires, totalCount, order, sortBy, sortAsc, userLevel, t } = this.props
+    const { survey, questionnaires, totalCount, order, sortBy, sortAsc,
+      userLevel, t } = this.props
+    const { filterInput } = this.state
 
     if (!this.props.respondents || !survey || !questionnaires || !this.props.project) {
       return <div>{t('Loading...')}</div>
@@ -392,6 +404,7 @@ class RespondentIndex extends Component<Props, State> {
         </li>
       )
     }
+
     return (
       <div className='white'>
         <div dangerouslySetInnerHTML={{
@@ -435,6 +448,11 @@ class RespondentIndex extends Component<Props, State> {
             {interactionsCsvLink}
           </ul>
         </Modal>
+        <RespondentsFilter
+          inputValue={filterInput}
+          onChange={inputValue => this.setState({ filterInput: inputValue })}
+          onEnter={() => this.fetchRespondents()}
+        />
         <CardTable title={title} footer={footer} tableScroll>
           <thead>
             <tr>
