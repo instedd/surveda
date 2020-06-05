@@ -13,6 +13,19 @@ defmodule Ask.RespondentsFilter do
     Map.put(filter, :disposition, disposition)
   end
 
+  @doc """
+  By putting since directly (without parsing it) we're trying to cover the case where Surveda is
+  being used by external services like SurvedaOnaConnector
+  Before the repondents filter module existed, the "since" url param received in the respondent
+  controller was being applied directly. So the understanding of the received date format string
+  was delegated to Ecto
+  See: https://github.com/instedd/surveda-ona-connector
+  Details: lib/surveda_ona_connector/runtime/surveda_client.ex#L58-L66
+  """
+  def put_since(filter, since) do
+    Map.put(filter, :since, since)
+  end
+
   def parse_since(filter, since) do
     case Timex.parse(since, @date_format_string) do
       {:ok, parsed} -> Map.put(filter, :since, parsed)

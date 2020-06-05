@@ -126,42 +126,54 @@ defmodule Ask.RespondentsFilterTest do
     setup do
       now = Timex.now()
       insert_respondents_set(now)
-      {:ok, now: now}
+
+      {
+        :ok,
+        now: now, total_respondents_count: count_all_respondents()
+      }
     end
 
-    test "filter by disposition" do
+    test "filter by disposition", %{total_respondents_count: total_respondents_count} do
       queued_filter_where = disposition_filter_where("queued")
       started_filter_where = disposition_filter_where("started")
       contacted_filter_where = disposition_filter_where("contacted")
 
-      total = count_all_respondents()
-      queued = filter_respondents_and_count(queued_filter_where)
-      started = filter_respondents_and_count(started_filter_where)
-      contacted = filter_respondents_and_count(contacted_filter_where)
+      queued_respondents_count = filter_respondents_and_count(queued_filter_where)
+      started_respondents_count = filter_respondents_and_count(started_filter_where)
+      contacted_respondents_count = filter_respondents_and_count(contacted_filter_where)
 
-      assert total == 45
-      assert queued == 6
-      assert started == 15
-      assert contacted == 24
+      assert total_respondents_count == 45
+      assert queued_respondents_count == 6
+      assert started_respondents_count == 15
+      assert contacted_respondents_count == 24
     end
 
-    test "filter by since", %{now: now} do
+    test "filter by since", %{
+      now: now,
+      total_respondents_count: total_respondents_count
+    } do
       yesterday_filter_where = since_days_ago_filter_where(now, 1)
       three_days_ago_filter_where = since_days_ago_filter_where(now, 3)
       five_days_ago_filter_where = since_days_ago_filter_where(now, 5)
 
-      total = count_all_respondents()
-      since_yesterday = filter_respondents_and_count(yesterday_filter_where)
-      since_three_days_ago = filter_respondents_and_count(three_days_ago_filter_where)
-      since_five_days_ago = filter_respondents_and_count(five_days_ago_filter_where)
+      since_yesterday_respondents_count = filter_respondents_and_count(yesterday_filter_where)
 
-      assert total == 45
-      assert since_yesterday == 12
-      assert since_three_days_ago == 27
-      assert since_five_days_ago == 45
+      since_three_days_ago_respondents_count =
+        filter_respondents_and_count(three_days_ago_filter_where)
+
+      since_five_days_ago_respondents_count =
+        filter_respondents_and_count(five_days_ago_filter_where)
+
+      assert total_respondents_count == 45
+      assert since_yesterday_respondents_count == 12
+      assert since_three_days_ago_respondents_count == 27
+      assert since_five_days_ago_respondents_count == 45
     end
 
-    test "filter by disposition and since", %{now: now} do
+    test "filter by disposition and since", %{
+      now: now,
+      total_respondents_count: total_respondents_count
+    } do
       queued_yesterday_filter_where = disposition_since_days_ago_filter_where("queued", now, 1)
 
       started_three_days_ago_filter_where =
@@ -170,16 +182,76 @@ defmodule Ask.RespondentsFilterTest do
       contacted_five_days_ago_filter_where =
         disposition_since_days_ago_filter_where("contacted", now, 5)
 
-      total = count_all_respondents()
-      queued_yesterday = filter_respondents_and_count(queued_yesterday_filter_where)
-      started_three_days_ago = filter_respondents_and_count(started_three_days_ago_filter_where)
-      contacted_five_days_ago = filter_respondents_and_count(contacted_five_days_ago_filter_where)
+      queued_yesterday_respondents_count =
+        filter_respondents_and_count(queued_yesterday_filter_where)
 
-      assert total == 45
-      assert queued_yesterday == 1
-      assert started_three_days_ago == 9
-      assert contacted_five_days_ago == 24
+      started_three_days_ago_respondents_count =
+        filter_respondents_and_count(started_three_days_ago_filter_where)
+
+      contacted_five_days_ago_respondents_count =
+        filter_respondents_and_count(contacted_five_days_ago_filter_where)
+
+      assert total_respondents_count == 45
+      assert queued_yesterday_respondents_count == 1
+      assert started_three_days_ago_respondents_count == 9
+      assert contacted_five_days_ago_respondents_count == 24
     end
+  end
+
+  # These tests try to cover the case where Surveda is being used by external services like
+  # SurvedaOnaConnector
+  # Before the repondents filter module existed, the "since" url param received in the respondent
+  # controller was being applied directly. So the understanding of the received date format string
+  # was delegated to Ecto
+  # See: https://github.com/instedd/surveda-ona-connector
+  # Details: lib/surveda_ona_connector/runtime/surveda_client.ex#L58-L66
+  describe "filter by since without parsing it" do
+    setup do
+      # prepare the dates
+      dummy_date = Timex.parse!("2020-06-01", "{YYYY}-{0M}-{0D}")
+      two_days_after = Timex.shift(dummy_date, days: 2)
+      # prepare the respondents
+      for _ <- 1..2, do: insert(:respondent, disposition: "queued", updated_at: dummy_date)
+      for _ <- 1..3, do: insert(:respondent, disposition: "queued", updated_at: two_days_after)
+
+      {
+        :ok,
+        total_respondents_count: count_all_respondents()
+      }
+    end
+
+    test "support a RFC 3339 5.6 date-time variation used by Ona connector", %{
+      total_respondents_count: total_respondents_count
+    } do
+      # prepare the date in a format string that Ecto should handle properly
+      day_between = "2020-06-02 00:20:56.000000Z"
+
+      # put since directly (without parsing it), filter, and count
+      since_day_between_respondents_count = put_since_filter_and_count(day_between)
+
+      assert total_respondents_count == 5
+      assert since_day_between_respondents_count == 3
+    end
+
+    test "support a ISO 8601 date-time variation", %{
+      total_respondents_count: total_respondents_count
+    } do
+      # prepare the date in a format string that Ecto should handle properly
+      day_between = "2020-06-02T19:20:30+01:00"
+
+      # put since directly (without parsing it), filter, and count
+      since_day_between_respondents_count = put_since_filter_and_count(day_between)
+
+      assert total_respondents_count == 5
+      assert since_day_between_respondents_count == 3
+    end
+  end
+
+  # Put since directly (without parsing it), filter, and count
+  defp put_since_filter_and_count(date_time_string) do
+    RespondentsFilter.put_since(%RespondentsFilter{}, date_time_string)
+    |> RespondentsFilter.filter_where()
+    |> filter_respondents_and_count()
   end
 
   defp insert_respondents_set(now) do
