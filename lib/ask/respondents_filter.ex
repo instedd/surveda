@@ -30,6 +30,7 @@ defmodule Ask.RespondentsFilter do
 
   def filter_where(filter) do
     filter = Map.from_struct(filter)
+
     Enum.reduce(filter, dynamic(true), fn
       {:disposition, value}, dynamic when value != nil ->
         dynamic([r], ^dynamic and r.disposition == ^value)

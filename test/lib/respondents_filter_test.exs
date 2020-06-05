@@ -80,7 +80,10 @@ defmodule Ask.RespondentsFilterTest do
     end
 
     test "put disposition when exists", %{date_format_string: date_format_string} do
-      filter = %RespondentsFilter{disposition: "old-disposition", since: Timex.parse!(@dummy_date, date_format_string)}
+      filter = %RespondentsFilter{
+        disposition: "old-disposition",
+        since: Timex.parse!(@dummy_date, date_format_string)
+      }
 
       filter = RespondentsFilter.put_disposition(filter, @dummy_disposition)
 
@@ -107,7 +110,10 @@ defmodule Ask.RespondentsFilterTest do
     end
 
     test "parse since when exists", %{date_format_string: date_format_string} do
-      filter = %RespondentsFilter{disposition: @dummy_disposition, since: Timex.parse!("2019-01-01", date_format_string)}
+      filter = %RespondentsFilter{
+        disposition: @dummy_disposition,
+        since: Timex.parse!("2019-01-01", date_format_string)
+      }
 
       filter = RespondentsFilter.parse_since(filter, @dummy_date)
 
@@ -157,8 +163,12 @@ defmodule Ask.RespondentsFilterTest do
 
     test "filter by disposition and since", %{now: now} do
       queued_yesterday_filter_where = disposition_since_days_ago_filter_where("queued", now, 1)
-      started_three_days_ago_filter_where = disposition_since_days_ago_filter_where("started", now, 3)
-      contacted_five_days_ago_filter_where = disposition_since_days_ago_filter_where("contacted", now, 5)
+
+      started_three_days_ago_filter_where =
+        disposition_since_days_ago_filter_where("started", now, 3)
+
+      contacted_five_days_ago_filter_where =
+        disposition_since_days_ago_filter_where("contacted", now, 5)
 
       total = count_all_respondents()
       queued_yesterday = filter_respondents_and_count(queued_yesterday_filter_where)
@@ -187,30 +197,35 @@ defmodule Ask.RespondentsFilterTest do
     for _ <- 1..9, do: insert(:respondent, disposition: "contacted", updated_at: four_days_ago)
   end
 
-  defp disposition_since_days_ago_filter_where(disposition, now, days_ago), do:
-    %RespondentsFilter{disposition: disposition, since: Timex.shift(now, days: -days_ago)}
+  defp disposition_since_days_ago_filter_where(disposition, now, days_ago),
+    do:
+      %RespondentsFilter{disposition: disposition, since: Timex.shift(now, days: -days_ago)}
       |> RespondentsFilter.filter_where()
 
-  defp since_days_ago_filter_where(now, days_ago), do:
-    %RespondentsFilter{since: Timex.shift(now, days: -days_ago)}
-    |> RespondentsFilter.filter_where()
+  defp since_days_ago_filter_where(now, days_ago),
+    do:
+      %RespondentsFilter{since: Timex.shift(now, days: -days_ago)}
+      |> RespondentsFilter.filter_where()
 
-  defp disposition_filter_where(disposition), do:
-    %RespondentsFilter{disposition: disposition}
-    |> RespondentsFilter.filter_where()
+  defp disposition_filter_where(disposition),
+    do:
+      %RespondentsFilter{disposition: disposition}
+      |> RespondentsFilter.filter_where()
 
   defp count_all_respondents() do
     Repo.one(
-        from r in "respondents",
+      from(r in "respondents",
         select: count(r.id)
       )
+    )
   end
 
   defp filter_respondents_and_count(filter_where) do
     Repo.one(
-        from r in "respondents",
+      from(r in "respondents",
         where: ^filter_where,
         select: count(r.id)
       )
+    )
   end
 end
