@@ -2,8 +2,9 @@ defmodule Ask.RespondentsFilterTest do
   import Ecto.Query, only: [from: 2]
   use Ask.ConnCase
   alias Ask.RespondentsFilter
+  alias Ecto.Adapters.SQL
 
-  @dummy_disposition "my-disposition"
+  @dummy_string "my-string"
   @dummy_date "2020-06-02"
 
   setup_all do
@@ -12,11 +13,11 @@ defmodule Ask.RespondentsFilterTest do
 
   describe "parsing" do
     test "parse disposition from q" do
-      q = "disposition:#{@dummy_disposition}"
+      q = "disposition:#{@dummy_string}"
 
       filter = RespondentsFilter.parse(q)
 
-      assert filter.disposition == @dummy_disposition
+      assert filter.disposition == @dummy_string
     end
 
     test "parse since from q", %{date_format_string: date_format_string} do
@@ -28,55 +29,55 @@ defmodule Ask.RespondentsFilterTest do
     end
 
     test "parse since and disposition", %{date_format_string: date_format_string} do
-      q = "since:#{@dummy_date} disposition:#{@dummy_disposition}"
+      q = "since:#{@dummy_date} disposition:#{@dummy_string}"
 
       filter = RespondentsFilter.parse(q)
 
       assert filter.since == Timex.parse!(@dummy_date, date_format_string)
-      assert filter.disposition == @dummy_disposition
+      assert filter.disposition == @dummy_string
 
       # change the arguments order
-      q = "disposition:#{@dummy_disposition} since:#{@dummy_date}"
+      q = "disposition:#{@dummy_string} since:#{@dummy_date}"
 
       filter = RespondentsFilter.parse(q)
 
       assert filter.since == Timex.parse!(@dummy_date, date_format_string)
-      assert filter.disposition == @dummy_disposition
+      assert filter.disposition == @dummy_string
     end
 
     test "parse when irrelevant stuffs", %{date_format_string: date_format_string} do
-      q = "foo disposition:#{@dummy_disposition} bar since:#{@dummy_date} baz"
+      q = "foo disposition:#{@dummy_string} bar since:#{@dummy_date} baz"
 
       filter = RespondentsFilter.parse(q)
 
       assert filter.since == Timex.parse!(@dummy_date, date_format_string)
-      assert filter.disposition == @dummy_disposition
+      assert filter.disposition == @dummy_string
 
       # change the arguments order
-      q = "disposition:#{@dummy_disposition} foo bar since:#{@dummy_date}"
+      q = "disposition:#{@dummy_string} foo bar since:#{@dummy_date}"
 
       filter = RespondentsFilter.parse(q)
 
       assert filter.since == Timex.parse!(@dummy_date, date_format_string)
-      assert filter.disposition == @dummy_disposition
+      assert filter.disposition == @dummy_string
     end
 
     test "put disposition when empty" do
       filter = %RespondentsFilter{}
 
-      filter = RespondentsFilter.put_disposition(filter, @dummy_disposition)
+      filter = RespondentsFilter.put_disposition(filter, @dummy_string)
 
-      assert filter.disposition == @dummy_disposition
+      assert filter.disposition == @dummy_string
       refute filter.since
     end
 
     test "put disposition when since", %{date_format_string: date_format_string} do
       filter = %RespondentsFilter{since: Timex.parse!(@dummy_date, date_format_string)}
 
-      filter = RespondentsFilter.put_disposition(filter, @dummy_disposition)
+      filter = RespondentsFilter.put_disposition(filter, @dummy_string)
 
       assert filter.since == Timex.parse!(@dummy_date, date_format_string)
-      assert filter.disposition == @dummy_disposition
+      assert filter.disposition == @dummy_string
     end
 
     test "put disposition when exists", %{date_format_string: date_format_string} do
@@ -85,10 +86,10 @@ defmodule Ask.RespondentsFilterTest do
         since: Timex.parse!(@dummy_date, date_format_string)
       }
 
-      filter = RespondentsFilter.put_disposition(filter, @dummy_disposition)
+      filter = RespondentsFilter.put_disposition(filter, @dummy_string)
 
       assert filter.since == Timex.parse!(@dummy_date, date_format_string)
-      assert filter.disposition == @dummy_disposition
+      assert filter.disposition == @dummy_string
     end
 
     test "parse since when empty", %{date_format_string: date_format_string} do
@@ -101,24 +102,32 @@ defmodule Ask.RespondentsFilterTest do
     end
 
     test "parse since when disposition", %{date_format_string: date_format_string} do
-      filter = %RespondentsFilter{disposition: @dummy_disposition}
+      filter = %RespondentsFilter{disposition: @dummy_string}
 
       filter = RespondentsFilter.parse_since(filter, @dummy_date)
 
       assert filter.since == Timex.parse!(@dummy_date, date_format_string)
-      assert filter.disposition == @dummy_disposition
+      assert filter.disposition == @dummy_string
     end
 
     test "parse since when exists", %{date_format_string: date_format_string} do
       filter = %RespondentsFilter{
-        disposition: @dummy_disposition,
+        disposition: @dummy_string,
         since: Timex.parse!("2019-01-01", date_format_string)
       }
 
       filter = RespondentsFilter.parse_since(filter, @dummy_date)
 
       assert filter.since == Timex.parse!(@dummy_date, date_format_string)
-      assert filter.disposition == @dummy_disposition
+      assert filter.disposition == @dummy_string
+    end
+
+    test "put final" do
+      filter = %RespondentsFilter{}
+
+      filter = RespondentsFilter.put_final(filter, @dummy_string)
+
+      assert filter.final == @dummy_string
     end
   end
 
@@ -247,6 +256,69 @@ defmodule Ask.RespondentsFilterTest do
     end
   end
 
+  # These tests try to cover the support for optimized queries used by the respondent controller
+  # for generating the CSV results file
+  # See https://github.com/instedd/surveda/commit/c812c676045debac25da816ba40f29ed5331b0a9
+  describe "support optimized queries" do
+    setup do
+      # prepare the respondents
+      for _ <- 1..2, do: insert(:respondent, disposition: "queued")
+      for _ <- 1..3, do: insert(:respondent, disposition: "started")
+
+      {
+        :ok,
+        total_respondents_count: count_all_respondents()
+      }
+    end
+
+    test "filter using optimized queries", %{
+      total_respondents_count: total_respondents_count
+    } do
+      optimized_filter_where = disposition_filter_where("queued", optimized: true)
+      optimized_query = optimized_count_respondents_query(optimized_filter_where)
+
+      filtered_respondents_count = Repo.one(optimized_query)
+      optimized_sql = SQL.to_sql(:all, Repo, optimized_query)
+
+      assert total_respondents_count == 5
+      assert filtered_respondents_count == 2
+
+      assert optimized_sql == {
+               """
+               SELECT count(r0.`id`)
+                FROM `respondents` AS r0
+                INNER JOIN `respondents` AS r1 ON r0.`id` = r1.`id`
+                WHERE (TRUE AND (r1.`disposition` = ?))
+               """
+               |> String.replace("\n", ""),
+               ["queued"]
+             }
+    end
+
+    test "filter without using optimized queries", %{
+      total_respondents_count: total_respondents_count
+    } do
+      filter_where = disposition_filter_where("queued")
+      query = count_respondents_query(filter_where)
+
+      filtered_respondents_count = Repo.one(query)
+      sql = SQL.to_sql(:all, Repo, query)
+
+      assert total_respondents_count == 5
+      assert filtered_respondents_count == 2
+
+      assert sql == {
+               """
+               SELECT count(r0.`id`)
+                FROM `respondents` AS r0
+                WHERE (TRUE AND (r0.`disposition` = ?))
+               """
+               |> String.replace("\n", ""),
+               ["queued"]
+             }
+    end
+  end
+
   # Put since directly (without parsing it), filter, and count
   defp put_since_filter_and_count(date_time_string) do
     RespondentsFilter.put_since(%RespondentsFilter{}, date_time_string)
@@ -279,10 +351,12 @@ defmodule Ask.RespondentsFilterTest do
       %RespondentsFilter{since: Timex.shift(now, days: -days_ago)}
       |> RespondentsFilter.filter_where()
 
-  defp disposition_filter_where(disposition),
-    do:
-      %RespondentsFilter{disposition: disposition}
-      |> RespondentsFilter.filter_where()
+  defp disposition_filter_where(disposition, options \\ []) do
+    optimized = Keyword.get(options, :optimized, false)
+
+    %RespondentsFilter{disposition: disposition}
+    |> RespondentsFilter.filter_where(optimized: optimized)
+  end
 
   defp count_all_respondents() do
     Repo.one(
@@ -292,12 +366,23 @@ defmodule Ask.RespondentsFilterTest do
     )
   end
 
-  defp filter_respondents_and_count(filter_where) do
-    Repo.one(
+  defp filter_respondents_and_count(filter_where), do:
+    count_respondents_query(filter_where)
+    |> Repo.one()
+
+  defp count_respondents_query(filter_where),
+    do:
       from(r in "respondents",
         where: ^filter_where,
         select: count(r.id)
       )
-    )
-  end
+
+  defp optimized_count_respondents_query(filter_where),
+    do:
+      from(r in "respondents",
+        join: r1 in "respondents",
+        on: r.id == r1.id,
+        where: ^filter_where,
+        select: count(r.id)
+      )
 end

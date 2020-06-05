@@ -1,11 +1,12 @@
 defmodule Ask.RespondentsFilter do
   import Ecto.Query
-  defstruct [:disposition, :since]
+  defstruct [:disposition, :since, :final]
   @date_format_string "{YYYY}-{0M}-{0D}"
 
   def parse(q) do
     %__MODULE__{}
     |> put_disposition(extract(q, "disposition"))
+    |> put_final(extract(q, "final"))
     |> parse_since(extract(q, "since"))
   end
 
@@ -26,6 +27,10 @@ defmodule Ask.RespondentsFilter do
     Map.put(filter, :since, since)
   end
 
+  def put_final(filter, final) do
+    Map.put(filter, :final, final)
+  end
+
   def parse_since(filter, since) do
     case Timex.parse(since, @date_format_string) do
       {:ok, parsed} -> Map.put(filter, :since, parsed)
@@ -41,15 +46,31 @@ defmodule Ask.RespondentsFilter do
     if capture, do: Map.get(capture, key), else: nil
   end
 
-  def filter_where(filter) do
+  def filter_where(filter, options \\ []) do
+    optimized = Keyword.get(options, :optimized, false)
     filter = Map.from_struct(filter)
 
     Enum.reduce(filter, dynamic(true), fn
       {:disposition, value}, dynamic when value != nil ->
-        dynamic([r], ^dynamic and r.disposition == ^value)
+        if (optimized) do
+          dynamic([_, r], ^dynamic and r.disposition == ^value)
+        else
+          dynamic([r], ^dynamic and r.disposition == ^value)
+        end
 
       {:since, value}, dynamic when value != nil ->
-        dynamic([r], ^dynamic and r.updated_at > ^value)
+        if (optimized) do
+          dynamic([_, r], ^dynamic and r.updated_at > ^value)
+        else
+          dynamic([r], ^dynamic and r.updated_at > ^value)
+        end
+
+      {:final, value}, dynamic when value != nil ->
+        if (optimized) do
+          dynamic([_, r], ^dynamic and ^value and r.state == "completed")
+        else
+          dynamic([r], ^dynamic and ^value and r.state == "completed")
+        end
 
       {_, _}, dynamic ->
         # Not a where parameter

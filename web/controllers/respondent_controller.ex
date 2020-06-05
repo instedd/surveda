@@ -535,31 +535,14 @@ defmodule Ask.RespondentController do
     |> Enum.uniq
     |> Enum.reject(fn s -> String.length(s) == 0 end)
 
-    dynamic = true
-
-    dynamic =
-      if params["since"] do
-        dynamic([r1, r2], r2.updated_at > ^params["since"] and ^dynamic)
-      else
-        dynamic
-      end
-
-    dynamic =
-      if params["disposition"] do
-        dynamic([r1, r2], r2.disposition == ^params["disposition"] and ^dynamic)
-      else
-        dynamic
-      end
-
-    dynamic =
-      if params["final"] do
-        dynamic([r1, r2], r2.state == "completed" and ^dynamic)
-      else
-        dynamic
-      end
-
+    # The new filters, shared by the index and the downloaded CSV file
     filter = RespondentsFilter.parse(Map.get(params, "q", ""))
-    filter_where = RespondentsFilter.filter_where(filter)
+    # The old filters are being received by its own specific url params
+    # If the same filter is received twice, the old filter is priorized over new one because
+    # ?param1=value is more specific than ?q=param1:value
+    filter = add_params_to_filter(filter, params)
+
+    filter_where = RespondentsFilter.filter_where(filter, optimized: true)
 
     respondents = Stream.resource(
       fn -> 0 end,
@@ -569,7 +552,6 @@ defmodule Ask.RespondentController do
           join: r2 in Respondent, on: r1.id == r2.id,
           where: r2.survey_id == ^survey.id and r2.id > ^last_seen_id,
           where: ^filter_where,
-          where: ^dynamic,
           order_by: r2.id,
           limit: 1000,
           preload: [:responses, :respondent_group],
@@ -583,8 +565,26 @@ defmodule Ask.RespondentController do
       end,
       fn _ -> [] end)
 
-
     render_results(conn, get_format(conn), project, survey, tz_offset, questionnaires, has_comparisons, all_fields, respondents)
+  end
+
+  defp add_params_to_filter(filter, params) do
+    filter =
+      if params["disposition"],
+        do: RespondentsFilter.put_disposition(filter, params["disposition"]),
+        else: filter
+
+    filter =
+      if params["since"],
+        do: RespondentsFilter.put_since(filter, params["since"]),
+        else: filter
+
+    filter =
+      if params["final"],
+        do: RespondentsFilter.put_final(filter, params["final"]),
+        else: filter
+
+    filter
   end
 
   defp render_results(conn, "json", _project, survey, _tz_offset, questionnaires, has_comparisons, _all_fields, respondents) do
