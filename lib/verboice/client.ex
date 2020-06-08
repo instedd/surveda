@@ -8,12 +8,15 @@ defmodule Verboice.Client do
     %Client{base_url: url, oauth2_client: oauth2_client}
   end
 
+  defp status_or_reason(%OAuth2.Error{reason: reason}), do: reason
+  defp status_or_reason(%{status_code: status_code}), do: status_code
+
   def call(client, params) do
     url = "#{URI.merge(client.base_url, "api/call")}?#{URI.encode_query(params)}"
     response = client.oauth2_client
     |> OAuth2.Client.get(url)
     {_, response_body} = response
-    SurvedaMetrics.increment_counter_with_label(:surveda_verboice_enqueue, [response_body.status_code])
+    SurvedaMetrics.increment_counter_with_label(:surveda_verboice_enqueue, [status_or_reason(response_body)])
     parse_response(response)
   end
 
