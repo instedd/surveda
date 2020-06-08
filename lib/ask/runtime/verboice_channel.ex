@@ -389,6 +389,7 @@ defmodule Ask.Runtime.VerboiceChannel do
         {:ok, %{"state" => "completed"}} -> false
         {:ok, %{"state" => "failed"}} -> false
         {:ok, %{"state" => "canceled"}} -> false
+        {:ok, %{"state" => "expired"}} -> false
         {:ok, %{"state" => _}} -> true
         _ -> false
       end
