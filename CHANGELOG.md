@@ -1,5 +1,11 @@
 # InSTEDD Surveda Changelog
 
+## 0.26.1
+
+### Bugfixes
+
+* Fix respondent start issue due to locks being acquired with different keys. [#1737](https://github.com/instedd/surveda/issues/1737), [#1738](https://github.com/instedd/surveda/issues/1738)
+
 ## 0.26.0
 
 ### Features
