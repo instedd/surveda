@@ -14,6 +14,8 @@ defmodule Ask.RespondentsFilter do
     Map.put(filter, :disposition, disposition)
   end
 
+  def date_format_string(), do: @date_format_string
+
   @doc """
   By putting since directly (without parsing it) we're trying to cover the case where Surveda is
   being used by external services like SurvedaOnaConnector
@@ -38,12 +40,12 @@ defmodule Ask.RespondentsFilter do
     end
   end
 
-  def date_format_string(), do: @date_format_string
-
   defp extract(q, key) do
-    {:ok, exp} = Regex.compile("(^|[ ])#{key}:(?<#{key}>[^ ]+)")
-    capture = Regex.named_captures(exp, q)
-    if capture, do: Map.get(capture, key), else: nil
+    {:ok, regex} = Regex.compile("(^|[ ])#{key}:(?<#{key}>(\"[^\"]+\")|([^ ]+))")
+    case Regex.named_captures(regex, q) do
+      %{ ^key => value} -> String.trim(value, "\"")
+      _ -> nil
+    end
   end
 
   def filter_where(filter, options \\ []) do

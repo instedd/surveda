@@ -5,11 +5,9 @@ defmodule Ask.RespondentsFilterTest do
   alias Ecto.Adapters.SQL
 
   @dummy_string "my-string"
-  @dummy_date "2020-06-02"
-
-  setup_all do
-    {:ok, %{date_format_string: RespondentsFilter.date_format_string()}}
-  end
+  @white_space_dummy_string "foo bar baz"
+  @dummy_date_string "2020-06-02"
+  @dummy_date Timex.parse!(@dummy_date_string, RespondentsFilter.date_format_string())
 
   describe "parsing" do
     test "parse disposition from q" do
@@ -20,20 +18,28 @@ defmodule Ask.RespondentsFilterTest do
       assert filter.disposition == @dummy_string
     end
 
-    test "parse since from q", %{date_format_string: date_format_string} do
+    test "parse white space disposition from q" do
+      q = "disposition:\"#{@white_space_dummy_string}\""
+
+      filter = RespondentsFilter.parse(q)
+
+      assert filter.disposition == @white_space_dummy_string
+    end
+
+    test "parse since from q" do
       q = "since:#{@dummy_date}"
 
       filter = RespondentsFilter.parse(q)
 
-      assert filter.since == Timex.parse!(@dummy_date, date_format_string)
+      assert filter.since == @dummy_date
     end
 
-    test "parse since and disposition", %{date_format_string: date_format_string} do
+    test "parse since and disposition" do
       q = "since:#{@dummy_date} disposition:#{@dummy_string}"
 
       filter = RespondentsFilter.parse(q)
 
-      assert filter.since == Timex.parse!(@dummy_date, date_format_string)
+      assert filter.since == @dummy_date
       assert filter.disposition == @dummy_string
 
       # change the arguments order
@@ -41,16 +47,16 @@ defmodule Ask.RespondentsFilterTest do
 
       filter = RespondentsFilter.parse(q)
 
-      assert filter.since == Timex.parse!(@dummy_date, date_format_string)
+      assert filter.since == @dummy_date
       assert filter.disposition == @dummy_string
     end
 
-    test "parse when irrelevant stuffs", %{date_format_string: date_format_string} do
+    test "parse when irrelevant stuffs" do
       q = "foo disposition:#{@dummy_string} bar since:#{@dummy_date} baz"
 
       filter = RespondentsFilter.parse(q)
 
-      assert filter.since == Timex.parse!(@dummy_date, date_format_string)
+      assert filter.since == @dummy_date
       assert filter.disposition == @dummy_string
 
       # change the arguments order
@@ -58,7 +64,7 @@ defmodule Ask.RespondentsFilterTest do
 
       filter = RespondentsFilter.parse(q)
 
-      assert filter.since == Timex.parse!(@dummy_date, date_format_string)
+      assert filter.since == @dummy_date
       assert filter.disposition == @dummy_string
     end
 
@@ -71,54 +77,54 @@ defmodule Ask.RespondentsFilterTest do
       refute filter.since
     end
 
-    test "put disposition when since", %{date_format_string: date_format_string} do
-      filter = %RespondentsFilter{since: Timex.parse!(@dummy_date, date_format_string)}
+    test "put disposition when since" do
+      filter = %RespondentsFilter{since: @dummy_date}
 
       filter = RespondentsFilter.put_disposition(filter, @dummy_string)
 
-      assert filter.since == Timex.parse!(@dummy_date, date_format_string)
+      assert filter.since == @dummy_date
       assert filter.disposition == @dummy_string
     end
 
-    test "put disposition when exists", %{date_format_string: date_format_string} do
+    test "put disposition when exists" do
       filter = %RespondentsFilter{
         disposition: "old-disposition",
-        since: Timex.parse!(@dummy_date, date_format_string)
+        since: @dummy_date
       }
 
       filter = RespondentsFilter.put_disposition(filter, @dummy_string)
 
-      assert filter.since == Timex.parse!(@dummy_date, date_format_string)
+      assert filter.since == @dummy_date
       assert filter.disposition == @dummy_string
     end
 
-    test "parse since when empty", %{date_format_string: date_format_string} do
+    test "parse since when empty" do
       filter = %RespondentsFilter{}
 
-      filter = RespondentsFilter.parse_since(filter, @dummy_date)
+      filter = RespondentsFilter.parse_since(filter, @dummy_date_string)
 
-      assert filter.since == Timex.parse!(@dummy_date, date_format_string)
+      assert filter.since == @dummy_date
       refute filter.disposition
     end
 
-    test "parse since when disposition", %{date_format_string: date_format_string} do
+    test "parse since when disposition" do
       filter = %RespondentsFilter{disposition: @dummy_string}
 
-      filter = RespondentsFilter.parse_since(filter, @dummy_date)
+      filter = RespondentsFilter.parse_since(filter, @dummy_date_string)
 
-      assert filter.since == Timex.parse!(@dummy_date, date_format_string)
+      assert filter.since == @dummy_date
       assert filter.disposition == @dummy_string
     end
 
-    test "parse since when exists", %{date_format_string: date_format_string} do
+    test "parse since when exists" do
       filter = %RespondentsFilter{
         disposition: @dummy_string,
-        since: Timex.parse!("2019-01-01", date_format_string)
+        since: @dummy_date
       }
 
-      filter = RespondentsFilter.parse_since(filter, @dummy_date)
+      filter = RespondentsFilter.parse_since(filter, @dummy_date_string)
 
-      assert filter.since == Timex.parse!(@dummy_date, date_format_string)
+      assert filter.since == @dummy_date
       assert filter.disposition == @dummy_string
     end
 
@@ -207,6 +213,34 @@ defmodule Ask.RespondentsFilterTest do
     end
   end
 
+  # These tests cover that filtering by parsed since works
+  describe "filter by since parsing it" do
+    setup do
+      # prepare the dates
+      dummy_date = Timex.parse!("2020-06-01", "{YYYY}-{0M}-{0D}")
+      two_days_after = Timex.shift(dummy_date, days: 2)
+      # prepare the respondents
+      for _ <- 1..2, do: insert(:respondent, disposition: "queued", updated_at: dummy_date)
+      for _ <- 1..3, do: insert(:respondent, disposition: "queued", updated_at: two_days_after)
+
+      {
+        :ok,
+        total_respondents_count: count_all_respondents()
+      }
+    end
+
+    test "support an ISO 8601 date", %{
+      total_respondents_count: total_respondents_count
+    } do
+      day_between = "2020-06-02"
+
+      since_day_between_respondents_count = parse_since_filter_and_count(day_between)
+
+      assert total_respondents_count == 5
+      assert since_day_between_respondents_count == 3
+    end
+  end
+
   # These tests try to cover the case where Surveda is being used by external services like
   # SurvedaOnaConnector
   # Before the repondents filter module existed, the "since" url param received in the respondent
@@ -242,7 +276,7 @@ defmodule Ask.RespondentsFilterTest do
       assert since_day_between_respondents_count == 3
     end
 
-    test "support a ISO 8601 date-time variation", %{
+    test "support an ISO 8601 date-time variation", %{
       total_respondents_count: total_respondents_count
     } do
       # prepare the date in a format string that Ecto should handle properly
@@ -319,12 +353,22 @@ defmodule Ask.RespondentsFilterTest do
     end
   end
 
+  defp parse_since_filter_and_count(date_time_string) do
+    RespondentsFilter.parse_since(%RespondentsFilter{}, date_time_string)
+    |> filter_and_count()
+  end
+
   # Put since directly (without parsing it), filter, and count
   defp put_since_filter_and_count(date_time_string) do
     RespondentsFilter.put_since(%RespondentsFilter{}, date_time_string)
-    |> RespondentsFilter.filter_where()
-    |> filter_respondents_and_count()
+    |> filter_and_count()
   end
+
+  defp filter_and_count(filter),
+    do:
+      filter
+      |> RespondentsFilter.filter_where()
+      |> filter_respondents_and_count()
 
   defp insert_respondents_set(now) do
     two_days_ago = Timex.shift(now, days: -2)
@@ -366,9 +410,10 @@ defmodule Ask.RespondentsFilterTest do
     )
   end
 
-  defp filter_respondents_and_count(filter_where), do:
-    count_respondents_query(filter_where)
-    |> Repo.one()
+  defp filter_respondents_and_count(filter_where),
+    do:
+      count_respondents_query(filter_where)
+      |> Repo.one()
 
   defp count_respondents_query(filter_where),
     do:
