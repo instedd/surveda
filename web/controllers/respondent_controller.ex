@@ -25,13 +25,17 @@ defmodule Ask.RespondentController do
     filter = RespondentsFilter.parse(q)
     filter_where = RespondentsFilter.filter_where(filter)
 
-    respondents = conn
-    |> load_project(project_id)
-    |> assoc(:surveys)
-    |> Repo.get!(survey_id)
-    |> assoc(:respondents)
-    |> preload(:responses)
-    |> where(^filter_where)
+    filtered_query = conn
+      |> load_project(project_id)
+      |> assoc(:surveys)
+      |> Repo.get!(survey_id)
+      |> assoc(:respondents)
+      |> preload(:responses)
+      |> where(^filter_where)
+
+    respondents_count = Repo.aggregate(filtered_query, :count, :id)
+
+    respondents = filtered_query
     |> conditional_limit(limit)
     |> conditional_page(limit, page)
     |> sort_respondents(sort_by, sort_asc)
@@ -42,7 +46,6 @@ defmodule Ask.RespondentController do
       |> effective_stats
     end)
 
-    respondents_count = Ask.RespondentStats.respondent_count(survey_id: ^survey_id)
     render(conn, "index.json", respondents: respondents, respondents_count: respondents_count)
   end
 
