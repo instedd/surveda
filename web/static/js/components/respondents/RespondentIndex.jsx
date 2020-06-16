@@ -21,6 +21,7 @@ type Props = {
   t: Function,
   projectId: number,
   surveyId: number,
+  q: string,
   survey: Survey,
   project: Project,
   questionnaires: {[id: any]: Questionnaire},
@@ -37,7 +38,8 @@ type Props = {
   surveyActions: any,
   projectActions: any,
   questionnairesActions: any,
-  actions: any
+  actions: any,
+  router: Object
 };
 
 type State = {
@@ -57,7 +59,7 @@ class RespondentIndex extends Component<Props, State> {
 
   constructor(props) {
     super(props)
-    this.state = {csvType: '', filterInput: ''}
+    this.state = {csvType: '', filterInput: props.q}
     this.toggleResultsLink = this.toggleResultsLink.bind(this)
     this.toggleIncentivesLink = this.toggleIncentivesLink.bind(this)
     this.toggleInteractionsLink = this.toggleInteractionsLink.bind(this)
@@ -301,6 +303,13 @@ class RespondentIndex extends Component<Props, State> {
     return numericFields.some(field => field == filterField)
   }
 
+  applyRespondentsFilter() {
+    const { router, projectId, surveyId } = this.props
+    const { filterInput } = this.state
+    router.push(routes.surveyRespondents(projectId, surveyId, filterInput))
+    this.fetchRespondents()
+  }
+
   render() {
     const { survey, questionnaires, totalCount, order, sortBy, sortAsc,
       userLevel, t } = this.props
@@ -451,7 +460,7 @@ class RespondentIndex extends Component<Props, State> {
         <RespondentsFilter
           inputValue={filterInput}
           onChange={inputValue => this.setState({ filterInput: inputValue })}
-          onEnter={() => this.fetchRespondents()}
+          onEnter={() => this.applyRespondentsFilter()}
         />
         <CardTable title={title} footer={footer} tableScroll>
           <thead>
@@ -520,6 +529,7 @@ const mapStateToProps = (state, ownProps) => {
   return {
     projectId: ownProps.params.projectId,
     surveyId: ownProps.params.surveyId,
+    q: ownProps.params.q || '',
     survey: state.survey.data,
     project: state.project.data,
     questionnaires: state.questionnaires.items,
