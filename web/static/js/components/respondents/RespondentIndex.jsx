@@ -96,9 +96,9 @@ class RespondentIndex extends Component<Props, State> {
     this.fetchRespondents(pageNumber - 1)
   }
 
-  downloadCSV() {
+  downloadCSV(applyUserFilter = false) {
     const { projectId, surveyId } = this.props
-    const { filterInput } = this.state
+    const filterInput = applyUserFilter ? this.state.filterInput : null
     window.location = routes.respondentsResultsCSV(projectId, surveyId, filterInput)
   }
 
@@ -310,6 +310,59 @@ class RespondentIndex extends Component<Props, State> {
     this.fetchRespondents()
   }
 
+  downloadItem(id) {
+    const { t } = this.props
+    let item = {}
+
+    switch (id) {
+      case 'filtered-results':
+        item = {
+          title: t('Survey results'),
+          description: t('One line per respondent, with a column for each variable in the questionnaire, including disposition and timestamp'),
+          downloadLink: null,
+          onDownload: () => this.downloadCSV(true)
+        }
+        break
+      case 'unfiltered-results':
+        item = {
+          title: t('Unfiltered survey results'),
+          description: t('Same as above but without applying the filters'),
+          downloadLink: this.downloadLink(this.resultsAccessLink(), this.toggleResultsLink, this.refreshResultsLink, 'resultsLink'),
+          onDownload: () => this.downloadCSV()
+        }
+        break
+      case 'incentives':
+        item = {
+          title: t('Incentives file'),
+          description: t('One line for each respondent that completed the survey, including the experiment version and the full phone number'),
+          downloadLink: this.downloadLink(this.incentivesAccessLink(), this.toggleIncentivesLink, this.refreshIncentivesLink, 'incentivesLink'),
+          onDownload: () => this.downloadIncentivesCSV()
+        }
+        break
+      case 'interactions':
+        item = {
+          title: t('Interactions'),
+          description: t('One line per respondent interaction, with a column describing the action type and data, including disposition and timestamp'),
+          downloadLink: this.downloadLink(this.interactionsAccessLink(), this.toggleInteractionsLink, this.refreshInteractionsLink, 'interactionsLink'),
+          onDownload: () => this.downloadInteractionsCSV()
+        }
+        break
+    }
+
+    return <li className='collection-item'>
+      <a href='#' className='download' onClick={e => { e.preventDefault(); item.onDownload() }}>
+        <div>
+          <i className='material-icons'>get_app</i>
+        </div>
+        <div>
+          <p className='black-text'><b>{item.title}</b></p>
+          <p>{item.description}</p>
+        </div>
+      </a>
+      {item.downloadLink}
+    </li>
+  }
+
   render() {
     const { survey, questionnaires, totalCount, order, sortBy, sortAsc,
       userLevel, t } = this.props
@@ -378,41 +431,7 @@ class RespondentIndex extends Component<Props, State> {
       colspan += 1
     }
 
-    let incentivesCsvLink = null
-    if (userLevel == 'owner' || userLevel == 'admin') {
-      incentivesCsvLink = (
-        <li className='collection-item'>
-          <a href='#' className='download' onClick={e => { e.preventDefault(); this.downloadIncentivesCSV() }}>
-            <div>
-              <i className='material-icons'>get_app</i>
-            </div>
-            <div>
-              <p className='black-text'><b>{t('Incentives file')}</b></p>
-              <p>{t('One line for each respondent that completed the survey, including the experiment version and the full phone number')}</p>
-            </div>
-          </a>
-          {this.downloadLink(this.incentivesAccessLink(), this.toggleIncentivesLink, this.refreshIncentivesLink, 'incentivesLink')}
-        </li>
-      )
-    }
-
-    let interactionsCsvLink = null
-    if (userLevel == 'owner' || userLevel == 'admin') {
-      interactionsCsvLink = (
-        <li className='collection-item'>
-          <a href='#' className='download' onClick={e => { e.preventDefault(); this.downloadInteractionsCSV() }}>
-            <div>
-              <i className='material-icons'>get_app</i>
-            </div>
-            <div>
-              <p className='black-text'><b>{t('Interactions')}</b></p>
-              <p>{t('One line per respondent interaction, with a column describing the action type and data, including disposition and timestamp')}</p>
-            </div>
-          </a>
-          {this.downloadLink(this.interactionsAccessLink(), this.toggleInteractionsLink, this.refreshInteractionsLink, 'interactionsLink')}
-        </li>
-      )
-    }
+    const ownerOrAdmin = userLevel == 'owner' || userLevel == 'admin'
 
     return (
       <div className='white'>
@@ -429,32 +448,10 @@ class RespondentIndex extends Component<Props, State> {
             <p>{t('Download survey respondents data as CSV')}</p>
           </div>
           <ul className='collection download-csv'>
-            <li className='collection-item'>
-              <a href='#' className='download' onClick={e => { e.preventDefault(); this.downloadCSV() }}>
-                <div>
-                  <i className='material-icons'>get_app</i>
-                </div>
-                <div>
-                  <p className='black-text'><b>{t('Survey results')}</b></p>
-                  <p>{t('One line per respondent, with a column for each variable in the questionnaire, including disposition and timestamp')}</p>
-                </div>
-              </a>
-              {this.downloadLink(this.resultsAccessLink(), this.toggleResultsLink, this.refreshResultsLink, 'resultsLink')}
-            </li>
-            <li className='collection-item'>
-              <a href='#' className='download' onClick={e => { e.preventDefault(); this.downloadDispositionHistoryCSV() }}>
-                <div>
-                  <i className='material-icons'>get_app</i>
-                </div>
-                <div>
-                  <p className='black-text'><b>{t('Disposition History')}</b></p>
-                  <p>{t('One line for each time the disposition of a respondent changed, including the timestamp')}</p>
-                </div>
-              </a>
-              {this.downloadLink(this.dispositionHistoryAccessLink(), this.toggleDispositionHistoryLink, this.refreshDispositionHistoryLink, 'dispositionHistoryLink')}
-            </li>
-            {incentivesCsvLink}
-            {interactionsCsvLink}
+            {this.downloadItem('filtered-results')}
+            {this.downloadItem('unfiltered-results')}
+            {ownerOrAdmin ? this.downloadItem('incentives') : null}
+            {ownerOrAdmin ? this.downloadItem('interactions') : null}
           </ul>
         </Modal>
         <RespondentsFilter
