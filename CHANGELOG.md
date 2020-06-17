@@ -1,5 +1,23 @@
 # InSTEDD Surveda Changelog
 
+## 0.27.0
+
+### Features
+
+* New questionnaire simulator. [#1672](https://github.com/instedd/surveda/issues/1672), [#1696](https://github.com/instedd/surveda/pull/1696), [#1701](https://github.com/instedd/surveda/pull/1701), [#1705](https://github.com/instedd/surveda/pull/1705), [#1698](https://github.com/instedd/surveda/pull/1698), [#1718](https://github.com/instedd/surveda/pull/1718), [#1729](https://github.com/instedd/surveda/pull/1729)
+
+### Bugfixes
+
+* Include interim partials in cockpit metrics. [#1726](https://github.com/instedd/surveda/issues/1726), [1734](https://github.com/instedd/surveda/pull/1734)
+* Handle partial relevant settings in exports and imports. [#1704](https://github.com/instedd/surveda/pull/1704)
+* Fix questionnaire's audios export to work across instances. [#1711](https://github.com/instedd/surveda/pull/1711)
+* Avoid showing onboarding when to fresh users when questionnaire is not empty or user is reader only. [#1727](https://github.com/instedd/surveda/pull/1727)
+* Fix activity log entries when the user has no username, fallback to email. [#1720](https://github.com/instedd/surveda/pull/1720)
+* Improve wording regarding cancelling/stopped entries in activity log. [#1719](https://github.com/instedd/surveda/pull/1719)
+* Improve wording in skip logic. [#1706](https://github.com/instedd/surveda/pull/1706)
+* Handle with expired Verboice calls when re-enqueueing from Surveda. [#1733](https://github.com/instedd/surveda/pull/1733)
+* Fix metrics computing in Verboice callbacks. [#1731](https://github.com/instedd/surveda/pull/1731)
+
 ## 0.26.1
 
 ### Bugfixes
