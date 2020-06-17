@@ -117,13 +117,59 @@ defmodule Ask.Respondent do
     "mobile_web_code_#{respondent_id}"
   end
 
-  def final_dispositions do
-    ["failed", "unresponsive", "ineligible", "rejected", "breakoff", "refused", "partial", "completed"]
-  end
+  def completed_dispositions(_count_partial_results \\ false)
 
-  def non_final_dispositions do
-    ["registered", "queued", "contacted", "started", "interim partial"]
-  end
+  def completed_dispositions(false), do: ["completed"]
+
+  def completed_dispositions(true), do:
+    completed_dispositions() ++ ["partial", "interim partial"]
+
+  def final_dispositions(), do: [
+    "failed",
+    "unresponsive",
+    "ineligible",
+    "rejected","breakoff",
+    "refused",
+    "partial",
+    "completed"
+  ]
+
+  def non_final_dispositions(), do: [
+    "registered",
+    "queued",
+    "contacted",
+    "started",
+    "interim partial"
+  ]
+
+  # Interim partial was created to distinguish between the respondents that reached partial but
+  # still can reach a complete and those who cannot. In the context of the current cockpit, it
+  # doesn't make sense to maintain this distinction when Count partial as complete is selected.
+
+  @doc """
+  The dispositions listed here are considered final for metrics.
+  """
+  def metrics_final_dispositions(_count_partial_results \\ false)
+
+  def metrics_final_dispositions(false), do: final_dispositions()
+
+  @doc """
+  Interim partial isn't a final disposition but it's considered final for metrics
+  """
+  def metrics_final_dispositions(true), do: final_dispositions() ++ ["interim partial"]
+
+  @doc """
+  The dispositions listed here are considered non final for metrics.
+  """
+  def metrics_non_final_dispositions(count_partial_results \\ false)
+
+  def metrics_non_final_dispositions(false), do: non_final_dispositions()
+
+  @doc """
+  Interim partial is a non final disposition but it's considered final for metrics
+  """
+  def metrics_non_final_dispositions(true), do:
+    List.delete(non_final_dispositions(), "interim partial")
 
   def add_mode_attempt!(respondent, mode), do: respondent |> changeset(%{stats: Stats.add_attempt(respondent.stats, mode)}) |> Repo.update!
 

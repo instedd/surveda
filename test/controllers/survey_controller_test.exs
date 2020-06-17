@@ -459,7 +459,7 @@ defmodule Ask.SurveyControllerTest do
         "success_rate" => 0.667,
         "completion_rate" => 1.0,
         "estimated_success_rate" => 0.667
-      } = testing_survey(%{user: user, cutoff: 2, respondents: respondents})
+      } = testing_survey(%{user: user, respondents: respondents, attrs: %{cutoff: 2}})
         |> get_stats(conn)
     end
 
@@ -476,18 +476,18 @@ defmodule Ask.SurveyControllerTest do
 
     test "estimated success rate is calculated using linear interpolation", %{conn: conn, user: user} do
       respondents = Enum.map(1..3, fn _ -> %{disposition: "failed"} end) ++ [%{disposition: "completed"}]
-      %{"estimated_success_rate" => 0.85} = testing_survey(%{user: user, cutoff: 5, respondents: respondents})
+      %{"estimated_success_rate" => 0.85} = testing_survey(%{user: user, respondents: respondents, attrs: %{cutoff: 5}})
         |> get_stats(conn)
     end
 
     test "additional respondents are never less than zero", %{conn: conn, user: user} do
       respondents = Enum.map(1..2, fn _ -> %{disposition: "queued"} end)
-      %{"additional_respondents" => 0} = testing_survey(%{user: user, cutoff: 1, respondents: respondents})
+      %{"additional_respondents" => 0} = testing_survey(%{user: user, respondents: respondents, attrs: %{cutoff: 1}})
         |> get_stats(conn)
     end
 
     test "expose correctly respondents in final dispositions", %{conn: conn, user: user} do
-      final_dispositions = Respondent.final_dispositions()
+      final_dispositions = Respondent.metrics_final_dispositions()
       respondents = Enum.map(final_dispositions, fn disposition -> %{disposition: disposition} end)
       %{"exhausted" => exhausted, "available" => 0} = testing_survey(%{user: user, respondents: respondents})
         |> get_stats(conn)
@@ -495,7 +495,7 @@ defmodule Ask.SurveyControllerTest do
     end
 
     test "expose correctly respondents in non final dispositions", %{conn: conn, user: user} do
-      non_final_dispositions = Respondent.non_final_dispositions()
+      non_final_dispositions = Respondent.metrics_non_final_dispositions()
       respondents = Enum.map(non_final_dispositions, fn disposition -> %{disposition: disposition} end)
       %{"exhausted" => 0, "available" => available} = testing_survey(%{user: user, respondents: respondents})
         |> get_stats(conn)
@@ -509,44 +509,146 @@ defmodule Ask.SurveyControllerTest do
     end
 
     test "needed to complete equals target with no respondents", %{conn: conn, user: user} do
-      %{"needed_to_complete" => 5} = testing_survey(%{user: user, respondents: [], cutoff: 5})
+      %{"needed_to_complete" => 5} = testing_survey(%{user: user, respondents: [], attrs: %{cutoff: 5}})
         |> get_stats(conn)
     end
 
     test "additional_completes equals target - completed respondents", %{conn: conn, user: user} do
       respondents = Enum.map(["completed", "completed", "queued"], fn disposition -> %{disposition: disposition} end)
-      %{"additional_completes" => 3} = testing_survey(%{user: user, respondents: respondents, cutoff: 5})
+      %{"additional_completes" => 3} = testing_survey(%{user: user, respondents: respondents, attrs: %{cutoff: 5}})
         |> get_stats(conn)
     end
 
     test "needed to complete duplicates additional to complete when estimated success rate is 50%", %{conn: conn, user: user} do
       respondents = Enum.map(1..99, fn _ -> %{disposition: "completed"} end) ++ Enum.map(1..99, fn _ -> %{disposition: "failed"} end)
-      %{"additional_completes" => 1, "needed_to_complete" => 2} = testing_survey(%{user: user, respondents: respondents, cutoff: 100})
+      %{"additional_completes" => 1, "needed_to_complete" => 2} = testing_survey(%{user: user, respondents: respondents, attrs: %{cutoff: 100}})
         |> get_stats(conn)
     end
 
     test "needed to complete equals additional_completes when estimated success rate is 100%", %{conn: conn, user: user} do
       respondents = [%{disposition: "completed"}]
-      %{"additional_completes" => 1, "needed_to_complete" => 1} = testing_survey(%{user: user, respondents: respondents, cutoff: 2})
+      %{"additional_completes" => 1, "needed_to_complete" => 1} = testing_survey(%{user: user, respondents: respondents, attrs: %{cutoff: 2}})
         |> get_stats(conn)
     end
 
     test "additional respondents equals needed to complete - respondents in non final dispositions", %{conn: conn, user: user} do
-      non_final_dispositions = Respondent.non_final_dispositions()
+      non_final_dispositions = Respondent.metrics_non_final_dispositions()
       respondents = [%{disposition: "completed"}] ++ Enum.map(non_final_dispositions, fn disposition -> %{disposition: disposition} end)
-      %{"needed_to_complete" => 100, "additional_respondents" => additional_respondents} = testing_survey(%{user: user, respondents: respondents, cutoff: 101})
+      %{"needed_to_complete" => 100, "additional_respondents" => additional_respondents} = testing_survey(%{user: user, respondents: respondents, attrs: %{cutoff: 101}})
         |> get_stats(conn)
       assert additional_respondents == 100 - Enum.count(non_final_dispositions)
     end
 
     test "additional respondents depends on needed to complete (it doesn't depend on additional_completes)", %{conn: conn, user: user} do
-      non_final_dispositions = Respondent.non_final_dispositions()
+      non_final_dispositions = Respondent.metrics_non_final_dispositions()
       respondents = Enum.map(1..100, fn _ -> %{disposition: "completed"} end) ++ Enum.map(1..100, fn _ -> %{disposition: "failed"} end) ++ Enum.map(non_final_dispositions, fn disposition -> %{disposition: disposition} end)
-      %{"needed_to_complete" => 18, "additional_completes" => 10, "additional_respondents" => additional_respondents} = testing_survey(%{user: user, respondents: respondents, cutoff: 110})
+      %{"needed_to_complete" => 18, "additional_completes" => 10, "additional_respondents" => additional_respondents} = testing_survey(%{user: user, respondents: respondents, attrs: %{cutoff: 110}})
         |> get_stats(conn)
       assert additional_respondents == 18 - Enum.count(non_final_dispositions)
     end
+  end
 
+  describe "count_partial_results stats" do
+    setup %{conn: conn, user: user} do
+      survey = count_partial_results_test_survey(%{
+        count_partial_results: false,
+        disposition: "completed",
+        user: user
+      })
+      completed_test_case_stats = get_stats(survey, conn)
+
+      {:ok, conn: conn, user: user, completed_test_case_stats: completed_test_case_stats}
+    end
+
+    test "treats completed as expected",
+      %{completed_test_case_stats: completed_test_case_stats} do
+
+      %{
+        "initial_success_rate" => initial_success_rate,
+        "completion_rate" => completion_rate,
+        "success_rate" => success_rate,
+        "estimated_success_rate" => estimated_success_rate,
+        "needed_to_complete" => needed_to_complete,
+        "available" => available,
+        "additional_respondents" => additional_respondents
+      } = completed_test_case_stats
+
+      assert initial_success_rate == 1
+      assert completion_rate == 0.333
+      assert success_rate == 0.5
+      assert estimated_success_rate == 0.833
+      assert needed_to_complete == 2
+      assert available == 1
+      assert additional_respondents == 1
+    end
+
+    test "treats partial as completed when count_partial_results",
+      %{conn: conn, user: user, completed_test_case_stats: completed_test_case_stats} do
+      survey = count_partial_results_test_survey(%{
+        count_partial_results: true,
+        disposition: "partial",
+        user: user
+      })
+
+      stats = get_stats(survey, conn)
+
+      assert stats == completed_test_case_stats
+    end
+
+    test "treats interim partial as completed when count_partial_results",
+      %{conn: conn, user: user, completed_test_case_stats: completed_test_case_stats} do
+      survey = count_partial_results_test_survey(%{
+        count_partial_results: true,
+        disposition: "interim partial",
+        user: user
+      })
+
+      stats = get_stats(survey, conn)
+
+      assert stats == completed_test_case_stats
+    end
+
+    test "doesn't treat partial as completed when not count_partial_results",
+      %{conn: conn, user: user, completed_test_case_stats: completed_test_case_stats} do
+      survey = count_partial_results_test_survey(%{
+        count_partial_results: false,
+        disposition: "partial",
+        user: user
+      })
+
+      stats = get_stats(survey, conn)
+
+      refute stats == completed_test_case_stats
+    end
+
+    test "doesn't treat interim partial as completed when not count_partial_results",
+      %{conn: conn, user: user, completed_test_case_stats: completed_test_case_stats} do
+      survey = count_partial_results_test_survey(%{
+        count_partial_results: false,
+        disposition: "interim partial",
+        user: user
+      })
+
+      stats = get_stats(survey, conn)
+
+      refute stats == completed_test_case_stats
+    end
+  end
+
+  defp count_partial_results_test_survey(%{
+      count_partial_results: count_partial_results,
+      disposition: disposition,
+      user: user
+    }) do
+    respondents = Enum.map(
+      [disposition, "failed", "started"],
+      fn disposition -> %{disposition: disposition} end
+    )
+    testing_survey(%{
+      user: user,
+      respondents: respondents,
+      attrs: %{count_partial_results: count_partial_results}
+    })
   end
 
   defp get_stats(%{survey: survey, project: project}, conn) do
@@ -554,15 +656,16 @@ defmodule Ask.SurveyControllerTest do
     json_response(conn, 200)["data"]
   end
 
-  defp testing_survey(%{user: user, cutoff: cutoff, respondents: respondents}) do
+  defp testing_survey(%{user: user, respondents: respondents, attrs: attrs}) do
     project = create_project_for_user(user)
-    survey = if cutoff, do: insert(:survey, project: project, cutoff: cutoff), else: insert(:survey, project: project)
-    survey = Survey |> Repo.get(survey.id)
+    survey = insert(:survey, project: project)
+    survey = if (attrs), do: Survey.changeset(survey, attrs) |> Repo.update!, else: survey
     Enum.each(respondents, fn %{disposition: disposition} -> insert(:respondent, survey: survey, disposition: disposition) end)
     %{project: project, survey: survey}
   end
 
-  defp testing_survey(%{user: user, respondents: respondents}), do: testing_survey(%{user: user, respondents: respondents, cutoff: nil})
+  defp testing_survey(%{user: user, respondents: respondents}), do:
+    testing_survey(%{user: user, respondents: respondents, attrs: nil})
 
   test "retries histograms", %{conn: conn, user: user} do
     project = create_project_for_user(user)
