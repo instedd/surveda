@@ -159,7 +159,12 @@ defmodule Ask.Respondent do
   Avoid nesting locks to prevent deadlocks
   """
   def with_lock(respondent_id, operation, respondent_modifier \\ fn x -> x end) do
-    Mutex.under(Ask.Mutex, respondent_id, fn ->
+    # `respondent_id` can be either an Integer or its String representation depending on
+    # the caller. Since we need a unified key to access the Mutex, we here convert it to
+    # a string - even if it's in a non-politically-correct way
+    mutex_key = "#{respondent_id}"
+    
+    Mutex.under(Ask.Mutex, mutex_key, fn ->
       respondent = Respondent
                    |> Repo.get(respondent_id)
                    |> respondent_modifier.()
