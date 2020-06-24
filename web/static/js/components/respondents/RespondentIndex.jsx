@@ -457,7 +457,7 @@ class RespondentIndex extends Component<Props, State> {
         <RespondentsFilter
           inputValue={filterInput}
           onChange={inputValue => this.setState({ filterInput: inputValue })}
-          onEnter={() => this.applyRespondentsFilter()}
+          onApplyFilter={() => this.applyRespondentsFilter()}
         />
         <CardTable title={title} footer={footer} tableScroll>
           <thead>
