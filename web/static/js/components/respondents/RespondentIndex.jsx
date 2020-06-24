@@ -312,44 +312,8 @@ class RespondentIndex extends Component<Props, State> {
 
   downloadItem(id) {
     const { t } = this.props
-    let item = {}
 
-    switch (id) {
-      case 'filtered-results':
-        item = {
-          title: t('Survey results'),
-          description: t('One line per respondent, with a column for each variable in the questionnaire, including disposition and timestamp'),
-          downloadLink: null,
-          onDownload: () => this.downloadCSV(true)
-        }
-        break
-      case 'unfiltered-results':
-        item = {
-          title: t('Unfiltered survey results'),
-          description: t('Same as above but without applying the filters'),
-          downloadLink: this.downloadLink(this.resultsAccessLink(), this.toggleResultsLink, this.refreshResultsLink, 'resultsLink'),
-          onDownload: () => this.downloadCSV()
-        }
-        break
-      case 'incentives':
-        item = {
-          title: t('Incentives file'),
-          description: t('One line for each respondent that completed the survey, including the experiment version and the full phone number'),
-          downloadLink: this.downloadLink(this.incentivesAccessLink(), this.toggleIncentivesLink, this.refreshIncentivesLink, 'incentivesLink'),
-          onDownload: () => this.downloadIncentivesCSV()
-        }
-        break
-      case 'interactions':
-        item = {
-          title: t('Interactions'),
-          description: t('One line per respondent interaction, with a column describing the action type and data, including disposition and timestamp'),
-          downloadLink: this.downloadLink(this.interactionsAccessLink(), this.toggleInteractionsLink, this.refreshInteractionsLink, 'interactionsLink'),
-          onDownload: () => this.downloadInteractionsCSV()
-        }
-        break
-    }
-
-    return <li className='collection-item'>
+    const render = item => <li className='collection-item'>
       <a href='#' className='download' onClick={e => { e.preventDefault(); item.onDownload() }}>
         <div>
           <i className='material-icons'>get_app</i>
@@ -361,6 +325,49 @@ class RespondentIndex extends Component<Props, State> {
       </a>
       {item.downloadLink}
     </li>
+
+    switch (id) {
+      /*
+      We'll use this option in the very near future:
+      case 'filtered-results':
+        item = {
+          title: t('Survey results'),
+          description: t('Same as below, but applying the filters and without the public link'),
+          downloadLink: null,
+          onDownload: () => this.downloadCSV(true)
+        }
+        break
+      case 'unfiltered-results':
+      */
+      case 'results':
+        return render({
+          title: t('Survey results'),
+          description: t('One line per respondent, with a column for each variable in the questionnaire, including disposition and timestamp'),
+          downloadLink: this.downloadLink(this.resultsAccessLink(), this.toggleResultsLink, this.refreshResultsLink, 'resultsLink'),
+          onDownload: () => this.downloadCSV()
+        })
+      case 'disposition-history':
+        return render({
+          title: t('Disposition History'),
+          description: t('One line for each time the disposition of a respondent changed, including the timestamp'),
+          downloadLink: this.downloadLink(this.dispositionHistoryAccessLink(), this.toggleDispositionHistoryLink, this.refreshDispositionHistoryLink, 'dispositionHistoryLink'),
+          onDownload: () => this.downloadDispositionHistoryCSV()
+        })
+      case 'incentives':
+        return render({
+          title: t('Incentives file'),
+          description: t('One line for each respondent that completed the survey, including the experiment version and the full phone number'),
+          downloadLink: this.downloadLink(this.incentivesAccessLink(), this.toggleIncentivesLink, this.refreshIncentivesLink, 'incentivesLink'),
+          onDownload: () => this.downloadIncentivesCSV()
+        })
+      case 'interactions':
+        return render({
+          title: t('Interactions'),
+          description: t('One line per respondent interaction, with a column describing the action type and data, including disposition and timestamp'),
+          downloadLink: this.downloadLink(this.interactionsAccessLink(), this.toggleInteractionsLink, this.refreshInteractionsLink, 'interactionsLink'),
+          onDownload: () => this.downloadInteractionsCSV()
+        })
+    }
   }
 
   render() {
@@ -448,8 +455,8 @@ class RespondentIndex extends Component<Props, State> {
             <p>{t('Download survey respondents data as CSV')}</p>
           </div>
           <ul className='collection download-csv'>
-            {this.downloadItem('filtered-results')}
-            {this.downloadItem('unfiltered-results')}
+            {this.downloadItem('results')}
+            {this.downloadItem('disposition-history')}
             {ownerOrAdmin ? this.downloadItem('incentives') : null}
             {ownerOrAdmin ? this.downloadItem('interactions') : null}
           </ul>
