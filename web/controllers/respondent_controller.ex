@@ -46,7 +46,47 @@ defmodule Ask.RespondentController do
       |> effective_stats
     end)
 
-    render(conn, "index.json", respondents: respondents, respondents_count: respondents_count)
+    survey = Repo.get!(Survey, survey_id)
+
+    render(conn, "index.json",
+      respondents: respondents,
+      respondents_count: respondents_count,
+      index_fields: fixed_index_fields()
+        ++ mode_index_fields(survey.mode)
+        ++ response_index_fields(respondents)
+        ++ variant_index_fields(survey.comparisons)
+    )
+  end
+
+  defp fixed_index_fields() do
+    ["phoneNumber", "disposition", "updated_at"]
+      |> present_fields("fixed")
+  end
+
+  defp mode_index_fields(survey_modes) do
+    List.flatten(survey_modes) |> Enum.uniq()
+      |> present_fields("mode")
+  end
+
+  defp variant_index_fields([]) do
+    []
+  end
+
+  defp variant_index_fields(_) do
+    [ "variant" ] |> present_fields("variant")
+  end
+
+  defp response_index_fields(respondents) do
+    all_duplicated_fields =
+      Enum.flat_map(respondents, fn %{responses: responses} ->
+        Enum.map(responses, fn %{field_name: field_name} -> field_name end)
+      end)
+    Enum.uniq(all_duplicated_fields)
+      |> present_fields("response")
+  end
+
+  defp present_fields(fields, type) do
+    Enum.map(fields, fn field -> %{ type: type, key: field } end)
   end
 
   defp effective_stats(respondent) do

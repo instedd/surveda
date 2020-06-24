@@ -552,16 +552,6 @@ class RespondentIndex extends Component<Props, State> {
     const respondentsFieldName = allFieldNames(respondents)
 
     let colspan = respondentsFieldName.length + 3
-    let variantHeader = null
-    if (hasComparisons) {
-      variantHeader = this.renderHeader({
-        displayText: t('Variant'),
-        key: 'variant',
-        sortable: false,
-        type: null
-      })
-      colspan += 1
-    }
     const [fileId, linkId] = ['file', 'link']
 
     const titleWithColumnsMenu = <div className='respondent-index-table-title'>
@@ -627,7 +617,6 @@ class RespondentIndex extends Component<Props, State> {
                   })
                 ))
               }
-              {variantHeader}
             </tr>
           </thead>
           <tbody>
