@@ -1,7 +1,5 @@
 {
-  " disposition, since, final": "",
-  " property1:value1[ property2:value2, ...]": "",
-  " using the following format": "",
+  " disposition:completed since:2020-06-20": "",
   "\"Mobile web\" must not be blank": "",
   "\"Phone call\" must not be blank": "",
   "\"Phone call\" must only consist of single digits, \"#\" or \"*\"": "",
@@ -163,7 +161,7 @@
   "Fallback delay": "",
   "Fallback delay is invalid": "",
   "Fallback mode": "",
-  "Filter by supported properties": "",
+  "Filter using the following format": "",
   "Finish survey as completed": "",
   "Flag": "",
   "Fri": "",

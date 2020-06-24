@@ -45,10 +45,8 @@ class RespondentsFilter extends Component<Props, State> {
         />
         <i className='material-icons grey-text'>search</i>
         <span className='small-text-bellow'>
-          {t('Filter by supported properties')}
-          <em>{t(' disposition, since, final')}</em>
-          {t(' using the following format')}
-          <em>{t(' property1:value1[ property2:value2, ...]')}</em>
+          {t('Filter using the following format')}
+          <em>{t(' disposition:completed since:2020-06-20')}</em>
           {/* In the future, we plan to support advanced search */}
           {/* <a href="#">View advanced search syntax</a> */}
         </span>
