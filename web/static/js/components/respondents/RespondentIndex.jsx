@@ -526,7 +526,7 @@ const mapStateToProps = (state, ownProps) => {
   return {
     projectId: ownProps.params.projectId,
     surveyId: ownProps.params.surveyId,
-    q: ownProps.params.q || '',
+    q: ownProps.location.query.q || '',
     survey: state.survey.data,
     project: state.project.data,
     questionnaires: state.questionnaires.items,

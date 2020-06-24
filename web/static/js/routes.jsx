@@ -49,7 +49,7 @@ export default (
           <Route path=':surveyId' title={SurveyTitle}>
             <IndexRoute components={{ body: SurveyShow, tabs: SurveyTabs }} />
             <Route path='overview' components={{ body: SurveyShow, tabs: SurveyTabs }} />
-            <Route path='respondents(/:q)' components={{ body: RespondentIndex, tabs: SurveyTabs }} />
+            <Route path='respondents' components={{ body: RespondentIndex, tabs: SurveyTabs }} />
             <Route path='settings' components={{ body: SurveySettings, tabs: SurveyTabs }} />
             <Route path='integrations' components={{ body: IntegrationIndex, tabs: SurveyTabs }} />
             <Route path='edit' component={SurveyEdit} showSavingStatus />
@@ -101,7 +101,7 @@ export const folder = (projectId, folderId) => `${project(projectId)}/folders/${
 export const surveyIndex = (projectId) => `${project(projectId)}/surveys`
 export const survey = (projectId, surveyId) => `${surveyIndex(projectId)}/${surveyId}`
 export const surveySimulation = (projectId, surveyId) => `${surveyIndex(projectId)}/${surveyId}/simulation`
-export const surveyRespondents = (projectId, surveyId, q) => `${survey(projectId, surveyId)}/respondents${(q && `/${q}`) || ''}`
+export const surveyRespondents = (projectId, surveyId, q) => `${survey(projectId, surveyId)}/respondents${(q && `?q=${q}`) || ''}`
 export const surveySettings = (projectId, surveyId) => `${survey(projectId, surveyId)}/settings`
 export const surveyIntegrations = (projectId, surveyId) => `${survey(projectId, surveyId)}/integrations`
 export const respondentsResultsCSV = (projectId, surveyId, q) => `/api/v1${surveyRespondents(projectId, surveyId)}/results?_format=csv${(q && `&q=${q}`) || ''}`
