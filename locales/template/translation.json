@@ -1,5 +1,4 @@
 {
-  " disposition:completed since:2020-06-20": "",
   "\"Mobile web\" must not be blank": "",
   "\"Phone call\" must not be blank": "",
   "\"Phone call\" must only consist of single digits, \"#\" or \"*\"": "",
@@ -515,6 +514,7 @@
   "channel": "",
   "channels": "",
   "disposition history": "",
+  "disposition:completed since:2020-06-20": "",
   "for {{count}} day": "",
   "for {{count}} day_plural": "",
   "for {{count}} hour": "",
