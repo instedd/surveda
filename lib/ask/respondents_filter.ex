@@ -69,9 +69,9 @@ defmodule Ask.RespondentsFilter do
 
       {:final, value}, dynamic when value != nil ->
         if (optimized) do
-          dynamic([_, r], ^dynamic and ^value and r.state == "completed")
+          dynamic([_, r], ^dynamic and (r.state == "completed" or not ^value))
         else
-          dynamic([r], ^dynamic and ^value and r.state == "completed")
+          dynamic([r], ^dynamic and (r.state == "completed" or not ^value))
         end
 
       {_, _}, dynamic ->
