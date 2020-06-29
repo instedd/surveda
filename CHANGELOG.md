@@ -1,5 +1,11 @@
 # InSTEDD Surveda Changelog
 
+## 0.26.2
+
+### Bugfixes
+
+* Handle with expired Verboice calls when re-enqueueing from Surveda. [#1733](https://github.com/instedd/surveda/pull/1733)
+
 ## 0.26.1
 
 ### Bugfixes
