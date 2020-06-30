@@ -1,12 +1,13 @@
 defmodule Ask.RespondentsFilter do
   import Ecto.Query
-  defstruct [:disposition, :since, :state]
+  defstruct [:disposition, :since, :state, :mode]
   @date_format_string "{YYYY}-{0M}-{0D}"
 
   def parse(q) do
     %__MODULE__{}
     |> put_disposition(extract(q, "disposition"))
     |> put_state(extract(q, "state"))
+    |> parse_mode(extract(q, "mode"))
     |> parse_since(extract(q, "since"))
   end
 
@@ -16,6 +17,14 @@ defmodule Ask.RespondentsFilter do
 
   def put_state(filter, state) do
     Map.put(filter, :state, state)
+  end
+
+  def parse_mode(filter, "mobile web") do
+    Map.put(filter, :mode, "mobileweb")
+  end
+
+  def parse_mode(filter, mode) do
+    Map.put(filter, :mode, mode)
   end
 
   def date_format_string(), do: @date_format_string
@@ -42,8 +51,9 @@ defmodule Ask.RespondentsFilter do
 
   defp extract(q, key) do
     {:ok, regex} = Regex.compile("(^|[ ])#{key}:(?<#{key}>(\"[^\"]+\")|([^ ]+))")
+
     case Regex.named_captures(regex, q) do
-      %{ ^key => value} -> String.trim(value, "\"")
+      %{^key => value} -> String.trim(value, "\"") |> String.downcase()
       _ -> nil
     end
   end
@@ -54,24 +64,33 @@ defmodule Ask.RespondentsFilter do
 
     Enum.reduce(filter, dynamic(true), fn
       {:disposition, value}, dynamic when value != nil ->
-        if (optimized) do
+        if optimized do
           dynamic([_, r], ^dynamic and r.disposition == ^value)
         else
           dynamic([r], ^dynamic and r.disposition == ^value)
         end
 
       {:since, value}, dynamic when value != nil ->
-        if (optimized) do
+        if optimized do
           dynamic([_, r], ^dynamic and r.updated_at > ^value)
         else
           dynamic([r], ^dynamic and r.updated_at > ^value)
         end
 
       {:state, value}, dynamic when value != nil ->
-        if (optimized) do
+        if optimized do
           dynamic([_, r], ^dynamic and r.state == ^value)
         else
           dynamic([r], ^dynamic and r.state == ^value)
+        end
+
+      # Test that the value is in the mode sequence
+      # SQL equivalence: r.mode LIKE '%<value>%'
+      {:mode, value}, dynamic when value != nil ->
+        if optimized do
+          dynamic([_, r], ^dynamic and like(r.mode, fragment("concat('%', ?, '%')", ^value)))
+        else
+          dynamic([r], ^dynamic and like(r.mode, fragment("concat('%', ?, '%')", ^value)))
         end
 
       {_, _}, dynamic ->

@@ -34,17 +34,24 @@ defmodule Ask.RespondentsFilterTest do
       assert filter.since == @dummy_date
     end
 
-    test "parse since, disposition, and state" do
-      q = "since:#{@dummy_date} disposition:disposition-#{@dummy_string} state:state-#{@dummy_string}"
+    test "parse q" do
+      q =
+        "since:#{@dummy_date} disposition:disposition-#{@dummy_string} state:state-#{
+          @dummy_string
+        } mode:mode-#{@dummy_string}"
 
       filter = RespondentsFilter.parse(q)
 
       assert filter.since == @dummy_date
       assert filter.disposition == "disposition-#{@dummy_string}"
       assert filter.state == "state-#{@dummy_string}"
+      assert filter.mode == "mode-#{@dummy_string}"
 
       # change the arguments order
-      q = "disposition:disposition-#{@dummy_string} state:state-#{@dummy_string} since:#{@dummy_date}"
+      q =
+        "disposition:disposition-#{@dummy_string} state:state-#{@dummy_string} since:#{
+          @dummy_date
+        }"
 
       filter = RespondentsFilter.parse(q)
 
@@ -137,6 +144,16 @@ defmodule Ask.RespondentsFilterTest do
 
       assert filter.state == @dummy_string
     end
+
+    test "parse mode" do
+      filter = %RespondentsFilter{}
+
+      dummy_filter = RespondentsFilter.parse_mode(filter, @dummy_string)
+      mobileweb_filter = RespondentsFilter.parse_mode(filter, "mobile web")
+
+      assert dummy_filter.mode == @dummy_string
+      assert mobileweb_filter.mode == "mobileweb"
+    end
   end
 
   describe "filtering" do
@@ -150,10 +167,25 @@ defmodule Ask.RespondentsFilterTest do
       }
     end
 
+    test "filter by disposition", %{total_respondents_count: total_respondents_count} do
+      queued_filter_where = filter_where(:disposition, "queued")
+      started_filter_where = filter_where(:disposition, "started")
+      contacted_filter_where = filter_where(:disposition, "contacted")
+
+      queued_respondents_count = filter_respondents_and_count(queued_filter_where)
+      started_respondents_count = filter_respondents_and_count(started_filter_where)
+      contacted_respondents_count = filter_respondents_and_count(contacted_filter_where)
+
+      assert total_respondents_count == 45
+      assert queued_respondents_count == 6
+      assert started_respondents_count == 15
+      assert contacted_respondents_count == 24
+    end
+
     test "filter by state", %{total_respondents_count: total_respondents_count} do
-      pending_filter_where = state_filter_where("pending")
-      active_filter_where = state_filter_where("active")
-      cancelled_filter_where = state_filter_where("cancelled")
+      pending_filter_where = filter_where(:state, "pending")
+      active_filter_where = filter_where(:state, "active")
+      cancelled_filter_where = filter_where(:state, "cancelled")
 
       pending_respondents_count = filter_respondents_and_count(pending_filter_where)
       active_respondents_count = filter_respondents_and_count(active_filter_where)
@@ -165,19 +197,19 @@ defmodule Ask.RespondentsFilterTest do
       assert cancelled_respondents_count == 24
     end
 
-    test "filter by disposition", %{total_respondents_count: total_respondents_count} do
-      queued_filter_where = disposition_filter_where("queued")
-      started_filter_where = disposition_filter_where("started")
-      contacted_filter_where = disposition_filter_where("contacted")
+    test "filter by mode", %{total_respondents_count: total_respondents_count} do
+      sms_filter_where = filter_where(:mode, "sms")
+      ivr_filter_where = filter_where(:mode, "ivr")
+      mobile_web_filter_where = filter_where(:mode, "mobileweb")
 
-      queued_respondents_count = filter_respondents_and_count(queued_filter_where)
-      started_respondents_count = filter_respondents_and_count(started_filter_where)
-      contacted_respondents_count = filter_respondents_and_count(contacted_filter_where)
+      sms_respondents_count = filter_respondents_and_count(sms_filter_where)
+      ivr_respondents_count = filter_respondents_and_count(ivr_filter_where)
+      mobileweb_respondents_count = filter_respondents_and_count(mobile_web_filter_where)
 
       assert total_respondents_count == 45
-      assert queued_respondents_count == 6
-      assert started_respondents_count == 15
-      assert contacted_respondents_count == 24
+      assert sms_respondents_count == 15
+      assert ivr_respondents_count == 23
+      assert mobileweb_respondents_count == 27
     end
 
     test "filter by since", %{
@@ -325,7 +357,7 @@ defmodule Ask.RespondentsFilterTest do
     test "filter using optimized queries", %{
       total_respondents_count: total_respondents_count
     } do
-      optimized_filter_where = disposition_filter_where("queued", optimized: true)
+      optimized_filter_where = filter_where(:disposition, "queued", optimized: true)
       optimized_query = optimized_count_respondents_query(optimized_filter_where)
 
       filtered_respondents_count = Repo.one(optimized_query)
@@ -349,7 +381,7 @@ defmodule Ask.RespondentsFilterTest do
     test "filter without using optimized queries", %{
       total_respondents_count: total_respondents_count
     } do
-      filter_where = disposition_filter_where("queued")
+      filter_where = filter_where(:disposition, "queued")
       query = count_respondents_query(filter_where)
 
       filtered_respondents_count = Repo.one(query)
@@ -391,15 +423,73 @@ defmodule Ask.RespondentsFilterTest do
     two_days_ago = Timex.shift(now, days: -2)
     four_days_ago = Timex.shift(now, days: -4)
 
-    for _ <- 1..1, do: insert(:respondent, disposition: "queued", state: "pending")
-    for _ <- 1..2, do: insert(:respondent, disposition: "queued", state: "pending", updated_at: two_days_ago)
-    for _ <- 1..3, do: insert(:respondent, disposition: "queued", state: "pending", updated_at: four_days_ago)
-    for _ <- 1..4, do: insert(:respondent, disposition: "started", state: "active")
-    for _ <- 1..5, do: insert(:respondent, disposition: "started", state: "active", updated_at: two_days_ago)
-    for _ <- 1..6, do: insert(:respondent, disposition: "started", state: "active", updated_at: four_days_ago)
-    for _ <- 1..7, do: insert(:respondent, disposition: "contacted", state: "cancelled")
-    for _ <- 1..8, do: insert(:respondent, disposition: "contacted", state: "cancelled", updated_at: two_days_ago)
-    for _ <- 1..9, do: insert(:respondent, disposition: "contacted", state: "cancelled", updated_at: four_days_ago)
+    for _ <- 1..1,
+        do:
+          insert(:respondent, disposition: "queued", state: "pending", mode: ["sms", "sms", "ivr"])
+
+    for _ <- 1..2,
+        do:
+          insert(:respondent,
+            disposition: "queued",
+            state: "pending",
+            updated_at: two_days_ago,
+            mode: ["ivr", "mobileweb", "mobileweb"]
+          )
+
+    for _ <- 1..3,
+        do:
+          insert(:respondent,
+            disposition: "queued",
+            state: "pending",
+            updated_at: four_days_ago,
+            mode: ["mobileweb", "sms", "sms"]
+          )
+
+    for _ <- 1..4, do: insert(:respondent, disposition: "started", state: "active", mode: ["sms"])
+
+    for _ <- 1..5,
+        do:
+          insert(:respondent,
+            disposition: "started",
+            state: "active",
+            updated_at: two_days_ago,
+            mode: ["ivr"]
+          )
+
+    for _ <- 1..6,
+        do:
+          insert(:respondent,
+            disposition: "started",
+            state: "active",
+            updated_at: four_days_ago,
+            mode: ["mobileweb"]
+          )
+
+    for _ <- 1..7,
+        do:
+          insert(:respondent,
+            disposition: "contacted",
+            state: "cancelled",
+            mode: ["sms", "ivr", "mobileweb"]
+          )
+
+    for _ <- 1..8,
+        do:
+          insert(:respondent,
+            disposition: "contacted",
+            state: "cancelled",
+            updated_at: two_days_ago,
+            mode: ["ivr", "ivr"]
+          )
+
+    for _ <- 1..9,
+        do:
+          insert(:respondent,
+            disposition: "contacted",
+            state: "cancelled",
+            updated_at: four_days_ago,
+            mode: ["mobileweb", "mobileweb"]
+          )
   end
 
   defp disposition_since_days_ago_filter_where(disposition, now, days_ago),
@@ -412,17 +502,10 @@ defmodule Ask.RespondentsFilterTest do
       %RespondentsFilter{since: Timex.shift(now, days: -days_ago)}
       |> RespondentsFilter.filter_where()
 
-  defp disposition_filter_where(disposition, options \\ []) do
+  defp filter_where(key, value, options \\ []) do
     optimized = Keyword.get(options, :optimized, false)
 
-    %RespondentsFilter{disposition: disposition}
-    |> RespondentsFilter.filter_where(optimized: optimized)
-  end
-
-  defp state_filter_where(state, options \\ []) do
-    optimized = Keyword.get(options, :optimized, false)
-
-    %RespondentsFilter{state: state}
+    Map.put(%RespondentsFilter{}, key, value)
     |> RespondentsFilter.filter_where(optimized: optimized)
   end
 
