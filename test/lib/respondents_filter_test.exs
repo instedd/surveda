@@ -34,21 +34,23 @@ defmodule Ask.RespondentsFilterTest do
       assert filter.since == @dummy_date
     end
 
-    test "parse since and disposition" do
-      q = "since:#{@dummy_date} disposition:#{@dummy_string}"
+    test "parse since, disposition, and state" do
+      q = "since:#{@dummy_date} disposition:disposition-#{@dummy_string} state:state-#{@dummy_string}"
 
       filter = RespondentsFilter.parse(q)
 
       assert filter.since == @dummy_date
-      assert filter.disposition == @dummy_string
+      assert filter.disposition == "disposition-#{@dummy_string}"
+      assert filter.state == "state-#{@dummy_string}"
 
       # change the arguments order
-      q = "disposition:#{@dummy_string} since:#{@dummy_date}"
+      q = "disposition:disposition-#{@dummy_string} state:state-#{@dummy_string} since:#{@dummy_date}"
 
       filter = RespondentsFilter.parse(q)
 
       assert filter.since == @dummy_date
-      assert filter.disposition == @dummy_string
+      assert filter.disposition == "disposition-#{@dummy_string}"
+      assert filter.state == "state-#{@dummy_string}"
     end
 
     test "parse when irrelevant stuffs" do
@@ -128,12 +130,12 @@ defmodule Ask.RespondentsFilterTest do
       assert filter.disposition == @dummy_string
     end
 
-    test "put final" do
+    test "put state" do
       filter = %RespondentsFilter{}
 
-      filter = RespondentsFilter.put_final(filter, @dummy_string)
+      filter = RespondentsFilter.put_state(filter, @dummy_string)
 
-      assert filter.final == @dummy_string
+      assert filter.state == @dummy_string
     end
   end
 
@@ -146,6 +148,21 @@ defmodule Ask.RespondentsFilterTest do
         :ok,
         now: now, total_respondents_count: count_all_respondents()
       }
+    end
+
+    test "filter by state", %{total_respondents_count: total_respondents_count} do
+      pending_filter_where = state_filter_where("pending")
+      active_filter_where = state_filter_where("active")
+      cancelled_filter_where = state_filter_where("cancelled")
+
+      pending_respondents_count = filter_respondents_and_count(pending_filter_where)
+      active_respondents_count = filter_respondents_and_count(active_filter_where)
+      cancelled_respondents_count = filter_respondents_and_count(cancelled_filter_where)
+
+      assert total_respondents_count == 45
+      assert pending_respondents_count == 6
+      assert active_respondents_count == 15
+      assert cancelled_respondents_count == 24
     end
 
     test "filter by disposition", %{total_respondents_count: total_respondents_count} do
@@ -374,15 +391,15 @@ defmodule Ask.RespondentsFilterTest do
     two_days_ago = Timex.shift(now, days: -2)
     four_days_ago = Timex.shift(now, days: -4)
 
-    for _ <- 1..1, do: insert(:respondent, disposition: "queued")
-    for _ <- 1..2, do: insert(:respondent, disposition: "queued", updated_at: two_days_ago)
-    for _ <- 1..3, do: insert(:respondent, disposition: "queued", updated_at: four_days_ago)
-    for _ <- 1..4, do: insert(:respondent, disposition: "started")
-    for _ <- 1..5, do: insert(:respondent, disposition: "started", updated_at: two_days_ago)
-    for _ <- 1..6, do: insert(:respondent, disposition: "started", updated_at: four_days_ago)
-    for _ <- 1..7, do: insert(:respondent, disposition: "contacted")
-    for _ <- 1..8, do: insert(:respondent, disposition: "contacted", updated_at: two_days_ago)
-    for _ <- 1..9, do: insert(:respondent, disposition: "contacted", updated_at: four_days_ago)
+    for _ <- 1..1, do: insert(:respondent, disposition: "queued", state: "pending")
+    for _ <- 1..2, do: insert(:respondent, disposition: "queued", state: "pending", updated_at: two_days_ago)
+    for _ <- 1..3, do: insert(:respondent, disposition: "queued", state: "pending", updated_at: four_days_ago)
+    for _ <- 1..4, do: insert(:respondent, disposition: "started", state: "active")
+    for _ <- 1..5, do: insert(:respondent, disposition: "started", state: "active", updated_at: two_days_ago)
+    for _ <- 1..6, do: insert(:respondent, disposition: "started", state: "active", updated_at: four_days_ago)
+    for _ <- 1..7, do: insert(:respondent, disposition: "contacted", state: "cancelled")
+    for _ <- 1..8, do: insert(:respondent, disposition: "contacted", state: "cancelled", updated_at: two_days_ago)
+    for _ <- 1..9, do: insert(:respondent, disposition: "contacted", state: "cancelled", updated_at: four_days_ago)
   end
 
   defp disposition_since_days_ago_filter_where(disposition, now, days_ago),
@@ -399,6 +416,13 @@ defmodule Ask.RespondentsFilterTest do
     optimized = Keyword.get(options, :optimized, false)
 
     %RespondentsFilter{disposition: disposition}
+    |> RespondentsFilter.filter_where(optimized: optimized)
+  end
+
+  defp state_filter_where(state, options \\ []) do
+    optimized = Keyword.get(options, :optimized, false)
+
+    %RespondentsFilter{state: state}
     |> RespondentsFilter.filter_where(optimized: optimized)
   end
 

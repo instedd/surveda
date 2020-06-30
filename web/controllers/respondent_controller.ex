@@ -584,7 +584,7 @@ defmodule Ask.RespondentController do
 
     filter =
       if params["final"],
-        do: RespondentsFilter.put_final(filter, params["final"]),
+        do: RespondentsFilter.put_state(filter, "completed"),
         else: filter
 
     filter

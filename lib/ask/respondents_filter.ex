@@ -1,17 +1,21 @@
 defmodule Ask.RespondentsFilter do
   import Ecto.Query
-  defstruct [:disposition, :since, :final]
+  defstruct [:disposition, :since, :state]
   @date_format_string "{YYYY}-{0M}-{0D}"
 
   def parse(q) do
     %__MODULE__{}
     |> put_disposition(extract(q, "disposition"))
-    |> put_final(extract(q, "final"))
+    |> put_state(extract(q, "state"))
     |> parse_since(extract(q, "since"))
   end
 
   def put_disposition(filter, disposition) do
     Map.put(filter, :disposition, disposition)
+  end
+
+  def put_state(filter, state) do
+    Map.put(filter, :state, state)
   end
 
   def date_format_string(), do: @date_format_string
@@ -27,10 +31,6 @@ defmodule Ask.RespondentsFilter do
   """
   def put_since(filter, since) do
     Map.put(filter, :since, since)
-  end
-
-  def put_final(filter, final) do
-    Map.put(filter, :final, final)
   end
 
   def parse_since(filter, since) do
@@ -67,11 +67,11 @@ defmodule Ask.RespondentsFilter do
           dynamic([r], ^dynamic and r.updated_at > ^value)
         end
 
-      {:final, value}, dynamic when value != nil ->
+      {:state, value}, dynamic when value != nil ->
         if (optimized) do
-          dynamic([_, r], ^dynamic and (r.state == "completed" or not ^value))
+          dynamic([_, r], ^dynamic and r.state == ^value)
         else
-          dynamic([r], ^dynamic and (r.state == "completed" or not ^value))
+          dynamic([r], ^dynamic and r.state == ^value)
         end
 
       {_, _}, dynamic ->
