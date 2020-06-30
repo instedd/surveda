@@ -37,6 +37,11 @@ class RespondentsFilter extends Component<Props, State> {
     applyFilterDebounced()
   }
 
+  onInputKeyPress = (event) => {
+    const { onApplyFilter } = this.props
+    if (event.key === 'Enter') onApplyFilter()
+  }
+
   render = () => {
     const { t } = this.props
     const { inputValue } = this.state
@@ -48,6 +53,7 @@ class RespondentsFilter extends Component<Props, State> {
           type='search'
           className='search-input'
           onChange={this.onInputChange}
+          onKeyPress={this.onInputKeyPress}
         />
         <i className='material-icons grey-text'>search</i>
         <span className='small-text-bellow'>
