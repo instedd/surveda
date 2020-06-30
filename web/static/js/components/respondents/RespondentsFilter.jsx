@@ -7,7 +7,6 @@ type Props = {
   t: Function,
   inputValue: string,
   onChange: Function,
-  debounceMilliseconds: ?number,
   onApplyFilter: Function
 }
 
@@ -23,7 +22,7 @@ class RespondentsFilter extends Component<Props, State> {
       inputValue: props.inputValue,
       applyFilterDebounced: AwesomeDebouncePromise(
         props.onApplyFilter,
-        props.debounceMilliseconds || 2000
+        500
       )
     }
   }
