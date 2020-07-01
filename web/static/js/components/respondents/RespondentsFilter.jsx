@@ -62,7 +62,7 @@ class RespondentsFilter extends Component<Props, State> {
             href='https://github.com/instedd/surveda/wiki/How-to-filter-respondents'
             target='_blank'
           >
-          View advanced search syntax
+            {t('View advanced search syntax')}
           </a>
         </span>
       </div>
