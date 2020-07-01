@@ -85,12 +85,12 @@ defmodule Ask.RespondentsFilter do
         end
 
       # Test that the value is in the mode sequence
-      # SQL equivalence: r.mode LIKE '%<value>%'
+      # SQL equivalence: r.mode LIKE '%"<value>"%'
       {:mode, value}, dynamic when value != nil ->
         if optimized do
-          dynamic([_, r], ^dynamic and like(r.mode, fragment("concat('%', ?, '%')", ^value)))
+          dynamic([_, r], ^dynamic and like(r.mode, fragment("concat('%\"', ?, '\"%')", ^value)))
         else
-          dynamic([r], ^dynamic and like(r.mode, fragment("concat('%', ?, '%')", ^value)))
+          dynamic([r], ^dynamic and like(r.mode, fragment("concat('%\"', ?, '\"%')", ^value)))
         end
 
       {_, _}, dynamic ->
