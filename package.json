@@ -38,8 +38,7 @@
     "react-intl": "^2.1.5",
     "react-materialize": "^0.17.0",
     "react-timeago": "^3.4.3",
-    "uuid": "^3.2.1",
-    "awesome-debounce-promise": "^2.1.0"
+    "uuid": "^3.2.1"
   },
   "devDependencies": {
     "babel-eslint": "^7.0.0",
