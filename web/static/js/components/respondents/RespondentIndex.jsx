@@ -21,7 +21,7 @@ type Props = {
   t: Function,
   projectId: number,
   surveyId: number,
-  q: string,
+  filterInput: string,
   survey: Survey,
   project: Project,
   questionnaires: {[id: any]: Questionnaire},
@@ -39,13 +39,13 @@ type Props = {
   projectActions: any,
   questionnairesActions: any,
   actions: any,
-  router: Object
-};
+  router: Object,
+  updateRespondentsFilter: Function
+}
 
 type State = {
-  csvType: string,
-  filterInput: string
-};
+  csvType: string
+}
 
 class RespondentIndex extends Component<Props, State> {
   toggleResultsLink: Function
@@ -59,7 +59,7 @@ class RespondentIndex extends Component<Props, State> {
 
   constructor(props) {
     super(props)
-    this.state = {csvType: '', filterInput: props.q}
+    this.state = {csvType: ''}
     this.toggleResultsLink = this.toggleResultsLink.bind(this)
     this.toggleIncentivesLink = this.toggleIncentivesLink.bind(this)
     this.toggleInteractionsLink = this.toggleInteractionsLink.bind(this)
@@ -71,18 +71,26 @@ class RespondentIndex extends Component<Props, State> {
   }
 
   componentDidMount() {
-    const { projectId, surveyId } = this.props
+    const {
+      projectId,
+      surveyId,
+      projectActions,
+      surveyActions,
+      questionnairesActions,
+      filterInput,
+      updateRespondentsFilter
+    } = this.props
     if (projectId && surveyId) {
-      this.props.projectActions.fetchProject(projectId)
-      this.props.surveyActions.fetchSurvey(projectId, surveyId)
-      this.props.questionnairesActions.fetchQuestionnaires(projectId)
+      projectActions.fetchProject(projectId)
+      surveyActions.fetchSurvey(projectId, surveyId)
+      questionnairesActions.fetchQuestionnaires(projectId)
+      updateRespondentsFilter(filterInput)
       this.fetchRespondents()
     }
   }
 
   fetchRespondents(pageNumber = 1) {
-    const { projectId, surveyId, pageSize } = this.props
-    const { filterInput } = this.state
+    const { projectId, surveyId, pageSize, filterInput } = this.props
     this.props.actions.fetchRespondents(projectId, surveyId, pageSize, pageNumber, filterInput)
   }
 
@@ -97,9 +105,9 @@ class RespondentIndex extends Component<Props, State> {
   }
 
   downloadCSV(applyUserFilter = false) {
-    const { projectId, surveyId } = this.props
-    const filterInput = applyUserFilter ? this.state.filterInput : null
-    window.location = routes.respondentsResultsCSV(projectId, surveyId, filterInput)
+    const { projectId, surveyId, filterInput } = this.props
+    const q = (applyUserFilter && filterInput) || null
+    window.location = routes.respondentsResultsCSV(projectId, surveyId, q)
   }
 
   downloadDispositionHistoryCSV() {
@@ -118,8 +126,7 @@ class RespondentIndex extends Component<Props, State> {
   }
 
   sortBy(name) {
-    const { projectId, surveyId } = this.props
-    const { filterInput } = this.state
+    const { projectId, surveyId, filterInput } = this.props
     this.props.actions.sortRespondentsBy(projectId, surveyId, name, filterInput)
   }
 
@@ -303,13 +310,6 @@ class RespondentIndex extends Component<Props, State> {
     return numericFields.some(field => field == filterField)
   }
 
-  applyRespondentsFilter() {
-    const { router, projectId, surveyId } = this.props
-    const { filterInput } = this.state
-    router.push(routes.surveyRespondents(projectId, surveyId, filterInput))
-    this.fetchRespondents()
-  }
-
   downloadItem(id) {
     const { t } = this.props
 
@@ -370,10 +370,15 @@ class RespondentIndex extends Component<Props, State> {
     }
   }
 
+  onFilterChage(inputValue) {
+    const { router, projectId, surveyId, updateRespondentsFilter } = this.props
+    router.push(routes.surveyRespondents(projectId, surveyId, inputValue))
+    updateRespondentsFilter(inputValue)
+  }
+
   render() {
     const { survey, questionnaires, totalCount, order, sortBy, sortAsc,
-      userLevel, t } = this.props
-    const { filterInput } = this.state
+      userLevel, t, filterInput } = this.props
 
     if (!this.props.respondents || !survey || !questionnaires || !this.props.project) {
       return <div>{t('Loading...')}</div>
@@ -463,8 +468,8 @@ class RespondentIndex extends Component<Props, State> {
         </Modal>
         <RespondentsFilter
           inputValue={filterInput}
-          onChange={inputValue => this.setState({ filterInput: inputValue })}
-          onApplyFilter={() => this.applyRespondentsFilter()}
+          onChange={inputValue => this.onFilterChage(inputValue)}
+          onApplyFilter={() => this.fetchRespondents()}
         />
         <CardTable title={title} footer={footer} tableScroll>
           <thead>
@@ -533,7 +538,6 @@ const mapStateToProps = (state, ownProps) => {
   return {
     projectId: ownProps.params.projectId,
     surveyId: ownProps.params.surveyId,
-    q: ownProps.location.query.q || '',
     survey: state.survey.data,
     project: state.project.data,
     questionnaires: state.questionnaires.items,
@@ -546,7 +550,8 @@ const mapStateToProps = (state, ownProps) => {
     endIndex,
     totalCount,
     sortBy,
-    sortAsc
+    sortAsc,
+    filterInput: ownProps.location.query.q || ''
   }
 }
 
@@ -554,7 +559,14 @@ const mapDispatchToProps = (dispatch) => ({
   actions: bindActionCreators(actions, dispatch),
   surveyActions: bindActionCreators(surveyActions, dispatch),
   projectActions: bindActionCreators(projectActions, dispatch),
-  questionnairesActions: bindActionCreators(questionnairesActions, dispatch)
+  questionnairesActions: bindActionCreators(questionnairesActions, dispatch),
+  updateRespondentsFilter: inputValue =>
+    dispatch(actions.updateRespondentsFilter({ q: inputValue }))
 })
 
-export default translate()(connect(mapStateToProps, mapDispatchToProps)(RespondentIndex))
+export default translate()(
+  connect(
+    mapStateToProps,
+    mapDispatchToProps
+  )(RespondentIndex)
+)

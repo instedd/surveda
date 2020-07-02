@@ -11,7 +11,8 @@ const initialState = {
     number: 1,
     size: 5,
     totalCount: 0
-  }
+  },
+  filter: null
 }
 
 export default (state = initialState, action) => {
@@ -21,6 +22,7 @@ export default (state = initialState, action) => {
     case actions.UPDATE_RESPONDENT: return createOrUpdateRespondent(state, action)
     case actions.RECEIVE_RESPONDENTS: return receiveRespondents(state, action)
     case actions.SORT: return sortRespondents(state, action)
+    case actions.UPDATE_RESPONDENTS_FILTER: return updateRespondentsFilter(state, action)
     default: return state
   }
 }
@@ -43,6 +45,11 @@ const fetchRespondents = (state, action) => {
   }
 }
 
+const updateRespondentsFilter = (state, action) => ({
+  ...state,
+  filter: action.filter
+})
+
 const createOrUpdateRespondent = (state, action) => ({
   ...state,
   [action.id]: {
@@ -50,8 +57,12 @@ const createOrUpdateRespondent = (state, action) => ({
   }
 })
 
+const isCurrentFilter = (stateFilter, actionFilter) => {
+  return (stateFilter && stateFilter.q) == (actionFilter && actionFilter.q)
+}
+
 const receiveRespondents = (state, action) => {
-  if (state.surveyId != action.surveyId || state.page.number != action.page) {
+  if (state.surveyId != action.surveyId || state.page.number != action.page || !isCurrentFilter(state.filter, action.filter)) {
     return state
   }
 

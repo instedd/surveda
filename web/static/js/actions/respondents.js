@@ -7,12 +7,13 @@ export const UPDATE_RESPONDENT = 'UPDATE_RESPONDENT'
 export const RECEIVE_RESPONDENTS_ERROR = 'RECEIVE_RESPONDENTS_ERROR'
 export const RECEIVE_RESPONDENTS_STATS = 'RECEIVE_RESPONDENTS_STATS'
 export const SORT = 'RESPONDENTS_SORT'
+export const UPDATE_RESPONDENTS_FILTER = 'UPDATE_RESPONDENTS_FILTER'
 
 export const fetchRespondents = (projectId, surveyId, limit, page = 1, q) => (dispatch, getState) => {
   const state = getState().respondents
   dispatch(startFetchingRespondents(surveyId, page))
   api.fetchRespondents(projectId, surveyId, limit, page, state.sortBy, state.sortAsc, q)
-    .then(response => dispatch(receiveRespondents(surveyId, page, response.entities.respondents || {}, response.respondentsCount, response.result)))
+    .then(response => dispatch(receiveRespondents(surveyId, page, response.entities.respondents || {}, response.respondentsCount, response.result, {q})))
 }
 
 export const fetchRespondentsStats = (projectId, surveyId) => dispatch => {
@@ -25,13 +26,14 @@ export const receiveRespondentsStats = (response) => ({
   response
 })
 
-export const receiveRespondents = (surveyId, page, respondents, respondentsCount, order) => ({
+export const receiveRespondents = (surveyId, page, respondents, respondentsCount, order, filter) => ({
   type: RECEIVE_RESPONDENTS,
   surveyId,
   page,
   respondents,
   respondentsCount,
-  order
+  order,
+  filter
 })
 
 export const createRespondent = (response) => ({
@@ -44,6 +46,11 @@ export const updateRespondent = (response) => ({
   type: UPDATE_RESPONDENT,
   id: response.result,
   respondent: response.entities.respondents[response.result]
+})
+
+export const updateRespondentsFilter = (filter) => ({
+  type: UPDATE_RESPONDENTS_FILTER,
+  filter: filter
 })
 
 export const receiveRespondentsError = (error) => ({
@@ -61,7 +68,7 @@ export const sortRespondentsBy = (projectId, surveyId, property, q) => (dispatch
   const state = getState().respondents
   const sortAsc = state.sortBy == property ? !state.sortAsc : true
   api.fetchRespondents(projectId, surveyId, state.page.size, 1, property, sortAsc, q)
-    .then(response => dispatch(receiveRespondents(surveyId, 1, response.entities.respondents || {}, response.respondentsCount, response.result)))
+    .then(response => dispatch(receiveRespondents(surveyId, 1, response.entities.respondents || {}, response.respondentsCount, response.result, {q})))
 
   dispatch({
     type: SORT,
