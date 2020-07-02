@@ -67,7 +67,7 @@ class RespondentsFilter extends Component<Props, State> {
         <i className='material-icons grey-text'>search</i>
         <span className='small-text-bellow'>
           {t('Filter using the following format')}:&nbsp;
-          <em>{t('disposition:completed since:2020-06-20')}</em>.&nbsp;
+          <em>disposition:completed since:2020-06-20</em>.&nbsp;
           <a
             href='https://github.com/instedd/surveda/wiki/How-to-filter-respondents'
             target='_blank'
