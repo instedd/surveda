@@ -59,14 +59,49 @@
       }
     }
     &.download-csv {
+      padding: 1.5rem 0;
+      background-color: #fff;
       li.collection-item {
         border: none;
         min-height: 6rem;
-        margin: 1.5rem 0;
+      }
+      a.download {
+        @extend .grey-text;
+        position: relative;
+        > div {
+          padding-left: 70px;
+          max-width: 85%;
+          &:first-child {
+            background-color: #999999;
+            text-align: center;
+            border-radius: 50%;
+            height: 45px;
+            width: 45px;
+            padding-left: 0;
+            max-width: initial;
+            position: absolute;
+            top: 4px;
+            left: 5px;
+            i.material-icons {
+              @extend .white-text;
+              font-size: 1.5rem;
+              line-height: 45px;
+            }
+          }
+          p {
+            font-size: 1.1rem;
+            margin: 0.2rem 0;
+          }
+        }
+        &:after {
+          content: '';
+          display: table;
+          clear: both;
+          zoom: 1;
+        }
       }
       .access-link {
-        padding-left: 70px;
-        padding-top: 0.5rem;
+        padding: 0.5rem 0;
         max-width: 85%;
         .switch {
           display: inline-block;
@@ -112,39 +147,14 @@
           }
         }
       }
-      a.download {
+      div.link {
         @extend .grey-text;
-        position: relative;
         > div {
-          padding-left: 70px;
           max-width: 85%;
-          &:first-child {
-            background-color: #999999;
-            text-align: center;
-            border-radius: 50%;
-            height: 45px;
-            width: 45px;
-            padding-left: 0;
-            max-width: initial;
-            position: absolute;
-            top: 4px;
-            left: 5px;
-            i.material-icons {
-              @extend .white-text;
-              font-size: 1.5rem;
-              line-height: 45px;
-            }
-          }
           p {
             font-size: 1.1rem;
             margin: 0.2rem 0;
           }
-        }
-        &:after {
-          content: '';
-          display: table;
-          clear: both;
-          zoom: 1;
         }
       }
     }
@@ -205,4 +215,3 @@
     }
   }
 }
-

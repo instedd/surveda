@@ -7,7 +7,16 @@ import * as surveyActions from '../../actions/survey'
 import * as projectActions from '../../actions/project'
 import * as questionnairesActions from '../../actions/questionnaires'
 import values from 'lodash/values'
-import { CardTable, UntitledIfEmpty, Modal, SortableHeader, Tooltip, PagingFooter } from '../ui'
+import {
+  CardTable,
+  UntitledIfEmpty,
+  Modal,
+  SortableHeader,
+  Tooltip,
+  PagingFooter,
+  MainAction,
+  Action
+} from '../ui'
 import RespondentRow from './RespondentRow'
 import * as routes from '../../routes'
 import { modeLabel } from '../../questionnaire.mode'
@@ -322,35 +331,45 @@ class RespondentIndex extends Component<Props, State> {
     return numericFields.some(field => field == filterField)
   }
 
-  downloadItem(id) {
-    const { t } = this.props
+  downloadItem(id, itemType) {
+    const { t, totalCount, filter } = this.props
+    const titleDescription = item => (
+      <div>
+        <p className='black-text'><b>{item.title}</b></p>
+        <p>{item.description}</p>
+      </div>
+    )
 
-    const render = item => <li className='collection-item'>
-      <a href='#' className='download' onClick={e => { e.preventDefault(); item.onDownload() }}>
-        <div>
-          <i className='material-icons'>get_app</i>
-        </div>
-        <div>
-          <p className='black-text'><b>{item.title}</b></p>
-          <p>{item.description}</p>
-        </div>
-      </a>
-      {item.downloadLink}
-    </li>
+    const render = item =>
+    (
+      <li className='collection-item'>
+        {
+          itemType == 'file'
+          ? (
+            <a href='#' className='download' onClick={e => { e.preventDefault(); item.onDownload() }}>
+              <div>
+                <i className='material-icons'>get_app</i>
+              </div>
+              { titleDescription(item) }
+            </a>
+          )
+          : <div className='link'>{titleDescription(item)}</div>
+        }
+        { itemType == 'link' ? item.downloadLink : null }
+      </li>
+    )
 
     switch (id) {
-      /*
-      We'll use this option in the very near future:
       case 'filtered-results':
-        item = {
-          title: t('Survey results'),
-          description: t('Same as below, but applying the filters and without the public link'),
+        return render({
+          title: t('Filtered survey results'),
+          description: t(
+            '{{totalCount}} respondents resulting of applying the current filter: {{filter}}',
+            { totalCount, filter }
+          ),
           downloadLink: null,
           onDownload: () => this.downloadCSV(true)
-        }
-        break
-      case 'unfiltered-results':
-      */
+        })
       case 'results':
         return render({
           title: t('Survey results'),
@@ -398,6 +417,42 @@ class RespondentIndex extends Component<Props, State> {
     )
   }
 
+  downloadModal({ itemType }) {
+    const { userLevel, t, filter } = this.props
+    const ownerOrAdmin = userLevel == 'owner' || userLevel == 'admin'
+    const [title, description] =
+      itemType == 'file'
+        ? [t('Download CSV'), t('Choose the data you want to download')]
+        : [
+          t('Public links'),
+          t(
+            'Choose the data you want to be able to access through a public link'
+          )
+        ]
+
+    return (
+      <Modal
+        id={`downloadCSV-${itemType}`}
+        confirmationText='Download CSV'
+        card
+      >
+        <div className='card-title header'>
+          <h5>{title}</h5>
+          <p>{description}</p>
+        </div>
+        <ul className='collection download-csv'>
+          {itemType == 'file' && filter
+            ? this.downloadItem('filtered-results', itemType)
+            : null}
+          {this.downloadItem('results', itemType)}
+          {this.downloadItem('disposition-history', itemType)}
+          {ownerOrAdmin ? this.downloadItem('incentives', itemType) : null}
+          {ownerOrAdmin ? this.downloadItem('interactions', itemType) : null}
+        </ul>
+      </Modal>
+    )
+  }
+
   render() {
     const { project,
       survey,
@@ -406,10 +461,8 @@ class RespondentIndex extends Component<Props, State> {
       order,
       sortBy,
       sortAsc,
-      userLevel,
       t
     } = this.props
-
     const loading = (
       !project ||
       !survey ||
@@ -481,31 +534,19 @@ class RespondentIndex extends Component<Props, State> {
       variantHeader = <th>{t('Variant')}</th>
       colspan += 1
     }
-
-    const ownerOrAdmin = userLevel == 'owner' || userLevel == 'admin'
+    const [fileId, linkId] = ['file', 'link']
 
     return (
       <div className='white'>
         <div dangerouslySetInnerHTML={{
           __html: '<style> body { overflow-y: auto !important; color: black}</style>' }} />
-        <div className='fixed-action-btn horizontal right mtop'>
-          <a className='btn-floating btn-large green' href='#' onClick={(e) => { e.preventDefault(); $('#downloadCSV').modal('open') }}>
-            <i className='material-icons'>get_app</i>
-          </a>
-        </div>
-        <Modal id='downloadCSV' confirmationText='Download CSV' card>
-          <div className='card-title header'>
-            <h5>{t('Download CSV')}</h5>
-            <p>{t('Download survey respondents data as CSV')}</p>
-          </div>
-          <ul className='collection download-csv'>
-            {this.downloadItem('results')}
-            {this.downloadItem('disposition-history')}
-            {ownerOrAdmin ? this.downloadItem('incentives') : null}
-            {ownerOrAdmin ? this.downloadItem('interactions') : null}
-          </ul>
-        </Modal>
-        {this.respondentsFilter()}
+        <MainAction text='Downloads' icon='get_app'>
+          <Action text='Download CSVs' icon='insert_drive_file' onClick={() => $(`#downloadCSV-${fileId}`).modal('open')} />
+          <Action text='Public links' icon='link' onClick={() => $(`#downloadCSV-${linkId}`).modal('open')} />
+        </MainAction>
+        { this.downloadModal({itemType: fileId}) }
+        { this.downloadModal({itemType: linkId}) }
+        { this.respondentsFilter() }
         <CardTable title={title} footer={footer} tableScroll>
           <thead>
             <tr>

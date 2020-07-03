@@ -77,6 +77,8 @@
   "Checking this box will make the survey accept written numbers as valid numeric responses, like \"one\" or \"fifty five\". Written numbers are supported up to one hundred (100).": "",
   "Choose a key for each language": "",
   "Choose an option to change the color scheme": "",
+  "Choose the data you want to be able to access through a public link": "",
+  "Choose the data you want to download": "",
   "Choose the disposition you want to set at this point of the questionnaire.": "",
   "Choose the questionnaire answers you want to use to define quotas": "",
   "Close": "",
@@ -127,7 +129,6 @@
   "Done": "",
   "Download CSV": "",
   "Download contents as CSV": "",
-  "Download survey respondents data as CSV": "",
   "Downloaded <i>{{surveyName}}</i> {{reportType}}": "",
   "Duplicate questionnaire": "",
   "EDIT QUOTAS": "",
@@ -162,6 +163,7 @@
   "Fallback delay is invalid": "",
   "Fallback mode": "",
   "Filter using the following format": "",
+  "Filtered survey results": "",
   "Finish survey as completed": "",
   "Flag": "",
   "Fri": "",
@@ -309,6 +311,7 @@
   "Projects": "",
   "Provider": "",
   "Public link:": "",
+  "Public links": "",
   "QUEUE SIZE": "",
   "Quantity": "",
   "Question Prompt": "",
@@ -369,7 +372,6 @@
   "SMS with mobile web fallback": "",
   "SMS with phone call fallback": "",
   "SUCCESS RATE": "",
-  "Same as below, but applying the filters and without the public link": "",
   "Sat": "",
   "Saving...": "",
   "Scheduled at <1>{{hour}}</1>": "Scheduled at <1>{{hour}}</1>",
@@ -569,5 +571,6 @@
   "{{mode}} Attempts": "",
   "{{percentage}}% of target completed": "",
   "{{role}} (invited)": "",
-  "{{startIndex}}-{{endIndex}} of {{totalCount}}": ""
+  "{{startIndex}}-{{endIndex}} of {{totalCount}}": "",
+  "{{totalCount}} respondents resulting of applying the current filter: {{filter}}": ""
 }
