@@ -9,13 +9,42 @@ export const RECEIVE_RESPONDENTS_STATS = 'RECEIVE_RESPONDENTS_STATS'
 export const SORT = 'RESPONDENTS_SORT'
 export const UPDATE_RESPONDENTS_FILTER = 'UPDATE_RESPONDENTS_FILTER'
 
-export const fetchRespondents = (projectId, surveyId, limit, page = 1, q) => (dispatch, getState) => {
-  const state = getState().respondents
-  dispatch(startFetchingRespondents(surveyId, page))
-  api.fetchRespondents(projectId, surveyId, limit, page, state.sortBy, state.sortAsc, q)
-    .then(response => dispatch(receiveRespondents(surveyId, page, response.entities.respondents || {}, response.respondentsCount, response.result, {q})))
+export const fetchRespondents = (
+  projectId,
+  surveyId,
+  limit,
+  page,
+  filter = '',
+  sortBy = null,
+  sortAsc = true
+) => (dispatch, getState) => {
+  dispatch(startFetchingRespondents(surveyId, page, sortBy, sortAsc, filter))
+  api
+    .fetchRespondents(projectId, surveyId, limit, page, sortBy, sortAsc, filter)
+    .then((response) => {
+      const state = getState().respondents
+      const lastFetchResponse =
+        state.surveyId == surveyId &&
+        state.page.number == page &&
+        state.sortBy == sortBy &&
+        state.sortAsc == sortAsc &&
+        state.filter == filter
+      if (lastFetchResponse) {
+        dispatch(
+          receiveRespondents(
+            surveyId,
+            page,
+            response.entities.respondents || {},
+            response.respondentsCount,
+            response.result,
+            sortBy,
+            sortAsc,
+            filter
+          )
+        )
+      }
+    })
 }
-
 export const fetchRespondentsStats = (projectId, surveyId) => dispatch => {
   api.fetchRespondentsStats(projectId, surveyId)
     .then(stats => dispatch(receiveRespondentsStats(stats)))
@@ -26,13 +55,15 @@ export const receiveRespondentsStats = (response) => ({
   response
 })
 
-export const receiveRespondents = (surveyId, page, respondents, respondentsCount, order, filter) => ({
+export const receiveRespondents = (surveyId, page, respondents, respondentsCount, order, sortBy, sortAsc, filter) => ({
   type: RECEIVE_RESPONDENTS,
   surveyId,
   page,
   respondents,
   respondentsCount,
   order,
+  sortBy,
+  sortAsc,
   filter
 })
 
@@ -48,30 +79,27 @@ export const updateRespondent = (response) => ({
   respondent: response.entities.respondents[response.result]
 })
 
-export const updateRespondentsFilter = (filter) => ({
-  type: UPDATE_RESPONDENTS_FILTER,
-  filter: filter
-})
+export const updateRespondentsFilter = (projectId, surveyId, filter) => (dispatch, getState) => {
+  const { sortBy, sortAsc, page } = getState().respondents
+  dispatch(fetchRespondents(projectId, surveyId, page.size, 1, filter, sortBy, sortAsc))
+}
 
 export const receiveRespondentsError = (error) => ({
   type: RECEIVE_RESPONDENTS_ERROR,
   error
 })
 
-export const startFetchingRespondents = (surveyId, page) => ({
+export const startFetchingRespondents = (surveyId, page, sortBy, sortAsc, filter) => ({
   type: FETCH_RESPONDENTS,
   surveyId,
-  page
+  page,
+  sortBy,
+  sortAsc,
+  filter
 })
 
-export const sortRespondentsBy = (projectId, surveyId, property, q) => (dispatch, getState) => {
-  const state = getState().respondents
-  const sortAsc = state.sortBy == property ? !state.sortAsc : true
-  api.fetchRespondents(projectId, surveyId, state.page.size, 1, property, sortAsc, q)
-    .then(response => dispatch(receiveRespondents(surveyId, 1, response.entities.respondents || {}, response.respondentsCount, response.result, {q})))
-
-  dispatch({
-    type: SORT,
-    property
-  })
+export const sortRespondentsBy = (projectId, surveyId, property) => (dispatch, getState) => {
+  const { page, sortBy, sortAsc, filter } = getState().respondents
+  const newSortAsc = sortBy == property ? !sortAsc : true
+  dispatch(fetchRespondents(projectId, surveyId, page.size, 1, filter, sortBy, newSortAsc))
 }

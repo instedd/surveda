@@ -4,39 +4,23 @@ import { translate } from 'react-i18next'
 
 type Props = {
   t: Function,
-  inputValue: string,
-  onChange: Function,
-  onApplyFilter: Function
+  defaultValue: string,
+  onChange: Function
 }
 
-type State = {
-  inputValue: string
-}
-
-class RespondentsFilter extends Component<Props, State> {
+class RespondentsFilter extends Component<Props> {
   _timeoutId = null
 
-  constructor(props) {
-    super(props)
-    this.state = {
-      inputValue: props.inputValue
-    }
+  onInputChange = event => {
+    this.applyFilter({ value: event.target.value, debounced: true })
   }
 
-  onInputChange = (event) => {
+  onInputKeyPress = event => {
+    if (event.key === 'Enter') this.applyFilter({ value: event.target.value, debounced: false })
+  }
+
+  applyFilter = ({ value, debounced }) => {
     const { onChange } = this.props
-    const inputValue = event.target.value
-    this.setState({ inputValue: inputValue })
-    onChange(inputValue)
-    this.applyFilter({ debounced: true })
-  }
-
-  onInputKeyPress = (event) => {
-    if (event.key === 'Enter') this.applyFilter()
-  }
-
-  applyFilter = ({ debounced } = { debounced: false }) => {
-    const { onApplyFilter } = this.props
     if (this._timeoutId != null) {
       clearTimeout(this._timeoutId)
       this._timeoutId = null
@@ -44,21 +28,21 @@ class RespondentsFilter extends Component<Props, State> {
     if (debounced) {
       this._timeoutId = setTimeout(() => {
         this._timeoutId = null
-        onApplyFilter()
+        onChange(value)
       }, 500)
     } else {
-      onApplyFilter()
+      onChange(value)
     }
   }
 
   render = () => {
-    const { t } = this.props
-    const { inputValue } = this.state
+    const { t, defaultValue } = this.props
 
     return (
-      <div className='input-field'>
+      <div className='input-field'
+        style={{marginRight: '3.8rem', marginLeft: '0.7rem'}}>
         <input
-          value={inputValue}
+          defaultValue={defaultValue}
           type='search'
           className='search-input'
           onChange={this.onInputChange}

@@ -21,8 +21,6 @@ export default (state = initialState, action) => {
     case actions.CREATE_RESPONDENT: return createOrUpdateRespondent(state, action)
     case actions.UPDATE_RESPONDENT: return createOrUpdateRespondent(state, action)
     case actions.RECEIVE_RESPONDENTS: return receiveRespondents(state, action)
-    case actions.SORT: return sortRespondents(state, action)
-    case actions.UPDATE_RESPONDENTS_FILTER: return updateRespondentsFilter(state, action)
     default: return state
   }
 }
@@ -36,6 +34,7 @@ const fetchRespondents = (state, action) => {
     items,
     fetching: true,
     surveyId: action.surveyId,
+    filter: action.filter,
     sortBy: sameSurvey ? state.sortBy : null,
     sortAsc: sameSurvey ? state.sortAsc : true,
     page: {
@@ -45,11 +44,6 @@ const fetchRespondents = (state, action) => {
   }
 }
 
-const updateRespondentsFilter = (state, action) => ({
-  ...state,
-  filter: action.filter
-})
-
 const createOrUpdateRespondent = (state, action) => ({
   ...state,
   [action.id]: {
@@ -57,38 +51,14 @@ const createOrUpdateRespondent = (state, action) => ({
   }
 })
 
-const isCurrentFilter = (stateFilter, actionFilter) => {
-  return (stateFilter && stateFilter.q) == (actionFilter && actionFilter.q)
-}
-
-const receiveRespondents = (state, action) => {
-  if (state.surveyId != action.surveyId || state.page.number != action.page || !isCurrentFilter(state.filter, action.filter)) {
-    return state
+const receiveRespondents = (state, action) => ({
+  ...state,
+  fetching: false,
+  items: action.respondents,
+  order: action.order,
+  page: {
+    ...state.page,
+    number: action.page,
+    totalCount: action.respondentsCount
   }
-
-  return {
-    ...state,
-    fetching: false,
-    items: action.respondents,
-    order: action.order,
-    page: {
-      ...state.page,
-      number: action.page,
-      totalCount: action.respondentsCount
-    }
-  }
-}
-
-const sortRespondents = (state, action) => {
-  const sortAsc = state.sortBy == action.property ? !state.sortAsc : true
-  const sortBy = action.property
-  return {
-    ...state,
-    page: {
-      ...state.page,
-      number: 1
-    },
-    sortBy,
-    sortAsc
-  }
-}
+})

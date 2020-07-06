@@ -21,7 +21,6 @@ type Props = {
   t: Function,
   projectId: number,
   surveyId: number,
-  filterInput: string,
   survey: Survey,
   project: Project,
   questionnaires: {[id: any]: Questionnaire},
@@ -40,7 +39,8 @@ type Props = {
   questionnairesActions: any,
   actions: any,
   router: Object,
-  updateRespondentsFilter: Function
+  filter: string,
+  q: string
 }
 
 type State = {
@@ -77,21 +77,20 @@ class RespondentIndex extends Component<Props, State> {
       projectActions,
       surveyActions,
       questionnairesActions,
-      filterInput,
-      updateRespondentsFilter
+      q
     } = this.props
     if (projectId && surveyId) {
       projectActions.fetchProject(projectId)
       surveyActions.fetchSurvey(projectId, surveyId)
       questionnairesActions.fetchQuestionnaires(projectId)
-      updateRespondentsFilter(filterInput)
-      this.fetchRespondents()
+      this.fetchRespondents(1, q)
     }
   }
 
-  fetchRespondents(pageNumber = 1) {
-    const { projectId, surveyId, pageSize, filterInput } = this.props
-    this.props.actions.fetchRespondents(projectId, surveyId, pageSize, pageNumber, filterInput)
+  fetchRespondents(pageNumber = 1, overrideFilter = null) {
+    const { projectId, surveyId, pageSize, filter } = this.props
+    const _filter = overrideFilter == null ? filter : overrideFilter
+    this.props.actions.fetchRespondents(projectId, surveyId, pageSize, pageNumber, _filter)
   }
 
   nextPage() {
@@ -105,8 +104,8 @@ class RespondentIndex extends Component<Props, State> {
   }
 
   downloadCSV(applyUserFilter = false) {
-    const { projectId, surveyId, filterInput } = this.props
-    const q = (applyUserFilter && filterInput) || null
+    const { projectId, surveyId, filter } = this.props
+    const q = (applyUserFilter && filter) || null
     window.location = routes.respondentsResultsCSV(projectId, surveyId, q)
   }
 
@@ -126,8 +125,8 @@ class RespondentIndex extends Component<Props, State> {
   }
 
   sortBy(name) {
-    const { projectId, surveyId, filterInput } = this.props
-    this.props.actions.sortRespondentsBy(projectId, surveyId, name, filterInput)
+    const { projectId, surveyId } = this.props
+    this.props.actions.sortRespondentsBy(projectId, surveyId, name)
   }
 
   getModes(surveyModes) {
@@ -370,18 +369,45 @@ class RespondentIndex extends Component<Props, State> {
     }
   }
 
-  onFilterChage(inputValue) {
-    const { router, projectId, surveyId, updateRespondentsFilter } = this.props
-    router.push(routes.surveyRespondents(projectId, surveyId, inputValue))
-    updateRespondentsFilter(inputValue)
+  onFilterChange(value) {
+    const { router, projectId, surveyId, actions } = this.props
+    router.push(routes.surveyRespondents(projectId, surveyId, value))
+    actions.updateRespondentsFilter(projectId, surveyId, value)
+  }
+
+  respondentsFilter() {
+    const { q } = this.props
+    return (
+      <RespondentsFilter
+        defaultValue={q}
+        onChange={value => this.onFilterChange(value)}
+      />
+    )
   }
 
   render() {
-    const { survey, questionnaires, totalCount, order, sortBy, sortAsc,
-      userLevel, t, filterInput } = this.props
+    const { project,
+      survey,
+      questionnaires,
+      totalCount,
+      order,
+      sortBy,
+      sortAsc,
+      userLevel,
+      t
+    } = this.props
 
-    if (!this.props.respondents || !survey || !questionnaires || !this.props.project) {
-      return <div>{t('Loading...')}</div>
+    const loading = (
+      !project ||
+      !survey ||
+      !this.props.respondents ||
+      !questionnaires
+    )
+
+    if (loading) {
+      return <div>
+        {t('Loading...')}
+      </div>
     }
 
     const hasComparisons = survey.comparisons.length > 0
@@ -466,11 +492,7 @@ class RespondentIndex extends Component<Props, State> {
             {ownerOrAdmin ? this.downloadItem('interactions') : null}
           </ul>
         </Modal>
-        <RespondentsFilter
-          inputValue={filterInput}
-          onChange={inputValue => this.onFilterChage(inputValue)}
-          onApplyFilter={() => this.fetchRespondents()}
-        />
+        {this.respondentsFilter()}
         <CardTable title={title} footer={footer} tableScroll>
           <thead>
             <tr>
@@ -528,22 +550,23 @@ class RespondentIndex extends Component<Props, State> {
 }
 
 const mapStateToProps = (state, ownProps) => {
-  const pageNumber = state.respondents.page.number
-  const pageSize = state.respondents.page.size
-  const totalCount = state.respondents.page.totalCount
-  const sortBy = state.respondents.sortBy
-  const sortAsc = state.respondents.sortAsc
-  const startIndex = (pageNumber - 1) * state.respondents.page.size + 1
-  const endIndex = Math.min(startIndex + state.respondents.page.size - 1, totalCount)
+  const { project, survey, questionnaires, respondents } = state
+  const { page, sortBy, sortAsc, order, filter, items } = respondents
+  const { number: pageNumber, size: pageSize, totalCount } = page
+  const { projectId, surveyId } = ownProps.params
+  const startIndex = (pageNumber - 1) * pageSize + 1
+  const endIndex = Math.min(startIndex + pageSize - 1, totalCount)
+
   return {
-    projectId: ownProps.params.projectId,
-    surveyId: ownProps.params.surveyId,
-    survey: state.survey.data,
-    project: state.project.data,
-    questionnaires: state.questionnaires.items,
-    respondents: state.respondents.items,
-    order: state.respondents.order,
-    userLevel: state.project.data ? state.project.data.level : '',
+    projectId,
+    surveyId,
+    q: ownProps.location.query.q || '',
+    survey: survey.data,
+    project: project.data,
+    questionnaires: questionnaires.items,
+    respondents: items,
+    order,
+    userLevel: project.data ? project.data.level : '',
     pageNumber,
     pageSize,
     startIndex,
@@ -551,7 +574,7 @@ const mapStateToProps = (state, ownProps) => {
     totalCount,
     sortBy,
     sortAsc,
-    filterInput: ownProps.location.query.q || ''
+    filter
   }
 }
 
@@ -559,9 +582,7 @@ const mapDispatchToProps = (dispatch) => ({
   actions: bindActionCreators(actions, dispatch),
   surveyActions: bindActionCreators(surveyActions, dispatch),
   projectActions: bindActionCreators(projectActions, dispatch),
-  questionnairesActions: bindActionCreators(questionnairesActions, dispatch),
-  updateRespondentsFilter: inputValue =>
-    dispatch(actions.updateRespondentsFilter({ q: inputValue }))
+  questionnairesActions: bindActionCreators(questionnairesActions, dispatch)
 })
 
 export default translate()(
