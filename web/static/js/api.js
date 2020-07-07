@@ -241,7 +241,12 @@ export const removeRespondentGroup = (projectId, surveyId, groupId) => {
 }
 
 export const fetchRespondents = (projectId, surveyId, limit, page, sortBy, sortAsc, q) => {
-  const params = { limit, page, sort_by: sortBy, sort_asc: sortAsc, q }
+  let params = { limit, page }
+  if (sortBy) {
+    params.sort_by = sortBy
+    params.sort_asc = sortAsc
+  }
+  if (q) params.q = q
   const queryString = new URLSearchParams(Object.entries(params)).toString()
   return apiFetchJSONWithCallback(`projects/${projectId}/surveys/${surveyId}/respondents/?${queryString}`, arrayOf(respondentSchema), {}, respondentsCallback)
 }
