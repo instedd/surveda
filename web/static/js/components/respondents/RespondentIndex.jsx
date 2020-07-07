@@ -15,6 +15,7 @@ import find from 'lodash/find'
 import flatten from 'lodash/flatten'
 import { translate } from 'react-i18next'
 import classNames from 'classnames/bind'
+import RespondentsFilter from './RespondentsFilter'
 
 type Props = {
   t: Function,
@@ -36,12 +37,15 @@ type Props = {
   surveyActions: any,
   projectActions: any,
   questionnairesActions: any,
-  actions: any
-};
+  actions: any,
+  router: Object,
+  filter: string,
+  q: string
+}
 
 type State = {
   csvType: string
-};
+}
 
 class RespondentIndex extends Component<Props, State> {
   toggleResultsLink: Function
@@ -67,28 +71,57 @@ class RespondentIndex extends Component<Props, State> {
   }
 
   componentDidMount() {
-    const { projectId, surveyId, pageSize } = this.props
+    const {
+      projectId,
+      surveyId,
+      projectActions,
+      surveyActions,
+      questionnairesActions,
+      q
+    } = this.props
     if (projectId && surveyId) {
-      this.props.projectActions.fetchProject(projectId)
-      this.props.surveyActions.fetchSurvey(projectId, surveyId)
-      this.props.questionnairesActions.fetchQuestionnaires(projectId)
-      this.props.actions.fetchRespondents(projectId, surveyId, pageSize, 1)
+      projectActions.fetchProject(projectId)
+      surveyActions.fetchSurvey(projectId, surveyId)
+      questionnairesActions.fetchQuestionnaires(projectId)
+      this.fetchRespondents(1, q)
     }
   }
 
+  fetchRespondents(pageNumber = 1, overrideFilter = null) {
+    const {
+      projectId,
+      surveyId,
+      pageSize,
+      filter,
+      sortBy,
+      sortAsc
+    } = this.props
+    const _filter = overrideFilter == null ? filter : overrideFilter
+    this.props.actions.fetchRespondents(
+      projectId,
+      surveyId,
+      pageSize,
+      pageNumber,
+      _filter,
+      sortBy,
+      sortAsc
+    )
+  }
+
   nextPage() {
-    const { projectId, surveyId, pageNumber, pageSize } = this.props
-    this.props.actions.fetchRespondents(projectId, surveyId, pageSize, pageNumber + 1)
+    const { pageNumber } = this.props
+    this.fetchRespondents(pageNumber + 1)
   }
 
   previousPage() {
-    const { projectId, surveyId, pageNumber, pageSize } = this.props
-    this.props.actions.fetchRespondents(projectId, surveyId, pageSize, pageNumber - 1)
+    const { pageNumber } = this.props
+    this.fetchRespondents(pageNumber - 1)
   }
 
-  downloadCSV() {
-    const { projectId, surveyId } = this.props
-    window.location = routes.respondentsResultsCSV(projectId, surveyId)
+  downloadCSV(applyUserFilter = false) {
+    const { projectId, surveyId, filter } = this.props
+    const q = (applyUserFilter && filter) || null
+    window.location = routes.respondentsResultsCSV(projectId, surveyId, q)
   }
 
   downloadDispositionHistoryCSV() {
@@ -116,14 +149,12 @@ class RespondentIndex extends Component<Props, State> {
   }
 
   getModeAttempts() {
-    const {survey, sortBy, sortAsc, t} = this.props
+    const {survey, t} = this.props
     let modes = this.getModes(survey.mode)
     let attemptsHeader = modes.map(function(mode) {
       const capitalize = str => str.charAt(0).toUpperCase() + str.slice(1)
-      let modeTitle = capitalize(mode) + ' ' + 'Attempts'
-      return <SortableHeader className='thNumber' key={mode} text={t(modeTitle)} property='stats' sortBy={sortBy} sortAsc={sortAsc} onClick={name => this.sortBy(name)} />
-    }
-    )
+      return <th className='thNumber' key={mode}>{t('{{mode}} Attempts', {mode: capitalize(mode)})}</th>
+    })
     return attemptsHeader
   }
 
@@ -291,11 +322,105 @@ class RespondentIndex extends Component<Props, State> {
     return numericFields.some(field => field == filterField)
   }
 
-  render() {
-    const { survey, questionnaires, totalCount, order, sortBy, sortAsc, userLevel, t } = this.props
+  downloadItem(id) {
+    const { t } = this.props
 
-    if (!this.props.respondents || !survey || !questionnaires || !this.props.project) {
-      return <div>{t('Loading...')}</div>
+    const render = item => <li className='collection-item'>
+      <a href='#' className='download' onClick={e => { e.preventDefault(); item.onDownload() }}>
+        <div>
+          <i className='material-icons'>get_app</i>
+        </div>
+        <div>
+          <p className='black-text'><b>{item.title}</b></p>
+          <p>{item.description}</p>
+        </div>
+      </a>
+      {item.downloadLink}
+    </li>
+
+    switch (id) {
+      /*
+      We'll use this option in the very near future:
+      case 'filtered-results':
+        item = {
+          title: t('Survey results'),
+          description: t('Same as below, but applying the filters and without the public link'),
+          downloadLink: null,
+          onDownload: () => this.downloadCSV(true)
+        }
+        break
+      case 'unfiltered-results':
+      */
+      case 'results':
+        return render({
+          title: t('Survey results'),
+          description: t('One line per respondent, with a column for each variable in the questionnaire, including disposition and timestamp'),
+          downloadLink: this.downloadLink(this.resultsAccessLink(), this.toggleResultsLink, this.refreshResultsLink, 'resultsLink'),
+          onDownload: () => this.downloadCSV()
+        })
+      case 'disposition-history':
+        return render({
+          title: t('Disposition History'),
+          description: t('One line for each time the disposition of a respondent changed, including the timestamp'),
+          downloadLink: this.downloadLink(this.dispositionHistoryAccessLink(), this.toggleDispositionHistoryLink, this.refreshDispositionHistoryLink, 'dispositionHistoryLink'),
+          onDownload: () => this.downloadDispositionHistoryCSV()
+        })
+      case 'incentives':
+        return render({
+          title: t('Incentives file'),
+          description: t('One line for each respondent that completed the survey, including the experiment version and the full phone number'),
+          downloadLink: this.downloadLink(this.incentivesAccessLink(), this.toggleIncentivesLink, this.refreshIncentivesLink, 'incentivesLink'),
+          onDownload: () => this.downloadIncentivesCSV()
+        })
+      case 'interactions':
+        return render({
+          title: t('Interactions'),
+          description: t('One line per respondent interaction, with a column describing the action type and data, including disposition and timestamp'),
+          downloadLink: this.downloadLink(this.interactionsAccessLink(), this.toggleInteractionsLink, this.refreshInteractionsLink, 'interactionsLink'),
+          onDownload: () => this.downloadInteractionsCSV()
+        })
+    }
+  }
+
+  onFilterChange(value) {
+    const { router, projectId, surveyId, actions } = this.props
+    router.push(routes.surveyRespondents(projectId, surveyId, value))
+    actions.updateRespondentsFilter(projectId, surveyId, value)
+  }
+
+  respondentsFilter() {
+    const { q } = this.props
+    return (
+      <RespondentsFilter
+        defaultValue={q}
+        onChange={value => this.onFilterChange(value)}
+      />
+    )
+  }
+
+  render() {
+    const { project,
+      survey,
+      questionnaires,
+      totalCount,
+      order,
+      sortBy,
+      sortAsc,
+      userLevel,
+      t
+    } = this.props
+
+    const loading = (
+      !project ||
+      !survey ||
+      !this.props.respondents ||
+      !questionnaires
+    )
+
+    if (loading) {
+      return <div>
+        {t('Loading...')}
+      </div>
     }
 
     const hasComparisons = survey.comparisons.length > 0
@@ -357,41 +482,8 @@ class RespondentIndex extends Component<Props, State> {
       colspan += 1
     }
 
-    let incentivesCsvLink = null
-    if (userLevel == 'owner' || userLevel == 'admin') {
-      incentivesCsvLink = (
-        <li className='collection-item'>
-          <a href='#' className='download' onClick={e => { e.preventDefault(); this.downloadIncentivesCSV() }}>
-            <div>
-              <i className='material-icons'>get_app</i>
-            </div>
-            <div>
-              <p className='black-text'><b>{t('Incentives file')}</b></p>
-              <p>{t('One line for each respondent that completed the survey, including the experiment version and the full phone number')}</p>
-            </div>
-          </a>
-          {this.downloadLink(this.incentivesAccessLink(), this.toggleIncentivesLink, this.refreshIncentivesLink, 'incentivesLink')}
-        </li>
-      )
-    }
+    const ownerOrAdmin = userLevel == 'owner' || userLevel == 'admin'
 
-    let interactionsCsvLink = null
-    if (userLevel == 'owner' || userLevel == 'admin') {
-      interactionsCsvLink = (
-        <li className='collection-item'>
-          <a href='#' className='download' onClick={e => { e.preventDefault(); this.downloadInteractionsCSV() }}>
-            <div>
-              <i className='material-icons'>get_app</i>
-            </div>
-            <div>
-              <p className='black-text'><b>{t('Interactions')}</b></p>
-              <p>{t('One line per respondent interaction, with a column describing the action type and data, including disposition and timestamp')}</p>
-            </div>
-          </a>
-          {this.downloadLink(this.interactionsAccessLink(), this.toggleInteractionsLink, this.refreshInteractionsLink, 'interactionsLink')}
-        </li>
-      )
-    }
     return (
       <div className='white'>
         <div dangerouslySetInnerHTML={{
@@ -407,40 +499,19 @@ class RespondentIndex extends Component<Props, State> {
             <p>{t('Download survey respondents data as CSV')}</p>
           </div>
           <ul className='collection download-csv'>
-            <li className='collection-item'>
-              <a href='#' className='download' onClick={e => { e.preventDefault(); this.downloadCSV() }}>
-                <div>
-                  <i className='material-icons'>get_app</i>
-                </div>
-                <div>
-                  <p className='black-text'><b>{t('Survey results')}</b></p>
-                  <p>{t('One line per respondent, with a column for each variable in the questionnaire, including disposition and timestamp')}</p>
-                </div>
-              </a>
-              {this.downloadLink(this.resultsAccessLink(), this.toggleResultsLink, this.refreshResultsLink, 'resultsLink')}
-            </li>
-            <li className='collection-item'>
-              <a href='#' className='download' onClick={e => { e.preventDefault(); this.downloadDispositionHistoryCSV() }}>
-                <div>
-                  <i className='material-icons'>get_app</i>
-                </div>
-                <div>
-                  <p className='black-text'><b>{t('Disposition History')}</b></p>
-                  <p>{t('One line for each time the disposition of a respondent changed, including the timestamp')}</p>
-                </div>
-              </a>
-              {this.downloadLink(this.dispositionHistoryAccessLink(), this.toggleDispositionHistoryLink, this.refreshDispositionHistoryLink, 'dispositionHistoryLink')}
-            </li>
-            {incentivesCsvLink}
-            {interactionsCsvLink}
+            {this.downloadItem('results')}
+            {this.downloadItem('disposition-history')}
+            {ownerOrAdmin ? this.downloadItem('incentives') : null}
+            {ownerOrAdmin ? this.downloadItem('interactions') : null}
           </ul>
         </Modal>
+        {this.respondentsFilter()}
         <CardTable title={title} footer={footer} tableScroll>
           <thead>
             <tr>
-              <SortableHeader text={t('Respondent ID')} property='phoneNumber' sortBy={sortBy} sortAsc={sortAsc} onClick={name => this.sortBy(name)} />
+              <SortableHeader text={t('Respondent ID')} property='phoneNumber' sortBy={sortBy} sortAsc={sortAsc} onClick={() => this.sortBy('phoneNumber')} />
               <th>{t('Disposition')}</th>
-              <SortableHeader className='thDate' text={t('Date')} property='date' sortBy={sortBy} sortAsc={sortAsc} onClick={name => this.sortBy(name)} />
+              <SortableHeader className='thDate' text={t('Date')} property='date' sortBy={sortBy} sortAsc={sortAsc} onClick={() => this.sortBy('date')} />
               {this.getModeAttempts()}
               {respondentsFieldName.map(field =>
                 <th className={classNames({'thNumber': this.fieldIsNumeric(numericFields, field)})} key={field}>{field}</th>
@@ -492,29 +563,31 @@ class RespondentIndex extends Component<Props, State> {
 }
 
 const mapStateToProps = (state, ownProps) => {
-  const pageNumber = state.respondents.page.number
-  const pageSize = state.respondents.page.size
-  const totalCount = state.respondents.page.totalCount
-  const sortBy = state.respondents.sortBy
-  const sortAsc = state.respondents.sortAsc
-  const startIndex = (pageNumber - 1) * state.respondents.page.size + 1
-  const endIndex = Math.min(startIndex + state.respondents.page.size - 1, totalCount)
+  const { project, survey, questionnaires, respondents } = state
+  const { page, sortBy, sortAsc, order, filter, items } = respondents
+  const { number: pageNumber, size: pageSize, totalCount } = page
+  const { projectId, surveyId } = ownProps.params
+  const startIndex = (pageNumber - 1) * pageSize + 1
+  const endIndex = Math.min(startIndex + pageSize - 1, totalCount)
+
   return {
-    projectId: ownProps.params.projectId,
-    surveyId: ownProps.params.surveyId,
-    survey: state.survey.data,
-    project: state.project.data,
-    questionnaires: state.questionnaires.items,
-    respondents: state.respondents.items,
-    order: state.respondents.order,
-    userLevel: state.project.data ? state.project.data.level : '',
+    projectId,
+    surveyId,
+    q: ownProps.location.query.q || '',
+    survey: survey.data,
+    project: project.data,
+    questionnaires: questionnaires.items,
+    respondents: items,
+    order,
+    userLevel: project.data ? project.data.level : '',
     pageNumber,
     pageSize,
     startIndex,
     endIndex,
     totalCount,
     sortBy,
-    sortAsc
+    sortAsc,
+    filter
   }
 }
 
@@ -525,4 +598,9 @@ const mapDispatchToProps = (dispatch) => ({
   questionnairesActions: bindActionCreators(questionnairesActions, dispatch)
 })
 
-export default translate()(connect(mapStateToProps, mapDispatchToProps)(RespondentIndex))
+export default translate()(
+  connect(
+    mapStateToProps,
+    mapDispatchToProps
+  )(RespondentIndex)
+)

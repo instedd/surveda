@@ -240,8 +240,15 @@ export const removeRespondentGroup = (projectId, surveyId, groupId) => {
   return apiDelete(`projects/${projectId}/surveys/${surveyId}/respondent_groups/${groupId}`)
 }
 
-export const fetchRespondents = (projectId, surveyId, limit, page, sortBy, sortAsc) => {
-  return apiFetchJSONWithCallback(`projects/${projectId}/surveys/${surveyId}/respondents/?limit=${limit}&page=${page}&sort_by=${sortBy}&sort_asc=${sortAsc}`, arrayOf(respondentSchema), {}, respondentsCallback)
+export const fetchRespondents = (projectId, surveyId, limit, page, filter, sortBy, sortAsc) => {
+  let params = { limit, page }
+  if (sortBy) {
+    params.sort_by = sortBy
+    params.sort_asc = sortAsc
+  }
+  if (filter) params.q = filter
+  const queryString = new URLSearchParams(Object.entries(params)).toString()
+  return apiFetchJSONWithCallback(`projects/${projectId}/surveys/${surveyId}/respondents/?${queryString}`, arrayOf(respondentSchema), {}, respondentsCallback)
 }
 
 export const fetchRespondentsStats = (projectId, surveyId) => {

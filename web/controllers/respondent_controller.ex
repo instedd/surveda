@@ -11,7 +11,8 @@ defmodule Ask.RespondentController do
     RespondentDispositionHistory,
     Stats,
     Survey,
-    SurveyLogEntry
+    SurveyLogEntry,
+    RespondentsFilter
   }
 
   def index(conn, %{"project_id" => project_id, "survey_id" => survey_id} = params) do
@@ -19,13 +20,22 @@ defmodule Ask.RespondentController do
     page = Map.get(params, "page", "")
     sort_by = Map.get(params, "sort_by", "")
     sort_asc = Map.get(params, "sort_asc", "")
+    q = Map.get(params, "q", "")
 
-    respondents = conn
-    |> load_project(project_id)
-    |> assoc(:surveys)
-    |> Repo.get!(survey_id)
-    |> assoc(:respondents)
-    |> preload(:responses)
+    filter = RespondentsFilter.parse(q)
+    filter_where = RespondentsFilter.filter_where(filter)
+
+    filtered_query = conn
+      |> load_project(project_id)
+      |> assoc(:surveys)
+      |> Repo.get!(survey_id)
+      |> assoc(:respondents)
+      |> preload(:responses)
+      |> where(^filter_where)
+
+    respondents_count = Repo.aggregate(filtered_query, :count, :id)
+
+    respondents = filtered_query
     |> conditional_limit(limit)
     |> conditional_page(limit, page)
     |> sort_respondents(sort_by, sort_asc)
@@ -36,7 +46,6 @@ defmodule Ask.RespondentController do
       |> effective_stats
     end)
 
-    respondents_count = Ask.RespondentStats.respondent_count(survey_id: ^survey_id)
     render(conn, "index.json", respondents: respondents, respondents_count: respondents_count)
   end
 
@@ -529,28 +538,14 @@ defmodule Ask.RespondentController do
     |> Enum.uniq
     |> Enum.reject(fn s -> String.length(s) == 0 end)
 
-    dynamic = true
+    # The new filters, shared by the index and the downloaded CSV file
+    filter = RespondentsFilter.parse(Map.get(params, "q", ""))
+    # The old filters are being received by its own specific url params
+    # If the same filter is received twice, the old filter is priorized over new one because
+    # ?param1=value is more specific than ?q=param1:value
+    filter = add_params_to_filter(filter, params)
 
-    dynamic =
-      if params["since"] do
-        dynamic([r1, r2], r2.updated_at > ^params["since"] and ^dynamic)
-      else
-        dynamic
-      end
-
-    dynamic =
-      if params["disposition"] do
-        dynamic([r1, r2], r2.disposition == ^params["disposition"] and ^dynamic)
-      else
-        dynamic
-      end
-
-    dynamic =
-      if params["final"] do
-        dynamic([r1, r2], r2.state == "completed" and ^dynamic)
-      else
-        dynamic
-      end
+    filter_where = RespondentsFilter.filter_where(filter, optimized: true)
 
     respondents = Stream.resource(
       fn -> 0 end,
@@ -559,7 +554,7 @@ defmodule Ask.RespondentController do
           from r1 in Respondent,
           join: r2 in Respondent, on: r1.id == r2.id,
           where: r2.survey_id == ^survey.id and r2.id > ^last_seen_id,
-          where: ^dynamic,
+          where: ^filter_where,
           order_by: r2.id,
           limit: 1000,
           preload: [:responses, :respondent_group],
@@ -573,8 +568,26 @@ defmodule Ask.RespondentController do
       end,
       fn _ -> [] end)
 
-
     render_results(conn, get_format(conn), project, survey, tz_offset, questionnaires, has_comparisons, all_fields, respondents)
+  end
+
+  defp add_params_to_filter(filter, params) do
+    filter =
+      if params["disposition"],
+        do: RespondentsFilter.put_disposition(filter, params["disposition"]),
+        else: filter
+
+    filter =
+      if params["since"],
+        do: RespondentsFilter.put_since(filter, params["since"]),
+        else: filter
+
+    filter =
+      if params["final"],
+        do: RespondentsFilter.put_state(filter, "completed"),
+        else: filter
+
+    filter
   end
 
   defp render_results(conn, "json", _project, survey, _tz_offset, questionnaires, has_comparisons, _all_fields, respondents) do
