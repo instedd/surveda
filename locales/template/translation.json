@@ -566,6 +566,7 @@
   "{{groupName}} ({{count}} contact)": "",
   "{{groupName}} ({{count}} contact)_plural": "",
   "{{inviter_email}} has invited you to collaborate as {{role}} on {{project}}": "",
+  "{{mode}} Attempts": "",
   "{{percentage}}% of target completed": "",
   "{{role}} (invited)": "",
   "{{startIndex}}-{{endIndex}} of {{totalCount}}": ""

@@ -35,8 +35,8 @@ const fetchRespondents = (state, action) => {
     fetching: true,
     surveyId: action.surveyId,
     filter: action.filter,
-    sortBy: sameSurvey ? state.sortBy : null,
-    sortAsc: sameSurvey ? state.sortAsc : true,
+    sortBy: sameSurvey ? action.sortBy : null,
+    sortAsc: sameSurvey ? action.sortAsc : true,
     page: {
       ...state.page,
       number: action.page

@@ -18,15 +18,16 @@ export const fetchRespondents = (
   sortBy = null,
   sortAsc = true
 ) => (dispatch, getState) => {
-  dispatch(startFetchingRespondents(surveyId, page, sortBy, sortAsc, filter))
+  const newSortBy = sortBy || getState().sortBy
+  dispatch(startFetchingRespondents(surveyId, page, newSortBy, sortAsc, filter))
   api
-    .fetchRespondents(projectId, surveyId, limit, page, sortBy, sortAsc, filter)
+    .fetchRespondents(projectId, surveyId, limit, page, newSortBy, sortAsc, filter)
     .then((response) => {
       const state = getState().respondents
       const lastFetchResponse =
         state.surveyId == surveyId &&
         state.page.number == page &&
-        state.sortBy == sortBy &&
+        state.sortBy == newSortBy &&
         state.sortAsc == sortAsc &&
         state.filter == filter
       if (lastFetchResponse) {
@@ -37,7 +38,7 @@ export const fetchRespondents = (
             response.entities.respondents || {},
             response.respondentsCount,
             response.result,
-            sortBy,
+            sortBy: newSortBy,
             sortAsc,
             filter
           )
@@ -98,8 +99,8 @@ export const startFetchingRespondents = (surveyId, page, sortBy, sortAsc, filter
   filter
 })
 
-export const sortRespondentsBy = (projectId, surveyId, property) => (dispatch, getState) => {
+export const sortRespondentsBy = (projectId, surveyId, newSortBy) => (dispatch, getState) => {
   const { page, sortBy, sortAsc, filter } = getState().respondents
-  const newSortAsc = sortBy == property ? !sortAsc : true
-  dispatch(fetchRespondents(projectId, surveyId, page.size, 1, filter, sortBy, newSortAsc))
+  const newSortAsc = sortBy == newSortBy ? !sortAsc : true
+  dispatch(fetchRespondents(projectId, surveyId, page.size, 1, filter, newSortBy, newSortAsc))
 }

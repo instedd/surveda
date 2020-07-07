@@ -134,14 +134,12 @@ class RespondentIndex extends Component<Props, State> {
   }
 
   getModeAttempts() {
-    const {survey, sortBy, sortAsc, t} = this.props
+    const {survey, t} = this.props
     let modes = this.getModes(survey.mode)
     let attemptsHeader = modes.map(function(mode) {
       const capitalize = str => str.charAt(0).toUpperCase() + str.slice(1)
-      let modeTitle = capitalize(mode) + ' ' + 'Attempts'
-      return <SortableHeader className='thNumber' key={mode} text={t(modeTitle)} property='stats' sortBy={sortBy} sortAsc={sortAsc} onClick={name => this.sortBy(name)} />
-    }
-    )
+      return <th className='thNumber' key={mode}>{t('{{mode}} Attempts', {mode: capitalize(mode)})}</th>
+    })
     return attemptsHeader
   }
 
@@ -496,9 +494,9 @@ class RespondentIndex extends Component<Props, State> {
         <CardTable title={title} footer={footer} tableScroll>
           <thead>
             <tr>
-              <SortableHeader text={t('Respondent ID')} property='phoneNumber' sortBy={sortBy} sortAsc={sortAsc} onClick={name => this.sortBy(name)} />
+              <SortableHeader text={t('Respondent ID')} property='phoneNumber' sortBy={sortBy} sortAsc={sortAsc} onClick={() => this.sortBy('phoneNumber')} />
               <th>{t('Disposition')}</th>
-              <SortableHeader className='thDate' text={t('Date')} property='date' sortBy={sortBy} sortAsc={sortAsc} onClick={name => this.sortBy(name)} />
+              <SortableHeader className='thDate' text={t('Date')} property='date' sortBy={sortBy} sortAsc={sortAsc} onClick={() => this.sortBy('date')} />
               {this.getModeAttempts()}
               {respondentsFieldName.map(field =>
                 <th className={classNames({'thNumber': this.fieldIsNumeric(numericFields, field)})} key={field}>{field}</th>
