@@ -6,8 +6,6 @@ export const CREATE_RESPONDENT = 'CREATE_RESPONDENT'
 export const UPDATE_RESPONDENT = 'UPDATE_RESPONDENT'
 export const RECEIVE_RESPONDENTS_ERROR = 'RECEIVE_RESPONDENTS_ERROR'
 export const RECEIVE_RESPONDENTS_STATS = 'RECEIVE_RESPONDENTS_STATS'
-export const SORT = 'RESPONDENTS_SORT'
-export const UPDATE_RESPONDENTS_FILTER = 'UPDATE_RESPONDENTS_FILTER'
 
 export const fetchRespondents = (
   projectId,
@@ -18,16 +16,15 @@ export const fetchRespondents = (
   sortBy = null,
   sortAsc = true
 ) => (dispatch, getState) => {
-  const newSortBy = sortBy || getState().sortBy
-  dispatch(startFetchingRespondents(surveyId, page, newSortBy, sortAsc, filter))
+  dispatch(startFetchingRespondents(surveyId, page, sortBy, sortAsc, filter))
   api
-    .fetchRespondents(projectId, surveyId, limit, page, newSortBy, sortAsc, filter)
+    .fetchRespondents(projectId, surveyId, limit, page, sortBy, sortAsc, filter)
     .then((response) => {
       const state = getState().respondents
       const lastFetchResponse =
         state.surveyId == surveyId &&
         state.page.number == page &&
-        state.sortBy == newSortBy &&
+        state.sortBy == sortBy &&
         state.sortAsc == sortAsc &&
         state.filter == filter
       if (lastFetchResponse) {
@@ -38,7 +35,7 @@ export const fetchRespondents = (
             response.entities.respondents || {},
             response.respondentsCount,
             response.result,
-            sortBy: newSortBy,
+            sortBy,
             sortAsc,
             filter
           )
