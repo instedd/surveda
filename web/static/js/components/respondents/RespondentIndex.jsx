@@ -88,9 +88,24 @@ class RespondentIndex extends Component<Props, State> {
   }
 
   fetchRespondents(pageNumber = 1, overrideFilter = null) {
-    const { projectId, surveyId, pageSize, filter } = this.props
+    const {
+      projectId,
+      surveyId,
+      pageSize,
+      filter,
+      sortBy,
+      sortAsc
+    } = this.props
     const _filter = overrideFilter == null ? filter : overrideFilter
-    this.props.actions.fetchRespondents(projectId, surveyId, pageSize, pageNumber, _filter)
+    this.props.actions.fetchRespondents(
+      projectId,
+      surveyId,
+      pageSize,
+      pageNumber,
+      _filter,
+      sortBy,
+      sortAsc
+    )
   }
 
   nextPage() {
