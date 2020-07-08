@@ -7,8 +7,13 @@ import * as actions from '../../actions/surveys'
 import * as surveyActions from '../../actions/survey'
 import * as projectActions from '../../actions/project'
 import * as folderActions from '../../actions/folder'
-import { EmptyPage, ConfirmationModal, PagingFooter, FABButton, Tooltip } from '../ui'
-import { Button } from 'react-materialize'
+import {
+  EmptyPage,
+  ConfirmationModal,
+  PagingFooter,
+  MainAction,
+  Action
+} from '../ui'
 import FolderCard from '../folders/FolderCard'
 import SurveyCard from './SurveyCard'
 import * as channelsActions from '../../actions/channels'
@@ -135,28 +140,20 @@ class SurveyIndex extends Component<any, State> {
 
     const readOnly = !project || project.readOnly
 
-    let addButton = null
-    if (!readOnly) {
-      addButton = (
-        <FABButton icon={'add'} hoverEnabled={false} text='Add survey'>
-          <Tooltip text='Survey' position='left'>
-            <Button onClick={() => this.newSurvey()} className='btn-floating btn-small waves-effect waves-light right mbottom white black-text' >
-              <i className='material-icons black-text'>assignment_turned_in</i>
-            </Button>
-          </Tooltip>
-          <Tooltip text='Folder' position='left'>
-            <Button onClick={() => this.newFolder()} className='btn-floating btn-small waves-effect waves-light right mbottom white black-text' >
-              <i className='material-icons black-text'>folder</i>
-            </Button>
-          </Tooltip>
-
-        </FABButton>
-      )
-    }
+    let mainAction = (
+      <MainAction text='Add' icon='add'>
+        <Action
+          text='Survey'
+          icon='assignment_turned_in'
+          onClick={() => this.newSurvey()}
+        />
+        <Action text='Folder' icon='folder' onClick={() => this.newFolder()} />
+      </MainAction>
+    )
 
     return (
       <div>
-        {addButton}
+        { readOnly ? null : mainAction}
         { (surveys && surveys.length == 0 && folders && folders.length === 0)
         ? <EmptyPage icon='assignment_turned_in' title={t('You have no surveys on this project')} onClick={(e) => this.newSurvey()} readOnly={readOnly} createText={t('Create one', {context: 'survey'})} />
         : (
