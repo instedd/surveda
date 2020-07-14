@@ -918,7 +918,10 @@ label + .tooltipped {
         }
         &:before {
           top: -.1rem;
-          bottom: .65rem;
+          bottom: .6rem;
+          @media #{$medium-and-down} {
+            bottom: .65rem;
+          }
         }
       }
       label:before {
