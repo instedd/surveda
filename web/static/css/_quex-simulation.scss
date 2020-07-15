@@ -20,14 +20,14 @@ $smallChatWindowBodyHeight: $smallSimulationHeight -
 
 .quex-simulation-container {
   display: grid;
-  grid-template-areas: 'disposition steps chat';
   grid-gap: 2rem;
 
+  @media #{$large-and-up} {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
   @media #{$medium-and-down} {
-    grid-template-areas:
-      'disposition'
-      'steps'
-      'chat';
+    grid-template-rows: repeat(3, 1fr);
   }
 
   @media #{$medium-only} {
@@ -41,7 +41,6 @@ $smallChatWindowBodyHeight: $smallSimulationHeight -
 }
 .quex-simulation-disposition {
   height: $simulationHeight;
-  grid-area: disposition;
 
   @media #{$medium-and-down} {
     height: $smallSimulationHeight;
@@ -51,7 +50,6 @@ $smallChatWindowBodyHeight: $smallSimulationHeight -
 .quex-simulation-steps {
   overflow: auto;
   height: $simulationHeight;
-  grid-area: steps;
 
   .card {
     margin-top: 0;
@@ -77,7 +75,6 @@ $smallChatWindowBodyHeight: $smallSimulationHeight -
   border-radius: 5px;
   max-height: $simulationHeight;
   padding: 0;
-  grid-area: chat;
   overflow: auto;
 
   @media #{$medium-and-down} {
