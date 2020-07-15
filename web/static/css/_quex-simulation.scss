@@ -5,13 +5,18 @@ $chatBorderBackground: color("grey", "darken-3");
 
 // every simulation component heightens 8.5 simulation steps
 // the simulation step height depends on the screen size
-$simulationHeight: calc(74px * 8.5);
-$simulationHeightMediumAndDown: calc(72px * 8.5);
-
-// chatBodyHeight = chatTotalHeight - (chatHeaderHeight + chatFooterHeight)
+$simulationStepHeight: 74px;
+$smallSimulationStepHeight: 72px;
+$simulationSteps: 8.5;
 $chatWindowHeaderHeight: 90px;
-$chatWindowBodyHeight: calc((74px * 8.5) - (90px + 81px));
-$chatWindowBodyHeightMediumAndDown: calc((72px * 8.5) - (90px + 81px));
+$chatWindowFooterHeight: 81px;
+
+$simulationHeight: $simulationStepHeight * $simulationSteps;
+$smallSimulationHeight: $smallSimulationStepHeight * $simulationSteps;
+$chatWindowBodyHeight: $simulationHeight -
+  ($chatWindowHeaderHeight + $chatWindowFooterHeight);
+$smallChatWindowBodyHeight: $smallSimulationHeight -
+  ($chatWindowHeaderHeight + $chatWindowFooterHeight);
 
 .quex-simulation-container {
   display: grid;
@@ -39,7 +44,7 @@ $chatWindowBodyHeightMediumAndDown: calc((72px * 8.5) - (90px + 81px));
   grid-area: disposition;
 
   @media #{$medium-and-down} {
-    height: $simulationHeightMediumAndDown;
+    height: $smallSimulationHeight;
   }
 }
 
@@ -56,7 +61,7 @@ $chatWindowBodyHeightMediumAndDown: calc((72px * 8.5) - (90px + 81px));
   }
 
   @media #{$medium-and-down} {
-    height: $simulationHeightMediumAndDown;
+    height: $smallSimulationHeight;
   }
 }
 
@@ -76,7 +81,7 @@ $chatWindowBodyHeightMediumAndDown: calc((72px * 8.5) - (90px + 81px));
   overflow: auto;
 
   @media #{$medium-and-down} {
-    height: $simulationHeightMediumAndDown;
+    height: $smallSimulationHeight;
   }
 }
 .chat-window-body {
@@ -87,7 +92,7 @@ $chatWindowBodyHeightMediumAndDown: calc((72px * 8.5) - (90px + 81px));
   height: $chatWindowBodyHeight;
 
   @media #{$medium-and-down} {
-    height: $chatWindowBodyHeightMediumAndDown;
+    height: $smallChatWindowBodyHeight;
   }
 
   ul {
