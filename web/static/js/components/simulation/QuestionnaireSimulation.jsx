@@ -164,17 +164,13 @@ class QuestionnaireSimulation extends Component<Props, State> {
         simulation
         ? <div>
           {closeSimulationButton}
-          <div className='col s12 m4'>
+          <div className='quex-simulation-container'>
             <DispositionChart disposition={simulation.disposition} />
-          </div>
-          <div className='col s12 m4'>
             <SimulationSteps steps={simulation.questionnaire.steps}
               currentStepId={simulation.currentStep}
               submissions={simulation.submissions}
               simulationIsEnded={simulation.simulationStatus == 'ended'}
             />
-          </div>
-          <div className='col s12 m4'>
             <ChatWindow messages={simulation.messagesHistory} onSendMessage={this.handleATMessage} chatTitle={'SMS mode'} readOnly={!simulationIsActive} />
           </div>
         </div>

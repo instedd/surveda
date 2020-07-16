@@ -79,16 +79,18 @@ class SimulationSteps extends Component<Props> {
       response: stepResponses[step.id]
     }))
 
-    return <Card>
-      <ul className='collection simulation'>
-        {
-          preparedSteps.map((step, index) => <StepItem
-            step={step}
-            key={`step-item-${index}`}
-          />)
-        }
-      </ul>
-    </Card>
+    return <div className='quex-simulation-steps'>
+      <Card>
+        <ul className='collection simulation'>
+          {
+            preparedSteps.map((step, index) => <StepItem
+              step={step}
+              key={`step-item-${index}`}
+            />)
+          }
+        </ul>
+      </Card>
+    </div>
   }
 }
 

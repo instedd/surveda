@@ -3,6 +3,66 @@ $atMessageBackground: color("grey", "darken-4");
 $chatWindowBodyBackground: #999999;
 $chatBorderBackground: color("grey", "darken-3");
 
+// every simulation component heightens 8.5 simulation steps
+// the simulation step height depends on the screen size
+$simulationStepHeight: 74px;
+$smallSimulationStepHeight: 72px;
+$simulationSteps: 8.5;
+$chatWindowHeaderHeight: 90px;
+$chatWindowFooterHeight: 81px;
+
+$simulationHeight: $simulationStepHeight * $simulationSteps;
+$smallSimulationHeight: $smallSimulationStepHeight * $simulationSteps;
+$chatWindowBodyHeight: $simulationHeight -
+  ($chatWindowHeaderHeight + $chatWindowFooterHeight);
+$smallChatWindowBodyHeight: $smallSimulationHeight -
+  ($chatWindowHeaderHeight + $chatWindowFooterHeight);
+
+.quex-simulation-container {
+  display: grid;
+  grid-gap: 2rem;
+
+  @media #{$large-and-up} {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  @media #{$medium-and-down} {
+    grid-template-rows: repeat(3, 1fr);
+  }
+
+  @media #{$medium-only} {
+    margin-left: 20%;
+    margin-right: 20%;
+  }
+
+  @media #{$medium-and-down} {
+    margin-bottom: 2rem;
+  }
+}
+.quex-simulation-disposition {
+  height: $simulationHeight;
+
+  @media #{$medium-and-down} {
+    height: $smallSimulationHeight;
+  }
+}
+
+.quex-simulation-steps {
+  overflow: auto;
+  height: $simulationHeight;
+
+  .card {
+    margin-top: 0;
+    ul {
+      margin-top: 0;
+    }
+  }
+
+  @media #{$medium-and-down} {
+    height: $smallSimulationHeight;
+  }
+}
+
 .wrapper .simulator-container {
   @extend .row;
   padding-top: 60px;
@@ -12,16 +72,25 @@ $chatBorderBackground: color("grey", "darken-3");
 }
 .chat-window {
   @extend .z-depth-5;
-  width: 100%;
   border-radius: 5px;
+  max-height: $simulationHeight;
   padding: 0;
+  overflow: auto;
+
+  @media #{$medium-and-down} {
+    height: $smallSimulationHeight;
+  }
 }
 .chat-window-body {
-  height: 500px;
   overflow: auto;
   padding: 15px 15px;
   position: relative;
   background: $chatWindowBodyBackground;
+  height: $chatWindowBodyHeight;
+
+  @media #{$medium-and-down} {
+    height: $smallChatWindowBodyHeight;
+  }
 
   ul {
     list-style-type: none;
@@ -110,10 +179,10 @@ $chatBorderBackground: color("grey", "darken-3");
   @extend .white-text;
   background: $chatBorderBackground;
   text-align: center;
-  height: 90px;
+  height: $chatWindowHeaderHeight;
   font-size: 24px;
   font-style: normal;
-  line-height: 90px;
+  line-height: $chatWindowHeaderHeight;
   border-top-left-radius: 5px;
   border-top-right-radius: 5px;
   border-bottom: 1px solid $chatWindowBodyBackground;

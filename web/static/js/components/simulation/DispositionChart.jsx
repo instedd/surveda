@@ -37,7 +37,7 @@ class DispositionChart extends Component<Props> {
 
   render() {
     const {disposition, t} = this.props
-    return <div>
+    return <div className='quex-simulation-disposition'>
       <h4>{t('Disposition')}</h4>
       <ul className='disposition radio-no-pointer'>
         <li>

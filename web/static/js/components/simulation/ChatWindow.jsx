@@ -18,7 +18,7 @@ class ChatWindow extends Component<ChatWindowProps> {
   render() {
     const { messages, onSendMessage, chatTitle, readOnly } = this.props
 
-    return <div className='chat-window'>
+    return <div className='chat-window quex-simulation-chat'>
       <ChatTitle title={chatTitle} />
       <MessagesList messages={messages} />
       <ChatFooter onSendMessage={onSendMessage} readOnly={readOnly} />
