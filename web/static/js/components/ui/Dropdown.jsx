@@ -1,3 +1,4 @@
+// TODO: Add flow check
 import { uniqueId } from 'lodash'
 import React, { Component, PropTypes } from 'react'
 export class Dropdown extends Component {
@@ -18,7 +19,8 @@ export class Dropdown extends Component {
   }
 
   componentDidMount() {
-    if (!this.props.readOnly) $(this.refs.node).dropdown()
+    const {readOnly} = this.props
+    if (!readOnly) $(this.refs.node).dropdown()
   }
 
   render() {
@@ -33,7 +35,7 @@ export class Dropdown extends Component {
           {label}
           {readOnly ? null : <i className={iconLeft ? 'material-icons left' : 'material-icons right'}>{icon}</i> }
         </a>
-        <ul id={this.dropdownId} className='dropdown-content'>
+        <ul id={this.dropdownId} className='dropdown-content' onClick={event => { event.stopPropagation() }}>
           {children}
         </ul>
       </span>
@@ -41,13 +43,28 @@ export class Dropdown extends Component {
   }
 }
 
-export const DropdownItem = ({children, className}) => (
-  <li className={className}>{children}</li>
-)
+export class DropdownItem extends Component {
+  static propTypes = {
+    className: PropTypes.string,
+    children: PropTypes.node,
+    onClickKeepMenuOpen: PropTypes.bool,
+    onClick: PropTypes.func
+  }
 
-DropdownItem.propTypes = {
-  children: PropTypes.node,
-  className: PropTypes.string
+  componentDidMount() {
+    const { onClick, onClickKeepMenuOpen } = this.props
+    if (onClickKeepMenuOpen) {
+      $(this.refs.node).on('click', function(event) {
+        if (onClick) onClick()
+        event.stopPropagation()
+      })
+    }
+  }
+
+  render() {
+    const { className, children } = this.props
+    return <li className={className} ref='node'>{children}</li>
+  }
 }
 
 export const DropdownDivider = () => (

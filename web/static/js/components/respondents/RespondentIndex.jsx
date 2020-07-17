@@ -51,7 +51,8 @@ type Props = {
   actions: any,
   router: Object,
   filter: string,
-  q: string
+  q: string,
+  fields: Array<Object>
 }
 
 type State = {
@@ -157,24 +158,6 @@ class RespondentIndex extends Component<Props, State> {
 
   getModes(surveyModes) {
     return [...new Set(flatten(surveyModes))]
-  }
-
-  getModeAttemptsHeaders() {
-    const { survey, t } = this.props
-    const renderHeader = (displayText, key) =>
-      this.renderHeader({
-        displayText: displayText,
-        key: key,
-        sortable: false,
-        type: 'number'
-      })
-    return this.getModes(survey.mode).map(function(mode) {
-      const capitalize = (str) => str.charAt(0).toUpperCase() + str.slice(1)
-      return renderHeader(
-        t('{{mode}} Attempts', { mode: capitalize(mode) }),
-        mode
-      )
-    })
   }
 
   resultsAccessLink() {
@@ -463,19 +446,55 @@ class RespondentIndex extends Component<Props, State> {
     )
   }
 
-  renderHeader({displayText, key, sortable, type}) {
+  renderHeader({ displayText, type, key, sortable, dataType }) {
     const { sortBy, sortAsc } = this.props
     let className = classNames({
-      'thNumber': type === 'number',
-      'thDate': type === 'date'
+      thNumber: dataType === 'number',
+      thDate: dataType === 'date'
     })
 
     if (sortable) {
-      return <SortableHeader text={displayText} property={key} sortBy={sortBy}
-        sortAsc={sortAsc} onClick={() => this.sortBy(key)} />
+      return (
+        <SortableHeader
+          text={displayText}
+          property={key}
+          sortBy={sortBy}
+          sortAsc={sortAsc}
+          onClick={() => this.sortBy(key)}
+          key={this.fieldUniqueKey(type, key)}
+          className={className}
+        />
+      )
     } else {
-      return <th className={className} key={key}>{displayText}</th>
+      return (
+        <th className={className} key={this.fieldUniqueKey(type, key)}>
+          {displayText}
+        </th>
+      )
     }
+  }
+
+  fieldUniqueKey(type, key) {
+    return `${type}_${key}`
+  }
+
+  columnsMenuOption({ type, key, displayText, checked }) {
+    return (
+      <DropdownItem
+        onClickKeepMenuOpen
+        onClick={() => {
+          // TODO: Toogle the column selection
+        }}
+        key={this.fieldUniqueKey(type, key)}
+      >
+        <a>
+          <i className='material-icons'>
+            {checked ? 'check_box' : 'check_box_outline_blank'}
+          </i>
+          {displayText}
+        </a>
+      </DropdownItem>
+    )
   }
 
   render() {
@@ -484,7 +503,8 @@ class RespondentIndex extends Component<Props, State> {
       questionnaires,
       totalCount,
       order,
-      t
+      t,
+      fields
     } = this.props
     const loading = (
       !project ||
@@ -558,11 +578,21 @@ class RespondentIndex extends Component<Props, State> {
       <div>
         {title}
       </div>
-      <Dropdown className='options columns-menu' dataBelowOrigin={false}
+      <Dropdown stopPropagationOnClick className='options columns-menu' dataBelowOrigin={false}
         label={<i className='material-icons'>more_vert</i>}>
         <DropdownItem className='dots'>
           <i className='material-icons'>more_vert</i>
         </DropdownItem>
+        {
+          fields.map(field =>
+            this.columnsMenuOption({
+              type: field.type,
+              key: field.key,
+              displayText: field.displayText,
+              checked: true
+            })
+          )
+        }
       </Dropdown>
     </div>
 
@@ -581,41 +611,15 @@ class RespondentIndex extends Component<Props, State> {
           <thead>
             <tr>
               {
-                this.renderHeader({
-                  displayText: t('Respondent ID'),
-                  key: 'phoneNumber',
-                  sortable: true,
-                  type: null
-                })
-              }
-              {
-                this.renderHeader({
-                  displayText: t('Disposition'),
-                  key: 'disposition',
-                  sortable: false,
-                  type: null
-                })
-              }
-              {
-                this.renderHeader({
-                  displayText: t('Date'),
-                  key: 'date',
-                  sortable: true,
-                  type: 'date'
-                })
-              }
-              {
-                this.getModeAttemptsHeaders()
-              }
-              {
-                respondentsFieldName.map(field => (
+                fields.map(field =>
                   this.renderHeader({
-                    displayText: field,
-                    key: field,
-                    sortable: false,
-                    type: this.fieldIsNumeric(numericFields, field) ? 'number' : null
+                    displayText: field.displayText,
+                    key: field.key,
+                    sortable: field.sortable,
+                    type: field.type,
+                    dataType: field.dataType
                   })
-                ))
+                )
               }
             </tr>
           </thead>
@@ -664,7 +668,7 @@ class RespondentIndex extends Component<Props, State> {
 
 const mapStateToProps = (state, ownProps) => {
   const { project, survey, questionnaires, respondents } = state
-  const { page, sortBy, sortAsc, order, filter, items } = respondents
+  const { page, sortBy, sortAsc, order, filter, items, fields } = respondents
   const { number: pageNumber, size: pageSize, totalCount } = page
   const { projectId, surveyId } = ownProps.params
   const startIndex = (pageNumber - 1) * pageSize + 1
@@ -687,7 +691,8 @@ const mapStateToProps = (state, ownProps) => {
     totalCount,
     sortBy,
     sortAsc,
-    filter
+    filter,
+    fields: fields || []
   }
 }
 
