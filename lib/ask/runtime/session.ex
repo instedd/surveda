@@ -636,12 +636,12 @@ defmodule Ask.Runtime.Session do
     end
   end
 
-  # Runtime.Session increments by 1 the quota bucket when...
-  # The respondent is already in a completed disposition and the quota bucket is assigned to them
   defp assign_bucket_if_one_match([bucket], respondent, session) do
     respondent =
-      respondent |> Respondent.changeset(%{quota_bucket_id: bucket.id}) |> Repo.update!()
+    respondent |> Respondent.changeset(%{quota_bucket_id: bucket.id}) |> Repo.update!()
 
+    # Runtime.Session increments by 1 the quota bucket when...
+    # The respondent is already in a completed disposition and the quota bucket is assigned to them
     if Respondent.completed_disposition?(respondent.disposition, session.count_partial_results) do
       from(q in QuotaBucket, where: q.id == ^bucket.id) |> Repo.update_all(inc: [count: 1])
     end

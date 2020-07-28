@@ -349,10 +349,10 @@ defmodule Ask.Runtime.Survey do
     end
   end
 
-  # Runtime.Survey increments by 1 the quota bucket when...
-  # The bucket is already assigned to the respondent and they enter for the first time in a
-  # completed disposition
   defp update_quota_bucket(respondent, old_disposition, count_partial_results) do
+    # Runtime.Survey increments by 1 the quota bucket when...
+    # The bucket is already assigned to the respondent and they enter for the first time in a
+    # completed disposition
     if Respondent.enters_in_completed_disposition?(
          old_disposition,
          respondent.disposition,
