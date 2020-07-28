@@ -117,36 +117,34 @@ defmodule Ask.Respondent do
     "mobile_web_code_#{respondent_id}"
   end
 
-  def completed_dispositions(_count_partial_results \\ false)
+  def completed_dispositions(count_partial_results \\ false)
 
   def completed_dispositions(false), do: ["completed"]
 
   def completed_dispositions(true), do:
     completed_dispositions() ++ ["partial", "interim partial"]
 
+  def completed_disposition?(disposition, count_partial_results \\ false)
+
   def completed_disposition?(disposition, count_partial_results),
     do:
       Respondent.completed_dispositions(count_partial_results)
       |> Enum.member?(disposition)
 
-  def transitions_to_completed_disposition?(
+  def enters_in_completed_disposition?(
+        old_disposition,
+        new_disposition,
+        count_partial_results \\ false
+      )
+
+  def enters_in_completed_disposition?(
         old_disposition,
         new_disposition,
         count_partial_results
-      )
-
-  def transitions_to_completed_disposition?(old_disposition, "completed", false),
-    do: old_disposition != "completed"
-
-  def transitions_to_completed_disposition?(old_disposition, "completed", true),
-    do:
-      old_disposition != "completed" &&
-        old_disposition != "interim partial"
-
-  def transitions_to_completed_disposition?(old_disposition, "interim partial", true),
-    do: old_disposition != "interim partial"
-
-  def transitions_to_completed_disposition?(_, _, _), do: false
+      ),
+      do:
+        !completed_disposition?(old_disposition, count_partial_results) &&
+          completed_disposition?(new_disposition, count_partial_results)
 
   def final_dispositions(), do: [
     "failed",

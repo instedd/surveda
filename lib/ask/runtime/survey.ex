@@ -350,7 +350,7 @@ defmodule Ask.Runtime.Survey do
   end
 
   defp update_quota_bucket(respondent, old_disposition, count_partial_results) do
-    if Respondent.transitions_to_completed_disposition?(
+    if Respondent.enters_in_completed_disposition?(
          old_disposition,
          respondent.disposition,
          count_partial_results

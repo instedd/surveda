@@ -651,7 +651,6 @@ defmodule Ask.Runtime.Session do
     respondent
   end
 
-
   defp sorted_responses(respondent) do
     (respondent |> Repo.preload(:responses)).responses
       |> Enum.map(fn response ->
