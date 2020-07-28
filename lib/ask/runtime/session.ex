@@ -546,7 +546,7 @@ defmodule Ask.Runtime.Session do
   end
 
   defp handle_step_answer(session, {:ok, flow, reply}, current_mode, persist) do
-    case falls_in_quota_already_completed?(session.respondent, flow) do
+    case falls_in_quota_already_completed?(session.respondent, flow, session.count_partial_results) do
       true ->
         session = update_respondent_disposition(session, "rejected", current_mode)
 
@@ -676,10 +676,11 @@ defmodule Ask.Runtime.Session do
     end)
   end
 
-  defp falls_in_quota_already_completed?(respondent, flow) do
+  defp falls_in_quota_already_completed?(respondent, flow, count_partial_results) do
     cond do
       flow.in_quota_completed_steps -> false
       respondent.quota_bucket_id == nil -> false
+      Respondent.completed_disposition?(respondent.disposition, count_partial_results) -> false
       true ->
         bucket = (respondent |> Repo.preload(:quota_bucket)).quota_bucket
         bucket.count >= bucket.quota
