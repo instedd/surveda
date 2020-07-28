@@ -637,9 +637,10 @@ defmodule Ask.Runtime.Session do
   end
 
   defp assign_bucket_if_one_match([bucket], respondent, session) do
-    respondent = respondent |> Respondent.changeset(%{quota_bucket_id: bucket.id}) |> Repo.update!
+    respondent =
+      respondent |> Respondent.changeset(%{quota_bucket_id: bucket.id}) |> Repo.update!()
 
-    if (session.count_partial_results && respondent.disposition && (respondent.disposition == "partial" || respondent.disposition == "interim partial")) || (respondent.disposition && respondent.disposition == "completed") do
+    if Respondent.completed_disposition?(respondent.disposition, session.count_partial_results) do
       from(q in QuotaBucket, where: q.id == ^bucket.id) |> Repo.update_all(inc: [count: 1])
     end
 
@@ -649,6 +650,7 @@ defmodule Ask.Runtime.Session do
   defp assign_bucket_if_one_match(_buckets, respondent, _session) do
     respondent
   end
+
 
   defp sorted_responses(respondent) do
     (respondent |> Repo.preload(:responses)).responses

@@ -124,6 +124,30 @@ defmodule Ask.Respondent do
   def completed_dispositions(true), do:
     completed_dispositions() ++ ["partial", "interim partial"]
 
+  def completed_disposition?(disposition, count_partial_results),
+    do:
+      Respondent.completed_dispositions(count_partial_results)
+      |> Enum.member?(disposition)
+
+  def transitions_to_completed_disposition?(
+        old_disposition,
+        new_disposition,
+        count_partial_results
+      )
+
+  def transitions_to_completed_disposition?(old_disposition, "completed", false),
+    do: old_disposition != "completed"
+
+  def transitions_to_completed_disposition?(old_disposition, "completed", true),
+    do:
+      old_disposition != "completed" &&
+        old_disposition != "interim partial"
+
+  def transitions_to_completed_disposition?(old_disposition, "interim partial", true),
+    do: old_disposition != "interim partial"
+
+  def transitions_to_completed_disposition?(_, _, _), do: false
+
   def final_dispositions(), do: [
     "failed",
     "unresponsive",
@@ -209,7 +233,7 @@ defmodule Ask.Respondent do
     # the caller. Since we need a unified key to access the Mutex, we here convert it to
     # a string - even if it's in a non-politically-correct way
     mutex_key = "#{respondent_id}"
-    
+
     Mutex.under(Ask.Mutex, mutex_key, fn ->
       respondent = Respondent
                    |> Repo.get(respondent_id)

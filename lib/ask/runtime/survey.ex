@@ -350,25 +350,24 @@ defmodule Ask.Runtime.Survey do
   end
 
   defp update_quota_bucket(respondent, old_disposition, count_partial_results) do
-    if should_update_quota_bucket(respondent.disposition, old_disposition, count_partial_results) do
-      responses = respondent |> assoc(:responses) |> Repo.all
-      matching_bucket = Repo.all(from b in QuotaBucket, where: b.survey_id == ^respondent.survey_id)
-                      |> Enum.find( fn bucket -> match_condition(responses, bucket) end )
+    if Respondent.transitions_to_completed_disposition?(
+         old_disposition,
+         respondent.disposition,
+         count_partial_results
+       ) do
+      responses = respondent |> assoc(:responses) |> Repo.all()
+
+      matching_bucket =
+        Repo.all(from(b in QuotaBucket, where: b.survey_id == ^respondent.survey_id))
+        |> Enum.find(fn bucket -> match_condition(responses, bucket) end)
 
       if matching_bucket do
-        from(q in QuotaBucket, where: q.id == ^matching_bucket.id) |> Ask.Repo.update_all(inc: [count: 1])
+        from(q in QuotaBucket, where: q.id == ^matching_bucket.id)
+        |> Ask.Repo.update_all(inc: [count: 1])
       end
     end
+
     respondent
-  end
-
-  defp should_update_quota_bucket(new_disposition, old_disposition, true) do
-    (new_disposition != old_disposition && new_disposition == "interim partial")
-    || (new_disposition == "completed" && old_disposition != "interim partial" && old_disposition != "completed")
-  end
-
-  defp should_update_quota_bucket(new_disposition, old_disposition, _) do
-    new_disposition != old_disposition && new_disposition == "completed"
   end
 
   defp match_condition(responses, bucket) do
