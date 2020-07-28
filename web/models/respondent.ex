@@ -124,9 +124,7 @@ defmodule Ask.Respondent do
   def completed_dispositions(true), do:
     completed_dispositions() ++ ["partial", "interim partial"]
 
-  def completed_disposition?(disposition, count_partial_results \\ false)
-
-  def completed_disposition?(disposition, count_partial_results),
+  def completed_disposition?(disposition, count_partial_results \\ false),
     do:
       Respondent.completed_dispositions(count_partial_results)
       |> Enum.member?(disposition)
@@ -135,12 +133,6 @@ defmodule Ask.Respondent do
         old_disposition,
         new_disposition,
         count_partial_results \\ false
-      )
-
-  def enters_in_completed_disposition?(
-        old_disposition,
-        new_disposition,
-        count_partial_results
       ),
       do:
         !completed_disposition?(old_disposition, count_partial_results) &&
