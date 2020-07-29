@@ -704,7 +704,6 @@ defmodule Ask.Runtime.Session do
 
     cond do
       # Was the respondent already rejected?
-      # flow.in_quota_completed_steps ~= (respondent.disposition == "rejected)
       in_quota_completed_steps ->
         false
 
