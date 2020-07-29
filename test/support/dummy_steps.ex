@@ -368,6 +368,51 @@ defmodule Ask.DummySteps do
         )
       ]
 
+      @completed_dispositions_shouldnt_be_rejected_dummy_steps [
+        multiple_choice_step(
+          id: Ecto.UUID.generate,
+          title: "City question",
+          prompt: prompt(
+            sms: sms_prompt("Where do you live? Reply 1 for GBA, 2 for CABA"),
+            ivr: tts_prompt("Where do you live? Press 1 for GBA, 2 for CABA")
+          ),
+          store: "City",
+          choices: [
+            choice(value: "GBA", responses: responses(sms: ["1"], ivr: ["1"])),
+            choice(value: "CABA", responses: responses(sms: ["1"], ivr: ["2"]))
+          ]
+        ),
+        flag_step(
+          id: "aaa",
+          title: "Let there be rock",
+          disposition: "interim partial"
+        ),
+        numeric_step(
+          id: Ecto.UUID.generate,
+          title: "Random question 1",
+          prompt: prompt(
+            sms: sms_prompt("Please give me a random number"),
+            ivr: tts_prompt("Please give me a random number")
+          ),
+          store: "RQ1",
+          skip_logic: default_numeric_skip_logic(),
+          alphabetical_answers: false,
+          refusal: nil
+        ),
+        numeric_step(
+          id: Ecto.UUID.generate,
+          title: "Random question 2",
+          prompt: prompt(
+            sms: sms_prompt("Please give me another random number"),
+            ivr: tts_prompt("Please give me another random number")
+          ),
+          store: "RQ2",
+          skip_logic: default_numeric_skip_logic(),
+          alphabetical_answers: false,
+          refusal: nil
+        )
+      ]
+
       @skip_logic [
         multiple_choice_step(
           id: "aaa",

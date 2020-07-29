@@ -181,6 +181,49 @@ defmodule Ask.Runtime.BrokerTest do
     end
   end
 
+  # These tests cover the bugfix for [#1752](https://github.com/instedd/surveda/issues/1752)
+  # Before [#1754](https://github.com/instedd/surveda/pull/1754), questionnaires didn't go well
+  # for interim partial respondents that were part of a quota when the flag `Count partials as
+  # completed` was enabled in the survey.
+  describe "#1752 - respondents in completed dispositions shouldn't be rejected" do
+    setup do
+      %{
+        ivr_respondent: ivr_respondent,
+        sms_respondent: sms_respondent
+      } = init_completed_dispositions_shouldnt_be_rejected_tests()
+
+      broker_poll()
+
+      {:ok,
+       %{
+         ivr_respondent_id: ivr_respondent.id,
+         sms_respondent_id: sms_respondent.id
+       }}
+    end
+
+    test "doesn't reject interim partial - IVR", %{ivr_respondent_id: respondent_id} do
+      mode = "ivr"
+
+      # Where do you live? Press 1 for GBA, 2 for CABA
+      respondent_reply(respondent_id, "1", mode)
+      # Random question
+      respondent_reply(respondent_id, "999", mode)
+
+      refute_respondent_state(respondent_id, "rejected")
+    end
+
+    test "doesn't reject interim partial - SMS", %{sms_respondent_id: respondent_id} do
+      mode = "sms"
+
+      # Where do you live? Reply 1 for GBA, 2 for CABA
+      respondent_reply(respondent_id, "1", mode)
+      # Random question
+      respondent_reply(respondent_id, "999", mode)
+
+      refute_respondent_state(respondent_id, "rejected")
+    end
+  end
+
   describe "fallback respondent" do
     test "fallback respondent (SMS => IVR)" do
       test_channel = TestChannel.new
@@ -1238,4 +1281,72 @@ defmodule Ask.Runtime.BrokerTest do
     end)
   end
 
+  defp init_completed_dispositions_shouldnt_be_rejected_tests() do
+    insert_channel = fn mode ->
+      insert(:channel, settings: TestChannel.new() |> TestChannel.settings(), type: mode)
+    end
+
+    ivr_channel = insert_channel.("ivr")
+    sms_channel = insert_channel.("sms")
+
+    quiz = insert(:questionnaire, steps: @completed_dispositions_shouldnt_be_rejected_dummy_steps)
+
+    insert_survey = fn mode ->
+      insert(
+        :survey,
+        schedule: Schedule.always(),
+        state: "running",
+        questionnaires: [quiz],
+        mode: [[mode]],
+        count_partial_results: true,
+        quota_vars: ["City"]
+      )
+    end
+
+    ivr_survey = insert_survey.("ivr")
+    sms_survey = insert_survey.("sms")
+
+    insert_bucket = fn survey ->
+      insert(:quota_bucket, condition: %{City: "GBA"}, quota: 1, count: 0, survey: survey)
+    end
+
+    insert_bucket.(ivr_survey)
+    insert_bucket.(sms_survey)
+
+    insert_group = fn survey ->
+      insert(:respondent_group, survey: survey, respondents_count: 1) |> Repo.preload([:channels])
+    end
+
+    ivr_group = insert_group.(ivr_survey)
+    sms_group = insert_group.(sms_survey)
+
+    insert_group_channel = fn mode, channel, group ->
+      RespondentGroupChannel.changeset(%RespondentGroupChannel{}, %{
+        respondent_group_id: group.id,
+        channel_id: channel.id,
+        mode: mode
+      })
+      |> Repo.insert()
+    end
+
+    insert_group_channel.("ivr", ivr_channel, ivr_group)
+    insert_group_channel.("sms", sms_channel, sms_group)
+
+    %{
+      ivr_respondent: insert(:respondent, survey: ivr_survey, respondent_group: ivr_group),
+      sms_respondent: insert(:respondent, survey: sms_survey, respondent_group: sms_group)
+    }
+  end
+
+  defp broker_poll(), do: Broker.handle_info(:poll, nil)
+
+  defp respondent_reply(respondent_id, reply_message, mode) do
+    respondent = Repo.get!(Respondent, respondent_id)
+    Ask.Runtime.Survey.sync_step(respondent, Flow.Message.reply(reply_message), mode)
+  end
+
+  defp refute_respondent_state(respondent_id, state) do
+    respondent = Repo.get!(Respondent, respondent_id)
+    refute respondent.state == state
+  end
 end
