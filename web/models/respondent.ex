@@ -138,6 +138,14 @@ defmodule Ask.Respondent do
         !completed_disposition?(old_disposition, count_partial_results) &&
           completed_disposition?(new_disposition, count_partial_results)
 
+  @doc """
+    Did the respondent incremented their quota?
+  """
+  def incremented_their_quota?(respondent, count_partial_results),
+    do:
+      respondent.quota_bucket_id != nil &&
+        completed_disposition?(respondent.disposition, count_partial_results)
+
   def final_dispositions(), do: [
     "failed",
     "unresponsive",

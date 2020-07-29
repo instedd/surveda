@@ -546,7 +546,12 @@ defmodule Ask.Runtime.Session do
   end
 
   defp handle_step_answer(session, {:ok, flow, reply}, current_mode, persist) do
-    case falls_in_quota_already_completed?(session.respondent, flow, session.count_partial_results) do
+    case must_be_rejected?(
+           session.respondent,
+           reply.disposition,
+           flow.in_quota_completed_steps,
+           session.count_partial_results
+         ) do
       true ->
         session = update_respondent_disposition(session, "rejected", current_mode)
 
@@ -676,11 +681,43 @@ defmodule Ask.Runtime.Session do
     end)
   end
 
-  defp falls_in_quota_already_completed?(respondent, flow, count_partial_results) do
+  # Must the respondent be rejected?
+  defp must_be_rejected?(
+         respondent,
+         reply_disposition,
+         in_quota_completed_steps,
+         count_partial_results
+       ) do
+    # The respondent disposition is updated by Runtime.Survey after the current step is handled
+    # by Runtime.Session, but the quota bucket could be assigned to the respondent and the quota
+    # incremented before the disposition update happens. So if the disposition should be updated
+    # the respondent also must be tested using their new disposition.
+    respondent_incremented_their_quota? =
+      if Flow.should_update_disposition(respondent.disposition, reply_disposition) do
+        updated_respondent = %{respondent | disposition: reply_disposition}
+
+        Respondent.incremented_their_quota?(respondent, count_partial_results) ||
+          Respondent.incremented_their_quota?(updated_respondent, count_partial_results)
+      else
+        Respondent.incremented_their_quota?(respondent, count_partial_results)
+      end
+
     cond do
-      flow.in_quota_completed_steps -> false
-      respondent.quota_bucket_id == nil -> false
-      Respondent.completed_disposition?(respondent.disposition, count_partial_results) -> false
+      # Was the respondent already rejected?
+      # flow.in_quota_completed_steps ~= (respondent.disposition == "rejected)
+      in_quota_completed_steps ->
+        false
+
+      # Is the respondent in a quota?
+      respondent.quota_bucket_id == nil ->
+        false
+
+      # Did the respondent increment their quota?
+      respondent_incremented_their_quota? ->
+        false
+
+      # The above guards prevent the respondent to be considered rejectable during this test
+      # If none of them apply then the respondent is rejected when their quota is completed
       true ->
         bucket = (respondent |> Repo.preload(:quota_bucket)).quota_bucket
         bucket.count >= bucket.quota
