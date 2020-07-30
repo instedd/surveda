@@ -1338,8 +1338,6 @@ defmodule Ask.Runtime.BrokerTest do
     }
   end
 
-  defp broker_poll(), do: Broker.handle_info(:poll, nil)
-
   defp refute_respondent_state(respondent_id, state) do
     respondent = Repo.get!(Respondent, respondent_id)
     refute respondent.state == state

@@ -2,7 +2,7 @@ defmodule Ask.TestHelpers do
   defmacro __using__(_) do
     quote do
       use Ask.DummySteps
-      alias Ask.Runtime.Flow
+      alias Ask.Runtime.{Broker, Flow}
       alias Ask.{Repo, Respondent}
 
       def create_project_for_user(user, options \\ []) do
@@ -70,6 +70,8 @@ defmodule Ask.TestHelpers do
         assert a == active
         assert p == pending
       end
+
+      defp broker_poll(), do: Broker.handle_info(:poll, nil)
 
       defp respondent_reply(respondent_id, reply_message, mode) do
         respondent = Repo.get!(Respondent, respondent_id)
