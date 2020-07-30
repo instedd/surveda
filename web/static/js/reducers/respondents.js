@@ -13,7 +13,8 @@ const initialState = {
     totalCount: 0
   },
   filter: null,
-  fields: null
+  fields: null,
+  selectedFields: []
 }
 
 export default (state = initialState, action) => {
@@ -22,6 +23,7 @@ export default (state = initialState, action) => {
     case actions.CREATE_RESPONDENT: return createOrUpdateRespondent(state, action)
     case actions.UPDATE_RESPONDENT: return createOrUpdateRespondent(state, action)
     case actions.RECEIVE_RESPONDENTS: return receiveRespondents(state, action)
+    case actions.TOOGLE_RESPONDENTS_FIELD: return toogleRespondentsField(state, action)
     default: return state
   }
 }
@@ -52,15 +54,37 @@ const createOrUpdateRespondent = (state, action) => ({
   }
 })
 
-const receiveRespondents = (state, action) => ({
-  ...state,
-  fetching: false,
-  items: action.respondents,
-  order: action.order,
-  page: {
-    ...state.page,
-    number: action.page,
-    totalCount: action.respondentsCount
-  },
-  fields: action.fields
-})
+const receiveRespondents = (state, action) => {
+  // Select every field except reponses (only the first time)
+  const selectedFields = state.selectedFields.length || !action.fields
+    ? state.selectedFields
+    : action.fields
+        .filter(field => field.type != 'response')
+        .map(field => fieldUniqueKey(field.type, field.key))
+  return {
+    ...state,
+    fetching: false,
+    items: action.respondents,
+    order: action.order,
+    page: {
+      ...state.page,
+      number: action.page,
+      totalCount: action.respondentsCount
+    },
+    fields: action.fields,
+    selectedFields: selectedFields
+  }
+}
+
+const toogleRespondentsField = (state, action) => {
+  const fieldKey = fieldUniqueKey(action.fieldType, action.fieldKey)
+  const selectedFields = state.selectedFields.some(key => key == fieldKey)
+    ? state.selectedFields.filter(key => key != fieldKey)
+    : [...state.selectedFields, fieldKey]
+  return {
+    ...state,
+    selectedFields
+  }
+}
+
+export const fieldUniqueKey = (type, key) => `${type}_${key}`

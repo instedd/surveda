@@ -3,6 +3,7 @@ import React, { Component } from 'react'
 import { bindActionCreators } from 'redux'
 import { connect } from 'react-redux'
 import * as actions from '../../actions/respondents'
+import { fieldUniqueKey } from '../../reducers/respondents'
 import * as surveyActions from '../../actions/survey'
 import * as projectActions from '../../actions/project'
 import * as questionnairesActions from '../../actions/questionnaires'
@@ -17,7 +18,8 @@ import {
   MainAction,
   Action,
   Dropdown,
-  DropdownItem
+  DropdownItem,
+  DropdownDropdownCheckboxItem
 } from '../ui'
 import RespondentRow from './RespondentRow'
 import * as routes from '../../routes'
@@ -52,7 +54,8 @@ type Props = {
   router: Object,
   filter: string,
   q: string,
-  fields: Array<Object>
+  fields: Array<Object>,
+  selectedFields: Array<string>
 }
 
 type State = {
@@ -461,39 +464,36 @@ class RespondentIndex extends Component<Props, State> {
           sortBy={sortBy}
           sortAsc={sortAsc}
           onClick={() => this.sortBy(key)}
-          key={this.fieldUniqueKey(type, key)}
+          key={fieldUniqueKey(type, key)}
           className={className}
         />
       )
     } else {
       return (
-        <th className={className} key={this.fieldUniqueKey(type, key)}>
+        <th className={className} key={fieldUniqueKey(type, key)}>
           {displayText}
         </th>
       )
     }
   }
 
-  fieldUniqueKey(type, key) {
-    return `${type}_${key}`
+  toogleColumn(type, key) {
+    this.props.actions.toogleSelectedColumn(type, key)
   }
 
   columnsMenuOption({ type, key, displayText, checked }) {
+    const { selectedFields } = this.props
+    const inputId = `toggle_column_${fieldUniqueKey(type, key)}`
     return (
-      <DropdownItem
-        onClickKeepMenuOpen
-        onClick={() => {
-          // TODO: Toogle the column selection
+      <DropdownDropdownCheckboxItem
+        key={Math.random().toString()}
+        id={inputId}
+        defaultChecked={selectedFields.some(uniqueKey => uniqueKey == fieldUniqueKey(type, key))}
+        onClick={e => {
+          this.toogleColumn(type, key)
         }}
-        key={this.fieldUniqueKey(type, key)}
-      >
-        <a>
-          <i className='material-icons'>
-            {checked ? 'check_box' : 'check_box_outline_blank'}
-          </i>
-          {displayText}
-        </a>
-      </DropdownItem>
+        displayText={displayText}
+      />
     )
   }
 
@@ -504,7 +504,8 @@ class RespondentIndex extends Component<Props, State> {
       totalCount,
       order,
       t,
-      fields
+      fields,
+      selectedFields
     } = this.props
     const loading = (
       !project ||
@@ -611,15 +612,17 @@ class RespondentIndex extends Component<Props, State> {
           <thead>
             <tr>
               {
-                fields.map(field =>
-                  this.renderHeader({
-                    displayText: field.displayText,
-                    key: field.key,
-                    sortable: field.sortable,
-                    type: field.type,
-                    dataType: field.dataType
-                  })
-                )
+                fields
+                  .filter(field => selectedFields.some(key => key == fieldUniqueKey(field.type, field.key)))
+                  .map(field =>
+                    this.renderHeader({
+                      displayText: field.displayText,
+                      key: field.key,
+                      sortable: field.sortable,
+                      type: field.type,
+                      dataType: field.dataType
+                    })
+                  )
               }
             </tr>
           </thead>
@@ -657,6 +660,7 @@ class RespondentIndex extends Component<Props, State> {
                 responses={responses}
                 variantColumn={variantColumn}
                 surveyModes={this.getModes(survey.mode)}
+                selectedFields={selectedFields}
                 />
             })}
           </tbody>
@@ -668,7 +672,7 @@ class RespondentIndex extends Component<Props, State> {
 
 const mapStateToProps = (state, ownProps) => {
   const { project, survey, questionnaires, respondents } = state
-  const { page, sortBy, sortAsc, order, filter, items, fields } = respondents
+  const { page, sortBy, sortAsc, order, filter, items, fields, selectedFields } = respondents
   const { number: pageNumber, size: pageSize, totalCount } = page
   const { projectId, surveyId } = ownProps.params
   const startIndex = (pageNumber - 1) * pageSize + 1
@@ -692,7 +696,8 @@ const mapStateToProps = (state, ownProps) => {
     sortBy,
     sortAsc,
     filter,
-    fields: fields || []
+    fields: fields || [],
+    selectedFields
   }
 }
 

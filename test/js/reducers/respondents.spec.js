@@ -7,7 +7,7 @@ describe('respondents reducer', () => {
   const initialState = reducer(undefined, {})
 
   it('should handle initial state', () => {
-    expect(initialState).toEqual({fetching: false, surveyId: null, items: null, order: [], sortBy: null, sortAsc: true, page: {number: 1, size: 5, totalCount: 0}, filter: null, fields: null})
+    expect(initialState).toEqual({fetching: false, surveyId: null, items: null, order: [], sortBy: null, sortAsc: true, page: {number: 1, size: 5, totalCount: 0}, filter: null, fields: null, selectedFields: []})
   })
 
   it('should start fetching respondents', () => {

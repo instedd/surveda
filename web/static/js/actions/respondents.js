@@ -6,6 +6,7 @@ export const CREATE_RESPONDENT = 'CREATE_RESPONDENT'
 export const UPDATE_RESPONDENT = 'UPDATE_RESPONDENT'
 export const RECEIVE_RESPONDENTS_ERROR = 'RECEIVE_RESPONDENTS_ERROR'
 export const RECEIVE_RESPONDENTS_STATS = 'RECEIVE_RESPONDENTS_STATS'
+export const TOOGLE_RESPONDENTS_FIELD = 'TOOGLE_RESPONDENTS_FIELD'
 
 export const fetchRespondents = (
   projectId,
@@ -83,6 +84,12 @@ export const updateRespondentsFilter = (projectId, surveyId, filter) => (dispatc
   const { sortBy, sortAsc, page } = getState().respondents
   dispatch(fetchRespondents(projectId, surveyId, page.size, 1, filter, sortBy, sortAsc))
 }
+
+export const toogleSelectedColumn = (type, key) => ({
+  type: TOOGLE_RESPONDENTS_FIELD,
+  fieldType: type,
+  fieldKey: key
+})
 
 export const receiveRespondentsError = (error) => ({
   type: RECEIVE_RESPONDENTS_ERROR,

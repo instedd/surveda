@@ -43,27 +43,50 @@ export class Dropdown extends Component {
   }
 }
 
-export class DropdownItem extends Component {
+export const DropdownItem = ({children, className}) => (
+  <li className={className}>{children}</li>
+)
+
+DropdownItem.propTypes = {
+  children: PropTypes.node,
+  className: PropTypes.string
+}
+
+export class DropdownDropdownCheckboxItem extends Component {
   static propTypes = {
-    className: PropTypes.string,
-    children: PropTypes.node,
-    onClickKeepMenuOpen: PropTypes.bool,
-    onClick: PropTypes.func
+    onClick: PropTypes.func,
+    defaultChecked: PropTypes.bool,
+    id: PropTypes.string,
+    displayText: PropTypes.string
   }
 
   componentDidMount() {
-    const { onClick, onClickKeepMenuOpen } = this.props
-    if (onClickKeepMenuOpen) {
-      $(this.refs.node).on('click', function(event) {
-        if (onClick) onClick()
-        event.stopPropagation()
-      })
-    }
+    const { onClick } = this.props
+    $(this.refs.li).on('click', function(event) {
+      // Prevent the menu from closing
+      event.stopPropagation()
+    })
+    $(this.refs.input).on('click', function(event) {
+      // Prevent the menu from closing
+      event.preventDefault()
+      onClick()
+    })
   }
 
   render() {
-    const { className, children } = this.props
-    return <li className={className} ref='node'>{children}</li>
+    const { defaultChecked, id, displayText } = this.props
+    return (
+      <li ref='li'>
+        <input
+          id={id}
+          ref='input'
+          type='checkbox'
+          defaultChecked={defaultChecked}
+          className='filled-in'
+        />
+        <label className='bottom-margin' htmlFor={id}>{displayText}</label>
+      </li>
+    )
   }
 }
 
