@@ -523,11 +523,6 @@ defmodule Ask.Runtime.RetriesHistogramTest do
   defp histogram_hour(flow, %{attempt: _attempt} = map), do: histogram_hour(flow, Map.put(map, :hours_after, 0))
 
   defp contacting_slot(type, delay), do: %{delay: delay, label: "#{delay}h", type: type}
-
-  defp respondent_reply(respondent_id, reply_message, mode) do
-    respondent = Repo.get!(Respondent, respondent_id)
-    Ask.Runtime.Survey.sync_step(respondent, Flow.Message.reply(reply_message), mode)
-  end
 end
 
 defmodule TestConfiguration do

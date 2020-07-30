@@ -1340,11 +1340,6 @@ defmodule Ask.Runtime.BrokerTest do
 
   defp broker_poll(), do: Broker.handle_info(:poll, nil)
 
-  defp respondent_reply(respondent_id, reply_message, mode) do
-    respondent = Repo.get!(Respondent, respondent_id)
-    Ask.Runtime.Survey.sync_step(respondent, Flow.Message.reply(reply_message), mode)
-  end
-
   defp refute_respondent_state(respondent_id, state) do
     respondent = Repo.get!(Respondent, respondent_id)
     refute respondent.state == state
