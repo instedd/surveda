@@ -141,10 +141,10 @@ defmodule Ask.Respondent do
   @doc """
     Did the respondent incremented their quota?
   """
-  def incremented_their_quota?(respondent, count_partial_results),
+  def incremented_their_quota?(quota_bucket_id, disposition, count_partial_results),
     do:
-      respondent.quota_bucket_id != nil &&
-        completed_disposition?(respondent.disposition, count_partial_results)
+      quota_bucket_id != nil &&
+        completed_disposition?(disposition, count_partial_results)
 
   def final_dispositions(), do: [
     "failed",
