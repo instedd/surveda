@@ -117,12 +117,34 @@ defmodule Ask.Respondent do
     "mobile_web_code_#{respondent_id}"
   end
 
-  def completed_dispositions(_count_partial_results \\ false)
+  def completed_dispositions(count_partial_results \\ false)
 
   def completed_dispositions(false), do: ["completed"]
 
   def completed_dispositions(true), do:
     completed_dispositions() ++ ["partial", "interim partial"]
+
+  def completed_disposition?(disposition, count_partial_results \\ false),
+    do:
+      Respondent.completed_dispositions(count_partial_results)
+      |> Enum.member?(disposition)
+
+  def enters_in_completed_disposition?(
+        old_disposition,
+        new_disposition,
+        count_partial_results \\ false
+      ),
+      do:
+        !completed_disposition?(old_disposition, count_partial_results) &&
+          completed_disposition?(new_disposition, count_partial_results)
+
+  @doc """
+    Did the respondent incremented their quota?
+  """
+  def incremented_their_quota?(quota_bucket_id, disposition, count_partial_results),
+    do:
+      quota_bucket_id != nil &&
+        completed_disposition?(disposition, count_partial_results)
 
   def final_dispositions(), do: [
     "failed",
@@ -209,7 +231,7 @@ defmodule Ask.Respondent do
     # the caller. Since we need a unified key to access the Mutex, we here convert it to
     # a string - even if it's in a non-politically-correct way
     mutex_key = "#{respondent_id}"
-    
+
     Mutex.under(Ask.Mutex, mutex_key, fn ->
       respondent = Respondent
                    |> Repo.get(respondent_id)

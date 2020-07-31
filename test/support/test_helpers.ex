@@ -2,6 +2,8 @@ defmodule Ask.TestHelpers do
   defmacro __using__(_) do
     quote do
       use Ask.DummySteps
+      alias Ask.Runtime.{Broker, Flow}
+      alias Ask.{Repo, Respondent}
 
       def create_project_for_user(user, options \\ []) do
         level = options[:level] || "owner"
@@ -67,6 +69,13 @@ defmodule Ask.TestHelpers do
 
         assert a == active
         assert p == pending
+      end
+
+      defp broker_poll(), do: Broker.handle_info(:poll, nil)
+
+      defp respondent_reply(respondent_id, reply_message, mode) do
+        respondent = Repo.get!(Respondent, respondent_id)
+        Ask.Runtime.Survey.sync_step(respondent, Flow.Message.reply(reply_message), mode)
       end
 
       defp get_respondents_by_state(survey) do

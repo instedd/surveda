@@ -450,8 +450,6 @@ defmodule Ask.Runtime.RetriesHistogramTest do
     assert expected_histogram == actual_histogram, "#{message}: \n\texpected histogram: #{inspect(expected_histogram)} \n\tactual histogram: #{inspect(actual_histogram)}"
   end
 
-  defp broker_poll(), do: Broker.handle_info(:poll, nil)
-
   defp initialize_survey(mode, survey_configuration, steps) do
     [survey, _group, _test_channel, respondent, _phone_number] = create_running_survey_with_channel_and_respondent(steps, mode)
     survey = survey |> Survey.changeset(survey_configuration) |> Repo.update!
@@ -523,11 +521,6 @@ defmodule Ask.Runtime.RetriesHistogramTest do
   defp histogram_hour(flow, %{attempt: _attempt} = map), do: histogram_hour(flow, Map.put(map, :hours_after, 0))
 
   defp contacting_slot(type, delay), do: %{delay: delay, label: "#{delay}h", type: type}
-
-  defp respondent_reply(respondent_id, reply_message, mode) do
-    respondent = Repo.get!(Respondent, respondent_id)
-    Ask.Runtime.Survey.sync_step(respondent, Flow.Message.reply(reply_message), mode)
-  end
 end
 
 defmodule TestConfiguration do
