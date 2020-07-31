@@ -102,13 +102,9 @@ defmodule Ask.RespondentController do
 
   defp sort_respondents(query, sort_by, sort_asc) do
     case {sort_by, sort_asc} do
-      {"phoneNumber", "true"} ->
-        query |> order_by([r], asc: r.hashed_number)
-      {"phoneNumber", "false"} ->
-        query |> order_by([r], desc: r.hashed_number)
-      {"date", "true"} ->
+      {"updated_at", "true"} ->
         query |> order_by([r], asc: r.updated_at)
-      {"date", "false"} ->
+      {"updated_at", "false"} ->
         query |> order_by([r], desc: r.updated_at)
       _ ->
         query

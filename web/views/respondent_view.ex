@@ -18,7 +18,7 @@ defmodule Ask.RespondentView do
       displayText: Ask.Gettext.gettext("Respondent ID"),
       key: key,
       type: type,
-      sortable: true,
+      sortable: false,
       data_type: "text"
     }
   end
