@@ -76,7 +76,7 @@ export class DropdownDropdownCheckboxItem extends Component {
   render() {
     const { defaultChecked, id, displayText } = this.props
     return (
-      <li ref='li'>
+      <li ref='li' className='checkbox'>
         <input
           id={id}
           ref='input'
@@ -84,7 +84,7 @@ export class DropdownDropdownCheckboxItem extends Component {
           defaultChecked={defaultChecked}
           className='filled-in'
         />
-        <label className='bottom-margin' htmlFor={id}>{displayText}</label>
+        <label htmlFor={id}>{displayText}</label>
       </li>
     )
   }
