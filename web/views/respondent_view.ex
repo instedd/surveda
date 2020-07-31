@@ -23,7 +23,7 @@ defmodule Ask.RespondentView do
       display_text: Ask.Gettext.gettext("Disposition"),
       key: key,
       type: type,
-      sortable: false,
+      sortable: true,
       data_type: "text"
     }
   end
