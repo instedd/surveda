@@ -146,6 +146,21 @@ video.responsive-video {
     vertical-align: top;
     height: 30px;
 
+    &.page-size {
+      label {
+        @extend .grey-text;
+      }
+      .input-field {
+        margin-top: 0;
+
+        .select-wrapper input {
+          border-bottom: none;
+          margin: 0;
+          width: 4.75rem;
+        }
+      }
+    }
+
     &.page-numbers {
       @extend .grey-text;
       margin: 0 2.5rem;

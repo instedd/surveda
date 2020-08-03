@@ -42,7 +42,8 @@ const fetchRespondents = (state, action) => {
     sortAsc: sameSurvey ? action.sortAsc : true,
     page: {
       ...state.page,
-      number: action.page
+      size: action.pageSize,
+      number: action.pageNumber
     }
   }
 }
@@ -68,7 +69,6 @@ const receiveRespondents = (state, action) => {
     order: action.order,
     page: {
       ...state.page,
-      number: action.page,
       totalCount: action.respondentsCount
     },
     fields: action.fields,

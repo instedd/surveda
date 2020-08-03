@@ -53,7 +53,8 @@ type Props = {
   filter: string,
   q: string,
   fields: Array<Object>,
-  selectedFields: Array<string>
+  selectedFields: Array<string>,
+  pageSize: number
 }
 
 type State = {
@@ -540,12 +541,13 @@ class RespondentIndex extends Component<Props, State> {
   }
 
   renderFooter() {
-    const { startIndex, endIndex, totalCount } = this.props
+    const { startIndex, endIndex, totalCount, pageSize } = this.props
     return (
       <PagingFooter
-        {...{startIndex, endIndex, totalCount}}
+        {...{startIndex, endIndex, pageSize, totalCount}}
         onPreviousPage={() => this.previousPage()}
         onNextPage={() => this.nextPage()}
+        onPageSizeChange={pageSize => this.changePageSize(pageSize)}
       />
     )
   }
@@ -577,6 +579,13 @@ class RespondentIndex extends Component<Props, State> {
         }
       </tr>
     )
+  }
+
+  changePageSize(pageSize) {
+    const { projectId, surveyId, actions } = this.props
+    if (pageSize != this.props.pageSize) {
+      actions.changePageSize(projectId, surveyId, pageSize)
+    }
   }
 
   render() {

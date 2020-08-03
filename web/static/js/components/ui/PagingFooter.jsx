@@ -1,5 +1,6 @@
 // @flow
 import React, { Component } from 'react'
+import { Input } from 'react-materialize'
 import { translate } from 'react-i18next'
 
 type Props = {
@@ -8,7 +9,9 @@ type Props = {
   totalCount: number,
   t: Function,
   onPreviousPage: Function,
-  onNextPage: Function
+  onNextPage: Function,
+  onPageSizeChange: Function,
+  pageSize: number
 };
 
 class PagingFooterComponent extends Component<Props> {
@@ -22,11 +25,35 @@ class PagingFooterComponent extends Component<Props> {
     this.props.onNextPage()
   }
 
+  renderPageSize() {
+    const { pageSize, onPageSizeChange, t } = this.props
+    const pageSizeSelectId = 'page-size-select'
+    const onChange = event => {
+      const pageSize = parseInt(event.target.value)
+      onPageSizeChange(pageSize)
+    }
+    const sizeOptions = [ 5, 10, 20, 50 ]
+    return (
+      <li className='page-size'>
+        <div className='valign-wrapper'>
+          <label htmlFor={pageSizeSelectId}>{t('Rows per page:')}</label>
+          <Input id={pageSizeSelectId} type='select' value={pageSize} onChange={onChange}>
+            {
+              sizeOptions.map(size => (
+                <option value={size} key={`${pageSizeSelectId}_${size}`}>{size}</option>
+              ))
+            }
+          </Input>
+        </div>
+      </li>
+    )
+  }
+
   render() {
     const { startIndex, endIndex, totalCount, t } = this.props
-
     return <div className='card-action right-align'>
       <ul className='pagination'>
+        {this.renderPageSize()}
         <li className='page-numbers'>{t('{{startIndex}}-{{endIndex}} of {{totalCount}}', {startIndex: totalCount ? startIndex : 0, endIndex, totalCount})}</li>
         { startIndex > 1
             ? <li className='previous-page'><a href='#!' onClick={e => this.previousPage(e)}><i className='material-icons'>chevron_left</i></a></li>

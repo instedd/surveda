@@ -11,34 +11,30 @@ export const SET_RESPONDENTS_FIELD_SELECTION = 'SET_RESPONDENTS_FIELD_SELECTION'
 export const fetchRespondents = (
   projectId,
   surveyId,
-  limit,
-  page,
+  pageSize,
+  pageNumber,
   filter = '',
   sortBy = null,
   sortAsc = true
 ) => (dispatch, getState) => {
-  dispatch(startFetchingRespondents(surveyId, page, filter, sortBy, sortAsc))
+  dispatch(startFetchingRespondents(surveyId, pageSize, pageNumber, filter, sortBy, sortAsc))
   api
-    .fetchRespondents(projectId, surveyId, limit, page, filter, sortBy, sortAsc)
+    .fetchRespondents(projectId, surveyId, pageSize, pageNumber, filter, sortBy, sortAsc)
     .then((response) => {
       const state = getState().respondents
       const lastFetchResponse =
         state.surveyId == surveyId &&
-        state.page.number == page &&
+        state.page.size == pageSize &&
+        state.page.number == pageNumber &&
         state.filter == filter &&
         state.sortBy == sortBy &&
         state.sortAsc == sortAsc
       if (lastFetchResponse) {
         dispatch(
           receiveRespondents(
-            surveyId,
-            page,
             response.entities.respondents || {},
             response.respondentsCount,
             response.result,
-            filter,
-            sortBy,
-            sortAsc,
             response.respondentsFields
           )
         )
@@ -55,16 +51,11 @@ export const receiveRespondentsStats = (response) => ({
   response
 })
 
-export const receiveRespondents = (surveyId, page, respondents, respondentsCount, order, filter, sortBy, sortAsc, fields) => ({
+export const receiveRespondents = (respondents, respondentsCount, order, fields) => ({
   type: RECEIVE_RESPONDENTS,
-  surveyId,
-  page,
   respondents,
   respondentsCount,
   order,
-  filter,
-  sortBy,
-  sortAsc,
   fields
 })
 
@@ -96,10 +87,11 @@ export const receiveRespondentsError = (error) => ({
   error
 })
 
-export const startFetchingRespondents = (surveyId, page, filter, sortBy, sortAsc) => ({
+export const startFetchingRespondents = (surveyId, pageSize, pageNumber, filter, sortBy, sortAsc) => ({
   type: FETCH_RESPONDENTS,
   surveyId,
-  page,
+  pageSize,
+  pageNumber,
   filter,
   sortBy,
   sortAsc
@@ -109,4 +101,9 @@ export const sortRespondentsBy = (projectId, surveyId, newSortBy) => (dispatch, 
   const { page, filter, sortBy, sortAsc } = getState().respondents
   const newSortAsc = sortBy == newSortBy ? !sortAsc : true
   dispatch(fetchRespondents(projectId, surveyId, page.size, 1, filter, newSortBy, newSortAsc))
+}
+
+export const changePageSize = (projectId, surveyId, pageSize) => (dispatch, getState) => {
+  const { filter, sortBy, sortAsc } = getState().respondents
+  dispatch(fetchRespondents(projectId, surveyId, pageSize, 1, filter, sortBy, sortAsc))
 }
