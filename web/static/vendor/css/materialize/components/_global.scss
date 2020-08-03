@@ -146,6 +146,19 @@ video.responsive-video {
     vertical-align: top;
     height: 30px;
 
+    &.page-numbers {
+      @extend .grey-text;
+      margin: 0 2.5rem;
+    }
+
+    &.previous-page {
+      margin-right: 0.75rem;
+    }
+
+    &.next-page {
+      margin-left: 0.75rem;
+    }
+
     a {
       color: #444;
       display: inline-block;
