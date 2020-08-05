@@ -27,6 +27,18 @@ defmodule Ask.RespondentControllerTest do
       assert json_response(conn, 200)["meta"]["count"] == 0
     end
 
+    test "includes meta with fields in the index response", %{conn: conn, user: user} do
+      project = create_project_for_user(user)
+      survey = insert(:survey, project: project)
+
+      conn = get conn, project_survey_respondent_path(conn, :index, project.id, survey.id)
+
+      body = json_response(conn, 200)
+      fields = body["meta"]["fields"]
+      assert fields
+      assert Enum.at(fields, 0)["type"] == "fixed"
+    end
+
     test "fetches responses on index", %{conn: conn, user: user} do
       project = create_project_for_user(user)
       questionnaire = insert(:questionnaire, project: project)
