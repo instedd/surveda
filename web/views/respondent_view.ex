@@ -169,7 +169,7 @@ defmodule Ask.RespondentView do
     }
   end
 
-  defp render_index_field(%{type: "fixed" = type, key: "updated_at" = key}) do
+  defp render_index_field(%{type: "fixed" = type, key: "date" = key}) do
     %{
       displayText: Ask.Gettext.gettext("Date"),
       key: key,

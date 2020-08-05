@@ -59,7 +59,7 @@ defmodule Ask.RespondentController do
   end
 
   defp fixed_index_fields() do
-    ["phoneNumber", "disposition", "updated_at"]
+    ["phoneNumber", "disposition", "date"]
       |> present_fields("fixed")
   end
 
@@ -102,9 +102,9 @@ defmodule Ask.RespondentController do
 
   defp sort_respondents(query, sort_by, sort_asc) do
     case {sort_by, sort_asc} do
-      {"updated_at", "true"} ->
+      {"date", "true"} ->
         query |> order_by([r], asc: r.updated_at)
-      {"updated_at", "false"} ->
+      {"date", "false"} ->
         query |> order_by([r], desc: r.updated_at)
       _ ->
         query
