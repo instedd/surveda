@@ -477,22 +477,58 @@ class RespondentIndex extends Component<Props, State> {
     }
   }
 
-  toogleColumn(type, key) {
-    this.props.actions.toogleSelectedColumn(type, key)
-  }
-
-  columnsMenuOption({ type, key, displayText, checked }) {
-    const { selectedFields } = this.props
+  columnsPickerOption({ type, key, displayText, checked }) {
     const inputId = `toggle_column_${fieldUniqueKey(type, key)}`
     return (
       <DropdownDropdownCheckboxItem
         key={Math.random().toString()}
         id={inputId}
-        defaultChecked={selectedFields.some(uniqueKey => uniqueKey == fieldUniqueKey(type, key))}
+        defaultChecked={checked}
         onClick={e => {
-          this.toogleColumn(type, key)
+          this.props.actions.setRespondentsFieldSelection(type, key, !checked)
         }}
         displayText={displayText}
+      />
+    )
+  }
+
+  renderTitleWithColumnsPicker() {
+    const {t, fields, selectedFields, totalCount} = this.props
+    const isFieldSelected = (type, key) => selectedFields
+      .some(uniqueKey => uniqueKey == fieldUniqueKey(type, key))
+    const title = t('{{count}} respondent', {count: totalCount})
+    return (
+      <div className='respondent-index-table-title'>
+        <div>
+          {title}
+        </div>
+        <Dropdown stopPropagationOnClick className='options columns-menu' dataBelowOrigin={false}
+          label={<i className='material-icons'>more_vert</i>}>
+          <DropdownItem className='dots'>
+            <i className='material-icons'>more_vert</i>
+          </DropdownItem>
+          {
+            fields.map(field =>
+              this.columnsPickerOption({
+                type: field.type,
+                key: field.key,
+                displayText: field.displayText,
+                checked: isFieldSelected(field.type, field.key)
+              })
+            )
+          }
+        </Dropdown>
+      </div>
+    )
+  }
+
+  renderFooter() {
+    const { startIndex, endIndex, totalCount } = this.props
+    return (
+      <PagingFooter
+        {...{startIndex, endIndex, totalCount}}
+        onPreviousPage={() => this.previousPage()}
+        onNextPage={() => this.nextPage()}
       />
     )
   }
@@ -501,7 +537,6 @@ class RespondentIndex extends Component<Props, State> {
     const { project,
       survey,
       questionnaires,
-      totalCount,
       order,
       t,
       fields,
@@ -545,15 +580,6 @@ class RespondentIndex extends Component<Props, State> {
       return res
     }
 
-    function allFieldNames(rs) {
-      let fieldNames = Object.keys(rs).map((key) => (rs[key].responses))
-      fieldNames = fieldNames.map((response) => Object.keys(response))
-      fieldNames = [].concat.apply([], fieldNames)
-      // Don't show fields for empty variable names
-      fieldNames = fieldNames.filter(x => x.trim().length > 0)
-      return fieldNames
-    }
-
     function hasResponded(rs, respondentId, fieldName) {
       return Object.keys(rs[respondentId].responses).includes(fieldName)
     }
@@ -562,40 +588,16 @@ class RespondentIndex extends Component<Props, State> {
       return hasResponded(rs, respondentId, fieldName) ? rs[respondentId].responses[fieldName] : '-'
     }
 
-    const { startIndex, endIndex } = this.props
+    const responseFieldsKeys = this.props.fields
+      .filter(field => field.type == 'response')
+      .map(field => field.key)
 
-    const title = t('{{count}} respondent', {count: totalCount})
-    const footer = <PagingFooter
-      {...{startIndex, endIndex, totalCount}}
-      onPreviousPage={() => this.previousPage()}
-      onNextPage={() => this.nextPage()} />
+    const fixedFieldsCount = this.props.fields
+      .filter(field => field.type == 'fixed')
+      .length
 
-    const respondentsFieldName = allFieldNames(respondents)
-
-    let colspan = respondentsFieldName.length + 3
+    let colspan = responseFieldsKeys.length + fixedFieldsCount
     const [fileId, linkId] = ['file', 'link']
-
-    const titleWithColumnsMenu = <div className='respondent-index-table-title'>
-      <div>
-        {title}
-      </div>
-      <Dropdown stopPropagationOnClick className='options columns-menu' dataBelowOrigin={false}
-        label={<i className='material-icons'>more_vert</i>}>
-        <DropdownItem className='dots'>
-          <i className='material-icons'>more_vert</i>
-        </DropdownItem>
-        {
-          fields.map(field =>
-            this.columnsMenuOption({
-              type: field.type,
-              key: field.key,
-              displayText: field.displayText,
-              checked: true
-            })
-          )
-        }
-      </Dropdown>
-    </div>
 
     return (
       <div className='white'>
@@ -608,7 +610,7 @@ class RespondentIndex extends Component<Props, State> {
         { this.downloadModal({itemType: fileId}) }
         { this.downloadModal({itemType: linkId}) }
         { this.respondentsFilter() }
-        <CardTable title={titleWithColumnsMenu} footer={footer} tableScroll>
+        <CardTable title={this.renderTitleWithColumnsPicker()} footer={this.renderFooter()} tableScroll>
           <thead>
             <tr>
               {
@@ -645,10 +647,10 @@ class RespondentIndex extends Component<Props, State> {
                 variantColumn = <td>{variantValue}</td>
               }
 
-              const responses = respondentsFieldName.map((field) => {
+              const responses = responseFieldsKeys.map((responseKey) => {
                 return {
-                  name: field,
-                  value: responseOf(respondents, respondent.id, field)
+                  name: responseKey,
+                  value: responseOf(respondents, respondent.id, responseKey)
                 }
               })
               return <RespondentRow

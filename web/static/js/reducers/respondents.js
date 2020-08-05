@@ -23,7 +23,7 @@ export default (state = initialState, action) => {
     case actions.CREATE_RESPONDENT: return createOrUpdateRespondent(state, action)
     case actions.UPDATE_RESPONDENT: return createOrUpdateRespondent(state, action)
     case actions.RECEIVE_RESPONDENTS: return receiveRespondents(state, action)
-    case actions.TOOGLE_RESPONDENTS_FIELD: return toogleRespondentsField(state, action)
+    case actions.SET_RESPONDENTS_FIELD_SELECTION: return setRespondentsFieldSelection(state, action)
     default: return state
   }
 }
@@ -76,14 +76,27 @@ const receiveRespondents = (state, action) => {
   }
 }
 
-const toogleRespondentsField = (state, action) => {
+const setRespondentsFieldSelection = (state, action) => {
   const fieldKey = fieldUniqueKey(action.fieldType, action.fieldKey)
-  const selectedFields = state.selectedFields.some(key => key == fieldKey)
-    ? state.selectedFields.filter(key => key != fieldKey)
-    : [...state.selectedFields, fieldKey]
+  const selectField = () => [...state.selectedFields, fieldKey]
+  const unselectField = () => state.selectedFields.filter(key => key != fieldKey)
+  const isSelected = state.selectedFields.some(key => key == fieldKey)
+  const shouldSelectField = action.selected && !isSelected
+  const shouldUnselectField = !action.selected && isSelected
+
+  const selectedFields = () => {
+    if (shouldSelectField) {
+      return selectField()
+    } else if (shouldUnselectField) {
+      return unselectField()
+    } else {
+      return state.selectedFields
+    }
+  }
+
   return {
     ...state,
-    selectedFields
+    selectedFields: selectedFields()
   }
 }
 
