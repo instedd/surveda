@@ -19,7 +19,7 @@ import {
   Action,
   Dropdown,
   DropdownItem,
-  DropdownDropdownCheckboxItem
+  DropdownCheckboxItem
 } from '../ui'
 import RespondentRow from './RespondentRow'
 import * as routes from '../../routes'
@@ -480,7 +480,7 @@ class RespondentIndex extends Component<Props, State> {
   columnsPickerOption({ type, key, displayText, checked }) {
     const inputId = `toggle_column_${fieldUniqueKey(type, key)}`
     return (
-      <DropdownDropdownCheckboxItem
+      <DropdownCheckboxItem
         key={Math.random().toString()}
         id={inputId}
         defaultChecked={checked}

@@ -52,7 +52,7 @@ DropdownItem.propTypes = {
   className: PropTypes.string
 }
 
-export class DropdownDropdownCheckboxItem extends Component {
+export class DropdownCheckboxItem extends Component {
   static propTypes = {
     onClick: PropTypes.func,
     defaultChecked: PropTypes.bool,
