@@ -478,11 +478,9 @@ class RespondentIndex extends Component<Props, State> {
   }
 
   columnsPickerOption({ type, key, displayText, checked }) {
-    const inputId = `toggle_column_${fieldUniqueKey(type, key)}`
     return (
       <DropdownCheckboxItem
         key={Math.random().toString()}
-        id={inputId}
         defaultChecked={checked}
         onClick={e => {
           this.props.actions.setRespondentsFieldSelection(type, key, !checked)

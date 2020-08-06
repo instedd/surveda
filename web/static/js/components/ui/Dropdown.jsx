@@ -56,7 +56,6 @@ export class DropdownCheckboxItem extends Component {
   static propTypes = {
     onClick: PropTypes.func,
     defaultChecked: PropTypes.bool,
-    id: PropTypes.string,
     displayText: PropTypes.string
   }
 
@@ -74,7 +73,8 @@ export class DropdownCheckboxItem extends Component {
   }
 
   render() {
-    const { defaultChecked, id, displayText } = this.props
+    const { defaultChecked, displayText } = this.props
+    const id = uniqueId('dropdown_checkbox_')
     return (
       <li ref='li' className='checkbox'>
         <input
