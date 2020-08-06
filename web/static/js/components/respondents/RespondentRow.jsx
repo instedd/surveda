@@ -42,7 +42,7 @@ class RespondentRow extends Component<Props> {
         {this.isFieldSelected('fixed', 'phoneNumber') ? <td>{respondent.phoneNumber}</td> : null}
         {this.isFieldSelected('fixed', 'disposition') ? <td>{capitalize(respondent.disposition)}</td> : null}
         {
-          this.isFieldSelected('fixed', 'updated_at')
+          this.isFieldSelected('fixed', 'date')
           ? <td className='tdDate'>
             {respondent.date ? dateformat(new Date(respondent.date), 'mmm d, yyyy HH:MM') : '-'}
           </td>
