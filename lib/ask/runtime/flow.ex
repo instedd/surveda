@@ -10,12 +10,22 @@ defmodule Ask.Runtime.Flow do
 
   def start(quiz, mode) do
     has_sections = questionnaire_has_sections(quiz)
-    section_order = if(has_sections) do
-      randomize_sections(quiz)
-    else
-      nil
-    end
-    %Flow{questionnaire: quiz, mode: mode, language: quiz.default_language, has_sections: has_sections, section_order: section_order, ignored_values_from_relevant_steps: ignored_values_from_relevant_steps(quiz)}
+
+    section_order =
+      if(has_sections) do
+        randomize_sections(quiz)
+      else
+        nil
+      end
+
+    %Flow{
+      questionnaire: quiz,
+      mode: mode,
+      language: quiz.default_language,
+      has_sections: has_sections,
+      section_order: section_order,
+      ignored_values_from_relevant_steps: Questionnaire.ignored_values_from_relevant_steps(quiz)
+    }
   end
 
   def step(flow, visitor, reply, old_disposition) do
@@ -47,7 +57,18 @@ defmodule Ask.Runtime.Flow do
 
   def load(state) do
     quiz = Repo.get(Questionnaire, state["questionnaire_id"])
-    %Flow{questionnaire: quiz, current_step: load_current_step(state["current_step"]), mode: state["mode"], language: state["language"], retries: state["retries"], in_quota_completed_steps: state["in_quota_completed_steps"], has_sections: questionnaire_has_sections(quiz), section_order: state["section_order"], ignored_values_from_relevant_steps: ignored_values_from_relevant_steps(quiz)}
+
+    %Flow{
+      questionnaire: quiz,
+      current_step: load_current_step(state["current_step"]),
+      mode: state["mode"],
+      language: state["language"],
+      retries: state["retries"],
+      in_quota_completed_steps: state["in_quota_completed_steps"],
+      has_sections: questionnaire_has_sections(quiz),
+      section_order: state["section_order"],
+      ignored_values_from_relevant_steps: Questionnaire.ignored_values_from_relevant_steps(quiz)
+    }
   end
 
   def load_current_step([first, second]) do
@@ -511,20 +532,25 @@ defmodule Ask.Runtime.Flow do
     questionnaire.partial_relevant_config["min_relevant_steps"]
   end
 
-  def relevant_response?(%{questionnaire: questionnaire, ignored_values_from_relevant_steps: ignored_values} = _flow, response) do
-    quiz_step = questionnaire |> Questionnaire.all_steps |> Enum.find(fn step -> step["store"] == response.field_name end)
-    not_ignored = fn value -> String.upcase(value) not in ignored_values end
+  def relevant_response?(
+        %Flow{questionnaire: questionnaire, ignored_values_from_relevant_steps: ignored_values},
+        response
+      ),
+      do: relevant_response?(questionnaire, ignored_values, response)
 
-    quiz_step["relevant"] && not_ignored.(response.value)
+  def relevant_response?(questionnaire, response) do
+    ignored_values = Questionnaire.ignored_values_from_relevant_steps(questionnaire)
+    relevant_response?(questionnaire, ignored_values, response)
   end
 
-  defp ignored_values_from_relevant_steps(questionnaire) do
-    not_empty = fn str -> str != "" end
-    (questionnaire.partial_relevant_config["ignored_values"] || "")
-    |> String.split(",")
-    |> Enum.map(&String.trim/1)
-    |> Enum.filter(not_empty)
-    |> Enum.map(&String.upcase/1)
+  defp relevant_response?(questionnaire, ignored_values, response) do
+    quiz_step =
+      questionnaire
+      |> Questionnaire.all_steps()
+      |> Enum.find(fn step -> step["store"] == response.field_name end)
+
+    not_ignored = fn value -> String.upcase(value) not in ignored_values end
+    quiz_step["relevant"] && not_ignored.(response.value)
   end
 end
 

@@ -235,7 +235,7 @@ defmodule Ask.Questionnaire do
 
       if step["type"] == "section" do
         Multi.insert(multi, {:delete_section_log, step_id}, ActivityLog.delete_questionnaire_section(project, conn, questionnaire, questionnaire_name, step_id, step["title"]))
-      else 
+      else
         Multi.insert(multi, {:delete_step_log, step_id}, ActivityLog.delete_questionnaire_step(project, conn, questionnaire, questionnaire_name, step_id, step["title"], step["type"]))
       end
     end)
@@ -275,4 +275,18 @@ defmodule Ask.Questionnaire do
     multi
   end
 
+  def ignored_values_from_relevant_steps(questionnaire) do
+    not_empty = fn str -> str != "" end
+    (questionnaire.partial_relevant_config["ignored_values"] || "")
+    |> String.split(",")
+    |> Enum.map(&String.trim/1)
+    |> Enum.filter(not_empty)
+    |> Enum.map(&String.upcase/1)
+  end
+
+  def any_partial_relevant_in_questionnaires?(questionnaires),
+    do: Enum.any?(questionnaires, fn q -> partial_relevant_enabled?(q) end)
+
+  defp partial_relevant_enabled?(questionnaire),
+    do: !!questionnaire.partial_relevant_config["enabled"]
 end

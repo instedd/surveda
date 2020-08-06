@@ -1,9 +1,19 @@
 defmodule Ask.RespondentView do
   use Ask.Web, :view
+  alias Ask.Runtime.Session
 
-  def render("index.json", %{respondents: respondents} = render_index_data) do
+  def render(
+        "index.json",
+        %{respondents: respondents, partial_relevant_enabled: partial_relevant_enabled} =
+          render_index_data
+      ) do
     %{
-      data: %{respondents: render_many(respondents, Ask.RespondentView, "respondent.json")},
+      data: %{
+        respondents:
+          render_many(respondents, Ask.RespondentView, "respondent.json",
+            partial_relevant_enabled: partial_relevant_enabled
+          )
+      },
       meta: render_index_meta(render_index_data)
     }
   end
@@ -78,6 +88,18 @@ defmodule Ask.RespondentView do
     }
   end
 
+  def render("index_field.json", %{
+        index_field: %{type: "partial_relevant" = type, key: "answered_questions" = key}
+      }) do
+    %{
+      display_text: Ask.Gettext.gettext("Relevants"),
+      key: key,
+      type: type,
+      sortable: false,
+      data_type: "number"
+    }
+  end
+
   def render("index_field.json", %{index_field: %{type: type, key: key}}) do
     %{
       display_text: String.capitalize(key),
@@ -95,29 +117,29 @@ defmodule Ask.RespondentView do
     %{data: %{}}
   end
 
-  def render("respondent.json", %{respondent: respondent}) do
-    date = case respondent.responses do
-      [] -> nil
-      _ -> respondent.responses |>  Enum.map(fn r -> r.updated_at end) |> Enum.max
-    end
-    responses = render_many(respondent.responses, Ask.RespondentView, "response.json", as: :response)
+  def render("respondent.json", %{
+        respondent: respondent,
+        partial_relevant_enabled: partial_relevant_enabled
+      }) do
+    date =
+      case respondent.responses do
+        [] -> nil
+        _ -> respondent.responses |> Enum.map(fn r -> r.updated_at end) |> Enum.max()
+      end
 
-    if respondent.experiment_name do
-      %{
-        id: respondent.id,
-        phone_number: respondent.hashed_number,
-        survey_id: respondent.survey_id,
-        mode: respondent.mode,
-        effective_modes: respondent.effective_modes,
-        stats: respondent.stats,
-        questionnaire_id: respondent.questionnaire_id,
-        responses: responses,
-        disposition: respondent.disposition,
-        date: date,
-        updated_at: respondent.updated_at,
-        experiment_name: respondent.experiment_name
-      }
-    else
+    partial_relevant_answered_count =
+      if partial_relevant_enabled,
+        do: Session.partial_relevant_answered_count(respondent, false),
+        else: nil
+
+    responses =
+      render_many(respondent.responses, Ask.RespondentView, "response.json", as: :response)
+
+    put_if = fn map, key, value, condition ->
+      if condition, do: Map.put(map, key, value), else: map
+    end
+
+    result =
       %{
         id: respondent.id,
         phone_number: respondent.hashed_number,
@@ -131,7 +153,14 @@ defmodule Ask.RespondentView do
         date: date,
         updated_at: respondent.updated_at
       }
-    end
+      |> put_if.(:experiment_name, respondent.experiment_name, respondent.experiment_name)
+      |> put_if.(
+        :partial_relevant,
+        %{answered_count: partial_relevant_answered_count},
+        partial_relevant_enabled
+      )
+
+    result
   end
 
   def render("response.json", %{response: response}) do
@@ -226,5 +255,4 @@ defmodule Ask.RespondentView do
     }
 
   defp render_index_meta(%{respondents_count: respondents_count}), do: %{count: respondents_count}
-
 end

@@ -1,7 +1,7 @@
 defmodule Ask.Respondent do
   use Ask.Web, :model
   alias Ask.Ecto.Type.JSON
-  alias Ask.{Stats, Repo, Respondent, Survey}
+  alias Ask.{Stats, Repo, Respondent, Survey, Questionnaire}
 
   schema "respondents" do
     field :phone_number, :string # phone_number as-it-is in the respondents_list
@@ -43,7 +43,7 @@ defmodule Ask.Respondent do
     field :effective_modes, JSON
     field :mobile_web_cookie_code, :string
     field :language, :string
-    belongs_to :questionnaire, Ask.Questionnaire
+    belongs_to :questionnaire, Questionnaire
     belongs_to :survey, Ask.Survey
     belongs_to :respondent_group, Ask.RespondentGroup
     belongs_to :quota_bucket, Ask.QuotaBucket
@@ -248,5 +248,32 @@ defmodule Ask.Respondent do
     else
       Map.merge(respondent, changes)
     end
+  end
+
+  def stored_responses(respondent, persist \\ true),
+    do:
+      if(persist,
+        do: from(r in Ask.Response, where: r.respondent_id == ^respondent.id) |> Repo.all(),
+        else: respondent.responses
+      )
+
+  @doc """
+  This function was originally intended to check if there's a potential answer of a relevant question
+  for a specific survey by checking against the questionnaire assigned to every respondent at the
+  moment that the survey was launched or the respondent was added to a running survey
+  """
+  def any_partial_relevant_in_respondents?(respondents) do
+    all_distinct_questionnaires_in_respondents(respondents)
+    |> Questionnaire.any_partial_relevant_in_questionnaires?()
+  end
+
+  defp all_distinct_questionnaires_in_respondents(respondents) do
+    all_duplicated_questionnaires =
+      Enum.map(respondents, fn %{questionnaire: questionnaire} ->
+        questionnaire
+      end)
+      |> Enum.reject(&is_nil/1)
+
+    Enum.uniq(all_duplicated_questionnaires)
   end
 end

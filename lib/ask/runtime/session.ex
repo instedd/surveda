@@ -362,8 +362,7 @@ defmodule Ask.Runtime.Session do
 
   defp all_responses(respondent, reply, persist) do
     current_responses = Ask.Response.build_from_reply(reply)
-    stored_responses = if persist, do: from(r in Ask.Response, where: r.respondent_id == ^respondent.id) |> Repo.all, else: respondent.responses
-    current_responses ++ stored_responses
+    current_responses ++ Respondent.stored_responses(respondent, persist)
   end
 
   defp mobile_contact_reply(session) do
@@ -744,4 +743,10 @@ defmodule Ask.Runtime.Session do
       session
     end
   end
+
+  def partial_relevant_answered_count(%{questionnaire: questionnaire} = respondent, persist \\ true),
+    do:
+      Respondent.stored_responses(respondent, persist)
+      |> Enum.count(fn response -> Flow.relevant_response?(questionnaire, response) end)
+
 end

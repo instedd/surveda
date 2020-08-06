@@ -51,6 +51,15 @@ class RespondentRow extends Component<Props> {
           : null
         }
         {this.getModeAttemptsValues()}
+        {this.isFieldSelected('variant', 'variant') ? variantColumn : null}
+        {
+          respondent.partialRelevant &&
+            this.isFieldSelected('partial_relevant', 'answered_questions')
+            ? <td className='tdNumber'>
+              {respondent.partialRelevant.answeredCount}
+            </td>
+            : null
+        }
         {
           responses
             .filter(response => this.isFieldSelected('response', response.name))
@@ -68,7 +77,6 @@ class RespondentRow extends Component<Props> {
               </td>
             })
         }
-        {this.isFieldSelected('variant', 'variant') ? variantColumn : null}
       </tr>
     )
   }

@@ -31,6 +31,7 @@ defmodule Ask.RespondentController do
       |> Repo.get!(survey_id)
       |> assoc(:respondents)
       |> preload(:responses)
+      |> preload(:questionnaire)
       |> where(^filter_where)
 
     respondents_count = Repo.aggregate(filtered_query, :count, :id)
@@ -48,19 +49,36 @@ defmodule Ask.RespondentController do
 
     survey = Repo.get!(Survey, survey_id)
 
+    # TODO: Check the following question:
+    # We aren't considering the questionnaire of every respondent of the survey.
+    # We're considering only the questionnaires of the filtered respondents.
+    # Should we take in consideration the questionnaire of every respondent of the survey or this is enough?
+    partial_relevant_enabled = Respondent.any_partial_relevant_in_respondents?(respondents)
+
     render(conn, "index.json",
       respondents: respondents,
       respondents_count: respondents_count,
-      index_fields: index_fields_for_render(%{survey: survey, respondents: respondents})
+      partial_relevant_enabled: partial_relevant_enabled,
+      index_fields:
+        index_fields_for_render(%{
+          survey: survey,
+          respondents: respondents,
+          partial_relevant_enabled: partial_relevant_enabled
+        })
     )
   end
 
-  defp index_fields_for_render(%{survey: survey, respondents: respondents}),
-    do:
-      index_fields_for_render("fixed") ++
-        index_fields_for_render("mode", survey.mode) ++
-        index_fields_for_render("response", respondents) ++
-        index_fields_for_render("variant", survey.comparisons)
+  defp index_fields_for_render(%{
+         survey: survey,
+         respondents: respondents,
+         partial_relevant_enabled: partial_relevant_enabled
+       }),
+       do:
+         index_fields_for_render("fixed") ++
+           index_fields_for_render("mode", survey.mode) ++
+           index_fields_for_render("variant", survey.comparisons) ++
+           index_fields_for_render("partial_relevant", partial_relevant_enabled) ++
+           index_fields_for_render("response", respondents)
 
   defp index_fields_for_render("fixed" = field_type),
     do:
@@ -88,12 +106,20 @@ defmodule Ask.RespondentController do
   defp index_fields_for_render("variant" = field_type, _survey_comparisons),
     do: [index_field_for_render(field_type, "variant")]
 
+  defp index_fields_for_render("partial_relevant" = field_type, partial_relevant_enabled) do
+    if partial_relevant_enabled do
+      map_fields_with_type(["answered_questions"], field_type)
+    else
+      []
+    end
+  end
+
   defp map_fields_with_type(field_keys, field_type),
     do: Enum.map(field_keys, fn field_key -> index_field_for_render(field_type, field_key) end)
 
   defp index_field_for_render(field_type, field_key), do: %{type: field_type, key: field_key}
 
-  defp effective_stats(respondent) do
+    defp effective_stats(respondent) do
     effective_stats = case respondent.stats do
       %{attempts: %{"ivr" => _ivr_attempts}} = stats ->
         effective_attempts = Map.put(stats.attempts, "ivr", Ask.Stats.attempts(stats, :ivr))
@@ -601,7 +627,7 @@ defmodule Ask.RespondentController do
           where: ^filter_where,
           order_by: r2.id,
           limit: 1000,
-          preload: [:responses, :respondent_group],
+          preload: [:responses, :respondent_group, :questionnaire],
           select: r1
         ) |> Repo.all;
 
@@ -612,7 +638,9 @@ defmodule Ask.RespondentController do
       end,
       fn _ -> [] end)
 
-    render_results(conn, get_format(conn), project, survey, tz_offset, questionnaires, has_comparisons, all_fields, respondents)
+    partial_relevant_enabled = Respondent.any_partial_relevant_in_respondents?(respondents)
+
+    render_results(conn, get_format(conn), project, survey, tz_offset, questionnaires, has_comparisons, all_fields, respondents, partial_relevant_enabled)
   end
 
   defp add_params_to_filter(filter, params) do
@@ -634,7 +662,7 @@ defmodule Ask.RespondentController do
     filter
   end
 
-  defp render_results(conn, "json", _project, survey, _tz_offset, questionnaires, has_comparisons, _all_fields, respondents) do
+  defp render_results(conn, "json", _project, survey, _tz_offset, questionnaires, has_comparisons, _all_fields, respondents, partial_relevant_enabled) do
     respondents_count = Ask.RespondentStats.respondent_count(survey_id: ^survey.id)
     respondents = if has_comparisons do
       respondents
@@ -656,12 +684,12 @@ defmodule Ask.RespondentController do
     end
 
     {:ok, conn} = Repo.transaction(fn() ->
-      render(conn, "index.json", respondents: respondents, respondents_count: respondents_count)
+      render(conn, "index.json", respondents: respondents, respondents_count: respondents_count, partial_relevant_enabled: partial_relevant_enabled)
     end)
     conn
   end
 
-  defp render_results(conn, "csv", project, survey, tz_offset, questionnaires, has_comparisons, all_fields, respondents) do
+  defp render_results(conn, "csv", project, survey, tz_offset, questionnaires, has_comparisons, all_fields, respondents, _partial_relevant_enabled) do
     stats = survey.mode |> Enum.flat_map(fn(modes) ->
       modes |> Enum.flat_map(fn(mode) ->
         case mode do
