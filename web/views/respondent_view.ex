@@ -8,6 +8,86 @@ defmodule Ask.RespondentView do
     }
   end
 
+
+  def render("index_field.json", %{index_field: %{type: "fixed" = type, key: "phoneNumber" = key}}) do
+    %{
+      displayText: Ask.Gettext.gettext("Respondent ID"),
+      key: key,
+      type: type,
+      sortable: false,
+      data_type: "text"
+    }
+  end
+
+  def render("index_field.json", %{index_field: %{type: "fixed" = type, key: "disposition" = key}}) do
+    %{
+      displayText: Ask.Gettext.gettext("Disposition"),
+      key: key,
+      type: type,
+      sortable: false,
+      data_type: "text"
+    }
+  end
+
+  def render("index_field.json", %{index_field: %{type: "fixed" = type, key: "date" = key}}) do
+    %{
+      displayText: Ask.Gettext.gettext("Date"),
+      key: key,
+      type: type,
+      sortable: true,
+      data_type: "date"
+    }
+  end
+
+  def render("index_field.json", %{index_field: %{type: "mode" = type, key: "ivr" = key}}) do
+    %{
+      displayText: Ask.Gettext.gettext("IVR Attempts"),
+      key: key,
+      type: type,
+      sortable: false,
+      data_type: "number"
+    }
+  end
+
+  def render("index_field.json", %{index_field: %{type: "mode" = type, key: "sms" = key}}) do
+    %{
+      displayText: Ask.Gettext.gettext("SMS Attempts"),
+      key: key,
+      type: type,
+      sortable: false,
+      data_type: "number"
+    }
+  end
+
+  def render("index_field.json", %{index_field: %{type: "mode" = type, key: "mobileweb" = key}}) do
+    %{
+      displayText: Ask.Gettext.gettext("Mobileweb Attempts"),
+      key: key,
+      type: type,
+      sortable: false,
+      data_type: "number"
+    }
+  end
+
+  def render("index_field.json", %{index_field: %{type: "variant" = type, key: "variant" = key}}) do
+    %{
+      displayText: Ask.Gettext.gettext("Variant"),
+      key: key,
+      type: type,
+      sortable: false,
+      data_type: "text"
+    }
+  end
+
+  def render("index_field.json", %{index_field: %{type: "response" = type, key: variable}}) do
+    %{
+      displayText: String.capitalize(variable),
+      key: variable,
+      type: type,
+      sortable: false
+    }
+  end
+
   def render("show.json", %{respondent: respondent}) do
     %{data: render_one(respondent, Ask.RespondentView, "respondent.json")}
   end
@@ -141,90 +221,11 @@ defmodule Ask.RespondentView do
   end
 
   defp render_index_meta(%{respondents_count: respondents_count, index_fields: index_fields}),
-    do: %{count: respondents_count, fields: render_index_fields(index_fields)}
+    do: %{
+      count: respondents_count,
+      fields: render_many(index_fields, Ask.RespondentView, "index_field.json", as: :index_field)
+    }
 
   defp render_index_meta(%{respondents_count: respondents_count}), do: %{count: respondents_count}
 
-  defp render_index_fields(fields) do
-    Enum.map(fields, fn field -> render_index_field(field) end)
-  end
-
-  defp render_index_field(%{type: "fixed" = type, key: "phoneNumber" = key}) do
-    %{
-      displayText: Ask.Gettext.gettext("Respondent ID"),
-      key: key,
-      type: type,
-      sortable: false,
-      data_type: "text"
-    }
-  end
-
-  defp render_index_field(%{type: "fixed" = type, key: "disposition" = key}) do
-    %{
-      displayText: Ask.Gettext.gettext("Disposition"),
-      key: key,
-      type: type,
-      sortable: false,
-      data_type: "text"
-    }
-  end
-
-  defp render_index_field(%{type: "fixed" = type, key: "date" = key}) do
-    %{
-      displayText: Ask.Gettext.gettext("Date"),
-      key: key,
-      type: type,
-      sortable: true,
-      data_type: "date"
-    }
-  end
-
-  defp render_index_field(%{type: "mode" = type, key: "ivr" = key}) do
-    %{
-      displayText: Ask.Gettext.gettext("IVR Attempts"),
-      key: key,
-      type: type,
-      sortable: false,
-      data_type: "number"
-    }
-  end
-
-  defp render_index_field(%{type: "mode" = type, key: "sms" = key}) do
-    %{
-      displayText: Ask.Gettext.gettext("SMS Attempts"),
-      key: key,
-      type: type,
-      sortable: false,
-      data_type: "number"
-    }
-  end
-
-  defp render_index_field(%{type: "mode" = type, key: "mobileweb" = key}) do
-    %{
-      displayText: Ask.Gettext.gettext("Mobileweb Attempts"),
-      key: key,
-      type: type,
-      sortable: false,
-      data_type: "number"
-    }
-  end
-
-  defp render_index_field(%{type: "variant" = type, key: "variant" = key}) do
-    %{
-      displayText: Ask.Gettext.gettext("Variant"),
-      key: key,
-      type: type,
-      sortable: false,
-      data_type: "text"
-    }
-  end
-
-  defp render_index_field(%{type: "response" = type, key: variable}) do
-    %{
-      displayText: String.capitalize(variable),
-      key: variable,
-      type: type,
-      sortable: false
-    }
-  end
 end
