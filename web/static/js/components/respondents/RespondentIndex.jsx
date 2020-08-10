@@ -16,10 +16,7 @@ import {
   Tooltip,
   PagingFooter,
   MainAction,
-  Action,
-  Dropdown,
-  DropdownItem,
-  DropdownCheckboxItem
+  Action
 } from '../ui'
 import RespondentRow from './RespondentRow'
 import * as routes from '../../routes'
@@ -436,7 +433,7 @@ class RespondentIndex extends Component<Props, State> {
           <h5>{title}</h5>
           <p>{description}</p>
         </div>
-        <ul className='collection download-csv'>
+        <ul className='collection repondents-index-modal'>
           {itemType == 'file' && filter
             ? this.downloadItem('filtered-results', itemType)
             : null}
@@ -477,45 +474,60 @@ class RespondentIndex extends Component<Props, State> {
     }
   }
 
-  columnsPickerOption({ type, key, displayText, checked }) {
+  renderColumnPickerModal() {
+    const {fields, selectedFields, t} = this.props
+    const isFieldSelected = field => selectedFields
+      .some(uniqueKey => uniqueKey == fieldUniqueKey(field.type, field.key))
+    const onInputChange = (uniqueKey, newValue) =>
+      this.props.actions.setRespondentsFieldSelection(uniqueKey, newValue)
+
     return (
-      <DropdownCheckboxItem
-        key={Math.random().toString()}
-        defaultChecked={checked}
-        onClick={e => {
-          this.props.actions.setRespondentsFieldSelection(type, key, !checked)
-        }}
-        displayText={displayText}
-      />
+      <Modal
+        id={'bar'}
+        confirmationText='Foo'
+        card
+        className={'column-picker'}
+      >
+        <div className='card-title header'>
+          <h5>{t('Column picker')}</h5>
+          <p>{t('Selected columns')}</p>
+        </div>
+        <ul className='collection repondents-index-modal'>
+          {
+            fields.map(field => {
+              const uniqueKey = fieldUniqueKey(field.type, field.key)
+              const id = `column_picker_${uniqueKey}`
+              const checked = isFieldSelected(field)
+              return (
+                <li className='collection-item'>
+                  <input className='filled-in'
+                    id={id}
+                    key={id}
+                    type='checkbox'
+                    checked={checked}
+                    onChange={event => onInputChange(uniqueKey, !checked)}
+                  />
+                  <label htmlFor={id}>{field.displayText}</label>
+                </li>
+              )
+            })
+          }
+        </ul>
+      </Modal>
     )
   }
 
-  renderTitleWithColumnsPicker() {
-    const {t, fields, selectedFields, totalCount} = this.props
-    const isFieldSelected = (type, key) => selectedFields
-      .some(uniqueKey => uniqueKey == fieldUniqueKey(type, key))
+  renderTitleWithColumnsPickerButton() {
+    const {t, totalCount} = this.props
     const title = t('{{count}} respondent', {count: totalCount})
     return (
       <div className='respondent-index-table-title'>
         <div>
           {title}
         </div>
-        <Dropdown stopPropagationOnClick className='options columns-menu' dataBelowOrigin={false}
-          label={<i className='material-icons'>more_vert</i>}>
-          <DropdownItem className='dots'>
-            <i className='material-icons'>more_vert</i>
-          </DropdownItem>
-          {
-            fields.map(field =>
-              this.columnsPickerOption({
-                type: field.type,
-                key: field.key,
-                displayText: field.displayText,
-                checked: isFieldSelected(field.type, field.key)
-              })
-            )
-          }
-        </Dropdown>
+        <button className='transparent-button' onClick={() => $('#bar').modal('open')}>
+          <i className='material-icons'>more_vert</i>
+        </button>
       </div>
     )
   }
@@ -607,8 +619,9 @@ class RespondentIndex extends Component<Props, State> {
         </MainAction>
         { this.downloadModal({itemType: fileId}) }
         { this.downloadModal({itemType: linkId}) }
+        { this.renderColumnPickerModal() }
         { this.respondentsFilter() }
-        <CardTable title={this.renderTitleWithColumnsPicker()} footer={this.renderFooter()} tableScroll>
+        <CardTable title={this.renderTitleWithColumnsPickerButton()} footer={this.renderFooter()} tableScroll>
           <thead>
             <tr>
               {

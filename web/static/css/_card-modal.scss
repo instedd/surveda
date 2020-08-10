@@ -5,6 +5,10 @@
   max-width: 800px !important;
   min-width: 400px;
 
+  &.column-picker {
+    max-width: 400px !important;
+  }
+
   .modal-content {
     padding: 0;
   }
@@ -58,11 +62,13 @@
         -webkit-filter: grayscale(100%);
       }
     }
-    &.download-csv {
+    &.repondents-index-modal {
       padding: 1.5rem 0;
       background-color: #fff;
       li.collection-item {
         border: none;
+      }
+      li.collection-item.download {
         min-height: 6rem;
       }
       a.download {

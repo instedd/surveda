@@ -77,10 +77,9 @@ const receiveRespondents = (state, action) => {
 }
 
 const setRespondentsFieldSelection = (state, action) => {
-  const fieldKey = fieldUniqueKey(action.fieldType, action.fieldKey)
-  const selectField = () => [...state.selectedFields, fieldKey]
-  const unselectField = () => state.selectedFields.filter(key => key != fieldKey)
-  const isSelected = state.selectedFields.some(key => key == fieldKey)
+  const selectField = () => [...state.selectedFields, action.fieldUniqueKey]
+  const unselectField = () => state.selectedFields.filter(key => key != action.fieldUniqueKey)
+  const isSelected = state.selectedFields.some(key => key == action.fieldUniqueKey)
   const shouldSelectField = action.selected && !isSelected
   const shouldUnselectField = !action.selected && isSelected
 

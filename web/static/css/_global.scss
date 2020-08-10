@@ -8,6 +8,11 @@
   margin: 0 0 0.5rem 0 !important
 }
 
+.transparent-button {
+  border: none;
+  background-color: transparent !important;
+}
+
 .folder-header {
   @extend .black-text;
 
@@ -1511,12 +1516,9 @@ body.bdfh {
         margin-right: 5px;
         vertical-align: middle;
       }
-      &.checkbox {
-        padding: $dropdown-menu-item-padding;
-      }
       a {
         @extend .black-text;
-        padding: $dropdown-menu-item-padding;
+        padding: 14px 22px 14px 16px;
         white-space: nowrap;
         display: block;
       }

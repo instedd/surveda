@@ -1,4 +1,3 @@
-// TODO: Add flow check
 import { uniqueId } from 'lodash'
 import React, { Component, PropTypes } from 'react'
 export class Dropdown extends Component {
@@ -19,8 +18,7 @@ export class Dropdown extends Component {
   }
 
   componentDidMount() {
-    const {readOnly} = this.props
-    if (!readOnly) $(this.refs.node).dropdown()
+    if (!this.props.readOnly) $(this.refs.node).dropdown()
   }
 
   render() {
@@ -35,7 +33,7 @@ export class Dropdown extends Component {
           {label}
           {readOnly ? null : <i className={iconLeft ? 'material-icons left' : 'material-icons right'}>{icon}</i> }
         </a>
-        <ul id={this.dropdownId} className='dropdown-content' onClick={event => { event.stopPropagation() }}>
+        <ul id={this.dropdownId} className='dropdown-content'>
           {children}
         </ul>
       </span>
@@ -50,44 +48,6 @@ export const DropdownItem = ({children, className}) => (
 DropdownItem.propTypes = {
   children: PropTypes.node,
   className: PropTypes.string
-}
-
-export class DropdownCheckboxItem extends Component {
-  static propTypes = {
-    onClick: PropTypes.func,
-    defaultChecked: PropTypes.bool,
-    displayText: PropTypes.string
-  }
-
-  componentDidMount() {
-    const { onClick } = this.props
-    $(this.refs.li).on('click', function(event) {
-      // Prevent the menu from closing
-      event.stopPropagation()
-    })
-    $(this.refs.input).on('click', function(event) {
-      // Prevent the menu from closing
-      event.preventDefault()
-      onClick()
-    })
-  }
-
-  render() {
-    const { defaultChecked, displayText } = this.props
-    const id = uniqueId('dropdown_checkbox_')
-    return (
-      <li ref='li' className='checkbox'>
-        <input
-          id={id}
-          ref='input'
-          type='checkbox'
-          defaultChecked={defaultChecked}
-          className='filled-in'
-        />
-        <label htmlFor={id}>{displayText}</label>
-      </li>
-    )
-  }
 }
 
 export const DropdownDivider = () => (

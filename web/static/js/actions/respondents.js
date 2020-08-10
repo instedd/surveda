@@ -85,10 +85,9 @@ export const updateRespondentsFilter = (projectId, surveyId, filter) => (dispatc
   dispatch(fetchRespondents(projectId, surveyId, page.size, 1, filter, sortBy, sortAsc))
 }
 
-export const setRespondentsFieldSelection = (type, key, selected) => ({
+export const setRespondentsFieldSelection = (fieldUniqueKey, selected) => ({
   type: SET_RESPONDENTS_FIELD_SELECTION,
-  fieldType: type,
-  fieldKey: key,
+  fieldUniqueKey,
   selected
 })
 
