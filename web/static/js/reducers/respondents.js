@@ -55,9 +55,9 @@ const createOrUpdateRespondent = (state, action) => ({
 })
 
 const receiveRespondents = (state, action) => {
-  // Select every field except reponses (only the first time)
   const selectedFields = state.selectedFields.length || !action.fields
     ? state.selectedFields
+    // Select every field except responses (only the first time)
     : action.fields
         .filter(field => field.type != 'response')
         .map(field => fieldUniqueKey(field.type, field.key))
