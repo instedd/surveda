@@ -505,10 +505,9 @@ class RespondentIndex extends Component<Props, State> {
               const id = `column_picker_${uniqueKey}`
               const checked = this.isFieldSelected(uniqueKey)
               return (
-                <li className='collection-item'>
+                <li className='collection-item' key={id}>
                   <input className='filled-in'
                     id={id}
-                    key={id}
                     type='checkbox'
                     checked={checked}
                     onChange={event => onInputChange(uniqueKey, !checked)}
