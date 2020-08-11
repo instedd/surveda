@@ -51,43 +51,49 @@ defmodule Ask.RespondentController do
     render(conn, "index.json",
       respondents: respondents,
       respondents_count: respondents_count,
-      index_fields: fixed_index_fields()
-        ++ mode_index_fields(survey.mode)
-        ++ response_index_fields(respondents)
-        ++ variant_index_fields(survey.comparisons)
+      index_fields: index_fields_for_render(%{survey: survey, respondents: respondents})
     )
   end
 
-  defp fixed_index_fields() do
-    ["phoneNumber", "disposition", "date"]
-      |> present_fields("fixed")
-  end
+  defp index_fields_for_render(%{survey: survey, respondents: respondents}),
+    do:
+      index_fields_for_render("fixed") ++
+        index_fields_for_render("mode", survey.mode) ++
+        index_fields_for_render("response", respondents) ++
+        index_fields_for_render("variant", survey.comparisons)
 
-  defp mode_index_fields(survey_modes) do
-    List.flatten(survey_modes) |> Enum.uniq()
-      |> present_fields("mode")
-  end
+  defp index_fields_for_render("fixed" = field_type),
+    do:
+      ["phoneNumber", "disposition", "date"]
+      |> map_fields_with_type(field_type)
 
-  defp variant_index_fields([]) do
-    []
-  end
+  defp index_fields_for_render("mode" = field_type, survey_modes),
+    do:
+      List.flatten(survey_modes)
+      |> Enum.uniq()
+      |> map_fields_with_type(field_type)
 
-  defp variant_index_fields(_) do
-    [ "variant" ] |> present_fields("variant")
-  end
-
-  defp response_index_fields(respondents) do
-    all_duplicated_fields =
+  defp index_fields_for_render("response" = field_type, respondents) do
+    all_duplicated_responses_keys =
       Enum.flat_map(respondents, fn %{responses: responses} ->
         Enum.map(responses, fn %{field_name: field_name} -> field_name end)
       end)
-    Enum.uniq(all_duplicated_fields)
-      |> present_fields("response")
+
+    Enum.uniq(all_duplicated_responses_keys)
+    |> map_fields_with_type(field_type)
   end
 
-  defp present_fields(fields, type) do
-    Enum.map(fields, fn field -> %{ type: type, key: field } end)
+  defp index_fields_for_render("variant" = _type, []), do:
+    []
+
+  defp index_fields_for_render("variant" = field_type, _) do
+    [index_field_for_render(field_type, "variant")]
   end
+
+  defp index_field_for_render(field_type, field_key), do: %{type: field_type, key: field_key}
+
+  defp map_fields_with_type(field_keys, field_type), do:
+    Enum.map(field_keys, fn field_key -> index_field_for_render(field_type, field_key) end)
 
   defp effective_stats(respondent) do
     effective_stats = case respondent.stats do
