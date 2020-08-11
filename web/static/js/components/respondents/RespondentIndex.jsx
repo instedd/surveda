@@ -609,7 +609,7 @@ class RespondentIndex extends Component<Props, State> {
       return hasResponded(rs, respondentId, fieldName) ? rs[respondentId].responses[fieldName] : '-'
     }
 
-    const responseFieldsKeys = this.props.fields
+    const responseKeys = this.props.fields
       .filter(field => field.type == 'response')
       .map(field => field.key)
 
@@ -617,7 +617,7 @@ class RespondentIndex extends Component<Props, State> {
       .filter(field => field.type == 'fixed')
       .length
 
-    let colspan = responseFieldsKeys.length + fixedFieldsCount
+    let colspan = responseKeys.length + fixedFieldsCount
     const [fileId, linkId] = ['file', 'link']
 
     return (
@@ -669,7 +669,7 @@ class RespondentIndex extends Component<Props, State> {
                 variantColumn = <td>{variantValue}</td>
               }
 
-              const responses = responseFieldsKeys.map((responseKey) => {
+              const responses = responseKeys.map((responseKey) => {
                 return {
                   name: responseKey,
                   value: responseOf(respondents, respondent.id, responseKey)
