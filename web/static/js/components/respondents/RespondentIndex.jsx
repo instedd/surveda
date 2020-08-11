@@ -26,6 +26,7 @@ import flatten from 'lodash/flatten'
 import { translate } from 'react-i18next'
 import classNames from 'classnames/bind'
 import RespondentsFilter from './RespondentsFilter'
+import { uniqueId } from 'lodash'
 
 type Props = {
   t: Function,
@@ -68,6 +69,7 @@ class RespondentIndex extends Component<Props, State> {
   refreshIncentivesLink: Function
   refreshInteractionsLink: Function
   refreshDispositionHistoryLink: Function
+  columnPickerModalId: string
 
   constructor(props) {
     super(props)
@@ -80,6 +82,7 @@ class RespondentIndex extends Component<Props, State> {
     this.refreshIncentivesLink = this.refreshIncentivesLink.bind(this)
     this.refreshInteractionsLink = this.refreshInteractionsLink.bind(this)
     this.refreshDispositionHistoryLink = this.refreshDispositionHistoryLink.bind(this)
+    this.columnPickerModalId = uniqueId('column-picker-modal-id_')
   }
 
   componentDidMount() {
@@ -487,8 +490,7 @@ class RespondentIndex extends Component<Props, State> {
 
     return (
       <Modal
-        id={'bar'}
-        confirmationText='Foo'
+        id={this.columnPickerModalId}
         card
         className={'column-picker'}
       >
@@ -529,7 +531,9 @@ class RespondentIndex extends Component<Props, State> {
         <div>
           {title}
         </div>
-        <button className='transparent-button valign-wrapper' onClick={() => $('#bar').modal('open')}>
+        <button className='transparent-button valign-wrapper'
+          onClick={() => $(`#${this.columnPickerModalId}`).modal('open')}
+        >
           <i className='material-icons'>more_vert</i>
         </button>
       </div>
