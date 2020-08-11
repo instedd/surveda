@@ -521,11 +521,11 @@ class RespondentIndex extends Component<Props, State> {
     const {t, totalCount} = this.props
     const title = t('{{count}} respondent', {count: totalCount})
     return (
-      <div className='respondent-index-table-title'>
+      <div className='valign-wrapper'>
         <div>
           {title}
         </div>
-        <button className='transparent-button' onClick={() => $('#bar').modal('open')}>
+        <button className='transparent-button valign-wrapper' onClick={() => $('#bar').modal('open')}>
           <i className='material-icons'>more_vert</i>
         </button>
       </div>
