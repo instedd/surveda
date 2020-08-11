@@ -3,7 +3,7 @@ import React, { Component } from 'react'
 import { bindActionCreators } from 'redux'
 import { connect } from 'react-redux'
 import * as actions from '../../actions/respondents'
-import { fieldUniqueKey } from '../../reducers/respondents'
+import { fieldUniqueKey, isFieldSelected } from '../../reducers/respondents'
 import * as surveyActions from '../../actions/survey'
 import * as projectActions from '../../actions/project'
 import * as questionnairesActions from '../../actions/questionnaires'
@@ -448,6 +448,7 @@ class RespondentIndex extends Component<Props, State> {
 
   renderHeader({ displayText, type, key, sortable, dataType }) {
     const { sortBy, sortAsc } = this.props
+    const uniqueKey = fieldUniqueKey(type, key)
     let className = classNames({
       thNumber: dataType === 'number',
       thDate: dataType === 'date'
@@ -461,23 +462,26 @@ class RespondentIndex extends Component<Props, State> {
           sortBy={sortBy}
           sortAsc={sortAsc}
           onClick={() => this.sortBy(key)}
-          key={fieldUniqueKey(type, key)}
+          key={uniqueKey}
           className={className}
         />
       )
     } else {
       return (
-        <th className={className} key={fieldUniqueKey(type, key)}>
+        <th className={className} key={uniqueKey}>
           {displayText}
         </th>
       )
     }
   }
 
+  isFieldSelected(uniqueKey) {
+    const { selectedFields } = this.props
+    return isFieldSelected(selectedFields, uniqueKey)
+  }
+
   renderColumnPickerModal() {
-    const {fields, selectedFields, t} = this.props
-    const isFieldSelected = field => selectedFields
-      .some(uniqueKey => uniqueKey == fieldUniqueKey(field.type, field.key))
+    const {fields, t} = this.props
     const onInputChange = (uniqueKey, newValue) =>
       this.props.actions.setRespondentsFieldSelection(uniqueKey, newValue)
 
@@ -497,7 +501,7 @@ class RespondentIndex extends Component<Props, State> {
             fields.map(field => {
               const uniqueKey = fieldUniqueKey(field.type, field.key)
               const id = `column_picker_${uniqueKey}`
-              const checked = isFieldSelected(field)
+              const checked = this.isFieldSelected(uniqueKey)
               return (
                 <li className='collection-item'>
                   <input className='filled-in'
@@ -626,7 +630,7 @@ class RespondentIndex extends Component<Props, State> {
             <tr>
               {
                 fields
-                  .filter(field => selectedFields.some(key => key == fieldUniqueKey(field.type, field.key)))
+                  .filter(field => this.isFieldSelected(fieldUniqueKey(field.type, field.key)))
                   .map(field =>
                     this.renderHeader({
                       displayText: field.displayText,

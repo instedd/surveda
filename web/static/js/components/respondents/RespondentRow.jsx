@@ -3,7 +3,7 @@ import React, {Component} from 'react'
 import dateformat from 'dateformat'
 import languageNames from 'language-names'
 import capitalize from 'lodash/capitalize'
-import { fieldUniqueKey } from '../../reducers/respondents'
+import { fieldUniqueKey, isFieldSelected } from '../../reducers/respondents'
 
 type Props = {
   respondent: Respondent,
@@ -18,7 +18,7 @@ class RespondentRow extends Component<Props> {
 
   isFieldSelected(fieldType: string, fieldKey: string) {
     const { selectedFields } = this.props
-    return selectedFields.some(key => key == fieldUniqueKey(fieldType, fieldKey))
+    return isFieldSelected(selectedFields, fieldUniqueKey(fieldType, fieldKey))
   }
 
   getModeAttemptsValues() {
