@@ -547,6 +547,10 @@ class RespondentIndex extends Component<Props, State> {
     )
   }
 
+  fieldDataType(field, isNumeric) {
+    return field.type == 'response' && isNumeric ? 'number' : field.dataType
+  }
+
   render() {
     const { project,
       survey,
@@ -637,7 +641,7 @@ class RespondentIndex extends Component<Props, State> {
                       key: field.key,
                       sortable: field.sortable,
                       type: field.type,
-                      dataType: field.dataType
+                      dataType: this.fieldDataType(field, this.fieldIsNumeric(numericFields, field.key))
                     })
                   )
               }
