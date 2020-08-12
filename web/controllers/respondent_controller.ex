@@ -83,17 +83,15 @@ defmodule Ask.RespondentController do
     |> map_fields_with_type(field_type)
   end
 
-  defp index_fields_for_render("variant" = _type, []), do:
-    []
+  defp index_fields_for_render("variant" = _field_type, [] = _survey_comparisons), do: []
 
-  defp index_fields_for_render("variant" = field_type, _) do
-    [index_field_for_render(field_type, "variant")]
-  end
+  defp index_fields_for_render("variant" = field_type, _survey_comparisons),
+    do: [index_field_for_render(field_type, "variant")]
+
+  defp map_fields_with_type(field_keys, field_type),
+    do: Enum.map(field_keys, fn field_key -> index_field_for_render(field_type, field_key) end)
 
   defp index_field_for_render(field_type, field_key), do: %{type: field_type, key: field_key}
-
-  defp map_fields_with_type(field_keys, field_type), do:
-    Enum.map(field_keys, fn field_key -> index_field_for_render(field_type, field_key) end)
 
   defp effective_stats(respondent) do
     effective_stats = case respondent.stats do
