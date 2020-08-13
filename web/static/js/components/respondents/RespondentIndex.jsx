@@ -554,13 +554,37 @@ class RespondentIndex extends Component<Props, State> {
     return field.type == 'response' && isNumeric ? 'number' : field.dataType
   }
 
+  renderHeaders(numericFields) {
+    const {fields} = this.props
+    const selectedFields = fields
+      .filter(field => this.isFieldSelected(fieldUniqueKey(field.type, field.key)))
+    return (
+      <tr>
+        {
+          selectedFields.length
+          ? selectedFields
+            .map(field =>
+              this.renderHeader({
+                displayText: field.displayText,
+                key: field.key,
+                sortable: field.sortable,
+                type: field.type,
+                dataType: this.fieldDataType(field, this.fieldIsNumeric(numericFields, field.key))
+              })
+            )
+          // If no field is selected, render an empty header
+          : <th className='center'>-</th>
+        }
+      </tr>
+    )
+  }
+
   render() {
     const { project,
       survey,
       questionnaires,
       order,
       t,
-      fields,
       selectedFields
     } = this.props
     const loading = (
@@ -634,21 +658,7 @@ class RespondentIndex extends Component<Props, State> {
         { this.respondentsFilter() }
         <CardTable title={this.renderTitleWithColumnsPickerButton()} footer={this.renderFooter()} tableScroll>
           <thead>
-            <tr>
-              {
-                fields
-                  .filter(field => this.isFieldSelected(fieldUniqueKey(field.type, field.key)))
-                  .map(field =>
-                    this.renderHeader({
-                      displayText: field.displayText,
-                      key: field.key,
-                      sortable: field.sortable,
-                      type: field.type,
-                      dataType: this.fieldDataType(field, this.fieldIsNumeric(numericFields, field.key))
-                    })
-                  )
-              }
-            </tr>
+            { this.renderHeaders(numericFields) }
           </thead>
           <tbody>
             { order.map((respondentId, index) => {

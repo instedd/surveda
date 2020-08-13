@@ -36,9 +36,11 @@ class RespondentRow extends Component<Props> {
   }
 
   render() {
-    const {respondent, responses, variantColumn, cellClassNames} = this.props
+    const {respondent, responses, variantColumn, cellClassNames, selectedFields} = this.props
     return (
       <tr key={respondent.id}>
+        {/* If no field is selected, render an empty row */}
+        {selectedFields.length ? null : <td className='center'>-</td>}
         {this.isFieldSelected('fixed', 'phoneNumber') ? <td>{respondent.phoneNumber}</td> : null}
         {this.isFieldSelected('fixed', 'disposition') ? <td>{capitalize(respondent.disposition)}</td> : null}
         {
