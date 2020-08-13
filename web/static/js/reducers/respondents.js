@@ -14,7 +14,7 @@ const initialState = {
   },
   filter: null,
   fields: null,
-  selectedFields: []
+  selectedFields: null
 }
 
 export default (state = initialState, action) => {
@@ -55,7 +55,7 @@ const createOrUpdateRespondent = (state, action) => ({
 })
 
 const receiveRespondents = (state, action) => {
-  const selectedFields = state.selectedFields.length || !action.fields
+  const selectedFields = state.selectedFields || !action.fields
     ? state.selectedFields
     // Select every field except responses (only the first time)
     : action.fields

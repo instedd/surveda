@@ -731,7 +731,7 @@ const mapStateToProps = (state, ownProps) => {
     sortAsc,
     filter,
     fields: fields || [],
-    selectedFields
+    selectedFields: selectedFields || []
   }
 }
 
