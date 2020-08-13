@@ -7,6 +7,12 @@
 
   &.column-picker {
     max-width: 400px !important;
+    ul {
+      // The ideal formula should consider cutting the last field option just in the middle
+      // So the user can easily notice they need to scroll to see the options below
+      max-height: calc(95.5vh - 274px); // 274px stands for (header + footer) approx
+      overflow: auto;
+    }
   }
 
   .modal-content {
