@@ -10,7 +10,7 @@ defmodule Ask.RespondentView do
 
   def render("index_field.json", %{index_field: %{type: "fixed" = type, key: "phone_number" = key}}) do
     %{
-      displayText: Ask.Gettext.gettext("Respondent ID"),
+      display_text: Ask.Gettext.gettext("Respondent ID"),
       key: key,
       type: type,
       sortable: false,
@@ -20,7 +20,7 @@ defmodule Ask.RespondentView do
 
   def render("index_field.json", %{index_field: %{type: "fixed" = type, key: "disposition" = key}}) do
     %{
-      displayText: Ask.Gettext.gettext("Disposition"),
+      display_text: Ask.Gettext.gettext("Disposition"),
       key: key,
       type: type,
       sortable: false,
@@ -30,7 +30,7 @@ defmodule Ask.RespondentView do
 
   def render("index_field.json", %{index_field: %{type: "fixed" = type, key: "date" = key}}) do
     %{
-      displayText: Ask.Gettext.gettext("Date"),
+      display_text: Ask.Gettext.gettext("Date"),
       key: key,
       type: type,
       sortable: true,
@@ -40,7 +40,7 @@ defmodule Ask.RespondentView do
 
   def render("index_field.json", %{index_field: %{type: "mode" = type, key: "ivr" = key}}) do
     %{
-      displayText: Ask.Gettext.gettext("IVR Attempts"),
+      display_text: Ask.Gettext.gettext("IVR Attempts"),
       key: key,
       type: type,
       sortable: false,
@@ -50,7 +50,7 @@ defmodule Ask.RespondentView do
 
   def render("index_field.json", %{index_field: %{type: "mode" = type, key: "sms" = key}}) do
     %{
-      displayText: Ask.Gettext.gettext("SMS Attempts"),
+      display_text: Ask.Gettext.gettext("SMS Attempts"),
       key: key,
       type: type,
       sortable: false,
@@ -60,7 +60,7 @@ defmodule Ask.RespondentView do
 
   def render("index_field.json", %{index_field: %{type: "mode" = type, key: "mobileweb" = key}}) do
     %{
-      displayText: Ask.Gettext.gettext("Mobileweb Attempts"),
+      display_text: Ask.Gettext.gettext("Mobileweb Attempts"),
       key: key,
       type: type,
       sortable: false,
@@ -70,7 +70,7 @@ defmodule Ask.RespondentView do
 
   def render("index_field.json", %{index_field: %{type: "variant" = type, key: "variant" = key}}) do
     %{
-      displayText: Ask.Gettext.gettext("Variant"),
+      display_text: Ask.Gettext.gettext("Variant"),
       key: key,
       type: type,
       sortable: false,
@@ -78,10 +78,10 @@ defmodule Ask.RespondentView do
     }
   end
 
-  def render("index_field.json", %{index_field: %{type: "response" = type, key: variable}}) do
+  def render("index_field.json", %{index_field: %{type: type, key: key}}) do
     %{
-      displayText: String.capitalize(variable),
-      key: variable,
+      display_text: String.capitalize(key),
+      key: key,
       type: type,
       sortable: false
     }
