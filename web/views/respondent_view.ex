@@ -8,8 +8,7 @@ defmodule Ask.RespondentView do
     }
   end
 
-
-  def render("index_field.json", %{index_field: %{type: "fixed" = type, key: "phoneNumber" = key}}) do
+  def render("index_field.json", %{index_field: %{type: "fixed" = type, key: "phone_number" = key}}) do
     %{
       displayText: Ask.Gettext.gettext("Respondent ID"),
       key: key,

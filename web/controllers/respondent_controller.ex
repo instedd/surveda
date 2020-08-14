@@ -64,7 +64,7 @@ defmodule Ask.RespondentController do
 
   defp index_fields_for_render("fixed" = field_type),
     do:
-      ["phoneNumber", "disposition", "date"]
+      ["phone_number", "disposition", "date"]
       |> map_fields_with_type(field_type)
 
   defp index_fields_for_render("mode" = field_type, survey_modes),
