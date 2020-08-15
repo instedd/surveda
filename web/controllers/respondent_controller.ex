@@ -49,11 +49,7 @@ defmodule Ask.RespondentController do
 
     survey = Repo.get!(Survey, survey_id)
 
-    # TODO: Check the following question:
-    # We aren't considering the questionnaire of every respondent of the survey.
-    # We're considering only the questionnaires of the filtered respondents.
-    # Should we take in consideration the questionnaire of every respondent of the survey or this is enough?
-    partial_relevant_enabled = Respondent.any_partial_relevant_in_respondents?(respondents)
+    partial_relevant_enabled = partial_relevant_enabled_in_survey?(survey_id)
 
     render(conn, "index.json",
       respondents: respondents,
@@ -638,7 +634,7 @@ defmodule Ask.RespondentController do
       end,
       fn _ -> [] end)
 
-    partial_relevant_enabled = Respondent.any_partial_relevant_in_respondents?(respondents)
+    partial_relevant_enabled = partial_relevant_enabled_in_survey?(survey_id)
 
     render_results(conn, get_format(conn), project, survey, tz_offset, questionnaires, has_comparisons, all_fields, respondents, partial_relevant_enabled)
   end
@@ -1007,4 +1003,15 @@ defmodule Ask.RespondentController do
 
     Ask.TimeUtil.format(Ecto.DateTime.cast!(dt), offset_seconds, tz_offset)
   end
+
+  # TODO: check if there's a better way or if this is good enough
+  defp partial_relevant_enabled_in_survey?(survey_id),
+    do:
+      from(q in Questionnaire,
+        join: r in Respondent,
+        where: r.survey_id == ^survey_id,
+        distinct: true
+      )
+      |> Repo.all()
+      |> Questionnaire.any_partial_relevant_in_questionnaires?()
 end
