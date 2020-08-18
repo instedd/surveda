@@ -15,6 +15,8 @@ defmodule Ask.RespondentController do
     RespondentsFilter
   }
 
+  alias Ask.Runtime.Session
+
   def index(conn, %{"project_id" => project_id, "survey_id" => survey_id} = params) do
     limit = Map.get(params, "limit", "")
     page = Map.get(params, "page", "")
@@ -685,7 +687,7 @@ defmodule Ask.RespondentController do
     conn
   end
 
-  defp render_results(conn, "csv", project, survey, tz_offset, questionnaires, has_comparisons, all_fields, respondents, _partial_relevant_enabled) do
+  defp render_results(conn, "csv", project, survey, tz_offset, questionnaires, has_comparisons, all_fields, respondents, partial_relevant_enabled) do
     stats = survey.mode |> Enum.flat_map(fn(modes) ->
       modes |> Enum.flat_map(fn(mode) ->
         case mode do
@@ -737,6 +739,31 @@ defmodule Ask.RespondentController do
 
         row = row ++ [respondent_group]
 
+        questionnaire_id = respondent.questionnaire_id
+        mode = respondent.mode
+
+        row = if has_comparisons do
+          variant = if questionnaire_id && mode do
+            questionnaire = questionnaires |> Enum.find(fn q -> q.id == questionnaire_id end)
+            if questionnaire do
+              experiment_name(questionnaire, mode)
+            else
+              "-"
+            end
+          else
+            "-"
+          end
+          row ++ [variant]
+        else
+          row
+        end
+
+        row = if partial_relevant_enabled do
+          row ++ [Session.partial_relevant_answered_count(respondent, false)]
+        else
+          row
+        end
+
         # We traverse all fields and see if there's a response for this respondent
         row = all_fields |> Enum.reduce(row, fn field_name, acc ->
           response = responses
@@ -758,27 +785,10 @@ defmodule Ask.RespondentController do
           end
         end)
 
-        questionnaire_id = respondent.questionnaire_id
-        mode = respondent.mode
-
-        row = if has_comparisons do
-          variant = if questionnaire_id && mode do
-            questionnaire = questionnaires |> Enum.find(fn q -> q.id == questionnaire_id end)
-            if questionnaire do
-              experiment_name(questionnaire, mode)
-            else
-              "-"
-            end
-          else
-            "-"
-          end
-          row ++ [variant]
-        else
-          row
-        end
-
         row
     end)
+
+    append_if = fn list, elems, condition -> if condition, do: list ++ elems, else: list end
 
     # Add header to csv_rows
     header = ["respondent_id", "disposition", "date", "modes", "user_stopped"]
@@ -793,12 +803,9 @@ defmodule Ask.RespondentController do
       end
     end)
     header = header ++ ["section_order", "sample_file"]
+    header = append_if.(header, ["variant"], has_comparisons)
+    header = append_if.(header, ["p_relevants"], partial_relevant_enabled)
     header = header ++ all_fields
-    header = if has_comparisons do
-      header ++ ["variant"]
-    else
-      header
-    end
 
     rows = Stream.concat([[header], csv_rows])
 

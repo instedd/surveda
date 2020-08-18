@@ -1501,9 +1501,9 @@ defmodule Ask.RespondentControllerTest do
       csv = response(conn, 200)
 
       [line1, line2, line3, _] = csv |> String.split("\r\n")
-      assert line1 == "respondent_id,disposition,date,modes,user_stopped,total_sent_sms,total_received_sms,sms_attempts,section_order,sample_file,Smokes,Exercises,Perfect_Number,Question,variant"
+      assert line1 == "respondent_id,disposition,date,modes,user_stopped,total_sent_sms,total_received_sms,sms_attempts,section_order,sample_file,variant,Smokes,Exercises,Perfect_Number,Question"
 
-      [line_2_hashed_number, line_2_disp, _, _, _, _, _, line_2_sms_attempts, _, _,line_2_smoke, _, line_2_number, _, line_2_variant] = [line2] |> Stream.map(&(&1)) |> CSV.decode |> Enum.to_list |> hd
+      [line_2_hashed_number, line_2_disp, _, _, _, _, _, line_2_sms_attempts, _, _, line_2_variant, line_2_smoke, _, line_2_number, _] = [line2] |> Stream.map(&(&1)) |> CSV.decode |> Enum.to_list |> hd
       assert line_2_hashed_number == respondent_1.hashed_number |> to_string
       assert line_2_smoke == "Yes"
       assert line_2_number == "No"
@@ -1511,7 +1511,7 @@ defmodule Ask.RespondentControllerTest do
       assert line_2_disp == "Partial"
       assert line_2_sms_attempts == "2"
 
-      [line_3_hashed_number, line_3_disp, _, _, _, _, _, line_3_sms_attempts, _, _,line_3_smoke, _, line_3_number, _, line_3_variant] = [line3] |> Stream.map(&(&1)) |> CSV.decode |> Enum.to_list |> hd
+      [line_3_hashed_number, line_3_disp, _, _, _, _, _, line_3_sms_attempts, _, _, line_3_variant, line_3_smoke, _, line_3_number, _] = [line3] |> Stream.map(&(&1)) |> CSV.decode |> Enum.to_list |> hd
       assert line_3_hashed_number == respondent_2.hashed_number |> to_string
       assert line_3_smoke == "No"
       assert line_3_number == ""
