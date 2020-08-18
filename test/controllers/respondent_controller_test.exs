@@ -3,8 +3,21 @@ defmodule Ask.RespondentControllerTest do
   use Ask.TestHelpers
   use Ask.DummySteps
 
-  alias Ask.{QuotaBucket, Survey, SurveyLogEntry, Response, Respondent, ShortLink, Stats, ActivityLog}
+  alias Ask.{
+    QuotaBucket,
+    Survey,
+    SurveyLogEntry,
+    Response,
+    Respondent,
+    ShortLink,
+    Stats,
+    ActivityLog,
+    QuestionnaireRelevantSteps,
+    Schedule,
+    TestChannel
+  }
 
+  alias Ask.Runtime.ChannelStatusServer
 
   @empty_stats %{
     "attempts" => nil,
@@ -1022,6 +1035,76 @@ defmodule Ask.RespondentControllerTest do
       assert respondent["stats"]["attempts"]["ivr"] == 3, "should be 3 since pending_call = false and ivr: 3"
     end
 
+  end
+
+  describe "relevant steps" do
+    setup %{conn: conn} do
+      {:ok, conn: conn, user: user} = user(%{conn: conn})
+
+      project = create_project_for_user(user)
+      mode = "sms"
+      steps = QuestionnaireRelevantSteps.all_relevant_steps()
+
+      partial_relevant_config = %{
+        "enabled" => true,
+        "min_relevant_steps" => 2,
+        "ignored_values" => ""
+      }
+
+      questionnaire =
+        insert(
+          :questionnaire,
+          name: "test",
+          project: project,
+          steps: steps,
+          partial_relevant_config: partial_relevant_config
+        )
+
+      survey =
+        insert(
+          :survey,
+          project: project,
+          schedule: Schedule.always(),
+          state: "running",
+          questionnaires: [questionnaire],
+          mode: [[mode]]
+        )
+
+      channel =
+        insert(
+          :channel,
+          settings: TestChannel.new() |> TestChannel.settings(),
+          type: mode
+        )
+
+      group = insert(:respondent_group, survey: survey, respondents_count: 1)
+      insert(:respondent_group_channel, respondent_group: group, channel: channel, mode: mode)
+      insert(:respondent, survey: survey, respondent_group: group)
+
+      ChannelStatusServer.start_link()
+      Broker.start_link()
+      Broker.poll()
+
+      {:ok, conn: conn, user: user, survey: survey}
+    end
+
+    test "CSV with no responses", %{conn: conn, survey: survey} do
+      csv =
+        get(
+          conn,
+          project_survey_respondents_results_path(conn, :results, survey.project.id, survey.id, %{
+            "offset" => "0",
+            "_format" => "csv"
+          }))
+          |> response(200)
+
+      [header, respondent, _] = String.split(csv, "\r\n")
+      p_relevants_header = String.split(header, ",") |> Enum.at(10)
+      {p_relevants_count, _remainder_of_binary} = String.split(respondent, ",") |> Enum.at(10) |> Integer.parse()
+
+      assert p_relevants_header == "p_relevants"
+      assert p_relevants_count == 0
+    end
   end
 
   describe "download" do
