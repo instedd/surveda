@@ -1088,6 +1088,32 @@ defmodule Ask.RespondentControllerTest do
       {:ok, conn: conn, user: user, survey: survey}
     end
 
+    test "index with no responses", %{conn: conn, survey: survey} do
+      %{
+        "meta" => %{"fields" => fields},
+        "data" => %{
+          "respondents" => [
+            %{
+              "partial_relevant" => %{
+                "answered_count" => answered_count
+              }
+            }
+          ]
+        }
+      } = get(conn, project_survey_respondent_path(conn, :index, survey.project.id, survey.id))
+        |> json_response(200)
+
+      assert Enum.at(fields, 4) == %{
+        "data_type" => "number",
+        "display_text" => "Relevants",
+        "key" => "answered_questions",
+        "sortable" => false,
+        "type" => "partial_relevant"
+      }
+
+      assert answered_count == 0
+    end
+
     test "CSV with no responses", %{conn: conn, survey: survey} do
       csv =
         get(
