@@ -12,7 +12,9 @@ const initialState = {
     size: 5,
     totalCount: 0
   },
-  filter: null
+  filter: null,
+  fields: null,
+  selectedFields: null
 }
 
 export default (state = initialState, action) => {
@@ -21,6 +23,7 @@ export default (state = initialState, action) => {
     case actions.CREATE_RESPONDENT: return createOrUpdateRespondent(state, action)
     case actions.UPDATE_RESPONDENT: return createOrUpdateRespondent(state, action)
     case actions.RECEIVE_RESPONDENTS: return receiveRespondents(state, action)
+    case actions.SET_RESPONDENTS_FIELD_SELECTION: return setRespondentsFieldSelection(state, action)
     default: return state
   }
 }
@@ -51,14 +54,54 @@ const createOrUpdateRespondent = (state, action) => ({
   }
 })
 
-const receiveRespondents = (state, action) => ({
-  ...state,
-  fetching: false,
-  items: action.respondents,
-  order: action.order,
-  page: {
-    ...state.page,
-    number: action.page,
-    totalCount: action.respondentsCount
+const receiveRespondents = (state, action) => {
+  const selectedFields = state.selectedFields || !action.fields
+    ? state.selectedFields
+    // Select every field except responses (only the first time)
+    : action.fields
+        .filter(field => field.type != 'response')
+        .map(field => fieldUniqueKey(field.type, field.key))
+  return {
+    ...state,
+    fetching: false,
+    items: action.respondents,
+    order: action.order,
+    page: {
+      ...state.page,
+      number: action.page,
+      totalCount: action.respondentsCount
+    },
+    fields: action.fields,
+    selectedFields: selectedFields
   }
-})
+}
+
+const setRespondentsFieldSelection = (state, action) => {
+  const selectField = () => [...state.selectedFields, action.fieldUniqueKey]
+  const unselectField = () => state.selectedFields.filter(key => key != action.fieldUniqueKey)
+  const isSelected = isFieldSelected(state.selectedFields, action.fieldUniqueKey)
+  const shouldSelectField = action.selected && !isSelected
+  const shouldUnselectField = !action.selected && isSelected
+
+  const selectedFields = () => {
+    if (shouldSelectField) {
+      return selectField()
+    } else if (shouldUnselectField) {
+      return unselectField()
+    } else {
+      return state.selectedFields
+    }
+  }
+
+  return {
+    ...state,
+    selectedFields: selectedFields()
+  }
+}
+
+export const fieldUniqueKey = (type, key) => `${type}_${key}`
+
+export const isFieldSelected = (selectedFields, uniqueKey) =>
+  selectedFields.some(
+    selectedFieldUniqueKey => selectedFieldUniqueKey == uniqueKey
+  )

@@ -5,6 +5,16 @@
   max-width: 800px !important;
   min-width: 400px;
 
+  &.column-picker {
+    max-width: 400px !important;
+    ul {
+      // The ideal formula should consider cutting the last field option just in the middle
+      // So the user can easily notice they need to scroll to see the options below
+      max-height: calc(95.5vh - 274px); // 274px stands for (header + footer) approx
+      overflow: auto;
+    }
+  }
+
   .modal-content {
     padding: 0;
   }
@@ -58,11 +68,13 @@
         -webkit-filter: grayscale(100%);
       }
     }
-    &.download-csv {
+    &.repondents-index-modal {
       padding: 1.5rem 0;
       background-color: #fff;
       li.collection-item {
         border: none;
+      }
+      li.collection-item.download {
         min-height: 6rem;
       }
       a.download {

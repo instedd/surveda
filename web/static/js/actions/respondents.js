@@ -6,6 +6,7 @@ export const CREATE_RESPONDENT = 'CREATE_RESPONDENT'
 export const UPDATE_RESPONDENT = 'UPDATE_RESPONDENT'
 export const RECEIVE_RESPONDENTS_ERROR = 'RECEIVE_RESPONDENTS_ERROR'
 export const RECEIVE_RESPONDENTS_STATS = 'RECEIVE_RESPONDENTS_STATS'
+export const SET_RESPONDENTS_FIELD_SELECTION = 'SET_RESPONDENTS_FIELD_SELECTION'
 
 export const fetchRespondents = (
   projectId,
@@ -37,7 +38,8 @@ export const fetchRespondents = (
             response.result,
             filter,
             sortBy,
-            sortAsc
+            sortAsc,
+            response.respondentsFields
           )
         )
       }
@@ -53,7 +55,7 @@ export const receiveRespondentsStats = (response) => ({
   response
 })
 
-export const receiveRespondents = (surveyId, page, respondents, respondentsCount, order, filter, sortBy, sortAsc) => ({
+export const receiveRespondents = (surveyId, page, respondents, respondentsCount, order, filter, sortBy, sortAsc, fields) => ({
   type: RECEIVE_RESPONDENTS,
   surveyId,
   page,
@@ -62,7 +64,8 @@ export const receiveRespondents = (surveyId, page, respondents, respondentsCount
   order,
   filter,
   sortBy,
-  sortAsc
+  sortAsc,
+  fields
 })
 
 export const createRespondent = (response) => ({
@@ -81,6 +84,12 @@ export const updateRespondentsFilter = (projectId, surveyId, filter) => (dispatc
   const { sortBy, sortAsc, page } = getState().respondents
   dispatch(fetchRespondents(projectId, surveyId, page.size, 1, filter, sortBy, sortAsc))
 }
+
+export const setRespondentsFieldSelection = (fieldUniqueKey, selected) => ({
+  type: SET_RESPONDENTS_FIELD_SELECTION,
+  fieldUniqueKey,
+  selected
+})
 
 export const receiveRespondentsError = (error) => ({
   type: RECEIVE_RESPONDENTS_ERROR,

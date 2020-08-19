@@ -1,8 +1,90 @@
 defmodule Ask.RespondentView do
   use Ask.Web, :view
 
-  def render("index.json", %{respondents: respondents, respondents_count: respondents_count}) do
-    %{data: %{respondents: render_many(respondents, Ask.RespondentView, "respondent.json")}, meta: %{count: respondents_count}}
+  def render("index.json", %{respondents: respondents} = render_index_data) do
+    %{
+      data: %{respondents: render_many(respondents, Ask.RespondentView, "respondent.json")},
+      meta: render_index_meta(render_index_data)
+    }
+  end
+
+  def render("index_field.json", %{index_field: %{type: "fixed" = type, key: "phone_number" = key}}) do
+    %{
+      display_text: Ask.Gettext.gettext("Respondent ID"),
+      key: key,
+      type: type,
+      sortable: false,
+      data_type: "text"
+    }
+  end
+
+  def render("index_field.json", %{index_field: %{type: "fixed" = type, key: "disposition" = key}}) do
+    %{
+      display_text: Ask.Gettext.gettext("Disposition"),
+      key: key,
+      type: type,
+      sortable: false,
+      data_type: "text"
+    }
+  end
+
+  def render("index_field.json", %{index_field: %{type: "fixed" = type, key: "date" = key}}) do
+    %{
+      display_text: Ask.Gettext.gettext("Date"),
+      key: key,
+      type: type,
+      sortable: true,
+      data_type: "date"
+    }
+  end
+
+  def render("index_field.json", %{index_field: %{type: "mode" = type, key: "ivr" = key}}) do
+    %{
+      display_text: Ask.Gettext.gettext("IVR Attempts"),
+      key: key,
+      type: type,
+      sortable: false,
+      data_type: "number"
+    }
+  end
+
+  def render("index_field.json", %{index_field: %{type: "mode" = type, key: "sms" = key}}) do
+    %{
+      display_text: Ask.Gettext.gettext("SMS Attempts"),
+      key: key,
+      type: type,
+      sortable: false,
+      data_type: "number"
+    }
+  end
+
+  def render("index_field.json", %{index_field: %{type: "mode" = type, key: "mobileweb" = key}}) do
+    %{
+      display_text: Ask.Gettext.gettext("Mobileweb Attempts"),
+      key: key,
+      type: type,
+      sortable: false,
+      data_type: "number"
+    }
+  end
+
+  def render("index_field.json", %{index_field: %{type: "variant" = type, key: "variant" = key}}) do
+    %{
+      display_text: Ask.Gettext.gettext("Variant"),
+      key: key,
+      type: type,
+      sortable: false,
+      data_type: "text"
+    }
+  end
+
+  def render("index_field.json", %{index_field: %{type: type, key: key}}) do
+    %{
+      display_text: String.capitalize(key),
+      key: key,
+      type: type,
+      sortable: false
+    }
   end
 
   def render("show.json", %{respondent: respondent}) do
@@ -136,4 +218,13 @@ defmodule Ask.RespondentView do
       percent: percentage
     }
   end
+
+  defp render_index_meta(%{respondents_count: respondents_count, index_fields: index_fields}),
+    do: %{
+      count: respondents_count,
+      fields: render_many(index_fields, Ask.RespondentView, "index_field.json", as: :index_field)
+    }
+
+  defp render_index_meta(%{respondents_count: respondents_count}), do: %{count: respondents_count}
+
 end

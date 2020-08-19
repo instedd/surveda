@@ -8,6 +8,11 @@
   margin: 0 0 0.5rem 0 !important
 }
 
+.transparent-button {
+  border: none;
+  background-color: transparent !important;
+}
+
 .folder-header {
   @extend .black-text;
 

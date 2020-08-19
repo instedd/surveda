@@ -3,6 +3,7 @@ import React, { Component } from 'react'
 import { bindActionCreators } from 'redux'
 import { connect } from 'react-redux'
 import * as actions from '../../actions/respondents'
+import { fieldUniqueKey, isFieldSelected } from '../../reducers/respondents'
 import * as surveyActions from '../../actions/survey'
 import * as projectActions from '../../actions/project'
 import * as questionnairesActions from '../../actions/questionnaires'
@@ -25,6 +26,7 @@ import flatten from 'lodash/flatten'
 import { translate } from 'react-i18next'
 import classNames from 'classnames/bind'
 import RespondentsFilter from './RespondentsFilter'
+import { uniqueId } from 'lodash'
 
 type Props = {
   t: Function,
@@ -49,7 +51,9 @@ type Props = {
   actions: any,
   router: Object,
   filter: string,
-  q: string
+  q: string,
+  fields: Array<Object>,
+  selectedFields: Array<string>
 }
 
 type State = {
@@ -65,6 +69,7 @@ class RespondentIndex extends Component<Props, State> {
   refreshIncentivesLink: Function
   refreshInteractionsLink: Function
   refreshDispositionHistoryLink: Function
+  columnPickerModalId: string
 
   constructor(props) {
     super(props)
@@ -77,6 +82,7 @@ class RespondentIndex extends Component<Props, State> {
     this.refreshIncentivesLink = this.refreshIncentivesLink.bind(this)
     this.refreshInteractionsLink = this.refreshInteractionsLink.bind(this)
     this.refreshDispositionHistoryLink = this.refreshDispositionHistoryLink.bind(this)
+    this.columnPickerModalId = uniqueId('column-picker-modal-id_')
   }
 
   componentDidMount() {
@@ -155,16 +161,6 @@ class RespondentIndex extends Component<Props, State> {
 
   getModes(surveyModes) {
     return [...new Set(flatten(surveyModes))]
-  }
-
-  getModeAttempts() {
-    const {survey, t} = this.props
-    let modes = this.getModes(survey.mode)
-    let attemptsHeader = modes.map(function(mode) {
-      const capitalize = str => str.charAt(0).toUpperCase() + str.slice(1)
-      return <th className='thNumber' key={mode}>{t('{{mode}} Attempts', {mode: capitalize(mode)})}</th>
-    })
-    return attemptsHeader
   }
 
   resultsAccessLink() {
@@ -440,7 +436,7 @@ class RespondentIndex extends Component<Props, State> {
           <h5>{title}</h5>
           <p>{description}</p>
         </div>
-        <ul className='collection download-csv'>
+        <ul className='collection repondents-index-modal'>
           {itemType == 'file' && filter
             ? this.downloadItem('filtered-results', itemType)
             : null}
@@ -453,15 +449,143 @@ class RespondentIndex extends Component<Props, State> {
     )
   }
 
+  renderHeader({ displayText, type, key, sortable, dataType }) {
+    const { sortBy, sortAsc } = this.props
+    const uniqueKey = fieldUniqueKey(type, key)
+    let className = classNames({
+      thNumber: dataType === 'number',
+      thDate: dataType === 'date'
+    })
+
+    if (sortable) {
+      return (
+        <SortableHeader
+          text={displayText}
+          property={key}
+          sortBy={sortBy}
+          sortAsc={sortAsc}
+          onClick={() => this.sortBy(key)}
+          key={uniqueKey}
+          className={className}
+        />
+      )
+    } else {
+      return (
+        <th className={className} key={uniqueKey}>
+          {displayText}
+        </th>
+      )
+    }
+  }
+
+  isFieldSelected(uniqueKey) {
+    const { selectedFields } = this.props
+    return isFieldSelected(selectedFields, uniqueKey)
+  }
+
+  renderColumnPickerModal() {
+    const {fields, t} = this.props
+    const onInputChange = (uniqueKey, newValue) =>
+      this.props.actions.setRespondentsFieldSelection(uniqueKey, newValue)
+
+    return (
+      <Modal
+        id={this.columnPickerModalId}
+        card
+        className={'column-picker'}
+      >
+        <div className='card-title header'>
+          <h5>{t('Column picker')}</h5>
+          <p>{t('Selected columns')}</p>
+        </div>
+        <ul className='collection repondents-index-modal'>
+          {
+            fields.map(field => {
+              const uniqueKey = fieldUniqueKey(field.type, field.key)
+              const id = `column_picker_${uniqueKey}`
+              const checked = this.isFieldSelected(uniqueKey)
+              return (
+                <li className='collection-item' key={id}>
+                  <input className='filled-in'
+                    id={id}
+                    type='checkbox'
+                    checked={checked}
+                    onChange={event => onInputChange(uniqueKey, !checked)}
+                  />
+                  <label htmlFor={id}>{field.displayText}</label>
+                </li>
+              )
+            })
+          }
+        </ul>
+      </Modal>
+    )
+  }
+
+  renderTitleWithColumnsPickerButton() {
+    const {t, totalCount} = this.props
+    const title = t('{{count}} respondent', {count: totalCount})
+    return (
+      <div className='valign-wrapper'>
+        <div>
+          {title}
+        </div>
+        <button className='transparent-button valign-wrapper'
+          onClick={() => $(`#${this.columnPickerModalId}`).modal('open')}
+        >
+          <i className='material-icons'>more_vert</i>
+        </button>
+      </div>
+    )
+  }
+
+  renderFooter() {
+    const { startIndex, endIndex, totalCount } = this.props
+    return (
+      <PagingFooter
+        {...{startIndex, endIndex, totalCount}}
+        onPreviousPage={() => this.previousPage()}
+        onNextPage={() => this.nextPage()}
+      />
+    )
+  }
+
+  fieldDataType(field, isNumeric) {
+    return field.type == 'response' && isNumeric ? 'number' : field.dataType
+  }
+
+  renderHeaders(numericFields) {
+    const {fields} = this.props
+    const selectedFields = fields
+      .filter(field => this.isFieldSelected(fieldUniqueKey(field.type, field.key)))
+    return (
+      <tr>
+        {
+          selectedFields.length
+          ? selectedFields
+            .map(field =>
+              this.renderHeader({
+                displayText: field.displayText,
+                key: field.key,
+                sortable: field.sortable,
+                type: field.type,
+                dataType: this.fieldDataType(field, this.fieldIsNumeric(numericFields, field.key))
+              })
+            )
+          // If no field is selected, render an empty header
+          : <th className='center'>-</th>
+        }
+      </tr>
+    )
+  }
+
   render() {
     const { project,
       survey,
       questionnaires,
-      totalCount,
       order,
-      sortBy,
-      sortAsc,
-      t
+      t,
+      selectedFields
     } = this.props
     const loading = (
       !project ||
@@ -501,15 +625,6 @@ class RespondentIndex extends Component<Props, State> {
       return res
     }
 
-    function allFieldNames(rs) {
-      let fieldNames = Object.keys(rs).map((key) => (rs[key].responses))
-      fieldNames = fieldNames.map((response) => Object.keys(response))
-      fieldNames = [].concat.apply([], fieldNames)
-      // Don't show fields for empty variable names
-      fieldNames = fieldNames.filter(x => x.trim().length > 0)
-      return fieldNames
-    }
-
     function hasResponded(rs, respondentId, fieldName) {
       return Object.keys(rs[respondentId].responses).includes(fieldName)
     }
@@ -518,22 +633,15 @@ class RespondentIndex extends Component<Props, State> {
       return hasResponded(rs, respondentId, fieldName) ? rs[respondentId].responses[fieldName] : '-'
     }
 
-    const { startIndex, endIndex } = this.props
+    const responseKeys = this.props.fields
+      .filter(field => field.type == 'response')
+      .map(field => field.key)
 
-    const title = t('{{count}} respondent', {count: totalCount})
-    const footer = <PagingFooter
-      {...{startIndex, endIndex, totalCount}}
-      onPreviousPage={() => this.previousPage()}
-      onNextPage={() => this.nextPage()} />
+    const fixedFieldsCount = this.props.fields
+      .filter(field => field.type == 'fixed')
+      .length
 
-    const respondentsFieldName = allFieldNames(respondents)
-
-    let colspan = respondentsFieldName.length + 3
-    let variantHeader = null
-    if (hasComparisons) {
-      variantHeader = <th>{t('Variant')}</th>
-      colspan += 1
-    }
+    let colspan = responseKeys.length + fixedFieldsCount
     const [fileId, linkId] = ['file', 'link']
 
     return (
@@ -546,19 +654,11 @@ class RespondentIndex extends Component<Props, State> {
         </MainAction>
         { this.downloadModal({itemType: fileId}) }
         { this.downloadModal({itemType: linkId}) }
+        { this.renderColumnPickerModal() }
         { this.respondentsFilter() }
-        <CardTable title={title} footer={footer} tableScroll>
+        <CardTable title={this.renderTitleWithColumnsPickerButton()} footer={this.renderFooter()} tableScroll>
           <thead>
-            <tr>
-              <SortableHeader text={t('Respondent ID')} property='phoneNumber' sortBy={sortBy} sortAsc={sortAsc} onClick={() => this.sortBy('phoneNumber')} />
-              <th>{t('Disposition')}</th>
-              <SortableHeader className='thDate' text={t('Date')} property='date' sortBy={sortBy} sortAsc={sortAsc} onClick={() => this.sortBy('date')} />
-              {this.getModeAttempts()}
-              {respondentsFieldName.map(field =>
-                <th className={classNames({'thNumber': this.fieldIsNumeric(numericFields, field)})} key={field}>{field}</th>
-              )}
-              {variantHeader}
-            </tr>
+            { this.renderHeaders(numericFields) }
           </thead>
           <tbody>
             { order.map((respondentId, index) => {
@@ -579,10 +679,10 @@ class RespondentIndex extends Component<Props, State> {
                 variantColumn = <td>{variantValue}</td>
               }
 
-              const responses = respondentsFieldName.map((field) => {
+              const responses = responseKeys.map((responseKey) => {
                 return {
-                  name: field,
-                  value: responseOf(respondents, respondent.id, field)
+                  name: responseKey,
+                  value: responseOf(respondents, respondent.id, responseKey)
                 }
               })
               return <RespondentRow
@@ -594,6 +694,7 @@ class RespondentIndex extends Component<Props, State> {
                 responses={responses}
                 variantColumn={variantColumn}
                 surveyModes={this.getModes(survey.mode)}
+                selectedFields={selectedFields}
                 />
             })}
           </tbody>
@@ -605,7 +706,7 @@ class RespondentIndex extends Component<Props, State> {
 
 const mapStateToProps = (state, ownProps) => {
   const { project, survey, questionnaires, respondents } = state
-  const { page, sortBy, sortAsc, order, filter, items } = respondents
+  const { page, sortBy, sortAsc, order, filter, items, fields, selectedFields } = respondents
   const { number: pageNumber, size: pageSize, totalCount } = page
   const { projectId, surveyId } = ownProps.params
   const startIndex = (pageNumber - 1) * pageSize + 1
@@ -628,7 +729,9 @@ const mapStateToProps = (state, ownProps) => {
     totalCount,
     sortBy,
     sortAsc,
-    filter
+    filter,
+    fields: fields || [],
+    selectedFields: selectedFields || []
   }
 }
 

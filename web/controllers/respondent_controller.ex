@@ -46,8 +46,52 @@ defmodule Ask.RespondentController do
       |> effective_stats
     end)
 
-    render(conn, "index.json", respondents: respondents, respondents_count: respondents_count)
+    survey = Repo.get!(Survey, survey_id)
+
+    render(conn, "index.json",
+      respondents: respondents,
+      respondents_count: respondents_count,
+      index_fields: index_fields_for_render(%{survey: survey, respondents: respondents})
+    )
   end
+
+  defp index_fields_for_render(%{survey: survey, respondents: respondents}),
+    do:
+      index_fields_for_render("fixed") ++
+        index_fields_for_render("mode", survey.mode) ++
+        index_fields_for_render("response", respondents) ++
+        index_fields_for_render("variant", survey.comparisons)
+
+  defp index_fields_for_render("fixed" = field_type),
+    do:
+      ["phone_number", "disposition", "date"]
+      |> map_fields_with_type(field_type)
+
+  defp index_fields_for_render("mode" = field_type, survey_modes),
+    do:
+      List.flatten(survey_modes)
+      |> Enum.uniq()
+      |> map_fields_with_type(field_type)
+
+  defp index_fields_for_render("response" = field_type, respondents) do
+    all_duplicated_responses_keys =
+      Enum.flat_map(respondents, fn %{responses: responses} ->
+        Enum.map(responses, fn %{field_name: field_name} -> field_name end)
+      end)
+
+    Enum.uniq(all_duplicated_responses_keys)
+    |> map_fields_with_type(field_type)
+  end
+
+  defp index_fields_for_render("variant" = _field_type, [] = _survey_comparisons), do: []
+
+  defp index_fields_for_render("variant" = field_type, _survey_comparisons),
+    do: [index_field_for_render(field_type, "variant")]
+
+  defp map_fields_with_type(field_keys, field_type),
+    do: Enum.map(field_keys, fn field_key -> index_field_for_render(field_type, field_key) end)
+
+  defp index_field_for_render(field_type, field_key), do: %{type: field_type, key: field_key}
 
   defp effective_stats(respondent) do
     effective_stats = case respondent.stats do
@@ -62,10 +106,6 @@ defmodule Ask.RespondentController do
 
   defp sort_respondents(query, sort_by, sort_asc) do
     case {sort_by, sort_asc} do
-      {"phoneNumber", "true"} ->
-        query |> order_by([r], asc: r.hashed_number)
-      {"phoneNumber", "false"} ->
-        query |> order_by([r], desc: r.hashed_number)
       {"date", "true"} ->
         query |> order_by([r], asc: r.updated_at)
       {"date", "false"} ->
