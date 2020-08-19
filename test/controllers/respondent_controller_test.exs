@@ -28,7 +28,10 @@ defmodule Ask.RespondentControllerTest do
 
       ordered_dispositions = ["completed", "partial"]
 
-      insert_respondent = fn ordered_dispositions_index, ordered_dates_index ->
+      insert_respondent = fn %{
+          ordered_dispositions_index: ordered_dispositions_index,
+          ordered_dates_index: ordered_dates_index
+        } ->
         insert(:respondent,
           survey: survey,
           mode: ["sms"],
@@ -38,10 +41,11 @@ defmodule Ask.RespondentControllerTest do
         )
       end
 
-      insert_respondent.(0, 1)
-      insert_respondent.(1, 0)
-      insert_respondent.(1, 1)
-      insert_respondent.(0, 0)
+      # Intentionally disordered by date and disposition
+      insert_respondent.(%{ordered_dispositions_index: 0, ordered_dates_index: 1})
+      insert_respondent.(%{ordered_dispositions_index: 1, ordered_dates_index: 0})
+      insert_respondent.(%{ordered_dispositions_index: 1, ordered_dates_index: 1})
+      insert_respondent.(%{ordered_dispositions_index: 0, ordered_dates_index: 0})
 
       {:ok,
        conn: conn,
@@ -51,7 +55,7 @@ defmodule Ask.RespondentControllerTest do
        ordered_dispositions: ordered_dispositions}
     end
 
-    test "disposition asc", %{
+    test "by disposition asc", %{
       conn: conn,
       project_id: project_id,
       survey_id: survey_id,
@@ -63,38 +67,38 @@ defmodule Ask.RespondentControllerTest do
           sort_asc: "true"
         )
 
-      fetched_respondents = json_response(get(conn, path), 200)["data"]["respondents"]
+      respondents = json_response(get(conn, path), 200)["data"]["respondents"]
 
-      assert_disposition(%{
-        fetched_respondents: fetched_respondents,
+      assert_respondent_order_by_disposition(%{
+        respondents: respondents,
+        respondent_index: 0,
         ordered_dispositions: ordered_dispositions,
-        fetched_index: 0,
         ordered_index: 0
       })
 
-      assert_disposition(%{
-        fetched_respondents: fetched_respondents,
+      assert_respondent_order_by_disposition(%{
+        respondents: respondents,
+        respondent_index: 1,
         ordered_dispositions: ordered_dispositions,
-        fetched_index: 1,
         ordered_index: 0
       })
 
-      assert_disposition(%{
-        fetched_respondents: fetched_respondents,
+      assert_respondent_order_by_disposition(%{
+        respondents: respondents,
+        respondent_index: 2,
         ordered_dispositions: ordered_dispositions,
-        fetched_index: 2,
         ordered_index: 1
       })
 
-      assert_disposition(%{
-        fetched_respondents: fetched_respondents,
+      assert_respondent_order_by_disposition(%{
+        respondents: respondents,
+        respondent_index: 3,
         ordered_dispositions: ordered_dispositions,
-        fetched_index: 3,
         ordered_index: 1
       })
     end
 
-    test "disposition desc", %{
+    test "by disposition desc", %{
       conn: conn,
       project_id: project_id,
       survey_id: survey_id,
@@ -106,38 +110,38 @@ defmodule Ask.RespondentControllerTest do
           sort_asc: "false"
         )
 
-      fetched_respondents = json_response(get(conn, path), 200)["data"]["respondents"]
+      respondents = json_response(get(conn, path), 200)["data"]["respondents"]
 
-      assert_disposition(%{
-        fetched_respondents: fetched_respondents,
+      assert_respondent_order_by_disposition(%{
+        respondents: respondents,
+        respondent_index: 0,
         ordered_dispositions: ordered_dispositions,
-        fetched_index: 0,
         ordered_index: 1
       })
 
-      assert_disposition(%{
-        fetched_respondents: fetched_respondents,
+      assert_respondent_order_by_disposition(%{
+        respondents: respondents,
+        respondent_index: 1,
         ordered_dispositions: ordered_dispositions,
-        fetched_index: 1,
         ordered_index: 1
       })
 
-      assert_disposition(%{
-        fetched_respondents: fetched_respondents,
+      assert_respondent_order_by_disposition(%{
+        respondents: respondents,
+        respondent_index: 2,
         ordered_dispositions: ordered_dispositions,
-        fetched_index: 2,
         ordered_index: 0
       })
 
-      assert_disposition(%{
-        fetched_respondents: fetched_respondents,
+      assert_respondent_order_by_disposition(%{
+        respondents: respondents,
+        respondent_index: 3,
         ordered_dispositions: ordered_dispositions,
-        fetched_index: 3,
         ordered_index: 0
       })
     end
 
-    test "date asc", %{
+    test "by date asc", %{
       conn: conn,
       project_id: project_id,
       survey_id: survey_id,
@@ -149,38 +153,38 @@ defmodule Ask.RespondentControllerTest do
           sort_asc: "true"
         )
 
-      fetched_respondents = json_response(get(conn, path), 200)["data"]["respondents"]
+      respondents = json_response(get(conn, path), 200)["data"]["respondents"]
 
-      assert_updated_at(%{
-        fetched_respondents: fetched_respondents,
+      assert_respondent_order_by_date(%{
+        respondents: respondents,
+        respondent_index: 0,
         ordered_dates: ordered_dates,
-        fetched_index: 0,
         ordered_index: 0
       })
 
-      assert_updated_at(%{
-        fetched_respondents: fetched_respondents,
+      assert_respondent_order_by_date(%{
+        respondents: respondents,
+        respondent_index: 1,
         ordered_dates: ordered_dates,
-        fetched_index: 1,
         ordered_index: 0
       })
 
-      assert_updated_at(%{
-        fetched_respondents: fetched_respondents,
+      assert_respondent_order_by_date(%{
+        respondents: respondents,
+        respondent_index: 2,
         ordered_dates: ordered_dates,
-        fetched_index: 2,
         ordered_index: 1
       })
 
-      assert_updated_at(%{
-        fetched_respondents: fetched_respondents,
+      assert_respondent_order_by_date(%{
+        respondents: respondents,
+        respondent_index: 3,
         ordered_dates: ordered_dates,
-        fetched_index: 3,
         ordered_index: 1
       })
     end
 
-    test "date desc", %{
+    test "by date desc", %{
       conn: conn,
       project_id: project_id,
       survey_id: survey_id,
@@ -192,33 +196,33 @@ defmodule Ask.RespondentControllerTest do
           sort_asc: "false"
         )
 
-      fetched_respondents = json_response(get(conn, path), 200)["data"]["respondents"]
+      respondents = json_response(get(conn, path), 200)["data"]["respondents"]
 
-      assert_updated_at(%{
-        fetched_respondents: fetched_respondents,
+      assert_respondent_order_by_date(%{
+        respondents: respondents,
+        respondent_index: 0,
         ordered_dates: ordered_dates,
-        fetched_index: 0,
         ordered_index: 1
       })
 
-      assert_updated_at(%{
-        fetched_respondents: fetched_respondents,
+      assert_respondent_order_by_date(%{
+        respondents: respondents,
+        respondent_index: 1,
         ordered_dates: ordered_dates,
-        fetched_index: 1,
         ordered_index: 1
       })
 
-      assert_updated_at(%{
-        fetched_respondents: fetched_respondents,
+      assert_respondent_order_by_date(%{
+        respondents: respondents,
+        respondent_index: 2,
         ordered_dates: ordered_dates,
-        fetched_index: 2,
         ordered_index: 0
       })
 
-      assert_updated_at(%{
-        fetched_respondents: fetched_respondents,
+      assert_respondent_order_by_date(%{
+        respondents: respondents,
+        respondent_index: 3,
         ordered_dates: ordered_dates,
-        fetched_index: 3,
         ordered_index: 0
       })
     end
@@ -1980,29 +1984,29 @@ defmodule Ask.RespondentControllerTest do
     %{project: project, questionnaire: questionnaire, survey: survey, conn: conn}
   end
 
-  defp assert_updated_at(%{
-    fetched_respondents: fetched_respondents,
+  defp assert_respondent_order_by_date(%{
+    respondents: respondents,
+    respondent_index: respondent_index,
     ordered_dates: ordered_dates,
-    fetched_index: fetched_index,
     ordered_index: ordered_index
   }),
   do:
     assert(
-      Enum.at(fetched_respondents, fetched_index)["updated_at"] |> String.slice(0..9) ==
+      Enum.at(respondents, respondent_index)["updated_at"] |> String.slice(0..9) ==
         Enum.at(ordered_dates, ordered_index)
         |> Ecto.DateTime.to_string()
         |> String.slice(0..9)
     )
 
-defp assert_disposition(%{
-    fetched_respondents: fetched_respondents,
+defp assert_respondent_order_by_disposition(%{
+    respondents: respondents,
+    respondent_index: respondent_index,
     ordered_dispositions: ordered_dispositions,
-    fetched_index: fetched_index,
     ordered_index: ordered_index
   }),
   do:
     assert(
-      Enum.at(fetched_respondents, fetched_index)["disposition"] ==
+      Enum.at(respondents, respondent_index)["disposition"] ==
         Enum.at(ordered_dispositions, ordered_index)
     )
 end
