@@ -1043,7 +1043,7 @@ defmodule Ask.RespondentControllerTest do
 
       project = create_project_for_user(user)
       mode = "sms"
-      steps = QuestionnaireRelevantSteps.all_relevant_steps()
+      steps = QuestionnaireRelevantSteps.odd_relevant_steps()
 
       partial_relevant_config = %{
         "enabled" => true,
@@ -1079,57 +1079,125 @@ defmodule Ask.RespondentControllerTest do
 
       group = insert(:respondent_group, survey: survey, respondents_count: 1)
       insert(:respondent_group_channel, respondent_group: group, channel: channel, mode: mode)
-      insert(:respondent, survey: survey, respondent_group: group)
+      respondent = insert(:respondent, survey: survey, respondent_group: group)
 
       ChannelStatusServer.start_link()
       Broker.start_link()
       Broker.poll()
 
-      {:ok, conn: conn, user: user, survey: survey}
+      {:ok, conn: conn, user: user, survey: survey, mode: mode, respondent: respondent}
     end
 
-    test "index with no responses", %{conn: conn, survey: survey} do
+    test "index - 1 respondent", %{conn: conn, survey: survey, mode: mode, respondent: respondent} do
+      # No answers
       %{
-        "meta" => %{"fields" => fields},
-        "data" => %{
-          "respondents" => [
-            %{
-              "partial_relevant" => %{
-                "answered_count" => answered_count
-              }
-            }
-          ]
-        }
-      } = get(conn, project_survey_respondent_path(conn, :index, survey.project.id, survey.id))
-        |> json_response(200)
+        fields: fields,
+        respondents: respondents
+      } = respondents_index(conn, survey.project.id, survey.id)
 
-      assert Enum.at(fields, 4) == %{
-        "data_type" => "number",
-        "display_text" => "Relevants",
-        "key" => "answered_questions",
-        "sortable" => false,
-        "type" => "partial_relevant"
-      }
+      assert_partial_relevant_index_field(fields, 4)
+      assert_partial_relevant_index_respondent(respondents, 0, 0)
 
-      assert answered_count == 0
+      # Answer 1st (relevant) question
+      respondent_reply(respondent.id, "1", mode)
+
+      %{
+        fields: fields,
+        respondents: respondents
+      } = respondents_index(conn, survey.project.id, survey.id)
+
+      assert_partial_relevant_index_field(fields, 4)
+      assert_partial_relevant_index_respondent(respondents, 0, 1)
+
+      # Answer 2nd (no relevant) question
+      respondent_reply(respondent.id, "1", mode)
+
+      %{
+        fields: fields,
+        respondents: respondents
+      } = respondents_index(conn, survey.project.id, survey.id)
+
+      assert_partial_relevant_index_field(fields, 4)
+      assert_partial_relevant_index_respondent(respondents, 0, 1)
+
+      # Answer 3rd (relevant) question
+      respondent_reply(respondent.id, "1", mode)
+
+      %{
+        fields: fields,
+        respondents: respondents
+      } = respondents_index(conn, survey.project.id, survey.id)
+
+      assert_partial_relevant_index_field(fields, 4)
+      assert_partial_relevant_index_respondent(respondents, 0, 2)
     end
 
-    test "CSV with no responses", %{conn: conn, survey: survey} do
-      csv =
-        get(
-          conn,
-          project_survey_respondents_results_path(conn, :results, survey.project.id, survey.id, %{
-            "offset" => "0",
-            "_format" => "csv"
-          }))
-          |> response(200)
+    test "CSV - 1 respondent", %{conn: conn, survey: survey, mode: mode, respondent: respondent} do
+      # No answers
+      %{
+        header: header,
+        respondents: respondents
+      } = respondents_csv(conn, survey.project.id, survey.id)
 
-      [header, respondent, _] = String.split(csv, "\r\n")
-      p_relevants_header = String.split(header, ",") |> Enum.at(10)
-      {p_relevants_count, _remainder_of_binary} = String.split(respondent, ",") |> Enum.at(10) |> Integer.parse()
+      assert_partial_relevant_csv_header(header, 10)
 
-      assert p_relevants_header == "p_relevants"
-      assert p_relevants_count == 0
+      assert_partial_relevant_csv_respondent(%{
+        respondents: respondents,
+        respondent_index: 0,
+        field_index: 10,
+        answered_count: 0
+      })
+
+      # Answer 1st (relevant) question
+      respondent_reply(respondent.id, "1", mode)
+
+      %{
+        header: header,
+        respondents: respondents
+      } = respondents_csv(conn, survey.project.id, survey.id)
+
+      assert_partial_relevant_csv_header(header, 10)
+
+      assert_partial_relevant_csv_respondent(%{
+        respondents: respondents,
+        respondent_index: 0,
+        field_index: 10,
+        answered_count: 1
+      })
+
+      # Answer 2nd (no relevant) question
+      respondent_reply(respondent.id, "1", mode)
+
+      %{
+        header: header,
+        respondents: respondents
+      } = respondents_csv(conn, survey.project.id, survey.id)
+
+      assert_partial_relevant_csv_header(header, 10)
+
+      assert_partial_relevant_csv_respondent(%{
+        respondents: respondents,
+        respondent_index: 0,
+        field_index: 10,
+        answered_count: 1
+      })
+
+      # Answer 3rd (relevant) question
+      respondent_reply(respondent.id, "1", mode)
+
+      %{
+        header: header,
+        respondents: respondents
+      } = respondents_csv(conn, survey.project.id, survey.id)
+
+      assert_partial_relevant_csv_header(header, 10)
+
+      assert_partial_relevant_csv_respondent(%{
+        respondents: respondents,
+        respondent_index: 0,
+        field_index: 10,
+        answered_count: 2
+      })
     end
   end
 
@@ -2118,4 +2186,70 @@ defmodule Ask.RespondentControllerTest do
            Enum.at(respondents, respondent_index)["disposition"] ==
              Enum.at(ordered_dispositions, ordered_index)
          )
+
+  defp respondents_csv(conn, project_id, survey_id) do
+    [header | respondents] =
+      get(
+        conn,
+        project_survey_respondents_results_path(conn, :results, project_id, survey_id, %{
+          "offset" => "0",
+          "_format" => "csv"
+        })
+      )
+      |> response(200)
+      |> String.split("\r\n")
+
+    %{header: header, respondents: respondents}
+  end
+
+  defp assert_partial_relevant_csv_header(header, index) do
+    header_values = parse_csv_line(header)
+    Enum.at(header_values, index)
+  end
+
+  defp assert_partial_relevant_csv_respondent(%{
+         respondents: respondents,
+         respondent_index: respondent_index,
+         field_index: field_index,
+         answered_count: answered_count
+       }) do
+    respondent_line = Enum.at(respondents, respondent_index)
+    respondent_values = parse_csv_line(respondent_line)
+    raw_p_relevants_count = respondent_values |> Enum.at(field_index)
+    {p_relevants_count, _remainder_of_binary} = Integer.parse(raw_p_relevants_count)
+    assert p_relevants_count == answered_count
+  end
+
+  defp parse_csv_line(line),
+    do: [line] |> Stream.map(& &1) |> CSV.decode() |> Enum.to_list() |> hd
+
+  defp respondents_index(conn, project_id, survey_id) do
+    %{
+      "meta" => %{"fields" => fields},
+      "data" => %{
+        "respondents" => respondents
+      }
+    } =
+      get(conn, project_survey_respondent_path(conn, :index, project_id, survey_id))
+      |> json_response(200)
+
+    %{fields: fields, respondents: respondents}
+  end
+
+  defp assert_partial_relevant_index_field(fields, index),
+    do:
+      assert(
+        Enum.at(fields, index) == %{
+          "data_type" => "number",
+          "display_text" => "Relevants",
+          "key" => "answered_questions",
+          "sortable" => false,
+          "type" => "partial_relevant"
+        }
+      )
+
+  defp assert_partial_relevant_index_respondent(respondents, index, answered_count) do
+    %{"partial_relevant" => partial_relevant} = Enum.at(respondents, index)
+    assert partial_relevant == %{"answered_count" => answered_count}
+  end
 end
