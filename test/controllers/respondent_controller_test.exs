@@ -29,9 +29,9 @@ defmodule Ask.RespondentControllerTest do
       ordered_dispositions = ["completed", "partial"]
 
       insert_respondent = fn %{
-          ordered_dispositions_index: ordered_dispositions_index,
-          ordered_dates_index: ordered_dates_index
-        } ->
+                               ordered_dispositions_index: ordered_dispositions_index,
+                               ordered_dates_index: ordered_dates_index
+                             } ->
         insert(:respondent,
           survey: survey,
           mode: ["sms"],
@@ -1985,28 +1985,28 @@ defmodule Ask.RespondentControllerTest do
   end
 
   defp assert_respondent_order_by_date(%{
-    respondents: respondents,
-    respondent_index: respondent_index,
-    ordered_dates: ordered_dates,
-    ordered_index: ordered_index
-  }),
-  do:
-    assert(
-      Enum.at(respondents, respondent_index)["updated_at"] |> String.slice(0..9) ==
-        Enum.at(ordered_dates, ordered_index)
-        |> Ecto.DateTime.to_string()
-        |> String.slice(0..9)
-    )
+         respondents: respondents,
+         respondent_index: respondent_index,
+         ordered_dates: ordered_dates,
+         ordered_index: ordered_index
+       }),
+       do:
+         assert(
+           Enum.at(respondents, respondent_index)["updated_at"] |> String.slice(0..9) ==
+             Enum.at(ordered_dates, ordered_index)
+             |> Ecto.DateTime.to_string()
+             |> String.slice(0..9)
+         )
 
-defp assert_respondent_order_by_disposition(%{
-    respondents: respondents,
-    respondent_index: respondent_index,
-    ordered_dispositions: ordered_dispositions,
-    ordered_index: ordered_index
-  }),
-  do:
-    assert(
-      Enum.at(respondents, respondent_index)["disposition"] ==
-        Enum.at(ordered_dispositions, ordered_index)
-    )
+  defp assert_respondent_order_by_disposition(%{
+         respondents: respondents,
+         respondent_index: respondent_index,
+         ordered_dispositions: ordered_dispositions,
+         ordered_index: ordered_index
+       }),
+       do:
+         assert(
+           Enum.at(respondents, respondent_index)["disposition"] ==
+             Enum.at(ordered_dispositions, ordered_index)
+         )
 end
