@@ -59,6 +59,12 @@ defmodule Ask.Survey do
     has_many :respondent_groups, RespondentGroup
     has_many :respondents, Respondent
     has_many :quota_buckets, QuotaBucket, on_replace: :delete
+
+    # Before the survey is launched, the user selects one or more questionnaires
+    # Until the survey is launched, it's directly related to these questionnaires
+    # These original questionnaires are totally updatable in any moment
+    # From the moment the survey is launched, these questionnaires are replaced by snapshots
+    # Besides they remain related to its original by `snapshot_of`, they aren't updatable at all
     many_to_many :questionnaires, Questionnaire, join_through: SurveyQuestionnaire, on_replace: :delete
 
     has_many :floip_endpoints, FloipEndpoint
