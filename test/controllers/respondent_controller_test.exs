@@ -1037,58 +1037,15 @@ defmodule Ask.RespondentControllerTest do
 
   end
 
-  describe "relevant steps" do
+  describe "partial relevant counter (basic)" do
     setup %{conn: conn} do
-      {:ok, conn: conn, user: user} = user(%{conn: conn})
+      %{conn: conn, survey: survey, mode: mode, respondent: respondent} =
+        init_partial_relevant(conn, "basic")
 
-      project = create_project_for_user(user)
-      mode = "sms"
-      steps = QuestionnaireRelevantSteps.odd_relevant_steps()
-
-      partial_relevant_config = %{
-        "enabled" => true,
-        "min_relevant_steps" => 2,
-        "ignored_values" => ""
-      }
-
-      questionnaire =
-        insert(
-          :questionnaire,
-          name: "test",
-          project: project,
-          steps: steps,
-          partial_relevant_config: partial_relevant_config
-        )
-
-      survey =
-        insert(
-          :survey,
-          project: project,
-          schedule: Schedule.always(),
-          state: "running",
-          questionnaires: [questionnaire],
-          mode: [[mode]]
-        )
-
-      channel =
-        insert(
-          :channel,
-          settings: TestChannel.new() |> TestChannel.settings(),
-          type: mode
-        )
-
-      group = insert(:respondent_group, survey: survey, respondents_count: 1)
-      insert(:respondent_group_channel, respondent_group: group, channel: channel, mode: mode)
-      respondent = insert(:respondent, survey: survey, respondent_group: group)
-
-      ChannelStatusServer.start_link()
-      Broker.start_link()
-      Broker.poll()
-
-      {:ok, conn: conn, user: user, survey: survey, mode: mode, respondent: respondent}
+      {:ok, conn: conn, survey: survey, mode: mode, respondent: respondent}
     end
 
-    test "index - 1 respondent", %{conn: conn, survey: survey, mode: mode, respondent: respondent} do
+    test "index", %{conn: conn, survey: survey, mode: mode, respondent: respondent} do
       # No answers
       %{
         fields: fields,
@@ -1132,7 +1089,7 @@ defmodule Ask.RespondentControllerTest do
       assert_partial_relevant_index_respondent(respondents, 0, 2)
     end
 
-    test "CSV - 1 respondent", %{conn: conn, survey: survey, mode: mode, respondent: respondent} do
+    test "CSV", %{conn: conn, survey: survey, mode: mode, respondent: respondent} do
       # No answers
       %{
         header: header,
@@ -1198,6 +1155,54 @@ defmodule Ask.RespondentControllerTest do
         field_index: 10,
         answered_count: 2
       })
+    end
+  end
+
+  describe "partial relevant counter included when comparisions" do
+    setup %{conn: conn} do
+      %{conn: conn, survey: survey} = init_partial_relevant(conn, "comparisions")
+
+      {:ok, conn: conn, survey: survey}
+    end
+
+    test "index", %{conn: conn, survey: survey} do
+      %{
+        fields: fields
+      } = respondents_index(conn, survey.project.id, survey.id)
+
+      assert_partial_relevant_index_field(fields, 4)
+    end
+
+    test "CSV", %{conn: conn, survey: survey} do
+      %{
+        header: header
+      } = respondents_csv(conn, survey.project.id, survey.id)
+
+      assert_partial_relevant_csv_header(header, 10)
+    end
+  end
+
+  describe "partial relevant not included when no questionnaires with partial relevant" do
+    setup %{conn: conn} do
+      %{conn: conn, survey: survey} = init_partial_relevant(conn, "no_partial_relevant")
+
+      {:ok, conn: conn, survey: survey}
+    end
+
+    test "index", %{conn: conn, survey: survey} do
+      %{
+        fields: fields
+      } = respondents_index(conn, survey.project.id, survey.id)
+
+      assert_partial_relevant_index_field(fields, 4, true)
+    end
+
+    test "CSV", %{conn: conn, survey: survey} do
+      %{
+        header: header
+      } = respondents_csv(conn, survey.project.id, survey.id)
+
+      assert_partial_relevant_csv_header(header, 10, true)
     end
   end
 
@@ -2202,9 +2207,11 @@ defmodule Ask.RespondentControllerTest do
     %{header: header, respondents: respondents}
   end
 
-  defp assert_partial_relevant_csv_header(header, index) do
+  defp assert_partial_relevant_csv_header(header, index, refute \\ false) do
     header_values = parse_csv_line(header)
-    Enum.at(header_values, index)
+    actual = Enum.at(header_values, index)
+    expected = "p_relevants"
+    assert(actual, expected, refute)
   end
 
   defp assert_partial_relevant_csv_respondent(%{
@@ -2236,20 +2243,151 @@ defmodule Ask.RespondentControllerTest do
     %{fields: fields, respondents: respondents}
   end
 
-  defp assert_partial_relevant_index_field(fields, index),
-    do:
-      assert(
-        Enum.at(fields, index) == %{
-          "data_type" => "number",
-          "display_text" => "Relevants",
-          "key" => "answered_questions",
-          "sortable" => false,
-          "type" => "partial_relevant"
-        }
-      )
+  defp assert_partial_relevant_index_field(fields, index, refute \\ false) do
+    actual = Enum.at(fields, index)
+
+    expected = %{
+      "data_type" => "number",
+      "display_text" => "Relevants",
+      "key" => "answered_questions",
+      "sortable" => false,
+      "type" => "partial_relevant"
+    }
+
+    assert(actual, expected, refute)
+  end
 
   defp assert_partial_relevant_index_respondent(respondents, index, answered_count) do
     %{"partial_relevant" => partial_relevant} = Enum.at(respondents, index)
     assert partial_relevant == %{"answered_count" => answered_count}
+  end
+
+  defp init_partial_relevant(conn, setup) do
+    {:ok, conn: conn, user: user} = user(%{conn: conn})
+
+    project = create_project_for_user(user)
+    mode = "sms"
+    steps = QuestionnaireRelevantSteps.odd_relevant_steps()
+
+    questionnaires =
+      partial_relevant_questionnaires(%{
+        setup: setup,
+        project: project,
+        steps: steps
+      })
+
+    init_partial_relevant(%{
+      conn: conn,
+      project: project,
+      mode: mode,
+      questionnaires: questionnaires
+    })
+  end
+
+  defp init_partial_relevant(%{
+         conn: conn,
+         project: project,
+         mode: mode,
+         questionnaires: questionnaires
+       }) do
+    survey =
+      insert(
+        :survey,
+        project: project,
+        schedule: Schedule.always(),
+        state: "running",
+        questionnaires: questionnaires,
+        mode: [[mode]]
+      )
+
+    channel =
+      insert(
+        :channel,
+        settings: TestChannel.new() |> TestChannel.settings(),
+        type: mode
+      )
+
+    group = insert(:respondent_group, survey: survey, respondents_count: 1)
+    insert(:respondent_group_channel, respondent_group: group, channel: channel, mode: mode)
+    respondent = insert(:respondent, survey: survey, respondent_group: group)
+
+    ChannelStatusServer.start_link()
+    Broker.start_link()
+    Broker.poll()
+
+    %{conn: conn, survey: survey, mode: mode, respondent: respondent}
+  end
+
+  defp partial_relevant_questionnaires(%{
+         setup: "basic",
+         project: project,
+         steps: steps
+       }) do
+    questionnaire =
+      insert(
+        :questionnaire,
+        name: "test",
+        project: project,
+        steps: steps,
+        partial_relevant_config: %{
+          "enabled" => true,
+          "min_relevant_steps" => 2,
+          "ignored_values" => ""
+        }
+      )
+
+    [questionnaire]
+  end
+
+  defp partial_relevant_questionnaires(%{
+         setup: "comparisions",
+         project: project,
+         steps: steps
+       }) do
+    insert_questionnaire = fn partial_relevant_config ->
+      insert(
+        :questionnaire,
+        name: "test",
+        project: project,
+        steps: steps,
+        partial_relevant_config: partial_relevant_config
+      )
+    end
+
+    questionnaire_0 =
+      insert_questionnaire.(%{
+        "enabled" => true,
+        "min_relevant_steps" => 2,
+        "ignored_values" => ""
+      })
+
+    questionnaire_1 = insert_questionnaire.(nil)
+
+    [questionnaire_0, questionnaire_1]
+  end
+
+  defp partial_relevant_questionnaires(%{
+         setup: "no_partial_relevant",
+         project: project,
+         steps: steps
+       }) do
+    questionnaire =
+      insert(
+        :questionnaire,
+        name: "test",
+        project: project,
+        steps: steps,
+        partial_relevant_config: nil
+      )
+
+    [questionnaire]
+  end
+
+  defp assert(actual, expected, refute) do
+    if refute do
+      refute actual == expected
+    else
+      assert actual == expected
+    end
   end
 end
