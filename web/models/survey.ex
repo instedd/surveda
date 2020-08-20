@@ -572,4 +572,22 @@ defmodule Ask.Survey do
     end
   end
 
+  def partial_relevant_enabled?(survey, persist \\ false) do
+    partial_relevant_configs = partial_relevant_configs(survey, persist)
+    Enum.any?(partial_relevant_configs, fn config -> !!config["enabled"] end)
+  end
+
+  defp partial_relevant_configs(survey, true = _persist),
+    do:
+      from(sq in SurveyQuestionnaire,
+        join: q in Questionnaire,
+        where: sq.survey_id == ^survey.id,
+        select: q.partial_relevant_config
+      )
+      |> Repo.all()
+
+  defp partial_relevant_configs(survey, _persist),
+    do:
+      survey.questionnaires
+      |> Enum.map(fn q -> q.partial_relevant_config end)
 end

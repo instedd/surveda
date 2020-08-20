@@ -51,7 +51,7 @@ defmodule Ask.RespondentController do
 
     survey = Repo.get!(Survey, survey_id)
 
-    partial_relevant_enabled = partial_relevant_enabled_in_survey?(survey_id)
+    partial_relevant_enabled = Survey.partial_relevant_enabled?(survey, true)
 
     render(conn, "index.json",
       respondents: respondents,
@@ -636,7 +636,7 @@ defmodule Ask.RespondentController do
       end,
       fn _ -> [] end)
 
-    partial_relevant_enabled = partial_relevant_enabled_in_survey?(survey_id)
+    partial_relevant_enabled = Survey.partial_relevant_enabled?(survey, true)
 
     render_results(conn, get_format(conn), project, survey, tz_offset, questionnaires, has_comparisons, all_fields, respondents, partial_relevant_enabled)
   end
@@ -1010,15 +1010,4 @@ defmodule Ask.RespondentController do
 
     Ask.TimeUtil.format(Ecto.DateTime.cast!(dt), offset_seconds, tz_offset)
   end
-
-  # TODO: check if there's a better way or if this is good enough
-  defp partial_relevant_enabled_in_survey?(survey_id),
-    do:
-      from(q in Questionnaire,
-        join: r in Respondent,
-        where: r.survey_id == ^survey_id,
-        distinct: true
-      )
-      |> Repo.all()
-      |> Questionnaire.any_partial_relevant_in_questionnaires?()
 end

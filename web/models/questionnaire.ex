@@ -283,10 +283,4 @@ defmodule Ask.Questionnaire do
     |> Enum.filter(not_empty)
     |> Enum.map(&String.upcase/1)
   end
-
-  def any_partial_relevant_in_questionnaires?(questionnaires),
-    do: Enum.any?(questionnaires, fn q -> partial_relevant_enabled?(q) end)
-
-  defp partial_relevant_enabled?(questionnaire),
-    do: !!questionnaire.partial_relevant_config["enabled"]
 end
