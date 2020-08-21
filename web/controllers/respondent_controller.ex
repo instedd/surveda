@@ -110,6 +110,10 @@ defmodule Ask.RespondentController do
         query |> order_by([r], asc: r.updated_at)
       {"date", "false"} ->
         query |> order_by([r], desc: r.updated_at)
+      {"disposition", "true"} ->
+        query |> order_by([r], asc: r.disposition)
+      {"disposition", "false"} ->
+        query |> order_by([r], desc: r.disposition)
       _ ->
         query
     end

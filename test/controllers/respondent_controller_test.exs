@@ -16,6 +16,218 @@ defmodule Ask.RespondentControllerTest do
     "call_durations" => %{}
   }
 
+  describe "fetches respondents in the requested order" do
+    setup %{conn: conn} do
+      %{project: project, questionnaire: questionnaire, survey: survey, conn: conn} =
+        init_respondents_fetch_setup(conn)
+
+      ordered_dates = [
+        Ecto.DateTime.cast!("2020-06-01T10:00:00Z"),
+        Ecto.DateTime.cast!("2020-07-01T10:00:00Z")
+      ]
+
+      ordered_dispositions = ["completed", "partial"]
+
+      insert_respondent = fn %{
+                               ordered_dispositions_index: ordered_dispositions_index,
+                               ordered_dates_index: ordered_dates_index
+                             } ->
+        insert(:respondent,
+          survey: survey,
+          mode: ["sms"],
+          questionnaire_id: questionnaire.id,
+          disposition: Enum.at(ordered_dispositions, ordered_dispositions_index),
+          updated_at: Enum.at(ordered_dates, ordered_dates_index)
+        )
+      end
+
+      # Intentionally disordered by date and disposition
+      insert_respondent.(%{ordered_dispositions_index: 0, ordered_dates_index: 1})
+      insert_respondent.(%{ordered_dispositions_index: 1, ordered_dates_index: 0})
+      insert_respondent.(%{ordered_dispositions_index: 1, ordered_dates_index: 1})
+      insert_respondent.(%{ordered_dispositions_index: 0, ordered_dates_index: 0})
+
+      {:ok,
+       conn: conn,
+       project_id: project.id,
+       survey_id: survey.id,
+       ordered_dates: ordered_dates,
+       ordered_dispositions: ordered_dispositions}
+    end
+
+    test "by disposition asc", %{
+      conn: conn,
+      project_id: project_id,
+      survey_id: survey_id,
+      ordered_dispositions: ordered_dispositions
+    } do
+      path =
+        project_survey_respondent_path(conn, :index, project_id, survey_id,
+          sort_by: "disposition",
+          sort_asc: "true"
+        )
+
+      respondents = json_response(get(conn, path), 200)["data"]["respondents"]
+
+      assert_respondent_order_by_disposition(%{
+        respondents: respondents,
+        respondent_index: 0,
+        ordered_dispositions: ordered_dispositions,
+        ordered_index: 0
+      })
+
+      assert_respondent_order_by_disposition(%{
+        respondents: respondents,
+        respondent_index: 1,
+        ordered_dispositions: ordered_dispositions,
+        ordered_index: 0
+      })
+
+      assert_respondent_order_by_disposition(%{
+        respondents: respondents,
+        respondent_index: 2,
+        ordered_dispositions: ordered_dispositions,
+        ordered_index: 1
+      })
+
+      assert_respondent_order_by_disposition(%{
+        respondents: respondents,
+        respondent_index: 3,
+        ordered_dispositions: ordered_dispositions,
+        ordered_index: 1
+      })
+    end
+
+    test "by disposition desc", %{
+      conn: conn,
+      project_id: project_id,
+      survey_id: survey_id,
+      ordered_dispositions: ordered_dispositions
+    } do
+      path =
+        project_survey_respondent_path(conn, :index, project_id, survey_id,
+          sort_by: "disposition",
+          sort_asc: "false"
+        )
+
+      respondents = json_response(get(conn, path), 200)["data"]["respondents"]
+
+      assert_respondent_order_by_disposition(%{
+        respondents: respondents,
+        respondent_index: 0,
+        ordered_dispositions: ordered_dispositions,
+        ordered_index: 1
+      })
+
+      assert_respondent_order_by_disposition(%{
+        respondents: respondents,
+        respondent_index: 1,
+        ordered_dispositions: ordered_dispositions,
+        ordered_index: 1
+      })
+
+      assert_respondent_order_by_disposition(%{
+        respondents: respondents,
+        respondent_index: 2,
+        ordered_dispositions: ordered_dispositions,
+        ordered_index: 0
+      })
+
+      assert_respondent_order_by_disposition(%{
+        respondents: respondents,
+        respondent_index: 3,
+        ordered_dispositions: ordered_dispositions,
+        ordered_index: 0
+      })
+    end
+
+    test "by date asc", %{
+      conn: conn,
+      project_id: project_id,
+      survey_id: survey_id,
+      ordered_dates: ordered_dates
+    } do
+      path =
+        project_survey_respondent_path(conn, :index, project_id, survey_id,
+          sort_by: "date",
+          sort_asc: "true"
+        )
+
+      respondents = json_response(get(conn, path), 200)["data"]["respondents"]
+
+      assert_respondent_order_by_date(%{
+        respondents: respondents,
+        respondent_index: 0,
+        ordered_dates: ordered_dates,
+        ordered_index: 0
+      })
+
+      assert_respondent_order_by_date(%{
+        respondents: respondents,
+        respondent_index: 1,
+        ordered_dates: ordered_dates,
+        ordered_index: 0
+      })
+
+      assert_respondent_order_by_date(%{
+        respondents: respondents,
+        respondent_index: 2,
+        ordered_dates: ordered_dates,
+        ordered_index: 1
+      })
+
+      assert_respondent_order_by_date(%{
+        respondents: respondents,
+        respondent_index: 3,
+        ordered_dates: ordered_dates,
+        ordered_index: 1
+      })
+    end
+
+    test "by date desc", %{
+      conn: conn,
+      project_id: project_id,
+      survey_id: survey_id,
+      ordered_dates: ordered_dates
+    } do
+      path =
+        project_survey_respondent_path(conn, :index, project_id, survey_id,
+          sort_by: "date",
+          sort_asc: "false"
+        )
+
+      respondents = json_response(get(conn, path), 200)["data"]["respondents"]
+
+      assert_respondent_order_by_date(%{
+        respondents: respondents,
+        respondent_index: 0,
+        ordered_dates: ordered_dates,
+        ordered_index: 1
+      })
+
+      assert_respondent_order_by_date(%{
+        respondents: respondents,
+        respondent_index: 1,
+        ordered_dates: ordered_dates,
+        ordered_index: 1
+      })
+
+      assert_respondent_order_by_date(%{
+        respondents: respondents,
+        respondent_index: 2,
+        ordered_dates: ordered_dates,
+        ordered_index: 0
+      })
+
+      assert_respondent_order_by_date(%{
+        respondents: respondents,
+        respondent_index: 3,
+        ordered_dates: ordered_dates,
+        ordered_index: 0
+      })
+    end
+  end
+
   describe "normal" do
     setup :user
 
@@ -1763,4 +1975,38 @@ defmodule Ask.RespondentControllerTest do
 
     {:ok, conn: conn, user: user}
   end
+
+  defp init_respondents_fetch_setup(conn) do
+    {:ok, conn: conn, user: user} = user(%{conn: conn})
+    project = create_project_for_user(user)
+    questionnaire = insert(:questionnaire, project: project)
+    survey = insert(:survey, project: project, questionnaires: [questionnaire])
+    %{project: project, questionnaire: questionnaire, survey: survey, conn: conn}
+  end
+
+  defp assert_respondent_order_by_date(%{
+         respondents: respondents,
+         respondent_index: respondent_index,
+         ordered_dates: ordered_dates,
+         ordered_index: ordered_index
+       }),
+       do:
+         assert(
+           Enum.at(respondents, respondent_index)["updated_at"] |> String.slice(0..9) ==
+             Enum.at(ordered_dates, ordered_index)
+             |> Ecto.DateTime.to_string()
+             |> String.slice(0..9)
+         )
+
+  defp assert_respondent_order_by_disposition(%{
+         respondents: respondents,
+         respondent_index: respondent_index,
+         ordered_dispositions: ordered_dispositions,
+         ordered_index: ordered_index
+       }),
+       do:
+         assert(
+           Enum.at(respondents, respondent_index)["disposition"] ==
+             Enum.at(ordered_dispositions, ordered_index)
+         )
 end
