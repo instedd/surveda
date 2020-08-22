@@ -14,11 +14,7 @@ defmodule Ask.RespondentControllerTest do
     ActivityLog,
     QuestionnaireRelevantSteps,
     Schedule,
-    TestChannel,
-    RespondentGroupChannel,
-    Channel,
-    RespondentGroup,
-    Questionnaire
+    TestChannel
   }
 
   alias Ask.Runtime.ChannelStatusServer
@@ -1188,21 +1184,42 @@ defmodule Ask.RespondentControllerTest do
     end
   end
 
-  # For testing purposes (the order ir arbitrary)
-  #  - the 1st respondent is associated to a questionnaire with partial relevant
-  #  - the 2nd respondent is associated to a questionnaire without partial relevant
   describe "partial relevant counter - with comparisions " do
     setup %{conn: conn} do
-      setup = "comparisons"
-
       %{
         conn: conn,
         survey: survey,
         mode: mode,
         respondents: respondents,
+        questionnaires: questionnaires,
         expected_field_index_on_index: expected_field_index_on_index,
         expected_field_index_on_csv: expected_field_index_on_csv
-      } = init_partial_relevant(conn, setup, nil)
+      } = init_partial_relevant(conn, "comparisons")
+
+      [
+        partial_relevant_questionnaire,
+        not_partial_relevant_questionnaire
+      ] = questionnaires
+
+      [
+        partial_relevant_respondent,
+        not_partial_relevant_respondent
+      ] = respondents
+
+      # Because the questionnaire associated to every respondent when comparisions is random
+      # the respondent questionnaire association is reseted arbitrary so:
+      #  - the 1st respondent is associated to the questionnaire with partial relevant
+      #  - the 2nd respondent is associated to the questionnaire without partial relevant
+
+      Respondent.changeset(partial_relevant_respondent, %{
+        questionnaire_id: partial_relevant_questionnaire.id
+      })
+      |> Repo.update!()
+
+      Respondent.changeset(not_partial_relevant_respondent, %{
+        questionnaire_id: not_partial_relevant_questionnaire.id
+      })
+      |> Repo.update!()
 
       {
         :ok,
@@ -2468,19 +2485,6 @@ defmodule Ask.RespondentControllerTest do
     assert partial_relevant == %{"answered_count" => answered_count}
   end
 
-  # Because the questionnaire associated to every respondent is random, retry until:
-  #  - the 1st respondent is associated with the questionnaire with partial relevant
-  #  - the 2nd respondent is associated the questionnaire with no partial relevant
-  defp init_partial_relevant(conn, "comparisons" = setup, result) do
-    if respondent_questionnaire_id_ok_for_comparisons() do
-      result
-    else
-      clear_partial_relevant_db()
-      result = init_partial_relevant(conn, setup)
-      init_partial_relevant(conn, setup, result)
-    end
-  end
-
   defp init_partial_relevant(conn, setup) do
     {:ok, conn: conn, user: user} = user(%{conn: conn})
 
@@ -2548,6 +2552,7 @@ defmodule Ask.RespondentControllerTest do
     %{
       conn: conn,
       survey: Repo.get!(Survey, survey.id),
+      questionnaires: questionnaires,
       mode: mode,
       respondents: Repo.all(Respondent),
       expected_field_index_on_index: expected_field_index_on_index,
@@ -2696,25 +2701,5 @@ defmodule Ask.RespondentControllerTest do
     else
       assert actual == expected
     end
-  end
-
-  # The 1st respondent must be associated with the partial relevant questionnaire
-  # The 2nd respondent must be associated with the not partial relevant questionnaire
-  defp respondent_questionnaire_id_ok_for_comparisons(),
-    do:
-      from(r0 in Respondent,
-        join: r1 in Respondent,
-        on: r0.id < r1.id,
-        where: r0.questionnaire_id < r1.questionnaire_id
-      )
-      |> Repo.aggregate(:count, :id) > 0
-
-  defp clear_partial_relevant_db() do
-    Repo.delete_all(RespondentGroupChannel)
-    Repo.delete_all(Channel)
-    Repo.delete_all(RespondentGroup)
-    Repo.delete_all(Respondent)
-    Repo.delete_all(Survey)
-    Repo.delete_all(Questionnaire)
   end
 end
