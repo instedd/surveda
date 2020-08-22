@@ -574,7 +574,7 @@ defmodule Ask.Survey do
 
   def partial_relevant_enabled?(survey, persist \\ false) do
     partial_relevant_configs = partial_relevant_configs(survey, persist)
-    Enum.any?(partial_relevant_configs, fn config -> !!config["enabled"] end)
+    Enum.any?(partial_relevant_configs, fn config -> Questionnaire.partial_relevant_enabled?(config) end)
   end
 
   defp partial_relevant_configs(survey, true = _persist),

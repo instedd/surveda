@@ -1,9 +1,36 @@
 defmodule Ask.Runtime.Session do
   import Ecto.Query
   import Ecto
-  alias Ask.{Repo, QuotaBucket, Respondent, Schedule, RespondentDispositionHistory, Survey}
+
+  alias Ask.{
+    Repo,
+    QuotaBucket,
+    Respondent,
+    Schedule,
+    RespondentDispositionHistory,
+    Survey,
+    Questionnaire
+  }
+
   alias Ask.Runtime.Flow.TextVisitor
-  alias Ask.Runtime.{Flow, Channel, Session, Reply, SurveyLogger, ReplyStep, SessionMode, SessionModeProvider, SMSMode, IVRMode, MobileWebMode, SMSSimulatorMode, ChannelPatterns, RetriesHistogram}
+
+  alias Ask.Runtime.{
+    Flow,
+    Channel,
+    Session,
+    Reply,
+    SurveyLogger,
+    ReplyStep,
+    SessionMode,
+    SessionModeProvider,
+    SMSMode,
+    IVRMode,
+    MobileWebMode,
+    SMSSimulatorMode,
+    ChannelPatterns,
+    RetriesHistogram
+  }
+
   use Timex
 
   defstruct [:current_mode, :fallback_mode, :flow, :respondent, :token, :fallback_delay, :channel_state, :count_partial_results, :schedule]
@@ -744,9 +771,18 @@ defmodule Ask.Runtime.Session do
     end
   end
 
-  def partial_relevant_answered_count(%{questionnaire: questionnaire} = respondent, persist \\ true),
-    do:
+  def partial_relevant_answered_count(
+        %{questionnaire: questionnaire} = respondent,
+        persist \\ true
+      ) do
+    partial_relevant_enabled =
+      Questionnaire.partial_relevant_enabled?(questionnaire.partial_relevant_config)
+
+    if partial_relevant_enabled do
       Respondent.stored_responses(respondent, persist)
       |> Enum.count(fn response -> Flow.relevant_response?(questionnaire, response) end)
-
+    else
+      0
+    end
+  end
 end

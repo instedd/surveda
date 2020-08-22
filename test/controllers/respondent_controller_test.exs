@@ -14,7 +14,11 @@ defmodule Ask.RespondentControllerTest do
     ActivityLog,
     QuestionnaireRelevantSteps,
     Schedule,
-    TestChannel
+    TestChannel,
+    RespondentGroupChannel,
+    Channel,
+    RespondentGroup,
+    Questionnaire
   }
 
   alias Ask.Runtime.ChannelStatusServer
@@ -1039,20 +1043,40 @@ defmodule Ask.RespondentControllerTest do
 
   describe "partial relevant counter (basic)" do
     setup %{conn: conn} do
-      %{conn: conn, survey: survey, mode: mode, respondent: respondent} =
-        init_partial_relevant(conn, "basic")
+      %{
+        conn: conn,
+        survey: survey,
+        mode: mode,
+        respondents: respondents,
+        expected_field_index_on_index: expected_field_index_on_index,
+        expected_field_index_on_csv: expected_field_index_on_csv
+      } = init_partial_relevant(conn, "basic")
 
-      {:ok, conn: conn, survey: survey, mode: mode, respondent: respondent}
+      {
+        :ok,
+        conn: conn,
+        survey: survey,
+        mode: mode,
+        respondent: Enum.at(respondents, 0),
+        expected_field_index_on_index: expected_field_index_on_index,
+        expected_field_index_on_csv: expected_field_index_on_csv
+      }
     end
 
-    test "index", %{conn: conn, survey: survey, mode: mode, respondent: respondent} do
+    test "index", %{
+      conn: conn,
+      survey: survey,
+      mode: mode,
+      respondent: respondent,
+      expected_field_index_on_index: expected_field_index_on_index
+    } do
       # No answers
       %{
         fields: fields,
         respondents: respondents
-      } = respondents_index(conn, survey.project.id, survey.id)
+      } = respondents_index(conn, survey.project_id, survey.id)
 
-      assert_partial_relevant_index_field(fields, 4)
+      assert_partial_relevant_index_field(fields, expected_field_index_on_index)
       assert_partial_relevant_index_respondent(respondents, 0, 0)
 
       # Answer 1st (relevant) question
@@ -1061,9 +1085,9 @@ defmodule Ask.RespondentControllerTest do
       %{
         fields: fields,
         respondents: respondents
-      } = respondents_index(conn, survey.project.id, survey.id)
+      } = respondents_index(conn, survey.project_id, survey.id)
 
-      assert_partial_relevant_index_field(fields, 4)
+      assert_partial_relevant_index_field(fields, expected_field_index_on_index)
       assert_partial_relevant_index_respondent(respondents, 0, 1)
 
       # Answer 2nd (no relevant) question
@@ -1072,9 +1096,9 @@ defmodule Ask.RespondentControllerTest do
       %{
         fields: fields,
         respondents: respondents
-      } = respondents_index(conn, survey.project.id, survey.id)
+      } = respondents_index(conn, survey.project_id, survey.id)
 
-      assert_partial_relevant_index_field(fields, 4)
+      assert_partial_relevant_index_field(fields, expected_field_index_on_index)
       assert_partial_relevant_index_respondent(respondents, 0, 1)
 
       # Answer 3rd (relevant) question
@@ -1083,25 +1107,31 @@ defmodule Ask.RespondentControllerTest do
       %{
         fields: fields,
         respondents: respondents
-      } = respondents_index(conn, survey.project.id, survey.id)
+      } = respondents_index(conn, survey.project_id, survey.id)
 
-      assert_partial_relevant_index_field(fields, 4)
+      assert_partial_relevant_index_field(fields, expected_field_index_on_index)
       assert_partial_relevant_index_respondent(respondents, 0, 2)
     end
 
-    test "CSV", %{conn: conn, survey: survey, mode: mode, respondent: respondent} do
+    test "CSV", %{
+      conn: conn,
+      survey: survey,
+      mode: mode,
+      respondent: respondent,
+      expected_field_index_on_csv: expected_field_index_on_csv
+    } do
       # No answers
       %{
         header: header,
         respondents: respondents
-      } = respondents_csv(conn, survey.project.id, survey.id)
+      } = respondents_csv(conn, survey.project_id, survey.id)
 
-      assert_partial_relevant_csv_header(header, 10)
+      assert_partial_relevant_csv_header(header, expected_field_index_on_csv)
 
       assert_partial_relevant_csv_respondent(%{
         respondents: respondents,
         respondent_index: 0,
-        field_index: 10,
+        field_index: expected_field_index_on_csv,
         answered_count: 0
       })
 
@@ -1111,14 +1141,14 @@ defmodule Ask.RespondentControllerTest do
       %{
         header: header,
         respondents: respondents
-      } = respondents_csv(conn, survey.project.id, survey.id)
+      } = respondents_csv(conn, survey.project_id, survey.id)
 
-      assert_partial_relevant_csv_header(header, 10)
+      assert_partial_relevant_csv_header(header, expected_field_index_on_csv)
 
       assert_partial_relevant_csv_respondent(%{
         respondents: respondents,
         respondent_index: 0,
-        field_index: 10,
+        field_index: expected_field_index_on_csv,
         answered_count: 1
       })
 
@@ -1128,14 +1158,14 @@ defmodule Ask.RespondentControllerTest do
       %{
         header: header,
         respondents: respondents
-      } = respondents_csv(conn, survey.project.id, survey.id)
+      } = respondents_csv(conn, survey.project_id, survey.id)
 
-      assert_partial_relevant_csv_header(header, 10)
+      assert_partial_relevant_csv_header(header, expected_field_index_on_csv)
 
       assert_partial_relevant_csv_respondent(%{
         respondents: respondents,
         respondent_index: 0,
-        field_index: 10,
+        field_index: expected_field_index_on_csv,
         answered_count: 1
       })
 
@@ -1145,40 +1175,216 @@ defmodule Ask.RespondentControllerTest do
       %{
         header: header,
         respondents: respondents
-      } = respondents_csv(conn, survey.project.id, survey.id)
+      } = respondents_csv(conn, survey.project_id, survey.id)
 
-      assert_partial_relevant_csv_header(header, 10)
+      assert_partial_relevant_csv_header(header, expected_field_index_on_csv)
 
       assert_partial_relevant_csv_respondent(%{
         respondents: respondents,
         respondent_index: 0,
-        field_index: 10,
+        field_index: expected_field_index_on_csv,
         answered_count: 2
       })
     end
   end
 
-  describe "partial relevant counter included when comparisions" do
+  # For testing purposes (the order ir arbitrary)
+  #  - the 1st respondent is associated to a questionnaire with partial relevant
+  #  - the 2nd respondent is associated to a questionnaire without partial relevant
+  describe "partial relevant counter - with comparisions " do
     setup %{conn: conn} do
-      %{conn: conn, survey: survey} = init_partial_relevant(conn, "comparisions")
+      setup = "comparisons"
 
-      {:ok, conn: conn, survey: survey}
+      %{
+        conn: conn,
+        survey: survey,
+        mode: mode,
+        respondents: respondents,
+        expected_field_index_on_index: expected_field_index_on_index,
+        expected_field_index_on_csv: expected_field_index_on_csv
+      } = init_partial_relevant(conn, setup, nil)
+
+      {
+        :ok,
+        conn: conn,
+        survey: survey,
+        mode: mode,
+        respondents: respondents,
+        expected_field_index_on_index: expected_field_index_on_index,
+        expected_field_index_on_csv: expected_field_index_on_csv
+      }
     end
 
-    test "index", %{conn: conn, survey: survey} do
-      %{
-        fields: fields
-      } = respondents_index(conn, survey.project.id, survey.id)
+    test "index", %{
+      conn: conn,
+      survey: survey,
+      mode: mode,
+      respondents: respondents,
+      expected_field_index_on_index: expected_field_index_on_index
+    } do
+      [
+        partial_relevant_respondent,
+        not_partial_relevant_respondent
+      ] = respondents
 
-      assert_partial_relevant_index_field(fields, 4)
+      # No answers
+      %{
+        fields: fields,
+        respondents: respondents
+      } = respondents_index(conn, survey.project_id, survey.id)
+
+      assert_partial_relevant_index_field(fields, expected_field_index_on_index)
+      assert_partial_relevant_index_respondent(respondents, 0, 0)
+      assert_partial_relevant_index_respondent(respondents, 1, 0)
+
+      # Answer 1st (relevant) question
+      respondent_reply(partial_relevant_respondent.id, "1", mode)
+      respondent_reply(not_partial_relevant_respondent.id, "1", mode)
+
+      %{
+        fields: fields,
+        respondents: respondents
+      } = respondents_index(conn, survey.project_id, survey.id)
+
+      assert_partial_relevant_index_field(fields, expected_field_index_on_index)
+      assert_partial_relevant_index_respondent(respondents, 0, 1)
+      assert_partial_relevant_index_respondent(respondents, 1, 0)
+
+      # Answer 2nd (no relevant) question
+      respondent_reply(partial_relevant_respondent.id, "1", mode)
+      respondent_reply(not_partial_relevant_respondent.id, "1", mode)
+
+      %{
+        fields: fields,
+        respondents: respondents
+      } = respondents_index(conn, survey.project_id, survey.id)
+
+      assert_partial_relevant_index_field(fields, expected_field_index_on_index)
+      assert_partial_relevant_index_respondent(respondents, 0, 1)
+      assert_partial_relevant_index_respondent(respondents, 1, 0)
+
+      # Answer 3rd (relevant) question
+      respondent_reply(partial_relevant_respondent.id, "1", mode)
+      respondent_reply(not_partial_relevant_respondent.id, "1", mode)
+
+      %{
+        fields: fields,
+        respondents: respondents
+      } = respondents_index(conn, survey.project_id, survey.id)
+
+      assert_partial_relevant_index_field(fields, expected_field_index_on_index)
+      assert_partial_relevant_index_respondent(respondents, 0, 2)
+      assert_partial_relevant_index_respondent(respondents, 1, 0)
     end
 
-    test "CSV", %{conn: conn, survey: survey} do
-      %{
-        header: header
-      } = respondents_csv(conn, survey.project.id, survey.id)
+    test "CSV", %{
+      conn: conn,
+      survey: survey,
+      mode: mode,
+      respondents: respondents,
+      expected_field_index_on_csv: expected_field_index_on_csv
+    } do
+      [
+        partial_relevant_respondent,
+        not_partial_relevant_respondent
+      ] = respondents
 
-      assert_partial_relevant_csv_header(header, 10)
+      # No answers
+      %{
+        header: header,
+        respondents: respondents
+      } = respondents_csv(conn, survey.project_id, survey.id)
+
+      assert_partial_relevant_csv_header(header, expected_field_index_on_csv)
+
+      assert_partial_relevant_csv_respondent(%{
+        respondents: respondents,
+        respondent_index: 0,
+        field_index: expected_field_index_on_csv,
+        answered_count: 0
+      })
+
+      assert_partial_relevant_csv_respondent(%{
+        respondents: respondents,
+        respondent_index: 1,
+        field_index: expected_field_index_on_csv,
+        answered_count: 0
+      })
+
+      # Answer 1st (relevant) question
+      respondent_reply(partial_relevant_respondent.id, "1", mode)
+      respondent_reply(not_partial_relevant_respondent.id, "1", mode)
+
+      %{
+        header: header,
+        respondents: respondents
+      } = respondents_csv(conn, survey.project_id, survey.id)
+
+      assert_partial_relevant_csv_header(header, expected_field_index_on_csv)
+
+      assert_partial_relevant_csv_respondent(%{
+        respondents: respondents,
+        respondent_index: 0,
+        field_index: expected_field_index_on_csv,
+        answered_count: 1
+      })
+
+      assert_partial_relevant_csv_respondent(%{
+        respondents: respondents,
+        respondent_index: 1,
+        field_index: expected_field_index_on_csv,
+        answered_count: 0
+      })
+
+      # Answer 2nd (no relevant) question
+      respondent_reply(partial_relevant_respondent.id, "1", mode)
+      respondent_reply(not_partial_relevant_respondent.id, "1", mode)
+
+      %{
+        header: header,
+        respondents: respondents
+      } = respondents_csv(conn, survey.project_id, survey.id)
+
+      assert_partial_relevant_csv_header(header, expected_field_index_on_csv)
+
+      assert_partial_relevant_csv_respondent(%{
+        respondents: respondents,
+        respondent_index: 0,
+        field_index: expected_field_index_on_csv,
+        answered_count: 1
+      })
+
+      assert_partial_relevant_csv_respondent(%{
+        respondents: respondents,
+        respondent_index: 1,
+        field_index: expected_field_index_on_csv,
+        answered_count: 0
+      })
+
+      # Answer 3rd (relevant) question
+      respondent_reply(partial_relevant_respondent.id, "1", mode)
+      respondent_reply(not_partial_relevant_respondent.id, "1", mode)
+
+      %{
+        header: header,
+        respondents: respondents
+      } = respondents_csv(conn, survey.project_id, survey.id)
+
+      assert_partial_relevant_csv_header(header, expected_field_index_on_csv)
+
+      assert_partial_relevant_csv_respondent(%{
+        respondents: respondents,
+        respondent_index: 0,
+        field_index: expected_field_index_on_csv,
+        answered_count: 2
+      })
+
+      assert_partial_relevant_csv_respondent(%{
+        respondents: respondents,
+        respondent_index: 1,
+        field_index: expected_field_index_on_csv,
+        answered_count: 0
+      })
     end
   end
 
@@ -1192,7 +1398,7 @@ defmodule Ask.RespondentControllerTest do
     test "index", %{conn: conn, survey: survey} do
       %{
         fields: fields
-      } = respondents_index(conn, survey.project.id, survey.id)
+      } = respondents_index(conn, survey.project_id, survey.id)
 
       assert_partial_relevant_index_field(fields, 4, true)
     end
@@ -1200,7 +1406,7 @@ defmodule Ask.RespondentControllerTest do
     test "CSV", %{conn: conn, survey: survey} do
       %{
         header: header
-      } = respondents_csv(conn, survey.project.id, survey.id)
+      } = respondents_csv(conn, survey.project_id, survey.id)
 
       assert_partial_relevant_csv_header(header, 10, true)
     end
@@ -2262,6 +2468,19 @@ defmodule Ask.RespondentControllerTest do
     assert partial_relevant == %{"answered_count" => answered_count}
   end
 
+  # Because the questionnaire associated to every respondent is random, retry until:
+  #  - the 1st respondent is associated with the questionnaire with partial relevant
+  #  - the 2nd respondent is associated the questionnaire with no partial relevant
+  defp init_partial_relevant(conn, "comparisons" = setup, result) do
+    if respondent_questionnaire_id_ok_for_comparisons() do
+      result
+    else
+      clear_partial_relevant_db()
+      result = init_partial_relevant(conn, setup)
+      init_partial_relevant(conn, setup, result)
+    end
+  end
+
   defp init_partial_relevant(conn, setup) do
     {:ok, conn: conn, user: user} = user(%{conn: conn})
 
@@ -2270,7 +2489,7 @@ defmodule Ask.RespondentControllerTest do
     steps = QuestionnaireRelevantSteps.odd_relevant_steps()
 
     questionnaires =
-      partial_relevant_questionnaires(%{
+      insert_partial_relevant_questionnaires(%{
         setup: setup,
         project: project,
         steps: steps
@@ -2280,7 +2499,8 @@ defmodule Ask.RespondentControllerTest do
       conn: conn,
       project: project,
       mode: mode,
-      questionnaires: questionnaires
+      questionnaires: questionnaires,
+      setup: setup
     })
   end
 
@@ -2288,17 +2508,16 @@ defmodule Ask.RespondentControllerTest do
          conn: conn,
          project: project,
          mode: mode,
-         questionnaires: questionnaires
+         questionnaires: questionnaires,
+         setup: setup
        }) do
     survey =
-      insert(
-        :survey,
+      insert_partial_relevant_survey(%{
         project: project,
-        schedule: Schedule.always(),
-        state: "running",
         questionnaires: questionnaires,
-        mode: [[mode]]
-      )
+        mode: mode,
+        setup: setup
+      })
 
     channel =
       insert(
@@ -2309,38 +2528,98 @@ defmodule Ask.RespondentControllerTest do
 
     group = insert(:respondent_group, survey: survey, respondents_count: 1)
     insert(:respondent_group_channel, respondent_group: group, channel: channel, mode: mode)
-    respondent = insert(:respondent, survey: survey, respondent_group: group)
+
+    insert_partial_relevant_respondents(%{
+      survey: survey,
+      respondent_group: group,
+      questionnaires: questionnaires,
+      setup: setup
+    })
 
     ChannelStatusServer.start_link()
     Broker.start_link()
     Broker.poll()
 
-    %{conn: conn, survey: survey, mode: mode, respondent: respondent}
+    %{
+      on_index: expected_field_index_on_index,
+      on_csv: expected_field_index_on_csv
+    } = expected_field_index(setup)
+
+    %{
+      conn: conn,
+      survey: Repo.get!(Survey, survey.id),
+      mode: mode,
+      respondents: Repo.all(Respondent),
+      expected_field_index_on_index: expected_field_index_on_index,
+      expected_field_index_on_csv: expected_field_index_on_csv
+    }
   end
 
-  defp partial_relevant_questionnaires(%{
-         setup: "basic",
-         project: project,
-         steps: steps
+  defp insert_partial_relevant_respondents(%{
+         survey: survey,
+         respondent_group: group,
+         setup: "comparisons"
        }) do
-    questionnaire =
-      insert(
-        :questionnaire,
-        name: "test",
-        project: project,
-        steps: steps,
-        partial_relevant_config: %{
-          "enabled" => true,
-          "min_relevant_steps" => 2,
-          "ignored_values" => ""
-        }
-      )
-
-    [questionnaire]
+    for _ <- 0..1,
+        do:
+          insert(
+            :respondent,
+            survey: survey,
+            respondent_group: group
+          )
   end
 
-  defp partial_relevant_questionnaires(%{
-         setup: "comparisions",
+  defp insert_partial_relevant_respondents(%{
+         survey: survey,
+         respondent_group: group,
+         questionnaires: [questionnaire]
+       }),
+       do: [
+         insert(
+           :respondent,
+           survey: survey,
+           respondent_group: group,
+           questionnaire: questionnaire
+         )
+       ]
+
+  defp insert_partial_relevant_survey(%{
+         project: project,
+         questionnaires: questionnaires,
+         mode: mode,
+         setup: "comparisons"
+       }) do
+    insert(
+      :survey,
+      project: project,
+      schedule: Schedule.always(),
+      state: "running",
+      questionnaires: questionnaires,
+      mode: [[mode]],
+      comparisons: [
+        %{"ratio" => 50, "questionnaire_id" => Enum.at(questionnaires, 0).id, "mode" => [mode]},
+        %{"ratio" => 50, "questionnaire_id" => Enum.at(questionnaires, 1).id, "mode" => [mode]}
+      ]
+    )
+  end
+
+  defp insert_partial_relevant_survey(%{
+         project: project,
+         questionnaires: questionnaires,
+         mode: mode
+       }) do
+    insert(
+      :survey,
+      project: project,
+      schedule: Schedule.always(),
+      state: "running",
+      questionnaires: questionnaires,
+      mode: [[mode]]
+    )
+  end
+
+  defp insert_partial_relevant_questionnaires(%{
+         setup: "comparisons",
          project: project,
          steps: steps
        }) do
@@ -2366,7 +2645,7 @@ defmodule Ask.RespondentControllerTest do
     [questionnaire_0, questionnaire_1]
   end
 
-  defp partial_relevant_questionnaires(%{
+  defp insert_partial_relevant_questionnaires(%{
          setup: "no_partial_relevant",
          project: project,
          steps: steps
@@ -2383,11 +2662,59 @@ defmodule Ask.RespondentControllerTest do
     [questionnaire]
   end
 
+  defp insert_partial_relevant_questionnaires(%{
+         project: project,
+         steps: steps
+       }) do
+    questionnaire =
+      insert(
+        :questionnaire,
+        name: "test",
+        project: project,
+        steps: steps,
+        partial_relevant_config: %{
+          "enabled" => true,
+          "min_relevant_steps" => 2,
+          "ignored_values" => ""
+        }
+      )
+
+    [questionnaire]
+  end
+
+  defp expected_field_index("comparisons") do
+    %{on_index: 5, on_csv: 11}
+  end
+
+  defp expected_field_index(_setup) do
+    %{on_index: 4, on_csv: 10}
+  end
+
   defp assert(actual, expected, refute) do
     if refute do
       refute actual == expected
     else
       assert actual == expected
     end
+  end
+
+  # The 1st respondent must be associated with the partial relevant questionnaire
+  # The 2nd respondent must be associated with the not partial relevant questionnaire
+  defp respondent_questionnaire_id_ok_for_comparisons(),
+    do:
+      from(r0 in Respondent,
+        join: r1 in Respondent,
+        on: r0.id < r1.id,
+        where: r0.questionnaire_id < r1.questionnaire_id
+      )
+      |> Repo.aggregate(:count, :id) > 0
+
+  defp clear_partial_relevant_db() do
+    Repo.delete_all(RespondentGroupChannel)
+    Repo.delete_all(Channel)
+    Repo.delete_all(RespondentGroup)
+    Repo.delete_all(Respondent)
+    Repo.delete_all(Survey)
+    Repo.delete_all(Questionnaire)
   end
 end
