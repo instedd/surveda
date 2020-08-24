@@ -1184,6 +1184,8 @@ defmodule Ask.RespondentControllerTest do
     end
   end
 
+  # These tests cover the following case: a survey with two questionnaires (partial relevant
+  # enabled and disabled) and two respondents, each one associated with a different questionnaire
   describe "partial relevant counter - with comparisions " do
     setup %{conn: conn} do
       %{
@@ -1426,6 +1428,70 @@ defmodule Ask.RespondentControllerTest do
       } = respondents_csv(conn, survey.project_id, survey.id)
 
       assert_partial_relevant_csv_header(header, 10, true)
+    end
+  end
+
+  # These tests cover the case where the survey has pending respondents
+  describe "partial relevant counter (with pending respondents)" do
+    setup %{conn: conn} do
+      %{
+        conn: conn,
+        survey: survey,
+        expected_field_index_on_index: expected_field_index_on_index,
+        expected_field_index_on_csv: expected_field_index_on_csv
+      } = init_partial_relevant(conn, "pending")
+
+      {
+        :ok,
+        conn: conn,
+        survey: survey,
+        expected_field_index_on_index: expected_field_index_on_index,
+        expected_field_index_on_csv: expected_field_index_on_csv
+      }
+    end
+
+    test "index", %{
+      conn: conn,
+      survey: survey,
+      expected_field_index_on_index: expected_field_index_on_index
+    } do
+      # No answers
+      %{
+        fields: fields,
+        respondents: respondents
+      } = respondents_index(conn, survey.project_id, survey.id)
+
+      assert_partial_relevant_index_field(fields, expected_field_index_on_index)
+      assert_partial_relevant_index_respondent(respondents, 0, 0)
+      assert_partial_relevant_index_respondent(respondents, 1, 0)
+    end
+
+    test "CSV", %{
+      conn: conn,
+      survey: survey,
+      expected_field_index_on_csv: expected_field_index_on_csv
+    } do
+      # No answers
+      %{
+        header: header,
+        respondents: respondents
+      } = respondents_csv(conn, survey.project_id, survey.id)
+
+      assert_partial_relevant_csv_header(header, expected_field_index_on_csv)
+
+      assert_partial_relevant_csv_respondent(%{
+        respondents: respondents,
+        respondent_index: 0,
+        field_index: expected_field_index_on_csv,
+        answered_count: 0
+      })
+
+      assert_partial_relevant_csv_respondent(%{
+        respondents: respondents,
+        respondent_index: 1,
+        field_index: expected_field_index_on_csv,
+        answered_count: 0
+      })
     end
   end
 
@@ -2544,6 +2610,13 @@ defmodule Ask.RespondentControllerTest do
     Broker.start_link()
     Broker.poll()
 
+    insert_partial_relevant_additional_respondents(%{
+      survey: survey,
+      respondent_group: group,
+      questionnaires: questionnaires,
+      setup: setup
+    })
+
     %{
       on_index: expected_field_index_on_index,
       on_csv: expected_field_index_on_csv
@@ -2559,6 +2632,23 @@ defmodule Ask.RespondentControllerTest do
       expected_field_index_on_csv: expected_field_index_on_csv
     }
   end
+
+  defp insert_partial_relevant_additional_respondents(%{
+         survey: survey,
+         respondent_group: group,
+         setup: "pending"
+       }),
+       do: [
+         insert(
+           :respondent,
+           survey: survey,
+           respondent_group: group,
+           state: "pending",
+           disposition: "registered"
+         )
+       ]
+
+  defp insert_partial_relevant_additional_respondents(_), do: []
 
   defp insert_partial_relevant_respondents(%{
          survey: survey,

@@ -771,9 +771,17 @@ defmodule Ask.Runtime.Session do
     end
   end
 
+  def partial_relevant_answered_count(respondent, persist \\ true)
+
+  def partial_relevant_answered_count(
+        %{questionnaire: nil} = _respondent,
+        _persist
+      ),
+      do: 0
+
   def partial_relevant_answered_count(
         %{questionnaire: questionnaire} = respondent,
-        persist \\ true
+        persist
       ) do
     partial_relevant_enabled =
       Questionnaire.partial_relevant_enabled?(questionnaire.partial_relevant_config)
