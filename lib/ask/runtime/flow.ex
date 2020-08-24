@@ -1,7 +1,7 @@
 defmodule Ask.Runtime.Flow do
   # current_step: step_index | {section_index, step_index}
   defstruct current_step: nil, questionnaire: nil, mode: nil, language: nil, retries: 0, in_quota_completed_steps: false, has_sections: false, section_order: nil, ignored_values_from_relevant_steps: []
-  alias Ask.{Repo, Questionnaire}
+  alias Ask.{Repo, Questionnaire, Respondent}
   alias Ask.Runtime.{Reply, Step}
   alias Ask.Runtime.Flow.{Visitor, Message}
   alias __MODULE__
@@ -536,22 +536,7 @@ defmodule Ask.Runtime.Flow do
         %Flow{questionnaire: questionnaire, ignored_values_from_relevant_steps: ignored_values},
         response
       ),
-      do: relevant_response?(questionnaire, ignored_values, response)
-
-  def relevant_response?(questionnaire, response) do
-    ignored_values = Questionnaire.ignored_values_from_relevant_steps(questionnaire)
-    relevant_response?(questionnaire, ignored_values, response)
-  end
-
-  defp relevant_response?(questionnaire, ignored_values, response) do
-    quiz_step =
-      questionnaire
-      |> Questionnaire.all_steps()
-      |> Enum.find(fn step -> step["store"] == response.field_name end)
-
-    not_ignored = fn value -> String.upcase(value) not in ignored_values end
-    quiz_step["relevant"] && not_ignored.(response.value)
-  end
+      do: Respondent.relevant_response?(questionnaire, ignored_values, response)
 end
 
 defmodule Ask.Runtime.Flow.Message do

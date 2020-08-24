@@ -1,7 +1,7 @@
 defmodule Ask.Respondent do
   use Ask.Web, :model
   alias Ask.Ecto.Type.JSON
-  alias Ask.{Stats, Repo, Respondent, Survey}
+  alias Ask.{Stats, Repo, Respondent, Survey, Questionnaire}
 
   schema "respondents" do
     field :phone_number, :string # phone_number as-it-is in the respondents_list
@@ -43,7 +43,7 @@ defmodule Ask.Respondent do
     field :effective_modes, JSON
     field :mobile_web_cookie_code, :string
     field :language, :string
-    belongs_to :questionnaire, Ask.Questionnaire
+    belongs_to :questionnaire, Questionnaire
     belongs_to :survey, Ask.Survey
     belongs_to :respondent_group, Ask.RespondentGroup
     belongs_to :quota_bucket, Ask.QuotaBucket
@@ -256,4 +256,41 @@ defmodule Ask.Respondent do
         do: from(r in Ask.Response, where: r.respondent_id == ^respondent.id) |> Repo.all(),
         else: respondent.responses
       )
+  def partial_relevant_answered_count(respondent, persist \\ true)
+
+  def partial_relevant_answered_count(
+        %{questionnaire: nil} = _respondent,
+        _persist
+      ),
+      do: 0
+
+  def partial_relevant_answered_count(
+        %{questionnaire: questionnaire} = respondent,
+        persist
+      ) do
+    partial_relevant_enabled =
+      Questionnaire.partial_relevant_enabled?(questionnaire.partial_relevant_config)
+
+    if partial_relevant_enabled do
+      Respondent.stored_responses(respondent, persist)
+      |> Enum.count(fn response -> relevant_response?(questionnaire, response) end)
+    else
+      0
+    end
+  end
+
+  defp relevant_response?(questionnaire, response) do
+    ignored_values = Questionnaire.ignored_values_from_relevant_steps(questionnaire)
+    relevant_response?(questionnaire, ignored_values, response)
+  end
+
+  def relevant_response?(questionnaire, ignored_values, response) do
+    quiz_step =
+      questionnaire
+      |> Questionnaire.all_steps()
+      |> Enum.find(fn step -> step["store"] == response.field_name end)
+
+    not_ignored = fn value -> String.upcase(value) not in ignored_values end
+    quiz_step["relevant"] && not_ignored.(response.value)
+  end
 end

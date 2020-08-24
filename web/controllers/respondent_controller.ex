@@ -15,8 +15,6 @@ defmodule Ask.RespondentController do
     RespondentsFilter
   }
 
-  alias Ask.Runtime.Session
-
   def index(conn, %{"project_id" => project_id, "survey_id" => survey_id} = params) do
     limit = Map.get(params, "limit", "")
     page = Map.get(params, "page", "")
@@ -759,7 +757,7 @@ defmodule Ask.RespondentController do
         end
 
         row = if partial_relevant_enabled do
-          row ++ [Session.partial_relevant_answered_count(respondent, false)]
+          row ++ [Respondent.partial_relevant_answered_count(respondent, false)]
         else
           row
         end

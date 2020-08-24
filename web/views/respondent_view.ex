@@ -1,6 +1,6 @@
 defmodule Ask.RespondentView do
   use Ask.Web, :view
-  alias Ask.Runtime.Session
+  alias Ask.Respondent\
 
   def render(
         "index.json",
@@ -129,7 +129,7 @@ defmodule Ask.RespondentView do
 
     partial_relevant_answered_count =
       if partial_relevant_enabled,
-        do: Session.partial_relevant_answered_count(respondent, false),
+        do: Respondent.partial_relevant_answered_count(respondent, false),
         else: nil
 
     responses =

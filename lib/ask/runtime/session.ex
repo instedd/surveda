@@ -8,8 +8,7 @@ defmodule Ask.Runtime.Session do
     Respondent,
     Schedule,
     RespondentDispositionHistory,
-    Survey,
-    Questionnaire
+    Survey
   }
 
   alias Ask.Runtime.Flow.TextVisitor
@@ -768,29 +767,6 @@ defmodule Ask.Runtime.Session do
       %{session | respondent: respondent}
     else
       session
-    end
-  end
-
-  def partial_relevant_answered_count(respondent, persist \\ true)
-
-  def partial_relevant_answered_count(
-        %{questionnaire: nil} = _respondent,
-        _persist
-      ),
-      do: 0
-
-  def partial_relevant_answered_count(
-        %{questionnaire: questionnaire} = respondent,
-        persist
-      ) do
-    partial_relevant_enabled =
-      Questionnaire.partial_relevant_enabled?(questionnaire.partial_relevant_config)
-
-    if partial_relevant_enabled do
-      Respondent.stored_responses(respondent, persist)
-      |> Enum.count(fn response -> Flow.relevant_response?(questionnaire, response) end)
-    else
-      0
     end
   end
 end
