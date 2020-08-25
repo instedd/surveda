@@ -1,6 +1,6 @@
 defmodule Ask.RespondentView do
   use Ask.Web, :view
-  alias Ask.Respondent\
+  alias Ask.Respondent
 
   def render(
         "index.json",
