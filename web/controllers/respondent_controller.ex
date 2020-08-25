@@ -102,20 +102,18 @@ defmodule Ask.RespondentController do
   defp index_fields_for_render("variant" = field_type, _survey_comparisons),
     do: [index_field_for_render(field_type, "variant")]
 
-  defp index_fields_for_render("partial_relevant" = field_type, partial_relevant_enabled) do
-    if partial_relevant_enabled do
+  defp index_fields_for_render("partial_relevant" = field_type, true),
+    do:
       map_fields_with_type(["answered_questions"], field_type)
-    else
-      []
-    end
-  end
+
+  defp index_fields_for_render("partial_relevant" = _field_type, _), do: []
 
   defp map_fields_with_type(field_keys, field_type),
     do: Enum.map(field_keys, fn field_key -> index_field_for_render(field_type, field_key) end)
 
   defp index_field_for_render(field_type, field_key), do: %{type: field_type, key: field_key}
 
-    defp effective_stats(respondent) do
+  defp effective_stats(respondent) do
     effective_stats = case respondent.stats do
       %{attempts: %{"ivr" => _ivr_attempts}} = stats ->
         effective_attempts = Map.put(stats.attempts, "ivr", Ask.Stats.attempts(stats, :ivr))
