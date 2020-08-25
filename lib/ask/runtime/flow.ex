@@ -533,7 +533,8 @@ defmodule Ask.Runtime.Flow do
   end
 
   def relevant_response?(
-        %Flow{questionnaire: questionnaire, ignored_values_from_relevant_steps: ignored_values},
+        %{questionnaire: questionnaire, ignored_values_from_relevant_steps: ignored_values} =
+          _flow,
         response
       ),
       do: Respondent.relevant_response?(questionnaire, ignored_values, response)
