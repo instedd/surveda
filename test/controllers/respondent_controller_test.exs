@@ -1409,25 +1409,42 @@ defmodule Ask.RespondentControllerTest do
 
   describe "partial relevant not included when no questionnaires with partial relevant" do
     setup %{conn: conn} do
-      %{conn: conn, survey: survey} = init_partial_relevant(conn, "no_partial_relevant")
+      %{
+        conn: conn,
+        survey: survey,
+        expected_field_index_on_index: expected_field_index_on_index,
+        expected_field_index_on_csv: expected_field_index_on_csv
+      } = init_partial_relevant(conn, "no_partial_relevant")
 
-      {:ok, conn: conn, survey: survey}
+      {:ok,
+       conn: conn,
+       survey: survey,
+       expected_field_index_on_index: expected_field_index_on_index,
+       expected_field_index_on_csv: expected_field_index_on_csv}
     end
 
-    test "index", %{conn: conn, survey: survey} do
+    test "index", %{
+      conn: conn,
+      survey: survey,
+      expected_field_index_on_index: expected_field_index_on_index
+    } do
       %{
         fields: fields
       } = respondents_index(conn, survey.project_id, survey.id)
 
-      assert_partial_relevant_index_field(fields, 4, true)
+      refute_partial_relevant_index_field(fields, expected_field_index_on_index)
     end
 
-    test "CSV", %{conn: conn, survey: survey} do
+    test "CSV", %{
+      conn: conn,
+      survey: survey,
+      expected_field_index_on_csv: expected_field_index_on_csv
+    } do
       %{
         header: header
       } = respondents_csv(conn, survey.project_id, survey.id)
 
-      assert_partial_relevant_csv_header(header, 10, true)
+      refute_partial_relevant_csv_header(header, expected_field_index_on_csv)
     end
   end
 
@@ -2496,6 +2513,9 @@ defmodule Ask.RespondentControllerTest do
     %{header: header, respondents: respondents}
   end
 
+  defp refute_partial_relevant_csv_header(header, index),
+    do: assert_partial_relevant_csv_header(header, index, true)
+
   defp assert_partial_relevant_csv_header(header, index, refute \\ false) do
     header_values = parse_csv_line(header)
     actual = Enum.at(header_values, index)
@@ -2531,6 +2551,9 @@ defmodule Ask.RespondentControllerTest do
 
     %{fields: fields, respondents: respondents}
   end
+
+  defp refute_partial_relevant_index_field(fields, index),
+    do: assert_partial_relevant_index_field(fields, index, true)
 
   defp assert_partial_relevant_index_field(fields, index, refute \\ false) do
     actual = Enum.at(fields, index)
