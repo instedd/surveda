@@ -31,6 +31,7 @@ defmodule Ask.RespondentController do
       |> Repo.get!(survey_id)
       |> assoc(:respondents)
       |> preload(:responses)
+      |> preload(:questionnaire)
       |> where(^filter_where)
 
     respondents_count = Repo.aggregate(filtered_query, :count, :id)
@@ -48,19 +49,32 @@ defmodule Ask.RespondentController do
 
     survey = Repo.get!(Survey, survey_id)
 
+    partial_relevant_enabled = Survey.partial_relevant_enabled?(survey, true)
+
     render(conn, "index.json",
       respondents: respondents,
       respondents_count: respondents_count,
-      index_fields: index_fields_for_render(%{survey: survey, respondents: respondents})
+      partial_relevant_enabled: partial_relevant_enabled,
+      index_fields:
+        index_fields_for_render(%{
+          survey: survey,
+          respondents: respondents,
+          partial_relevant_enabled: partial_relevant_enabled
+        })
     )
   end
 
-  defp index_fields_for_render(%{survey: survey, respondents: respondents}),
-    do:
-      index_fields_for_render("fixed") ++
-        index_fields_for_render("mode", survey.mode) ++
-        index_fields_for_render("response", respondents) ++
-        index_fields_for_render("variant", survey.comparisons)
+  defp index_fields_for_render(%{
+         survey: survey,
+         respondents: respondents,
+         partial_relevant_enabled: partial_relevant_enabled
+       }),
+       do:
+         index_fields_for_render("fixed") ++
+           index_fields_for_render("mode", survey.mode) ++
+           index_fields_for_render("variant", survey.comparisons) ++
+           index_fields_for_render("partial_relevant", partial_relevant_enabled) ++
+           index_fields_for_render("response", respondents)
 
   defp index_fields_for_render("fixed" = field_type),
     do:
@@ -87,6 +101,12 @@ defmodule Ask.RespondentController do
 
   defp index_fields_for_render("variant" = field_type, _survey_comparisons),
     do: [index_field_for_render(field_type, "variant")]
+
+  defp index_fields_for_render("partial_relevant" = field_type, true),
+    do:
+      map_fields_with_type(["answered_questions"], field_type)
+
+  defp index_fields_for_render("partial_relevant" = _field_type, _), do: []
 
   defp map_fields_with_type(field_keys, field_type),
     do: Enum.map(field_keys, fn field_key -> index_field_for_render(field_type, field_key) end)
@@ -601,7 +621,7 @@ defmodule Ask.RespondentController do
           where: ^filter_where,
           order_by: r2.id,
           limit: 1000,
-          preload: [:responses, :respondent_group],
+          preload: [:responses, :respondent_group, :questionnaire],
           select: r1
         ) |> Repo.all;
 
@@ -612,7 +632,9 @@ defmodule Ask.RespondentController do
       end,
       fn _ -> [] end)
 
-    render_results(conn, get_format(conn), project, survey, tz_offset, questionnaires, has_comparisons, all_fields, respondents)
+    partial_relevant_enabled = Survey.partial_relevant_enabled?(survey, true)
+
+    render_results(conn, get_format(conn), project, survey, tz_offset, questionnaires, has_comparisons, all_fields, respondents, partial_relevant_enabled)
   end
 
   defp add_params_to_filter(filter, params) do
@@ -634,7 +656,7 @@ defmodule Ask.RespondentController do
     filter
   end
 
-  defp render_results(conn, "json", _project, survey, _tz_offset, questionnaires, has_comparisons, _all_fields, respondents) do
+  defp render_results(conn, "json", _project, survey, _tz_offset, questionnaires, has_comparisons, _all_fields, respondents, partial_relevant_enabled) do
     respondents_count = Ask.RespondentStats.respondent_count(survey_id: ^survey.id)
     respondents = if has_comparisons do
       respondents
@@ -656,12 +678,12 @@ defmodule Ask.RespondentController do
     end
 
     {:ok, conn} = Repo.transaction(fn() ->
-      render(conn, "index.json", respondents: respondents, respondents_count: respondents_count)
+      render(conn, "index.json", respondents: respondents, respondents_count: respondents_count, partial_relevant_enabled: partial_relevant_enabled)
     end)
     conn
   end
 
-  defp render_results(conn, "csv", project, survey, tz_offset, questionnaires, has_comparisons, all_fields, respondents) do
+  defp render_results(conn, "csv", project, survey, tz_offset, questionnaires, has_comparisons, all_fields, respondents, partial_relevant_enabled) do
     stats = survey.mode |> Enum.flat_map(fn(modes) ->
       modes |> Enum.flat_map(fn(mode) ->
         case mode do
@@ -713,6 +735,31 @@ defmodule Ask.RespondentController do
 
         row = row ++ [respondent_group]
 
+        questionnaire_id = respondent.questionnaire_id
+        mode = respondent.mode
+
+        row = if has_comparisons do
+          variant = if questionnaire_id && mode do
+            questionnaire = questionnaires |> Enum.find(fn q -> q.id == questionnaire_id end)
+            if questionnaire do
+              experiment_name(questionnaire, mode)
+            else
+              "-"
+            end
+          else
+            "-"
+          end
+          row ++ [variant]
+        else
+          row
+        end
+
+        row = if partial_relevant_enabled do
+          row ++ [Respondent.partial_relevant_answered_count(respondent, false)]
+        else
+          row
+        end
+
         # We traverse all fields and see if there's a response for this respondent
         row = all_fields |> Enum.reduce(row, fn field_name, acc ->
           response = responses
@@ -734,27 +781,10 @@ defmodule Ask.RespondentController do
           end
         end)
 
-        questionnaire_id = respondent.questionnaire_id
-        mode = respondent.mode
-
-        row = if has_comparisons do
-          variant = if questionnaire_id && mode do
-            questionnaire = questionnaires |> Enum.find(fn q -> q.id == questionnaire_id end)
-            if questionnaire do
-              experiment_name(questionnaire, mode)
-            else
-              "-"
-            end
-          else
-            "-"
-          end
-          row ++ [variant]
-        else
-          row
-        end
-
         row
     end)
+
+    append_if = fn list, elems, condition -> if condition, do: list ++ elems, else: list end
 
     # Add header to csv_rows
     header = ["respondent_id", "disposition", "date", "modes", "user_stopped"]
@@ -769,12 +799,9 @@ defmodule Ask.RespondentController do
       end
     end)
     header = header ++ ["section_order", "sample_file"]
+    header = append_if.(header, ["variant"], has_comparisons)
+    header = append_if.(header, ["p_relevants"], partial_relevant_enabled)
     header = header ++ all_fields
-    header = if has_comparisons do
-      header ++ ["variant"]
-    else
-      header
-    end
 
     rows = Stream.concat([[header], csv_rows])
 

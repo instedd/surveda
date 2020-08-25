@@ -86,6 +86,10 @@ export type QuotaVar = {
   steps?: string
 };
 
+export type PartialRelevant = {
+  answeredCount: number
+}
+
 export type Respondent = {
   id: number,
   phoneNumber: string,
@@ -94,6 +98,7 @@ export type Respondent = {
   date: ?string,
   responses: Response[],
   questionnaireId: number,
+  partialRelevant: PartialRelevant,
   stats: Stats
 };
 

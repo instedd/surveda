@@ -1,9 +1,35 @@
 defmodule Ask.Runtime.Session do
   import Ecto.Query
   import Ecto
-  alias Ask.{Repo, QuotaBucket, Respondent, Schedule, RespondentDispositionHistory, Survey}
+
+  alias Ask.{
+    Repo,
+    QuotaBucket,
+    Respondent,
+    Schedule,
+    RespondentDispositionHistory,
+    Survey
+  }
+
   alias Ask.Runtime.Flow.TextVisitor
-  alias Ask.Runtime.{Flow, Channel, Session, Reply, SurveyLogger, ReplyStep, SessionMode, SessionModeProvider, SMSMode, IVRMode, MobileWebMode, SMSSimulatorMode, ChannelPatterns, RetriesHistogram}
+
+  alias Ask.Runtime.{
+    Flow,
+    Channel,
+    Session,
+    Reply,
+    SurveyLogger,
+    ReplyStep,
+    SessionMode,
+    SessionModeProvider,
+    SMSMode,
+    IVRMode,
+    MobileWebMode,
+    SMSSimulatorMode,
+    ChannelPatterns,
+    RetriesHistogram
+  }
+
   use Timex
 
   defstruct [:current_mode, :fallback_mode, :flow, :respondent, :token, :fallback_delay, :channel_state, :count_partial_results, :schedule]
@@ -362,8 +388,7 @@ defmodule Ask.Runtime.Session do
 
   defp all_responses(respondent, reply, persist) do
     current_responses = Ask.Response.build_from_reply(reply)
-    stored_responses = if persist, do: from(r in Ask.Response, where: r.respondent_id == ^respondent.id) |> Repo.all, else: respondent.responses
-    current_responses ++ stored_responses
+    current_responses ++ Respondent.stored_responses(respondent, persist)
   end
 
   defp mobile_contact_reply(session) do

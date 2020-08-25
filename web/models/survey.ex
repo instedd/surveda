@@ -59,6 +59,12 @@ defmodule Ask.Survey do
     has_many :respondent_groups, RespondentGroup
     has_many :respondents, Respondent
     has_many :quota_buckets, QuotaBucket, on_replace: :delete
+
+    # Before the survey is launched, the user selects one or more questionnaires
+    # Until the survey is launched, it's directly related to these questionnaires
+    # These original questionnaires are totally updatable in any moment
+    # From the moment the survey is launched, these questionnaires are replaced by snapshots
+    # Besides they remain related to its original by `snapshot_of`, they aren't updatable at all
     many_to_many :questionnaires, Questionnaire, join_through: SurveyQuestionnaire, on_replace: :delete
 
     has_many :floip_endpoints, FloipEndpoint
@@ -566,4 +572,23 @@ defmodule Ask.Survey do
     end
   end
 
+  def partial_relevant_enabled?(survey, persist \\ false) do
+    partial_relevant_configs = partial_relevant_configs(survey, persist)
+    Enum.any?(partial_relevant_configs, fn config -> Questionnaire.partial_relevant_enabled?(config) end)
+  end
+
+  defp partial_relevant_configs(survey, true = _persist),
+    do:
+      from(sq in SurveyQuestionnaire,
+        join: q in Questionnaire,
+        on: q.id == sq.questionnaire_id,
+        where: sq.survey_id == ^survey.id,
+        select: q.partial_relevant_config
+      )
+      |> Repo.all()
+
+  defp partial_relevant_configs(survey, _persist),
+    do:
+      survey.questionnaires
+      |> Enum.map(fn q -> q.partial_relevant_config end)
 end
