@@ -581,6 +581,7 @@ defmodule Ask.Survey do
     do:
       from(sq in SurveyQuestionnaire,
         join: q in Questionnaire,
+        on: q.id == sq.questionnaire_id,
         where: sq.survey_id == ^survey.id,
         select: q.partial_relevant_config
       )

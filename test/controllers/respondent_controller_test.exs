@@ -2588,6 +2588,12 @@ defmodule Ask.RespondentControllerTest do
         steps: steps
       })
 
+    # So there aren't only the questionnaires of the survey
+    insert_partial_relevant_external_questionnaires(%{
+      project: project,
+      steps: steps
+    })
+
     init_partial_relevant(%{
       conn: conn,
       project: project,
@@ -2741,24 +2747,23 @@ defmodule Ask.RespondentControllerTest do
          project: project,
          steps: steps
        }) do
-    insert_questionnaire = fn partial_relevant_config ->
-      insert(
-        :questionnaire,
-        name: "test",
+    questionnaire_0 =
+      insert_partial_relevant_questionnaire(%{
         project: project,
         steps: steps,
-        partial_relevant_config: partial_relevant_config
-      )
-    end
-
-    questionnaire_0 =
-      insert_questionnaire.(%{
-        "enabled" => true,
-        "min_relevant_steps" => 2,
-        "ignored_values" => ""
+        partial_relevant_config: %{
+          "enabled" => true,
+          "min_relevant_steps" => 2,
+          "ignored_values" => ""
+        }
       })
 
-    questionnaire_1 = insert_questionnaire.(nil)
+    questionnaire_1 =
+      insert_partial_relevant_questionnaire(%{
+        project: project,
+        steps: steps,
+        partial_relevant_config: nil
+      })
 
     [questionnaire_0, questionnaire_1]
   end
@@ -2769,13 +2774,11 @@ defmodule Ask.RespondentControllerTest do
          steps: steps
        }) do
     questionnaire =
-      insert(
-        :questionnaire,
-        name: "test",
+      insert_partial_relevant_questionnaire(%{
         project: project,
         steps: steps,
         partial_relevant_config: nil
-      )
+      })
 
     [questionnaire]
   end
@@ -2799,6 +2802,41 @@ defmodule Ask.RespondentControllerTest do
 
     [questionnaire]
   end
+
+  defp insert_partial_relevant_external_questionnaires(%{
+         project: project,
+         steps: steps
+       }) do
+    insert_partial_relevant_questionnaire(%{
+      project: project,
+      steps: steps,
+      partial_relevant_config: nil
+    })
+
+    insert_partial_relevant_questionnaire(%{
+      project: project,
+      steps: steps,
+      partial_relevant_config: %{
+        "enabled" => true,
+        "min_relevant_steps" => 2,
+        "ignored_values" => ""
+      }
+    })
+  end
+
+  defp insert_partial_relevant_questionnaire(%{
+         project: project,
+         steps: steps,
+         partial_relevant_config: partial_relevant_config
+       }),
+       do:
+         insert(
+           :questionnaire,
+           name: "test",
+           project: project,
+           steps: steps,
+           partial_relevant_config: partial_relevant_config
+         )
 
   defp expected_field_index("comparisons") do
     %{on_index: 5, on_csv: 11}
