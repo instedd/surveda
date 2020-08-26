@@ -19,7 +19,7 @@ const initialState = {
 
 export default (state = initialState, action) => {
   switch (action.type) {
-    case actions.FETCH_RESPONDENTS: return fetchRespondents(state, action)
+    case actions.START_FETCHING_RESPONDENTS: return startFetchingRespondents(state, action)
     case actions.CREATE_RESPONDENT: return createOrUpdateRespondent(state, action)
     case actions.UPDATE_RESPONDENT: return createOrUpdateRespondent(state, action)
     case actions.RECEIVE_RESPONDENTS: return receiveRespondents(state, action)
@@ -28,7 +28,7 @@ export default (state = initialState, action) => {
   }
 }
 
-const fetchRespondents = (state, action) => {
+const startFetchingRespondents = (state, action) => {
   const sameSurvey = state.surveyId == action.surveyId
 
   const items = sameSurvey ? state.items : null

@@ -1,7 +1,7 @@
 import * as api from '../api'
 
 export const RECEIVE_RESPONDENTS = 'RECEIVE_RESPONDENTS'
-export const FETCH_RESPONDENTS = 'FETCH_RESPONDENTS'
+export const START_FETCHING_RESPONDENTS = 'START_FETCHING_RESPONDENTS'
 export const CREATE_RESPONDENT = 'CREATE_RESPONDENT'
 export const UPDATE_RESPONDENT = 'UPDATE_RESPONDENT'
 export const RECEIVE_RESPONDENTS_ERROR = 'RECEIVE_RESPONDENTS_ERROR'
@@ -88,7 +88,7 @@ export const receiveRespondentsError = (error) => ({
 })
 
 export const startFetchingRespondents = (surveyId, pageSize, pageNumber, filter, sortBy, sortAsc) => ({
-  type: FETCH_RESPONDENTS,
+  type: START_FETCHING_RESPONDENTS,
   surveyId,
   pageSize,
   pageNumber,
