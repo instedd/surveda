@@ -25,6 +25,7 @@ describe('respondents reducer', () => {
     const result = reducer(r1, actions.receiveRespondents(respondents, respondentsCount))
     expect(result.fetching).toEqual(false)
     expect(result.items).toEqual(respondents)
+    expect(result.surveyId).toEqual(surveyId)
     expect(result.page.totalCount).toEqual(123)
   })
 })
