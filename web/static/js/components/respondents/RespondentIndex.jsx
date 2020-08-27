@@ -53,8 +53,7 @@ type Props = {
   filter: string,
   q: string,
   fields: Array<Object>,
-  selectedFields: Array<string>,
-  pageSize: number
+  selectedFields: Array<string>
 }
 
 type State = {
