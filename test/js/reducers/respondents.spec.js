@@ -27,13 +27,18 @@ describe('respondents reducer', () => {
 
   it('should receive respondents', () => {
     const surveyId = 200
-    const respondents = {1: {id: 1}}
+    const respondentId = 1
+    const respondents = {respondentId: {id: respondentId}}
     const respondentsCount = 123
+    const order = [respondentId]
+    const fields = [{type: 'foo', key: 'bar'}]
     const r1 = reducer(initialState, actions.startFetchingRespondents(surveyId, 1))
-    const result = reducer(r1, actions.receiveRespondents(respondents, respondentsCount))
+    const result = reducer(r1, actions.receiveRespondents(respondents, respondentsCount, order, fields))
     expect(result.fetching).toEqual(false)
     expect(result.items).toEqual(respondents)
     expect(result.surveyId).toEqual(surveyId)
-    expect(result.page.totalCount).toEqual(123)
+    expect(result.page.totalCount).toEqual(respondentsCount)
+    expect(result.order).toEqual(order)
+    expect(result.selectedFields).toEqual([`${fields[0].type}_${fields[0].key}`])
   })
 })
