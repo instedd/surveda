@@ -149,6 +149,7 @@ video.responsive-video {
     &.page-size {
       label {
         @extend .grey-text;
+        font-size: 1rem;
       }
       .input-field {
         margin-top: 0;
@@ -157,6 +158,8 @@ video.responsive-video {
           border-bottom: none;
           margin: 0;
           width: 3.25rem;
+          font-size: 1rem;
+          height: 1.5rem;
         }
       }
     }
