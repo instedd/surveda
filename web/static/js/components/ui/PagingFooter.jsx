@@ -2,6 +2,7 @@
 import React, { Component } from 'react'
 import { Input } from 'react-materialize'
 import { translate } from 'react-i18next'
+import { uniqueId } from 'lodash'
 
 type Props = {
   startIndex: number,
@@ -15,6 +16,13 @@ type Props = {
 };
 
 class PagingFooterComponent extends Component<Props> {
+  pageSizeSelectId: string
+
+  constructor(props) {
+    super(props)
+    this.pageSizeSelectId = uniqueId('page-size-select-id')
+  }
+
   previousPage(e) {
     e.preventDefault()
     this.props.onPreviousPage()
@@ -27,7 +35,6 @@ class PagingFooterComponent extends Component<Props> {
 
   renderPageSize() {
     const { pageSize, onPageSizeChange, t } = this.props
-    const pageSizeSelectId = 'page-size-select'
     const onChange = event => {
       const pageSize = parseInt(event.target.value)
       onPageSizeChange(pageSize)
@@ -36,11 +43,11 @@ class PagingFooterComponent extends Component<Props> {
     return (
       <li className='page-size'>
         <div className='valign-wrapper'>
-          <label htmlFor={pageSizeSelectId}>{t('Rows per page:')}</label>
-          <Input id={pageSizeSelectId} type='select' value={pageSize} onChange={onChange}>
+          <label htmlFor={this.pageSizeSelectId}>{t('Rows per page:')}</label>
+          <Input id={this.pageSizeSelectId} type='select' value={pageSize} onChange={onChange}>
             {
-              sizeOptions.map(size => (
-                <option value={size} key={`${pageSizeSelectId}_${size}`}>{size}</option>
+              sizeOptions.map((size, index) => (
+                <option value={size} key={index}>{size}</option>
               ))
             }
           </Input>
