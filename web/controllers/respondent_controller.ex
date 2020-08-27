@@ -47,7 +47,7 @@ defmodule Ask.RespondentController do
       |> effective_stats
     end)
 
-    survey = Repo.get!(Survey, survey_id)
+    survey = Repo.get!(Survey, survey_id) |> Repo.preload(:questionnaires)
 
     partial_relevant_enabled = Survey.partial_relevant_enabled?(survey, true)
 
@@ -58,7 +58,6 @@ defmodule Ask.RespondentController do
       index_fields:
         index_fields_for_render(%{
           survey: survey,
-          respondents: respondents,
           partial_relevant_enabled: partial_relevant_enabled
         })
     )
@@ -66,7 +65,6 @@ defmodule Ask.RespondentController do
 
   defp index_fields_for_render(%{
          survey: survey,
-         respondents: respondents,
          partial_relevant_enabled: partial_relevant_enabled
        }),
        do:
@@ -74,7 +72,7 @@ defmodule Ask.RespondentController do
            index_fields_for_render("mode", survey.mode) ++
            index_fields_for_render("variant", survey.comparisons) ++
            index_fields_for_render("partial_relevant", partial_relevant_enabled) ++
-           index_fields_for_render("response", respondents)
+           index_fields_for_render("response", survey.questionnaires)
 
   defp index_fields_for_render("fixed" = field_type),
     do:
@@ -87,15 +85,10 @@ defmodule Ask.RespondentController do
       |> Enum.uniq()
       |> map_fields_with_type(field_type)
 
-  defp index_fields_for_render("response" = field_type, respondents) do
-    all_duplicated_responses_keys =
-      Enum.flat_map(respondents, fn %{responses: responses} ->
-        Enum.map(responses, fn %{field_name: field_name} -> field_name end)
-      end)
-
-    Enum.uniq(all_duplicated_responses_keys)
-    |> map_fields_with_type(field_type)
-  end
+  defp index_fields_for_render("response" = field_type, questionnaires),
+    do:
+      all_questionnaires_fields(questionnaires)
+      |> map_fields_with_type(field_type)
 
   defp index_fields_for_render("variant" = _field_type, [] = _survey_comparisons), do: []
 
@@ -596,11 +589,7 @@ defmodule Ask.RespondentController do
     has_comparisons = length(survey.comparisons) > 0
 
     # We first need to get all unique field names in all questionnaires
-    all_fields = questionnaires
-    |> Enum.flat_map(&Questionnaire.variables/1)
-    |> Enum.map(fn s -> s |> sanitize_variable_name end)
-    |> Enum.uniq
-    |> Enum.reject(fn s -> String.length(s) == 0 end)
+    all_fields = all_questionnaires_fields(questionnaires, true)
 
     # The new filters, shared by the index and the downloaded CSV file
     filter = RespondentsFilter.parse(Map.get(params, "q", ""))
@@ -636,6 +625,19 @@ defmodule Ask.RespondentController do
 
     render_results(conn, get_format(conn), project, survey, tz_offset, questionnaires, has_comparisons, all_fields, respondents, partial_relevant_enabled)
   end
+
+  defp all_questionnaires_fields(questionnaires, sanitize \\ false) do
+    fields =
+      questionnaires
+      |> Enum.flat_map(&Questionnaire.variables/1)
+      |> Enum.uniq()
+      |> Enum.reject(fn s -> String.length(s) == 0 end)
+
+    if sanitize, do: sanitize_fields(fields), else: fields
+  end
+
+  defp sanitize_fields(fields),
+    do: Enum.map(fields, fn field -> sanitize_variable_name(field) end)
 
   defp add_params_to_filter(filter, params) do
     filter =
