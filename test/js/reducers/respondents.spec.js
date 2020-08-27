@@ -11,10 +11,18 @@ describe('respondents reducer', () => {
   })
 
   it('should start fetching respondents', () => {
-    const surveyId = 200
-    const result = reducer(initialState, actions.startFetchingRespondents(surveyId, 1))
+    const [surveyId, pageSize, pageNumber, filter] = [1, 2, 3, '4']
+
+    const result = reducer(
+      initialState,
+      actions.startFetchingRespondents(surveyId, pageSize, pageNumber, filter)
+    )
+
     expect(result.fetching).toEqual(true)
     expect(result.surveyId).toEqual(surveyId)
+    expect(result.page.size).toEqual(pageSize)
+    expect(result.page.number).toEqual(pageNumber)
+    expect(result.filter).toEqual(filter)
   })
 
   it('should receive respondents', () => {
