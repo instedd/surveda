@@ -138,7 +138,7 @@ class FolderShow extends Component<any, any> {
 }
 
 const mapStateToProps = (state, ownProps) => {
-  const id = ownProps.params.folderId
+  const id = parseInt(ownProps.params.folderId)
 
   // Right now we show all surveys: they are not paginated nor sorted
   let surveys = state.surveys.items
