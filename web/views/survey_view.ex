@@ -83,7 +83,8 @@ defmodule Ask.SurveyView do
       links: render_many(survey.links, Ask.SurveyView, "link.json", as: :link),
       comparisons: survey.comparisons || [],
       next_schedule_time: next_schedule_time(survey),
-      down_channels: survey.down_channels
+      down_channels: survey.down_channels,
+      folder_id: survey.folder_id
     }
 
     if Ask.Survey.launched?(survey) || survey.simulation do

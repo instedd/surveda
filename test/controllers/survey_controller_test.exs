@@ -178,8 +178,31 @@ defmodule Ask.SurveyControllerTest do
         "links" => [],
         "comparisons" => [],
         "next_schedule_time" => nil,
-        "down_channels" => []
+        "down_channels" => [],
+        "folder_id" => nil
       }
+    end
+
+
+    test "includes folder_id when showing the chosen resource", %{conn: conn, user: user} do
+      project = create_project_for_user(user)
+      folder = insert(:folder, project: project)
+
+      survey =
+        insert(:survey,
+          project: project,
+          folder_id: folder.id,
+          description: "initial survey",
+          state: "terminated",
+          started_at: Timex.now(),
+          ended_at: Timex.shift(Timex.now(), days: 1)
+        )
+
+      conn = get(conn, project_survey_path(conn, :show, project, survey))
+
+      folder_id = Map.get(json_response(conn, 200)["data"], "folder_id")
+
+      assert folder_id == folder.id
     end
 
     test "shows chosen resource with buckets", %{conn: conn, user: user} do
@@ -249,7 +272,8 @@ defmodule Ask.SurveyControllerTest do
         "links" => [],
         "comparisons" => [],
         "next_schedule_time" => nil,
-        "down_channels" => []
+        "down_channels" => [],
+        "folder_id" => nil
       }
     end
 
@@ -316,7 +340,8 @@ defmodule Ask.SurveyControllerTest do
         ],
         "comparisons" => [],
         "next_schedule_time" => nil,
-        "down_channels" => []
+        "down_channels" => [],
+        "folder_id" => nil
       }
     end
 
@@ -375,7 +400,8 @@ defmodule Ask.SurveyControllerTest do
         ],
         "comparisons" => [],
         "next_schedule_time" => nil,
-        "down_channels" => []
+        "down_channels" => [],
+        "folder_id" => nil
       }
     end
 

@@ -4,6 +4,7 @@ import { connect } from 'react-redux'
 import { withRouter } from 'react-router'
 import * as actions from '../../actions/survey'
 import * as respondentActions from '../../actions/respondents'
+import * as folderActions from '../../actions/folder'
 import SurveyStatus from './SurveyStatus'
 import * as routes from '../../routes'
 import { Tooltip, Modal, dispositionGroupLabel, dispositionLabel } from '../ui'
@@ -64,6 +65,9 @@ class SurveyShow extends Component<any, State> {
     dispatch(actions.fetchSurveyIfNeeded(projectId, surveyId))
     dispatch(respondentActions.fetchRespondentsStats(projectId, surveyId))
     dispatch(actions.fetchSurveyStats(projectId, surveyId))
+
+    // Fetch folders for breadcrumb
+    dispatch(folderActions.fetchFolders(projectId))
   }
 
   componentDidUpdate() {
