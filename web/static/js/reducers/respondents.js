@@ -19,7 +19,7 @@ const initialState = {
 
 export default (state = initialState, action) => {
   switch (action.type) {
-    case actions.FETCH_RESPONDENTS: return fetchRespondents(state, action)
+    case actions.START_FETCHING_RESPONDENTS: return startFetchingRespondents(state, action)
     case actions.CREATE_RESPONDENT: return createOrUpdateRespondent(state, action)
     case actions.UPDATE_RESPONDENT: return createOrUpdateRespondent(state, action)
     case actions.RECEIVE_RESPONDENTS: return receiveRespondents(state, action)
@@ -28,7 +28,7 @@ export default (state = initialState, action) => {
   }
 }
 
-const fetchRespondents = (state, action) => {
+const startFetchingRespondents = (state, action) => {
   const sameSurvey = state.surveyId == action.surveyId
 
   const items = sameSurvey ? state.items : null
@@ -42,7 +42,8 @@ const fetchRespondents = (state, action) => {
     sortAsc: sameSurvey ? action.sortAsc : true,
     page: {
       ...state.page,
-      number: action.page
+      size: action.pageSize,
+      number: action.pageNumber
     }
   }
 }
@@ -68,7 +69,6 @@ const receiveRespondents = (state, action) => {
     order: action.order,
     page: {
       ...state.page,
-      number: action.page,
       totalCount: action.respondentsCount
     },
     fields: action.fields,
