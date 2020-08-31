@@ -5,8 +5,8 @@ import { UntitledIfEmpty, Dropdown, DropdownItem, DropdownDivider } from '../ui'
 import * as routes from '../../routes'
 import { translate } from 'react-i18next'
 
-const Header = ({ tabs, logout, user, project, folder, showProjectLink, showQuestionnairesLink, t }) => {
-  let projectLink, questionnairesLink, folderLink
+const Header = ({ tabs, logout, user, project, surveyFolder, showProjectLink, showQuestionnairesLink, showFolderLink, t }) => {
+  let projectLink, questionnairesLink
 
   if (showProjectLink) {
     projectLink = (
@@ -26,13 +26,13 @@ const Header = ({ tabs, logout, user, project, folder, showProjectLink, showQues
     )
   }
 
-  if (folder) {
-    folderLink = (
+  const surveyFolderLink = showFolderLink
+    ? (
       <li className='breadcrumb-item'>
-        <Link to={routes.folder(folder.projectId, folder.id)} className=''>{folder.name}</Link>
+        <Link to={routes.folder(surveyFolder.projectId, surveyFolder.id)} className=''>{surveyFolder.name}</Link>
       </li>
     )
-  }
+    : null
 
   return (
     <header>
@@ -46,7 +46,7 @@ const Header = ({ tabs, logout, user, project, folder, showProjectLink, showQues
                 </li>
                 { projectLink }
                 { questionnairesLink }
-                { folderLink }
+                { surveyFolderLink }
                 <li className='channels-tab'>
                   <Link to={routes.channels}>{t('Channels')}</Link>
                 </li>
@@ -83,9 +83,10 @@ Header.propTypes = {
   logout: PropTypes.func.isRequired,
   user: PropTypes.string.isRequired,
   project: PropTypes.object,
-  folder: PropTypes.object,
+  surveyFolder: PropTypes.object,
   showProjectLink: PropTypes.bool,
-  showQuestionnairesLink: PropTypes.bool
+  showQuestionnairesLink: PropTypes.bool,
+  showFolderLink: PropTypes.bool
 }
 
 export default translate()(Header)

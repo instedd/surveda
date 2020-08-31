@@ -6,6 +6,7 @@ import * as projectActions from '../../actions/project'
 import * as channelsActions from '../../actions/channels'
 import * as questionnairesActions from '../../actions/questionnaires'
 import * as respondentGroupsActions from '../../actions/respondentGroups'
+import * as folderActions from '../../actions/folder'
 import SurveyForm from './SurveyForm'
 import * as routes from '../../routes'
 import { translate } from 'react-i18next'
@@ -37,6 +38,9 @@ class SurveyEdit extends Component {
       dispatch(channelsActions.fetchProjectChannels(projectId))
       dispatch(questionnairesActions.fetchQuestionnaires(projectId))
       dispatch(respondentGroupsActions.fetchRespondentGroups(projectId, surveyId))
+
+      // Fetch folders for breadcrumb
+      dispatch(folderActions.fetchFolders(projectId))
     }
   }
 

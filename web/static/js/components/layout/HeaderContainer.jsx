@@ -15,14 +15,15 @@ class HeaderContainer extends Component {
   }
 
   render() {
-    const { tabs, logout, user } = this.props
-    let { project } = this.props
+    const { tabs, logout, user, project, surveyFolder } = this.props
     const { projectId, surveyId, questionnaireId, folderId } = this.props.params
 
     let showProjectLink = true
     if (!project || (!surveyId && !questionnaireId && !folderId)) {
       showProjectLink = false
     }
+
+    const showFolderLink = !!(surveyId && surveyFolder)
 
     if (projectId && !project) {
       // If there's a projectId and there's no project loaded
@@ -35,7 +36,7 @@ class HeaderContainer extends Component {
     }
 
     return (
-      <Header tabs={tabs} logout={logout} user={user} showProjectLink={showProjectLink} showQuestionnairesLink={!!questionnaireId} project={project || null} />
+      <Header tabs={tabs} logout={logout} user={user} showProjectLink={showProjectLink} showQuestionnairesLink={!!questionnaireId} project={project || null} surveyFolder={surveyFolder} showFolderLink={showFolderLink} />
     )
   }
 }
@@ -46,13 +47,18 @@ HeaderContainer.propTypes = {
   project: PropTypes.object,
   tabs: PropTypes.node,
   logout: PropTypes.func.isRequired,
-  user: PropTypes.string.isRequired
+  user: PropTypes.string.isRequired,
+  surveyFolder: PropTypes.object
 }
 
 const mapStateToProps = (state, ownProps) => {
+  const folders = state.folder && state.folder.folders
+  const survey = state.survey && state.survey.data
+  const surveyFolder = survey && folders && folders[survey.folderId]
   return {
     params: ownProps.params,
-    project: state.project.data
+    project: state.project.data,
+    surveyFolder: surveyFolder || null
   }
 }
 
