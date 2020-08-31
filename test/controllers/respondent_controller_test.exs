@@ -254,14 +254,32 @@ defmodule Ask.RespondentControllerTest do
 
     test "includes meta with fields in the index response", %{conn: conn, user: user} do
       project = create_project_for_user(user)
-      survey = insert(:survey, project: project)
+
+      questionnaire =
+        insert(
+          :questionnaire,
+          name: "test",
+          project: project,
+          steps: @dummy_steps
+        )
+
+      survey = insert(:survey, project: project, questionnaires: [questionnaire])
 
       conn = get conn, project_survey_respondent_path(conn, :index, project.id, survey.id)
 
       body = json_response(conn, 200)
       fields = body["meta"]["fields"]
-      assert fields
-      assert Enum.at(fields, 0)["type"] == "fixed"
+
+      assert_field_at(fields, "fixed", "phone_number", 0)
+      assert_field_at(fields, "fixed", "disposition", 1)
+      assert_field_at(fields, "fixed", "date", 2)
+      assert_field_at(fields, "mode", "sms", 3)
+
+      # The response fields are ordered alphabetically
+      assert_field_at(fields, "response", "Exercises", 4)
+      assert_field_at(fields, "response", "Perfect Number", 5)
+      assert_field_at(fields, "response", "Question", 6)
+      assert_field_at(fields, "response", "Smokes", 7)
     end
 
     test "fetches responses on index", %{conn: conn, user: user} do
@@ -2852,5 +2870,10 @@ defmodule Ask.RespondentControllerTest do
     else
       assert actual == expected
     end
+  end
+
+  defp assert_field_at(fields, type, key, index) do
+    assert Enum.at(fields, index)["type"] == type
+    assert Enum.at(fields, index)["key"] == key
   end
 end
