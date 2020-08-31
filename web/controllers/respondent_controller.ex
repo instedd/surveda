@@ -85,10 +85,13 @@ defmodule Ask.RespondentController do
       |> Enum.uniq()
       |> map_fields_with_type(field_type)
 
-  defp index_fields_for_render("response" = field_type, questionnaires),
-    do:
-      all_questionnaires_fields(questionnaires)
-      |> map_fields_with_type(field_type)
+  defp index_fields_for_render("response" = field_type, questionnaires) do
+    order_alphabetically = &(String.downcase(&1) < String.downcase(&2))
+
+    all_questionnaires_fields(questionnaires)
+    |> Enum.sort(&order_alphabetically.(&1, &2))
+    |> map_fields_with_type(field_type)
+  end
 
   defp index_fields_for_render("variant" = _field_type, [] = _survey_comparisons), do: []
 
