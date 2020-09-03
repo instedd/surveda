@@ -12,7 +12,8 @@ type Props = {
   onPreviousPage: Function,
   onNextPage: Function,
   onPageSizeChange: Function,
-  pageSize: number
+  pageSize: number,
+  pageSizeOptions: Array<number>
 };
 
 class PagingFooterComponent extends Component<Props> {
@@ -34,26 +35,32 @@ class PagingFooterComponent extends Component<Props> {
   }
 
   renderPageSize() {
-    const { pageSize, onPageSizeChange, t } = this.props
-    const onChange = event => {
-      const pageSize = parseInt(event.target.value)
-      onPageSizeChange(pageSize)
+    const { pageSize, onPageSizeChange, t, pageSizeOptions } = this.props
+    // This condition is a workaround and it will be removed shortly
+    // after the implementation of the page size selection in every page
+    if (pageSize) {
+      const onChange = event => {
+        const pageSize = parseInt(event.target.value)
+        onPageSizeChange(pageSize)
+      }
+      const sizeOptions = pageSizeOptions
+      return (
+        <li className='page-size'>
+          <div className='valign-wrapper'>
+            <label htmlFor={this.pageSizeSelectId}>{t('Rows per page:')}</label>
+            <Input id={this.pageSizeSelectId} type='select' value={pageSize} onChange={onChange}>
+              {
+                sizeOptions.map((size, index) => (
+                  <option value={size} key={index}>{size}</option>
+                ))
+              }
+            </Input>
+          </div>
+        </li>
+      )
+    } else {
+      return null
     }
-    const sizeOptions = [ 5, 10, 20, 50 ]
-    return (
-      <li className='page-size'>
-        <div className='valign-wrapper'>
-          <label htmlFor={this.pageSizeSelectId}>{t('Rows per page:')}</label>
-          <Input id={this.pageSizeSelectId} type='select' value={pageSize} onChange={onChange}>
-            {
-              sizeOptions.map((size, index) => (
-                <option value={size} key={index}>{size}</option>
-              ))
-            }
-          </Input>
-        </div>
-      </li>
-    )
   }
 
   render() {

@@ -388,8 +388,8 @@ export const updateCollaboratorLevel = (projectId, collaboratorEmail, newLevel) 
   return apiPutJSON(`projects/${projectId}/memberships/update`, {}, { email: collaboratorEmail, level: newLevel })
 }
 
-export const fetchActivities = (projectId, limit, page, sortBy, sortAsc) => {
-  return apiFetchJSONWithCallback(`projects/${projectId}/activities?limit=${limit}&page=${page}&sort_by=${sortBy}&sort_asc=${sortAsc}`, arrayOf(activitySchema), {}, activitiesCallback)
+export const fetchActivities = (projectId, pageSize, pageNumber, sortBy, sortAsc) => {
+  return apiFetchJSONWithCallback(`projects/${projectId}/activities?limit=${pageSize}&page=${pageNumber}&sort_by=${sortBy}&sort_asc=${sortAsc}`, arrayOf(activitySchema), {}, activitiesCallback)
 }
 
 export const fetchSettings = () => {

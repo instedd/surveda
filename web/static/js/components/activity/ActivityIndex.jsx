@@ -12,18 +12,23 @@ class ActivityIndex extends Component {
   componentDidMount() {
     const { projectId, pageNumber } = this.props
     if (projectId) {
-      this.props.actions.fetchActivities(projectId, pageNumber)
+      this.fetchActivities(pageNumber)
     }
   }
 
   nextPage() {
-    const { projectId, pageNumber } = this.props
-    this.props.actions.fetchActivities(projectId, pageNumber + 1)
+    const { pageNumber } = this.props
+    this.fetchActivities(pageNumber + 1)
   }
 
   previousPage() {
-    const { projectId, pageNumber } = this.props
-    this.props.actions.fetchActivities(projectId, pageNumber - 1)
+    const { pageNumber } = this.props
+    this.fetchActivities(pageNumber - 1)
+  }
+
+  fetchActivities(pageNumber = 1) {
+    const { actions, projectId, pageSize, sortAsc } = this.props
+    actions.fetchActivities(projectId, pageSize, pageNumber, sortAsc)
   }
 
   sort() {
@@ -31,8 +36,15 @@ class ActivityIndex extends Component {
     this.props.actions.sortActivities(projectId)
   }
 
+  changePageSize(pageSize) {
+    const { projectId, actions } = this.props
+    if (pageSize != this.props.pageSize) {
+      actions.changePageSize(projectId, pageSize)
+    }
+  }
+
   render() {
-    const { activities, totalCount, startIndex, endIndex, sortBy, sortAsc, t } = this.props
+    const { activities, totalCount, startIndex, pageSize, endIndex, sortBy, sortAsc, t } = this.props
 
     if (!activities) {
       return (
@@ -44,9 +56,12 @@ class ActivityIndex extends Component {
 
     const title = `${totalCount} ${(totalCount == 1) ? t('activity') : t('activities')}`
     const footer = <PagingFooter
-      {...{startIndex, endIndex, totalCount}}
+      {...{startIndex, endIndex, totalCount, pageSize}}
       onPreviousPage={() => this.previousPage()}
-      onNextPage={() => this.nextPage()} />
+      onNextPage={() => this.nextPage()}
+      onPageSizeChange={pageSize => this.changePageSize(pageSize)}
+      pageSizeOptions={[ 5, 15, 50, 100 ]}
+      />
 
     const userContent = (userName, userEmail, remoteIp) => {
       if (userName) return userName
