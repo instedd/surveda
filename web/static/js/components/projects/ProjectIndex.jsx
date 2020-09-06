@@ -5,12 +5,19 @@ import { withRouter } from 'react-router'
 import { createProject } from '../../api'
 import * as actions from '../../actions/projects'
 import * as projectActions from '../../actions/project'
-import { AddButton, EmptyPage, CardTable, SortableHeader, UntitledIfEmpty, Tooltip, PagingFooter } from '../ui'
+import {
+  AddButton,
+  EmptyPage,
+  CardTable,
+  SortableHeader,
+  UntitledIfEmpty,
+  ArchiveIcon,
+  ArchiveFilter,
+  PagingFooter } from '../ui'
 import * as routes from '../../routes'
 import range from 'lodash/range'
 import { orderedItems } from '../../reducers/collection'
 import { FormattedDate } from 'react-intl'
-import { Input } from 'react-materialize'
 import { translate } from 'react-i18next'
 
 class ProjectIndex extends Component {
@@ -18,7 +25,7 @@ class ProjectIndex extends Component {
     this.creatingProject = false
 
     this.props.projectActions.clearProject()
-    this.props.actions.fetchProjects({'archived': false})
+    this.fetchProjects()
   }
 
   newProject(e) {
@@ -64,37 +71,21 @@ class ProjectIndex extends Component {
     })
   }
 
-  fetchProjects(event: any) {
-    const newValue = (event.target.value == 'archived')
-    this.props.actions.fetchProjects({'archived': newValue})
+  fetchProjects(archived: boolean = false) {
+    this.props.actions.fetchProjects({'archived': archived})
   }
 
   archiveIconForProject(archived: boolean, project: Project) {
-    const { t } = this.props
     if (!project.owner) {
       return <td />
     } else {
-      if (archived) {
-        return (
-          <td className='action'>
-            <Tooltip text={t('Unarchive')}>
-              <a onClick={() => this.archiveOrUnarchive(project, 'unarchive')}>
-                <i className='material-icons'>unarchive</i>
-              </a>
-            </Tooltip>
-          </td>
-        )
-      } else {
-        return (
-          <td className='action'>
-            <Tooltip text={t('Archive')}>
-              <a onClick={() => this.archiveOrUnarchive(project, 'archive')}>
-                <i className='material-icons'>archive</i>
-              </a>
-            </Tooltip>
-          </td>
-        )
-      }
+      const action = archived ? 'unarchive' : 'archive'
+      const onClick = () => this.archiveOrUnarchive(project, action)
+      return (
+        <td className='action'>
+          <ArchiveIcon archived={archived} onClick={onClick} />
+        </td>
+      )
     }
   }
 
@@ -105,21 +96,14 @@ class ProjectIndex extends Component {
 
   render() {
     const { archived, t } = this.props
-
-    const archivedFilter = <Input
-      type='select'
-      value={archived ? 'archived' : 'active'}
-      onChange={e => this.fetchProjects(e)}
-      >
-      <option key='archived' id='archived' name='archived' value='archived'>{t('Archived')}</option>
-      <option key='active' id='active' name='active' value='active'>{t('Active')}</option>
-    </Input>
-
     return (
       <div>
         <AddButton text={t('Add project')} onClick={e => this.newProject(e)} />
         <div className='row filterIndex'>
-          {archivedFilter}
+          <ArchiveFilter
+            archived={archived}
+            onChange={selection => this.fetchProjects(selection == 'archived')}
+          />
         </div>
         { this.renderTable() }
       </div>
