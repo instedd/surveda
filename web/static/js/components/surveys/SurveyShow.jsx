@@ -417,7 +417,17 @@ class SurveyShow extends Component<any, State> {
     return (
       <div className='card overflow'>
         <div className='card-table-title'>
-          {t('Dispositions')}
+          <div>
+            {t('Dispositions')}
+          </div>
+          <div className='disposition-flow-chart-link'>
+            <a
+              href='https://github.com/instedd/surveda/wiki/Disposition-flow-chart'
+              target='_blank'
+            >
+              {t('View disposition flow chart')}
+            </a>
+          </div>
         </div>
         <div className='card-table'>
           <table>
