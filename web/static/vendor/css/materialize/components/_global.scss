@@ -159,7 +159,13 @@ video.responsive-video {
           margin: 0;
           width: 3.25rem;
           font-size: 1rem;
+
+          // Limiting the height of the select is needed to get the expected vertical alignment
+          // of the whole page size component in every browser
           height: 1.5rem;
+          // Setting de line height the same as the height is needed to avoid visually breaking
+          // the select in Safari
+          line-height: 1;
         }
       }
     }
