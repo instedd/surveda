@@ -18,7 +18,6 @@ export default (state = initialState, action) => {
   switch (action.type) {
     case actions.FETCH_ACTIVITIES: return fetchActivities(state, action)
     case actions.RECEIVE_ACTIVITIES: return receiveActivities(state, action)
-    case actions.UPDATE_ACTIVITIES_ORDER: return updateActivitiesOrder(state, action)
     default: return state
   }
 }
@@ -32,38 +31,22 @@ const fetchActivities = (state, action) => {
     items,
     projectId: action.projectId,
     fetching: true,
+    sortAsc: sameProject ? action.sortAsc : false,
     page: {
       ...state.page,
-      number: action.page
+      size: action.pageSize,
+      number: action.pageNumber
     }
   }
 }
 
-const receiveActivities = (state, action) => {
-  if (state.projectId != action.projectId || state.page.number != action.page) {
-    return state
+const receiveActivities = (state, action) => ({
+  ...state,
+  fetching: false,
+  items: action.activities,
+  order: action.order,
+  page: {
+    ...state.page,
+    totalCount: action.activitiesCount
   }
-
-  return {
-    ...state,
-    fetching: false,
-    items: action.activities,
-    order: action.order,
-    page: {
-      ...state.page,
-      number: action.page,
-      totalCount: action.activitiesCount
-    }
-  }
-}
-
-const updateActivitiesOrder = (state, action) => {
-  return {
-    ...state,
-    page: {
-      ...state.page,
-      number: 1
-    },
-    sortAsc: action.sortAsc
-  }
-}
+})

@@ -547,6 +547,7 @@ class RespondentIndex extends Component<Props, State> {
         onPreviousPage={() => this.previousPage()}
         onNextPage={() => this.nextPage()}
         onPageSizeChange={pageSize => this.changePageSize(pageSize)}
+        pageSizeOptions={[ 5, 10, 20, 50 ]}
       />
     )
   }
