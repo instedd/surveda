@@ -161,14 +161,11 @@ video.responsive-video {
           font-size: 1rem;
 
           // Limiting the height of the select is needed to get the expected vertical alignment
-          // of the whole page size component
+          // of the whole page size component in every browser
           height: 1.5rem;
-
-          // In Safari, limiting the height of the select fixes the whole component vertical
-          // alignment but the select input itself is visually broken
-          @supports (-webkit-hyphens:none) {
-            height: 2.9rem;
-          }
+          // Setting de line height the same as the height is needed to avoid visually breaking
+          // the select in Safari
+          line-height: 1;
         }
       }
     }
