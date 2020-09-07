@@ -1,21 +1,15 @@
 defmodule Ask.ProjectController do
   use Ask.Web, :api_controller
 
-  alias Ask.{Project, Survey, ProjectMembership, Invite, Logger}
+  alias Ask.{Project, Survey, ProjectMembership, Invite, Logger, ControllerHelper}
 
   def index(conn, params) do
-    archived =
-      case params["archived"] do
-        "true" -> true
-        "false" -> false
-        _ -> nil
-      end
-
     current_user = conn |> current_user
+    archived = ControllerHelper.archived_param(params)
 
     projects = current_user
     |> assoc([:project_memberships, :project])
-    |> filter_archived(archived)
+    |> ControllerHelper.filter_archived(archived)
     |> preload(:project_memberships)
     |> Repo.all
 
@@ -142,11 +136,7 @@ defmodule Ask.ProjectController do
     project = conn
     |> load_project_for_owner(id)
 
-    archived = case project_params["archived"] do
-      "true" -> true
-      "false" -> false
-      other -> other
-    end
+    archived = ControllerHelper.archived_param(project_params)
 
     changeset = project
     |> Project.changeset(%{archived: archived})
@@ -316,7 +306,4 @@ defmodule Ask.ProjectController do
         query
     end
   end
-
-  defp filter_archived(query, nil), do: query
-  defp filter_archived(query, archived), do: where(query, [p], p.archived == ^archived)
 end

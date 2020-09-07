@@ -1,21 +1,41 @@
 defmodule Ask.QuestionnaireController do
   use Ask.Web, :api_controller
 
-  alias Ask.{Questionnaire, SurveyQuestionnaire, Survey, Project, JsonSchema, Audio, Logger, ActivityLog}
+  alias Ask.{
+    Questionnaire,
+    SurveyQuestionnaire,
+    Survey,
+    Project,
+    JsonSchema,
+    Audio,
+    Logger,
+    ActivityLog,
+    ControllerHelper
+  }
   alias Ecto.Multi
   alias Ask.Runtime.QuestionnaireSimulator
 
   plug :validate_params when action in [:create, :update]
   action_fallback Ask.FallbackController
 
-  def index(conn, %{"project_id" => project_id}) do
-    project = conn
-    |> load_project(project_id)
+  def index(conn, %{"project_id" => project_id} = params) do
+    project =
+      conn
+      |> load_project(project_id)
 
-    questionnaires = Repo.all(from q in Questionnaire,
-      where: q.project_id == ^project.id
-        and is_nil(q.snapshot_of)
-        and q.deleted == false)
+    archived = ControllerHelper.archived_param(params)
+
+    query =
+      from(q in Questionnaire,
+        where:
+          q.project_id == ^project.id and
+            is_nil(q.snapshot_of) and
+            q.deleted == false
+      )
+
+    query = ControllerHelper.filter_archived(query, archived)
+
+    questionnaires = Repo.all(query)
 
     render(conn, "index.json", questionnaires: questionnaires)
   end
@@ -121,6 +141,36 @@ defmodule Ask.QuestionnaireController do
       |> Ask.Survey.update_state
       |> Repo.update!
     end)
+  end
+
+  def update_archived_status(conn, %{
+        "project_id" => project_id,
+        "questionnaire_id" => id,
+        "questionnaire" => params
+      }) do
+    project =
+      conn
+      |> load_project_for_change(project_id)
+
+    questionnaire = load_questionnaire_not_snapshot(project, id)
+
+    archived = ControllerHelper.archived_param(params)
+
+    changeset =
+      questionnaire
+      |> Questionnaire.changeset(%{archived: archived})
+
+    case Repo.update(changeset) do
+      {:ok, questionnaire} ->
+        render(conn, "show.json", questionnaire: questionnaire)
+
+      {:error, changeset} ->
+        Logger.warn("Error when archiving/unarchiving questionnaire: #{inspect(changeset)}")
+
+        conn
+        |> put_status(:unprocessable_entity)
+        |> render(Ask.ChangesetView, "error.json", changeset: changeset)
+    end
   end
 
   def delete(conn, %{"project_id" => project_id, "id" => id}) do
