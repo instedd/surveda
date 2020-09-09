@@ -114,6 +114,28 @@ class QuestionnaireIndex extends Component<any> {
     return !project || project.readOnly
   }
 
+  archiveIconForQuestionnaire(questionnaire: Questionnaire, archived: boolean) {
+    const action = archived ? 'unarchive' : 'archive'
+    const onClick = () => this.archiveOrUnarchive(questionnaire, action)
+    return (
+      <td className='action'>
+        <ArchiveIcon archived={archived} onClick={onClick} />
+      </td>
+    )
+  }
+
+  archiveOrUnarchive(questionnaire: Questionnaire, action: string) {
+    const { t, actions, startIndex } = this.props
+    actions.archiveOrUnarchive(questionnaire, action).then(() => {
+      const { questionnaires } = this.props
+      if (questionnaires.length == 0 && startIndex > 0) {
+        actions.previousPage()
+      }
+      const description = action == 'archive' ? t('Project successfully archived') : t('Questionnaire successfully unarchived')
+      window.Materialize.toast(description, 5000)
+    })
+  }
+
   render() {
     const { questionnaires, sortBy, sortAsc, pageSize, startIndex, endIndex, totalCount, userSettings, archived, t } = this.props
 
@@ -189,16 +211,7 @@ class QuestionnaireIndex extends Component<any> {
                 {
                   readOnly
                     ? null
-                    : <td className='action'>
-                      {
-                        <ArchiveIcon
-                          archived={false}
-                          onClick={() => {
-                            // TODO: Make it happen!
-                          }}
-                        />
-                      }
-                    </td>
+                    : this.archiveIconForQuestionnaire(questionnaire, archived)
                 }
                 <td className='tdError'>
                   {!questionnaire.valid

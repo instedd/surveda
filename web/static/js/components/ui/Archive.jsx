@@ -4,6 +4,7 @@ import { Tooltip } from '../ui'
 import { Input } from 'react-materialize'
 
 export const ArchiveFilter = ({ archived, onChange }) => (
+  // TODO: remove the row from this component. Leave the Input alone.
   <div className='row filterIndex'>
     <Input
       type='select'

@@ -63,3 +63,14 @@ export const deleted = (questionnaire: Questionnaire) => ({
   type: DELETED,
   id: questionnaire.id
 })
+
+export const archiveOrUnarchive = (questionnaire: Questionnaire, action: string) => (dispatch: Function, getState: () => Store) => {
+  const archive = (action == 'archive')
+  const newQuestionnaire = {
+    ...questionnaire,
+    archived: archive
+  }
+  return api.updateQuestionnaireArchived(newQuestionnaire).then(response => {
+    dispatch(deleted(questionnaire))
+  })
+}
