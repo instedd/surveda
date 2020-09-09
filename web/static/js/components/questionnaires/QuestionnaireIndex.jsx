@@ -37,8 +37,13 @@ class QuestionnaireIndex extends Component<any> {
     const { projectId } = this.props
     // Fetch project for title
     this.props.projectActions.fetchProject(projectId)
-    this.props.actions.fetchQuestionnaires(projectId)
+    this.fetchQuestionnaires()
     this.props.userSettingsActions.fetchSettings()
+  }
+
+  fetchQuestionnaires(archived: boolean = false) {
+    const { projectId } = this.props
+    this.props.actions.fetchQuestionnaires(projectId, {'archived': archived})
   }
 
   nextPage() {
@@ -110,7 +115,7 @@ class QuestionnaireIndex extends Component<any> {
   }
 
   render() {
-    const { questionnaires, sortBy, sortAsc, pageSize, startIndex, endIndex, totalCount, userSettings, t } = this.props
+    const { questionnaires, sortBy, sortAsc, pageSize, startIndex, endIndex, totalCount, userSettings, archived, t } = this.props
 
     if (!questionnaires || !userSettings.settings) {
       return (
@@ -211,14 +216,14 @@ class QuestionnaireIndex extends Component<any> {
     return (
       <div>
         {addButton}
-        { (questionnaires.length == 0)
+        { (questionnaires.length == 0 && !archived)
           ? <EmptyPage icon='assignment' title={t('You have no questionnaires on this project')} onClick={e => this.newQuestionnaire(e)} readOnly={readOnly} createText={t('Create one', {context: 'questionnaire'})} />
           : (
             <div>
               <ArchiveFilter
-                archived={false}
+                archived={archived}
                 onChange={selection => {
-                  // TODO: Make it happen!
+                  this.fetchQuestionnaires(selection == 'archived')
                 }}
               />
               {quexTable}
@@ -247,11 +252,13 @@ QuestionnaireIndex.propTypes = {
   startIndex: PropTypes.number.isRequired,
   endIndex: PropTypes.number.isRequired,
   totalCount: PropTypes.number.isRequired,
-  router: PropTypes.object
+  router: PropTypes.object,
+  archived: PropTypes.bool
 }
 
 const mapStateToProps = (state, ownProps) => {
   let questionnaires = orderedItems(state.questionnaires.items, state.questionnaires.order)
+  const archived = questionnaires ? state.questionnaires.filter.archived : false
   const userSettings = state.userSettings
   const sortBy = state.questionnaires.sortBy
   const sortAsc = state.questionnaires.sortAsc
@@ -273,7 +280,8 @@ const mapStateToProps = (state, ownProps) => {
     pageSize,
     startIndex,
     endIndex,
-    totalCount
+    totalCount,
+    archived
   }
 }
 

@@ -15,4 +15,10 @@ const deleteItem = (state: IndexedList<Questionnaire>, action: any) => {
   return items
 }
 
-export default collectionReducer(actions, itemsReducer, projectFilterProvider)
+// TODO: This filter breaks the tests
+const filterProvider = (action: FilteredAction): Filter => ({
+  ...projectFilterProvider(action),
+  archived: action.archived
+})
+
+export default collectionReducer(actions, itemsReducer, filterProvider)

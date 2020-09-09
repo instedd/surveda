@@ -8,7 +8,7 @@ export const PREVIOUS_PAGE = 'QUESTIONNAIRES_PREVIOUS_PAGE'
 export const SORT = 'QUESTIONNAIRES_SORT'
 export const DELETED = 'QUESTIONNAIRES_DELETED'
 
-export const fetchQuestionnaires = (projectId: number) => (dispatch: Function, getState: () => Store): Promise<?QuestionnaireList> => {
+export const fetchQuestionnaires = (projectId: number, options: Object) => (dispatch: Function, getState: () => Store): Promise<?QuestionnaireList> => {
   const state = getState()
 
   // Don't fetch questionnaires if they are already being fetched
@@ -17,23 +17,27 @@ export const fetchQuestionnaires = (projectId: number) => (dispatch: Function, g
     return Promise.resolve(getState().questionnaires.items)
   }
 
-  dispatch(startFetchingQuestionnaires(projectId))
+  if (!options) options = {'archived': null}
+
+  dispatch(startFetchingQuestionnaires(projectId, options['archived']))
 
   return api
-    .fetchQuestionnaires(projectId)
-    .then(response => dispatch(receiveQuestionnaires(projectId, response.entities.questionnaires || {})))
+    .fetchQuestionnaires(projectId, options)
+    .then(response => dispatch(receiveQuestionnaires(projectId, response.entities.questionnaires || {}, options['archived'])))
     .then(() => getState().questionnaires.items)
 }
 
-export const startFetchingQuestionnaires = (projectId: number) => ({
+export const startFetchingQuestionnaires = (projectId: number, archived: ?boolean) => ({
   type: FETCH,
-  projectId
+  projectId,
+  archived
 })
 
-export const receiveQuestionnaires = (projectId: number, items: IndexedList<Questionnaire>): ReceiveFilteredItemsAction => ({
+export const receiveQuestionnaires = (projectId: number, items: IndexedList<Questionnaire>, archived: boolean): ReceiveFilteredItemsAction => ({
   type: RECEIVE,
   projectId,
-  items
+  items,
+  archived
 })
 
 export const nextQuestionnairesPage = () => ({
