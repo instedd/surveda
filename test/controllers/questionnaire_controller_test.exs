@@ -124,6 +124,7 @@ defmodule Ask.QuestionnaireControllerTest do
         "valid" => true,
         "description" => nil,
         "partial_relevant_config" => nil,
+        "archived" => false,
         "settings" => %{
           "error_message" => %{
             "en" => %{

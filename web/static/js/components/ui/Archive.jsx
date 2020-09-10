@@ -10,8 +10,8 @@ export const ArchiveFilter = ({ archived, onChange }) => (
       value={archived ? 'archived' : 'active'}
       onChange={event => onChange(event.target.value)}
     >
-      <option key='archived' id='archived' name='archived' value='archived'>{i18n.t('Archived')}</option>
       <option key='active' id='active' name='active' value='active'>{i18n.t('Active')}</option>
+      <option key='archived' id='archived' name='archived' value='archived'>{i18n.t('Archived')}</option>
     </Input>
   </div>
 )

@@ -25,6 +25,7 @@ defmodule Ask.QuestionnaireView do
       settings: questionnaire.settings,
       valid: questionnaire.valid,
       partial_relevant_config: questionnaire.partial_relevant_config,
+      archived: questionnaire.archived
     }
   end
 

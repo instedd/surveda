@@ -467,25 +467,34 @@ type renderSwitchProps = {
   classes?: string
 };
 
-const mapStateToProps = (state, ownProps) => ({
-  projectId: ownProps.params.projectId,
-  project: state.project.data,
-  userSettings: state.userSettings,
-  readOnly: state.project && state.project.data ? state.project.data.readOnly : true,
-  questionnaireId: ownProps.params.questionnaireId,
-  questionnaire: state.questionnaire.data,
-  questionnaireHasSections: state.questionnaire.data ? state.questionnaire.data.steps.some(function(item) {
-    return item.type == 'section'
-  }) : false,
-  errors: state.questionnaire.errors,
-  errorsByPath: state.questionnaire.errorsByPath || {},
-  selectedSteps: state.ui.data.questionnaireEditor.steps,
-  selectedQuotaCompletedSteps: state.ui.data.questionnaireEditor.quotaCompletedSteps,
-  uploadId: state.ui.data.questionnaireEditor.upload.uploadId,
-  uploadError: state.ui.data.questionnaireEditor.upload.error,
-  uploadProgress: state.ui.data.questionnaireEditor.upload.progress,
-  userLevel: state.project.data ? state.project.data.level : ''
-})
+const mapStateToProps = (state, ownProps) => {
+  const questionnaire = state.questionnaire && state.questionnaire.data
+  const projectReadOnly = state.project && state.project.data
+    ? state.project.data.readOnly
+    : true
+  const questionnaireReadOnly = questionnaire
+    ? questionnaire.archived
+    : true
+  return {
+    projectId: ownProps.params.projectId,
+    project: state.project.data,
+    userSettings: state.userSettings,
+    readOnly: projectReadOnly || questionnaireReadOnly,
+    questionnaireId: ownProps.params.questionnaireId,
+    questionnaire,
+    questionnaireHasSections: questionnaire ? questionnaire.steps.some(function(item) {
+      return item.type == 'section'
+    }) : false,
+    errors: state.questionnaire.errors,
+    errorsByPath: state.questionnaire.errorsByPath || {},
+    selectedSteps: state.ui.data.questionnaireEditor.steps,
+    selectedQuotaCompletedSteps: state.ui.data.questionnaireEditor.quotaCompletedSteps,
+    uploadId: state.ui.data.questionnaireEditor.upload.uploadId,
+    uploadError: state.ui.data.questionnaireEditor.upload.error,
+    uploadProgress: state.ui.data.questionnaireEditor.upload.progress,
+    userLevel: state.project.data ? state.project.data.level : ''
+  }
+}
 
 const mapDispatchToProps = (dispatch) => ({
   projectActions: bindActionCreators(projectActions, dispatch),

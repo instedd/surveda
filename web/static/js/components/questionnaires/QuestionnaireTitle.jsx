@@ -34,21 +34,28 @@ class QuestionnaireTitle extends Component {
 
     return (
       <div className='title-container'>
-        <EditableTitleLabel title={questionnaire.name} onSubmit={(value) => { this.handleSubmit(value) }} emptyText={t('Untitled questionnaire')} readOnly={readOnly} more={hideMenu ? '' : <QuestionnaireMenu />} />
+        <EditableTitleLabel title={questionnaire.name} onSubmit={(value) => { this.handleSubmit(value) }} emptyText={t('Untitled questionnaire')} readOnly={readOnly} more={hideMenu ? '' : <QuestionnaireMenu readOnly={readOnly} />} />
         <EditableDescriptionLabel description={questionnaire.description} emptyText={readOnly ? '' : t('Add description')} onSubmit={(value) => { this.handleSubmitDescription(value) }} readOnly={readOnly} />
       </div>
     )
   }
 }
 
-const mapStateToProps = (state, ownProps) => ({
-  readOnly: typeof ownProps.readOnly === 'boolean'
-  ? ownProps.readOnly
-  : (
-    state.project && state.project.data
-    ? state.project.data.readOnly
-    : true
-  )
-})
+const mapStateToProps = (state, ownProps) => {
+  const { readOnly } = ownProps
+  if (typeof readOnly === 'boolean') {
+    // Explicitly set by the component user
+    return { readOnly }
+  } else {
+    const questionnaire = state.questionnaire && state.questionnaire.data
+    const projectReadOnly = state.project && state.project.data
+      ? state.project.data.readOnly
+      : true
+    const questionnaireReadOnly = questionnaire
+      ? questionnaire.archived
+      : true
+    return { readOnly: projectReadOnly || questionnaireReadOnly }
+  }
+}
 
 export default translate()(connect(mapStateToProps)(withQuestionnaire(QuestionnaireTitle)))
