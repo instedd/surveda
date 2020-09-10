@@ -233,12 +233,14 @@ class QuestionnaireIndex extends Component<any> {
           ? <EmptyPage icon='assignment' title={t('You have no questionnaires on this project')} onClick={e => this.newQuestionnaire(e)} readOnly={readOnly} createText={t('Create one', {context: 'questionnaire'})} />
           : (
             <div>
-              <ArchiveFilter
-                archived={archived}
-                onChange={selection => {
-                  this.fetchQuestionnaires(selection == 'archived')
-                }}
-              />
+              <div className='row'>
+                <ArchiveFilter
+                  archived={archived}
+                  onChange={selection => {
+                    this.fetchQuestionnaires(selection == 'archived')
+                  }}
+                />
+              </div>
               {quexTable}
             </div>
           )

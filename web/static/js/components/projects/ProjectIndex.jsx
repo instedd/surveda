@@ -99,7 +99,7 @@ class ProjectIndex extends Component {
     return (
       <div>
         <AddButton text={t('Add project')} onClick={e => this.newProject(e)} />
-        <div className='row filterIndex'>
+        <div className='row'>
           <ArchiveFilter
             archived={archived}
             onChange={selection => this.fetchProjects(selection == 'archived')}
