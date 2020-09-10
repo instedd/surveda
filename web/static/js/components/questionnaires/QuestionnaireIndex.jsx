@@ -154,7 +154,7 @@ class QuestionnaireIndex extends Component<any> {
       onNextPage={() => this.nextPage()} />
 
     const readOnly = this.readOnly()
-    const actionHeader = <th className='action' />
+    const actionHeaders = Array(3).fill().map((_, i) => <th className='action' key={i} />)
 
     let addButton = null
     if (!readOnly) {
@@ -170,9 +170,7 @@ class QuestionnaireIndex extends Component<any> {
             <SortableHeader text='Name' property='name' sortBy={sortBy} sortAsc={sortAsc} onClick={(name) => this.sortBy(name)} />
             <SortableHeader text='Last Modified' property='updatedAt' sortBy={sortBy} sortAsc={sortAsc} onClick={(propertyName) => this.sortBy(propertyName)} />
             <th>{t('Modes')}</th>
-            { readOnly ? null : actionHeader }
-            { readOnly ? null : actionHeader }
-            { readOnly ? null : actionHeader }
+            { actionHeaders }
             <th style={{width: '20px'}} />
           </tr>
         </thead>
@@ -200,6 +198,11 @@ class QuestionnaireIndex extends Component<any> {
                       </a>
                     </Tooltip>
                   </td>}
+                {
+                  readOnly
+                    ? null
+                    : this.archiveIconForQuestionnaire(questionnaire, archived)
+                }
                 {readOnly ? null
                   : <td className='action'>
                     <Tooltip text={t('Delete questionnaire')}>
@@ -208,11 +211,6 @@ class QuestionnaireIndex extends Component<any> {
                       </a>
                     </Tooltip>
                   </td>}
-                {
-                  readOnly
-                    ? null
-                    : this.archiveIconForQuestionnaire(questionnaire, archived)
-                }
                 <td className='tdError'>
                   {!questionnaire.valid
                   ? <span className='questionnaire-error' />
