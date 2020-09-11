@@ -180,6 +180,22 @@ defmodule Ask.QuestionnaireControllerTest do
       assert Repo.get_by(Questionnaire, @valid_attrs)
     end
 
+    test "creates an active questionnaire when duplicating an archived questionnaire", %{
+      conn: conn,
+      user: user
+    } do
+      project = create_project_for_user(user)
+      archived_questionnaire = Map.put(@valid_attrs, :archived, true)
+
+      conn =
+        post(conn, project_questionnaire_path(conn, :create, project.id),
+          questionnaire: archived_questionnaire
+        )
+
+      duplicated_questionnaire = Repo.get(Questionnaire, json_response(conn, 201)["data"]["id"])
+      assert duplicated_questionnaire.archived == false
+    end
+
     test "creates and renders resource with a full questionnaire", %{conn: conn, user: user} do
       project = create_project_for_user(user)
       quiz = %{

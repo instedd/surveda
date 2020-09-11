@@ -49,6 +49,7 @@ defmodule Ask.QuestionnaireController do
     params = conn.assigns[:questionnaire]
     |> Map.put_new("languages", ["en"])
     |> Map.put_new("default_language", "en")
+    |> Map.put("archived", false)
 
     changeset = project
     |> build_assoc(:questionnaires)
