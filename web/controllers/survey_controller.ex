@@ -486,6 +486,11 @@ defmodule Ask.SurveyController do
     new_questionnaires = Enum.map(survey.questionnaires, fn questionnaire ->
       %{questionnaire | id: nil, snapshot_of_questionnaire: questionnaire, questionnaire_variables: [], project: survey.project}
       |> Repo.preload(:translations)
+      # The surveys are preloaded here because otherwise the following error is raised:
+      # ** (RuntimeError) attempting to cast or change association `surveys` from
+      # `Ask.Questionnaire` that was not loaded. Please preload your associations before
+      # manipulating them through changesets
+      |> Repo.preload(:surveys)
       |> Repo.insert!
       |> Questionnaire.recreate_variables!
     end)

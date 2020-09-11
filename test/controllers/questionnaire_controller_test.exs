@@ -329,6 +329,10 @@ defmodule Ask.QuestionnaireControllerTest do
       snapshot_questionnaire =
         insert(:questionnaire, project: project, snapshot_of: questionnaire.id)
 
+      questionnaire_with_survey = insert(:questionnaire, project: project)
+      survey = insert(:survey, project: project, questionnaires: [questionnaire_with_survey], state: "ready")
+      insert(:survey_questionnaire, survey: survey, questionnaire: questionnaire_with_survey)
+
       {
         :ok,
         archive: archive,
@@ -340,7 +344,8 @@ defmodule Ask.QuestionnaireControllerTest do
         unrelated_questionnaire: unrelated_questionnaire,
         read_only_questionnaire: read_only_questionnaire,
         archived_project_questionnaire: archived_project_questionnaire,
-        snapshot_questionnaire: snapshot_questionnaire
+        snapshot_questionnaire: snapshot_questionnaire,
+        questionnaire_with_survey: questionnaire_with_survey
       }
     end
 
@@ -390,7 +395,8 @@ defmodule Ask.QuestionnaireControllerTest do
       unrelated_questionnaire: unrelated_questionnaire,
       read_only_questionnaire: read_only_questionnaire,
       archived_project_questionnaire: archived_project_questionnaire,
-      snapshot_questionnaire: snapshot_questionnaire
+      snapshot_questionnaire: snapshot_questionnaire,
+      questionnaire_with_survey: questionnaire_with_survey
     } do
       # The questionnaire doesn't belong to the current user
       assert_error_sent(:forbidden, fn ->
@@ -419,6 +425,17 @@ defmodule Ask.QuestionnaireControllerTest do
       end)
 
       assert archived?.(snapshot_questionnaire) == false
+
+      # If a survey isn't running, archiving its questionnaires is forbidden.
+      # So the user must first remove the survey relation to be able to archive it.
+      # If the survey was already launched, the related questionnaires are snapshots, so archiving
+      # them is already forbidden because of they are snapshots.
+      # In conclusion, it's forbidden to archive a questionnaire related to any survey.
+      assert_error_sent(:forbidden, fn ->
+        archive.(questionnaire_with_survey)
+      end)
+
+      assert archived?.(questionnaire_with_survey) == false
     end
   end
 

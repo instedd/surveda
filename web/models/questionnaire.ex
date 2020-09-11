@@ -1,7 +1,7 @@
 defmodule Ask.Questionnaire do
   use Ask.Web, :model
 
-  alias Ask.{Questionnaire, QuestionnaireVariable, ActivityLog, Repo}
+  alias Ask.{Questionnaire, QuestionnaireVariable, ActivityLog, Repo, Survey, SurveyQuestionnaire}
   alias Ask.Ecto.Type.JSON
   alias Ecto.Multi
 
@@ -23,6 +23,13 @@ defmodule Ask.Questionnaire do
     belongs_to :project, Ask.Project
     has_many :questionnaire_variables, Ask.QuestionnaireVariable, on_delete: :delete_all
     has_many :translations, Ask.Translation, on_delete: :delete_all
+
+    # Before the survey is launched, the user selects one or more questionnaires
+    # Until the survey is launched, it's directly related to these questionnaires
+    # These original questionnaires are totally updatable in any moment
+    # From the moment the survey is launched, these questionnaires are replaced by snapshots
+    # Besides they remain related to its original by `snapshot_of`, they aren't updatable at all
+    many_to_many :surveys, Survey, join_through: SurveyQuestionnaire
 
     timestamps()
   end
