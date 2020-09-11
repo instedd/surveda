@@ -463,7 +463,16 @@ defmodule Ask.QuestionnaireControllerTest do
       end
     end
 
-    test "updates project updated_at when questionnaire is updated", %{conn: conn, user: user}  do
+    test "rejects update if the questionnaire is archived", %{conn: conn, user: user} do
+      project = create_project_for_user(user)
+      questionnaire = insert(:questionnaire, project: project)
+      archived_questionnaire = insert(:questionnaire, project: project, archived: true)
+      assert_error_sent :not_found, fn ->
+        put conn, project_questionnaire_path(conn, :update, questionnaire.project, archived_questionnaire), questionnaire: @valid_attrs
+      end
+    end
+
+    test "updates project updated_at when questionnaire is updated", %{conn: conn, user: user} do
       {:ok, datetime, _} = DateTime.from_iso8601("2000-01-01T00:00:00Z")
       project = create_project_for_user(user, updated_at: datetime)
       questionnaire = insert(:questionnaire, project: project)

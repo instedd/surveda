@@ -90,7 +90,7 @@ defmodule Ask.QuestionnaireController do
 
     params = conn.assigns[:questionnaire]
 
-    questionnaire = load_questionnaire_not_snapshot(project, id)
+    questionnaire = load_questionnaire_not_snapshot_nor_archive(project.id, id)
 
     old_valid = questionnaire.valid
     old_modes = questionnaire.modes
@@ -152,7 +152,7 @@ defmodule Ask.QuestionnaireController do
       conn
       |> load_project_for_change(project_id)
 
-    questionnaire = load_questionnaire_not_snapshot(project, id)
+    questionnaire = load_questionnaire_not_snapshot(project.id, id)
 
     archived = ControllerHelper.archived_param(params)
 
@@ -177,7 +177,7 @@ defmodule Ask.QuestionnaireController do
     project = conn
     |> load_project_for_change(project_id)
 
-    changeset = load_questionnaire_not_snapshot(project, id)
+    changeset = load_questionnaire_not_snapshot(project.id, id)
     |> Questionnaire.changeset(%{deleted: true})
 
     multi = Multi.new
@@ -223,7 +223,7 @@ defmodule Ask.QuestionnaireController do
     project = conn
     |> load_project(project_id)
 
-    questionnaire = load_questionnaire_not_snapshot(project, id)
+    questionnaire = load_questionnaire_not_snapshot(project.id, id)
     all_questionnaire_steps = Questionnaire.all_steps(questionnaire)
     audio_ids = collect_steps_audio_ids(all_questionnaire_steps, [])
     audio_ids = collect_prompt_audio_ids(questionnaire.settings["error_message"], audio_ids)
@@ -310,7 +310,7 @@ defmodule Ask.QuestionnaireController do
     project = conn
     |> load_project_for_change(project_id)
 
-    questionnaire = load_questionnaire_not_snapshot(project, id)
+    questionnaire = load_questionnaire_not_snapshot(project.id, id)
 
     {:ok, files} = :zip.unzip(to_charlist(file.path), [:memory])
 
@@ -429,11 +429,24 @@ defmodule Ask.QuestionnaireController do
     end
   end
 
-  defp load_questionnaire_not_snapshot(project, id) do
-    Repo.one!(from q in Questionnaire,
-      where: q.project_id == ^project.id
-        and q.id == ^id
-        and q.deleted == false
-        and is_nil(q.snapshot_of))
-  end
+  defp not_deleted_nor_snapshot_query(project_id, questionnaire_id),
+    do:
+      from(q in Questionnaire,
+        where:
+          q.project_id == ^project_id and
+            q.id == ^questionnaire_id and
+            q.deleted == false and
+            is_nil(q.snapshot_of)
+      )
+
+  defp load_questionnaire_not_snapshot(project_id, questionnaire_id),
+    do:
+      not_deleted_nor_snapshot_query(project_id, questionnaire_id)
+      |> Repo.one!()
+
+  defp load_questionnaire_not_snapshot_nor_archive(project_id, questionnaire_id),
+    do:
+      not_deleted_nor_snapshot_query(project_id, questionnaire_id)
+      |> where([q], q.archived == false)
+      |> Repo.one!()
 end
