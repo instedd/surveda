@@ -155,7 +155,7 @@ defmodule Ask.QuestionnaireController do
 
     questionnaire = load_questionnaire_not_snapshot(project.id, id, preload_surveys: true)
 
-    if (length(questionnaire.surveys) > 0), do: raise UnauthorizedError
+    if length(questionnaire.surveys) > 0, do: raise(UnauthorizedError)
 
     archived = ControllerHelper.archived_param(params)
 
@@ -163,11 +163,20 @@ defmodule Ask.QuestionnaireController do
       questionnaire
       |> Questionnaire.changeset(%{archived: archived})
 
-    case Repo.update(changeset) do
-      {:ok, questionnaire} ->
+    multi =
+      Multi.new()
+      |> Multi.update(:questionnaire, changeset)
+      |> Multi.run(:log, fn %{questionnaire: questionnaire} ->
+        ActivityLog.update_archived_status(project, conn, questionnaire, archived)
+        |> Repo.insert()
+      end)
+      |> Repo.transaction()
+
+    case multi do
+      {:ok, %{questionnaire: questionnaire}} ->
         render(conn, "show.json", questionnaire: questionnaire)
 
-      {:error, changeset} ->
+      {:error, _, changeset, _} ->
         Logger.warn("Error when archiving/unarchiving questionnaire: #{inspect(changeset)}")
 
         conn

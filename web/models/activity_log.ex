@@ -22,7 +22,7 @@ defmodule Ask.ActivityLog do
     ["create", "edit", "rename", "change_description", "lock", "unlock", "delete", "start", "request_cancel", "completed_cancel", "download", "enable_public_link", "regenerate_public_link", "disable_public_link", "change_folder"]
 
   def valid_actions("questionnaire"), do:
-    ["create", "edit", "rename", "delete", "add_mode", "remove_mode", "add_language", "remove_language", "create_step", "delete_step", "rename_step", "edit_step", "edit_settings", "create_section", "rename_section", "delete_section", "edit_section"]
+    ["create", "edit", "rename", "delete", "add_mode", "remove_mode", "add_language", "remove_language", "create_step", "delete_step", "rename_step", "edit_step", "edit_settings", "create_section", "rename_section", "delete_section", "edit_section", "archive", "unarchive"]
 
   def valid_actions("folder"), do:
     ["rename"]
@@ -276,5 +276,10 @@ defmodule Ask.ActivityLog do
 
   def delete_questionnaire(project, conn, questionnaire) do
     create("delete", project, conn, questionnaire, %{questionnaire_name: questionnaire.name})
+  end
+
+  def update_archived_status(project, conn, questionnaire, archived) do
+    action = if archived, do: "archive", else: "unarchive"
+    create(action, project, conn, questionnaire, %{questionnaire_name: questionnaire.name})
   end
 end

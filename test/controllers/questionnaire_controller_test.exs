@@ -317,6 +317,12 @@ defmodule Ask.QuestionnaireControllerTest do
       unarchive = fn questionnaire -> update_archived.(questionnaire, false) end
       archived? = fn questionnaire -> Repo.get(Questionnaire, questionnaire.id).archived end
 
+      logged? = fn questionnaire, action ->
+        ActivityLog
+        |> where(entity_type: "questionnaire", entity_id: ^questionnaire.id, action: ^action)
+        |> Repo.aggregate(:count, :id) == 1
+      end
+
       project = create_project_for_user(user)
       questionnaire = insert(:questionnaire, project: project)
       archived_questionnaire = insert(:questionnaire, project: project, archived: true)
@@ -345,24 +351,33 @@ defmodule Ask.QuestionnaireControllerTest do
         read_only_questionnaire: read_only_questionnaire,
         archived_project_questionnaire: archived_project_questionnaire,
         snapshot_questionnaire: snapshot_questionnaire,
-        questionnaire_with_survey: questionnaire_with_survey
+        questionnaire_with_survey: questionnaire_with_survey,
+        logged?: logged?
       }
     end
 
-    test "archives", %{archive: archive, archived?: archived?, questionnaire: questionnaire} do
+    test "archives", %{
+      archive: archive,
+      archived?: archived?,
+      questionnaire: questionnaire,
+      logged?: logged?
+    } do
       archive.(questionnaire)
 
       assert archived?.(questionnaire) == true
+      assert logged?.(questionnaire, "archive") == true
     end
 
     test "unarchives", %{
       unarchive: unarchive,
       archived?: archived?,
-      archived_questionnaire: questionnaire
+      archived_questionnaire: questionnaire,
+      logged?: logged?
     } do
       unarchive.(questionnaire)
 
       assert archived?.(questionnaire) == false
+      assert logged?.(questionnaire, "unarchive") == true
     end
 
     test "rejects invalid requests", %{
