@@ -1,5 +1,23 @@
 # InSTEDD Surveda Changelog
 
+## 0.28.0
+
+### Features
+
+* Allow filtering respondents using a search input. Check [wiki](https://github.com/instedd/surveda/wiki/How-to-filter-respondents) for valid expressions. [#1723](https://github.com/instedd/surveda/issues/1723), [#1735](https://github.com/instedd/surveda/pull/1735)
+  * Clarify downloads and share link relation with this new filters. [#1746](https://github.com/instedd/surveda/issues/1746)
+* Add column picker in respondents table. [#1745](https://github.com/instedd/surveda/pull/1745)
+* Add partial relevant answered questions counter to respondents. [#1762](https://github.com/instedd/surveda/pull/1762)
+* Allow sorting respondents by disposition. [#1756](https://github.com/instedd/surveda/pull/1756)
+* Allow choosing page size in respondents and activities listings. [#1758](https://github.com/instedd/surveda/pull/1758), [#1774](https://github.com/instedd/surveda/pull/1774)
+* Add survey's folder to navbar. [#1768](https://github.com/instedd/surveda/pull/1768)
+* Add link to disposition flow chart wiki. [#1776](https://github.com/instedd/surveda/pull/1776)
+
+### Bugfixes
+
+* Support long questionnaire in SMS simulation. [#1750](https://github.com/instedd/surveda/pull/1750)
+* Avoid wrongly rejecting respondents in completed dispositions. [#1754](https://github.com/instedd/surveda/pull/1754)
+
 ## 0.27.0
 
 ### Features
