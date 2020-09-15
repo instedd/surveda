@@ -93,7 +93,7 @@ defmodule Ask.QuestionnaireController do
 
     params = conn.assigns[:questionnaire]
 
-    questionnaire = load_questionnaire_not_snapshot_nor_archive(project.id, id)
+    questionnaire = load_questionnaire_not_snapshot_nor_archived(project.id, id)
 
     old_valid = questionnaire.valid
     old_modes = questionnaire.modes
@@ -473,7 +473,7 @@ defmodule Ask.QuestionnaireController do
     |> Repo.one!()
   end
 
-  defp load_questionnaire_not_snapshot_nor_archive(project_id, questionnaire_id),
+  defp load_questionnaire_not_snapshot_nor_archived(project_id, questionnaire_id),
     do:
       not_deleted_nor_snapshot_query(project_id, questionnaire_id)
       |> where([q], q.archived == false)
