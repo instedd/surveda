@@ -30,7 +30,7 @@ export const fetchQuestionnaires = (projectId: number, options: Object = {}) => 
     .then(() => getState().questionnaires.items)
 }
 
-export const startFetchingQuestionnaires = (projectId: number, archived: ?boolean) => ({
+export const startFetchingQuestionnaires = (projectId: number, archived: boolean) => ({
   type: FETCH,
   projectId,
   archived

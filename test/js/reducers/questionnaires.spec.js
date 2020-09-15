@@ -14,7 +14,7 @@ describe('questionnaires reducer', () => {
 
   it('should start fetching questionnaires', () => {
     const projectId = 100
-    const result = reducer(initialState, actions.startFetchingQuestionnaires(projectId))
+    const result = reducer(initialState, actions.startFetchingQuestionnaires(projectId, false))
     expect(result.fetching).toEqual(true)
     expect(result.filter && result.filter.projectId).toEqual(projectId)
   })
@@ -33,9 +33,9 @@ describe('questionnaires reducer', () => {
   it('should start fetching questionnaires for a different project', () => {
     const projectId = 100
     const questionnaires = {'1': {...questionnaire, id: 1}}
-    const r1 = reducer(initialState, actions.startFetchingQuestionnaires(projectId))
+    const r1 = reducer(initialState, actions.startFetchingQuestionnaires(projectId, false))
     const r2 = reducer(r1, actions.receiveQuestionnaires(projectId, questionnaires, false))
-    const r3 = reducer(r2, actions.startFetchingQuestionnaires(projectId + 1))
+    const r3 = reducer(r2, actions.startFetchingQuestionnaires(projectId + 1, false))
     expect(r3.items).toEqual(null)
   })
 

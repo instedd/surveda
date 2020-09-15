@@ -28,7 +28,7 @@ export const fetchProjects = (options: Object = {}) => (dispatch: Function, getS
     .then(response => dispatch(receiveProjects(response.entities.projects || {}, optionsOrDefault['archived'])))
 }
 
-export const startFetchingProjects = (archived: ?boolean): FilteredAction => ({
+export const startFetchingProjects = (archived: boolean): FilteredAction => ({
   type: FETCH,
   archived
 })
