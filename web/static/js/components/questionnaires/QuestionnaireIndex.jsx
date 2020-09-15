@@ -126,13 +126,18 @@ class QuestionnaireIndex extends Component<any> {
 
   archiveOrUnarchive(questionnaire: Questionnaire, action: string) {
     const { t, actions, startIndex } = this.props
-    actions.archiveOrUnarchive(questionnaire, action).then(() => {
-      const { questionnaires } = this.props
-      if (questionnaires.length == 0 && startIndex > 0) {
-        actions.previousPage()
+    actions.archiveOrUnarchive(questionnaire, action).then(({error}) => {
+      if (error) {
+        window.Materialize.toast(t(error), 5000, 'error-toast')
+      } else {
+        actions.deleted(questionnaire)
+        const { questionnaires } = this.props
+        if (questionnaires.length == 0 && startIndex > 0) {
+          actions.previousPage()
+        }
+        const description = action == 'archive' ? t('Questionnaire successfully archived') : t('Questionnaire successfully unarchived')
+        window.Materialize.toast(description, 5000)
       }
-      const description = action == 'archive' ? t('Project successfully archived') : t('Questionnaire successfully unarchived')
-      window.Materialize.toast(description, 5000)
     })
   }
 

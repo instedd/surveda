@@ -11,7 +11,8 @@ defmodule Ask.QuestionnaireController do
     Logger,
     ActivityLog,
     ControllerHelper,
-    UnauthorizedError
+    ErrorView,
+    Gettext
   }
   alias Ecto.Multi
   alias Ask.Runtime.QuestionnaireSimulator
@@ -155,11 +156,34 @@ defmodule Ask.QuestionnaireController do
       |> load_project_for_change(project_id)
 
     questionnaire = load_questionnaire_not_snapshot(project.id, id, preload_surveys: true)
-
-    if length(questionnaire.surveys) > 0, do: raise(UnauthorizedError)
-
     archived = ControllerHelper.archived_param(params)
 
+    update_archived_status(%{
+      project: project,
+      questionnaire: questionnaire,
+      archived: archived,
+      conn: conn
+    })
+  end
+
+  defp update_archived_status(%{questionnaire: %{surveys: surveys}, archived: true, conn: conn})
+       when length(surveys) > 0 do
+    conn
+    |> put_status(:unprocessable_entity)
+    |> render(ErrorView, "error.json",
+      error_message:
+        Gettext.gettext(
+          "Cannot archive questionnaire because it's related to one or more surveys"
+        )
+    )
+  end
+
+  defp update_archived_status(%{
+         project: project,
+         questionnaire: questionnaire,
+         archived: archived,
+         conn: conn
+       }) do
     changeset =
       questionnaire
       |> Questionnaire.changeset(%{archived: archived})

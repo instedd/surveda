@@ -352,7 +352,14 @@ defmodule Ask.QuestionnaireControllerTest do
         insert(:questionnaire, project: project, snapshot_of: questionnaire.id)
 
       questionnaire_with_survey = insert(:questionnaire, project: project)
-      survey = insert(:survey, project: project, questionnaires: [questionnaire_with_survey], state: "ready")
+
+      survey =
+        insert(:survey,
+          project: project,
+          questionnaires: [questionnaire_with_survey],
+          state: "ready"
+        )
+
       insert(:survey_questionnaire, survey: survey, questionnaire: questionnaire_with_survey)
 
       {
@@ -462,9 +469,10 @@ defmodule Ask.QuestionnaireControllerTest do
       # If the survey was already launched, the related questionnaires are snapshots, so archiving
       # them is already forbidden because of they are snapshots.
       # In conclusion, it's forbidden to archive a questionnaire related to any survey.
-      assert_error_sent(:forbidden, fn ->
-        archive.(questionnaire_with_survey)
-      end)
+      conn = archive.(questionnaire_with_survey)
+
+      assert json_response(conn, 422)["error"] ==
+               "Cannot archive questionnaire because it's related to one or more surveys"
 
       assert archived?.(questionnaire_with_survey) == false
     end

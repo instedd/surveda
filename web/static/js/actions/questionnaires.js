@@ -71,6 +71,10 @@ export const archiveOrUnarchive = (questionnaire: Questionnaire, action: string)
     archived: archive
   }
   return api.updateQuestionnaireArchived(newQuestionnaire).then(response => {
-    dispatch(deleted(questionnaire))
+    return { error: false }
+  })
+  .catch(async response => {
+    const body = await response.json()
+    return { error: body.error }
   })
 }
