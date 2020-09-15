@@ -133,7 +133,7 @@ class QuestionnaireIndex extends Component<any> {
         actions.deleted(questionnaire)
         const { questionnaires } = this.props
         if (questionnaires.length == 0 && startIndex > 0) {
-          actions.previousPage()
+          this.previousPage()
         }
         const description = action == 'archive' ? t('Questionnaire successfully archived') : t('Questionnaire successfully unarchived')
         window.Materialize.toast(description, 5000)
@@ -141,8 +141,8 @@ class QuestionnaireIndex extends Component<any> {
     })
   }
 
-  render() {
-    const { questionnaires, sortBy, sortAsc, pageSize, startIndex, endIndex, totalCount, userSettings, archived, t } = this.props
+  renderTableOrEmptyPage() {
+    const { questionnaires, userSettings, sortBy, sortAsc, pageSize, startIndex, endIndex, totalCount, archived, t } = this.props
 
     if (!questionnaires || !userSettings.settings) {
       return (
@@ -161,14 +161,7 @@ class QuestionnaireIndex extends Component<any> {
     const readOnly = this.readOnly()
     const actionHeaders = Array(3).fill().map((_, i) => <th className='action' key={i} />)
 
-    let addButton = null
-    if (!readOnly) {
-      addButton = (
-        <AddButton text={t('Add questionnaire')} onClick={e => this.newQuestionnaire(e)} />
-      )
-    }
-
-    const quexTable = (
+    const table = (
       <CardTable title={title} footer={footer} highlight style={{tableLayout: 'fixed'}}>
         <thead>
           <tr>
@@ -229,25 +222,44 @@ class QuestionnaireIndex extends Component<any> {
       </CardTable>
     )
 
+    const emptyPage = (
+      <EmptyPage
+        icon='assignment'
+        title={t('You have no active questionnaires on this project')}
+        onClick={e => this.newQuestionnaire(e)}
+        readOnly={readOnly}
+        createText={t('Create one', {context: 'questionnaire'})}
+      />
+    )
+
     return (
       <div>
-        {addButton}
-        { (questionnaires.length == 0 && !archived)
-          ? <EmptyPage icon='assignment' title={t('You have no questionnaires on this project')} onClick={e => this.newQuestionnaire(e)} readOnly={readOnly} createText={t('Create one', {context: 'questionnaire'})} />
-          : (
-            <div>
-              <div className='row'>
-                <ArchiveFilter
-                  archived={archived}
-                  onChange={selection => {
-                    this.fetchQuestionnaires(selection == 'archived')
-                  }}
-                />
-              </div>
-              {quexTable}
-            </div>
-          )
+        {
+          (questionnaires.length == 0 && !archived)
+          ? emptyPage
+          : table
         }
+      </div>
+    )
+  }
+
+  render() {
+    const { archived, t } = this.props
+
+    const addButton = (
+      <AddButton text={t('Add questionnaire')} onClick={e => this.newQuestionnaire(e)} />
+    )
+
+    return (
+      <div>
+        { this.readOnly() ? null : addButton }
+        <div className='row'>
+          <ArchiveFilter
+            archived={archived}
+            onChange={selection => this.fetchQuestionnaires(selection == 'archived')}
+          />
+        </div>
+        { this.renderTableOrEmptyPage() }
         <ConfirmationModal modalId='questionnaire_index_delete' ref='deleteConfirmationModal' confirmationText={t('DELETE')} header={t('Delete questionnaire')} showCancel />
       </div>
     )
