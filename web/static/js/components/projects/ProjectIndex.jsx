@@ -131,7 +131,7 @@ class ProjectIndex extends Component {
       <div>
         { (projects.length == 0 && !archived)
           ? <div className='empty-projects'>
-            <EmptyPage icon='folder' title={t('You have no projects yet')} onClick={e => this.newProject(e)} createText={t('Create one', {context: 'project'})} />
+            <EmptyPage icon='folder' title={t('You have no active projects')} onClick={e => this.newProject(e)} createText={t('Create one', {context: 'project'})} />
             <div className='organize'>
               <div className='icons'>
                 <i className='material-icons'>assignment_turned_in</i>
