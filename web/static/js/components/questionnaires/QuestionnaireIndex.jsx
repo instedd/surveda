@@ -164,7 +164,7 @@ class QuestionnaireIndex extends Component<any> {
             <SortableHeader text='Name' property='name' sortBy={sortBy} sortAsc={sortAsc} onClick={(name) => this.sortBy(name)} />
             <SortableHeader text='Last Modified' property='updatedAt' sortBy={sortBy} sortAsc={sortAsc} onClick={(propertyName) => this.sortBy(propertyName)} />
             <th>{t('Modes')}</th>
-            { actionHeaders }
+            { readOnly ? null : actionHeaders }
             <th style={{width: '20px'}} />
           </tr>
         </thead>
