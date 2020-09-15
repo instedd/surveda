@@ -8,7 +8,7 @@ export const PREVIOUS_PAGE = 'QUESTIONNAIRES_PREVIOUS_PAGE'
 export const SORT = 'QUESTIONNAIRES_SORT'
 export const DELETED = 'QUESTIONNAIRES_DELETED'
 
-export const fetchQuestionnaires = (projectId: number, options: Object) => (dispatch: Function, getState: () => Store): Promise<?QuestionnaireList> => {
+export const fetchQuestionnaires = (projectId: number, options: Object = {}) => (dispatch: Function, getState: () => Store): Promise<?QuestionnaireList> => {
   const state = getState()
 
   // Don't fetch questionnaires if they are already being fetched
@@ -17,13 +17,16 @@ export const fetchQuestionnaires = (projectId: number, options: Object) => (disp
     return Promise.resolve(getState().questionnaires.items)
   }
 
-  if (!options) options = {'archived': null}
+  const optionsOrDefault = {
+    archived: false,
+    ...options
+  }
 
-  dispatch(startFetchingQuestionnaires(projectId, options['archived']))
+  dispatch(startFetchingQuestionnaires(projectId, optionsOrDefault['archived']))
 
   return api
     .fetchQuestionnaires(projectId, options)
-    .then(response => dispatch(receiveQuestionnaires(projectId, response.entities.questionnaires || {}, options['archived'])))
+    .then(response => dispatch(receiveQuestionnaires(projectId, response.entities.questionnaires || {}, optionsOrDefault['archived'])))
     .then(() => getState().questionnaires.items)
 }
 
