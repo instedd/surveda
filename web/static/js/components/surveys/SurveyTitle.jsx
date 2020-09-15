@@ -4,6 +4,7 @@ import { withRouter } from 'react-router'
 import { EditableTitleLabel, EditableDescriptionLabel } from '../ui'
 import * as surveyActions from '../../actions/survey'
 import { translate } from 'react-i18next'
+import { isProjectReadOnly } from '../../reducers/project'
 
 class SurveyTitle extends Component {
   static propTypes = {
@@ -47,7 +48,7 @@ const mapStateToProps = (state, ownProps) => {
     projectId: ownProps.params.projectId,
     surveyId: ownProps.params.surveyId,
     survey: state.survey.data,
-    readOnly: state.project && state.project.data ? state.project.data.readOnly : true
+    readOnly: isProjectReadOnly(state)
   }
 }
 

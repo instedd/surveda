@@ -25,6 +25,8 @@ import {
 import * as routes from '../../routes'
 import { modeLabel, modeOrder } from '../../questionnaire.mode'
 import { translate, Trans } from 'react-i18next'
+import { isProjectReadOnly } from '../../reducers/project'
+import { isQuestionnaireReadOnly } from '../../reducers/questionnaire'
 
 class QuestionnaireIndex extends Component<any> {
   creatingQuestionnaire: boolean
@@ -109,11 +111,6 @@ class QuestionnaireIndex extends Component<any> {
     })
   }
 
-  readOnly() {
-    const { project } = this.props
-    return !project || project.readOnly
-  }
-
   archiveIconForQuestionnaire(questionnaire: Questionnaire, archived: boolean) {
     const action = archived ? 'unarchive' : 'archive'
     const onClick = () => this.archiveOrUnarchive(questionnaire, action)
@@ -142,7 +139,7 @@ class QuestionnaireIndex extends Component<any> {
   }
 
   renderTableOrEmptyPage() {
-    const { questionnaires, userSettings, sortBy, sortAsc, pageSize, startIndex, endIndex, totalCount, archived, t } = this.props
+    const { questionnaires, userSettings, sortBy, sortAsc, pageSize, startIndex, endIndex, totalCount, archived, t, readOnly } = this.props
 
     if (!questionnaires || !userSettings.settings) {
       return (
@@ -158,7 +155,6 @@ class QuestionnaireIndex extends Component<any> {
       onPreviousPage={() => this.previousPage()}
       onNextPage={() => this.nextPage()} />
 
-    const readOnly = this.readOnly()
     const actionHeaders = Array(3).fill().map((_, i) => <th className='action' key={i} />)
 
     const table = (
@@ -244,7 +240,7 @@ class QuestionnaireIndex extends Component<any> {
   }
 
   render() {
-    const { archived, t } = this.props
+    const { archived, t, readOnly } = this.props
 
     const addButton = (
       <AddButton text={t('Add questionnaire')} onClick={e => this.newQuestionnaire(e)} />
@@ -252,7 +248,7 @@ class QuestionnaireIndex extends Component<any> {
 
     return (
       <div>
-        { this.readOnly() ? null : addButton }
+        { readOnly ? null : addButton }
         <div className='row'>
           <ArchiveFilter
             archived={archived}
@@ -283,7 +279,8 @@ QuestionnaireIndex.propTypes = {
   endIndex: PropTypes.number.isRequired,
   totalCount: PropTypes.number.isRequired,
   router: PropTypes.object,
-  archived: PropTypes.bool
+  archived: PropTypes.bool,
+  readOnly: PropTypes.bool
 }
 
 const mapStateToProps = (state, ownProps) => {
@@ -300,6 +297,7 @@ const mapStateToProps = (state, ownProps) => {
   }
   const startIndex = Math.min(totalCount, pageIndex + 1)
   const endIndex = Math.min(pageIndex + pageSize, totalCount)
+  const readOnly = isProjectReadOnly(state) || isQuestionnaireReadOnly(state)
   return {
     projectId: ownProps.params.projectId,
     project: state.project.data,
@@ -311,7 +309,8 @@ const mapStateToProps = (state, ownProps) => {
     startIndex,
     endIndex,
     totalCount,
-    archived
+    archived,
+    readOnly
   }
 }
 

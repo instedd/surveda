@@ -21,7 +21,8 @@ import { Dropdown, DropdownItem, PositionFixer, Tooltip } from '../ui'
 import { hasErrorsInModeWithLanguage } from '../../questionnaireErrors'
 import classNames from 'classnames/bind'
 import { translate } from 'react-i18next'
-import { countRelevantSteps } from '../../reducers/questionnaire'
+import { countRelevantSteps, isQuestionnaireReadOnly } from '../../reducers/questionnaire'
+import { isProjectReadOnly } from '../../reducers/project'
 
 type State = {
   isNew: boolean
@@ -469,17 +470,11 @@ type renderSwitchProps = {
 
 const mapStateToProps = (state, ownProps) => {
   const questionnaire = state.questionnaire && state.questionnaire.data
-  const projectReadOnly = state.project && state.project.data
-    ? state.project.data.readOnly
-    : true
-  const questionnaireReadOnly = questionnaire
-    ? questionnaire.archived
-    : true
   return {
     projectId: ownProps.params.projectId,
     project: state.project.data,
     userSettings: state.userSettings,
-    readOnly: projectReadOnly || questionnaireReadOnly,
+    readOnly: isProjectReadOnly(state) || isQuestionnaireReadOnly(state),
     questionnaireId: ownProps.params.questionnaireId,
     questionnaire,
     questionnaireHasSections: questionnaire ? questionnaire.steps.some(function(item) {

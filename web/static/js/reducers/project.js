@@ -54,3 +54,7 @@ const clearProject = (state, action) => ({
   projectId: null,
   data: null
 })
+
+export const isProjectReadOnly = state => (
+  state.project && state.project.data ? state.project.data.readOnly : true
+)

@@ -6,6 +6,7 @@ import merge from 'lodash/merge'
 import * as projectActions from '../../actions/project'
 import { updateProject } from '../../api'
 import { translate } from 'react-i18next'
+import { isProjectReadOnly } from '../../reducers/project'
 
 class ProjectTitle extends Component {
   static propTypes = {
@@ -43,7 +44,7 @@ const mapStateToProps = (state, ownProps) => {
   return {
     projectId: ownProps.params.projectId,
     project: state.project.data,
-    readOnly: state.project && state.project.data ? state.project.data.readOnly : true
+    readOnly: isProjectReadOnly(state)
   }
 }
 
