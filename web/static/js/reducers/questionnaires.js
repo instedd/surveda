@@ -15,7 +15,6 @@ const deleteItem = (state: IndexedList<Questionnaire>, action: any) => {
   return items
 }
 
-// TODO: This filter breaks the tests
 const filterProvider = (action: FilteredAction): Filter => ({
   ...projectFilterProvider(action),
   archived: action.archived
