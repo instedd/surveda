@@ -1,7 +1,7 @@
 defmodule Ask.Questionnaire do
   use Ask.Web, :model
 
-  alias Ask.{Questionnaire, QuestionnaireVariable, ActivityLog, Repo, Survey, SurveyQuestionnaire}
+  alias Ask.{Questionnaire, QuestionnaireVariable, ActivityLog, Repo, SurveyQuestionnaire}
   alias Ask.Ecto.Type.JSON
   alias Ecto.Multi
 
@@ -24,12 +24,23 @@ defmodule Ask.Questionnaire do
     has_many :questionnaire_variables, Ask.QuestionnaireVariable, on_delete: :delete_all
     has_many :translations, Ask.Translation, on_delete: :delete_all
 
+    # It would be useful to place here the following line:
+    # many_to_many :surveys, Survey, join_through: SurveyQuestionnaire
+
+    # That relation exists in the DB, Survey and SurveyQuestionnaire models but it's missing here.
+    # We decided to avoid adding it here for the moment because we don't know how many queries
+    # could be broken. The following lines tries to explain how this relation works.
+
     # Before the survey is launched, the user selects one or more questionnaires
-    # Until the survey is launched, it's directly related to these questionnaires
-    # These original questionnaires are totally updatable in any moment
-    # From the moment the survey is launched, these questionnaires are replaced by snapshots
-    # Besides they remain related to its original by `snapshot_of`, they aren't updatable at all
-    many_to_many :surveys, Survey, join_through: SurveyQuestionnaire
+    # In that moment the survey and the selected questionnaires are associated through
+    # SurveyQuestionnaire. From the moment the survey is launched, a copy of their questionnaires
+    # is created and the associations through SurveyQuestionnaire are replaced. From that moment,
+    # the Survey remains forever associated with these new copies and it's no more associated to
+    # their original questionnaires. These copies are called snapshots and remain forever
+    # associated with their original questionnaire through the field `snapshot_of`.
+
+    # If two surveys shared the same original questionnaire, different snapshots of the
+    # same questionnaire will be created for each survey at the moment they are launched.
 
     timestamps()
   end
@@ -311,4 +322,12 @@ defmodule Ask.Questionnaire do
   def partial_relevant_enabled?(partial_relevant_config),
     do:
       !!partial_relevant_config["enabled"]
+
+  def has_related_surveys?(questionnaire_id) do
+    Repo.one(
+      from sq in SurveyQuestionnaire,
+      where: sq.questionnaire_id == ^ questionnaire_id,
+      select: count(sq.id)
+    ) > 0
+  end
 end

@@ -155,34 +155,35 @@ defmodule Ask.QuestionnaireController do
       conn
       |> load_project_for_change(project_id)
 
-    questionnaire = load_questionnaire_not_snapshot(project.id, id, preload_surveys: true)
+    questionnaire = load_questionnaire_not_snapshot(project.id, id)
     archived = ControllerHelper.archived_param(params)
 
     update_archived_status(%{
+      conn: conn,
       project: project,
       questionnaire: questionnaire,
       archived: archived,
-      conn: conn
+      related_surveys_rejection: archived == true
+        and Questionnaire.has_related_surveys?(questionnaire.id)
     })
   end
 
-  defp update_archived_status(%{questionnaire: %{surveys: surveys}, archived: true, conn: conn})
-       when length(surveys) > 0 do
-    conn
-    |> put_status(:unprocessable_entity)
-    |> render(ErrorView, "error.json",
-      error_message:
-        Gettext.gettext(
-          "Cannot archive questionnaire because it's related to one or more surveys"
-        )
-    )
-  end
+  defp update_archived_status(%{conn: conn, related_surveys_rejection: true}),
+    do:
+      conn
+      |> put_status(:unprocessable_entity)
+      |> render(ErrorView, "error.json",
+        error_message:
+          Gettext.gettext(
+            "Cannot archive questionnaire because it's related to one or more surveys"
+          )
+      )
 
   defp update_archived_status(%{
-         project: project,
-         questionnaire: questionnaire,
-         archived: archived,
-         conn: conn
+        conn: conn,
+        project: project,
+        questionnaire: questionnaire,
+        archived: archived,
        }) do
     changeset =
       questionnaire
@@ -466,10 +467,8 @@ defmodule Ask.QuestionnaireController do
     end
   end
 
-  defp load_questionnaire_not_snapshot(project_id, questionnaire_id, options \\ []) do
-    option_default = %{preload_surveys: false}
-    %{preload_surveys: preload_surveys} = Enum.into(options, option_default)
-    not_deleted_nor_snapshot_query(project_id, questionnaire_id, preload_surveys)
+  defp load_questionnaire_not_snapshot(project_id, questionnaire_id) do
+    not_deleted_nor_snapshot_query(project_id, questionnaire_id)
     |> Repo.one!()
   end
 
@@ -479,14 +478,7 @@ defmodule Ask.QuestionnaireController do
       |> where([q], q.archived == false)
       |> Repo.one!()
 
-  defp not_deleted_nor_snapshot_query(project_id, questionnaire_id, preload_surveys \\ false)
-
-  defp not_deleted_nor_snapshot_query(project_id, questionnaire_id, true = _preload_surveys) do
-    not_deleted_nor_snapshot_query(project_id, questionnaire_id)
-    |> preload(:surveys)
-  end
-
-  defp not_deleted_nor_snapshot_query(project_id, questionnaire_id, _preload_surveys),
+  defp not_deleted_nor_snapshot_query(project_id, questionnaire_id),
     do:
       from(q in Questionnaire,
         where:
