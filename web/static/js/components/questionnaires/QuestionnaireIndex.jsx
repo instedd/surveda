@@ -26,7 +26,6 @@ import * as routes from '../../routes'
 import { modeLabel, modeOrder } from '../../questionnaire.mode'
 import { translate, Trans } from 'react-i18next'
 import { isProjectReadOnly } from '../../reducers/project'
-import { isQuestionnaireReadOnly } from '../../reducers/questionnaire'
 
 class QuestionnaireIndex extends Component<any> {
   creatingQuestionnaire: boolean
@@ -297,7 +296,7 @@ const mapStateToProps = (state, ownProps) => {
   }
   const startIndex = Math.min(totalCount, pageIndex + 1)
   const endIndex = Math.min(pageIndex + pageSize, totalCount)
-  const readOnly = isProjectReadOnly(state) || isQuestionnaireReadOnly(state)
+  const readOnly = isProjectReadOnly(state)
   return {
     projectId: ownProps.params.projectId,
     project: state.project.data,
