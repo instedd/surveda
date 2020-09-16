@@ -163,8 +163,9 @@ defmodule Ask.QuestionnaireController do
       project: project,
       questionnaire: questionnaire,
       archived: archived,
-      related_surveys_rejection: archived == true
-        and Questionnaire.has_related_surveys?(questionnaire.id)
+      related_surveys_rejection:
+        archived == true and
+          Questionnaire.has_related_surveys?(questionnaire.id)
     })
   end
 
@@ -180,10 +181,10 @@ defmodule Ask.QuestionnaireController do
       )
 
   defp update_archived_status(%{
-        conn: conn,
-        project: project,
-        questionnaire: questionnaire,
-        archived: archived,
+         conn: conn,
+         project: project,
+         questionnaire: questionnaire,
+         archived: archived
        }) do
     changeset =
       questionnaire

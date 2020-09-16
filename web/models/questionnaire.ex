@@ -325,9 +325,10 @@ defmodule Ask.Questionnaire do
 
   def has_related_surveys?(questionnaire_id) do
     Repo.one(
-      from sq in SurveyQuestionnaire,
-      where: sq.questionnaire_id == ^ questionnaire_id,
-      select: count(sq.id)
+      from(sq in SurveyQuestionnaire,
+        where: sq.questionnaire_id == ^questionnaire_id,
+        select: count(sq.id)
+      )
     ) > 0
   end
 end
