@@ -123,7 +123,8 @@ const validateFallbackDelay = (state: DataStore<Survey>) => {
   }
 }
 
-const timeSpecRegex = /^\d+[mhd]$/
+// Attempts are at least every 10m
+const timeSpecRegex = /^([1-9]\d+m)|([1-9]\d*[hd])$/
 
 const changeName = (state, action) => {
   return {

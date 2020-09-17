@@ -1381,7 +1381,7 @@ defmodule Ask.SurveyControllerTest do
 
       assert new_survey.state == "not_ready"
 
-      conn = put conn, project_survey_path(conn, :update, project, survey), survey: %{sms_retry_configuration: "5m 1h 2d"}
+      conn = put conn, project_survey_path(conn, :update, project, survey), survey: %{sms_retry_configuration: "10m 1h 2d"}
 
       assert json_response(conn, 200)["data"]["id"]
       new_survey = Repo.get(Survey, survey.id)

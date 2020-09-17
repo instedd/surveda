@@ -177,7 +177,7 @@ class SurveyWizardRetryAttempts extends Component {
                 />
               </InputWithLabel>
               <span className='small-text-bellow'>
-                {t('Enter a delay like 5m, 3h or 1d to express a time unit')}
+                {t('Enter delays like 10m 2h 1d to express time units (use values greater than 10m)')}
               </span>
             </div>
           </div>
@@ -200,7 +200,7 @@ class SurveyWizardRetryAttempts extends Component {
                     />
                 </InputWithLabel>
                 <span className='small-text-bellow'>
-                  {t('Enter delays like 5m 2h 1d to express time units')}
+                  {t('Enter delays like 10m 2h 1d to express time units (use values greater than 10m)')}
                 </span>
                 {this.retryConfigurationFlow(mode, defaultValue)}
               </div>
