@@ -144,6 +144,7 @@
   "End section": "",
   "Enter collaborator's email": "",
   "Enter comma-separated values to create ranges like 5,10,20": "",
+  "Enter delays like 10m 2h 1d to express time units (default 1h, use values greater than 10m)": "",
   "Enter delays like 10m 2h 1d to express time units (use values greater than 10m)": "",
   "Error ID:": "",
   "Error details": "",
