@@ -20,6 +20,13 @@ class MobileWebPrompt extends Component {
     if (!label) label = t('Mobile Web Message')
 
     const shouldDisplayErrors = value == this.props.originalValue
+
+    const autocompleteProps = {
+      autocomplete: this.props.autocomplete,
+      autocompleteGetData: this.props.autocompleteGetData,
+      autocompleteOnSelect: this.props.autocompleteOnSelect
+    }
+
     return (
       <div>
         <div className='row'>
@@ -30,6 +37,7 @@ class MobileWebPrompt extends Component {
               errors={shouldDisplayErrors && map(inputErrors, (error) => t(...error))}
               value={value}
               readOnly={readOnly}
+              {...autocompleteProps}
               />
           </div>
         </div>
@@ -46,7 +54,10 @@ MobileWebPrompt.propTypes = {
   onBlur: PropTypes.func.isRequired,
   inputErrors: PropTypes.array,
   readOnly: PropTypes.bool,
-  stepId: PropTypes.string
+  stepId: PropTypes.string,
+  autocomplete: PropTypes.bool,
+  autocompleteGetData: PropTypes.func,
+  autocompleteOnSelect: PropTypes.func
 }
 
 const mapDispatchToProps = (dispatch) => ({

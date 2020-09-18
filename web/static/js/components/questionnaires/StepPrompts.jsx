@@ -204,6 +204,8 @@ class StepPrompts extends Component<Props, State> {
         readOnly={readOnly}
         onBlur={text => this.stepPromptMobileWebSubmit(text)}
         autocomplete={autocomplete}
+        autocompleteGetData={(value, callback) => this.autocompletePromptGetData(value, callback, 'mobileweb')}
+        autocompleteOnSelect={item => this.autocompletePromptOnSelect(item, 'mobileweb')}
         stepId={step.id}
         />
     }
