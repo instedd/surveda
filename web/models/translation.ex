@@ -167,70 +167,54 @@ defmodule Ask.Translation do
     case prompt do
       %{^lang => lang_prompt} ->
         translations
-        |> collect_prompt_sms_translations(scope, lang, prompt, lang_prompt)
-        |> collect_prompt_ivr_translations(scope, lang, prompt, lang_prompt)
+        |> collect_prompt_translations(scope, lang, prompt, lang_prompt, "sms")
+        |> collect_prompt_translations(scope, lang, prompt, lang_prompt, "ivr")
+        |> collect_prompt_translations(scope, lang, prompt, lang_prompt, "mobileweb")
       _ ->
         translations
     end
   end
 
-  defp collect_prompt_sms_translations(translations, scope, lang, prompt, lang_prompt) do
-    case lang_prompt do
-      %{"sms" => text} ->
-        if text |> present? do
-          prompt
-          |> Enum.reduce(translations, fn {other_lang, other_prompt}, translations ->
-            if other_lang != lang do
-              case other_prompt do
-                %{"sms" => other_text} ->
-                  if other_text |> String.trim |> String.length == 0 do
-                    translations
-                  else
-                    [{"sms", scope, lang, text, other_lang, other_text} | translations]
-                  end
-                _ ->
-                  translations
-              end
-            else
-              translations
-            end
-          end)
+  defp collect_prompt_translations(translations, scope, lang, prompt, lang_prompt, mode) do
+    text = lang_prompt_text(lang_prompt, mode)
+    if text |> present? do
+      prompt
+      |> Enum.reduce(translations, fn {other_lang, other_prompt}, translations ->
+        if other_lang != lang do
+          other_text = lang_prompt_text(other_prompt, mode)
+          if other_text |> present? do
+            [{mode, scope, lang, text, other_lang, other_text} | translations]
+          else
+            translations
+          end
         else
           translations
         end
-      _ ->
-        translations
+      end)
+    else
+      translations
     end
   end
 
-  defp collect_prompt_ivr_translations(translations, scope, lang, prompt, lang_prompt) do
+  defp lang_prompt_text(lang_prompt, "ivr") do
     case lang_prompt do
-      %{"ivr" => %{"text" => text}} ->
-        if text |> present? do
-          prompt
-          |> Enum.reduce(translations, fn {other_lang, other_prompt}, translations ->
-            if other_lang != lang do
-              case other_prompt do
-                %{"ivr" => %{"text" => other_text}} ->
-                  if other_text |> present? do
-                    [{"ivr", scope, lang, text, other_lang, other_text} | translations]
-                  else
-                    translations
-                  end
-                _ ->
-                  translations
-              end
-            else
-              translations
-            end
-          end)
-        else
-          translations
-        end
-      _ ->
-        translations
+      %{"ivr" => %{"text" => text}}
+        -> text
+      _
+        -> nil
     end
   end
+
+  defp lang_prompt_text(lang_prompt, mode) when mode in ["sms", "mobileweb"] do
+    case lang_prompt do
+      %{^mode => text}
+        -> text
+      _
+        -> nil
+    end
+  end
+
+  defp lang_prompt_text(_, _), do: nil
 
   defp collect_choices_translations(translations, lang, step) do
     case step do
@@ -305,36 +289,20 @@ defmodule Ask.Translation do
     case prompt do
       %{^lang => lang_prompt} ->
         source_texts
-        |> collect_prompt_sms_source_texts(scope, lang_prompt)
-        |> collect_prompt_ivr_source_texts(scope, lang_prompt)
+        |> collect_prompt_source_texts(scope, lang_prompt, "sms")
+        |> collect_prompt_source_texts(scope, lang_prompt, "ivr")
+        |> collect_prompt_source_texts(scope, lang_prompt, "mobileweb")
       _ ->
         source_texts
     end
   end
 
-  defp collect_prompt_sms_source_texts(source_texts, scope, lang_prompt) do
-    case lang_prompt do
-      %{"sms" => text} ->
-        if text |> present? do
-          [{"sms", scope, text} | source_texts]
-        else
-          source_texts
-        end
-      _ ->
-        source_texts
-    end
-  end
-
-  defp collect_prompt_ivr_source_texts(source_texts, scope, lang_prompt) do
-    case lang_prompt do
-      %{"ivr" => %{"text" => text}} ->
-        if text |> present? do
-          [{"ivr", scope, text} | source_texts]
-        else
-          source_texts
-        end
-      _ ->
-        source_texts
+  defp collect_prompt_source_texts(source_texts, scope, lang_prompt, mode) do
+    text = lang_prompt_text(lang_prompt, mode)
+    if text |> present? do
+      [{mode, scope, text} | source_texts]
+    else
+      source_texts
     end
   end
 
@@ -368,6 +336,9 @@ defmodule Ask.Translation do
   # ----- #
   # Utils #
   # ----- #
+
+  defp present?(nil), do: false
+  defp present?(""), do: false
 
   defp present?(string) do
     (string |> String.trim |> String.length) > 0
