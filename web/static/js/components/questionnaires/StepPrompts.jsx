@@ -129,17 +129,29 @@ class StepPrompts extends Component<Props, State> {
 
     if (activeLanguage == defaultLanguage) {
       let value = this.autocompleteItems.find(i => i.id == item.id)
-      if (mode == 'sms') {
-        this.props.questionnaireActions.autocompleteStepPromptSms(step.id, value)
-      } else {
-        this.props.questionnaireActions.autocompleteStepPromptIvr(step.id, value)
+      switch (mode) {
+        case 'sms':
+          this.props.questionnaireActions.autocompleteStepPromptSms(step.id, value)
+          break
+        case 'ivr':
+          this.props.questionnaireActions.autocompleteStepPromptIvr(step.id, value)
+          break
+        case 'mobileweb':
+          this.props.questionnaireActions.autocompleteStepPromptMobileWeb(step.id, value)
+          break
       }
     } else {
-      if (mode == 'sms') {
-        this.props.questionnaireActions.changeStepPromptSms(step.id, item.text)
-      } else {
-        let prompt = getStepPromptIvr(step, activeLanguage)
-        this.props.questionnaireActions.changeStepPromptIvr(step.id, {...prompt, text: item.text})
+      switch (mode) {
+        case 'sms':
+          this.props.questionnaireActions.changeStepPromptSms(step.id, item.text)
+          break
+        case 'ivr':
+          let prompt = getStepPromptIvr(step, activeLanguage)
+          this.props.questionnaireActions.changeStepPromptIvr(step.id, {...prompt, text: item.text})
+          break
+        case 'mobileweb':
+          this.props.questionnaireActions.changeStepPromptMobileWeb(step.id, item.text)
+          break
       }
     }
   }

@@ -61,6 +61,7 @@ const dataReducer = (state: Questionnaire, action): Questionnaire => {
     case actions.CHANGE_STEP_AUDIO_ID_IVR: return changeStepIvrAudioId(state, action)
     case actions.CHANGE_STEP_STORE: return changeStepStore(state, action)
     case actions.AUTOCOMPLETE_STEP_PROMPT_SMS: return autocompleteStepSmsPrompt(state, action)
+    case actions.AUTOCOMPLETE_STEP_PROMPT_MOBILE_WEB: return autocompleteStepMobileWebPrompt(state, action)
     case actions.AUTOCOMPLETE_STEP_PROMPT_IVR: return autocompleteStepIvrPrompt(state, action)
     case actions.DELETE_STEP: return deleteStep(state, action)
     case actions.DELETE_SECTION: return deleteSection(state, action)
@@ -670,6 +671,34 @@ const autocompleteStepSmsPrompt = (state, action) => {
           return {
             ...prompt,
             sms: translation.text.trim()
+          }
+        } else {
+          return prompt
+        }
+      })
+    }
+
+    return step
+  })
+}
+
+const autocompleteStepMobileWebPrompt = (state, action) => {
+  return changeStep(state, action.stepId, step => {
+    // First change default language
+    step = setStepPrompt(step, state.defaultLanguage, prompt => ({
+      ...prompt,
+      mobileweb: action.item.text.trim()
+    }))
+
+    // Then change other languages
+    for (let translation of action.item.translations) {
+      if (!translation.language) continue
+
+      step = setStepPrompt(step, translation.language, prompt => {
+        if ((prompt || {}).mobileweb == '') {
+          return {
+            ...prompt,
+            mobileweb: translation.text.trim()
           }
         } else {
           return prompt
