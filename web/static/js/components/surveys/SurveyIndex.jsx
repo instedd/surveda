@@ -209,7 +209,7 @@ const mapStateToProps = (state, ownProps) => {
     totalCount,
     loadingSurveys: state.surveys.fetching,
     loadingFolders: state.folder.loadingFetch,
-    folders: state.folder.folders && Object.values(state.folder.folders)
+    folders: (state.folder.folders && Object.values(state.folder.folders)) || []
   }
 }
 
