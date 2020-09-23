@@ -105,7 +105,18 @@ export const fetchFolders = (projectId: number) => (dispatch: Function) => {
 
   return api.fetchFolders(projectId)
     .then(response => {
-      dispatch(fetchedFolders(projectId, response.entities.folders))
+      /*
+        When there are no folders:
+          - the API response is {"data": []}
+          - `response` here is {entities: {}, result: []}
+        When there are folders:
+          - the API response is {"data": [{"project_id": 15, "name": "Foo", "id": 6}]}
+          - `response` here is {entities: {folders: {6: {…}}}, result: [6]}
+
+        When there are no folders `response.entities.folders` is undefined.
+        This is why in this case it's defaulted to an empty array.
+      */
+      dispatch(fetchedFolders(projectId, response.entities.folders || []))
     })
 }
 
