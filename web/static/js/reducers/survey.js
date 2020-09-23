@@ -97,7 +97,7 @@ const validateRetry = (state: DataStore<Survey>, mode, key) => {
 
   let values = retriesValue.split(' ')
   values = values.filter((v) => v)
-  const invalid = values.some((v) => !timeSpecRegex.test(v))
+  const invalid = values.some((v) => !timeSpecRegex().test(v))
   if (invalid) {
     state.errorsByPath[key] = [k('Re-contact configuration is invalid')]
   }
@@ -117,14 +117,24 @@ const validateFallbackDelay = (state: DataStore<Survey>) => {
   const fallbackDelay = data.fallbackDelay
   if (!fallbackDelay) return
 
-  const invalid = !timeSpecRegex.test(fallbackDelay)
+  const invalid = !timeSpecRegex().test(fallbackDelay)
   if (invalid) {
     state.errorsByPath.fallbackDelay = [k('Fallback delay is invalid')]
   }
 }
 
-// Attempts are at least every 10m
-const timeSpecRegex = /^([1-9]\d+m)|([1-9]\d*[hd])$/
+/**
+ * Attempts are at least every 10m
+ * So the minimum by:
+ *  - Days: 1d
+ *  - Hours: 1h
+ *  - Minutes: 10m
+ */
+const timeSpecRegex = () => {
+  const atLeast1 = '[1-9]\\d*'
+  const atLeast10 = '[1-9]\\d+'
+  return new RegExp(`^(${atLeast10}m)|(${atLeast1}[hd])$`)
+}
 
 const changeName = (state, action) => {
   return {
