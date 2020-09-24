@@ -5,7 +5,7 @@ defmodule Ask.ProjectController do
 
   def index(conn, params) do
     current_user = conn |> current_user
-    archived = ControllerHelper.archived_param(params)
+    archived = ControllerHelper.archived_param(params, "url")
 
     projects = current_user
     |> assoc([:project_memberships, :project])
@@ -136,7 +136,7 @@ defmodule Ask.ProjectController do
     project = conn
     |> load_project_for_owner(id)
 
-    archived = ControllerHelper.archived_param(project_params)
+    archived = ControllerHelper.archived_param(project_params, "body_json", true)
 
     changeset = project
     |> Project.changeset(%{archived: archived})

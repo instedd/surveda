@@ -1,15 +1,29 @@
 defmodule Ask.ControllerHelper do
   use Ask.Web, :api_controller
 
-  def archived_param(params) do
-    case Map.get(params, "archived") do
-      # When filtering it receives a string
-      "true" -> true
-      "false" -> false
-      # When archiving and unarchiving it receives a boolean
+  def archived_param(params, source, required \\ false)
+
+  def archived_param(params, source, true = _required) do
+    case archived_param(params, source, false) do
       true -> true
       false -> false
-      _ -> :error
+      _other -> :error
+    end
+  end
+
+  def archived_param(params, "body_json" = _source, false = _required) do
+    case Map.get(params, "archived") do
+      true -> true
+      false -> false
+      other -> other
+    end
+  end
+
+  def archived_param(params, "url" = _source, false = _required) do
+    case Map.get(params, "archived") do
+      "true" -> true
+      "false" -> false
+      other -> other
     end
   end
 

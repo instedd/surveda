@@ -25,7 +25,7 @@ defmodule Ask.QuestionnaireController do
       conn
       |> load_project(project_id)
 
-    archived = ControllerHelper.archived_param(params)
+    archived = ControllerHelper.archived_param(params, "url")
 
     query =
       from(q in Questionnaire,
@@ -156,7 +156,7 @@ defmodule Ask.QuestionnaireController do
       |> load_project_for_change(project_id)
 
     questionnaire = load_questionnaire_not_snapshot(project.id, id)
-    archived = ControllerHelper.archived_param(params)
+    archived = ControllerHelper.archived_param(params, "body_json", true)
 
     update_archived_status(%{
       conn: conn,
