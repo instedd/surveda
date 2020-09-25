@@ -15,4 +15,9 @@ const deleteItem = (state: IndexedList<Questionnaire>, action: any) => {
   return items
 }
 
-export default collectionReducer(actions, itemsReducer, projectFilterProvider)
+const filterProvider = (action: FilteredAction): Filter => ({
+  ...projectFilterProvider(action),
+  archived: action.archived
+})
+
+export default collectionReducer(actions, itemsReducer, filterProvider)

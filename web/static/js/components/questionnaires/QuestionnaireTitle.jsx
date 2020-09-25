@@ -5,6 +5,8 @@ import QuestionnaireMenu from './QuestionnaireMenu'
 import * as questionnaireActions from '../../actions/questionnaire'
 import withQuestionnaire from './withQuestionnaire'
 import { translate } from 'react-i18next'
+import { isProjectReadOnly } from '../../reducers/project'
+import { isQuestionnaireReadOnly } from '../../reducers/questionnaire'
 
 class QuestionnaireTitle extends Component {
   static propTypes = {
@@ -34,21 +36,21 @@ class QuestionnaireTitle extends Component {
 
     return (
       <div className='title-container'>
-        <EditableTitleLabel title={questionnaire.name} onSubmit={(value) => { this.handleSubmit(value) }} emptyText={t('Untitled questionnaire')} readOnly={readOnly} more={hideMenu ? '' : <QuestionnaireMenu />} />
+        <EditableTitleLabel title={questionnaire.name} onSubmit={(value) => { this.handleSubmit(value) }} emptyText={t('Untitled questionnaire')} readOnly={readOnly} more={hideMenu ? '' : <QuestionnaireMenu readOnly={readOnly} />} />
         <EditableDescriptionLabel description={questionnaire.description} emptyText={readOnly ? '' : t('Add description')} onSubmit={(value) => { this.handleSubmitDescription(value) }} readOnly={readOnly} />
       </div>
     )
   }
 }
 
-const mapStateToProps = (state, ownProps) => ({
-  readOnly: typeof ownProps.readOnly === 'boolean'
-  ? ownProps.readOnly
-  : (
-    state.project && state.project.data
-    ? state.project.data.readOnly
-    : true
-  )
-})
+const mapStateToProps = (state, ownProps) => {
+  const { readOnly } = ownProps
+  if (typeof readOnly === 'boolean') {
+    // Explicitly set by the component user
+    return { readOnly }
+  } else {
+    return { readOnly: isProjectReadOnly(state) || isQuestionnaireReadOnly(state) }
+  }
+}
 
 export default translate()(connect(mapStateToProps)(withQuestionnaire(QuestionnaireTitle)))

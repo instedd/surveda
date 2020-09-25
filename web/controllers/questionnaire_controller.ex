@@ -1,21 +1,43 @@
 defmodule Ask.QuestionnaireController do
   use Ask.Web, :api_controller
 
-  alias Ask.{Questionnaire, SurveyQuestionnaire, Survey, Project, JsonSchema, Audio, Logger, ActivityLog}
+  alias Ask.{
+    Questionnaire,
+    SurveyQuestionnaire,
+    Survey,
+    Project,
+    JsonSchema,
+    Audio,
+    Logger,
+    ActivityLog,
+    ControllerHelper,
+    ErrorView,
+    Gettext
+  }
   alias Ecto.Multi
   alias Ask.Runtime.QuestionnaireSimulator
 
   plug :validate_params when action in [:create, :update]
   action_fallback Ask.FallbackController
 
-  def index(conn, %{"project_id" => project_id}) do
-    project = conn
-    |> load_project(project_id)
+  def index(conn, %{"project_id" => project_id} = params) do
+    project =
+      conn
+      |> load_project(project_id)
 
-    questionnaires = Repo.all(from q in Questionnaire,
-      where: q.project_id == ^project.id
-        and is_nil(q.snapshot_of)
-        and q.deleted == false)
+    archived = ControllerHelper.archived_param(params, "url")
+
+    query =
+      from(q in Questionnaire,
+        where:
+          q.project_id == ^project.id and
+            is_nil(q.snapshot_of) and
+            q.deleted == false
+      )
+
+    query = ControllerHelper.filter_archived(query, archived)
+
+    questionnaires = Repo.all(query)
 
     render(conn, "index.json", questionnaires: questionnaires)
   end
@@ -28,6 +50,7 @@ defmodule Ask.QuestionnaireController do
     params = conn.assigns[:questionnaire]
     |> Map.put_new("languages", ["en"])
     |> Map.put_new("default_language", "en")
+    |> Map.put("archived", false)
 
     changeset = project
     |> build_assoc(:questionnaires)
@@ -70,7 +93,7 @@ defmodule Ask.QuestionnaireController do
 
     params = conn.assigns[:questionnaire]
 
-    questionnaire = load_questionnaire_not_snapshot(project, id)
+    questionnaire = load_questionnaire_not_snapshot_nor_archived(project.id, id)
 
     old_valid = questionnaire.valid
     old_modes = questionnaire.modes
@@ -123,11 +146,77 @@ defmodule Ask.QuestionnaireController do
     end)
   end
 
+  def update_archived_status(conn, %{
+        "project_id" => project_id,
+        "questionnaire_id" => id,
+        "questionnaire" => params
+      }) do
+    project =
+      conn
+      |> load_project_for_change(project_id)
+
+    questionnaire = load_questionnaire_not_snapshot(project.id, id)
+    archived = ControllerHelper.archived_param(params, "body_json", true)
+
+    update_archived_status(%{
+      conn: conn,
+      project: project,
+      questionnaire: questionnaire,
+      archived: archived,
+      related_surveys_rejection:
+        archived == true and
+          Questionnaire.has_related_surveys?(questionnaire.id)
+    })
+  end
+
+  defp update_archived_status(%{conn: conn, related_surveys_rejection: true}),
+    do:
+      conn
+      |> put_status(:unprocessable_entity)
+      |> render(ErrorView, "error.json",
+        error_message:
+          Gettext.gettext(
+            "Cannot archive questionnaire because it's related to one or more surveys"
+          )
+      )
+
+  defp update_archived_status(%{
+         conn: conn,
+         project: project,
+         questionnaire: questionnaire,
+         archived: archived
+       }) do
+    changeset =
+      questionnaire
+      |> Questionnaire.changeset(%{archived: archived})
+
+    multi =
+      Multi.new()
+      |> Multi.update(:questionnaire, changeset)
+      |> Multi.run(:log, fn %{questionnaire: questionnaire} ->
+        ActivityLog.update_archived_status(project, conn, questionnaire, archived)
+        |> Repo.insert()
+      end)
+      |> Repo.transaction()
+
+    case multi do
+      {:ok, %{questionnaire: questionnaire}} ->
+        render(conn, "show.json", questionnaire: questionnaire)
+
+      {:error, _, changeset, _} ->
+        Logger.warn("Error when archiving/unarchiving questionnaire: #{inspect(changeset)}")
+
+        conn
+        |> put_status(:unprocessable_entity)
+        |> render(Ask.ChangesetView, "error.json", changeset: changeset)
+    end
+  end
+
   def delete(conn, %{"project_id" => project_id, "id" => id}) do
     project = conn
     |> load_project_for_change(project_id)
 
-    changeset = load_questionnaire_not_snapshot(project, id)
+    changeset = load_questionnaire_not_snapshot(project.id, id)
     |> Questionnaire.changeset(%{deleted: true})
 
     multi = Multi.new
@@ -173,7 +262,7 @@ defmodule Ask.QuestionnaireController do
     project = conn
     |> load_project(project_id)
 
-    questionnaire = load_questionnaire_not_snapshot(project, id)
+    questionnaire = load_questionnaire_not_snapshot(project.id, id)
     all_questionnaire_steps = Questionnaire.all_steps(questionnaire)
     audio_ids = collect_steps_audio_ids(all_questionnaire_steps, [])
     audio_ids = collect_prompt_audio_ids(questionnaire.settings["error_message"], audio_ids)
@@ -260,7 +349,7 @@ defmodule Ask.QuestionnaireController do
     project = conn
     |> load_project_for_change(project_id)
 
-    questionnaire = load_questionnaire_not_snapshot(project, id)
+    questionnaire = load_questionnaire_not_snapshot(project.id, id)
 
     {:ok, files} = :zip.unzip(to_charlist(file.path), [:memory])
 
@@ -379,11 +468,24 @@ defmodule Ask.QuestionnaireController do
     end
   end
 
-  defp load_questionnaire_not_snapshot(project, id) do
-    Repo.one!(from q in Questionnaire,
-      where: q.project_id == ^project.id
-        and q.id == ^id
-        and q.deleted == false
-        and is_nil(q.snapshot_of))
+  defp load_questionnaire_not_snapshot(project_id, questionnaire_id) do
+    not_deleted_nor_snapshot_query(project_id, questionnaire_id)
+    |> Repo.one!()
   end
+
+  defp load_questionnaire_not_snapshot_nor_archived(project_id, questionnaire_id),
+    do:
+      not_deleted_nor_snapshot_query(project_id, questionnaire_id)
+      |> where([q], q.archived == false)
+      |> Repo.one!()
+
+  defp not_deleted_nor_snapshot_query(project_id, questionnaire_id),
+    do:
+      from(q in Questionnaire,
+        where:
+          q.project_id == ^project_id and
+            q.id == ^questionnaire_id and
+            q.deleted == false and
+            is_nil(q.snapshot_of)
+      )
 end

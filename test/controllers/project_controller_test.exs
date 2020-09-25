@@ -258,14 +258,27 @@ defmodule Ask.ProjectControllerTest do
 
     test "sets archived status to true", %{conn: conn, user: user} do
       project = create_project_for_user(user)
-      put conn, project_update_archived_status_path(conn, :update_archived_status, project), project: %{"archived" => "true"}
+      put conn, project_update_archived_status_path(conn, :update_archived_status, project), project: %{"archived" => true}
       project = Project |> Repo.get(project.id)
       assert project.archived
+    end
+
+    test "sets archived status to false", %{conn: conn, user: user} do
+      project = create_project_for_user(user, archived: true)
+      put conn, project_update_archived_status_path(conn, :update_archived_status, project), project: %{"archived" => false}
+      project = Project |> Repo.get(project.id)
+      assert project.archived == false
     end
 
     test "rejects archived parameter when it is invalid", %{conn: conn, user: user} do
       project = create_project_for_user(user)
       conn = put conn, project_update_archived_status_path(conn, :update_archived_status, project), project: %{"archived" => "foo"}
+      assert json_response(conn, 422)["errors"]["archived"] == ["is invalid"]
+    end
+
+    test "rejects archived parameter when it is empty", %{conn: conn, user: user} do
+      project = create_project_for_user(user)
+      conn = put conn, project_update_archived_status_path(conn, :update_archived_status, project), project: %{"archived" => ""}
       assert json_response(conn, 422)["errors"]["archived"] == ["is invalid"]
     end
 

@@ -179,13 +179,9 @@ class QuestionnaireMenu extends Component {
   }
 }
 
-const mapStateToProps = (state, ownProps) => ({
-  readOnly: state.project && state.project.data ? state.project.data.readOnly : true
-})
-
 const mapDispatchToProps = (dispatch) => ({
   questionnaireActions: bindActionCreators(questionnaireActions, dispatch),
   uiActions: bindActionCreators(uiActions, dispatch)
 })
 
-export default translate()(withQuestionnaire(withRouter(connect(mapStateToProps, mapDispatchToProps)(QuestionnaireMenu))))
+export default translate()(withQuestionnaire(withRouter(connect(null, mapDispatchToProps)(QuestionnaireMenu))))

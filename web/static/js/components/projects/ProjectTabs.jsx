@@ -6,6 +6,7 @@ import * as routes from '../../routes'
 import ColourSchemeModal from './ColourSchemeModal'
 import { leaveProject } from '../../api'
 import { translate } from 'react-i18next'
+import { isProjectReadOnly } from '../../reducers/project'
 
 class ProjectTabs extends Component {
   openColorSchemePopup(e) {
@@ -85,7 +86,7 @@ const mapStateToProps = (state, ownProps) => ({
   projectId: ownProps.params.projectId,
   fetchedProject: state.project && !state.project.fetching,
   project: state.project.data,
-  readOnly: state.project && state.project.data ? state.project.data.readOnly : true
+  readOnly: isProjectReadOnly(state)
 })
 
 export default translate()(withRouter(connect(mapStateToProps)(ProjectTabs)))

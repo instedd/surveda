@@ -154,8 +154,8 @@ export const fetchSurveys = projectId => {
   return apiFetchJSON(`projects/${projectId}/surveys`, arrayOf(surveySchema))
 }
 
-export const fetchQuestionnaires = (projectId) => {
-  return apiFetchJSON(`projects/${projectId}/questionnaires`, arrayOf(questionnaireSchema))
+export const fetchQuestionnaires = (projectId, options) => {
+  return apiFetchJSON(`projects/${projectId}/questionnaires?archived=${options['archived']}`, arrayOf(questionnaireSchema))
 }
 
 export const fetchQuestionnaire = (projectId, id) => {
@@ -270,6 +270,10 @@ export const updateProject = (project) => {
 
 export const updateProjectArchived = (project) => {
   return apiPutJSON(`projects/${project.id}/update_archived_status`, projectSchema, { project })
+}
+
+export const updateQuestionnaireArchived = (questionnaire) => {
+  return apiPutJSON(`projects/${questionnaire.projectId}/questionnaires/${questionnaire.id}/update_archived_status`, projectSchema, { questionnaire })
 }
 
 export const updateSurvey = (projectId, survey) => {

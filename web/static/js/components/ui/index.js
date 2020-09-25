@@ -1,4 +1,5 @@
 export * from './AddButton'
+export * from './Archive'
 export * from './AudioDropzone'
 export * from './Autocomplete'
 export * from './Card'

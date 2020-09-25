@@ -55,6 +55,38 @@ defmodule Ask.QuestionnaireControllerTest do
       end
     end
 
+    test "filters archived", %{conn: conn, user: user} do
+      project = create_project_for_user(user)
+      questionnaire = insert(:questionnaire, project: project, archived: true)
+      insert(:questionnaire, project: project)
+
+      conn = get conn, project_questionnaire_path(conn, :index, project.id, %{"archived" => "true"})
+      data = json_response(conn, 200)["data"]
+      assert length(data) == 1
+      assert hd(data)["id"] == questionnaire.id
+    end
+
+    test "filters active", %{conn: conn, user: user} do
+      project = create_project_for_user(user)
+      questionnaire = insert(:questionnaire, project: project)
+      insert(:questionnaire, project: project, archived: true)
+
+      conn = get conn, project_questionnaire_path(conn, :index, project.id, %{"archived" => "false"})
+      data = json_response(conn, 200)["data"]
+      assert length(data) == 1
+      assert hd(data)["id"] == questionnaire.id
+    end
+
+    test "doesn't filter active nor archived", %{conn: conn, user: user} do
+      project = create_project_for_user(user)
+      insert(:questionnaire, project: project)
+      insert(:questionnaire, project: project, archived: true)
+
+      conn = get conn, project_questionnaire_path(conn, :index, project.id)
+      data = json_response(conn, 200)["data"]
+      assert length(data) == 2
+    end
+
     test "doesn't show snapshots", %{conn: conn, user: user} do
       project = create_project_for_user(user)
       questionnaire = insert(:questionnaire, project: project)
@@ -92,6 +124,7 @@ defmodule Ask.QuestionnaireControllerTest do
         "valid" => true,
         "description" => nil,
         "partial_relevant_config" => nil,
+        "archived" => false,
         "settings" => %{
           "error_message" => %{
             "en" => %{
@@ -145,6 +178,22 @@ defmodule Ask.QuestionnaireControllerTest do
       conn = post conn, project_questionnaire_path(conn, :create, project.id), questionnaire: @valid_attrs
       assert json_response(conn, 201)["data"]["id"]
       assert Repo.get_by(Questionnaire, @valid_attrs)
+    end
+
+    test "creates an active questionnaire when duplicating an archived questionnaire", %{
+      conn: conn,
+      user: user
+    } do
+      project = create_project_for_user(user)
+      archived_questionnaire = Map.put(@valid_attrs, :archived, true)
+
+      conn =
+        post(conn, project_questionnaire_path(conn, :create, project.id),
+          questionnaire: archived_questionnaire
+        )
+
+      duplicated_questionnaire = Repo.get(Questionnaire, json_response(conn, 201)["data"]["id"])
+      assert duplicated_questionnaire.archived == false
     end
 
     test "creates and renders resource with a full questionnaire", %{conn: conn, user: user} do
@@ -265,6 +314,170 @@ defmodule Ask.QuestionnaireControllerTest do
     end
   end
 
+  describe "archive and unarchive" do
+    setup %{conn: conn, user: user} do
+      update_archived = fn questionnaire, archived ->
+        put(
+          conn,
+          project_questionnaire_update_archived_status_path(
+            conn,
+            :update_archived_status,
+            questionnaire.project,
+            questionnaire
+          ),
+          questionnaire: %{"archived" => archived}
+        )
+      end
+
+      archive = fn questionnaire -> update_archived.(questionnaire, true) end
+      unarchive = fn questionnaire -> update_archived.(questionnaire, false) end
+      archived? = fn questionnaire -> Repo.get(Questionnaire, questionnaire.id).archived end
+
+      logged? = fn questionnaire, action ->
+        ActivityLog
+        |> where(entity_type: "questionnaire", entity_id: ^questionnaire.id, action: ^action)
+        |> Repo.aggregate(:count, :id) == 1
+      end
+
+      project = create_project_for_user(user)
+      questionnaire = insert(:questionnaire, project: project)
+      archived_questionnaire = insert(:questionnaire, project: project, archived: true)
+      unrelated_questionnaire = insert(:questionnaire)
+      read_only_project = create_project_for_user(user, level: "reader")
+      read_only_questionnaire = insert(:questionnaire, project: read_only_project)
+      archived_project = create_project_for_user(user, archived: true)
+      archived_project_questionnaire = insert(:questionnaire, project: archived_project)
+
+      snapshot_questionnaire =
+        insert(:questionnaire, project: project, snapshot_of: questionnaire.id)
+
+      questionnaire_with_survey = insert(:questionnaire, project: project)
+
+      survey =
+        insert(:survey,
+          project: project,
+          questionnaires: [questionnaire_with_survey],
+          state: "ready"
+        )
+
+      insert(:survey_questionnaire, survey: survey, questionnaire: questionnaire_with_survey)
+
+      {
+        :ok,
+        archive: archive,
+        unarchive: unarchive,
+        update_archived: update_archived,
+        archived?: archived?,
+        questionnaire: questionnaire,
+        archived_questionnaire: archived_questionnaire,
+        unrelated_questionnaire: unrelated_questionnaire,
+        read_only_questionnaire: read_only_questionnaire,
+        archived_project_questionnaire: archived_project_questionnaire,
+        snapshot_questionnaire: snapshot_questionnaire,
+        questionnaire_with_survey: questionnaire_with_survey,
+        logged?: logged?
+      }
+    end
+
+    test "archives", %{
+      archive: archive,
+      archived?: archived?,
+      questionnaire: questionnaire,
+      logged?: logged?
+    } do
+      archive.(questionnaire)
+
+      assert archived?.(questionnaire) == true
+      assert logged?.(questionnaire, "archive") == true
+    end
+
+    test "unarchives", %{
+      unarchive: unarchive,
+      archived?: archived?,
+      archived_questionnaire: questionnaire,
+      logged?: logged?
+    } do
+      unarchive.(questionnaire)
+
+      assert archived?.(questionnaire) == false
+      assert logged?.(questionnaire, "unarchive") == true
+    end
+
+    test "rejects invalid requests", %{
+      archived?: archived?,
+      questionnaire: questionnaire,
+      archived_questionnaire: archived_questionnaire,
+      update_archived: update_archived
+    } do
+      # It doesn't affect unarchived questionnaires
+      conn = update_archived.(questionnaire, "foo")
+
+      assert json_response(conn, 422)["errors"]["archived"] == ["is invalid"]
+      assert archived?.(questionnaire) == false
+
+      # It doesn't affect archived questionnaires
+      conn = update_archived.(archived_questionnaire, "bar")
+
+      assert json_response(conn, 422)["errors"]["archived"] == ["is invalid"]
+      assert archived?.(archived_questionnaire) == true
+
+      # Also, it rejects an empty parameter
+      conn = update_archived.(questionnaire, "")
+
+      assert json_response(conn, 422)["errors"]["archived"] == ["is invalid"]
+    end
+
+    test "rejects forbidden requests", %{
+      archive: archive,
+      archived?: archived?,
+      unrelated_questionnaire: unrelated_questionnaire,
+      read_only_questionnaire: read_only_questionnaire,
+      archived_project_questionnaire: archived_project_questionnaire,
+      snapshot_questionnaire: snapshot_questionnaire,
+      questionnaire_with_survey: questionnaire_with_survey
+    } do
+      # The questionnaire doesn't belong to the current user
+      assert_error_sent(:forbidden, fn ->
+        archive.(unrelated_questionnaire)
+      end)
+
+      assert archived?.(unrelated_questionnaire) == false
+
+      # The user is reader of the questionnaire project
+      assert_error_sent(:forbidden, fn ->
+        archive.(read_only_questionnaire)
+      end)
+
+      assert archived?.(read_only_questionnaire) == false
+
+      # The questionnaire project is archived
+      assert_error_sent(:forbidden, fn ->
+        archive.(archived_project_questionnaire)
+      end)
+
+      assert archived?.(archived_project_questionnaire) == false
+
+      # The questionnaire is a snapshot
+      assert_error_sent(:not_found, fn ->
+        archive.(snapshot_questionnaire)
+      end)
+
+      assert archived?.(snapshot_questionnaire) == false
+
+      # If a survey isn't running, archiving its questionnaires is forbidden.
+      # So the user must first remove the survey relation to be able to archive it.
+      # If the survey was already launched, the related questionnaires are snapshots, so archiving
+      # them is already forbidden because of they are snapshots.
+      # In conclusion, it's forbidden to archive a questionnaire related to any survey.
+      conn = archive.(questionnaire_with_survey)
+
+      assert json_response(conn, 422)["error"] ==
+               "Cannot archive questionnaire because it's related to one or more surveys"
+
+      assert archived?.(questionnaire_with_survey) == false
+    end
+  end
+
   describe "update:" do
     test "updates and renders chosen resource when data is valid", %{conn: conn, user: user} do
       project = create_project_for_user(user)
@@ -306,7 +519,16 @@ defmodule Ask.QuestionnaireControllerTest do
       end
     end
 
-    test "updates project updated_at when questionnaire is updated", %{conn: conn, user: user}  do
+    test "rejects update if the questionnaire is archived", %{conn: conn, user: user} do
+      project = create_project_for_user(user)
+      questionnaire = insert(:questionnaire, project: project)
+      archived_questionnaire = insert(:questionnaire, project: project, archived: true)
+      assert_error_sent :not_found, fn ->
+        put conn, project_questionnaire_path(conn, :update, questionnaire.project, archived_questionnaire), questionnaire: @valid_attrs
+      end
+    end
+
+    test "updates project updated_at when questionnaire is updated", %{conn: conn, user: user} do
       {:ok, datetime, _} = DateTime.from_iso8601("2000-01-01T00:00:00Z")
       project = create_project_for_user(user, updated_at: datetime)
       questionnaire = insert(:questionnaire, project: project)

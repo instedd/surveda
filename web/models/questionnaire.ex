@@ -1,7 +1,7 @@
 defmodule Ask.Questionnaire do
   use Ask.Web, :model
 
-  alias Ask.{Questionnaire, QuestionnaireVariable, ActivityLog, Repo}
+  alias Ask.{Questionnaire, QuestionnaireVariable, ActivityLog, Repo, SurveyQuestionnaire}
   alias Ask.Ecto.Type.JSON
   alias Ecto.Multi
 
@@ -17,10 +17,30 @@ defmodule Ask.Questionnaire do
     field :valid, :boolean
     field :deleted, :boolean
     field :partial_relevant_config, JSON
+    field :archived, :boolean, default: false
+
     belongs_to :snapshot_of_questionnaire, Ask.Questionnaire, foreign_key: :snapshot_of
     belongs_to :project, Ask.Project
     has_many :questionnaire_variables, Ask.QuestionnaireVariable, on_delete: :delete_all
     has_many :translations, Ask.Translation, on_delete: :delete_all
+
+    # It would be useful to place here the following line:
+    # many_to_many :surveys, Survey, join_through: SurveyQuestionnaire
+
+    # That relation exists in the DB, Survey and SurveyQuestionnaire models but it's missing here.
+    # We decided to avoid adding it here for the moment because we don't know how many queries
+    # could be broken. The following lines tries to explain how this relation works.
+
+    # Before the survey is launched, the user selects one or more questionnaires
+    # In that moment the survey and the selected questionnaires are associated through
+    # SurveyQuestionnaire. From the moment the survey is launched, a copy of their questionnaires
+    # is created and the associations through SurveyQuestionnaire are replaced. From that moment,
+    # the Survey remains forever associated with these new copies and it's no more associated to
+    # their original questionnaires. These copies are called snapshots and remain forever
+    # associated with their original questionnaire through the field `snapshot_of`.
+
+    # If two surveys shared the same original questionnaire, different snapshots of the
+    # same questionnaire will be created for each survey at the moment they are launched.
 
     timestamps()
   end
@@ -30,7 +50,22 @@ defmodule Ask.Questionnaire do
   """
   def changeset(struct, params \\ %{}) do
     struct
-    |> cast(params, [:project_id, :name, :description, :modes, :steps, :quota_completed_steps, :languages, :default_language, :valid, :settings, :snapshot_of, :deleted, :partial_relevant_config])
+    |> cast(params, [
+      :project_id,
+      :name,
+      :description,
+      :modes,
+      :steps,
+      :quota_completed_steps,
+      :languages,
+      :default_language,
+      :valid,
+      :settings,
+      :snapshot_of,
+      :deleted,
+      :partial_relevant_config,
+      :archived
+    ])
     |> validate_required([:project_id, :modes, :steps, :settings])
     |> foreign_key_constraint(:project_id)
     |> foreign_key_constraint(:snapshot_of)
@@ -287,4 +322,13 @@ defmodule Ask.Questionnaire do
   def partial_relevant_enabled?(partial_relevant_config),
     do:
       !!partial_relevant_config["enabled"]
+
+  def has_related_surveys?(questionnaire_id) do
+    Repo.one(
+      from(sq in SurveyQuestionnaire,
+        where: sq.questionnaire_id == ^questionnaire_id,
+        select: count(sq.id)
+      )
+    ) > 0
+  end
 end

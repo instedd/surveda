@@ -30,4 +30,8 @@ defmodule Ask.QuestionnaireTest do
     vars = Questionnaire.variables(questionnaire)
     assert vars == ["Smokes", "Exercises", "Perfect Number", "Question"]
   end
+
+  test "defaults to archived false" do
+    assert %Questionnaire{}.archived == false
+  end
 end

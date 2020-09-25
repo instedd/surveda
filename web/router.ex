@@ -112,6 +112,7 @@ defmodule Ask.Router do
           post "/import_zip", QuestionnaireController, :import_zip, as: :questionnaires_import_zip
           post "/simulation", QuestionnaireController, :start_simulation, as: :questionnaires_start_simulation
           post "/simulation/message", QuestionnaireController, :sync_simulation, as: :questionnaires_sync_simulation
+          put "/update_archived_status", QuestionnaireController, :update_archived_status, as: :update_archived_status
         end
         get "/autocomplete_vars", ProjectController, :autocomplete_vars, as: :autocomplete_vars
         get "/autocomplete_primary_language", ProjectController, :autocomplete_primary_language, as: :autocomplete_primary_language

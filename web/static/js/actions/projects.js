@@ -10,7 +10,7 @@ export const PREVIOUS_PAGE = 'PROJECTS_PREVIOUS_PAGE'
 export const SORT = 'PROJECTS_SORT'
 export const REMOVE = 'PROJECTS_REMOVE'
 
-export const fetchProjects = (options: Object) => (dispatch: Function, getState: () => Store) => {
+export const fetchProjects = (options: Object = {}) => (dispatch: Function, getState: () => Store) => {
   const state = getState()
 
   // Don't fetch projects if they are already being fetched
@@ -18,14 +18,17 @@ export const fetchProjects = (options: Object) => (dispatch: Function, getState:
     return
   }
 
-  if (!options) options = {'archived': null}
+  const optionsOrDefault = {
+    archived: false,
+    ...options
+  }
 
-  dispatch(startFetchingProjects(options['archived']))
+  dispatch(startFetchingProjects(optionsOrDefault['archived']))
   return api.fetchProjects(options)
-    .then(response => dispatch(receiveProjects(response.entities.projects || {}, options['archived'])))
+    .then(response => dispatch(receiveProjects(response.entities.projects || {}, optionsOrDefault['archived'])))
 }
 
-export const startFetchingProjects = (archived: ?boolean): FilteredAction => ({
+export const startFetchingProjects = (archived: boolean): FilteredAction => ({
   type: FETCH,
   archived
 })
@@ -61,4 +64,3 @@ export const remove = (project: Project) => ({
   type: REMOVE,
   id: project.id
 })
-

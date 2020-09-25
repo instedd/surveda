@@ -2016,3 +2016,7 @@ const setSecondaryColor = (state, action) => {
 }
 
 const setDirty = (state) => ({...state})
+
+export const isQuestionnaireReadOnly = (state: any) => (
+  state.questionnaire && state.questionnaire.data ? state.questionnaire.data.archived : true
+)

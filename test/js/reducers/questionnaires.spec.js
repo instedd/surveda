@@ -14,7 +14,7 @@ describe('questionnaires reducer', () => {
 
   it('should start fetching questionnaires', () => {
     const projectId = 100
-    const result = reducer(initialState, actions.startFetchingQuestionnaires(projectId))
+    const result = reducer(initialState, actions.startFetchingQuestionnaires(projectId, false))
     expect(result.fetching).toEqual(true)
     expect(result.filter && result.filter.projectId).toEqual(projectId)
   })
@@ -22,8 +22,8 @@ describe('questionnaires reducer', () => {
   it('should receive questionnaires', () => {
     const projectId = 100
     const questionnaires = {'1': {...questionnaire, id: 1}}
-    const r1 = reducer(initialState, actions.startFetchingQuestionnaires(projectId))
-    const result = reducer(r1, actions.receiveQuestionnaires(projectId, questionnaires))
+    const r1 = reducer(initialState, actions.startFetchingQuestionnaires(projectId, false))
+    const result = reducer(r1, actions.receiveQuestionnaires(projectId, questionnaires, false))
     expect(result.fetching).toEqual(false)
     expect(result.items).toEqual(questionnaires)
     expect(result.filter && result.filter.projectId).toEqual(projectId)
@@ -33,17 +33,17 @@ describe('questionnaires reducer', () => {
   it('should start fetching questionnaires for a different project', () => {
     const projectId = 100
     const questionnaires = {'1': {...questionnaire, id: 1}}
-    const r1 = reducer(initialState, actions.startFetchingQuestionnaires(projectId))
-    const r2 = reducer(r1, actions.receiveQuestionnaires(projectId, questionnaires))
-    const r3 = reducer(r2, actions.startFetchingQuestionnaires(projectId + 1))
+    const r1 = reducer(initialState, actions.startFetchingQuestionnaires(projectId, false))
+    const r2 = reducer(r1, actions.receiveQuestionnaires(projectId, questionnaires, false))
+    const r3 = reducer(r2, actions.startFetchingQuestionnaires(projectId + 1, false))
     expect(r3.items).toEqual(null)
   })
 
   it('should sort questionnaires by name', () => {
     const projectId = 100
     const questionnaires = {'1': {...questionnaire, id: 1, name: 'foo'}, '2': {...questionnaire, id: 2, name: 'bar'}}
-    const r1 = reducer(initialState, actions.startFetchingQuestionnaires(projectId))
-    const r2 = reducer(r1, actions.receiveQuestionnaires(projectId, questionnaires))
+    const r1 = reducer(initialState, actions.startFetchingQuestionnaires(projectId, false))
+    const r2 = reducer(r1, actions.receiveQuestionnaires(projectId, questionnaires, false))
     const r3 = reducer(r2, actions.sortQuestionnairesBy('name'))
     expect(r3.order).toEqual([2, 1])
     const r4 = reducer(r3, actions.sortQuestionnairesBy('name'))
@@ -62,8 +62,8 @@ describe('questionnaires reducer', () => {
   it('should delete questionnaire', () => {
     const projectId = 100
     const questionnaires = {'1': {...questionnaire, 'id': 1}}
-    const r1 = reducer(initialState, actions.startFetchingQuestionnaires(projectId))
-    const r2 = reducer(r1, actions.receiveQuestionnaires(projectId, questionnaires))
+    const r1 = reducer(initialState, actions.startFetchingQuestionnaires(projectId, false))
+    const r2 = reducer(r1, actions.receiveQuestionnaires(projectId, questionnaires, false))
     const r3 = reducer(r2, actions.deleted(questionnaires['1']))
     expect(r3.items).toEqual({})
     expect(r3.order).toEqual([])
