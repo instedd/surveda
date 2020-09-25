@@ -15,6 +15,11 @@ import InlineStyleControls from './InlineStyleControls'
 import {stateToHTML} from 'draft-js-export-html'
 
 class Draft extends React.Component {
+  static defaultProps = {
+    // plainText defaults to false for backward compatibility
+    plainText: false
+  }
+
   constructor(props) {
     super(props)
 
@@ -201,7 +206,7 @@ class Draft extends React.Component {
 
   render() {
     const { editorState } = this.state
-    const { label, errors, readOnly, textBelow } = this.props
+    const { label, errors, readOnly, textBelow, plainText } = this.props
 
     // If the user changes block type before entering any text, we can
     // either style the placeholder or hide it. Let's just hide it now.
@@ -241,6 +246,7 @@ class Draft extends React.Component {
           getData={(value, callback) => this.props.autocompleteGetData(value, callback)}
           onSelect={(item) => this.props.autocompleteOnSelect(item)}
           className='language-dropdown'
+          plainText={plainText}
         />
       ]
     }

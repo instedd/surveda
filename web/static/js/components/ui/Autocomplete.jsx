@@ -25,6 +25,11 @@ import 'materialize-autocomplete'
  * while in the latter one would do nothing.
  */
 export class Autocomplete extends Component {
+  static defaultProps = {
+    // plainText defaults to true for backward compatibility
+    plainText: true
+  }
+
   constructor(props) {
     super(props)
     this.clickingAutocomplete = false
@@ -61,13 +66,17 @@ export class Autocomplete extends Component {
   }
 
   setupAutocomplete() {
-    const { getInput, getData, onSelect, showOnClick } = this.props
+    const { getInput, getData, onSelect, showOnClick, plainText } = this.props
     let input = getInput()
     let dropdown = this.refs.dropdown
 
     if (showOnClick) {
       $(input).click(() => $(dropdown).show())
     }
+
+    const liInnerText = plainText
+      ? `$("<div/>").text(item.text).html().replace("\u001E", "<br/>")`
+      : `item.text`
 
     $(input).materialize_autocomplete({
       limit: 100,
@@ -83,7 +92,7 @@ export class Autocomplete extends Component {
         // in texts other than because of splitted message, so this is safe
         // and much easier than escaping it everywhere (plus it's hard to do because
         // a newline will show as a blank space, but here we want a <br/>)
-        itemTemplate: '<li class="ac-item black-text" data-id="<%= item.id %>" data-text=\'<%= $("<div/>").text(item.text).html() %>\'><%= $("<div/>").text(item.text).html().replace("\u001E", "<br/>") %></li>'
+        itemTemplate: `<li class="ac-item black-text" data-id="<%= item.id %>" data-text='<%= $("<div/>").text(item.text).html() %>'><%= ${liInnerText} %></li>`
       },
       onSelect: (item) => {
         this.clickingAutocomplete = false
@@ -104,5 +113,6 @@ Autocomplete.propTypes = {
   getData: PropTypes.func.isRequired,
   onSelect: PropTypes.func.isRequired,
   showOnClick: PropTypes.bool,
-  className: PropTypes.string
+  className: PropTypes.string,
+  plainText: PropTypes.bool
 }

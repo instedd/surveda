@@ -665,8 +665,8 @@ defmodule Ask.QuestionnaireControllerTest do
           id: "aaa",
           title: "Title",
           prompt: %{
-            "en" => %{"sms" => "EN 1", "ivr" => %{"text" => "EN 2", "audio_source": "tts"}},
-            "es" => %{"sms" => "ES 1"},
+            "en" => %{"sms" => "EN 1", "mobileweb" => "EN 3", "ivr" => %{"text" => "EN 2", "audio_source": "tts"}},
+            "es" => %{"sms" => "ES 1", "mobileweb" => "ES 3"},
             "fr" => %{"sms" => "", "ivr" => %{"text" => "FR 2", "audio_source": "tts"}},
           },
           store: "X",
@@ -686,8 +686,8 @@ defmodule Ask.QuestionnaireControllerTest do
         "type" => "explanation",
         "title" => "Completed",
         "prompt" => %{
-          "en" => %{"sms" => "EN 5", "ivr" => %{"text" => "EN 6", "audio_source": "tts"}},
-          "es" => %{"sms" => "ES 5"},
+          "en" => %{"sms" => "EN 5", "mobileweb" => "EN 7", "ivr" => %{"text" => "EN 6", "audio_source": "tts"}},
+          "es" => %{"sms" => "ES 5", "mobileweb" => "ES 7"},
           "fr" => %{"sms" => "", "ivr" => %{"text" => "FR 6", "audio_source": "tts"}},
         },
         "skip_logic" => nil
@@ -707,9 +707,11 @@ defmodule Ask.QuestionnaireControllerTest do
       expected = [
         {"sms", "prompt", "en", "EN 1", "es", "ES 1"},
         {"ivr", "prompt", "en", "EN 2", "fr", "FR 2"},
+        {"mobileweb", "prompt", "en", "EN 3", "es", "ES 3"},
         {"sms", "response", "en", "EN 3, EN 4", "es", "ES 3, ES 4"},
         {"sms", "prompt", "en", "EN 5", "es", "ES 5"},
         {"ivr", "prompt", "en", "EN 6", "fr", "FR 6"},
+        {"mobileweb", "prompt", "en", "EN 7", "es", "ES 7"}
       ] |> Enum.sort
 
       assert translations == expected
@@ -721,9 +723,9 @@ defmodule Ask.QuestionnaireControllerTest do
           id: "aaa",
           title: "Title",
           prompt: %{
-            "en" => %{"sms" => "EN 1", "ivr" => %{"text" => "EN 2", "audio_source": "tts"}},
-            "es" => %{"sms" => ""},
-            "fr" => %{"sms" => "", "ivr" => %{"text" => "FR 2 (NEW)", "audio_source": "tts"}},
+            "en" => %{"sms" => "EN 1", "mobileweb" => "EN 11", "ivr" => %{"text" => "EN 2", "audio_source": "tts"}},
+            "es" => %{"sms" => "", "mobileweb" => "ES 11"},
+            "fr" => %{"sms" => "", "ivr" => %{"text" => "FR 2 (NEW)", "audio_source": "tts"}, "mobileweb" => "FR 11"},
           },
           store: "X",
           choices: [
@@ -762,6 +764,9 @@ defmodule Ask.QuestionnaireControllerTest do
         {"sms", "response", "en", "EN 3, EN 4", "fr", "FR 3, FR 4"},
         {"sms", "prompt", "en", "EN 5", "es", "ES 5"},
         {"ivr", "prompt", "en", "EN 6", "fr", "FR 6"},
+        {"mobileweb", "prompt", "en", "EN 11", "es", "ES 11"},
+        {"mobileweb", "prompt", "en", "EN 11", "fr", "FR 11"},
+        {"mobileweb", "prompt", "en", "EN 7", "es", "ES 7"}
       ] |> Enum.sort
 
       assert translations == expected
@@ -814,6 +819,7 @@ defmodule Ask.QuestionnaireControllerTest do
         {"sms", "response", "en", "EN 3, EN 4", "fr", "FR 3, FR 4"},
         {"sms", "prompt", "en", "EN 5", "es", "ES 5"},
         {"ivr", "prompt", "en", "EN 6", "fr", "FR 6"},
+        {"mobileweb", "prompt", "en", "EN 7", "es", "ES 7"}
       ] |> Enum.sort
 
       assert translations == expected

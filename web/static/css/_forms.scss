@@ -219,6 +219,9 @@ label {
 
 .ac-item { // autocomplete dropdown li
   padding: 10px;
+  p {
+    margin: 0;
+  }
 }
 
 .filterIndex .input-field {
