@@ -97,7 +97,7 @@ const validateRetry = (state: DataStore<Survey>, mode, key) => {
 
   let values = retriesValue.split(' ')
   values = values.filter((v) => v)
-  const invalid = values.some((v) => !timeSpecRegex.test(v))
+  const invalid = values.some((recontactTime) => !isValidReContactTime(recontactTime))
   if (invalid) {
     state.errorsByPath[key] = [k('Re-contact configuration is invalid')]
   }
@@ -117,13 +117,27 @@ const validateFallbackDelay = (state: DataStore<Survey>) => {
   const fallbackDelay = data.fallbackDelay
   if (!fallbackDelay) return
 
-  const invalid = !timeSpecRegex.test(fallbackDelay)
+  const invalid = !isValidReContactTime(fallbackDelay)
   if (invalid) {
     state.errorsByPath.fallbackDelay = [k('Fallback delay is invalid')]
   }
 }
 
-const timeSpecRegex = /^\d+[mhd]$/
+/**
+ * Recontacts are at least every 10m
+ * So the minimum by:
+ *  - Days: 1d
+ *  - Hours: 1h
+ *  - Minutes: 10m
+ */
+const isValidReContactTime = (recontactTime) => {
+  const matches = recontactTime.match(/^(\d+)([hdm])$/)
+  if (matches == null) return false
+  const [quantity, unit] = [parseInt(matches[1]), matches[2]]
+  if (quantity == 0) return false
+  if (unit == 'm' && quantity < 10) return false
+  return true
+}
 
 const changeName = (state, action) => {
   return {

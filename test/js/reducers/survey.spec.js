@@ -236,33 +236,23 @@ describe('survey reducer', () => {
     expect(state.data.ivrRetryConfiguration).toEqual('15h 1d')
   })
 
-  it('should not add sms retry attempts errors if configuration is invalid', () => {
-    const state = playActions([
-      actions.fetch(1, 1),
-      actions.receive(survey),
-      actions.changeSmsRetryConfiguration('12j')
-    ])
-    expect(state.errorsByPath.smsRetryConfiguration).toEqual('Re-contact configuration is invalid')
+  it('should validate retry configuration (attempts are at least every 10m)', () => {
+    const [sms, ivr] = ['sms', 'ivr']
+    testRetryAttemptsValidation(actions.changeSmsRetryConfiguration('12j'), sms)
+    testRetryAttemptsValidation(actions.changeSmsRetryConfiguration('5m'), sms)
+    testRetryAttemptsValidation(actions.changeSmsRetryConfiguration('0h'), sms)
+    testRetryAttemptsValidation(actions.changeSmsRetryConfiguration('0d'), sms)
+    testRetryAttemptsValidation(actions.changeIvrRetryConfiguration('12j'), ivr)
+    testRetryAttemptsValidation(actions.changeIvrRetryConfiguration('5m'), ivr)
+    testRetryAttemptsValidation(actions.changeIvrRetryConfiguration('0h'), ivr)
+    testRetryAttemptsValidation(actions.changeIvrRetryConfiguration('0d'), ivr)
   })
 
-  it('should not add ivr retry attempts errors if configuration is invalid', () => {
-    const state = playActions([
-      actions.fetch(1, 1),
-      actions.receive(survey),
-      actions.selectMode(['ivr']),
-      actions.changeIvrRetryConfiguration('12j')
-    ])
-    expect(state.errorsByPath.ivrRetryConfiguration).toEqual('Re-contact configuration is invalid')
-  })
-
-  it('should validate fallback delay', () => {
-    const state = playActions([
-      actions.fetch(1, 1),
-      actions.receive(survey),
-      actions.selectMode(['sms', 'ivr']),
-      actions.changeFallbackDelay('12j')
-    ])
-    expect(state.errorsByPath.fallbackDelay).toEqual('Fallback delay is invalid')
+  it('should validate fallback delay (attempts are at least every 10m)', () => {
+    testFallBackDelayValidation('12j')
+    testFallBackDelayValidation('5m')
+    testFallBackDelayValidation('0h')
+    testFallBackDelayValidation('0d')
   })
 
   it('should not validate fallback delay if only one mode is selected', () => {
@@ -279,7 +269,7 @@ describe('survey reducer', () => {
       actions.fetch(1, 1),
       actions.receive(survey),
       actions.changeIvrRetryConfiguration('2h 5d'),
-      actions.changeIvrRetryConfiguration('3m 1h')
+      actions.changeIvrRetryConfiguration('10m 1h')
     ])
     expect(!state.errors.smsRetryConfiguration)
     expect(!state.errors.ivrRetryConfiguration)
@@ -880,4 +870,24 @@ describe('survey reducer', () => {
     ])
     expect(result.data.locked).toEqual(true)
   })
+
+  const testRetryAttemptsValidation = (changeRetryConfigurationAction, mode) => {
+    const state = playActions([
+      actions.fetch(1, 1),
+      actions.receive(survey),
+      actions.selectMode([mode]),
+      changeRetryConfigurationAction
+    ])
+    expect(state.errorsByPath[`${mode}RetryConfiguration`]).toEqual('Re-contact configuration is invalid')
+  }
+
+  const testFallBackDelayValidation = delay => {
+    const state = playActions([
+      actions.fetch(1, 1),
+      actions.receive(survey),
+      actions.selectMode(['sms', 'ivr']),
+      actions.changeFallbackDelay(delay)
+    ])
+    expect(state.errorsByPath.fallbackDelay).toEqual('Fallback delay is invalid')
+  }
 })
