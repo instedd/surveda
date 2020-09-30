@@ -409,31 +409,11 @@ defmodule Ask.Runtime.Session do
     |> Enum.with_index(1)
     |> Enum.map(fn {prompt, index} ->
       if index == length(prompts) do
-       "#{prompt} #{url(respondent.id)}"
+       "#{prompt} #{Respondent.mobile_web_url(respondent.id)}"
       else
        prompt
       end
     end)
-  end
-
-  defp url(respondent_id) do
-    shorten("#{mobile_base_url()}/mobile/#{respondent_id}?token=#{Respondent.token(respondent_id)}")
-  end
-
-  defp mobile_base_url() do
-    System.get_env("MOBILE_WEB_BASE_URL") || Ask.Endpoint.url
-  end
-
-  defp shorten(url) do
-    case Ask.UrlShortener.shorten(url) do
-      {:ok, shortened_url} ->
-        shortened_url
-      {:error, reason} ->
-        Ask.Logger.error "Couldn't shorten url. Reason: #{reason}"
-        url
-      :unavailable ->
-        url
-    end
   end
 
   defp run_flow(%{current_mode: current_mode, respondent: respondent} = session, persist) do

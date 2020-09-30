@@ -22,6 +22,18 @@ defmodule Ask.UrlShortener do
     end
   end
 
+  def shorten_or_log_error(url) do
+    case shorten(url) do
+      {:ok, shortened_url} ->
+        shortened_url
+      {:error, reason} ->
+        Ask.Logger.error "Couldn't shorten url. Reason: #{reason}"
+        url
+      :unavailable ->
+        url
+    end
+  end
+
   def build_short_url(host, response_body) do
     "#{host}/#{Poison.decode!(response_body)["key"]}"
   end
