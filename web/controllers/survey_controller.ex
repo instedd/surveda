@@ -747,14 +747,24 @@ defmodule Ask.SurveyController do
     |> Repo.get!(survey_id, simulation: true)
 
     # The simulation has only one respondent
-    %{id: respondent_id} = Repo.one!(from r in Respondent,
+    respondent = Repo.one!(from r in Respondent,
       where: r.survey_id == ^survey.id)
 
-    json(conn, %{
-      "data" => %{
-        "mobile_web_url" => Respondent.mobile_web_url(respondent_id),
-      }
-    })
+    response = if (respondent.session) do
+      session = Session.load_respondent_session(respondent, true)
+
+      json(conn, %{
+        "data" => %{
+          "mobile_web_url" => Respondent.mobile_web_url(respondent.id),
+          "mobile_contact_messages" => Session.mobile_contact_message(session)
+        }
+      })
+    else
+      conn
+      |> send_resp(:not_found, "")
+    end
+
+    response
   end
 
   def simulation_initial_state(conn, %{"project_id" => project_id, "survey_id" => survey_id}) do
