@@ -755,7 +755,6 @@ defmodule Ask.SurveyController do
 
       json(conn, %{
         "data" => %{
-          "mobile_web_url" => Respondent.mobile_web_url(respondent.id),
           "mobile_contact_messages" => Session.mobile_contact_message(session)
         }
       })
