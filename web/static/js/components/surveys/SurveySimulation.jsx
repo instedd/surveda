@@ -58,15 +58,19 @@ class SurveySimulation extends Component {
   }
 
   loadInitialStateIfNeeded() {
-    const { initialState } = this.state
-    if (initialState) return
+    const { initialState, disposition } = this.state
+    const [
+      initialStateLoaded,
+      respondentIsntReady
+    ] = [
+      !!initialState,
+      disposition == 'registered'
+    ]
+    if (initialStateLoaded || respondentIsntReady) return
     const { projectId, surveyId, mode } = this.props
     api.fetchSurveySimulationInitialState(projectId, surveyId, mode)
     .then(initialState => {
       this.setState({initialState})
-    }
-    , () => {
-      // Depending on the mode, it will error until the respondent (with its session) is created
     })
   }
 
