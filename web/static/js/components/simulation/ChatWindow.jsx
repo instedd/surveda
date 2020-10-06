@@ -1,7 +1,7 @@
 // @flow
 import React, { Component } from 'react'
 import { translate } from 'react-i18next'
-import linkifyHtml from 'linkifyjs/html'
+import linkifyStr from 'linkifyjs/string'
 
 type ChatMessage = {
   type: string,
@@ -50,7 +50,7 @@ const MessageBulk = (props: MessageBulkProps) => {
     <div className={'message-bubble'}>
       {messages.map((message, ix) =>
         <li key={ix} className={ATMessage ? 'at-message' : 'ao-message'}>
-          <div className='content-text' dangerouslySetInnerHTML={{__html: linkifyHtml(message.body.trim())}} />
+          <div className='content-text' dangerouslySetInnerHTML={{__html: linkifyStr(message.body.trim())}} />
         </li>
       )}
     </div>
