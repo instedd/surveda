@@ -223,3 +223,11 @@ $smallChatWindowBodyHeight: $smallSimulationHeight -
     }
   }
 }
+
+.info-messages .ao-message:after {
+  border-top-color: transparent !important;
+}
+
+.info-messages .content-text {
+  max-width: none !important;
+}

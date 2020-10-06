@@ -12,6 +12,7 @@ import { translate } from 'react-i18next'
 import flatten from 'lodash/flatten'
 import DispositionChart from '../simulation/DispositionChart'
 import ChatWindow from '../simulation/ChatWindow'
+import classNames from 'classnames'
 
 class SurveySimulation extends Component {
   constructor(props) {
@@ -57,16 +58,13 @@ class SurveySimulation extends Component {
     this.refreshStatus()
   }
 
+  initialStateLoaded() {
+    return !!this.state.initialState
+  }
+
   loadInitialStateIfNeeded() {
-    const { initialState, disposition } = this.state
-    const [
-      initialStateLoaded,
-      respondentIsntReady
-    ] = [
-      !!initialState,
-      disposition == 'registered'
-    ]
-    if (initialStateLoaded || respondentIsntReady) return
+    const respondentIsActive = this.state.state == 'active'
+    if (this.initialStateLoaded() || !respondentIsActive) return
     const { projectId, surveyId, mode } = this.props
     api.fetchSurveySimulationInitialState(projectId, surveyId, mode)
     .then(initialState => {
@@ -237,28 +235,23 @@ class SurveySimulation extends Component {
   }
 
   mobileContactMessages() {
-    const { mode } = this.props
-    const { initialState } = this.state
-    const messages = initialState && initialState.mobile_contact_messages
-    if (mode == 'mobileweb' && messages && messages.length > 0) {
-      const chatMessages = messages.map(msg => ({
-        type: 'ao',
-        body: msg
-      }))
-      return chatMessages
-    } else {
-      return []
-    }
+    const { mode, t } = this.props
+    if (mode != 'mobileweb') return []
+    const waitingMessages = this.state.state == 'pending'
+      ? [t('Waiting for messages to be sent. This could take up to 1 minute.')]
+      : []
+    const messages = this.initialStateLoaded()
+      ? this.state.initialState.mobile_contact_messages
+      : waitingMessages
+    return messages.map(msg => ({
+      type: 'ao',
+      body: msg
+    }))
   }
 
   render() {
     const { t, mode } = this.props
-    const { disposition } = this.state
-    const stepComponent = (
-      <div className='col s12 m8'>
-        {this.stepsComponent()}
-      </div>
-    )
+    const { disposition, state } = this.state
     return (
       <div>
         <Tooltip text={t('Stop simulation')}>
@@ -270,10 +263,17 @@ class SurveySimulation extends Component {
         {
           mode == 'mobileweb'
           ? (
-            <div className='quex-simulation-container'>
+            <div className={classNames('quex-simulation-container', {'info-messages': state == 'pending'})}>
               <DispositionChart disposition={disposition} />
-              { stepComponent }
-              <ChatWindow messages={this.mobileContactMessages()} chatTitle={'Mobileweb mode'} readOnly scrollToBottom={false} />
+              <div>
+                {this.stepsComponent()}
+              </div>
+              <ChatWindow
+                messages={this.mobileContactMessages()}
+                chatTitle={t('Mobileweb mode')}
+                readOnly
+                scrollToBottom={false}
+              />
             </div>
           )
           : (
@@ -281,7 +281,9 @@ class SurveySimulation extends Component {
               <div className='col s12 m4'>
                 <DispositionChart disposition={disposition} />
               </div>
-              { stepComponent }
+              <div className='col s12 m8'>
+                {this.stepsComponent()}
+              </div>
             </div>
           )
         }
