@@ -12,7 +12,6 @@ import { translate } from 'react-i18next'
 import flatten from 'lodash/flatten'
 import DispositionChart from '../simulation/DispositionChart'
 import ChatWindow from '../simulation/ChatWindow'
-import classNames from 'classnames'
 
 class SurveySimulation extends Component {
   constructor(props) {
@@ -258,9 +257,46 @@ class SurveySimulation extends Component {
     }
   }
 
+  mobileWebSimulation() {
+    const { t } = this.props
+    const { disposition, state, mobileWebUrl } = this.state
+    return (
+      <div className='quex-simulation-container'>
+        <DispositionChart disposition={disposition} />
+        <div>
+          {this.stepsComponent()}
+        </div>
+        {
+          mobileWebUrl
+          ? <div className='mobile-web-iframe-container'>
+            <div className='chat-header'>
+              <button onClick={() => { this.setState({mobileWebUrl: null}) }}>
+                <i className='material-icons white-text'>arrow_back</i>
+              </button>
+              <div className='title'>
+                {t('Mobileweb mode')}
+              </div>
+            </div>
+            <iframe src={mobileWebUrl} className={'mobile-web'} />
+          </div>
+          : <div onClick={event => this.onChatWindowClick(event)}
+            className={state == 'pending' ? 'info-messages' : ''}
+            >
+            <ChatWindow
+              messages={this.mobileContactMessages()}
+              chatTitle={t('Mobileweb mode')}
+              readOnly
+              scrollToBottom={false}
+            />
+          </div>
+        }
+      </div>
+    )
+  }
+
   render() {
     const { t, mode } = this.props
-    const { disposition, state, mobileWebUrl } = this.state
+    const { disposition } = this.state
     return (
       <div>
         <Tooltip text={t('Stop simulation')}>
@@ -271,36 +307,7 @@ class SurveySimulation extends Component {
         <ConfirmationModal modalId='survey_stop_simulation_modal' ref='stopSimulationModal' confirmationText={t('Stop')} header={t('Stop simulation')} showCancel />
         {
           mode == 'mobileweb'
-          ? (
-            <div className={classNames('quex-simulation-container', {'info-messages': state == 'pending'})}>
-              <DispositionChart disposition={disposition} />
-              <div>
-                {this.stepsComponent()}
-              </div>
-              <div onClick={event => this.onChatWindowClick(event)}>
-                {
-                  mobileWebUrl
-                  ? <div className='mobile-web-iframe-container'>
-                    <div className='chat-header'>
-                      <button onClick={() => { this.setState({mobileWebUrl: null}) }}>
-                        <i className='material-icons white-text'>arrow_back</i>
-                      </button>
-                      <div className='title'>
-                        {t('Mobileweb mode')}
-                      </div>
-                    </div>
-                    <iframe src={mobileWebUrl} className={'mobile-web'} />
-                  </div>
-                  : <ChatWindow
-                    messages={this.mobileContactMessages()}
-                    chatTitle={t('Mobileweb mode')}
-                    readOnly
-                    scrollToBottom={false}
-                  />
-                }
-              </div>
-            </div>
-          )
+          ? this.mobileWebSimulation()
           : (
             <div className='row'>
               <div className='col s12 m4'>
