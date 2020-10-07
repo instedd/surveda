@@ -236,17 +236,17 @@ $smallChatWindowBodyHeight: $smallSimulationHeight -
   background-color: white;
 
   .chat-header {
-    display: flex;
-    justify-content: center;
+    @extend .valign-wrapper;
 
     button {
       background: $chatBorderBackground;
       border: none;
       line-height: 0;
+      width: 30%;
     }
 
     .title {
-      margin: 0 1rem;
+      position: relative;
     }
   }
   iframe {
