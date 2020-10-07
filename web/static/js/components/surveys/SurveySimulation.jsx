@@ -28,7 +28,8 @@ class SurveySimulation extends Component {
       responses: {},
       timer: null,
       errorCount: 0,
-      initialState: null
+      initialState: null,
+      mobileWebUrl: null
     }
   }
 
@@ -249,9 +250,17 @@ class SurveySimulation extends Component {
     }))
   }
 
+  onChatWindowClick(event) {
+    const { className, href } = event.target
+    if (className == 'linkified') {
+      event.preventDefault()
+      this.setState({mobileWebUrl: href})
+    }
+  }
+
   render() {
     const { t, mode } = this.props
-    const { disposition, state } = this.state
+    const { disposition, state, mobileWebUrl } = this.state
     return (
       <div>
         <Tooltip text={t('Stop simulation')}>
@@ -268,12 +277,28 @@ class SurveySimulation extends Component {
               <div>
                 {this.stepsComponent()}
               </div>
-              <ChatWindow
-                messages={this.mobileContactMessages()}
-                chatTitle={t('Mobileweb mode')}
-                readOnly
-                scrollToBottom={false}
-              />
+              <div onClick={event => this.onChatWindowClick(event)}>
+                {
+                  mobileWebUrl
+                  ? <div className='mobile-web-iframe-container'>
+                    <div className='chat-header'>
+                      <button onClick={() => { this.setState({mobileWebUrl: null}) }}>
+                        <i className='material-icons white-text'>arrow_back</i>
+                      </button>
+                      <div className='title'>
+                        {t('Mobileweb mode')}
+                      </div>
+                    </div>
+                    <iframe src={mobileWebUrl} className={'mobile-web'} />
+                  </div>
+                  : <ChatWindow
+                    messages={this.mobileContactMessages()}
+                    chatTitle={t('Mobileweb mode')}
+                    readOnly
+                    scrollToBottom={false}
+                  />
+                }
+              </div>
             </div>
           )
           : (
