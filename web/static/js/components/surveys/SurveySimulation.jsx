@@ -62,8 +62,16 @@ class SurveySimulation extends Component {
     return !!this.state.initialState
   }
 
+  respondentIsActive() {
+    return this.state.state == 'active'
+  }
+
+  respondentIsReady() {
+    return this.respondentIsActive() && this.initialStateLoaded()
+  }
+
   loadInitialStateIfNeeded() {
-    const respondentIsActive = this.state.state == 'active'
+    const respondentIsActive = this.respondentIsActive()
     if (this.initialStateLoaded() || !respondentIsActive) return
     const { projectId, surveyId, mode } = this.props
     api.fetchSurveySimulationInitialState(projectId, surveyId, mode)
@@ -234,15 +242,23 @@ class SurveySimulation extends Component {
     )
   }
 
-  mobileContactMessages() {
+  mobileWebChatMessages() {
     const { mode, t } = this.props
+    const { state, initialState } = this.state
     if (mode != 'mobileweb') return []
-    const waitingMessages = this.state.state == 'pending'
-      ? [t('Waiting for messages to be sent. This could take up to 1 minute.')]
-      : []
-    const messages = this.initialStateLoaded()
-      ? this.state.initialState.mobile_contact_messages
-      : waitingMessages
+    const respondentIsActive = this.respondentIsActive()
+    const respondentIsPendingOrActive = state == 'pending' || respondentIsActive
+    const initialStateLoaded = this.initialStateLoaded()
+
+    let messages = []
+    if (respondentIsPendingOrActive && !initialStateLoaded) {
+      messages = [t('Waiting for messages to be sent. This could take up to 1 minute.')]
+    } else if (!respondentIsActive) {
+      messages = [t('This simulation has ended')]
+    } else if (initialStateLoaded) {
+      messages = initialState.mobile_contact_messages
+    }
+
     return messages.map(msg => ({
       type: 'ao',
       body: msg
@@ -259,7 +275,7 @@ class SurveySimulation extends Component {
 
   mobileWebSimulation() {
     const { t } = this.props
-    const { disposition, state, mobileWebUrl } = this.state
+    const { disposition, mobileWebUrl } = this.state
     return (
       <div className='quex-simulation-container'>
         <DispositionChart disposition={disposition} />
@@ -280,10 +296,10 @@ class SurveySimulation extends Component {
             <iframe src={mobileWebUrl} className={'mobile-web'} />
           </div>
           : <div onClick={event => this.onChatWindowClick(event)}
-            className={state == 'pending' ? 'info-messages' : ''}
+            className={this.respondentIsReady() ? '' : 'info-messages'}
             >
             <ChatWindow
-              messages={this.mobileContactMessages()}
+              messages={this.mobileWebChatMessages()}
               chatTitle={t('Mobileweb mode')}
               readOnly
               scrollToBottom={false}
