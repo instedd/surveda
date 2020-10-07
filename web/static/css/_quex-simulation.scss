@@ -233,6 +233,8 @@ $smallChatWindowBodyHeight: $smallSimulationHeight -
 }
 
 .mobile-web-iframe-container {
+  background-color: white;
+
   .chat-header {
     display: flex;
     justify-content: center;
