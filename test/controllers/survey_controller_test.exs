@@ -624,6 +624,23 @@ defmodule Ask.SurveyControllerTest do
 
       assert status == 404
     end
+
+    test "Mobileweb answers when the respondent is ready", %{conn: conn, create_running_survey: create_running_survey} do
+      mode = "mobileweb"
+      survey = create_running_survey.(mode)
+
+      # TODO: Make it work
+      Broker.start_link
+      Broker.poll
+
+      conn =
+        get(
+          conn,
+          project_survey_survey_path(conn, :simulation_initial_state, survey.project, survey, mode)
+        )
+
+      json_response(conn, 200)["data"]
+    end
   end
 
   describe "count_partial_results stats" do
