@@ -574,6 +574,58 @@ defmodule Ask.SurveyControllerTest do
     end
   end
 
+  describe "simulation initial state" do
+    setup %{user: user} do
+      create_running_survey = fn mode ->
+        [survey, _group, _test_channel, _respondent, _phone_number] = create_running_survey_with_channel_and_respondent_with_options(user: user, mode: mode)
+        survey
+      end
+
+      {:ok, create_running_survey: create_running_survey}
+    end
+
+    test "SMS return an empty map", %{conn: conn, create_running_survey: create_running_survey} do
+      mode = "sms"
+      survey = create_running_survey.(mode)
+
+      conn =
+        get(
+          conn,
+          project_survey_survey_path(conn, :simulation_initial_state, survey.project, survey, mode)
+        )
+
+      assert json_response(conn, 200)["data"] == %{}
+    end
+
+    test "IVR return an empty map", %{conn: conn, create_running_survey: create_running_survey} do
+      mode = "ivr"
+      survey = create_running_survey.(mode)
+
+      conn =
+        get(
+          conn,
+          project_survey_survey_path(conn, :simulation_initial_state, survey.project, survey, mode)
+        )
+
+      assert json_response(conn, 200)["data"] == %{}
+    end
+
+    test "Mobileweb fails when the respondent isn't ready", %{conn: conn, create_running_survey: create_running_survey} do
+      mode = "mobileweb"
+      survey = create_running_survey.(mode)
+
+      conn =
+        get(
+          conn,
+          project_survey_survey_path(conn, :simulation_initial_state, survey.project, survey, mode)
+        )
+
+      %{status: status} = conn
+
+      assert status == 404
+    end
+  end
+
   describe "count_partial_results stats" do
     setup %{conn: conn, user: user} do
       survey = count_partial_results_test_survey(%{
