@@ -577,8 +577,8 @@ defmodule Ask.SurveyControllerTest do
   describe "simulation initial state" do
     setup %{user: user} do
       create_running_survey = fn mode ->
-        [survey, _group, _test_channel, _respondent, _phone_number] = create_running_survey_with_channel_and_respondent_with_options(user: user, mode: mode)
-        survey
+        [survey, _group, _test_channel, respondent, _phone_number] = create_running_survey_with_channel_and_respondent_with_options(user: user, mode: mode)
+        %{survey: survey, respondent_id: respondent.id}
       end
 
       {:ok, create_running_survey: create_running_survey}
@@ -586,7 +586,7 @@ defmodule Ask.SurveyControllerTest do
 
     test "SMS return an empty map", %{conn: conn, create_running_survey: create_running_survey} do
       mode = "sms"
-      survey = create_running_survey.(mode)
+      %{survey: survey} = create_running_survey.(mode)
 
       conn =
         get(
@@ -599,7 +599,7 @@ defmodule Ask.SurveyControllerTest do
 
     test "IVR return an empty map", %{conn: conn, create_running_survey: create_running_survey} do
       mode = "ivr"
-      survey = create_running_survey.(mode)
+      %{survey: survey} = create_running_survey.(mode)
 
       conn =
         get(
@@ -612,7 +612,7 @@ defmodule Ask.SurveyControllerTest do
 
     test "Mobileweb fails when the respondent isn't ready", %{conn: conn, create_running_survey: create_running_survey} do
       mode = "mobileweb"
-      survey = create_running_survey.(mode)
+      %{survey: survey} = create_running_survey.(mode)
 
       conn =
         get(
@@ -621,15 +621,13 @@ defmodule Ask.SurveyControllerTest do
         )
 
       %{status: status} = conn
-
       assert status == 404
     end
 
     test "Mobileweb answers when the respondent is ready", %{conn: conn, create_running_survey: create_running_survey} do
       mode = "mobileweb"
-      survey = create_running_survey.(mode)
+      %{survey: survey, respondent_id: respondent_id} = create_running_survey.(mode)
 
-      # TODO: Make it work
       Broker.start_link
       {:ok, _pid} = ChannelStatusServer.start_link
       Process.register self(), :mail_target
@@ -642,7 +640,10 @@ defmodule Ask.SurveyControllerTest do
           project_survey_survey_path(conn, :simulation_initial_state, survey.project, survey, mode)
         )
 
-      json_response(conn, 200)["data"]
+      json_response_data = json_response(conn, 200)["data"]
+      assert Map.has_key?(json_response_data, "mobile_contact_messages"), "mobile_contact_messages key not present in response"
+      respondent_mobile_web_url = Respondent.mobile_web_url(respondent_id)
+      assert %{"mobile_contact_messages" => ["Please enter #{respondent_mobile_web_url}"]} == json_response_data
     end
   end
 
