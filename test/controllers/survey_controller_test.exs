@@ -631,6 +631,9 @@ defmodule Ask.SurveyControllerTest do
 
       # TODO: Make it work
       Broker.start_link
+      {:ok, _pid} = ChannelStatusServer.start_link
+      Process.register self(), :mail_target
+
       Broker.poll
 
       conn =
