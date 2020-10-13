@@ -8,7 +8,9 @@ defmodule Ask.Runtime.Session do
     Respondent,
     Schedule,
     RespondentDispositionHistory,
-    Survey
+    Survey,
+    Endpoint,
+    UrlShortener
   }
 
   alias Ask.Runtime.Flow.TextVisitor
@@ -409,11 +411,16 @@ defmodule Ask.Runtime.Session do
     |> Enum.with_index(1)
     |> Enum.map(fn {prompt, index} ->
       if index == length(prompts) do
-       "#{prompt} #{Respondent.mobile_web_url(respondent.id)}"
+       "#{prompt} #{mobile_web_url(respondent.id)}"
       else
        prompt
       end
     end)
+  end
+
+  defp mobile_web_url(respondent_id) do
+    base_url = System.get_env("MOBILE_WEB_BASE_URL") || Endpoint.url
+    UrlShortener.shorten_or_log_error("#{base_url}/mobile/#{respondent_id}?token=#{Respondent.token(respondent_id)}")
   end
 
   defp run_flow(%{current_mode: current_mode, respondent: respondent} = session, persist) do

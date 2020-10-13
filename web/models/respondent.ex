@@ -1,7 +1,7 @@
 defmodule Ask.Respondent do
   use Ask.Web, :model
   alias Ask.Ecto.Type.JSON
-  alias Ask.{Stats, Repo, Respondent, Survey, Questionnaire, UrlShortener, Endpoint}
+  alias Ask.{Stats, Repo, Respondent, Survey, Questionnaire}
 
   schema "respondents" do
     field :phone_number, :string # phone_number as-it-is in the respondents_list
@@ -292,10 +292,5 @@ defmodule Ask.Respondent do
 
     not_ignored = fn value -> String.upcase(value) not in ignored_values end
     quiz_step["relevant"] && not_ignored.(response.value)
-  end
-
-  def mobile_web_url(respondent_id) do
-    base_url = System.get_env("MOBILE_WEB_BASE_URL") || Endpoint.url
-    UrlShortener.shorten_or_log_error("#{base_url}/mobile/#{respondent_id}?token=#{token(respondent_id)}")
   end
 end
