@@ -53,7 +53,7 @@ export default (
             <Route path='settings' components={{ body: SurveySettings, tabs: SurveyTabs }} />
             <Route path='integrations' components={{ body: IntegrationIndex, tabs: SurveyTabs }} />
             <Route path='edit' component={SurveyEdit} showSavingStatus />
-            <Route path='simulation' component={SurveySimulation} />
+            <Route path='simulation/:mode' component={SurveySimulation} />
           </Route>
         </Route>
 
@@ -100,7 +100,7 @@ export const project = (id) => `${projects}/${id}`
 export const folder = (projectId, folderId) => `${project(projectId)}/folders/${folderId}`
 export const surveyIndex = (projectId) => `${project(projectId)}/surveys`
 export const survey = (projectId, surveyId) => `${surveyIndex(projectId)}/${surveyId}`
-export const surveySimulation = (projectId, surveyId) => `${surveyIndex(projectId)}/${surveyId}/simulation`
+export const surveySimulation = (projectId, surveyId, mode) => `${surveyIndex(projectId)}/${surveyId}/simulation/${mode}`
 export const surveyRespondents = (projectId, surveyId, q) => `${survey(projectId, surveyId)}/respondents${(q && `?q=${encodeURIComponent(q)}`) || ''}`
 export const surveySettings = (projectId, surveyId) => `${survey(projectId, surveyId)}/settings`
 export const surveyIntegrations = (projectId, surveyId) => `${survey(projectId, surveyId)}/integrations`

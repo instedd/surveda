@@ -38,7 +38,8 @@
     "react-intl": "^2.1.5",
     "react-materialize": "^0.17.0",
     "react-timeago": "^3.4.3",
-    "uuid": "^3.2.1"
+    "uuid": "^3.2.1",
+    "linkifyjs": "^2.1.9"
   },
   "devDependencies": {
     "babel-eslint": "^7.0.0",

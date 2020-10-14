@@ -574,6 +574,102 @@ defmodule Ask.SurveyControllerTest do
     end
   end
 
+  describe "simulation initial state" do
+    setup %{conn: conn, user: user} do
+      create_running_survey = fn mode ->
+        [survey, _group, _test_channel, respondent, _phone_number] =
+          create_running_survey_with_channel_and_respondent_with_options(user: user, mode: mode)
+
+        %{survey: survey, respondent_id: respondent.id}
+      end
+
+      get_simulation_initial_state = fn survey, mode ->
+        get(
+          conn,
+          project_survey_survey_path(
+            conn,
+            :simulation_initial_state,
+            survey.project,
+            survey,
+            mode
+          )
+        )
+      end
+
+      poll_survey = fn ->
+        Broker.start_link()
+        {:ok, _pid} = ChannelStatusServer.start_link()
+        Process.register(self(), :mail_target)
+        Broker.poll()
+      end
+
+      mobile_contact_messages = fn respondent_id ->
+        Repo.get!(Respondent, respondent_id)
+        |> Session.load_respondent_session(true)
+        |> Session.mobile_contact_message()
+      end
+
+      {:ok,
+       create_running_survey: create_running_survey,
+       get_simulation_initial_state: get_simulation_initial_state,
+       poll_survey: poll_survey,
+       mobile_contact_messages: mobile_contact_messages}
+    end
+
+    test "SMS return an empty map", %{
+      create_running_survey: create_running_survey,
+      get_simulation_initial_state: get_simulation_initial_state
+    } do
+      mode = "sms"
+      %{survey: survey} = create_running_survey.(mode)
+
+      conn = get_simulation_initial_state.(survey, mode)
+
+      assert json_response(conn, 200)["data"] == %{}
+    end
+
+    test "IVR return an empty map", %{
+      create_running_survey: create_running_survey,
+      get_simulation_initial_state: get_simulation_initial_state
+    } do
+      mode = "ivr"
+      %{survey: survey} = create_running_survey.(mode)
+
+      conn = get_simulation_initial_state.(survey, mode)
+
+      assert json_response(conn, 200)["data"] == %{}
+    end
+
+    test "Mobileweb fails when the respondent isn't ready", %{
+      create_running_survey: create_running_survey,
+      get_simulation_initial_state: get_simulation_initial_state
+    } do
+      mode = "mobileweb"
+      %{survey: survey} = create_running_survey.(mode)
+
+      conn = get_simulation_initial_state.(survey, mode)
+
+      %{status: status} = conn
+      assert status == 404
+    end
+
+    test "Mobileweb answers when the respondent is ready", %{
+      create_running_survey: create_running_survey,
+      mobile_contact_messages: mobile_contact_messages,
+      poll_survey: poll_survey,
+      get_simulation_initial_state: get_simulation_initial_state
+    } do
+      mode = "mobileweb"
+      %{survey: survey, respondent_id: respondent_id} = create_running_survey.(mode)
+      poll_survey.()
+
+      conn = get_simulation_initial_state.(survey, mode)
+
+      assert json_response(conn, 200)["data"]["mobile_contact_messages"] ==
+               mobile_contact_messages.(respondent_id)
+    end
+  end
+
   describe "count_partial_results stats" do
     setup %{conn: conn, user: user} do
       survey = count_partial_results_test_survey(%{

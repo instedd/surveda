@@ -34,7 +34,14 @@ defmodule Ask.TestHelpers do
         respondent_groups
       end
 
-      defp create_running_survey_with_channel_and_respondent(steps \\ @dummy_steps, mode \\ "sms", schedule \\ Ask.Schedule.always(), fallback_delay \\ "10m") do
+      defp create_running_survey_with_channel_and_respondent_with_options(options \\ []) do
+        steps = Keyword.get(options, :steps, @dummy_steps)
+        mode = Keyword.get(options, :mode, "sms")
+        schedule = Keyword.get(options, :schedule, Ask.Schedule.always())
+        fallback_delay = Keyword.get(options, :fallback_delay, "10m")
+        user = Keyword.get(options, :user, nil)
+
+        project = if (user), do: create_project_for_user(user), else: nil
         test_channel = Ask.TestChannel.new(false, mode == "sms")
 
         channel_type = case mode do
@@ -44,7 +51,9 @@ defmodule Ask.TestHelpers do
 
         channel = insert(:channel, settings: test_channel |> Ask.TestChannel.settings, type: channel_type)
         quiz = insert(:questionnaire, steps: steps, quota_completed_steps: nil)
-        survey = insert(:survey, %{schedule: schedule, state: "running", questionnaires: [quiz], mode: [[mode]], fallback_delay: fallback_delay})
+        survey = %{schedule: schedule, state: "running", questionnaires: [quiz], mode: [[mode]], fallback_delay: fallback_delay}
+        survey = if (project), do: Map.put(survey, :project, project), else: survey
+        survey = insert(:survey, survey)
         group = insert(:respondent_group, survey: survey, respondents_count: 1) |> Ask.Repo.preload(:channels)
 
         Ask.RespondentGroupChannel.changeset(%Ask.RespondentGroupChannel{}, %{respondent_group_id: group.id, channel_id: channel.id, mode: mode}) |> Ask.Repo.insert
@@ -55,6 +64,14 @@ defmodule Ask.TestHelpers do
         [survey, group, test_channel, respondent, phone_number]
       end
 
+      defp create_running_survey_with_channel_and_respondent(steps \\ @dummy_steps, mode \\ "sms", schedule \\ Ask.Schedule.always(), fallback_delay \\ "10m") do
+        create_running_survey_with_channel_and_respondent_with_options(
+          steps: steps,
+          mode: mode,
+          schedule: schedule,
+          fallback_delay: fallback_delay
+        )
+      end
 
       def create_several_respondents(survey, group, n) when n <= 1 do
         [insert(:respondent, survey: survey, respondent_group: group)]

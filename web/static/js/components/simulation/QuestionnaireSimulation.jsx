@@ -171,7 +171,7 @@ class QuestionnaireSimulation extends Component<Props, State> {
               submissions={simulation.submissions}
               simulationIsEnded={simulation.simulationStatus == 'ended'}
             />
-            <ChatWindow messages={simulation.messagesHistory} onSendMessage={this.handleATMessage} chatTitle={'SMS mode'} readOnly={!simulationIsActive} />
+            <ChatWindow messages={simulation.messagesHistory} onSendMessage={this.handleATMessage} chatTitle={'SMS mode'} readOnly={!simulationIsActive} scrollToBottom />
           </div>
         </div>
         : 'Loading'

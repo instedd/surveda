@@ -8,7 +8,9 @@ defmodule Ask.Runtime.Session do
     Respondent,
     Schedule,
     RespondentDispositionHistory,
-    Survey
+    Survey,
+    Endpoint,
+    UrlShortener
   }
 
   alias Ask.Runtime.Flow.TextVisitor
@@ -401,7 +403,7 @@ defmodule Ask.Runtime.Session do
     }
   end
 
-  defp mobile_contact_message(%Session{flow: flow, respondent: respondent}) do
+  def mobile_contact_message(%Session{flow: flow, respondent: respondent}) do
     msg = flow.questionnaire.settings["mobile_web_sms_message"] || "Please enter"
     prompts = Ask.Runtime.Step.split_by_newlines(msg)
 
@@ -409,31 +411,16 @@ defmodule Ask.Runtime.Session do
     |> Enum.with_index(1)
     |> Enum.map(fn {prompt, index} ->
       if index == length(prompts) do
-       "#{prompt} #{url(respondent.id)}"
+       "#{prompt} #{mobile_web_url(respondent.id)}"
       else
        prompt
       end
     end)
   end
 
-  defp url(respondent_id) do
-    shorten("#{mobile_base_url()}/mobile/#{respondent_id}?token=#{Respondent.token(respondent_id)}")
-  end
-
-  defp mobile_base_url() do
-    System.get_env("MOBILE_WEB_BASE_URL") || Ask.Endpoint.url
-  end
-
-  defp shorten(url) do
-    case Ask.UrlShortener.shorten(url) do
-      {:ok, shortened_url} ->
-        shortened_url
-      {:error, reason} ->
-        Ask.Logger.error "Couldn't shorten url. Reason: #{reason}"
-        url
-      :unavailable ->
-        url
-    end
+  defp mobile_web_url(respondent_id) do
+    base_url = System.get_env("MOBILE_WEB_BASE_URL") || Endpoint.url
+    UrlShortener.shorten_or_log_error("#{base_url}/mobile/#{respondent_id}?token=#{Respondent.token(respondent_id)}")
   end
 
   defp run_flow(%{current_mode: current_mode, respondent: respondent} = session, persist) do

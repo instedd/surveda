@@ -11,6 +11,7 @@ import { Tooltip, ConfirmationModal, Card, UntitledIfEmpty } from '../ui'
 import { translate } from 'react-i18next'
 import flatten from 'lodash/flatten'
 import DispositionChart from '../simulation/DispositionChart'
+import ChatWindow from '../simulation/ChatWindow'
 
 class SurveySimulation extends Component {
   constructor(props) {
@@ -25,7 +26,9 @@ class SurveySimulation extends Component {
       stepIndex: null,
       responses: {},
       timer: null,
-      errorCount: 0
+      errorCount: 0,
+      initialState: null,
+      mobileWebUrl: null
     }
   }
 
@@ -51,6 +54,33 @@ class SurveySimulation extends Component {
   }
 
   refresh() {
+    this.loadInitialStateIfNeeded()
+    this.refreshStatus()
+  }
+
+  initialStateLoaded() {
+    return !!this.state.initialState
+  }
+
+  respondentIsActive() {
+    return this.state.state == 'active'
+  }
+
+  respondentIsReady() {
+    return this.respondentIsActive() && this.initialStateLoaded()
+  }
+
+  loadInitialStateIfNeeded() {
+    const respondentIsActive = this.respondentIsActive()
+    if (this.initialStateLoaded() || !respondentIsActive) return
+    const { projectId, surveyId, mode } = this.props
+    api.fetchSurveySimulationInitialState(projectId, surveyId, mode)
+    .then(initialState => {
+      this.setState({initialState})
+    })
+  }
+
+  refreshStatus() {
     const { projectId, surveyId, questionnaire } = this.props
 
     api.fetchSurveySimulationStatus(projectId, surveyId)
@@ -212,8 +242,76 @@ class SurveySimulation extends Component {
     )
   }
 
-  render() {
+  mobileWebChatMessages() {
+    const { mode, t } = this.props
+    const { state, initialState } = this.state
+    if (mode != 'mobileweb') return []
+    const respondentIsActive = this.respondentIsActive()
+    const respondentIsPendingOrActive = state == 'pending' || respondentIsActive
+    const initialStateLoaded = this.initialStateLoaded()
+
+    let messages = []
+    if (respondentIsPendingOrActive && !initialStateLoaded) {
+      messages = [t('Waiting for messages to be sent. This could take up to 1 minute.')]
+    } else if (!respondentIsActive) {
+      messages = [t('This simulation has ended')]
+    } else if (initialStateLoaded) {
+      messages = initialState.mobile_contact_messages
+    }
+
+    return messages.map(msg => ({
+      type: 'ao',
+      body: msg
+    }))
+  }
+
+  onChatWindowClick(event) {
+    const { className, href } = event.target
+    if (className == 'linkified') {
+      event.preventDefault()
+      this.setState({mobileWebUrl: href})
+    }
+  }
+
+  mobileWebSimulation() {
     const { t } = this.props
+    const { disposition, mobileWebUrl } = this.state
+    return (
+      <div className='quex-simulation-container'>
+        <DispositionChart disposition={disposition} />
+        <div>
+          {this.stepsComponent()}
+        </div>
+        {
+          mobileWebUrl
+          ? <div className='mobile-web-iframe-container'>
+            <div className='chat-header'>
+              <button onClick={() => { this.setState({mobileWebUrl: null}) }}>
+                <i className='material-icons white-text'>arrow_back</i>
+              </button>
+              <div className='title'>
+                {t('Mobileweb mode')}
+              </div>
+            </div>
+            <iframe src={mobileWebUrl} className={'mobile-web'} />
+          </div>
+          : <div onClick={event => this.onChatWindowClick(event)}
+            className={this.respondentIsReady() ? '' : 'info-messages'}
+            >
+            <ChatWindow
+              messages={this.mobileWebChatMessages()}
+              chatTitle={t('Mobileweb mode')}
+              readOnly
+              scrollToBottom={false}
+            />
+          </div>
+        }
+      </div>
+    )
+  }
+
+  render() {
+    const { t, mode } = this.props
     const { disposition } = this.state
     return (
       <div>
@@ -223,15 +321,20 @@ class SurveySimulation extends Component {
           </a>
         </Tooltip>
         <ConfirmationModal modalId='survey_stop_simulation_modal' ref='stopSimulationModal' confirmationText={t('Stop')} header={t('Stop simulation')} showCancel />
-
-        <div className='row'>
-          <div className='col s12 m4'>
-            <DispositionChart disposition={disposition} />
-          </div>
-          <div className='col s12 m8'>
-            {this.stepsComponent()}
-          </div>
-        </div>
+        {
+          mode == 'mobileweb'
+          ? this.mobileWebSimulation()
+          : (
+            <div className='row'>
+              <div className='col s12 m4'>
+                <DispositionChart disposition={disposition} />
+              </div>
+              <div className='col s12 m8'>
+                {this.stepsComponent()}
+              </div>
+            </div>
+          )
+        }
       </div>
     )
   }
@@ -244,7 +347,8 @@ SurveySimulation.propTypes = {
   projectId: PropTypes.string,
   surveyId: PropTypes.string,
   survey: PropTypes.object,
-  questionnaire: PropTypes.object
+  questionnaire: PropTypes.object,
+  mode: PropTypes.string
 }
 
 const mapStateToProps = (state, ownProps) => {
@@ -252,7 +356,8 @@ const mapStateToProps = (state, ownProps) => {
     projectId: ownProps.params.projectId,
     surveyId: ownProps.params.surveyId,
     survey: state.survey.data,
-    questionnaire: state.questionnaire.data
+    questionnaire: state.questionnaire.data,
+    mode: ownProps.params.mode
   }
 }
 

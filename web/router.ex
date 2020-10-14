@@ -95,6 +95,7 @@ defmodule Ask.Router do
             post "/replace", RespondentGroupController, :replace, as: :replace
           end
           get "/respondents/stats", RespondentController, :stats, as: :respondents_stats
+          get "/simulation/initial_state/:mode", SurveyController, :simulation_initial_state
           get "/simulation_status", SurveyController, :simulation_status
           post "/stop_simulation", SurveyController, :stop_simulation
           get "/links/:name", SurveyController, :create_link, as: :links

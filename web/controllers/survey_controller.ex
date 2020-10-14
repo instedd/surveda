@@ -411,7 +411,7 @@ defmodule Ask.SurveyController do
 
     survey = project
     |> assoc(:surveys)
-    |> Repo.get!(survey_id)
+    |> Repo.get!(survey_id, simulation: true)
 
     # The simulation has only one respondent
     respondent = Repo.one!(from r in Respondent,
@@ -464,7 +464,7 @@ defmodule Ask.SurveyController do
 
     survey = project
     |> assoc(:surveys)
-    |> Repo.get!(survey_id)
+    |> Repo.get!(survey_id, simulation: true)
 
     questionnaire = survey
     |> assoc(:questionnaires)
@@ -736,6 +736,42 @@ defmodule Ask.SurveyController do
           |> put_status(:unprocessable_entity)
           |> render(Ask.ChangesetView, "error.json", changeset: change(%Survey{}, %{}))
     end
+  end
+
+  def simulation_initial_state(conn, %{"project_id" => project_id, "survey_id" => survey_id, "mode" => "mobileweb"}) do
+    project = conn
+    |> load_project(project_id)
+
+    survey = project
+    |> assoc(:surveys)
+    |> Repo.get!(survey_id, simulation: true)
+
+    # The simulation has only one respondent
+    respondent = Repo.one!(from r in Respondent,
+      where: r.survey_id == ^survey.id)
+
+    response = if (respondent.session) do
+      session = Session.load_respondent_session(respondent, true)
+
+      json(conn, %{
+        "data" => %{
+          "mobile_contact_messages" => Session.mobile_contact_message(session)
+        }
+      })
+    else
+      conn
+      |> send_resp(:not_found, "")
+    end
+
+    response
+  end
+
+  def simulation_initial_state(conn, %{"project_id" => project_id, "survey_id" => survey_id}) do
+    load_project(conn, project_id)
+    |> assoc(:surveys)
+    |> Repo.get!(survey_id, simulation: true)
+
+    json(conn, %{"data" => %{}})
   end
 
   defp prepare_channels(_, []), do: :ok

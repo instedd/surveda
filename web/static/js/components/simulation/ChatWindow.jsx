@@ -1,6 +1,7 @@
 // @flow
 import React, { Component } from 'react'
 import { translate } from 'react-i18next'
+import linkifyStr from 'linkifyjs/string'
 
 type ChatMessage = {
   type: string,
@@ -11,16 +12,17 @@ type ChatWindowProps = {
   messages: Array<ChatMessage>,
   chatTitle: string,
   onSendMessage: Function,
-  readOnly: boolean
+  readOnly: boolean,
+  scrollToBottom: boolean
 }
 
 class ChatWindow extends Component<ChatWindowProps> {
   render() {
-    const { messages, onSendMessage, chatTitle, readOnly } = this.props
+    const { messages, onSendMessage, chatTitle, readOnly, scrollToBottom } = this.props
 
     return <div className='chat-window quex-simulation-chat'>
       <ChatTitle title={chatTitle} />
-      <MessagesList messages={messages} />
+      <MessagesList messages={messages} scrollToBottom={scrollToBottom} />
       <ChatFooter onSendMessage={onSendMessage} readOnly={readOnly} />
     </div>
   }
@@ -48,9 +50,7 @@ const MessageBulk = (props: MessageBulkProps) => {
     <div className={'message-bubble'}>
       {messages.map((message, ix) =>
         <li key={ix} className={ATMessage ? 'at-message' : 'ao-message'}>
-          <div className='content-text'>
-            {message.body.trim()}
-          </div>
+          <div className='content-text' dangerouslySetInnerHTML={{__html: linkifyStr(message.body.trim())}} />
         </li>
       )}
     </div>
@@ -58,16 +58,19 @@ const MessageBulk = (props: MessageBulkProps) => {
 }
 
 type MessagesListProps = {
-  messages: Array<ChatMessage>
+  messages: Array<ChatMessage>,
+  scrollToBottom: boolean
 }
 
 class MessagesList extends Component<MessagesListProps> {
   messagesBottomDivRef: any
 
   scrollToBottom = () => {
-    window.setTimeout(() => {
-      this.messagesBottomDivRef.scrollIntoView({ behavior: 'smooth' })
-    }, 0)
+    if (this.props.scrollToBottom) {
+      window.setTimeout(() => {
+        this.messagesBottomDivRef.scrollIntoView({ behavior: 'smooth' })
+      }, 0)
+    }
   }
 
   componentDidMount() {

@@ -48,16 +48,17 @@ class TestQuestionnaireModal extends Component {
     e.preventDefault()
 
     this.setState({sending: true}, () => {
+      const {phoneNumber, mode, channelId} = this.state
       api.simulateQuestionnaire(questionnaire.projectId,
         questionnaire.id,
-        this.state.phoneNumber,
-        this.state.mode,
-        this.state.channelId)
+        phoneNumber,
+        mode,
+        channelId)
       .then(response => {
         this.refs.modal.close()
 
         const surveyId = response.result
-        router.push(routes.surveySimulation(questionnaire.projectId, surveyId))
+        router.push(routes.surveySimulation(questionnaire.projectId, surveyId, mode))
       })
     })
   }

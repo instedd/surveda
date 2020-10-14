@@ -223,3 +223,45 @@ $smallChatWindowBodyHeight: $smallSimulationHeight -
     }
   }
 }
+
+.info-messages .ao-message:after {
+  border-top-color: transparent !important;
+}
+
+.info-messages .ao-message {
+  background: transparent !important;
+  color: #424242 !important;
+  text-align: center;
+  margin-top: 1rem;
+  width: 100% !important;
+}
+
+.info-messages .content-text {
+  max-width: none !important;
+}
+
+.mobile-web-iframe-container {
+  background-color: white;
+  border-radius: 5px;
+  box-shadow: 0 2px 10px 2px rgba(0, 0, 0, 0.4);
+
+  .chat-header {
+    @extend .valign-wrapper;
+
+    button {
+      background: $chatBorderBackground;
+      border: none;
+      line-height: 0;
+      width: 30%;
+    }
+
+    .title {
+      position: relative;
+    }
+  }
+  iframe {
+    width: 100%;
+    height: $simulationHeight - $chatWindowHeaderHeight;
+    border: 0;
+  }
+}
