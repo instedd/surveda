@@ -228,6 +228,14 @@ $smallChatWindowBodyHeight: $smallSimulationHeight -
   border-top-color: transparent !important;
 }
 
+.info-messages .ao-message {
+  background: transparent !important;
+  color: #424242 !important;
+  text-align: center;
+  margin-top: 1rem;
+  width: 100% !important;
+}
+
 .info-messages .content-text {
   max-width: none !important;
 }
