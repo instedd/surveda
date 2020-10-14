@@ -49,9 +49,14 @@ class TestQuestionnaireModal extends Component {
 
     this.setState({sending: true}, () => {
       const {phoneNumber, mode, channelId} = this.state
+      const phoneNumberToBeSent = mode == 'mobileweb' && this.isEmptyOrWhiteSpace(phoneNumber)
+        // We don't care about the number, but the backend expects the respondent to have one
+        // Without this number, no message will be sent and so, no message will be shown
+        ? '9999999999'
+        : phoneNumber
       api.simulateQuestionnaire(questionnaire.projectId,
         questionnaire.id,
-        phoneNumber,
+        phoneNumberToBeSent,
         mode,
         channelId)
       .then(response => {
@@ -114,9 +119,14 @@ class TestQuestionnaireModal extends Component {
     return <option value=''>No channels for this mode</option>
   }
 
+  isEmptyOrWhiteSpace(s) {
+    return s.trim().length == 0
+  }
+
   render() {
     const { modalId, questionnaire, router, t } = this.props
-    const { mode } = this.state
+    const { mode, phoneNumber } = this.state
+    const isValidPhoneNumber = mode == 'mobileweb' || !this.isEmptyOrWhiteSpace(phoneNumber)
     const activeButton = ({ onClick }) => <a className='btn-large waves-effect waves-light blue modal-action' onClick={onClick}>Send</a>
     let sendButton = null
     let cancelButton = <a href='#!' className='modal-action modal-close btn-flat grey-text'>Cancel</a>
@@ -130,7 +140,7 @@ class TestQuestionnaireModal extends Component {
     } else if (this.state.sending) {
       sendButton = <a className='btn-medium disabled'>{t('Sending...')}</a>
       cancelButton = null
-    } else if (this.state.phoneNumber.trim().length != 0 &&
+    } else if (isValidPhoneNumber &&
       mode != '' &&
       this.state.channelId != '' &&
       this.state.channelOptions.length > 1) {
