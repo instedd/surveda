@@ -406,12 +406,11 @@ defmodule Ask.SurveyController do
   end
 
   def simulation_status(conn, %{"project_id" => project_id, "survey_id" => survey_id}) do
-    project = conn
+    survey = conn
     |> load_project(project_id)
-
-    survey = project
     |> assoc(:surveys)
-    |> Repo.get!(survey_id, simulation: true)
+    |> where([s], s.simulation)
+    |> Repo.get!(survey_id)
 
     # The simulation has only one respondent
     respondent = Repo.one!(from r in Respondent,
@@ -464,7 +463,8 @@ defmodule Ask.SurveyController do
 
     survey = project
     |> assoc(:surveys)
-    |> Repo.get!(survey_id, simulation: true)
+    |> where([s], s.simulation)
+    |> Repo.get!(survey_id)
 
     questionnaire = survey
     |> assoc(:questionnaires)

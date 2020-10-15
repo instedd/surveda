@@ -574,6 +574,86 @@ defmodule Ask.SurveyControllerTest do
     end
   end
 
+  describe "stop simulation" do
+    setup %{conn: conn, user: user} do
+      create_running_survey = fn simulation ->
+        [survey, _group, _test_channel, _respondent, _phone_number] =
+          create_running_survey_with_channel_and_respondent_with_options(user: user, simulation: simulation)
+        %{survey: survey}
+      end
+
+      stop_simulation = fn survey ->
+        post(
+          conn,
+          project_survey_survey_path(
+            conn,
+            :stop_simulation,
+            survey.project,
+            survey
+          )
+        )
+      end
+
+      {:ok,
+        create_running_survey: create_running_survey,
+        stop_simulation: stop_simulation
+      }
+    end
+
+    test "limits endpoint for survey simulations only", %{
+      create_running_survey: create_running_survey,
+      stop_simulation: stop_simulation
+    } do
+      simulation = false
+      %{survey: survey} = create_running_survey.(simulation)
+
+      assert_error_sent :not_found, fn ->
+        stop_simulation.(survey)
+      end
+    end
+
+  end
+
+  describe "simulation status" do
+    setup %{conn: conn, user: user} do
+      create_running_survey = fn simulation ->
+        [survey, _group, _test_channel, _respondent, _phone_number] =
+          create_running_survey_with_channel_and_respondent_with_options(user: user, simulation: simulation)
+        %{survey: survey}
+      end
+
+      get_simulation_status = fn survey ->
+        get(
+          conn,
+          project_survey_survey_path(
+            conn,
+            :simulation_status,
+            survey.project,
+            survey
+          )
+        )
+      end
+
+      {:ok,
+        create_running_survey: create_running_survey,
+        get_simulation_status: get_simulation_status
+      }
+    end
+
+    test "limits endpoint for survey simulations only", %{
+      create_running_survey: create_running_survey,
+      get_simulation_status: get_simulation_status
+    } do
+      simulation = false
+      %{survey: survey} = create_running_survey.(simulation)
+
+      assert_error_sent :not_found, fn ->
+        get_simulation_status.(survey)
+      end
+    end
+
+  end
+
   describe "simulation initial state" do
     setup %{conn: conn, user: user} do
       create_running_survey = fn (mode, simulation) ->
@@ -616,7 +696,7 @@ defmodule Ask.SurveyControllerTest do
       }
     end
 
-    test "Endpont limited only for simulations", %{
+    test "limits endpoint for survey simulations only", %{
       create_running_survey: create_running_survey,
       get_simulation_initial_state: get_simulation_initial_state
     } do
