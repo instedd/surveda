@@ -578,7 +578,11 @@ defmodule Ask.SurveyControllerTest do
     setup %{conn: conn, user: user} do
       create_running_survey = fn simulation ->
         [survey, _group, _test_channel, _respondent, _phone_number] =
-          create_running_survey_with_channel_and_respondent_with_options(user: user, simulation: simulation)
+          create_running_survey_with_channel_and_respondent_with_options(
+            user: user,
+            simulation: simulation
+          )
+
         %{survey: survey}
       end
 
@@ -594,10 +598,7 @@ defmodule Ask.SurveyControllerTest do
         )
       end
 
-      {:ok,
-        create_running_survey: create_running_survey,
-        stop_simulation: stop_simulation
-      }
+      {:ok, create_running_survey: create_running_survey, stop_simulation: stop_simulation}
     end
 
     test "limits endpoint for survey simulations only", %{
@@ -607,18 +608,21 @@ defmodule Ask.SurveyControllerTest do
       simulation = false
       %{survey: survey} = create_running_survey.(simulation)
 
-      assert_error_sent :not_found, fn ->
+      assert_error_sent(:not_found, fn ->
         stop_simulation.(survey)
-      end
+      end)
     end
-
   end
 
   describe "simulation status" do
     setup %{conn: conn, user: user} do
       create_running_survey = fn simulation ->
         [survey, _group, _test_channel, _respondent, _phone_number] =
-          create_running_survey_with_channel_and_respondent_with_options(user: user, simulation: simulation)
+          create_running_survey_with_channel_and_respondent_with_options(
+            user: user,
+            simulation: simulation
+          )
+
         %{survey: survey}
       end
 
@@ -635,9 +639,7 @@ defmodule Ask.SurveyControllerTest do
       end
 
       {:ok,
-        create_running_survey: create_running_survey,
-        get_simulation_status: get_simulation_status
-      }
+       create_running_survey: create_running_survey, get_simulation_status: get_simulation_status}
     end
 
     test "limits endpoint for survey simulations only", %{
@@ -647,18 +649,22 @@ defmodule Ask.SurveyControllerTest do
       simulation = false
       %{survey: survey} = create_running_survey.(simulation)
 
-      assert_error_sent :not_found, fn ->
+      assert_error_sent(:not_found, fn ->
         get_simulation_status.(survey)
-      end
+      end)
     end
-
   end
 
   describe "simulation initial state" do
     setup %{conn: conn, user: user} do
-      create_running_survey = fn (mode, simulation) ->
+      create_running_survey = fn mode, simulation ->
         [survey, _group, _test_channel, respondent, _phone_number] =
-          create_running_survey_with_channel_and_respondent_with_options(user: user, mode: mode, simulation: simulation)
+          create_running_survey_with_channel_and_respondent_with_options(
+            user: user,
+            mode: mode,
+            simulation: simulation
+          )
+
         %{survey: survey, respondent_id: respondent.id}
       end
 
@@ -692,8 +698,7 @@ defmodule Ask.SurveyControllerTest do
        create_running_survey: create_running_survey,
        get_simulation_initial_state: get_simulation_initial_state,
        poll_survey: poll_survey,
-       mobile_contact_messages: mobile_contact_messages
-      }
+       mobile_contact_messages: mobile_contact_messages}
     end
 
     test "limits endpoint for survey simulations only", %{
@@ -703,9 +708,9 @@ defmodule Ask.SurveyControllerTest do
       [mode, simulation] = ["sms", false]
       %{survey: survey} = create_running_survey.(mode, simulation)
 
-      assert_error_sent :not_found, fn ->
+      assert_error_sent(:not_found, fn ->
         get_simulation_initial_state.(survey, mode)
-      end
+      end)
     end
 
     test "SMS return an empty map", %{
