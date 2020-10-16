@@ -406,12 +406,11 @@ defmodule Ask.SurveyController do
   end
 
   def simulation_status(conn, %{"project_id" => project_id, "survey_id" => survey_id}) do
-    project = conn
+    survey = conn
     |> load_project(project_id)
-
-    survey = project
     |> assoc(:surveys)
-    |> Repo.get!(survey_id, simulation: true)
+    |> where([s], s.simulation)
+    |> Repo.get!(survey_id)
 
     # The simulation has only one respondent
     respondent = Repo.one!(from r in Respondent,
@@ -464,7 +463,8 @@ defmodule Ask.SurveyController do
 
     survey = project
     |> assoc(:surveys)
-    |> Repo.get!(survey_id, simulation: true)
+    |> where([s], s.simulation)
+    |> Repo.get!(survey_id)
 
     questionnaire = survey
     |> assoc(:questionnaires)
@@ -738,17 +738,19 @@ defmodule Ask.SurveyController do
     end
   end
 
-  def simulation_initial_state(conn, %{"project_id" => project_id, "survey_id" => survey_id, "mode" => "mobileweb"}) do
-    project = conn
-    |> load_project(project_id)
-
-    survey = project
+  def simulation_initial_state(conn, %{"project_id" => project_id, "survey_id" => survey_id, "mode" => mode}) do
+    survey = load_project(conn, project_id)
     |> assoc(:surveys)
-    |> Repo.get!(survey_id, simulation: true)
+    |> where([s], s.simulation)
+    |> Repo.get!(survey_id)
 
+    render_initial_state(conn, survey.id, mode)
+  end
+
+  defp render_initial_state(conn, survey_id, "mobileweb" = _mode) do
     # The simulation has only one respondent
     respondent = Repo.one!(from r in Respondent,
-      where: r.survey_id == ^survey.id)
+    where: r.survey_id == ^survey_id)
 
     response = if (respondent.session) do
       session = Session.load_respondent_session(respondent, true)
@@ -766,11 +768,7 @@ defmodule Ask.SurveyController do
     response
   end
 
-  def simulation_initial_state(conn, %{"project_id" => project_id, "survey_id" => survey_id}) do
-    load_project(conn, project_id)
-    |> assoc(:surveys)
-    |> Repo.get!(survey_id, simulation: true)
-
+  defp render_initial_state(conn, _survey_id, _mode) do
     json(conn, %{"data" => %{}})
   end
 

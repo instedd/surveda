@@ -40,6 +40,7 @@ defmodule Ask.TestHelpers do
         schedule = Keyword.get(options, :schedule, Ask.Schedule.always())
         fallback_delay = Keyword.get(options, :fallback_delay, "10m")
         user = Keyword.get(options, :user, nil)
+        simulation = Keyword.get(options, :simulation, false)
 
         project = if (user), do: create_project_for_user(user), else: nil
         test_channel = Ask.TestChannel.new(false, mode == "sms")
@@ -51,7 +52,7 @@ defmodule Ask.TestHelpers do
 
         channel = insert(:channel, settings: test_channel |> Ask.TestChannel.settings, type: channel_type)
         quiz = insert(:questionnaire, steps: steps, quota_completed_steps: nil)
-        survey = %{schedule: schedule, state: "running", questionnaires: [quiz], mode: [[mode]], fallback_delay: fallback_delay}
+        survey = %{schedule: schedule, state: "running", questionnaires: [quiz], mode: [[mode]], fallback_delay: fallback_delay, simulation: simulation}
         survey = if (project), do: Map.put(survey, :project, project), else: survey
         survey = insert(:survey, survey)
         group = insert(:respondent_group, survey: survey, respondents_count: 1) |> Ask.Repo.preload(:channels)
