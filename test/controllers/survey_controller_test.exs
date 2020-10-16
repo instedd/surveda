@@ -577,7 +577,7 @@ defmodule Ask.SurveyControllerTest do
   describe "stop simulation" do
     setup %{conn: conn, user: user} do
       create_running_survey = fn simulation ->
-        [survey, _group, _test_channel, _respondent, _phone_number] =
+        [survey | _tail] =
           create_running_survey_with_channel_and_respondent_with_options(
             user: user,
             simulation: simulation
@@ -617,7 +617,7 @@ defmodule Ask.SurveyControllerTest do
   describe "simulation status" do
     setup %{conn: conn, user: user} do
       create_running_survey = fn simulation ->
-        [survey, _group, _test_channel, _respondent, _phone_number] =
+        [survey | _tail] =
           create_running_survey_with_channel_and_respondent_with_options(
             user: user,
             simulation: simulation
@@ -705,7 +705,7 @@ defmodule Ask.SurveyControllerTest do
       create_running_survey: create_running_survey,
       get_simulation_initial_state: get_simulation_initial_state
     } do
-      [mode, simulation] = ["sms", false]
+      {mode, simulation} = {"sms", false}
       %{survey: survey} = create_running_survey.(mode, simulation)
 
       assert_error_sent(:not_found, fn ->
@@ -717,7 +717,7 @@ defmodule Ask.SurveyControllerTest do
       create_running_survey: create_running_survey,
       get_simulation_initial_state: get_simulation_initial_state
     } do
-      [mode, simulation] = ["sms", true]
+      {mode, simulation} = {"sms", true}
       %{survey: survey} = create_running_survey.(mode, simulation)
 
       conn = get_simulation_initial_state.(survey, mode)
@@ -729,7 +729,7 @@ defmodule Ask.SurveyControllerTest do
       create_running_survey: create_running_survey,
       get_simulation_initial_state: get_simulation_initial_state
     } do
-      [mode, simulation] = ["ivr", true]
+      {mode, simulation} = {"ivr", true}
       %{survey: survey} = create_running_survey.(mode, simulation)
 
       conn = get_simulation_initial_state.(survey, mode)
@@ -741,7 +741,7 @@ defmodule Ask.SurveyControllerTest do
       create_running_survey: create_running_survey,
       get_simulation_initial_state: get_simulation_initial_state
     } do
-      [mode, simulation] = ["mobileweb", true]
+      {mode, simulation} = {"mobileweb", true}
       %{survey: survey} = create_running_survey.(mode, simulation)
 
       conn = get_simulation_initial_state.(survey, mode)
@@ -756,7 +756,7 @@ defmodule Ask.SurveyControllerTest do
       poll_survey: poll_survey,
       get_simulation_initial_state: get_simulation_initial_state
     } do
-      [mode, simulation] = ["mobileweb", true]
+      {mode, simulation} = {"mobileweb", true}
       %{survey: survey, respondent_id: respondent_id} = create_running_survey.(mode, simulation)
       poll_survey.()
 
