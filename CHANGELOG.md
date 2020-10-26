@@ -1,5 +1,19 @@
 # InSTEDD Surveda Changelog
 
+## 0.29.0
+
+### Features
+
+* Archive questionnaires. [#1778](https://github.com/instedd/surveda/pull/1778), [#1771](https://github.com/instedd/surveda/issues/1771)
+* Enable mobile-web simulator to be used directly in browser. [#1787](https://github.com/instedd/surveda/pull/1787), [#1785](https://github.com/instedd/surveda/issues/1785)
+* Add autocomplete to mobile-web question prompt. [#1782](https://github.com/instedd/surveda/pull/1782), [#1095](https://github.com/instedd/surveda/issues/1095)
+
+### Bugfixes
+
+* Show no surveys message when the project is empty. [#1783](https://github.com/instedd/surveda/pull/1783)
+* Ensure attempts are at least every 10m. [#1781](https://github.com/instedd/surveda/pull/1781), [#570](https://github.com/instedd/surveda/issues/570)
+* Enforce that simulated surveys APIs operate only with simulated surveys. [#1792](https://github.com/instedd/surveda/pull/1792)
+
 ## 0.28.0
 
 ### Features
