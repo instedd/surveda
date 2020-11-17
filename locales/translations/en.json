@@ -15,6 +15,7 @@
     "{{groupName}} ({{count}} contact)_plural": "{{groupName}} ({{count}} contacts)",
     "An invalid entry was found at line {{lineNumbers}}_plural": "Invalid entries were found at lines {{lineNumbers}}",
     "and {{count}} more._plural": "and {{count}} more.",
+    "Channels <1><0>{{names}}<\/0><\/1> down <3><\/3>": "Channels <1><0>{{names}}<\/0><\/1> down <3><\/3>",
     "CSV uploaded successfully! {{count}} key was updated_plural": "CSV uploaded successfully! {{count}} keys were updated",
     "for {{count}} day_plural": "for {{count}} days",
     "for {{count}} hour_plural": "for {{count}} hours",
