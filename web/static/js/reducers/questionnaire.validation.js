@@ -446,7 +446,7 @@ const validatePartialRelevantMinRelevantSteps = (data: Questionnaire, context: V
     if (!minRelevantSteps) {
       addError(context, 'partialRelevant.minRelevantSteps', k('Min relevant steps must not be blank'))
     } else if (minRelevantSteps > relevantStepsQuantity) {
-      addError(context, 'partialRelevant.minRelevantSteps', k('Min relevant steps must not be greater than the total amount of relevant questions'))
+      addError(context, 'partialRelevant.minRelevantSteps', k('Min relevant steps must not be greater than the total amount of relevant steps'))
     }
   }
 }

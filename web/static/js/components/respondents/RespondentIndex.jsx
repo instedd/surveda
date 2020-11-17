@@ -360,7 +360,7 @@ class RespondentIndex extends Component<Props, State> {
         return render({
           title: t('Filtered survey results'),
           description: t(
-            '{{totalCount}} respondents resulting of applying the current filter: {{filter}}',
+            '{{totalCount}} respondents resulting from applying the current filter: {{filter}}',
             { totalCount, filter }
           ),
           downloadLink: null,
