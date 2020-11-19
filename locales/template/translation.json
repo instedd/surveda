@@ -224,7 +224,7 @@
   "Messages": "",
   "Min Relevant Steps": "",
   "Min relevant steps must not be blank": "",
-  "Min relevant steps must not be greater than the total amount of relevant questions": "",
+  "Min relevant steps must not be greater than the total amount of relevant steps": "",
   "Min value": "",
   "Min value must be less than or equal to the first delimiter ({{first}})": "",
   "Mobile Web": "",
@@ -577,5 +577,5 @@
   "{{percentage}}% of target completed": "",
   "{{role}} (invited)": "",
   "{{startIndex}}-{{endIndex}} of {{totalCount}}": "",
-  "{{totalCount}} respondents resulting of applying the current filter: {{filter}}": ""
+  "{{totalCount}} respondents resulting from applying the current filter: {{filter}}": ""
 }
