@@ -41,9 +41,11 @@ defmodule Ask.SurveyController do
     render(conn, "index.json", surveys: surveys)
   end
 
-  def create(conn, params = %{"folder_id" => folder_id}), do: create(conn, params, folder_id)
+  def create_panel_survey(conn, params), do: create(conn, params, true)
 
-  def create(conn, params = %{"project_id" => project_id}, folder_id  \\ nil) do
+  def create(conn, params = %{"project_id" => project_id}, is_panel_survey \\ false) do
+    folder_id = Map.get(params, "folder_id")
+
     project = conn
     |> load_project_for_change(project_id)
     |> validate_project_not_archived(conn)
@@ -62,7 +64,17 @@ defmodule Ask.SurveyController do
 
     multi = Multi.new
     |> Multi.insert(:survey, changeset)
-    |> Multi.run(:log, fn %{survey: survey} ->
+
+    multi = if is_panel_survey do
+      Multi.run(multi, :panel_survey, fn %{survey: survey} ->
+        Survey.changeset(survey, %{panel_survey_of: survey.id, latest_panel_survey: true})
+        |> Repo.update
+      end)
+    else
+      multi
+    end
+
+    multi = multi |> Multi.run(:log, fn %{survey: survey} ->
       ActivityLog.create_survey(project, conn, survey) |> Repo.insert
     end)
     |> Repo.transaction
