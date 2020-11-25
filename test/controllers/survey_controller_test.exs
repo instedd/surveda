@@ -939,7 +939,7 @@ defmodule Ask.SurveyControllerTest do
     test "creates a panel survey", %{conn: conn, user: user} do
       project = create_project_for_user(user)
 
-      conn = post conn, project_survey_path(conn, :create_panel_survey, project.id)
+      conn = post conn, project_survey_path(conn, :create, project.id, is_panel_survey: true)
 
       survey_id = json_response(conn, 201)["data"]["id"]
       assert survey_id

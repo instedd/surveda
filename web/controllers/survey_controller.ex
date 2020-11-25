@@ -41,10 +41,9 @@ defmodule Ask.SurveyController do
     render(conn, "index.json", surveys: surveys)
   end
 
-  def create_panel_survey(conn, params), do: create(conn, params, true)
-
-  def create(conn, params = %{"project_id" => project_id}, is_panel_survey \\ false) do
+  def create(conn, params = %{"project_id" => project_id}) do
     folder_id = Map.get(params, "folder_id")
+    is_panel_survey = Map.get(params, "is_panel_survey")
 
     project = conn
     |> load_project_for_change(project_id)
