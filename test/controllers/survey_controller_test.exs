@@ -936,38 +936,6 @@ defmodule Ask.SurveyControllerTest do
       assert project_id == project.id
     end
 
-    test "creates a panel survey", %{conn: conn, user: user} do
-      project = create_project_for_user(user)
-
-      conn = post conn, project_survey_path(conn, :create, project.id, is_panel_survey: true)
-
-      survey_id = json_response(conn, 201)["data"]["id"]
-      assert survey_id
-      survey = Survey |> preload(:panel_survey_of_survey) |> Repo.get(survey_id)
-      assert survey
-
-      %{panel_survey_of_survey: panel_survey_of_survey, latest_panel_survey: latest_panel_survey, project_id: project_id} = survey
-      assert project_id == project.id
-      assert latest_panel_survey == true
-      assert panel_survey_of_survey.id == survey.id
-    end
-
-    test "creates a regular survey", %{conn: conn, user: user} do
-      project = create_project_for_user(user)
-
-      conn = post conn, project_survey_path(conn, :create, project.id)
-
-      survey_id = json_response(conn, 201)["data"]["id"]
-      assert survey_id
-      survey = Survey |> preload(:panel_survey_of_survey) |> Repo.get(survey_id)
-      assert survey
-
-      %{panel_survey_of_survey: panel_survey_of_survey, latest_panel_survey: latest_panel_survey, project_id: project_id} = survey
-      assert project_id == project.id
-      assert latest_panel_survey == false
-      refute panel_survey_of_survey
-    end
-
     test "forbids creation of survey for a project that belongs to another user", %{conn: conn} do
       project = insert(:project)
 
@@ -2533,6 +2501,40 @@ defmodule Ask.SurveyControllerTest do
       log = ActivityLog |> Repo.one!()
 
       assert_survey_log(%{log: log, user: user, project: project, survey: survey, action: "unlock", remote_ip: "192.168.0.128", metadata: %{"survey_name" => survey.name}})
+    end
+  end
+
+  describe "panel surveys" do
+    test "creates a panel survey", %{conn: conn, user: user} do
+      project = create_project_for_user(user)
+
+      conn = post conn, project_survey_path(conn, :create, project.id, is_panel_survey: true)
+
+      survey_id = json_response(conn, 201)["data"]["id"]
+      assert survey_id
+      survey = Survey |> preload(:panel_survey_of_survey) |> Repo.get(survey_id)
+      assert survey
+
+      %{panel_survey_of_survey: panel_survey_of_survey, latest_panel_survey: latest_panel_survey, project_id: project_id} = survey
+      assert project_id == project.id
+      assert latest_panel_survey == true
+      assert panel_survey_of_survey.id == survey.id
+    end
+
+    test "creates a regular survey", %{conn: conn, user: user} do
+      project = create_project_for_user(user)
+
+      conn = post conn, project_survey_path(conn, :create, project.id)
+
+      survey_id = json_response(conn, 201)["data"]["id"]
+      assert survey_id
+      survey = Survey |> preload(:panel_survey_of_survey) |> Repo.get(survey_id)
+      assert survey
+
+      %{panel_survey_of_survey: panel_survey_of_survey, latest_panel_survey: latest_panel_survey, project_id: project_id} = survey
+      assert project_id == project.id
+      assert latest_panel_survey == false
+      refute panel_survey_of_survey
     end
   end
 
