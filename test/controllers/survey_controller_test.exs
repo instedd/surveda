@@ -179,7 +179,8 @@ defmodule Ask.SurveyControllerTest do
         "comparisons" => [],
         "next_schedule_time" => nil,
         "down_channels" => [],
-        "folder_id" => nil
+        "folder_id" => nil,
+        "is_panel_survey" => false
       }
     end
 
@@ -273,7 +274,8 @@ defmodule Ask.SurveyControllerTest do
         "comparisons" => [],
         "next_schedule_time" => nil,
         "down_channels" => [],
-        "folder_id" => nil
+        "folder_id" => nil,
+        "is_panel_survey" => false
       }
     end
 
@@ -341,7 +343,8 @@ defmodule Ask.SurveyControllerTest do
         "comparisons" => [],
         "next_schedule_time" => nil,
         "down_channels" => [],
-        "folder_id" => nil
+        "folder_id" => nil,
+        "is_panel_survey" => false
       }
     end
 
@@ -401,7 +404,8 @@ defmodule Ask.SurveyControllerTest do
         "comparisons" => [],
         "next_schedule_time" => nil,
         "down_channels" => [],
-        "folder_id" => nil
+        "folder_id" => nil,
+        "is_panel_survey" => false
       }
     end
 
@@ -2505,36 +2509,55 @@ defmodule Ask.SurveyControllerTest do
   end
 
   describe "panel surveys" do
-    test "creates a panel survey", %{conn: conn, user: user} do
+    setup %{user: user} do
       project = create_project_for_user(user)
-
-      conn = post conn, project_survey_path(conn, :create, project.id, is_panel_survey: true)
-
-      survey_id = json_response(conn, 201)["data"]["id"]
-      assert survey_id
-      survey = Survey |> preload(:panel_survey_of_survey) |> Repo.get(survey_id)
-      assert survey
-
-      %{panel_survey_of_survey: panel_survey_of_survey, latest_panel_survey: latest_panel_survey, project_id: project_id} = survey
-      assert project_id == project.id
-      assert latest_panel_survey == true
-      assert panel_survey_of_survey.id == survey.id
+      %{project: project}
     end
 
-    test "creates a regular survey", %{conn: conn, user: user} do
-      project = create_project_for_user(user)
+    test "shows a panel survey", %{conn: conn, project: project} do
+      survey = insert(:survey, project: project)
+      survey = Survey.changeset(survey, %{panel_survey_of: survey.id}) |> Repo.update!()
 
-      conn = post conn, project_survey_path(conn, :create, project.id)
+      conn = get(conn, project_survey_path(conn, :show, project, survey))
 
-      survey_id = json_response(conn, 201)["data"]["id"]
-      assert survey_id
-      survey = Survey |> preload(:panel_survey_of_survey) |> Repo.get(survey_id)
-      assert survey
+      assert json_response(conn, 200)["data"]["is_panel_survey"] == true
+    end
 
-      %{panel_survey_of_survey: panel_survey_of_survey, latest_panel_survey: latest_panel_survey, project_id: project_id} = survey
-      assert project_id == project.id
-      assert latest_panel_survey == false
-      refute panel_survey_of_survey
+    test "shows a regular survey", %{conn: conn, project: project} do
+      survey = insert(:survey, project: project)
+
+      conn = get(conn, project_survey_path(conn, :show, project, survey))
+
+      assert json_response(conn, 200)["data"]["is_panel_survey"] == false
+    end
+
+    test "sets up a panel survey", %{conn: conn, project: project} do
+      survey = insert(:survey, project: project)
+
+      conn =
+        put(conn, project_survey_path(conn, :update, project, survey),
+          survey: %{is_panel_survey: true}
+        )
+
+      survey = Repo.get!(Survey, survey.id)
+      assert json_response(conn, 200)["data"]["is_panel_survey"] == true
+      assert survey.panel_survey_of == survey.id
+      assert survey.latest_panel_survey == true
+    end
+
+    test "sets up a regular survey", %{conn: conn, project: project} do
+      survey = insert(:survey, project: project)
+      survey = Survey.changeset(survey, %{panel_survey_of: survey.id}) |> Repo.update!()
+
+      conn =
+        put(conn, project_survey_path(conn, :update, project, survey),
+          survey: %{is_panel_survey: false}
+        )
+
+      survey = Repo.get!(Survey, survey.id)
+      assert json_response(conn, 200)["data"]["is_panel_survey"] == false
+      assert survey.panel_survey_of == nil
+      assert survey.latest_panel_survey == false
     end
   end
 

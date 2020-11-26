@@ -43,7 +43,6 @@ defmodule Ask.SurveyController do
 
   def create(conn, params = %{"project_id" => project_id}) do
     folder_id = Map.get(params, "folder_id")
-    is_panel_survey = Map.get(params, "is_panel_survey")
 
     project = conn
     |> load_project_for_change(project_id)
@@ -63,17 +62,7 @@ defmodule Ask.SurveyController do
 
     multi = Multi.new
     |> Multi.insert(:survey, changeset)
-
-    multi = if is_panel_survey do
-      Multi.run(multi, :panel_survey, fn %{survey: survey} ->
-        Survey.changeset(survey, %{panel_survey_of: survey.id, latest_panel_survey: true})
-        |> Repo.update
-      end)
-    else
-      multi
-    end
-
-    multi = multi |> Multi.run(:log, fn %{survey: survey} ->
+    |> Multi.run(:log, fn %{survey: survey} ->
       ActivityLog.create_survey(project, conn, survey) |> Repo.insert
     end)
     |> Repo.transaction
@@ -136,6 +125,16 @@ defmodule Ask.SurveyController do
     survey = project
       |> assoc(:surveys)
       |> Repo.get!(id)
+
+    # Preserve the UI from handling the panel survey implementation details
+    {is_panel_survey_param, survey_params} = Map.pop(survey_params, "is_panel_survey")
+
+    survey_params =
+      if is_panel_survey_param do
+        Map.merge(survey_params, %{"panel_survey_of" => id, "latest_panel_survey" => true})
+      else
+        Map.merge(survey_params, %{"panel_survey_of" => nil, "latest_panel_survey" => false})
+      end
 
     if survey |> Survey.editable? do
       changeset = survey
