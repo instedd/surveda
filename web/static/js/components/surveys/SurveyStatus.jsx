@@ -90,13 +90,14 @@ class SurveyStatus extends PureComponent {
   }
 
   surveyRanDescription(survey) {
+    const { t } = this.props
     const formatDate = dateStr => dateformat(dateStr, 'yyyy-mm-dd')
     let startDate = formatDate(survey.startedAt)
     let endDate = formatDate(survey.endedAt)
     if (startDate === endDate) {
-      return `Ran only on ${startDate}`
+      return t('Ran only on {{startDate}}', {startDate})
     }
-    return `Ran from ${startDate} to ${endDate}`
+    return t('Ran from {{startDate}} to {{endDate}}',{startDate,endDate})
   }
 
   render() {

@@ -49,7 +49,7 @@ export const RespondentsList = translate()(({ survey, group, add, remove, channe
             <table className='ncdtable'>
               <thead>
                 <tr>
-                  <th>Channels</th>
+                  <th>{t('Channels')}</th>
                 </tr>
               </thead>
               <tbody>

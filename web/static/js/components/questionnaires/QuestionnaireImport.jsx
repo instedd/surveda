@@ -50,7 +50,7 @@ class QuestionnaireImport extends Component {
         </h5>
         <br />
         <a href='#!' onClick={this.onCancel} className='btn-large red'>
-          Cancel
+          { t('Cancel')}
         </a>
       </div>
     )
