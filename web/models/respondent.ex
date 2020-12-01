@@ -46,9 +46,9 @@ defmodule Ask.Respondent do
     # It may seem it represents a single mode when there is no fallback mode. But it doesn't.
     # This is why it's always represented as an array, having or not having a fallback mode.
     # Examples:
-    # * ["sms"]
-    # * ["ivr", "mobileweb"]
-    # * ["mobileweb", "ivr"]
+    # * ["sms"] -> SMS as primary mode, no fallback mode
+    # * ["ivr", "mobileweb"] -> IVR as primary mode, Mobileweb as fallback mode
+    # * ["mobileweb", "ivr"] -> Mobileweb as primary mode, IVR as fallback mode
     field :mode, JSON
     field :effective_modes, JSON
     field :mobile_web_cookie_code, :string

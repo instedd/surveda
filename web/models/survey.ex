@@ -38,9 +38,11 @@ defmodule Ask.Survey do
     # But it doesn't. This is why it's always represented as a two dimensional array,
     # having or not having comparisions and fallback modes.
     # Examples:
-    # * [["sms"]]
-    # * [["ivr", "mobileweb]]
-    # * [["mobileweb", "ivr"], ["sms"]]
+    # * [["sms"]] -> SMS as primary mode, no fallback mode, no comparision
+    # * [["ivr", "mobileweb]] -> IVR as primary mode, Mobileweb as fallback mode, no comparision
+    # * [["mobileweb", "ivr"], ["sms"]] -> 2 comparisions:
+    #   * 1st mode sequence: Mobileweb as primary mode, IVR as fallback mode
+    #   * 2nd mode sequence: SMS as primary mode, no fallback mode
     field :mode, JSON
     field :state, :string, default: "not_ready" # not_ready, ready, pending, running, terminated
     field :locked, :boolean, default: false
