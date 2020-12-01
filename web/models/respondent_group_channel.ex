@@ -4,6 +4,10 @@ defmodule Ask.RespondentGroupChannel do
   schema "respondent_group_channels" do
     belongs_to :respondent_group, Ask.RespondentGroup
     belongs_to :channel, Ask.Channel
+    # valid modes are:
+    # * "sms"
+    # * "ivr"
+    # * "mobileweb"
     field :mode, :string
 
     timestamps()

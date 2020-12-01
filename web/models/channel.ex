@@ -6,6 +6,9 @@ defmodule Ask.Channel do
 
   schema "channels" do
     field :name, :string
+    # valid types are:
+    # * "sms"
+    # * "ivr"
     field :type, :string
     field :provider, :string
     field :base_url, :string
