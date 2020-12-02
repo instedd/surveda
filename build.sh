@@ -13,6 +13,7 @@ docker-compose run --rm app mix deps.get
 docker-compose run --rm app mix run --no-compile --no-start -e 'File.write! "VERSION", Mix.Project.config[:version]'
 
 # Build assets
+docker-compose run --rm webpack yarn install --no-progress
 docker-compose run --rm webpack yarn deploy
 
 # Build and push the Docker image
