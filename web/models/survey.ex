@@ -554,7 +554,7 @@ defmodule Ask.Survey do
 
   def successful_respondents(quota_completed, _, _), do: quota_completed |> Decimal.to_integer
 
-  def is_panel_survey(%{panel_survey_of: panel_survey_of}), do: !!panel_survey_of
+  def panel_survey?(%{panel_survey_of: panel_survey_of}), do: !!panel_survey_of
 
   defp exhausted_respondents(respondents_by_disposition, count_partial_results) do
     disposition_filter = Respondent.metrics_final_dispositions(count_partial_results)
@@ -589,6 +589,8 @@ defmodule Ask.Survey do
     Enum.any?(partial_relevant_configs, fn config -> Questionnaire.partial_relevant_enabled?(config) end)
   end
 
+  def succeeded?(survey), do: survey.state == "terminated" and survey.exit_code == 0
+
   defp partial_relevant_configs(survey, true = _persist),
     do:
       from(sq in SurveyQuestionnaire,
@@ -603,4 +605,13 @@ defmodule Ask.Survey do
     do:
       survey.questionnaires
       |> Enum.map(fn q -> q.partial_relevant_config end)
+
+  def update_questionnaires(changeset, questionnaire_ids) do
+    questionnaires_changeset = Enum.map(questionnaire_ids, fn questionnaire_id ->
+      Repo.get!(Questionnaire, questionnaire_id) |> change
+    end)
+
+    changeset
+    |> put_assoc(:questionnaires, questionnaires_changeset)
+  end
 end
