@@ -23,7 +23,7 @@ jobs:
           docker-compose run --rm webpack yarn eslint
 
   build:
-    needs: test
+    # needs: test
     runs-on: ubuntu-latest
     env:
       DOCKER_REPOSITORY: 'instedd/ask'
