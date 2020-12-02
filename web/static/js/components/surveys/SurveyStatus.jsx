@@ -97,7 +97,7 @@ class SurveyStatus extends PureComponent {
     if (startDate === endDate) {
       return t('Ran only on {{startDate}}', {startDate})
     }
-    return t('Ran from {{startDate}} to {{endDate}}',{startDate,endDate})
+    return t('Ran from {{startDate}} to {{endDate}}', {startDate, endDate})
   }
 
   render() {
