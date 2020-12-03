@@ -1,0 +1,36 @@
+name: CI
+
+on: [push, pull_request]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Set environment up
+        run: |
+          docker-compose build
+          docker-compose run --rm -e MIX_ENV=test app mix do deps.get, deps.compile
+          docker-compose run --rm webpack yarn install --no-progress
+
+      - name: Run specs
+        run: |
+          docker-compose run --rm -e MIX_ENV=test app mix do compile --warnings-as-errors, test
+          docker-compose run --rm webpack yarn test
+          docker-compose run --rm webpack yarn webpack
+          docker-compose run --rm webpack yarn flow check
+          docker-compose run --rm webpack yarn eslint
+
+  build:
+    needs: test
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    env:
+      DOCKER_REPOSITORY: 'instedd/ask'
+      DOCKER_USER: ${{ secrets.DOCKER_USER }}
+      DOCKER_PASS: ${{ secrets.DOCKER_PASS }}
+    steps:
+      - uses: actions/checkout@v2
+      - name: Build image & push to Docker Hub
+        run: ./build.sh
