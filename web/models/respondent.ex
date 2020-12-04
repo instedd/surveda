@@ -39,6 +39,16 @@ defmodule Ask.Respondent do
     field :completed_at, Timex.Ecto.DateTime # only when state=="pending"
     field :timeout_at, Timex.Ecto.DateTime
     field :session, JSON
+    # In Respondent model, "mode" field name should change in the future.
+    # This word is used a lot in Surveda, describing related (but different) things.
+    # Because here it describes a mode sequence, it could be named "mode_sequence".
+    # Each mode sequence is the combination of two differente modes: primary and fallback modes.
+    # It may seem it represents a single mode when there is no fallback mode. But it doesn't.
+    # This is why it's always represented as an array, having or not having a fallback mode.
+    # Examples:
+    # * ["sms"] -> SMS as primary mode, no fallback mode
+    # * ["ivr", "mobileweb"] -> IVR as primary mode, Mobileweb as fallback mode
+    # * ["mobileweb", "ivr"] -> Mobileweb as primary mode, IVR as fallback mode
     field :mode, JSON
     field :effective_modes, JSON
     field :mobile_web_cookie_code, :string
