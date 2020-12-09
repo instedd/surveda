@@ -121,18 +121,22 @@ defmodule Ask.Runtime.SurveyAction do
       survey
       |> Repo.preload([:project])
       |> Repo.preload([:questionnaires])
+      |> Repo.preload([:respondent_groups])
 
-    update_changeset = Survey.changeset(survey, %{latest_panel_survey: false})
+    current_occurrence = Survey.changeset(survey, %{latest_panel_survey: false})
 
     multi =
       Multi.new()
-      |> Multi.update(:update, update_changeset)
-      |> Multi.insert(:insert, PanelSurvey.new_ocurrence_changeset(survey))
+      |> Multi.update(:current_occurrence, current_occurrence)
+      |> Multi.insert(:new_occurrence, PanelSurvey.new_ocurrence_changeset(survey))
       |> Repo.transaction()
 
     case multi do
-      {:ok, %{insert: survey}} ->
-        {:ok, %{survey: survey}}
+      {:ok, %{new_occurrence: new_occurrence}} ->
+        new_occurrence =
+          PanelSurvey.copy_respondents(survey, new_occurrence)
+
+        {:ok, %{survey: new_occurrence}}
 
       {:error, _, changeset, _} ->
         {:error, %{changeset: changeset}}

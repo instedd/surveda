@@ -614,4 +614,13 @@ defmodule Ask.Survey do
     changeset
     |> put_assoc(:questionnaires, questionnaires_changeset)
   end
+
+  def update_respondent_groups(changeset, respondent_group_ids) do
+    respondent_groups_changeset = Enum.map(respondent_group_ids, fn respondent_group_id ->
+      Repo.get!(RespondentGroup, respondent_group_id) |> change
+    end)
+
+    changeset
+    |> put_assoc(:respondent_groups, respondent_groups_changeset)
+  end
 end
