@@ -1,0 +1,15 @@
+{
+  "name": "surveda_cypress",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "scripts": {
+    "cypress:run": "cypress run --headless",
+    "cypress:open": "cypress open"
+  },
+  "dependencies": {
+    "cypress": "^6.1.0",
+    "cypress-file-upload": "^4.1.1",
+    "route-parser": "^0.0.5"
+  }
+}
