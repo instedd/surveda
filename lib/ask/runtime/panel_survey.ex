@@ -1,6 +1,11 @@
 defmodule Ask.Runtime.PanelSurvey do
-  def new_ocurrence(survey) do
-    %{
+  alias Ask.Survey
+  def new_ocurrence_changeset(survey) do
+    survey =
+      survey
+      |> Repo.preload([:project])
+
+    new_ocurrence = %{
       # basic settings
       project_id: survey.project_id,
       folder_id: survey.folder_id,
@@ -22,5 +27,12 @@ defmodule Ask.Runtime.PanelSurvey do
       quota_vars: survey.quota_vars,
       quotas: survey.quotas
     }
+
+    questionnaire_ids = Enum.map(survey.questionnaires, fn q -> q.id end)
+
+    survey.project
+    |> Ecto.build_assoc(:surveys)
+    |> Survey.changeset(new_ocurrence)
+    |> Survey.update_questionnaires(questionnaire_ids)
   end
 end

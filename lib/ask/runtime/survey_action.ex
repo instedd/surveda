@@ -122,21 +122,12 @@ defmodule Ask.Runtime.SurveyAction do
       |> Repo.preload([:project])
       |> Repo.preload([:questionnaires])
 
-    new_ocurrence = PanelSurvey.new_ocurrence(survey)
-    questionnaire_ids = Enum.map(survey.questionnaires, fn q -> q.id end)
-
-    insert_changeset =
-      survey.project
-      |> Ecto.build_assoc(:surveys)
-      |> Survey.changeset(new_ocurrence)
-      |> Survey.update_questionnaires(questionnaire_ids)
-
     update_changeset = Survey.changeset(survey, %{latest_panel_survey: false})
 
     multi =
       Multi.new()
       |> Multi.update(:update, update_changeset)
-      |> Multi.insert(:insert, insert_changeset)
+      |> Multi.insert(:insert, PanelSurvey.new_ocurrence_changeset(survey))
       |> Repo.transaction()
 
     case multi do
