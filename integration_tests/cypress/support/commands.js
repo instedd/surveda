@@ -61,3 +61,12 @@ Cypress.Commands.add('clickTitleMenu', (title) => {
     cy.get(".title-options > a").click()
   })
 })
+
+Cypress.Commands.add('deleteProjectQuestionnaires', (projectId) => {
+  cy.request(`${Cypress.env('host')}/api/v1/projects/${projectId}/questionnaires?archived=false`)
+    .then((response) => {
+      for (const q of response.body.data) {
+        cy.request('DELETE', `${Cypress.env('host')}/api/v1/projects/${projectId}/questionnaires/${q.id}`)
+      }
+    })
+})

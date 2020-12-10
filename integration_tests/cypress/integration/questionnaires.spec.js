@@ -5,6 +5,7 @@ import { waitForUrl } from '../support/waitForUrl'
 describe('questionnaires', () => {
   beforeEach(() => {
     cy.loginGuisso(Cypress.env('email'), Cypress.env('password'))
+    cy.deleteProjectQuestionnaires(Cypress.env('project_id'))
   })
 
   it('can be created by importing questionnaire', () => {
