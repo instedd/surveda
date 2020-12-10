@@ -51,8 +51,14 @@ Cypress.Commands.add('visitSurveda', (url) => {
 })
 
 Cypress.Commands.add('clickMainAction', (title) => {
-  // TODO: Add better selector
-  cy.get(`main a.mtop[data-tooltip=${JSON.stringify(title)}]`).click();
+  // TODO: Add better selector.
+  //      Add questionnaire                                   Add survey
+  //                 v--- no i                                            v--- an i element
+  cy.get(`main a.mtop[data-tooltip=${JSON.stringify(title)}], main a.mtop i[data-tooltip=${JSON.stringify(title)}]`).click();
+})
+
+Cypress.Commands.add('clickMainActionOption', (title) => {
+  cy.get(`main button.mbottom i[data-tooltip=${JSON.stringify(title)}]`).click();
 })
 
 Cypress.Commands.add('clickTitleMenu', (title) => {
