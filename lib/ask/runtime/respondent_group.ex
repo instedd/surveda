@@ -30,7 +30,7 @@ defmodule Ask.Runtime.RespondentGroup do
   end
 
   def insert_respondents(phone_numbers, respondent_group) do
-    respondent_group = Repo.preload(respondent_group, [survey: :project])
+    respondent_group = Repo.preload(respondent_group, survey: :project)
 
     map_respondent = fn phone_number ->
       canonical_number = Respondent.canonicalize_phone_number(phone_number)
@@ -41,7 +41,8 @@ defmodule Ask.Runtime.RespondentGroup do
         canonical_phone_number: canonical_number,
         survey_id: respondent_group.survey_id,
         respondent_group_id: respondent_group.id,
-        hashed_number: Respondent.hash_phone_number(phone_number, respondent_group.survey.project.salt),
+        hashed_number:
+          Respondent.hash_phone_number(phone_number, respondent_group.survey.project.salt),
         disposition: "registered",
         stats: %Stats{},
         user_stopped: false,

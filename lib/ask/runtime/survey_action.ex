@@ -133,8 +133,7 @@ defmodule Ask.Runtime.SurveyAction do
 
     case multi do
       {:ok, %{new_occurrence: new_occurrence}} ->
-        new_occurrence =
-          PanelSurvey.copy_respondents(survey, new_occurrence)
+        new_occurrence = PanelSurvey.copy_respondents(survey, new_occurrence)
 
         {:ok, %{survey: new_occurrence}}
 
