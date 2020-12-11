@@ -348,7 +348,6 @@ defmodule Ask.SurveyController do
       render(conn, "show.json",
         survey:
           survey
-          |> Repo.preload(:questionnaires)
           |> Survey.with_links(user_level(survey.project_id, current_user(conn).id))
       )
 

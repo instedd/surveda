@@ -1,6 +1,7 @@
 defmodule Ask.SurveyView do
   import Ask.Router.Helpers
   alias Ask.Endpoint
+  alias Ask.Repo
   use Ask.Web, :view
 
   alias Ask.Survey
@@ -56,6 +57,11 @@ defmodule Ask.SurveyView do
     }
   end
   def render("survey_detail.json", %{survey: survey}) do
+    survey =
+      survey
+      |> Repo.preload(:questionnaires)
+      |> Repo.preload(:quota_buckets)
+
     map = %{id: survey.id,
       name: survey.name,
       description: survey.description,
@@ -122,9 +128,7 @@ defmodule Ask.SurveyView do
   defp format_date(date), do: if(date, do: date |> Timex.format!("%FT%T%:z", :strftime), else: nil)
 
   defp questionnaire_ids(survey = %Ask.Survey{}) do
-    (survey
-    |> Ask.Repo.preload(:questionnaires)).questionnaires
-    |> Enum.map(&(&1.id))
+    Enum.map(survey.questionnaires, &(&1.id))
   end
 
   defp next_schedule_time(survey) do
