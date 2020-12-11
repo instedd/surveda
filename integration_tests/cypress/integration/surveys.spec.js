@@ -7,7 +7,7 @@ describe('surveys', () => {
     // Create "Cipoletti 1" questionnaire
     const projectId = Cypress.env('project_id')
     cy.deleteProjectQuestionnaires(projectId)
-    cy.visitSurveda(`/projects/${projectId}/questionnaires`)
+    cy.visit(`/projects/${projectId}/questionnaires`)
     cy.clickMainAction('Add questionnaire')
     cy.waitForUrl(`/projects/:projectId/questionnaires/:questionnaireId/edit`).then(r => {
       const { questionnaireId } = r
@@ -20,7 +20,7 @@ describe('surveys', () => {
   it('can be created with existing questionnaire', () => {
     const projectId = Cypress.env('project_id')
 
-    cy.visitSurveda(`/projects/${projectId}/surveys`)
+    cy.visit(`/projects/${projectId}/surveys`)
     cy.clickMainAction('Add')
     cy.clickMainActionOption('Survey')
 

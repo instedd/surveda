@@ -7,7 +7,7 @@ describe('projects', () => {
 
   it('show surveys by default', () => {
     const projectId = Cypress.env('project_id')
-    cy.visitSurveda(`/projects/${projectId}`)
+    cy.visit(`/projects/${projectId}`)
 
     cy.url().should('include', `/projects/${projectId}/surveys`)
   })

@@ -44,11 +44,7 @@ Cypress.Commands.add('loginGuisso', (email, pwd) => {
 
   // go to root to force the login cookie in Surveda's side.
   // Otherwise, next visit will cause a redirect.
-  cy.visitSurveda(`/`)
-})
-
-Cypress.Commands.add('visitSurveda', (url) => {
-  cy.visit(Cypress.env('host') + url)
+  cy.visit(`/`)
 })
 
 Cypress.Commands.add('clickMainAction', (title) => {
@@ -70,10 +66,10 @@ Cypress.Commands.add('clickTitleMenu', (title) => {
 })
 
 Cypress.Commands.add('deleteProjectQuestionnaires', (projectId) => {
-  cy.request(`${Cypress.env('host')}/api/v1/projects/${projectId}/questionnaires?archived=false`)
+  cy.request(`/api/v1/projects/${projectId}/questionnaires?archived=false`)
     .then((response) => {
       for (const q of response.body.data) {
-        cy.request('DELETE', `${Cypress.env('host')}/api/v1/projects/${projectId}/questionnaires/${q.id}`)
+        cy.request('DELETE', `/api/v1/projects/${projectId}/questionnaires/${q.id}`)
       }
     })
 })

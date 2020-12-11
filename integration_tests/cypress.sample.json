@@ -1,6 +1,6 @@
 {
+  "baseUrl": "https://surveda-stg.instedd.org",
   "env": {
-    "host": "https://surveda-stg.instedd.org",
     "guisso_host": "https://login-stg.instedd.org",
     "email": "foo@bar.com",
     "password": "foobar",

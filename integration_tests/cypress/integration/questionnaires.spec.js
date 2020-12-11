@@ -8,7 +8,7 @@ describe('questionnaires', () => {
 
   it('can be created by importing questionnaire', () => {
     const projectId = Cypress.env('project_id')
-    cy.visitSurveda(`/projects/${projectId}/questionnaires`)
+    cy.visit(`/projects/${projectId}/questionnaires`)
     cy.clickMainAction('Add questionnaire')
 
     cy.waitForUrl(`/projects/:projectId/questionnaires/:questionnaireId/edit`).then(r => {
