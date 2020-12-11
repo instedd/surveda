@@ -25,6 +25,7 @@
 // Cypress.Commands.overwrite("visit", (originalFn, url, options) => { ... })
 
 import 'cypress-file-upload'
+import Route from 'route-parser'
 
 Cypress.Commands.add('loginGuisso', (email, pwd) => {
   cy.visit(Cypress.env('guisso_host'))
@@ -75,4 +76,17 @@ Cypress.Commands.add('deleteProjectQuestionnaires', (projectId) => {
         cy.request('DELETE', `${Cypress.env('host')}/api/v1/projects/${projectId}/questionnaires/${q.id}`)
       }
     })
+})
+
+Cypress.Commands.add('waitForUrl', (pattern) => {
+  let route = new Route(pattern)
+
+  return cy.location('pathname').should(pathname => {
+    let match = route.match(pathname)
+    expect(match).to.be.an('object')
+    return match
+  }).then(pathname => {
+    let match = route.match(pathname)
+    return match
+  })
 })

@@ -1,7 +1,5 @@
 /// <reference types="Cypress" />
 
-import { waitForUrl } from '../support/waitForUrl'
-
 describe('questionnaires', () => {
   beforeEach(() => {
     cy.loginGuisso(Cypress.env('email'), Cypress.env('password'))
@@ -13,7 +11,7 @@ describe('questionnaires', () => {
     cy.visitSurveda(`/projects/${projectId}/questionnaires`)
     cy.clickMainAction('Add questionnaire')
 
-    waitForUrl(`/projects/:projectId/questionnaires/:questionnaireId/edit`).then(r => {
+    cy.waitForUrl(`/projects/:projectId/questionnaires/:questionnaireId/edit`).then(r => {
       const { questionnaireId } = r
 
       cy.clickTitleMenu()

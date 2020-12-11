@@ -1,7 +1,5 @@
 /// <reference types="Cypress" />
 
-import { waitForUrl } from '../support/waitForUrl'
-
 describe('surveys', () => {
   beforeEach(() => {
     cy.loginGuisso(Cypress.env('email'), Cypress.env('password'))
@@ -11,7 +9,7 @@ describe('surveys', () => {
     cy.deleteProjectQuestionnaires(projectId)
     cy.visitSurveda(`/projects/${projectId}/questionnaires`)
     cy.clickMainAction('Add questionnaire')
-    waitForUrl(`/projects/:projectId/questionnaires/:questionnaireId/edit`).then(r => {
+    cy.waitForUrl(`/projects/:projectId/questionnaires/:questionnaireId/edit`).then(r => {
       const { questionnaireId } = r
       cy.clickTitleMenu()
       cy.contains('Import questionnaire').click()
@@ -26,7 +24,7 @@ describe('surveys', () => {
     cy.clickMainAction('Add')
     cy.clickMainActionOption('Survey')
 
-    waitForUrl(`/projects/:projectId/surveys/:surveyId/edit`).then(r => {
+    cy.waitForUrl(`/projects/:projectId/surveys/:surveyId/edit`).then(r => {
       const { surveyId } = r
 
       // Set up questionnaire
