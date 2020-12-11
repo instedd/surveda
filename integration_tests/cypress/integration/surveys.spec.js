@@ -19,6 +19,7 @@ describe('surveys', () => {
 
   it('can be created with existing questionnaire', () => {
     const projectId = Cypress.env('project_id')
+    const smsChannelId = Cypress.env('sms_channel_id')
 
     cy.visit(`/projects/${projectId}/surveys`)
     cy.clickMainAction('Add')
@@ -42,8 +43,10 @@ describe('surveys', () => {
 
       // Upload respondents
       cy.contains('Upload your respondents list').click()
-      cy.get('input[type="file"]').attachFile('respondents_sample.csv')
-
+      cy.get("#respondents").within(() => {
+        cy.get('input[type="file"]').attachFile('respondents_sample.csv')
+        cy.get('input.select-dropdown + * + select').select(smsChannelId, { force: true })
+      })
     })
   })
 })
