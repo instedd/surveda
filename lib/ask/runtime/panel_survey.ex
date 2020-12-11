@@ -3,7 +3,9 @@ defmodule Ask.Runtime.PanelSurvey do
   alias Ask.{Survey, Repo, Respondent, RespondentGroupChannel}
 
   def new_ocurrence_changeset(survey) do
+    unless Survey.panel_survey?(survey), do: raise("Only panel surveys can be repeated")
     unless survey.latest_panel_survey, do: raise("Only the latest occurrence can be repeated")
+    unless Survey.succeeded?(survey), do: raise("Only succeeded surveys can be repeated")
 
     survey =
       survey
