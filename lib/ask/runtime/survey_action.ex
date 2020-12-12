@@ -36,7 +36,7 @@ defmodule Ask.Runtime.SurveyAction do
   end
 
   def repeat(survey) do
-    if Survey.succeeded?(survey) and Survey.panel_survey?(survey) and survey.latest_panel_survey do
+    if Survey.repeatable?(survey) do
       case create_panel_survey_occurrence(survey) do
         {:ok, %{survey: new_occurrence}} ->
           start(new_occurrence, repetition?: true)
@@ -46,7 +46,7 @@ defmodule Ask.Runtime.SurveyAction do
       end
     else
       Logger.warn(
-        "Survey #{survey.id} can't be repeated because it isn't a panel survey, it isn't the latest occurrence or it didn't succeeded"
+        "Survey #{survey.id} isn't repeatable"
       )
 
       {:error, %{survey: survey}}

@@ -556,6 +556,8 @@ defmodule Ask.Survey do
 
   def panel_survey?(%{panel_survey_of: panel_survey_of}), do: !!panel_survey_of
 
+  def repeatable?(survey), do: terminated?(survey) and panel_survey?(survey) and survey.latest_panel_survey
+
   defp exhausted_respondents(respondents_by_disposition, count_partial_results) do
     disposition_filter = Respondent.metrics_final_dispositions(count_partial_results)
     sum_respondents_by_disposition_filter(respondents_by_disposition, disposition_filter)
@@ -589,7 +591,9 @@ defmodule Ask.Survey do
     Enum.any?(partial_relevant_configs, fn config -> Questionnaire.partial_relevant_enabled?(config) end)
   end
 
-  def succeeded?(survey), do: survey.state == "terminated" and survey.exit_code == 0
+  defp terminated?(survey), do: survey.state == "terminated"
+
+  def succeeded?(survey), do: terminated?(survey) and survey.exit_code == 0
 
   defp partial_relevant_configs(survey, true = _persist),
     do:
