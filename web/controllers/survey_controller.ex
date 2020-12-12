@@ -129,6 +129,8 @@ defmodule Ask.SurveyController do
 
     # Preserve the UI from handling the panel survey implementation details
     {is_panel_survey_param, survey_params} = Map.pop(survey_params, "is_panel_survey")
+    # "is_repeatable" is a read-only and calculated field
+    survey_params = Map.delete(survey_params, "is_repeatable")
 
     survey_params =
       if is_panel_survey_param do

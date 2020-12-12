@@ -332,6 +332,10 @@ export const stopSurvey = (projectId, surveyId) => {
   return apiPostJSON(`projects/${projectId}/surveys/${surveyId}/stop`, surveySchema)
 }
 
+export const repeatSurvey = (projectId, surveyId) => {
+  return apiPostJSON(`projects/${projectId}/surveys/${surveyId}/repeat`, surveySchema)
+}
+
 export const fetchTimezones = () => {
   return apiFetchJSONWithCallback(`timezones`, null, {}, (json, schema) => {
     return () => {
