@@ -47,6 +47,33 @@ describe('surveys', () => {
         cy.get('input[type="file"]').attachFile('respondents_sample.csv')
         cy.get('input.select-dropdown + * + select').select(smsChannelId, { force: true })
       })
+
+      // Setup schedule
+      cy.contains('Setup a schedule').click()
+      cy.get("#schedule").within(() => {
+        cy.get(':nth-child(3) > :nth-child(2) > .select-wrapper > input.select-dropdown')
+          .click()
+        cy.get('select').last().select('23:00:00', { force: true })
+        cy.get(':nth-child(2) > .btn-floating').click()
+        cy.get(':nth-child(3) > .btn-floating').click()
+        cy.get(':nth-child(4) > .btn-floating').click()
+        cy.get(':nth-child(5) > .btn-floating').click()
+        cy.get(':nth-child(6) > .btn-floating').click()
+      })
+
+      // Define quotas
+      cy.contains('Setup cutoff rules').click()
+      cy.get("#cutoff").within(() => {
+        cy.get('.quotas > :nth-child(1) > label').click()
+        cy.get(':nth-child(1) > .col > .right > label').click()
+        cy.contains('Done').click()
+        cy.get(':nth-child(1) > :nth-child(4) > .col > div > input')
+          .clear()
+          .type('10')
+      })
+
+      // Launch survey
+      cy.clickMainAction('Launch survey')
     })
   })
 })
