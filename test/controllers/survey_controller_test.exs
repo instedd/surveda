@@ -180,7 +180,8 @@ defmodule Ask.SurveyControllerTest do
         "next_schedule_time" => nil,
         "down_channels" => [],
         "folder_id" => nil,
-        "is_panel_survey" => false
+        "is_panel_survey" => false,
+        "is_repeatable" => false
       }
     end
 
@@ -275,7 +276,8 @@ defmodule Ask.SurveyControllerTest do
         "next_schedule_time" => nil,
         "down_channels" => [],
         "folder_id" => nil,
-        "is_panel_survey" => false
+        "is_panel_survey" => false,
+        "is_repeatable" => false
       }
     end
 
@@ -344,7 +346,8 @@ defmodule Ask.SurveyControllerTest do
         "next_schedule_time" => nil,
         "down_channels" => [],
         "folder_id" => nil,
-        "is_panel_survey" => false
+        "is_panel_survey" => false,
+        "is_repeatable" => false
       }
     end
 
@@ -405,7 +408,8 @@ defmodule Ask.SurveyControllerTest do
         "next_schedule_time" => nil,
         "down_channels" => [],
         "folder_id" => nil,
-        "is_panel_survey" => false
+        "is_panel_survey" => false,
+        "is_repeatable" => false
       }
     end
 
