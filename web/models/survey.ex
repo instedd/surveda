@@ -80,6 +80,15 @@ defmodule Ask.Survey do
     # Besides they remain related to its original by `snapshot_of`, they aren't updatable at all
     many_to_many :questionnaires, Questionnaire, join_through: SurveyQuestionnaire, on_replace: :delete
 
+    # Panel Surveys:
+    belongs_to :panel_survey_of_survey, Ask.Survey, foreign_key: :panel_survey_of
+    # if it's nil, the survey isn't part of a panel survey
+    # otherwise, it points to the first occurrence of its panel survey
+    # if it points to itself, it's the first occurrence of its panel survey
+    field :latest_panel_survey, :boolean, default: false
+    # if true, it's the latest occurrence of its panel survey
+    # if it's the first and the latest, it must be the only one
+
     has_many :floip_endpoints, FloipEndpoint
 
     belongs_to :project, Project
@@ -93,10 +102,11 @@ defmodule Ask.Survey do
   """
   def changeset(struct, params \\ %{}) do
     struct
-    |> cast(params, [:name, :description, :project_id, :folder_id, :mode, :state, :locked, :exit_code, :exit_message, :cutoff, :schedule, :sms_retry_configuration, :ivr_retry_configuration, :mobileweb_retry_configuration, :fallback_delay, :started_at, :quotas, :quota_vars, :comparisons, :count_partial_results, :simulation, :ended_at])
+    |> cast(params, [:name, :description, :project_id, :folder_id, :mode, :state, :locked, :exit_code, :exit_message, :cutoff, :schedule, :sms_retry_configuration, :ivr_retry_configuration, :mobileweb_retry_configuration, :fallback_delay, :started_at, :quotas, :quota_vars, :comparisons, :count_partial_results, :simulation, :ended_at, :panel_survey_of, :latest_panel_survey])
     |> set_floip_package_id
     |> validate_required([:project_id, :state, :schedule])
     |> foreign_key_constraint(:project_id)
+    |> foreign_key_constraint(:panel_survey_of)
     |> validate_from_less_than_to
     |> validate_number(:cutoff, greater_than_or_equal_to: 0, less_than: @max_int)
     |> translate_quotas
@@ -557,6 +567,10 @@ defmodule Ask.Survey do
 
   def successful_respondents(quota_completed, _, _), do: quota_completed |> Decimal.to_integer
 
+  def panel_survey?(%{panel_survey_of: panel_survey_of}), do: !!panel_survey_of
+
+  def repeatable?(survey), do: terminated?(survey) and panel_survey?(survey) and survey.latest_panel_survey
+
   defp exhausted_respondents(respondents_by_disposition, count_partial_results) do
     disposition_filter = Respondent.metrics_final_dispositions(count_partial_results)
     sum_respondents_by_disposition_filter(respondents_by_disposition, disposition_filter)
@@ -590,6 +604,10 @@ defmodule Ask.Survey do
     Enum.any?(partial_relevant_configs, fn config -> Questionnaire.partial_relevant_enabled?(config) end)
   end
 
+  defp terminated?(survey), do: survey.state == "terminated"
+
+  def succeeded?(survey), do: terminated?(survey) and survey.exit_code == 0
+
   defp partial_relevant_configs(survey, true = _persist),
     do:
       from(sq in SurveyQuestionnaire,
@@ -604,4 +622,22 @@ defmodule Ask.Survey do
     do:
       survey.questionnaires
       |> Enum.map(fn q -> q.partial_relevant_config end)
+
+  def update_questionnaires(changeset, questionnaire_ids) do
+    questionnaires_changeset = Enum.map(questionnaire_ids, fn questionnaire_id ->
+      Repo.get!(Questionnaire, questionnaire_id) |> change
+    end)
+
+    changeset
+    |> put_assoc(:questionnaires, questionnaires_changeset)
+  end
+
+  def update_respondent_groups(changeset, respondent_group_ids) do
+    respondent_groups_changeset = Enum.map(respondent_group_ids, fn respondent_group_id ->
+      Repo.get!(RespondentGroup, respondent_group_id) |> change
+    end)
+
+    changeset
+    |> put_assoc(:respondent_groups, respondent_groups_changeset)
+  end
 end

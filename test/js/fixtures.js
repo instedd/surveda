@@ -363,7 +363,9 @@ const bareSurvey: Survey = {
     buckets: []
   },
   mode: [['sms']],
-  nextScheduleTime: null
+  nextScheduleTime: null,
+  isPanelSurvey: false,
+  isRepeatable: false
 }
 
 const bareFolder: Folder = {

@@ -1680,3 +1680,16 @@ a.disabled {
   padding: 5px 10px;
   margin-top: 20px;
 }
+
+.repeat-survey {
+  .top-separator {
+    border-bottom: 1px solid color('grey', 'lighten-1');
+    margin-left: 0.75rem;
+    margin-right: 0.75rem;
+  }
+
+  .hint {
+    color: color('grey', 'base');
+    line-height: 2.4rem;
+  }
+}

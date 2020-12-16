@@ -18,6 +18,7 @@ defmodule Ask.SurveyController do
     dynamic =
       if params["state"] do
         if params["state"] == "completed" do
+          # Same as Survey.succeeded?(s)
           dynamic([s], s.state == "terminated" and s.exit_code == 0 and ^dynamic)
         else
           dynamic([s], s.state == ^params["state"] and ^dynamic)
@@ -41,9 +42,9 @@ defmodule Ask.SurveyController do
     render(conn, "index.json", surveys: surveys)
   end
 
-  def create(conn, params = %{"folder_id" => folder_id}), do: create(conn, params, folder_id)
+  def create(conn, params = %{"project_id" => project_id}) do
+    folder_id = Map.get(params, "folder_id")
 
-  def create(conn, params = %{"project_id" => project_id}, folder_id  \\ nil) do
     project = conn
     |> load_project_for_change(project_id)
     |> validate_project_not_archived(conn)
@@ -125,6 +126,18 @@ defmodule Ask.SurveyController do
     survey = project
       |> assoc(:surveys)
       |> Repo.get!(id)
+
+    # Preserve the UI from handling the panel survey implementation details
+    {is_panel_survey_param, survey_params} = Map.pop(survey_params, "is_panel_survey")
+    # "is_repeatable" is a read-only and calculated field
+    survey_params = Map.delete(survey_params, "is_repeatable")
+
+    survey_params =
+      if is_panel_survey_param do
+        Map.merge(survey_params, %{"panel_survey_of" => id, "latest_panel_survey" => true})
+      else
+        Map.merge(survey_params, %{"panel_survey_of" => nil, "latest_panel_survey" => false})
+      end
 
     if survey |> Survey.editable? do
       changeset = survey
@@ -254,13 +267,8 @@ defmodule Ask.SurveyController do
     end
   end
 
-  defp update_questionnaires(changeset, %{"questionnaire_ids" => questionnaires_params}) do
-    questionnaires_changeset = Enum.map(questionnaires_params, fn ch ->
-      Repo.get!(Questionnaire, ch) |> change
-    end)
-
-    changeset
-    |> put_assoc(:questionnaires, questionnaires_changeset)
+  defp update_questionnaires(changeset, %{"questionnaire_ids" => questionnaires_ids}) do
+    Survey.update_questionnaires(changeset, questionnaires_ids)
   end
 
   defp update_questionnaires(changeset, _) do
@@ -297,57 +305,53 @@ defmodule Ask.SurveyController do
     end
   end
 
-  def launch(conn, %{"survey_id" => id}) do
-    survey = Repo.get!(Survey, id)
-    |> Repo.preload([:project])
-    |> Repo.preload([:quota_buckets])
-    |> Repo.preload([:questionnaires])
-    |> Repo.preload(respondent_groups: :channels)
+  def launch(conn, %{"project_id" => project_id, "survey_id" => survey_id}) do
+    perform_action = fn survey -> Ask.Runtime.SurveyAction.start(survey) end
+    activity_log = fn survey -> ActivityLog.start(survey.project, conn, survey) end
+    launch_or_repeat(conn, project_id, survey_id, perform_action, activity_log)
+  end
 
-    if survey.state != "ready" do
-      Logger.warn "Error when launching survey #{id}. State is not ready "
+  def repeat(conn, %{"project_id" => project_id, "survey_id" => survey_id}) do
+    perform_action = fn survey -> Ask.Runtime.SurveyAction.repeat(survey) end
+    activity_log = fn survey -> ActivityLog.repeat(survey.project, conn, survey) end
+    launch_or_repeat(conn, project_id, survey_id, perform_action, activity_log)
+  end
+
+  defp launch_or_repeat(conn, project_id, survey_id, perform_action, activity_log) do
+    project =
       conn
+      |> load_project_for_change(project_id)
+
+    survey =
+      project
+      |> assoc(:surveys)
+      |> Repo.get!(survey_id)
+
+    case perform_action.(survey) do
+      {:ok, %{survey: survey}} ->
+        Project.touch!(survey.project)
+        activity_log.(survey) |> Repo.insert!()
+        render_survey(conn, survey)
+
+      {:error, %{survey: survey}} ->
+        conn
         |> put_status(:unprocessable_entity)
-        |> render("show.json", survey: survey |> Repo.preload(:questionnaires) |> Survey.with_links(user_level(survey.project_id, current_user(conn).id)))
-    else
-      project = conn
-      |> load_project_for_change(survey.project_id)
+        |> render_survey(survey)
 
-      channels = survey.respondent_groups
-      |> Enum.flat_map(&(&1.channels))
-      |> Enum.uniq
-
-      case prepare_channels(conn, channels) do
-        :ok ->
-          changeset = Survey.changeset(survey, %{"state": "running", "started_at": Timex.now})
-
-          multi = Multi.new
-          |> Multi.update(:survey, changeset)
-          |> Multi.insert(:log, ActivityLog.start(project, conn, survey))
-          |> Repo.transaction
-
-          case multi do
-            {:ok, _} ->
-              survey = create_survey_questionnaires_snapshot(survey)
-              |> Repo.preload(:questionnaires)
-              |> Survey.with_links(user_level(survey.project_id, current_user(conn).id))
-              project |> Project.touch!
-              render(conn, "show.json", survey: survey)
-            {:error, _, changeset, _} ->
-              Logger.warn "Error when launching survey: #{inspect changeset}"
-              conn
-              |> put_status(:unprocessable_entity)
-              |> render(Ask.ChangesetView, "error.json", changeset: changeset)
-          end
-
-        {:error, reason} ->
-          Logger.warn "Error when preparing channels for launching survey #{id} (#{reason})"
-          conn
-          |> put_status(:unprocessable_entity)
-          |> render("show.json", survey: survey |> Repo.preload(:questionnaires) |> Survey.with_links(user_level(survey.project_id, current_user(conn).id)))
-      end
+      {:error, %{changeset: changeset}} ->
+        conn
+        |> put_status(:unprocessable_entity)
+        |> render(Ask.ChangesetView, "error.json", changeset: changeset)
     end
   end
+
+  defp render_survey(conn, survey),
+    do:
+      render(conn, "show.json",
+        survey:
+          survey
+          |> Survey.with_links(user_level(survey.project_id, current_user(conn).id))
+      )
 
   def simulate_questionanire(conn, %{"project_id" => project_id, "questionnaire_id" => questionnaire_id, "phone_number" => phone_number, "mode" => mode, "channel_id" => channel_id}) do
     project = conn
@@ -479,34 +483,6 @@ defmodule Ask.SurveyController do
         "questionnaire_id" => questionnaire.snapshot_of
       }
     })
-  end
-
-  defp create_survey_questionnaires_snapshot(survey) do
-    # Create copies of questionnaires
-    new_questionnaires = Enum.map(survey.questionnaires, fn questionnaire ->
-      %{questionnaire | id: nil, snapshot_of_questionnaire: questionnaire, questionnaire_variables: [], project: survey.project}
-      |> Repo.preload(:translations)
-      |> Repo.insert!
-      |> Questionnaire.recreate_variables!
-    end)
-
-    # Update references in comparisons, if any
-    comparisons = survey.comparisons
-    comparisons = if comparisons do
-      comparisons
-      |> Enum.map(fn comparison ->
-        questionnaire_id = Map.get(comparison, "questionnaire_id")
-        snapshot = Enum.find(new_questionnaires, fn q -> q.snapshot_of == questionnaire_id end)
-        Map.put(comparison, "questionnaire_id", snapshot.id)
-      end)
-    else
-      comparisons
-    end
-
-    survey
-    |> Survey.changeset(%{comparisons: comparisons})
-    |> Ecto.Changeset.put_assoc(:questionnaires, new_questionnaires)
-    |> Repo.update!
   end
 
   def config(conn, _params) do
@@ -770,15 +746,6 @@ defmodule Ask.SurveyController do
 
   defp render_initial_state(conn, _survey_id, _mode) do
     json(conn, %{"data" => %{}})
-  end
-
-  defp prepare_channels(_, []), do: :ok
-  defp prepare_channels(conn, [channel | rest]) do
-    runtime_channel = Ask.Channel.runtime_channel(channel)
-    case Ask.Runtime.Channel.prepare(runtime_channel) do
-      {:ok, _} -> prepare_channels(conn, rest)
-      error -> error
-    end
   end
 
   defp cancel_messages_and_respondents(survey_id), do: SurveyCanceller.start_cancelling(survey_id).consumers_pids
