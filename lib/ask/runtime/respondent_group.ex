@@ -1,5 +1,6 @@
 defmodule Ask.Runtime.RespondentGroup do
-  alias Ask.{Survey, Repo, Respondent, Stats, RespondentGroup}
+  import Ecto.Query
+  alias Ask.{Survey, Repo, Respondent, Stats, RespondentGroup, RespondentGroupChannel}
   alias Ecto.Changeset
 
   def create(name, phone_numbers, survey) do
@@ -60,5 +61,21 @@ defmodule Ask.Runtime.RespondentGroup do
     |> Stream.chunk_every(1_000)
     |> Stream.each(insert_respondents)
     |> Stream.run()
+  end
+
+  def update_channels(respondent_group_id, mode_channels) do
+    from(gch in RespondentGroupChannel, where: gch.respondent_group_id == ^respondent_group_id)
+    |> Repo.delete_all()
+
+    Repo.transaction(fn ->
+      Enum.each(mode_channels, fn %{"id" => channel_id, "mode" => mode} ->
+        RespondentGroupChannel.changeset(%RespondentGroupChannel{}, %{
+          respondent_group_id: respondent_group_id,
+          channel_id: channel_id,
+          mode: mode
+        })
+        |> Repo.insert()
+      end)
+    end)
   end
 end

@@ -1,6 +1,6 @@
 defmodule Ask.RespondentGroupController do
   use Ask.Web, :api_controller
-  alias Ask.{Project, Survey, Respondent, RespondentGroup, Logger, RespondentGroupChannel}
+  alias Ask.{Project, Survey, Respondent, RespondentGroup, Logger}
 
   plug :find_and_check_survey_state when action in [:create, :update, :delete, :replace]
 
@@ -131,15 +131,8 @@ defmodule Ask.RespondentGroupController do
     end)
   end
 
-  defp update_channels(id, %{"channels" => channels_params}) do
-    from(gch in RespondentGroupChannel, where: gch.respondent_group_id == ^id) |> Repo.delete_all
-
-    Repo.transaction fn ->
-      Enum.each(channels_params, fn ch ->
-        RespondentGroupChannel.changeset(%RespondentGroupChannel{}, %{respondent_group_id: id, channel_id: ch["id"], mode: ch["mode"]})
-        |> Repo.insert
-      end)
-    end
+  defp update_channels(id, %{"channels" => channels}) do
+    Ask.Runtime.RespondentGroup.update_channels(id, channels)
   end
 
   defp update_channels(_, _), do: nil
