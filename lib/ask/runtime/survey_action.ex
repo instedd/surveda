@@ -57,7 +57,7 @@ defmodule Ask.Runtime.SurveyAction do
     changeset = Survey.changeset(survey, %{state: "running", started_at: Timex.now()})
 
     case Repo.update(changeset) do
-      {:ok, _} ->
+      {:ok, survey} ->
         survey = if repetition?, do: survey, else: create_survey_questionnaires_snapshot(survey)
 
         {:ok, %{survey: survey}}
