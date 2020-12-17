@@ -21,6 +21,7 @@ $smallChatWindowBodyHeight: $smallSimulationHeight -
 .quex-simulation-container {
   display: grid;
   grid-gap: 2rem;
+  margin-bottom: 2rem;
 
   @media #{$large-and-up} {
     grid-template-columns: repeat(3, 1fr);
@@ -63,13 +64,6 @@ $smallChatWindowBodyHeight: $smallSimulationHeight -
   }
 }
 
-.wrapper .simulator-container {
-  @extend .row;
-  padding-top: 60px;
-  & main > div {
-    padding-top: 0;
-  }
-}
 .chat-window {
   @extend .z-depth-5;
   border-radius: 5px;

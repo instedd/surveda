@@ -148,11 +148,13 @@ class SurveySimulation extends Component {
     }
 
     return (
-      <Card>
-        <ul className='collection simulation'>
-          {stepList}
-        </ul>
-      </Card>
+      <div className='quex-simulation-steps'>
+        <Card>
+          <ul className='collection simulation'>
+            {stepList}
+          </ul>
+        </Card>
+      </div>
     )
   }
 
@@ -172,6 +174,7 @@ class SurveySimulation extends Component {
       }
       stepList.push(this.stepItem(step, this.state.responses[step.store], 0, className, iconValue))
     } else if (step.type === 'section') {
+      className += ' section'
       // add the section step to the stepList
       stepList.push(this.stepItem(step, null, index, className, iconValue))
       let value = null
