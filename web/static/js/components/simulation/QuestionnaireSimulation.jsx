@@ -152,14 +152,14 @@ class QuestionnaireSimulation extends Component<Props, State> {
     const closeSimulationButton = (
       <div>
         <Tooltip text='Close Simulation'>
-          <a key='one' className='btn-floating btn-large waves-effect waves-light red right' style={{marginTop: '-6.1rem'}} href='#' onClick={() => router.push(routes.editQuestionnaire(projectId, questionnaireId))}>
+          <a key='one' className='btn-floating btn-large waves-effect waves-light red right mtop' href='#' onClick={() => router.push(routes.editQuestionnaire(projectId, questionnaireId))}>
             <i className='material-icons'>close</i>
           </a>
         </Tooltip>
       </div>
     )
 
-    return <div className='simulator-container'>
+    return <div>
       {
         simulation
         ? <div>
