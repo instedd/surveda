@@ -406,7 +406,7 @@ defmodule Ask.SurveyController do
     |> Repo.insert!
 
     conn
-    |> launch(%{"survey_id" => survey.id})
+    |> launch(%{"project_id" => survey.project_id, "survey_id" => survey.id})
   end
 
   def simulation_status(conn, %{"project_id" => project_id, "survey_id" => survey_id}) do
