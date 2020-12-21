@@ -72,7 +72,7 @@ class QuestionnaireSimulation extends Component<Props, State> {
     if (projectId && questionnaireId) {
       this.fetchQuestionnaireForTitle()
       // We only support SMS for now
-      if (mode == 'sms') {
+      if (['sms', 'mobileweb'].includes(mode)) {
         startSimulation(projectId, questionnaireId, mode).then(result => {
           this.setState({ simulation: {
             messagesHistory: result.messagesHistory,
@@ -147,7 +147,7 @@ class QuestionnaireSimulation extends Component<Props, State> {
 
   render() {
     const { simulation } = this.state
-    const { router, projectId, questionnaireId } = this.props
+    const { router, projectId, questionnaireId, mode } = this.props
     const simulationIsActive = simulation && simulation.simulationStatus == 'active'
     const closeSimulationButton = (
       <div>
@@ -157,6 +157,11 @@ class QuestionnaireSimulation extends Component<Props, State> {
           </a>
         </Tooltip>
       </div>
+    )
+    const phoneWindow = () => (
+      mode == 'sms'
+      ? <ChatWindow messages={simulation.messagesHistory} onSendMessage={this.handleATMessage} chatTitle={'SMS mode'} readOnly={!simulationIsActive} scrollToBottom />
+      : null
     )
 
     return <div>
@@ -171,7 +176,7 @@ class QuestionnaireSimulation extends Component<Props, State> {
               submissions={simulation.submissions}
               simulationIsEnded={simulation.simulationStatus == 'ended'}
             />
-            <ChatWindow messages={simulation.messagesHistory} onSendMessage={this.handleATMessage} chatTitle={'SMS mode'} readOnly={!simulationIsActive} scrollToBottom />
+            {phoneWindow()}
           </div>
         </div>
         : 'Loading'

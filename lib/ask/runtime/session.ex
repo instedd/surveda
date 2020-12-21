@@ -28,6 +28,7 @@ defmodule Ask.Runtime.Session do
     IVRMode,
     MobileWebMode,
     SMSSimulatorMode,
+    MobilewebSimulatorMode,
     ChannelPatterns,
     RetriesHistogram
   }
@@ -321,8 +322,8 @@ defmodule Ask.Runtime.Session do
     end
   end
 
-  defp mode_start(%Session{flow: flow, respondent: respondent, current_mode: %SMSSimulatorMode{}} = session) do
-    case flow |> Flow.step(session.current_mode  |> SessionMode.visitor, :answer, respondent.disposition) do
+  defp mode_start(%Session{flow: flow, respondent: respondent, current_mode: %SMSSimulatorMode{} = current_mode} = session) do
+    case flow |> Flow.step(current_mode  |> SessionMode.visitor, :answer, respondent.disposition) do
       {:end, _, reply} ->
         {:end, reply, respondent}
       {:ok, flow, reply} ->
@@ -361,6 +362,11 @@ defmodule Ask.Runtime.Session do
     respondent = runtime_channel
     |> Channel.ask(respondent, token, reply)
 
+    {:ok, %{session | flow: flow, respondent: respondent}, reply, current_timeout(session)}
+  end
+
+  defp mode_start(%Session{flow: flow, respondent: respondent, current_mode: %MobilewebSimulatorMode{}} = session) do
+    reply = mobile_contact_reply(session)
     {:ok, %{session | flow: flow, respondent: respondent}, reply, current_timeout(session)}
   end
 
