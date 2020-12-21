@@ -29,7 +29,16 @@ defmodule Ask.QuestionnaireView do
     }
   end
 
+  def render("simulation.json", %{simulation: %{respondent_id: respondent_id} = simulation, mode: "mobileweb"}) do
+    render_simulation(simulation)
+    |> Map.put(:index_url, "/mobile/simulation/#{respondent_id}?token=foo")
+  end
+
   def render("simulation.json", %{simulation: simulation}) do
+    render_simulation(simulation)
+  end
+
+  defp render_simulation(simulation) do
     %{
       respondent_id: simulation.respondent_id,
       simulation_status: simulation.simulation_status,

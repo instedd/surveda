@@ -1,0 +1,17 @@
+<body>
+  <script>
+    window.header_color = ("<%= @header_color %>")
+  </script>
+  <div id="root" role="main"></div>
+    <div ref='stepContent'>
+      <header>
+        <nav style="background-color: <%= @header_color %>;">
+          <h1>Unauthorized</h1>
+        </nav>
+      </header>
+      <main>
+        <div className={'prompt'}><h1>You are not authorized to participate in the survey</h1></div>
+      </main>
+    </div>
+  </div>
+</body>

@@ -170,6 +170,7 @@ defmodule Ask.Router do
   get "/callbacks/:provider/*path", Ask.CallbackController, :callback
   post "/callbacks/:provider/*path", Ask.CallbackController, :callback
   get "/mobile/:respondent_id", Ask.MobileSurveyController, :index
+  get "/mobile/simulation/:respondent_id", Ask.MobileSurveySimulationController, :index
   get "/mobile/get_step/:respondent_id", Ask.MobileSurveyController, :get_step
   post "/mobile/send_reply/:respondent_id", Ask.MobileSurveyController, :send_reply
   get "/mobile/errors/unauthorized", Ask.MobileSurveyController, :unauthorized_error

@@ -391,7 +391,7 @@ defmodule Ask.QuestionnaireController do
     with {:ok, questionnaire} <- load_questionnaire(project, id),
          {:ok, simulation} <- QuestionnaireSimulator.start_simulation(project, questionnaire, mode)
     do
-      render(conn, "simulation.json", simulation: simulation)
+      render(conn, "simulation.json", simulation: simulation, mode: mode)
     end
   end
 
