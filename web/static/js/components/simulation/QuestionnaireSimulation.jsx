@@ -6,7 +6,7 @@ import { connect } from 'react-redux'
 import { bindActionCreators } from 'redux'
 import * as routes from '../../routes'
 import { Tooltip } from '../ui'
-import { startSimulation, messageSimulation } from '../../api.js'
+import { startSimulation, messageSimulation, fetchSimulation } from '../../api.js'
 import ChatWindow from './ChatWindow'
 import MobileWebWindow from './MobileWebWindow'
 import DispositionChart from './DispositionChart'
@@ -54,6 +54,15 @@ class QuestionnaireSimulation extends Component<Props, State> {
 
   componentDidMount = () => {
     browserHistory.listen(this.onRouteChange)
+    window.addEventListener('message', event => {
+      const { simulation } = this.state
+      if (event.data.simulationChanged && simulation) {
+        const { projectId, questionnaireId } = this.props
+        return fetchSimulation(projectId, questionnaireId, simulation.respondentId).then(result => {
+          this.onSimulationChanged(result)
+        })
+      }
+    })
   }
 
   onRouteChange = () => {
@@ -82,7 +91,7 @@ class QuestionnaireSimulation extends Component<Props, State> {
     }
   }
 
-  handleMessageResult = result => {
+  onSimulationChanged = result => {
     const { simulation } = this.state
     const { t } = this.props
     if (result.simulationStatus == 'expired') {
@@ -119,7 +128,7 @@ class QuestionnaireSimulation extends Component<Props, State> {
     if (simulation) {
       this.addMessage(message)
       messageSimulation(projectId, questionnaireId, simulation.respondentId, message.body).then(result => {
-        this.handleMessageResult(result)
+        this.onSimulationChanged(result)
       })
     }
   }

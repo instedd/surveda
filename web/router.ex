@@ -114,6 +114,8 @@ defmodule Ask.Router do
           post "/import_zip", QuestionnaireController, :import_zip, as: :questionnaires_import_zip
           post "/simulation", QuestionnaireController, :start_simulation, as: :questionnaires_start_simulation
           post "/simulation/message", QuestionnaireController, :sync_simulation, as: :questionnaires_sync_simulation
+          # TODO: This should be a GET endpoint. Fix front-end normalize error and change it.
+          post "/simulation/:respondent_id", QuestionnaireController, :get_last_simulation_response, as: :get_last_simulation_response
           put "/update_archived_status", QuestionnaireController, :update_archived_status, as: :update_archived_status
         end
         get "/autocomplete_vars", ProjectController, :autocomplete_vars, as: :autocomplete_vars
@@ -169,8 +171,10 @@ defmodule Ask.Router do
   post "/callbacks/:provider", Ask.CallbackController, :callback
   get "/callbacks/:provider/*path", Ask.CallbackController, :callback
   post "/callbacks/:provider/*path", Ask.CallbackController, :callback
-  get "/mobile/:respondent_id", Ask.MobileSurveyController, :index
   get "/mobile/simulation/:respondent_id", Ask.MobileSurveySimulationController, :index
+  get "/mobile/simulation/get_step/:respondent_id", Ask.MobileSurveySimulationController, :get_step
+  post "/mobile/simulation/send_reply/:respondent_id", Ask.MobileSurveySimulationController, :send_reply
+  get "/mobile/:respondent_id", Ask.MobileSurveyController, :index
   get "/mobile/get_step/:respondent_id", Ask.MobileSurveyController, :get_step
   post "/mobile/send_reply/:respondent_id", Ask.MobileSurveyController, :send_reply
   get "/mobile/errors/unauthorized", Ask.MobileSurveyController, :unauthorized_error

@@ -32,6 +32,20 @@ defmodule Ask.Runtime.Reply do
     List.last(steps)
     |> ReplyStep.num_digits
   end
+
+  def progress(reply) do
+    if reply.current_step && reply.total_steps && reply.total_steps > 0 do
+      100 * (reply.current_step / reply.total_steps)
+    else
+      # If no explicit progress is set in the reply, assume we are at the end.
+      # This happens in the "thank you" and "quota completed" messages.
+      100.0
+    end
+  end
+
+  def first_step(reply) do
+    reply |> steps() |> hd
+  end
 end
 
 defmodule Ask.Runtime.ReplyStep do

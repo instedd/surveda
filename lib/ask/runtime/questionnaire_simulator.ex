@@ -1,5 +1,5 @@
 defmodule Ask.QuestionnaireSimulation do
-  defstruct [:respondent, :questionnaire, :section_order, messages: [], submissions: []]
+  defstruct [:respondent, :questionnaire, :section_order, :last_simulation_response, messages: [], submissions: []]
 end
 
 defmodule Ask.QuestionnaireSimulationStep do
@@ -7,23 +7,25 @@ defmodule Ask.QuestionnaireSimulationStep do
   alias Ask.Simulation.Status
   alias __MODULE__
 
-  defstruct [:respondent_id, :simulation_status, :disposition, :current_step, :questionnaire, messages_history: [], submissions: []]
+  defstruct [:respondent_id, :simulation_status, :disposition, :current_step, :reply, :questionnaire, messages_history: [], submissions: []]
 
-  def start_build(simulation, current_step, status), do: build(simulation, current_step, status, true)
-  def sync_build(simulation, current_step, status), do: build(simulation, current_step, status, false)
+  def start_build(simulation, current_step, status, reply), do: build(simulation, current_step, status, true, reply)
+  def sync_build(simulation, current_step, status, reply), do: build(simulation, current_step, status, false, reply)
 
   def expired(respondent_id) do
     %QuestionnaireSimulationStep{respondent_id: respondent_id, simulation_status: Status.expired}
   end
 
-  defp build(%QuestionnaireSimulation{respondent: respondent, messages: all_messages, submissions: submissions, questionnaire: quiz, section_order: section_order}, current_step, status, with_quiz) do
+  defp build(%QuestionnaireSimulation{respondent: respondent, messages: all_messages, submissions: submissions, questionnaire: quiz, section_order: section_order}, current_step, status, with_quiz, reply) do
     step = %QuestionnaireSimulationStep{
       respondent_id: respondent.id,
       simulation_status: status,
       disposition: respondent.disposition,
       current_step: current_step,
       messages_history: all_messages,
-      submissions: submissions
+      submissions: submissions,
+      # The mobileweb simulation controller needs the reply to render properly
+      reply: reply
     }
     if with_quiz, do: %{step | questionnaire: sort_quiz_sections(quiz, section_order)}, else: step
   end
@@ -55,26 +57,47 @@ defmodule Ask.Runtime.QuestionnaireSimulator do
     end
   end
 
-  def process_respondent_response(respondent_id, response) do
+  # The mobileweb simulator needs the last response to update the screen asynchronously
+  def get_last_simulation_response(respondent_id) do
     simulation = QuestionnaireSimulatorStore.get_respondent_simulation(respondent_id)
-    if(simulation) do
-      %{respondent: respondent, messages: messages} = simulation
-      updated_messages = messages ++ [ATMessage.new(response)]
-      simulation = QuestionnaireSimulatorStore.add_respondent_simulation(respondent.id, %Ask.QuestionnaireSimulation{simulation | messages: updated_messages})
-      reply = Flow.Message.reply(response)
-
-      case Runtime.Survey.sync_step(respondent, reply, @sms_mode, SystemTime.time.now, false) do
-        {:reply, reply, respondent} ->
-          handle_app_reply(simulation, respondent, reply, Status.active)
-        {:end, {:reply, reply}, respondent} ->
-          handle_app_reply(simulation, respondent, reply, Status.ended)
-        {:end, respondent} ->
-          handle_app_reply(simulation, respondent, nil, Status.ended)
-      end
+    if (simulation) do
+      %{last_simulation_response: last_simulation_response} = simulation
+      last_simulation_response
     else
       respondent_id
       |> QuestionnaireSimulationStep.expired
       |> Response.success
+    end
+  end
+
+  def process_respondent_response(respondent_id, response, mode \\ @sms_mode) do
+    simulation = QuestionnaireSimulatorStore.get_respondent_simulation(respondent_id)
+    if (simulation) do
+      {:ok, %{simulation: simulation, simulation_response: simulation_response}} = sync_simulation(simulation, response, mode)
+      QuestionnaireSimulatorStore.add_respondent_simulation(respondent_id, %Ask.QuestionnaireSimulation{simulation | last_simulation_response: simulation_response})
+      simulation_response
+    else
+      respondent_id
+      |> QuestionnaireSimulationStep.expired
+      |> Response.success
+    end
+  end
+
+  defp sync_simulation(simulation, response, mode) do
+    %{respondent: respondent, messages: messages} = simulation
+    updated_messages = messages ++ [ATMessage.new(response)]
+    simulation = %{simulation | messages: updated_messages}
+    # :answer is the response used by MobileSurveyController.get_step to call Survey.sync_step
+    # The mobile survey simulation controller emulates this behaviour
+    reply = if response == :answer, do: :answer, else: Flow.Message.reply(response)
+
+    case Runtime.Survey.sync_step(respondent, reply, mode, SystemTime.time.now, false) do
+      {:reply, reply, respondent} ->
+        handle_app_reply(simulation, respondent, reply, Status.active)
+      {:end, {:reply, reply}, respondent} ->
+        handle_app_reply(simulation, respondent, reply, Status.ended)
+      {:end, respondent} ->
+        handle_app_reply(simulation, respondent, nil, Status.ended)
     end
   end
 
@@ -117,9 +140,14 @@ defmodule Ask.Runtime.QuestionnaireSimulator do
     submitted_steps = SubmittedStep.new_explanations(reply)
     current_step = current_step(reply)
 
-    QuestionnaireSimulatorStore.add_respondent_simulation(respondent.id, %Ask.QuestionnaireSimulation{questionnaire: questionnaire, respondent: sync_respondent(respondent), messages: messages, submissions: submitted_steps, section_order: section_order})
-    |> QuestionnaireSimulationStep.start_build(current_step, Status.active)
-    |> Response.success
+    simulation = %Ask.QuestionnaireSimulation{questionnaire: questionnaire, respondent: sync_respondent(respondent), messages: messages, submissions: submitted_steps, section_order: section_order}
+    response =
+      simulation
+      |> QuestionnaireSimulationStep.start_build(current_step, Status.active, reply)
+      |> Response.success
+
+    QuestionnaireSimulatorStore.add_respondent_simulation(respondent.id, %{simulation | last_simulation_response: response})
+    response
   end
 
   defp start(_project, _questionnaire, _mode) do
@@ -143,9 +171,12 @@ defmodule Ask.Runtime.QuestionnaireSimulator do
     submitted_steps = simulation.submissions ++ SubmittedStep.build_from_responses(respondent, simulation) ++ SubmittedStep.new_explanations(reply)
     current_step = current_step(reply)
 
-    QuestionnaireSimulatorStore.add_respondent_simulation(respondent.id, %Ask.QuestionnaireSimulation{simulation | respondent: sync_respondent(respondent), messages: messages, submissions: submitted_steps})
-    |> QuestionnaireSimulationStep.sync_build(current_step, status)
-    |> Response.success
+    simulation = %{simulation | respondent: sync_respondent(respondent), messages: messages, submissions: submitted_steps}
+    simulation_response =
+      simulation
+      |> QuestionnaireSimulationStep.sync_build(current_step, status, reply)
+      |> Response.success
+    {:ok, %{simulation: simulation, simulation_response: simulation_response}}
   end
 
   defp current_step(reply) do

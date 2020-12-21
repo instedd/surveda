@@ -1,14 +1,14 @@
 defmodule Ask.MobileSurveySimulationController do
-  alias Ask.Runtime.{QuestionnaireSimulatorStore}
+  alias Ask.Runtime.{QuestionnaireSimulator, QuestionnaireSimulatorStore, Reply}
   use Ask.Web, :controller
 
-  def index(conn, %{"respondent_id" => respondent_id, "token" => token}) do
+  def index(conn, %{"respondent_id" => respondent_id}) do
     %{respondent: respondent} = QuestionnaireSimulatorStore.get_respondent_simulation(respondent_id)
     color_style = respondent.session.flow.questionnaire.settings["mobile_web_color_style"]
-    render_index(conn, respondent, token, color_style)
+    render_index(conn, respondent, color_style)
   end
 
-  defp render_index(conn, respondent, token, color_style) do
+  defp render_index(conn, respondent, color_style) do
     questionnaire = respondent.session.flow.questionnaire
     default_language = questionnaire.default_language
 
@@ -21,6 +21,23 @@ defmodule Ask.MobileSurveySimulationController do
 
     conn
     |> put_layout({Ask.LayoutView, "mobile_survey.html"})
-    |> render("index.html", respondent_id: respondent.id, token: token, color_style: color_style, title: title, mobile_web_intro_message: mobile_web_intro_message)
+    |> render("index.html", respondent_id: respondent.id, color_style: color_style, title: title, mobile_web_intro_message: mobile_web_intro_message)
   end
+
+  def get_step(conn, %{"respondent_id" => respondent_id}) do
+    {:ok, simulation_step} = QuestionnaireSimulator.process_respondent_response(respondent_id, :answer, "mobileweb")
+    render_reply(conn, simulation_step.reply)
+  end
+
+  def send_reply(conn, %{"respondent_id" => respondent_id, "value" => value}) do
+    {:ok, simulation_step} = QuestionnaireSimulator.process_respondent_response(respondent_id, value, "mobileweb")
+    render_reply(conn, simulation_step.reply)
+  end
+
+  defp render_reply(conn, reply), do:
+    json(conn, %{
+      step: Reply.first_step(reply),
+      progress: Reply.progress(reply),
+      error_message: reply.error_message
+    })
 end

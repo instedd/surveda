@@ -389,9 +389,9 @@ defmodule Ask.QuestionnaireController do
     project = conn |> load_project(project_id)
     mode = conn.params["mode"]
     with {:ok, questionnaire} <- load_questionnaire(project, id),
-         {:ok, simulation} <- QuestionnaireSimulator.start_simulation(project, questionnaire, mode)
+         {:ok, simulation_response} <- QuestionnaireSimulator.start_simulation(project, questionnaire, mode)
     do
-      render(conn, "simulation.json", simulation: simulation, mode: mode)
+      render(conn, "simulation.json", simulation: simulation_response, mode: mode)
     end
   end
 
@@ -401,8 +401,16 @@ defmodule Ask.QuestionnaireController do
 
     respondent_id = conn.params["respondent_id"]
     response = conn.params["response"]
-    with {:ok, simulation} <- QuestionnaireSimulator.process_respondent_response(respondent_id, response), do:
-      render(conn, "simulation.json", simulation: simulation)
+    with {:ok, simulation_response} <- QuestionnaireSimulator.process_respondent_response(respondent_id, response), do:
+      render(conn, "simulation.json", simulation: simulation_response)
+  end
+
+  def get_last_simulation_response(conn, %{"project_id" => project_id}) do
+    # Load project to authorize connection
+    conn |> load_project(project_id)
+    respondent_id = conn.params["respondent_id"]
+    with {:ok, simulation_response} <- QuestionnaireSimulator.get_last_simulation_response(respondent_id), do:
+      render(conn, "simulation.json", simulation: simulation_response)
   end
 
   defp validate_params(conn, _params) do
