@@ -48,7 +48,7 @@ describe('surveys', () => {
         cy.get('input.select-dropdown + * + select').select(smsChannelId, { force: true })
       })
 
-      // Setup schedule
+      // Set up schedule
       cy.contains('Setup a schedule').click()
       cy.get("#schedule").within(() => {
         cy.get(':nth-child(3) > :nth-child(2) > .select-wrapper > input.select-dropdown')
@@ -74,6 +74,24 @@ describe('surveys', () => {
 
       // Launch survey
       cy.clickMainAction('Launch survey')
+    })
+  })
+
+  it('get invalid respondent state disposition', () => {
+    function validRespondentStateDisposition(respondent) {
+      const validStateDisposition = [
+        { disposition: 'contacted', state: 'cancelled' },
+        { disposition: 'started', state: 'cancelled' },
+        { disposition: 'rejected', state: 'rejected' },
+
+        // TODO add valid combinations
+      ]
+      return !!validStateDisposition.find(x => x.disposition == respondent.disposition && x.state == respondent.state)
+    }
+
+    cy.surveyRespondents(1, 1).then(respondents => {
+      const invalidRespondents = respondents.filter(r => !validRespondentStateDisposition(r))
+      cy.log(JSON.stringify(invalidRespondents))
     })
   })
 })
