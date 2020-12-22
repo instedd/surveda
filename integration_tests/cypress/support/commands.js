@@ -101,3 +101,97 @@ Cypress.Commands.add('surveyRespondents', (projectId, surveyId) => {
   const states = ['pending', 'active', 'completed', 'failed', 'rejected', 'cancelled']
   Promise.all(states.map(respondentsWithState)).then(result => [...result])
 })
+
+Cypress.Commands.add('setUpSurvey', (respondentsSample) => {
+  const projectId = Cypress.env('project_id')
+  const smsChannelId = Cypress.env('sms_channel_id')
+
+  cy.visit(`/projects/${projectId}/surveys`)
+  cy.clickMainAction('Add')
+  cy.clickMainActionOption('Survey')
+
+  cy.waitForUrl(`/projects/:projectId/surveys/:surveyId/edit`).then(r => {
+    const { surveyId } = r
+
+    // Set up questionnaire
+    cy.contains('Select a questionnaire').click()
+    cy.get("#questionnaire").within(() => {
+      //TODO get title from the imported questionnaire
+      cy.contains('Cipoletti 1').click()
+    })
+
+    // Set up mode
+    cy.contains('Select mode').click()
+    cy.get("#channels").within(() => {
+      cy.get('.card-action > .row > :nth-child(1) > .select-wrapper > input.select-dropdown').click({ force: true })
+      cy.contains('SMS').click({ force: true })
+    })
+
+    // Upload respondents
+    cy.contains('Upload your respondents list').click()
+    cy.get("#respondents").within(() => {
+      cy.get('input[type="file"]').attachFile(respondentsSample)
+      cy.get('input.select-dropdown + * + select').select(smsChannelId, { force: true })
+    })
+
+    // Set up schedule
+    cy.contains('Setup a schedule').click()
+    cy.get("#schedule").within(() => {
+      cy.get(':nth-child(3) > :nth-child(2) > .select-wrapper > input.select-dropdown')
+        .click()
+      cy.get('select').last().select('23:00:00', { force: true })
+      cy.get(':nth-child(2) > .btn-floating').click()
+      cy.get(':nth-child(3) > .btn-floating').click()
+      cy.get(':nth-child(4) > .btn-floating').click()
+      cy.get(':nth-child(5) > .btn-floating').click()
+      cy.get(':nth-child(6) > .btn-floating').click()
+    })
+
+    // Define quotas
+    cy.contains('Setup cutoff rules').click()
+    cy.get("#cutoff").within(() => {
+      cy.get('.quotas > :nth-child(1) > label').click()
+      cy.get(':nth-child(1) > .col > .right > label').click()
+      cy.contains('Done').click()
+      cy.get(':nth-child(1) > :nth-child(4) > .col > div > input')
+        .clear()
+        .type('10')
+    })
+
+    // Launch survey
+    cy.clickMainAction('Launch survey')
+  })
+})
+
+Cypress.Commands.add('prepareSurvey', (questionnaireTemplate, respondentsSample) => {
+  cy.importQuestionnaire(questionnaireTemplate)
+
+  cy.setUpSurvey(respondentsSample)
+})
+
+Cypress.Commands.add('importQuestionnaire', (questionnaireTemplate) => {
+  const projectId = Cypress.env('project_id')
+  cy.visit(`/projects/${projectId}/questionnaires`)
+  cy.clickMainAction('Add questionnaire')
+
+  cy.waitForUrl(`/projects/:projectId/questionnaires/:questionnaireId/edit`).then(r => {
+    const { questionnaireId } = r
+
+    cy.clickTitleMenu()
+    cy.contains('Import questionnaire').click()
+    cy.get('input[type="file"]').attachFile(questionnaireTemplate);
+  })
+})
+
+Cypress.Commands.add('waitUntilStale', (projectId, surveyId) => {
+  // check if survey has terminated (state: "terminated")
+
+  cy.request({
+    url: `/api/v1/projects/${projectId}/surveys/${surveyId}`
+  }).then((response) => {
+    const surveyState = response.body.data.state
+    if (surveyState == 'terminated') {
+    }
+  })
+
+})
