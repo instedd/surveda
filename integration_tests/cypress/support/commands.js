@@ -86,3 +86,18 @@ Cypress.Commands.add('waitForUrl', (pattern) => {
     return match
   })
 })
+
+Cypress.Commands.add('surveyRespondents', (projectId, surveyId) => {
+  // TODO watch out for pagination
+  const respondentsWithState = (state) => {
+    cy.request({
+      url: `/api/v1/projects/${projectId}/surveys/${surveyId}/respondents`,
+      qs: { q: `state:${state}` }
+    }).then((response) => {
+      const respondents = response.body.data.respondents
+      return respondents.map(r => ({ ...r, state: state }))
+    })
+  }
+  const states = ['pending', 'active', 'completed', 'failed', 'rejected', 'cancelled']
+  Promise.all(states.map(respondentsWithState)).then(result => [...result])
+})
