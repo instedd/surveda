@@ -15,7 +15,7 @@ defmodule Ask.QuestionnaireController do
     Gettext
   }
   alias Ecto.Multi
-  alias Ask.Runtime.QuestionnaireSimulator
+  alias Ask.Runtime.{QuestionnaireSimulator, QuestionnaireMobileWebSimulator}
 
   plug :validate_params when action in [:create, :update]
   action_fallback Ask.FallbackController
@@ -395,21 +395,23 @@ defmodule Ask.QuestionnaireController do
     end
   end
 
+  # TODO: Restrict to SMS mode only
   def sync_simulation(conn, %{"project_id" => project_id}) do
     # Load project to authorize connection
     conn |> load_project(project_id)
 
     respondent_id = conn.params["respondent_id"]
     response = conn.params["response"]
-    with {:ok, simulation_response} <- QuestionnaireSimulator.process_respondent_response(respondent_id, response), do:
+    with {:ok, simulation_response} <- QuestionnaireSimulator.process_respondent_response(respondent_id, response, "sms"), do:
       render(conn, "simulation.json", simulation: simulation_response)
   end
 
+  # TODO: Restrict to MobileWeb mode only
   def get_last_simulation_response(conn, %{"project_id" => project_id}) do
     # Load project to authorize connection
     conn |> load_project(project_id)
     respondent_id = conn.params["respondent_id"]
-    with {:ok, simulation_response} <- QuestionnaireSimulator.get_last_simulation_response(respondent_id), do:
+    with {:ok, simulation_response} <- QuestionnaireMobileWebSimulator.get_last_simulation_response(respondent_id), do:
       render(conn, "simulation.json", simulation: simulation_response)
   end
 

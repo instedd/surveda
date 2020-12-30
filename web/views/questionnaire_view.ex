@@ -42,11 +42,11 @@ defmodule Ask.QuestionnaireView do
     %{
       respondent_id: simulation.respondent_id,
       simulation_status: simulation.simulation_status,
-      disposition: simulation.disposition,
-      messages_history: simulation.messages_history,
-      submissions: simulation.submissions,
-      current_step: simulation.current_step,
-      questionnaire: render("questionnaire.json", %{questionnaire: simulation.questionnaire})
+      disposition: Map.get(simulation, :disposition),
+      messages_history: Map.get(simulation, :messages_history),
+      submissions: Map.get(simulation, :submissions),
+      current_step: Map.get(simulation, :current_step),
+      questionnaire: render("questionnaire.json", %{questionnaire: Map.get(simulation, :questionnaire)})
     }
     |> Enum.filter(fn {_, value} -> value end)
     |> Map.new()

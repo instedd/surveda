@@ -1264,8 +1264,6 @@ defmodule Ask.QuestionnaireControllerTest do
       conn = post conn, project_questionnaire_questionnaires_sync_simulation_path(conn, :sync_simulation, questionnaire.project, questionnaire), respondent_id: respondent_id, response: "2"
       %{
         "respondent_id" => ^respondent_id,
-        "submissions" => [],
-        "messages_history" => [],
         "simulation_status" => "expired"
       } = json_response(conn, 200)
     end

@@ -10,7 +10,7 @@ defmodule QuestionnaireSimulatorTest do
     project = insert(:project)
     QuestionnaireSimulatorStore.start_link()
     start_simulation = fn quiz ->
-      {:ok, simulation} = QuestionnaireSimulator.start_simulation(project, quiz)
+      {:ok, simulation} = QuestionnaireSimulator.start_simulation(project, quiz, "sms")
       simulation
     end
     {:ok, project: project, start_simulation: start_simulation}
@@ -23,7 +23,7 @@ defmodule QuestionnaireSimulatorTest do
   end
 
   def process_respondent_response(respondent_id, response) do
-    {:ok, simulation_step} = QuestionnaireSimulator.process_respondent_response(respondent_id, response)
+    {:ok, simulation_step} = QuestionnaireSimulator.process_respondent_response(respondent_id, response, "sms")
     simulation_step
   end
 
@@ -165,11 +165,6 @@ defmodule QuestionnaireSimulatorTest do
     test "when start_simulation with ivr mode", %{project: project} do
       quiz = questionnaire_with_steps(@dummy_steps)
       assert {:error, :invalid_simulation} == QuestionnaireSimulator.start_simulation(project, quiz, "ivr")
-    end
-
-    test "when start_simulation with mobile_web mode", %{project: project} do
-      quiz = questionnaire_with_steps(@dummy_steps)
-      assert {:error, :invalid_simulation} == QuestionnaireSimulator.start_simulation(project, quiz, "mobile-web")
     end
 
     test "when start_simulation with sms mode but questionnaire doesn't have sms mode", %{project: project}  do
@@ -321,7 +316,7 @@ defmodule QuestionnaireSimulatorTest do
   end
 
   defp assert_dummy_steps(project, quiz) do
-    {:ok, %{respondent_id: respondent_id, disposition: disposition, messages_history: messages, simulation_status: status, current_step: current_step}} = QuestionnaireSimulator.start_simulation(project, quiz)
+    {:ok, %{respondent_id: respondent_id, disposition: disposition, messages_history: messages, simulation_status: status, current_step: current_step}} = QuestionnaireSimulator.start_simulation(project, quiz, "sms")
     [first, second, third, fourth] = quiz |> Questionnaire.all_steps|> Enum.map(fn step -> step["id"] end)
     assert "contacted" == disposition
     assert "Do you smoke? Reply 1 for YES, 2 for NO" == List.last(messages).body

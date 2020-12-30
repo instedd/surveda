@@ -28,7 +28,7 @@ defmodule Ask.Runtime.Session do
     IVRMode,
     MobileWebMode,
     SMSSimulatorMode,
-    MobilewebSimulatorMode,
+    MobileWebSimulatorMode,
     ChannelPatterns,
     RetriesHistogram
   }
@@ -365,7 +365,7 @@ defmodule Ask.Runtime.Session do
     {:ok, %{session | flow: flow, respondent: respondent}, reply, current_timeout(session)}
   end
 
-  defp mode_start(%Session{flow: flow, respondent: respondent, current_mode: %MobilewebSimulatorMode{}} = session) do
+  defp mode_start(%Session{flow: flow, respondent: respondent, current_mode: %MobileWebSimulatorMode{}} = session) do
     reply = mobile_contact_reply(session)
     {:ok, %{session | flow: flow, respondent: respondent}, reply, current_timeout(session)}
   end
