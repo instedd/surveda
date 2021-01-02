@@ -183,15 +183,29 @@ Cypress.Commands.add('importQuestionnaire', (questionnaireTemplate) => {
   })
 })
 
-Cypress.Commands.add('waitUntilStale', (projectId, surveyId) => {
-  // check if survey has terminated (state: "terminated")
+Cypress.Commands.add('waitUntilStale', (projectId, surveyId, timeout) => {
+  var YMinutesLater = new Date();
+  var timeOutMinutes = timeout
+  YMinutesLater.setMinutes(YMinutesLater.getMinutes() + timeOutMinutes);
+  let _try = () => {
+    cy.request({
+      url: `/api/v1/projects/${projectId}/surveys/${surveyId}`
+    }).then((response) => {
+      const surveyState = response.body.data.state
+      // check if survey has terminated if Y minutes haven't passed
+      if (new Date() < YMinutesLater) {
 
-  cy.request({
-    url: `/api/v1/projects/${projectId}/surveys/${surveyId}`
-  }).then((response) => {
-    const surveyState = response.body.data.state
-    if (surveyState == 'terminated') {
-    }
-  })
-
+        // check state after 20 seconds
+        if (surveyState == 'running') {
+          cy.wait(20000).then(() => {
+            _try()
+          })
+        }
+      }
+      else {
+        assert.isOk(false, `After ${timeOutMinutes} minutes the survey didn't finish`)
+      }
+    })
+  }
+  _try()
 })
