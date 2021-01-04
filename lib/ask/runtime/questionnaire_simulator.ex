@@ -309,6 +309,7 @@ defmodule Ask.Runtime.QuestionnaireSmsSimulator do
 
     handle_app_reply = fn simulation, respondent, reply, status ->
       messages = simulation.messages ++ AOMessage.create_all(reply)
+      simulation = Map.put(simulation, :messages, messages)
 
       sync_build = fn simulation, current_step, status, _reply ->
         QuestionnaireSmsSimulationStep.sync_build(simulation, current_step, status, messages)

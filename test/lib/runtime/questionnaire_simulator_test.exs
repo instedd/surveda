@@ -101,7 +101,7 @@ defmodule QuestionnaireSimulatorTest do
       assert [] == submissions
     end
 
-    test "should include all the responses", %{start_simulation: start_simulation} do
+    test "should include all the questions and responses", %{start_simulation: start_simulation} do
       steps = @dummy_steps
       quiz = questionnaire_with_steps(steps)
       %{respondent_id: respondent_id} = start_simulation.(quiz)
@@ -109,16 +109,33 @@ defmodule QuestionnaireSimulatorTest do
       process_respondent_response(respondent_id, "1") # 1 is a yes response
       process_respondent_response(respondent_id, "Y") # Y is a yes response
       process_respondent_response(respondent_id, "7") # numeric response
-      %{submissions: submissions} = process_respondent_response(respondent_id, "4") # numeric response
+
+      %{submissions: submissions, messages_history: messages_history} = process_respondent_response(respondent_id, "4") # numeric response
 
       [first, second, third, fourth] = steps
+
       expected_submissions = [
         expected_submission(first, "Yes"),
         expected_submission(second, "Yes"),
         expected_submission(third, "7"),
         expected_submission(fourth, "4")
       ]
+
       assert expected_submissions == submissions
+
+      expected_messages_history = [
+        %{body: "Do you smoke? Reply 1 for YES, 2 for NO", type: "ao"},
+        %{body: "1", type: "at"},
+        %{body: "Do you exercise? Reply 1 for YES, 2 for NO", type: "ao"},
+        %{body: "Y", type: "at"},
+        %{body: "Which is the second perfect number??", type: "ao"},
+        %{body: "7", type: "at"},
+        %{body: "What's the number of this question??", type: "ao"},
+        %{body: "4", type: "at"},
+        %{body: "Thank you for taking the survey", type: "ao"}
+      ]
+
+      assert expected_messages_history == messages_history
     end
 
     test "should include all the responses even if the quiz doesn't have a thank-you-message", %{start_simulation: start_simulation} do
