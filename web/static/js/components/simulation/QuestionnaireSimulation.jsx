@@ -55,10 +55,11 @@ class QuestionnaireSimulation extends Component<Props, State> {
   componentDidMount = () => {
     browserHistory.listen(this.onRouteChange)
     window.addEventListener('message', event => {
+      const { mode } = this.props
       const { simulation } = this.state
       if (event.data.simulationChanged && simulation) {
         const { projectId, questionnaireId } = this.props
-        return fetchSimulation(projectId, questionnaireId, simulation.respondentId).then(result => {
+        return fetchSimulation(projectId, questionnaireId, simulation.respondentId, mode).then(result => {
           this.onSimulationChanged(result)
         })
       }

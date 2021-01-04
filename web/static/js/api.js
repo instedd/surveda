@@ -519,9 +519,9 @@ export const startSimulation = (projectId, questionnaireId, mode) => {
   return apiPutOrPostJSONWithCallback(`projects/${projectId}/questionnaires/${questionnaireId}/simulation`, arrayOf(referenceSchema), 'POST', { mode }, passthroughCallback)
 }
 
-export const fetchSimulation = (projectId, questionnaireId, respondentId) => {
+export const fetchSimulation = (projectId, questionnaireId, respondentId, mode) => {
   // TODO: This should use GET. Fix the normalize error and change it.
-  return apiPutOrPostJSONWithCallback(`projects/${projectId}/questionnaires/${questionnaireId}/simulation/${respondentId}`, arrayOf(referenceSchema), 'POST', {}, passthroughCallback)
+  return apiPutOrPostJSONWithCallback(`projects/${projectId}/questionnaires/${questionnaireId}/simulation/${respondentId}`, arrayOf(referenceSchema), 'POST', { mode }, passthroughCallback)
 }
 
 export const messageSimulation = (projectId, questionnaireId, respondentId, message) => {
