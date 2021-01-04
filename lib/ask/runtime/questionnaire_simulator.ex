@@ -258,8 +258,12 @@ defmodule Ask.Runtime.QuestionnaireMobileWebSimulator do
   def get_last_simulation_response(respondent_id) do
     simulation = QuestionnaireSimulatorStore.get_respondent_simulation(respondent_id)
     if (simulation) do
-      %{last_simulation_response: last_simulation_response} = simulation
-      last_simulation_response
+      last_simulation_response = Map.get(simulation, :last_simulation_response)
+      if (last_simulation_response) do
+        last_simulation_response
+      else
+        Response.invalid_simulation
+      end
     else
       respondent_id
       |> QuestionnaireSimulationStep.expired

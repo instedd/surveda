@@ -114,8 +114,7 @@ defmodule Ask.Router do
           post "/import_zip", QuestionnaireController, :import_zip, as: :questionnaires_import_zip
           post "/simulation", QuestionnaireController, :start_simulation, as: :questionnaires_start_simulation
           post "/simulation/message", QuestionnaireController, :sync_simulation, as: :questionnaires_sync_simulation
-          # TODO: This should be a GET endpoint. Fix front-end normalize error and change it.
-          post "/simulation/:respondent_id", QuestionnaireController, :get_last_simulation_response, as: :get_last_simulation_response
+          get "/simulation/:respondent_id", QuestionnaireController, :get_last_simulation_response, as: :get_last_simulation_response
           put "/update_archived_status", QuestionnaireController, :update_archived_status, as: :update_archived_status
         end
         get "/autocomplete_vars", ProjectController, :autocomplete_vars, as: :autocomplete_vars

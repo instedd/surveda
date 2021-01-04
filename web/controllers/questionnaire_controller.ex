@@ -402,7 +402,7 @@ defmodule Ask.QuestionnaireController do
       render(conn, "simulation.json", simulation: simulation_response)
   end
 
-  def get_last_simulation_response(conn, %{"project_id" => project_id, "respondent_id" => respondent_id, "mode" => "mobileweb"}) do
+  def get_last_simulation_response(conn, %{"project_id" => project_id, "respondent_id" => respondent_id}) do
     # Load project to authorize connection
     conn |> load_project(project_id)
     with {:ok, simulation_response} <- QuestionnaireMobileWebSimulator.get_last_simulation_response(respondent_id), do:

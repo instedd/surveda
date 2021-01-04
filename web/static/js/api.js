@@ -516,12 +516,11 @@ export const refreshDispositionHistoryLink = (projectId, surveyId) => {
 }
 
 export const startSimulation = (projectId, questionnaireId, mode) => {
-  return apiPutOrPostJSONWithCallback(`projects/${projectId}/questionnaires/${questionnaireId}/simulation`, arrayOf(referenceSchema), 'POST', { mode }, passthroughCallback)
+  return apiPutOrPostJSONWithCallback(`projects/${projectId}/questionnaires/${questionnaireId}/simulation`, null, 'POST', { mode }, passthroughCallback)
 }
 
 export const fetchSimulation = (projectId, questionnaireId, respondentId, mode) => {
-  // TODO: This should use GET. Fix the normalize error and change it.
-  return apiPutOrPostJSONWithCallback(`projects/${projectId}/questionnaires/${questionnaireId}/simulation/${respondentId}`, arrayOf(referenceSchema), 'POST', { mode }, passthroughCallback)
+  return apiFetchJSONWithCallback(`projects/${projectId}/questionnaires/${questionnaireId}/simulation/${respondentId}`, null, {}, passthroughCallback)
 }
 
 export const messageSimulation = (projectId, questionnaireId, respondentId, message, mode) => {
@@ -530,7 +529,7 @@ export const messageSimulation = (projectId, questionnaireId, respondentId, mess
     response: message,
     mode
   }
-  return apiPutOrPostJSONWithCallback(`projects/${projectId}/questionnaires/${questionnaireId}/simulation/message`, arrayOf(referenceSchema), 'POST', body, passthroughCallback)
+  return apiPutOrPostJSONWithCallback(`projects/${projectId}/questionnaires/${questionnaireId}/simulation/message`, null, 'POST', body, passthroughCallback)
 }
 
 export const deleteResultsLink = (projectId, surveyId) => {
