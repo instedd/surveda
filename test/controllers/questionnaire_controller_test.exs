@@ -1228,7 +1228,7 @@ defmodule Ask.QuestionnaireControllerTest do
       conn_ = post conn, project_questionnaire_questionnaires_start_simulation_path(conn, :start_simulation, questionnaire.project, questionnaire), mode: "sms"
       respondent_id = json_response(conn_, 200)["respondent_id"]
 
-      conn = post conn, project_questionnaire_questionnaires_sync_simulation_path(conn, :sync_simulation, questionnaire.project, questionnaire), respondent_id: respondent_id, response: "2"
+      conn = post conn, project_questionnaire_questionnaires_sync_simulation_path(conn, :sync_simulation, questionnaire.project, questionnaire), respondent_id: respondent_id, response: "2", mode: "sms"
       first_step_id = hd(steps)["id"]
       second_step_id = (steps |> Enum.at(1))["id"]
       response = json_response(conn, 200)
@@ -1261,7 +1261,7 @@ defmodule Ask.QuestionnaireControllerTest do
       questionnaire = insert(:questionnaire, project: project) |> Repo.preload(:project)
       respondent_id = Ecto.UUID.generate()
 
-      conn = post conn, project_questionnaire_questionnaires_sync_simulation_path(conn, :sync_simulation, questionnaire.project, questionnaire), respondent_id: respondent_id, response: "2"
+      conn = post conn, project_questionnaire_questionnaires_sync_simulation_path(conn, :sync_simulation, questionnaire.project, questionnaire), respondent_id: respondent_id, response: "2", mode: "sms"
       %{
         "respondent_id" => ^respondent_id,
         "simulation_status" => "expired"
@@ -1279,7 +1279,7 @@ defmodule Ask.QuestionnaireControllerTest do
       conn_ = post conn, project_questionnaire_questionnaires_start_simulation_path(conn, :start_simulation, questionnaire.project, questionnaire), mode: "sms"
       respondent_id = json_response(conn_, 200)["respondent_id"]
 
-      conn = post conn, project_questionnaire_questionnaires_sync_simulation_path(conn, :sync_simulation, questionnaire.project, questionnaire), respondent_id: respondent_id, response: "2"
+      conn = post conn, project_questionnaire_questionnaires_sync_simulation_path(conn, :sync_simulation, questionnaire.project, questionnaire), respondent_id: respondent_id, response: "2", mode: "sms"
       first_step_id = step["id"]
 
       assert %{

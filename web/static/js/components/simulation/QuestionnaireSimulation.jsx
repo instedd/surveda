@@ -124,11 +124,11 @@ class QuestionnaireSimulation extends Component<Props, State> {
   }
 
   handleATMessage = message => {
-    const { projectId, questionnaireId } = this.props
+    const { projectId, questionnaireId, mode } = this.props
     const { simulation } = this.state
     if (simulation) {
       this.addMessage(message)
-      messageSimulation(projectId, questionnaireId, simulation.respondentId, message.body).then(result => {
+      messageSimulation(projectId, questionnaireId, simulation.respondentId, message.body, mode).then(result => {
         this.onSimulationChanged(result)
       })
     }

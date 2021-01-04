@@ -395,13 +395,9 @@ defmodule Ask.QuestionnaireController do
     end
   end
 
-  # TODO: Restrict to SMS mode only
-  def sync_simulation(conn, %{"project_id" => project_id}) do
+  def sync_simulation(conn, %{"project_id" => project_id, "respondent_id" => respondent_id, "response" => response, "mode" => "sms"}) do
     # Load project to authorize connection
     conn |> load_project(project_id)
-
-    respondent_id = conn.params["respondent_id"]
-    response = conn.params["response"]
     with {:ok, simulation_response} <- QuestionnaireSimulator.process_respondent_response(respondent_id, response, "sms"), do:
       render(conn, "simulation.json", simulation: simulation_response)
   end

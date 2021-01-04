@@ -524,10 +524,11 @@ export const fetchSimulation = (projectId, questionnaireId, respondentId, mode) 
   return apiPutOrPostJSONWithCallback(`projects/${projectId}/questionnaires/${questionnaireId}/simulation/${respondentId}`, arrayOf(referenceSchema), 'POST', { mode }, passthroughCallback)
 }
 
-export const messageSimulation = (projectId, questionnaireId, respondentId, message) => {
+export const messageSimulation = (projectId, questionnaireId, respondentId, message, mode) => {
   const body = {
     respondentId,
-    response: message
+    response: message,
+    mode
   }
   return apiPutOrPostJSONWithCallback(`projects/${projectId}/questionnaires/${questionnaireId}/simulation/message`, arrayOf(referenceSchema), 'POST', body, passthroughCallback)
 }
