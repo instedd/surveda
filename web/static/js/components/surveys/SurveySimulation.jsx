@@ -314,7 +314,7 @@ class SurveySimulation extends Component {
   }
 
   render() {
-    const { t, mode } = this.props
+    const { t } = this.props
     const { disposition } = this.state
     return (
       <div>
@@ -324,20 +324,14 @@ class SurveySimulation extends Component {
           </a>
         </Tooltip>
         <ConfirmationModal modalId='survey_stop_simulation_modal' ref='stopSimulationModal' confirmationText={t('Stop')} header={t('Stop simulation')} showCancel />
-        {
-          mode == 'mobileweb'
-          ? this.mobileWebSimulation()
-          : (
-            <div className='row'>
-              <div className='col s12 m4'>
-                <DispositionChart disposition={disposition} />
-              </div>
-              <div className='col s12 m8'>
-                {this.stepsComponent()}
-              </div>
-            </div>
-          )
-        }
+        <div className='row'>
+          <div className='col s12 m4'>
+            <DispositionChart disposition={disposition} />
+          </div>
+          <div className='col s12 m8'>
+            {this.stepsComponent()}
+          </div>
+        </div>
       </div>
     )
   }
