@@ -10,9 +10,6 @@ defmodule Ask.QuestionnaireSimulationStep do
   alias Ask.Simulation.Status
   alias __MODULE__
 
-  # def start_build(simulation, current_step, status, reply), do: build(simulation, current_step, status, true, reply)
-  # def sync_build(simulation, current_step, status, reply), do: build(simulation, current_step, status, false, reply)
-
   def expired(respondent_id) do
     %{respondent_id: respondent_id, simulation_status: Status.expired}
   end

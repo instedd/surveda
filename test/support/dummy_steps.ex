@@ -1322,12 +1322,13 @@ defmodule Ask.QuestionnaireRelevantSteps do
       title: "Do you sleep well?",
       prompt: prompt(
         sms: sms_prompt("Do you sleep well? Reply 1 for YES, 2 for NO"),
-        ivr: tts_prompt("Do you sleep well? Press 8 for YES, 9 for NO")
+        ivr: tts_prompt("Do you sleep well? Press 8 for YES, 9 for NO"),
+        mobileweb: "Do you sleep well?"
       ),
       store: "Sleep",
       choices: [
-        choice(value: "Yes", responses: responses(sms: ["Yes", "Y", "1"], ivr: ["8"])),
-        choice(value: "No", responses: responses(sms: ["No", "N", "2"], ivr: ["9"]))
+        choice(value: "Yes", responses: responses(sms: ["Yes", "Y", "1"], ivr: ["8"], mobileweb: ["Yes"])),
+        choice(value: "No", responses: responses(sms: ["No", "N", "2"], ivr: ["9"], mobileweb: ["No"]))
       ],
       relevant: true
     ),
@@ -1336,7 +1337,8 @@ defmodule Ask.QuestionnaireRelevantSteps do
      title: "How many hours do you sleep?",
      prompt: prompt(
        sms: sms_prompt("How many hours do you sleep??"),
-       ivr: tts_prompt("How many hours do you sleep")
+       ivr: tts_prompt("How many hours do you sleep"),
+       mobileweb: "How many hours do you sleep?"
      ),
      store: "SleepHours",
      skip_logic: default_numeric_skip_logic(),
