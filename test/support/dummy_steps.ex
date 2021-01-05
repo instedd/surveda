@@ -119,6 +119,21 @@ defmodule Ask.StepBuilder do
     }
   end
 
+  def prompt(sms: sms, ivr: ivr, mobileweb: mobileweb) do
+    %{
+      "en" => %{
+        "sms" => sms,
+        "ivr" => ivr,
+        "mobileweb" => mobileweb
+      },
+      "es" => %{
+        "sms" => "#{sms} (Spanish)",
+        "ivr" => ivr,
+        "mobileweb" => mobileweb
+      }
+    }
+  end
+
   def sms_prompt(prompt) do
     prompt
   end
@@ -179,6 +194,18 @@ defmodule Ask.StepBuilder do
     }
   end
 
+  def responses(sms: sms, ivr: ivr, mobileweb: mobileweb) do
+    %{
+      "sms" => %{
+        "en" => sms
+      },
+      "ivr" => ivr,
+      "mobileweb" => %{
+        "en" => mobileweb
+      }
+    }
+  end
+
   def responses(ivr: ivr) do
     %{
       "ivr" => ivr
@@ -225,12 +252,13 @@ defmodule Ask.DummySteps do
           title: "Do you smoke?",
           prompt: prompt(
             sms: sms_prompt("Do you smoke? Reply 1 for YES, 2 for NO"),
-            ivr: tts_prompt("Do you smoke? Press 8 for YES, 9 for NO")
+            ivr: tts_prompt("Do you smoke? Press 8 for YES, 9 for NO"),
+            mobileweb: "Do you smoke?"
           ),
           store: "Smokes",
           choices: [
-            choice(value: "Yes", responses: responses(sms: ["Yes", "Y", "1"], ivr: ["8"])),
-            choice(value: "No", responses: responses(sms: ["No", "N", "2"], ivr: ["9"]))
+            choice(value: "Yes", responses: responses(sms: ["Yes", "Y", "1"], ivr: ["8"], mobileweb: ["Yes"])),
+            choice(value: "No", responses: responses(sms: ["No", "N", "2"], ivr: ["9"], mobileweb: ["No"]))
           ]
         ),
         multiple_choice_step(
@@ -238,12 +266,13 @@ defmodule Ask.DummySteps do
           title: "Do you exercise",
           prompt: prompt(
             sms: sms_prompt("Do you exercise? Reply 1 for YES, 2 for NO"),
-            ivr: tts_prompt("Do you exercise? Press 1 for YES, 2 for NO")
+            ivr: tts_prompt("Do you exercise? Press 1 for YES, 2 for NO"),
+            mobileweb: "Do you exercise?"
           ),
           store: "Exercises",
           choices: [
-            choice(value: "Yes", responses: responses(sms: ["Yes", "Y", "1"], ivr: ["1"])),
-            choice(value: "No", responses: responses(sms: ["No", "N", "2"], ivr: ["2"]))
+            choice(value: "Yes", responses: responses(sms: ["Yes", "Y", "1"], ivr: ["1"], mobileweb: ["Yes"])),
+            choice(value: "No", responses: responses(sms: ["No", "N", "2"], ivr: ["2"], mobileweb: ["No"]))
           ]
         ),
         numeric_step(
@@ -251,7 +280,8 @@ defmodule Ask.DummySteps do
           title: "Which is the second perfect number?",
           prompt: prompt(
             sms: sms_prompt("Which is the second perfect number??"),
-            ivr: tts_prompt("Which is the second perfect number")
+            ivr: tts_prompt("Which is the second perfect number"),
+            mobileweb: "Which is the second perfect number?"
             ),
           store: "Perfect Number",
           skip_logic: default_numeric_skip_logic(),
@@ -263,7 +293,8 @@ defmodule Ask.DummySteps do
           title: "What's the number of this question?",
           prompt: prompt(
             sms: sms_prompt("What's the number of this question??"),
-            ivr: tts_prompt("What's the number of this question")
+            ivr: tts_prompt("What's the number of this question"),
+            mobileweb: "What's the number of this question",
             ),
           store: "Question",
           skip_logic: default_numeric_skip_logic(),

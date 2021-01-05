@@ -195,14 +195,13 @@ defmodule Ask.Runtime.QuestionnaireSimulator do
     end
   end
 
-  def base_simulation(questionnaire, respondent, reply) do
-    submitted_steps = SubmittedStep.new_explanations(reply)
+  def base_simulation(questionnaire, respondent) do
     section_order = respondent.session.flow.section_order
     respondent = sync_respondent(respondent)
     %{
       questionnaire: questionnaire,
       respondent: respondent,
-      submissions: submitted_steps,
+      submissions: [],
       section_order: section_order
     }
   end
@@ -214,10 +213,9 @@ defmodule Ask.Runtime.QuestionnaireMobileWebSimulator do
   alias Ask.Simulation.{Status, Response}
   def start(project, questionnaire) do
     start_build = fn respondent, reply ->
-      base_simulation = QuestionnaireSimulator.base_simulation(questionnaire, respondent, reply)
-      current_step = QuestionnaireSimulator.current_step(reply)
-
+      base_simulation = QuestionnaireSimulator.base_simulation(questionnaire, respondent)
       simulation = Map.merge(%QuestionnaireMobileWebSimulation{}, base_simulation)
+      current_step = QuestionnaireSimulator.current_step(reply)
 
       response =
         simulation
@@ -276,14 +274,17 @@ end
 defmodule Ask.Runtime.QuestionnaireSmsSimulator do
   alias Ask.Runtime.{Survey, QuestionnaireSimulator, Flow}
   alias Ask.{QuestionnaireSmsSimulation, QuestionnaireSmsSimulationStep}
-  alias Ask.Simulation.{AOMessage, ATMessage, Status, Response}
+  alias Ask.Simulation.{AOMessage, ATMessage, Status, Response, SubmittedStep}
   def start(project, questionnaire) do
     start_build = fn respondent, reply ->
-      base_simulation = QuestionnaireSimulator.base_simulation(questionnaire, respondent, reply)
+      base_simulation = QuestionnaireSimulator.base_simulation(questionnaire, respondent)
       messages = AOMessage.create_all(reply)
+      simulation = Map.merge(base_simulation, %{
+        submissions: SubmittedStep.new_explanations(reply),
+        messages: messages
+      })
+      simulation = Map.merge(%QuestionnaireSmsSimulation{}, simulation)
       current_step = QuestionnaireSimulator.current_step(reply)
-
-      simulation = Map.merge(%QuestionnaireSmsSimulation{messages: messages}, base_simulation)
 
       response =
         simulation

@@ -9,21 +9,29 @@ defmodule QuestionnaireSimulatorTest do
   setup do
     project = insert(:project)
     QuestionnaireSimulatorStore.start_link()
-    start_simulation = fn quiz ->
-      {:ok, simulation} = QuestionnaireSimulator.start_simulation(project, quiz, "sms")
+    start_simulation = fn quiz, mode ->
+      {:ok, simulation} = QuestionnaireSimulator.start_simulation(project, quiz, mode)
       simulation
     end
     {:ok, project: project, start_simulation: start_simulation}
   end
 
-  def questionnaire_with_steps(steps, thank_you_message \\ %{"en" => %{"sms" => "Thank you for taking the survey"}}) do
-    insert(:questionnaire, steps: steps, quota_completed_steps: [])
-    |> Questionnaire.changeset(%{settings: %{"thank_you_message" => thank_you_message, "error_message" => %{"en" => %{"sms" => "Sorry, that was not a valid response"}}}})
+  def questionnaire_with_steps(steps, options \\ []) do
+    nil_thank_you_message = Keyword.get(options, :nil_thank_you_message, false)
+    quiz = insert(:questionnaire, steps: steps, quota_completed_steps: [])
+    quiz = if nil_thank_you_message do
+      settings = Map.get(quiz, :settings)
+      settings = Map.put(settings, :thank_you_message, nil)
+      Map.put(quiz, :settings, settings)
+    else
+      quiz
+    end
+    Questionnaire.changeset(quiz, %{modes: ["sms", "mobileweb"]})
     |> Repo.update!
   end
 
-  def process_respondent_response(respondent_id, response) do
-    {:ok, simulation_step} = QuestionnaireSimulator.process_respondent_response(respondent_id, response, "sms")
+  def process_respondent_response(respondent_id, response, mode \\ "sms") do
+    {:ok, simulation_step} = QuestionnaireSimulator.process_respondent_response(respondent_id, response, mode)
     simulation_step
   end
 
@@ -36,7 +44,7 @@ defmodule QuestionnaireSimulatorTest do
 
     test "with partial flag", %{start_simulation: start_simulation} do
       quiz = questionnaire_with_steps(SimulatorQuestionnaireSteps.with_interim_partial_flag)
-      %{respondent_id: respondent_id, disposition: disposition, messages_history: messages, simulation_status: status} = start_simulation.(quiz)
+      %{respondent_id: respondent_id, disposition: disposition, messages_history: messages, simulation_status: status} = start_simulation.(quiz, "sms")
       assert "contacted" == disposition
       assert  "Do you smoke? Reply 1 for YES, 2 for NO" == List.last(messages).body
       assert Simulation.Status.active == status
@@ -51,18 +59,18 @@ defmodule QuestionnaireSimulatorTest do
 
       %{disposition: disposition, messages_history: messages, simulation_status: status} = process_respondent_response(respondent_id, "Yes")
       assert "completed" == disposition
-      assert  "Thank you for taking the survey" == List.last(messages).body
+      assert  "Thanks for completing this survey" == List.last(messages).body
       assert Simulation.Status.ended == status
     end
 
     test "should maintain all respondent responses even if aren't valid", %{start_simulation: start_simulation} do
       quiz = questionnaire_with_steps(@dummy_steps)
-      %{respondent_id: respondent_id, messages_history: messages} = start_simulation.(quiz)
+      %{respondent_id: respondent_id, messages_history: messages} = start_simulation.(quiz, "sms")
       assert  "Do you smoke? Reply 1 for YES, 2 for NO" == List.last(messages).body
       %{messages_history: messages} = process_respondent_response(respondent_id, "perhaps")
       [_question, response, error_message, re_question] = messages
       assert response.body == "perhaps"
-      assert error_message.body == "Sorry, that was not a valid response"
+      assert error_message.body == "You have entered an invalid answer"
       assert re_question.body == "Do you smoke? Reply 1 for YES, 2 for NO"
     end
   end
@@ -72,7 +80,7 @@ defmodule QuestionnaireSimulatorTest do
     test "should include the explanation steps", %{start_simulation: start_simulation} do
       steps = SimulatorQuestionnaireSteps.with_explanation_first_step
       quiz = questionnaire_with_steps(steps)
-      %{respondent_id: respondent_id} = start_simulation.(quiz)
+      %{respondent_id: respondent_id} = start_simulation.(quiz, "sms")
       %{submissions: submissions} = process_respondent_response(respondent_id, "No")
 
       [first, second, third] = steps
@@ -87,8 +95,14 @@ defmodule QuestionnaireSimulatorTest do
     test "should indicate as response the valid-parsed responses", %{start_simulation: start_simulation} do
       steps = @dummy_steps
       quiz = questionnaire_with_steps(steps)
-      %{respondent_id: respondent_id} = start_simulation.(quiz)
+
+      %{respondent_id: respondent_id} = start_simulation.(quiz, "sms")
       %{submissions: submissions} = process_respondent_response(respondent_id, "1") # 1 is a yes response
+      first = hd(steps)
+      assert [expected_submission(first, "Yes")] == submissions
+
+      %{respondent_id: respondent_id} = start_simulation.(quiz, "mobileweb")
+      %{submissions: submissions} = process_respondent_response(respondent_id, "yes", "mobileweb")
       first = hd(steps)
       assert [expected_submission(first, "Yes")] == submissions
     end
@@ -96,7 +110,7 @@ defmodule QuestionnaireSimulatorTest do
     test "should not include the non-valid responses (since the step is not completed)", %{start_simulation: start_simulation} do
       steps = @dummy_steps
       quiz = questionnaire_with_steps(steps)
-      %{respondent_id: respondent_id} = start_simulation.(quiz)
+      %{respondent_id: respondent_id} = start_simulation.(quiz, "sms")
       %{submissions: submissions} = process_respondent_response(respondent_id, "perhaps")
       assert [] == submissions
     end
@@ -104,7 +118,7 @@ defmodule QuestionnaireSimulatorTest do
     test "should include all the questions and responses", %{start_simulation: start_simulation} do
       steps = @dummy_steps
       quiz = questionnaire_with_steps(steps)
-      %{respondent_id: respondent_id} = start_simulation.(quiz)
+      %{respondent_id: respondent_id} = start_simulation.(quiz, "sms")
 
       process_respondent_response(respondent_id, "1") # 1 is a yes response
       process_respondent_response(respondent_id, "Y") # Y is a yes response
@@ -132,7 +146,7 @@ defmodule QuestionnaireSimulatorTest do
         %{body: "7", type: "at"},
         %{body: "What's the number of this question??", type: "ao"},
         %{body: "4", type: "at"},
-        %{body: "Thank you for taking the survey", type: "ao"}
+        %{body: "Thanks for completing this survey", type: "ao"}
       ]
 
       assert expected_messages_history == messages_history
@@ -140,8 +154,8 @@ defmodule QuestionnaireSimulatorTest do
 
     test "should include all the responses even if the quiz doesn't have a thank-you-message", %{start_simulation: start_simulation} do
       steps = @dummy_steps
-      quiz = questionnaire_with_steps(steps, nil)
-      %{respondent_id: respondent_id} = start_simulation.(quiz)
+      quiz = questionnaire_with_steps(steps, nil_thank_you_message: true)
+      %{respondent_id: respondent_id} = start_simulation.(quiz, "sms")
 
       process_respondent_response(respondent_id, "1") # 1 is a yes response
       process_respondent_response(respondent_id, "Y") # Y is a yes response
@@ -195,7 +209,7 @@ defmodule QuestionnaireSimulatorTest do
   describe "stop messages ends the simulation" do
     test "if stop message on contacted disposition, then final disposition is 'refused'", %{start_simulation: start_simulation} do
       quiz = questionnaire_with_steps(@dummy_steps)
-      %{respondent_id: respondent_id, disposition: starting_disposition} = start_simulation.(quiz)
+      %{respondent_id: respondent_id, disposition: starting_disposition} = start_simulation.(quiz, "sms")
       assert "contacted" == starting_disposition
 
       %{simulation_status: status, disposition: disposition} = process_respondent_response(respondent_id, "Stop")
@@ -206,7 +220,7 @@ defmodule QuestionnaireSimulatorTest do
 
     test "if stop message on started disposition, then final disposition is 'breakoff'", %{start_simulation: start_simulation} do
       quiz = questionnaire_with_steps(@dummy_steps)
-      %{respondent_id: respondent_id} = start_simulation.(quiz)
+      %{respondent_id: respondent_id} = start_simulation.(quiz, "sms")
       %{disposition: previous_disposition} = process_respondent_response(respondent_id, "No")
 
       assert "started" == previous_disposition
@@ -219,7 +233,7 @@ defmodule QuestionnaireSimulatorTest do
 
     test "if stop message on interim-partial disposition, then final disposition is 'breakoff'", %{start_simulation: start_simulation} do
       quiz = questionnaire_with_steps(SimulatorQuestionnaireSteps.with_interim_partial_flag)
-      %{respondent_id: respondent_id} = start_simulation.(quiz)
+      %{respondent_id: respondent_id} = start_simulation.(quiz, "sms")
       process_respondent_response(respondent_id, "No")
       %{disposition: previous_disposition} = process_respondent_response(respondent_id, "Yes")
 
@@ -236,7 +250,7 @@ defmodule QuestionnaireSimulatorTest do
     test "if respondent answers min_relevant_steps, disposition should be 'interim partial'", %{start_simulation: start_simulation} do
       steps = QuestionnaireRelevantSteps.all_relevant_steps()
       quiz = questionnaire_with_steps(steps) |> Questionnaire.changeset(%{partial_relevant_config: %{"enabled" => true, "min_relevant_steps" => 2, "ignored_values" => ""}}) |> Repo.update!
-      %{respondent_id: respondent_id, disposition: disposition} = start_simulation.(quiz)
+      %{respondent_id: respondent_id, disposition: disposition} = start_simulation.(quiz, "sms")
       assert "contacted" == disposition
 
       %{disposition: disposition} = process_respondent_response(respondent_id, "No")
@@ -249,7 +263,7 @@ defmodule QuestionnaireSimulatorTest do
     test "once the respondent reaches 'interim partial', simulation should return such disposition until completes the survey", %{start_simulation: start_simulation} do
       steps = QuestionnaireRelevantSteps.all_relevant_steps()
       quiz = questionnaire_with_steps(steps) |> Questionnaire.changeset(%{partial_relevant_config: %{"enabled" => true, "min_relevant_steps" => 2, "ignored_values" => ""}}) |> Repo.update!
-      %{respondent_id: respondent_id, disposition: disposition} = start_simulation.(quiz)
+      %{respondent_id: respondent_id, disposition: disposition} = start_simulation.(quiz, "sms")
       assert "contacted" == disposition
 
       %{disposition: disposition} = process_respondent_response(respondent_id, "No")
@@ -269,7 +283,7 @@ defmodule QuestionnaireSimulatorTest do
     test "if respondent answer min_relevant_steps, even of different sections, disposition should be 'interim partial'", %{start_simulation: start_simulation} do
       steps = QuestionnaireRelevantSteps.relevant_steps_in_multiple_sections()
       quiz = questionnaire_with_steps(steps) |> Questionnaire.changeset(%{partial_relevant_config: %{"enabled" => true, "min_relevant_steps" => 2, "ignored_values" => ""}}) |> Repo.update!
-      %{respondent_id: respondent_id, disposition: disposition} = start_simulation.(quiz)
+      %{respondent_id: respondent_id, disposition: disposition} = start_simulation.(quiz, "sms")
       assert "contacted" == disposition
 
       %{disposition: disposition} = process_respondent_response(respondent_id, "No") # First relevant
@@ -286,24 +300,24 @@ defmodule QuestionnaireSimulatorTest do
   describe "questionnaire field" do
     test "should be included in start_simulation", %{start_simulation: start_simulation} do
       quiz = questionnaire_with_steps(@dummy_steps)
-      assert %{questionnaire: _quex} = start_simulation.(quiz)
+      assert %{questionnaire: _quex} = start_simulation.(quiz, "sms")
     end
 
     test "should not be included in process_respondent_response", %{start_simulation: start_simulation} do
       quiz = questionnaire_with_steps(@dummy_steps)
-      %{respondent_id: respondent_id} = start_simulation.(quiz)
+      %{respondent_id: respondent_id} = start_simulation.(quiz, "sms")
       assert %{questionnaire: nil} = process_respondent_response(respondent_id, "No")
     end
 
     test "if quiz doesn't have sections, steps should be in the same order", %{start_simulation: start_simulation} do
       quiz = questionnaire_with_steps(@dummy_steps)
-      %{questionnaire: quex} = start_simulation.(quiz)
+      %{questionnaire: quex} = start_simulation.(quiz, "sms")
       assert quiz.steps == quex.steps
     end
 
     test "if quiz has sections but not randomized, steps should be in the same order", %{start_simulation: start_simulation} do
       quiz = questionnaire_with_steps(SimulatorQuestionnaireSteps.two_sections_dummy_steps)
-      %{questionnaire: quex} = start_simulation.(quiz)
+      %{questionnaire: quex} = start_simulation.(quiz, "sms")
       assert quiz.steps == quex.steps
     end
 
@@ -322,7 +336,7 @@ defmodule QuestionnaireSimulatorTest do
 
   # Starts different simulations until one has a shuffled section order
   defp randomized_section_order(quiz, start_simulation) do
-    %{questionnaire: quex, respondent_id: respondent_id} = start_simulation.(quiz)
+    %{questionnaire: quex, respondent_id: respondent_id} = start_simulation.(quiz, "sms")
     %{section_order: section_order} = Ask.Runtime.QuestionnaireSimulatorStore.get_respondent_simulation(respondent_id)
     if section_order == Enum.sort(section_order) do
       # Sections where not shuffled
@@ -357,7 +371,7 @@ defmodule QuestionnaireSimulatorTest do
 
     %{disposition: disposition, messages_history: messages, simulation_status: status, current_step: current_step} = process_respondent_response(respondent_id, "4")
     assert "completed" == disposition
-    assert "Thank you for taking the survey" == List.last(messages).body
+    assert "Thanks for completing this survey" == List.last(messages).body
     assert current_step == nil
     assert Ask.Simulation.Status.ended == status
   end
