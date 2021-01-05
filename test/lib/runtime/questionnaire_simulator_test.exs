@@ -77,13 +77,55 @@ defmodule QuestionnaireSimulatorTest do
 
   describe "simulation submissions field" do
 
-    test "should include the explanation steps", %{start_simulation: start_simulation} do
+    test "SMS should include the explanation steps", %{start_simulation: start_simulation} do
       steps = SimulatorQuestionnaireSteps.with_explanation_first_step
       quiz = questionnaire_with_steps(steps)
       %{respondent_id: respondent_id} = start_simulation.(quiz, "sms")
       %{submissions: submissions} = process_respondent_response(respondent_id, "No")
 
       [first, second, third] = steps
+      expected_submissions = [
+        expected_submission(first),
+        expected_submission(second, "No"),
+        expected_submission(third)
+      ]
+      assert expected_submissions == submissions
+    end
+
+    # Ideally, mobile web explanation steps should be considered submitted after the user read it.
+    # But because the explanation steps aren't stored as answers, they behave differently.
+    # This behaviour isn't ideal, but fortunately the simulation works properly for the end user.
+    # The front-end marks them properly as the current step or a submission.
+    test "Mobile Web explanation steps behave differently", %{start_simulation: start_simulation} do
+      steps = SimulatorQuestionnaireSteps.with_explanation_first_step
+      quiz = questionnaire_with_steps(steps)
+      [first, second, third] = steps
+
+      # The simulation is started (the user asked for a simulation from the questionnaire screen)
+      %{respondent_id: respondent_id, submissions: submissions} = start_simulation.(quiz, "mobileweb")
+
+      expected_submissions = []
+      assert expected_submissions == submissions
+
+      # The mobile web screen is loaded and the first explanation step is shown.
+      %{submissions: submissions} = process_respondent_response(respondent_id, :answer, "mobileweb")
+
+      expected_submissions = [
+        expected_submission(first)
+      ]
+      assert expected_submissions == submissions
+
+      # The explanation step is read
+      %{submissions: submissions} = process_respondent_response(respondent_id, "", "mobileweb")
+
+      expected_submissions = [
+        expected_submission(first)
+      ]
+      assert expected_submissions == submissions
+
+      # The question is answered and the 2nd explanation step is shown
+      %{submissions: submissions} = process_respondent_response(respondent_id, "no", "mobileweb")
+
       expected_submissions = [
         expected_submission(first),
         expected_submission(second, "No"),
@@ -409,7 +451,8 @@ defmodule SimulatorQuestionnaireSteps do
       id: Ecto.UUID.generate,
       title: "Welcome",
       prompt: prompt(
-        sms: sms_prompt("Please consider taking this survey")
+        sms: sms_prompt("Please consider taking this survey"),
+        mobileweb: "Please consider taking this survey"
       ),
       skip_logic: nil
     ),
@@ -417,19 +460,21 @@ defmodule SimulatorQuestionnaireSteps do
       id: Ecto.UUID.generate,
       title: "Do you smoke?",
       prompt: prompt(
-        sms: sms_prompt("Do you smoke? Reply 1 for YES, 2 for NO")
+        sms: sms_prompt("Do you smoke? Reply 1 for YES, 2 for NO"),
+        mobileweb: "Do you smoke?"
       ),
       store: "Smokes",
       choices: [
-        choice(value: "Yes", responses: responses(sms: ["Yes", "Y", "1"])),
-        choice(value: "No", responses: responses(sms: ["No", "N", "2"]))
+        choice(value: "Yes", responses: responses(sms: ["Yes", "Y", "1"], mobileweb: ["yes"])),
+        choice(value: "No", responses: responses(sms: ["No", "N", "2"], mobileweb: ["no"]))
       ]
     ),
     explanation_step(
         id: Ecto.UUID.generate,
         title: "Explanation",
         prompt: prompt(
-          sms: sms_prompt("Your responses will be used responsibly")
+          sms: sms_prompt("Your responses will be used responsibly"),
+          mobileweb: "Your responses will be used responsibly"
         ),
         skip_logic: nil
       )

@@ -90,10 +90,13 @@ defmodule Ask.StepBuilder do
     }
   end
 
-  def prompt(mobileweb: text) do
+  def prompt(mobileweb: mobileweb) do
     %{
       "en" => %{
-        "mobileweb" => text
+        "mobileweb" => mobileweb
+      },
+      "es" => %{
+        "mobileweb" => "#{mobileweb} (Spanish)"
       }
     }
   end
@@ -119,6 +122,19 @@ defmodule Ask.StepBuilder do
     }
   end
 
+  def prompt(sms: sms, mobileweb: mobileweb) do
+    %{
+      "en" => %{
+        "sms" => sms,
+        "mobileweb" => mobileweb
+      },
+      "es" => %{
+        "sms" => "#{sms} (Spanish)",
+        "mobileweb" => "#{mobileweb} (Spanish)"
+      }
+    }
+  end
+
   def prompt(sms: sms, ivr: ivr, mobileweb: mobileweb) do
     %{
       "en" => %{
@@ -129,7 +145,7 @@ defmodule Ask.StepBuilder do
       "es" => %{
         "sms" => "#{sms} (Spanish)",
         "ivr" => ivr,
-        "mobileweb" => mobileweb
+        "mobileweb" => "#{mobileweb} (Spanish)"
       }
     }
   end
@@ -191,6 +207,17 @@ defmodule Ask.StepBuilder do
         "en" => sms
       },
       "ivr" => ivr
+    }
+  end
+
+  def responses(sms: sms, mobileweb: mobileweb) do
+    %{
+      "sms" => %{
+        "en" => sms
+      },
+      "mobileweb" => %{
+        "en" => mobileweb
+      }
     }
   end
 
