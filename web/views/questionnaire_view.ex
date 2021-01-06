@@ -1,4 +1,5 @@
 defmodule Ask.QuestionnaireView do
+  alias Ask.QuestionnaireSmsSimulationStep
   use Ask.Web, :view
 
   def render("index.json", %{questionnaires: questionnaires}) do
@@ -38,17 +39,39 @@ defmodule Ask.QuestionnaireView do
     render_simulation(simulation)
   end
 
+  defp render_simulation(%QuestionnaireSmsSimulationStep{
+    messages_history: messages_history,
+  } = simulation) do
+    simulation = prepare_simulation(simulation)
+    simulation = Map.put(simulation, :messages_history, messages_history)
+    render_prepared_simulation(simulation)
+  end
+
   defp render_simulation(simulation) do
+    simulation = prepare_simulation(simulation)
+    render_prepared_simulation(simulation)
+  end
+
+  defp prepare_simulation(%{
+    respondent_id: respondent_id,
+    simulation_status: simulation_status,
+    disposition: disposition,
+    submissions: submissions,
+    current_step: current_step,
+    questionnaire: questionnaire
+  }) do
     %{
-      respondent_id: simulation.respondent_id,
-      simulation_status: simulation.simulation_status,
-      disposition: Map.get(simulation, :disposition),
-      messages_history: Map.get(simulation, :messages_history),
-      submissions: Map.get(simulation, :submissions),
-      current_step: Map.get(simulation, :current_step),
-      questionnaire: render("questionnaire.json", %{questionnaire: Map.get(simulation, :questionnaire)})
+      respondent_id: respondent_id,
+      simulation_status: simulation_status,
+      disposition: disposition,
+      submissions: submissions,
+      current_step: current_step,
+      questionnaire: render("questionnaire.json", %{questionnaire: questionnaire})
     }
-    |> Enum.filter(fn {_, value} -> value end)
+  end
+
+  defp render_prepared_simulation(simulation) do
+    Enum.filter(simulation, fn {_, value} -> value end)
     |> Map.new()
   end
 end

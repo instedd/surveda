@@ -10,8 +10,10 @@ defmodule Ask.QuestionnaireSimulationStep do
   alias Ask.Simulation.Status
   alias __MODULE__
 
+  defstruct [:respondent_id, :simulation_status, :disposition, :current_step, :questionnaire, submissions: []]
+
   def expired(respondent_id) do
-    %{respondent_id: respondent_id, simulation_status: Status.expired}
+    %QuestionnaireSimulationStep{respondent_id: respondent_id, simulation_status: Status.expired}
   end
 
   def build(%{respondent: respondent, submissions: submissions, questionnaire: quiz, section_order: section_order}, current_step, status, with_quiz) do
