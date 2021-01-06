@@ -260,10 +260,10 @@ defmodule QuestionnaireSimulatorTest do
           responses = case mode do
             "sms" ->
               ["1", "Y", "7", "4"]
-              "mobileweb" ->
-                ["yes", "yes", "7", "4"]
-              end
-              [first, second, third, fourth] = responses
+            "mobileweb" ->
+              ["yes", "yes", "7", "4"]
+          end
+          [first, second, third, fourth] = responses
 
           %{respondent_id: respondent_id} = start_simulation.(quiz, mode)
           process_respondent_response(respondent_id, first, mode)
