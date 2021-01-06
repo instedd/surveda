@@ -77,21 +77,17 @@ describe('surveys', () => {
     })
   })
 
-  it('get invalid respondent state disposition', () => {
-    function validRespondentStateDisposition(respondent) {
-      const validStateDisposition = [
-        { disposition: 'contacted', state: 'cancelled' },
-        { disposition: 'started', state: 'cancelled' },
-        { disposition: 'rejected', state: 'rejected' },
+  it('verifies valid state and disposition combinations', () => {
+    const projectId = Cypress.env('project_id')
+    cy.setUpSurvey('respondents_sample.csv').then((value) => {
+      cy.wait(3000)
+      cy.waitUntilStale(projectId, value, 10).then(() => {
+        cy.surveyRespondents(projectId, value).then(respondents => {
+          const invalidRespondents = respondents.filter(r => !validRespondentStateDisposition(r))
 
-        // TODO add valid combinations
-      ]
-      return !!validStateDisposition.find(x => x.disposition == respondent.disposition && x.state == respondent.state)
-    }
-
-    cy.surveyRespondents(1, 1).then(respondents => {
-      const invalidRespondents = respondents.filter(r => !validRespondentStateDisposition(r))
-      cy.log(JSON.stringify(invalidRespondents))
+          cy.log(JSON.stringify(invalidRespondents))
+        })
+      })
     })
   })
 })

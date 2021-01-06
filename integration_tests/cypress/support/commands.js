@@ -87,6 +87,17 @@ Cypress.Commands.add('waitForUrl', (pattern) => {
   })
 })
 
+function validRespondentStateDisposition(respondent) {
+  const validStateDisposition = [
+    { disposition: 'contacted', state: 'cancelled' },
+    { disposition: 'started', state: 'cancelled' },
+    { disposition: 'rejected', state: 'rejected' },
+
+    // TODO add valid combinations
+  ]
+  return !!validStateDisposition.find(x => x.disposition == respondent.disposition && x.state == respondent.state)
+}
+
 Cypress.Commands.add('surveyRespondents', (projectId, surveyId) => {
   // TODO watch out for pagination
   const respondentsWithState = (state) => {
@@ -155,11 +166,18 @@ Cypress.Commands.add('setUpSurvey', (respondentsSample) => {
       cy.contains('Done').click()
       cy.get(':nth-child(1) > :nth-child(4) > .col > div > input')
         .clear()
-        .type('10')
+        .type('70')
     })
 
     // Launch survey
     cy.clickMainAction('Launch survey')
+
+    // Assert started status
+    cy.get(".cockpit").within(() => {
+      cy.get('.survey-status-container').should('contain', 'Started')
+    })
+
+    return cy.wrap(surveyId);
   })
 })
 
@@ -194,7 +212,6 @@ Cypress.Commands.add('waitUntilStale', (projectId, surveyId, timeout) => {
       const surveyState = response.body.data.state
       // check if survey has terminated if Y minutes haven't passed
       if (new Date() < YMinutesLater) {
-
         // check state after 20 seconds
         if (surveyState == 'running') {
           cy.wait(20000).then(() => {
