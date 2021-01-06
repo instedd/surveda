@@ -96,20 +96,20 @@ defmodule QuestionnaireSimulatorTest do
 
         %{respondent_id: respondent_id, disposition: disposition, simulation_status: status} = simulation
         assert "contacted" == disposition
-        assert_last_message(simulation, "Do you smoke? Reply 1 for YES, 2 for NO", mode)
+        on_sms_assert_last_message(simulation, "Do you smoke? Reply 1 for YES, 2 for NO", mode)
         assert Simulation.Status.active == status
 
         %{disposition: disposition} = simulation = process_respondent_response(respondent_id, "No", mode)
         assert "started" == disposition
-        assert_last_message(simulation, "Do you exercise? Reply 1 for YES, 2 for NO", mode)
+        on_sms_assert_last_message(simulation, "Do you exercise? Reply 1 for YES, 2 for NO", mode)
 
         %{disposition: disposition} = simulation = process_respondent_response(respondent_id, "Yes", mode)
         assert "interim partial" == disposition
-        assert_last_message(simulation, "Is this the last question?", mode)
+        on_sms_assert_last_message(simulation, "Is this the last question?", mode)
 
         %{disposition: disposition, simulation_status: status} = simulation = process_respondent_response(respondent_id, "Yes", mode)
         assert "completed" == disposition
-        assert_last_message(simulation, "Thanks for completing this survey", mode)
+        on_sms_assert_last_message(simulation, "Thanks for completing this survey", mode)
         assert Simulation.Status.ended == status
       end)
     end
@@ -490,28 +490,28 @@ defmodule QuestionnaireSimulatorTest do
     %{respondent_id: respondent_id, disposition: disposition, simulation_status: status, current_step: current_step} = simulation
     [first, second, third, fourth] = quiz |> Questionnaire.all_steps|> Enum.map(fn step -> step["id"] end)
     assert "contacted" == disposition
-    assert_last_message(simulation, "Do you smoke? Reply 1 for YES, 2 for NO", mode)
+    on_sms_assert_last_message(simulation, "Do you smoke? Reply 1 for YES, 2 for NO", mode)
     assert current_step == first
     assert Ask.Simulation.Status.active == status
 
     %{disposition: disposition, current_step: current_step} = simulation = process_respondent_response(respondent_id, "No", mode)
     assert "started" == disposition
-    assert_last_message(simulation, "Do you exercise? Reply 1 for YES, 2 for NO", mode)
+    on_sms_assert_last_message(simulation, "Do you exercise? Reply 1 for YES, 2 for NO", mode)
     assert current_step == second
 
     %{disposition: disposition, current_step: current_step} = simulation = process_respondent_response(respondent_id, "Yes", mode)
     assert "started" == disposition
-    assert_last_message(simulation, "Which is the second perfect number??", mode)
+    on_sms_assert_last_message(simulation, "Which is the second perfect number??", mode)
     assert current_step == third
 
     %{disposition: disposition, current_step: current_step} = simulation = process_respondent_response(respondent_id, "7", mode)
     assert "started" == disposition
-    assert_last_message(simulation, "What's the number of this question??", mode)
+    on_sms_assert_last_message(simulation, "What's the number of this question??", mode)
     assert current_step == fourth
 
     %{disposition: disposition, simulation_status: status, current_step: current_step} = simulation = process_respondent_response(respondent_id, "4", mode)
     assert "completed" == disposition
-    assert_last_message(simulation, "Thanks for completing this survey", mode)
+    on_sms_assert_last_message(simulation, "Thanks for completing this survey", mode)
     assert current_step == nil
     assert Ask.Simulation.Status.ended == status
   end
@@ -536,7 +536,7 @@ defmodule QuestionnaireSimulatorTest do
     simulation
   end
 
-  defp assert_last_message(simulation, message, mode) do
+  defp on_sms_assert_last_message(simulation, message, mode) do
     if mode == "sms" do
       messages = Map.get(simulation, :messages_history)
       assert message == List.last(messages).body
