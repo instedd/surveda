@@ -153,7 +153,7 @@ class QuestionnaireSimulation extends Component<Props, State> {
     const { simulation } = this.state
     const { router, projectId, questionnaireId, mode, t } = this.props
 
-    if (!simulation) return <div>{t('Loading')}</div>
+    if (!simulation) return <div>{t('Loading...')}</div>
 
     const simulationIsActive = simulation && simulation.simulationStatus == 'active'
     const closeSimulationButton = (
