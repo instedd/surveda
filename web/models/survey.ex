@@ -23,6 +23,7 @@ defmodule Ask.Survey do
   }
   alias Ask.Runtime.ChannelStatusServer
   alias Ask.Ecto.Type.JSON
+  alias Ecto.Multi
 
   @max_int 2147483647
   @default_fallback_delay 120
@@ -639,5 +640,9 @@ defmodule Ask.Survey do
 
     changeset
     |> put_assoc(:respondent_groups, respondent_groups_changeset)
+  end
+
+  def delete_multi(survey) do
+    Multi.delete(Multi.new, :survey, survey)
   end
 end

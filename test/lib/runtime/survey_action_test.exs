@@ -1,7 +1,7 @@
 defmodule Ask.SurveyActionTest do
   use Ask.ModelCase
   alias Ask.Runtime.SurveyAction
-  alias Ask.{Survey, Repo, TestChannel, Respondent}
+  alias Ask.{Survey, Repo, TestChannel, Respondent, ActivityLog}
 
   describe "repeat" do
     test "repeats a panel survey" do
@@ -72,6 +72,54 @@ defmodule Ask.SurveyActionTest do
     end
   end
 
+  describe "delete panel surveys" do
+    test "if it's the only one, just drop it" do
+      survey = completed_panel_survey()
+
+      {result, _data} = delete(survey)
+
+      assert result == :ok
+      assert_deleted_survey(survey.id)
+    end
+
+    test "removing one in the middle is fine" do
+      [first, second, third] = three_panel_survey_incarnations()
+
+      {result, _data} = delete(second)
+
+      assert result == :ok
+      assert_deleted_survey(second.id)
+      assert_panel_survey(first.id, panel_survey_of: first.id, latest_panel_survey: false, repeatable?: false)
+      assert_panel_survey(third.id, panel_survey_of: first.id, latest_panel_survey: true, repeatable?: true)
+    end
+
+    test "removing the original should make the second one to act as the original" do
+      [first, second, third] = three_panel_survey_incarnations()
+
+      {result, _data} = delete(first)
+
+      assert result == :ok
+      assert_deleted_survey(first.id)
+      assert_panel_survey(second.id, panel_survey_of: second.id, latest_panel_survey: false, repeatable?: false)
+      assert_panel_survey(third.id, panel_survey_of: second.id, latest_panel_survey: true, repeatable?: true)
+    end
+
+    test "removing the last one should allow the user to create a new incarnation from the previous one from the normal flow" do
+      [first, second, third] = three_panel_survey_incarnations()
+
+      {result, _data} = delete(third)
+
+      assert result == :ok
+      assert_deleted_survey(third.id)
+      assert_panel_survey(first.id, panel_survey_of: first.id, latest_panel_survey: false, repeatable?: false)
+      assert_panel_survey(second.id, panel_survey_of: first.id, latest_panel_survey: true, repeatable?: true)
+    end
+  end
+
+  defp delete(survey) do
+    SurveyAction.delete(survey, nil)
+  end
+
   defp respondent_channels(survey) do
     survey =
       survey
@@ -96,7 +144,7 @@ defmodule Ask.SurveyActionTest do
   end
 
   defp switch_to_panel_survey(survey) do
-    Survey.changeset(survey, %{panel_survey_of: regular_survey().id, latest_panel_survey: true})
+    Survey.changeset(survey, %{panel_survey_of: survey.id, latest_panel_survey: true})
     |> Repo.update!()
   end
 
@@ -114,10 +162,18 @@ defmodule Ask.SurveyActionTest do
     panel_survey() |> complete
   end
 
+  defp repeat(survey) do
+    {:ok, %{survey: new_occurrence}} = SurveyAction.repeat(survey)
+    %{
+      repeated_survey: Repo.get(Survey, survey.id),
+      new_occurrence: new_occurrence
+    }
+  end
+
   defp repeated_survey() do
     survey = completed_panel_survey()
-    SurveyAction.repeat(survey)
-    Repo.get!(Survey, survey.id)
+    %{repeated_survey: repeated_survey} = repeat(survey)
+    repeated_survey
   end
 
   defp completed_panel_survey_with_respondents() do
@@ -155,5 +211,44 @@ defmodule Ask.SurveyActionTest do
       |> Repo.get_by(hashed_number: hashed_number)
 
     !!respondent
+  end
+
+  defp assert_deleted_survey(survey_id) do
+    refute Repo.get(Survey, survey_id)
+    assert survey_id == Repo.one(ActivityLog).entity_id
+  end
+
+  defp assert_panel_survey(survey_id, options) do
+    survey = Repo.get(Survey, survey_id)
+    assert survey
+    assert Survey.panel_survey?(survey)
+
+    panel_survey_of = Keyword.get(options, :panel_survey_of, nil)
+    if panel_survey_of do
+      assert survey.panel_survey_of == panel_survey_of
+    end
+    latest_panel_survey = Keyword.get(options, :latest_panel_survey, nil)
+    if latest_panel_survey != nil do
+      assert survey.latest_panel_survey == latest_panel_survey
+    end
+    repeatable? = Keyword.get(options, :repeatable, nil)
+    if repeatable? != nil do
+      assert Survey.repeatable?(survey) == repeatable?
+    end
+  end
+
+  defp three_panel_survey_incarnations() do
+    first = completed_panel_survey()
+    %{
+      repeated_survey: first,
+      new_occurrence: second
+    } = repeat(first)
+    second = complete(second)
+    %{
+      repeated_survey: second,
+      new_occurrence: third
+    } = repeat(second)
+    third = complete(third)
+    [first, second, third]
   end
 end
