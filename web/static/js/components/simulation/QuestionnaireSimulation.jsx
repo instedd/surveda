@@ -6,8 +6,9 @@ import { connect } from 'react-redux'
 import { bindActionCreators } from 'redux'
 import * as routes from '../../routes'
 import { Tooltip } from '../ui'
-import { startSimulation, messageSimulation } from '../../api.js'
+import { startSimulation, messageSimulation, fetchSimulation } from '../../api.js'
 import ChatWindow from './ChatWindow'
+import MobileWebWindow from './MobileWebWindow'
 import DispositionChart from './DispositionChart'
 import SimulationSteps from './SimulationSteps'
 import { translate } from 'react-i18next'
@@ -29,7 +30,8 @@ type Simulation = {
   disposition: string,
   respondentId: string,
   currentStep: string,
-  questionnaire: Questionnaire
+  questionnaire: Questionnaire,
+  indexUrl: string
 }
 
 type Props = {
@@ -52,6 +54,16 @@ class QuestionnaireSimulation extends Component<Props, State> {
 
   componentDidMount = () => {
     browserHistory.listen(this.onRouteChange)
+    window.addEventListener('message', event => {
+      const { mode } = this.props
+      const { simulation } = this.state
+      if (event.data.simulationChanged && simulation) {
+        const { projectId, questionnaireId } = this.props
+        return fetchSimulation(projectId, questionnaireId, simulation.respondentId, mode).then(result => {
+          this.onSimulationChanged(result)
+        })
+      }
+    })
   }
 
   onRouteChange = () => {
@@ -72,23 +84,15 @@ class QuestionnaireSimulation extends Component<Props, State> {
     if (projectId && questionnaireId) {
       this.fetchQuestionnaireForTitle()
       // We only support SMS for now
-      if (mode == 'sms') {
+      if (['sms', 'mobileweb'].includes(mode)) {
         startSimulation(projectId, questionnaireId, mode).then(result => {
-          this.setState({ simulation: {
-            messagesHistory: result.messagesHistory,
-            submissions: result.submissions,
-            simulationStatus: result.simulationStatus,
-            disposition: result.disposition,
-            respondentId: result.respondentId,
-            currentStep: result.currentStep,
-            questionnaire: result.questionnaire
-          }})
+          this.setState({simulation: result})
         })
       }
     }
   }
 
-  handleMessageResult = result => {
+  onSimulationChanged = result => {
     const { simulation } = this.state
     const { t } = this.props
     if (result.simulationStatus == 'expired') {
@@ -120,12 +124,12 @@ class QuestionnaireSimulation extends Component<Props, State> {
   }
 
   handleATMessage = message => {
-    const { projectId, questionnaireId } = this.props
+    const { projectId, questionnaireId, mode } = this.props
     const { simulation } = this.state
     if (simulation) {
       this.addMessage(message)
-      messageSimulation(projectId, questionnaireId, simulation.respondentId, message.body).then(result => {
-        this.handleMessageResult(result)
+      messageSimulation(projectId, questionnaireId, simulation.respondentId, message.body, mode).then(result => {
+        this.onSimulationChanged(result)
       })
     }
   }
@@ -147,7 +151,10 @@ class QuestionnaireSimulation extends Component<Props, State> {
 
   render() {
     const { simulation } = this.state
-    const { router, projectId, questionnaireId } = this.props
+    const { router, projectId, questionnaireId, mode, t } = this.props
+
+    if (!simulation) return <div>{t('Loading...')}</div>
+
     const simulationIsActive = simulation && simulation.simulationStatus == 'active'
     const closeSimulationButton = (
       <div>
@@ -158,24 +165,25 @@ class QuestionnaireSimulation extends Component<Props, State> {
         </Tooltip>
       </div>
     )
+    const phoneWindow = () => {
+      if (mode == 'sms') {
+        return <ChatWindow messages={simulation.messagesHistory} onSendMessage={this.handleATMessage} chatTitle={'SMS mode'} readOnly={!simulationIsActive} scrollToBottom />
+      } else if (mode == 'mobileweb') {
+        return <MobileWebWindow indexUrl={simulation.indexUrl} />
+      }
+    }
 
     return <div>
-      {
-        simulation
-        ? <div>
-          {closeSimulationButton}
-          <div className='quex-simulation-container'>
-            <DispositionChart disposition={simulation.disposition} />
-            <SimulationSteps steps={simulation.questionnaire.steps}
-              currentStepId={simulation.currentStep}
-              submissions={simulation.submissions}
-              simulationIsEnded={simulation.simulationStatus == 'ended'}
-            />
-            <ChatWindow messages={simulation.messagesHistory} onSendMessage={this.handleATMessage} chatTitle={'SMS mode'} readOnly={!simulationIsActive} scrollToBottom />
-          </div>
-        </div>
-        : 'Loading'
-      }
+      {closeSimulationButton}
+      <div className='quex-simulation-container'>
+        <DispositionChart disposition={simulation.disposition} />
+        <SimulationSteps steps={simulation.questionnaire.steps}
+          currentStepId={simulation.currentStep}
+          submissions={simulation.submissions}
+          simulationIsEnded={simulation.simulationStatus == 'ended'}
+        />
+        {phoneWindow()}
+      </div>
     </div>
   }
 }

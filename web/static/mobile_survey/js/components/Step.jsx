@@ -14,6 +14,7 @@ type Props = {
   dispatch: PropTypes.func.isRequired,
   respondentId: any,
   token: string,
+  apiUrl: string,
   step: PropTypes.object.isRequired,
   progress: number,
   errorMessage: ?string,
@@ -43,7 +44,7 @@ class Step extends Component<Props, State> {
     this.setState({userConsent: true})
     // When fetching the survey, the cookie is created. After this first fetch, that cookie is needed to continue the survey, all others will fail.
     this.fetchStep()
-  }
+}
 
   componentDidMount() {
     window.addEventListener('scroll', this.hideMoreContentHint)
@@ -62,8 +63,10 @@ class Step extends Component<Props, State> {
   }
 
   fetchStep() {
-    const { dispatch, respondentId, token } = this.props
-    actions.fetchStep(dispatch, respondentId, token)
+    const { dispatch, respondentId, token, apiUrl } = this.props
+    actions.fetchStep(dispatch, respondentId, token, apiUrl).then(() => {
+      this.postSimulationChanged()
+    })
   }
 
   componentDidUpdate(prevProps) {
@@ -126,9 +129,16 @@ class Step extends Component<Props, State> {
   }
 
   handleValue(value) {
-    const { dispatch, step, respondentId, token } = this.props
-    actions.sendReply(dispatch, respondentId, token, step.id, value)
-      .then(() => this.refs.step.clearValue())
+    const { dispatch, step, respondentId, token, apiUrl } = this.props
+    actions.sendReply(dispatch, respondentId, token, step.id, value, apiUrl)
+      .then(() => {
+        this.refs.step.clearValue()
+        this.postSimulationChanged()
+      })
+  }
+
+  postSimulationChanged() {
+    window.parent.postMessage({simulationChanged: true})
   }
 
   render() {
@@ -180,6 +190,7 @@ const mapStateToProps = (state) => ({
   errorMessage: state.step.errorMessage,
   respondentId: window.respondentId,
   token: window.token,
+  apiUrl: window.apiUrl,
   introMessage: state.config.introMessage,
   colorStyle: state.config.colorStyle
 })

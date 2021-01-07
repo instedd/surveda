@@ -82,9 +82,9 @@ defmodule Ask.MobileSurveyController do
         respondent.state in ["pending", "active", "rejected"] ->
           case Survey.sync_step(respondent, value, "mobileweb") do
             {:reply, reply, _} ->
-              {first_step(reply), progress(reply), reply.error_message}
+              {Reply.first_step(reply), Reply.progress(reply), reply.error_message}
             {:end, {:reply, reply}, _} ->
-              {first_step(reply), progress(reply), reply.error_message}
+              {Reply.first_step(reply), Reply.progress(reply), reply.error_message}
             {:end, _} ->
               {end_step(), end_progress(), nil}
           end
@@ -98,20 +98,6 @@ defmodule Ask.MobileSurveyController do
       progress: progress,
       error_message: error_message
     })
-  end
-
-  defp first_step(reply) do
-    reply |> Reply.steps() |> hd
-  end
-
-  defp progress(reply) do
-    if reply.current_step && reply.total_steps && reply.total_steps > 0 do
-      100 * (reply.current_step / reply.total_steps)
-    else
-      # If no explicit progress is set in the reply, assume we are at the end.
-      # This happens in the "thank you" and "quota completed" messages.
-      100.0
-    end
   end
 
   defp end_step(msg \\ "The survey has ended") do

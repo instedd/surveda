@@ -516,15 +516,20 @@ export const refreshDispositionHistoryLink = (projectId, surveyId) => {
 }
 
 export const startSimulation = (projectId, questionnaireId, mode) => {
-  return apiPutOrPostJSONWithCallback(`projects/${projectId}/questionnaires/${questionnaireId}/simulation`, arrayOf(referenceSchema), 'POST', { mode }, passthroughCallback)
+  return apiPutOrPostJSONWithCallback(`projects/${projectId}/questionnaires/${questionnaireId}/simulation`, null, 'POST', { mode }, passthroughCallback)
 }
 
-export const messageSimulation = (projectId, questionnaireId, respondentId, message) => {
+export const fetchSimulation = (projectId, questionnaireId, respondentId, mode) => {
+  return apiFetchJSONWithCallback(`projects/${projectId}/questionnaires/${questionnaireId}/simulation/${respondentId}`, null, {}, passthroughCallback)
+}
+
+export const messageSimulation = (projectId, questionnaireId, respondentId, message, mode) => {
   const body = {
     respondentId,
-    response: message
+    response: message,
+    mode
   }
-  return apiPutOrPostJSONWithCallback(`projects/${projectId}/questionnaires/${questionnaireId}/simulation/message`, arrayOf(referenceSchema), 'POST', body, passthroughCallback)
+  return apiPutOrPostJSONWithCallback(`projects/${projectId}/questionnaires/${questionnaireId}/simulation/message`, null, 'POST', body, passthroughCallback)
 }
 
 export const deleteResultsLink = (projectId, surveyId) => {

@@ -15,7 +15,7 @@ defmodule Ask.QuestionnaireController do
     Gettext
   }
   alias Ecto.Multi
-  alias Ask.Runtime.QuestionnaireSimulator
+  alias Ask.Runtime.{QuestionnaireSimulator, QuestionnaireMobileWebSimulator}
 
   plug :validate_params when action in [:create, :update]
   action_fallback Ask.FallbackController
@@ -389,20 +389,24 @@ defmodule Ask.QuestionnaireController do
     project = conn |> load_project(project_id)
     mode = conn.params["mode"]
     with {:ok, questionnaire} <- load_questionnaire(project, id),
-         {:ok, simulation} <- QuestionnaireSimulator.start_simulation(project, questionnaire, mode)
+         {:ok, simulation_response} <- QuestionnaireSimulator.start_simulation(project, questionnaire, mode)
     do
-      render(conn, "simulation.json", simulation: simulation)
+      render(conn, "simulation.json", simulation: simulation_response, mode: mode)
     end
   end
 
-  def sync_simulation(conn, %{"project_id" => project_id}) do
+  def sync_simulation(conn, %{"project_id" => project_id, "respondent_id" => respondent_id, "response" => response, "mode" => "sms"}) do
     # Load project to authorize connection
     conn |> load_project(project_id)
+    with {:ok, simulation_response} <- QuestionnaireSimulator.process_respondent_response(respondent_id, response, "sms"), do:
+      render(conn, "simulation.json", simulation: simulation_response)
+  end
 
-    respondent_id = conn.params["respondent_id"]
-    response = conn.params["response"]
-    with {:ok, simulation} <- QuestionnaireSimulator.process_respondent_response(respondent_id, response), do:
-      render(conn, "simulation.json", simulation: simulation)
+  def get_last_simulation_response(conn, %{"project_id" => project_id, "respondent_id" => respondent_id}) do
+    # Load project to authorize connection
+    conn |> load_project(project_id)
+    with {:ok, simulation_response} <- QuestionnaireMobileWebSimulator.get_last_simulation_response(respondent_id), do:
+      render(conn, "simulation.json", simulation: simulation_response)
   end
 
   defp validate_params(conn, _params) do
