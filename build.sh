@@ -9,10 +9,10 @@ source <(curl -s https://raw.githubusercontent.com/manastech/ci-docker-builder/b
 dockerSetup
 
 # Write a VERSION file for the footer
-docker-compose run --rm app mix deps.get
-docker-compose run --rm app mix run --no-compile --no-start -e 'File.write! "VERSION", Mix.Project.config[:version]'
+echo $VERSION > VERSION
 
 # Build assets
+docker-compose run --rm app mix deps.get
 docker-compose run --rm webpack yarn install --no-progress
 docker-compose run --rm webpack yarn deploy
 
