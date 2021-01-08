@@ -1,7 +1,20 @@
 defmodule Ask.Runtime.SurveyAction do
-  alias Ask.{Survey, Logger, Repo, Questionnaire}
+  alias Ask.{Survey, Logger, Repo, Questionnaire, ActivityLog}
   alias Ask.Runtime.PanelSurvey
   alias Ecto.Multi
+
+  def delete(survey, conn) do
+    survey = Repo.preload(survey, [:project])
+
+    multi = if Survey.panel_survey?(survey) do
+      PanelSurvey.delete_multi(survey)
+    else
+      Survey.delete_multi(survey)
+    end
+
+    log = ActivityLog.delete_survey(survey.project, conn, survey)
+    Multi.insert(multi, :log, log) |> Repo.transaction
+  end
 
   def start(survey, options \\ []) do
     survey =

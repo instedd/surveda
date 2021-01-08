@@ -1,6 +1,7 @@
 defmodule Ask.Runtime.PanelSurvey do
   import Ecto.Query
   alias Ask.{Survey, Repo, Respondent, RespondentGroupChannel}
+  alias Ecto.Multi
 
   def new_ocurrence_changeset(survey) do
     unless Survey.repeatable?(survey), do: raise("Panel survey isn't repeatable")
@@ -93,4 +94,51 @@ defmodule Ask.Runtime.PanelSurvey do
       )
     end)
   end
+
+  def delete_multi(survey) do
+    Multi.append(pre_delete_multi(survey), Survey.delete_multi(survey))
+  end
+
+  defp pre_delete_multi(survey), do: pre_delete_multi(survey, Multi.new)
+
+  # If it's the only one, just drop it
+  defp pre_delete_multi(%{latest_panel_survey: true, id: id, panel_survey_of: panel_survey_of} = survey, multi) when id == panel_survey_of do
+    Multi.update(multi, :pre_delete_current, pre_delete_current_changeset(survey))
+  end
+
+  # Removing the original should make the second one to act as the original
+  defp pre_delete_multi(%{latest_panel_survey: false, id: id, panel_survey_of: panel_survey_of} = survey, multi) when id == panel_survey_of do
+    following_survey_id = Repo.one(from s in Survey,
+    select: s.id,
+    where: s.panel_survey_of == ^id and s.id > ^id,
+    order_by: [asc: :id],
+    limit: 1)
+    following_surveys_query = from(s in Survey, where: s.panel_survey_of == ^id and s.id > ^id)
+
+    multi
+     |> Multi.update_all(:pre_delete_following, following_surveys_query, set: [panel_survey_of: following_survey_id])
+     |> Multi.update(:pre_delete_current, pre_delete_current_changeset(survey))
+  end
+
+  # Removing one in the middle is fine
+  defp pre_delete_multi(%{latest_panel_survey: false} = survey, multi) do
+    Multi.update(multi, :pre_delete_current, pre_delete_current_changeset(survey))
+  end
+
+  # Removing the last one should allow the user to create a new incarnation from the previous one from the normal flow.
+  defp pre_delete_multi(%{latest_panel_survey: true, panel_survey_of: panel_survey_of, id: id} = survey, multi) do
+
+    previous_survey = Repo.one(from s in Survey,
+      where: s.panel_survey_of == ^panel_survey_of and s.id < ^id,
+      order_by: [desc: :id],
+      limit: 1)
+
+    previous_changeset = Survey.changeset(previous_survey, %{latest_panel_survey: true})
+
+    multi
+      |> Multi.update(:pre_delete_previous, previous_changeset)
+      |> Multi.update(:pre_delete_current, pre_delete_current_changeset(survey))
+  end
+
+  defp pre_delete_current_changeset(survey), do: Survey.changeset(survey, %{panel_survey_of: nil})
 end

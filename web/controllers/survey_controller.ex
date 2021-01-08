@@ -2,7 +2,7 @@ defmodule Ask.SurveyController do
   use Ask.Web, :api_controller
 
   alias Ask.{Project, Folder, Survey, Questionnaire, Logger, RespondentGroup, Respondent, Channel, ShortLink, ActivityLog, RetriesHistogram}
-  alias Ask.Runtime.Session
+  alias Ask.Runtime.{Session, SurveyAction}
   alias Ecto.Multi
   alias Ask.SurveyCanceller
 
@@ -283,17 +283,13 @@ defmodule Ask.SurveyController do
     |> assoc(:surveys)
     |> Repo.get!(id)
 
+    # TODO: Maybe we should move this validation to SurveyAction in the future
     case survey.state do
       "running" ->
         send_resp(conn, :bad_request, "")
 
       _ ->
-        multi = Multi.new
-        |> Multi.delete(:survey, survey)
-        |> Multi.insert(:log, ActivityLog.delete_survey(project, conn, survey))
-        |> Repo.transaction
-
-        case multi do
+        case SurveyAction.delete(survey, conn) do
           {:ok, _} ->
             project |> Project.touch!
             send_resp(conn, :no_content, "")
@@ -306,13 +302,13 @@ defmodule Ask.SurveyController do
   end
 
   def launch(conn, %{"project_id" => project_id, "survey_id" => survey_id}) do
-    perform_action = fn survey -> Ask.Runtime.SurveyAction.start(survey) end
+    perform_action = fn survey -> SurveyAction.start(survey) end
     activity_log = fn survey -> ActivityLog.start(survey.project, conn, survey) end
     launch_or_repeat(conn, project_id, survey_id, perform_action, activity_log)
   end
 
   def repeat(conn, %{"project_id" => project_id, "survey_id" => survey_id}) do
-    perform_action = fn survey -> Ask.Runtime.SurveyAction.repeat(survey) end
+    perform_action = fn survey -> SurveyAction.repeat(survey) end
     activity_log = fn survey -> ActivityLog.repeat(survey.project, conn, survey) end
     launch_or_repeat(conn, project_id, survey_id, perform_action, activity_log)
   end
