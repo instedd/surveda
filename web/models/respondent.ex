@@ -14,7 +14,7 @@ defmodule Ask.Respondent do
     # * pending: the initial state of a respondent, before communication starts
     # * active: a communication is being held with the respondent
     # * completed: the communication finished succesfully (it reached the end)
-    # * failed: communication couldn't be established or was cut, only for IVR
+    # * failed: communication couldn't be established or was cut
     # * rejected: communication ended because the respondent fell in a full quota bucket
     # * cancelled: when the survey is stopped and has "terminated" state, all the active
     #     respondents will be updated with this state.
