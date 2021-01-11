@@ -266,6 +266,7 @@ defmodule Ask.QuestionnaireController do
     all_questionnaire_steps = Questionnaire.all_steps(questionnaire)
     audio_ids = collect_steps_audio_ids(all_questionnaire_steps, [])
     audio_ids = collect_lang_prompt_audio_ids(questionnaire.settings["error_message"], audio_ids)
+    audio_ids = collect_lang_prompt_audio_ids(questionnaire.settings["thank_you_message"], audio_ids)
     #for each audio: charges it in memory and then streams it.
     audio_resource = Stream.resource(
       fn -> audio_ids end,
