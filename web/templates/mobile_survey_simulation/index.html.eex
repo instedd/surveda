@@ -4,6 +4,7 @@
     window.mixEnv = "<%= Mix.env %>"
     window.respondentId = "<%= @respondent_id %>"
     window.apiUrl = "/mobile/simulation"
+    window.simulation = true
   </script>
   <script src="<%= static_path(@conn, "/js/mobileSurvey.js") %>"></script>
 </body>

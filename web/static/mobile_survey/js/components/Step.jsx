@@ -19,7 +19,8 @@ type Props = {
   progress: number,
   errorMessage: ?string,
   introMessage: string,
-  colorStyle: PropTypes.object.isRequired
+  colorStyle: PropTypes.object.isRequired,
+  simulation: boolean
 }
 
 type State = {
@@ -47,6 +48,8 @@ class Step extends Component<Props, State> {
 }
 
   componentDidMount() {
+    const {simulation} = this.props
+
     window.addEventListener('scroll', this.hideMoreContentHint)
 
     // This is so that when the user switches between tabs,
@@ -54,7 +57,7 @@ class Step extends Component<Props, State> {
     // to the current step and so there's no way to submit
     // an answer for a previous question
     window.onfocus = () => {
-      if (this.state.userConsent) this.fetchStep()
+      if (!simulation && this.state.userConsent) this.fetchStep()
     }
   }
 
@@ -192,7 +195,8 @@ const mapStateToProps = (state) => ({
   token: window.token,
   apiUrl: window.apiUrl,
   introMessage: state.config.introMessage,
-  colorStyle: state.config.colorStyle
+  colorStyle: state.config.colorStyle,
+  simulation: !!window.simulation
 })
 
 Step.childContextTypes = {
