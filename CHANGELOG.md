@@ -1,5 +1,21 @@
 # InSTEDD Surveda Changelog
 
+## 0.30.0
+
+### Features
+
+* Add panel surveys support - first cut. [#1815](https://github.com/instedd/surveda/pull/1815)
+* Enable fast mobile web simulation i.e.: without a real device. [#1819](https://github.com/instedd/surveda/pull/1819)
+
+### Bugfixes
+
+* Updated multiple missing text translations
+
+### Others
+
+* Migrate build and CI to GitHub Actions. [#1812](https://github.com/instedd/surveda/pull/1812)
+* Unify simulators look and feel. [#1817](https://github.com/instedd/surveda/pull/1817)
+
 ## 0.29.0
 
 ### Features
