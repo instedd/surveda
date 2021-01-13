@@ -42,6 +42,10 @@ Cypress.Commands.add('loginGuisso', (email, pwd) => {
 
   cy.contains('Log in').click()
 
+  cy.get(".content").within(() => {
+    cy.get('.container-fluid').should('contain', 'Your authorizations')
+  })
+
   // go to root to force the login cookie in Surveda's side.
   // Otherwise, next visit will cause a redirect.
   cy.visit(`/`)
@@ -87,48 +91,22 @@ Cypress.Commands.add('waitForUrl', (pattern) => {
   })
 })
 
-function validRespondentStateDisposition(respondent) {
-  const validStateDisposition = [
-    { disposition: 'contacted', state: 'active' },
-    { disposition: 'interim partial', state: 'active' },
-    { disposition: 'queued', state: 'active' },
-    { disposition: 'started', state: 'active' },
-    { disposition: 'breakoff', state: 'cancelled' },
-    { disposition: 'contacted', state: 'cancelled' },
-    { disposition: 'failed', state: 'cancelled' },
-    { disposition: 'inelegible', state: 'cancelled' },
-    { disposition: 'interim partial', state: 'cancelled' },
-    { disposition: 'queued', state: 'cancelled' },
-    { disposition: 'refused', state: 'cancelled' },
-    { disposition: 'started', state: 'cancelled' },
-    { disposition: 'unresponsive', state: 'cancelled' },
-    { disposition: 'completed', state: 'completed' },
-    { disposition: 'ineligible', state: 'completed' },
-    { disposition: 'partial', state: 'completed' },
-    { disposition: 'refused', state: 'completed' },
-    { disposition: 'rejected', state: 'completed' },
-    { disposition: 'breakoff', state: 'failed' }, 
-    { disposition: 'failed', state: 'failed' }, 
-    { disposition: 'unresponsive', state: 'failed' }, 
-    { disposition: 'registered', state: 'pending' }, 
-    { disposition: 'rejected', state: 'rejected' },
-  ]
-  return !!validStateDisposition.find(x => x.disposition == respondent.disposition && x.state == respondent.state)
-}
-
 Cypress.Commands.add('surveyRespondents', (projectId, surveyId) => {
-  // TODO watch out for pagination
   const respondentsWithState = (state) => {
-    cy.request({
-      url: `/api/v1/projects/${projectId}/surveys/${surveyId}/respondents`,
-      qs: { q: `state:${state}` }
-    }).then((response) => {
-      const respondents = response.body.data.respondents
-      return respondents.map(r => ({ ...r, state: state }))
+    return new Cypress.Promise(resolve => {
+      cy.request({
+        url: `/api/v1/projects/${projectId}/surveys/${surveyId}/respondents`,
+        qs: { q: `state:${state}` }
+      }).then((response) => {
+        const respondents = response.body.data.respondents
+        resolve(respondents.map(r => ({ ...r, state: state })))
+      })
     })
   }
   const states = ['pending', 'active', 'completed', 'failed', 'rejected', 'cancelled']
-  Promise.all(states.map(respondentsWithState)).then(result => [...result])
+  Cypress.Promise.all(states.map(respondentsWithState)).then(result => {
+    return cy.wrap(result.flatMap(x => x))
+  })
 })
 
 Cypress.Commands.add('setUpSurvey', (respondentsSample) => {
@@ -169,11 +147,13 @@ Cypress.Commands.add('setUpSurvey', (respondentsSample) => {
       cy.get(':nth-child(3) > :nth-child(2) > .select-wrapper > input.select-dropdown')
         .click()
       cy.get('select').last().select('23:00:00', { force: true })
+      cy.get(':nth-child(1) > .btn-floating').click()
       cy.get(':nth-child(2) > .btn-floating').click()
       cy.get(':nth-child(3) > .btn-floating').click()
       cy.get(':nth-child(4) > .btn-floating').click()
       cy.get(':nth-child(5) > .btn-floating').click()
       cy.get(':nth-child(6) > .btn-floating').click()
+      cy.get(':nth-child(7) > .btn-floating').click()
     })
 
     // Define quotas
@@ -184,7 +164,7 @@ Cypress.Commands.add('setUpSurvey', (respondentsSample) => {
       cy.contains('Done').click()
       cy.get(':nth-child(1) > :nth-child(4) > .col > div > input')
         .clear()
-        .type('70')
+        .type('1')
     })
 
     // Launch survey
@@ -197,12 +177,6 @@ Cypress.Commands.add('setUpSurvey', (respondentsSample) => {
 
     return cy.wrap(surveyId);
   })
-})
-
-Cypress.Commands.add('prepareSurvey', (questionnaireTemplate, respondentsSample) => {
-  cy.importQuestionnaire(questionnaireTemplate)
-
-  cy.setUpSurvey(respondentsSample)
 })
 
 Cypress.Commands.add('importQuestionnaire', (questionnaireTemplate) => {

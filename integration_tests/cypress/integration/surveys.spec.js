@@ -1,4 +1,5 @@
 /// <reference types="Cypress" />
+import { validRespondentStateDisposition } from '../support/helpers'
 
 describe('surveys', () => {
   beforeEach(() => {
@@ -79,13 +80,14 @@ describe('surveys', () => {
 
   it('verifies valid state and disposition combinations', () => {
     const projectId = Cypress.env('project_id')
-    cy.setUpSurvey('respondents_sample.csv').then((value) => {
+    cy.setUpSurvey('respondents_sample.csv').then((surveyId) => {
       cy.wait(3000)
-      cy.waitUntilStale(projectId, value, 10).then(() => {
-        cy.surveyRespondents(projectId, value).then(respondents => {
+      cy.waitUntilStale(projectId, surveyId, 10).then(() => {
+        cy.surveyRespondents(projectId, surveyId).then(respondents => {
           const invalidRespondents = respondents.filter(r => !validRespondentStateDisposition(r))
 
           cy.log(JSON.stringify(invalidRespondents))
+          expect(invalidRespondents).to.be.empty
         })
       })
     })
