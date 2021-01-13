@@ -1,5 +1,5 @@
 import React, { Component } from 'react'
-import * as d3 from 'd3-4'
+import * as d3 from 'd3'
 import Donut from './Donut'
 import classNames from 'classnames'
 import { translate } from 'react-i18next'

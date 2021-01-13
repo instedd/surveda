@@ -1,6 +1,6 @@
 import React, { PureComponent } from 'react'
 import { referenceStrokeColorClasses } from '../../referenceColors'
-import d3 from 'd3'
+import * as d3 from 'd3'
 
 class RespondentsChart extends PureComponent {
   static propTypes = {
@@ -38,8 +38,8 @@ class RespondentsChart extends PureComponent {
     const xaxisContainer = d3.select(this.refs.xaxis)
       .attr('transform', 'translate(0,' + (this.chartHeight) + ')')
 
-    const xScale = d3.time.scale()
-    const yScale = d3.scale.linear().domain([0, 100])
+    const xScale = d3.scaleTime()
+    const yScale = d3.scaleLinear().domain([0, 100])
 
     // Set size
     xScale.range([0, this.chartWidth])
@@ -73,19 +73,18 @@ class RespondentsChart extends PureComponent {
 
     xScale.domain([initialDate, lastDate])
 
-    const xaxis = d3.svg.axis()
+    const xaxis = d3.axisBottom()
       .scale(xScale)
       .ticks(3)
 
-    const yaxis = d3.svg.axis()
+    const yaxis = d3.axisRight()
       .scale(yScale)
       .tickSize(this.width)
       .ticks(4)
-      .orient('right')
 
     xaxisContainer.call(xaxis
         .ticks(3)
-        .tickFormat(d3.time.format('%b')))
+        .tickFormat(d3.timeFormat('%b')))
         .selectAll('text')
         .attr('dy', 7)
         .attr('x', 10)
@@ -95,7 +94,7 @@ class RespondentsChart extends PureComponent {
           .attr('x', 0)
           .attr('dy', 16)
 
-    const line = d3.svg.line()
+    const line = d3.line()
       .x(d => xScale(d.date))
       .y(d => yScale(d.percent))
 
