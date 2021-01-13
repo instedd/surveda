@@ -1,4 +1,5 @@
 import React, { Component } from 'react'
+import { translate } from 'react-i18next'
 
 const margin = {left: 18, top: 18, right: 18, bottom: 18}
 
@@ -8,7 +9,8 @@ type Props = {
   available: number,
   needed: number,
   additionalCompletes: number,
-  additionalRespondents: number
+  additionalRespondents: number,
+  t: Function
 }
 
 type State = {
@@ -16,7 +18,7 @@ type State = {
   height: number
 }
 
-export default class QueueSize extends Component<Props, State> {
+class QueueSize extends Component<Props, State> {
   constructor(props) {
     super(props)
     this.recalculate = this.recalculate.bind(this)
@@ -71,7 +73,7 @@ export default class QueueSize extends Component<Props, State> {
 
   render() {
     const toKilo = num => num > 999 ? (num / 1000).toFixed(1) + 'K' : num
-    const {exhausted, available, needed, additionalCompletes, additionalRespondents, weight} = this.props
+    const {exhausted, available, needed, additionalCompletes, additionalRespondents, weight, t} = this.props
     const width = Math.max(this.state.width - margin.left - margin.right, 0)
     const height = Math.max(this.state.height - margin.top - margin.bottom, 0)
     const scale = Math.min(1, width / needed, width / (exhausted + available) / 2)
@@ -97,15 +99,15 @@ export default class QueueSize extends Component<Props, State> {
               <g transform={`translate(${-(available + exhausted) * scale / 2},0)`}>
                 <rect width={exhausted * scale} height={weight} className='queueProgress' />
                 <rect width={available * scale} height={weight} x={exhausted * scale} className='background' />
-                <text x={-offset} y={weight / 2} className='queueProgress label end'>{toKilo(exhausted)} exhausted</text>
-                <text x={(available + exhausted) * scale + offset} y={weight / 2} className='background label start'>{toKilo(available)} available</text>
+                <text x={-offset} y={weight / 2} className='queueProgress label end'>{t('{{exhausted}} exhausted', {exhausted: toKilo(exhausted)})}</text>
+                <text x={(available + exhausted) * scale + offset} y={weight / 2} className='background label start'>{t('{{available}} available', {available: toKilo(available)})}</text>
               </g>
               <path style={{display: needed ? 'auto' : 'none'}} className='dottedLine' d={this.connector(left.x1, left.y1, left.x2, left.y2, weight - (left.x1 > left.x2 && right.x1 > right.x2 ? corner : 0), corner)} />
               <path style={{display: needed ? 'auto' : 'none'}} className='dottedLine' d={this.connector(right.x1, right.y1, right.x2, right.y2, weight, corner)} />
               <g ref='content'>
-                <text className='needed'>{`${toKilo(needed)} respondents needed`}</text>
-                <text className='multiplier' y={18}>{`to have ${additionalCompletes ? toKilo(additionalCompletes) : 0} additional completes`}</text>
-                {additionalRespondents ? <text className='missing' y={54} ><tspan className='icon'>warning</tspan> {`Add ${toKilo(additionalRespondents)} additional respondents`}</text> : null}
+                <text className='needed'>{t('{{respondentsNeeded}} respondents needed', {needed: toKilo(needed)})}</text>
+                <text className='multiplier' y={18}>{t('to have {{additionalCompletes}} additional completes', {additionalCompletes: additionalCompletes ? toKilo(additionalCompletes) : 0})}</text>
+                {additionalRespondents ? <text className='missing' y={54} ><tspan className='icon'>warning</tspan>{t('Add {{additionalRespondents}} additional respondents', {additionalRespondents: toKilo(additionalRespondents)})}</text> : null}
               </g>
             </g>
             <g transform={`translate(0,${height - weight})`}>
@@ -118,3 +120,5 @@ export default class QueueSize extends Component<Props, State> {
     )
   }
 }
+
+export default translate()(QueueSize)
