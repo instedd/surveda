@@ -6,6 +6,7 @@ import { IntlProvider } from 'react-intl'
 import { I18nextProvider } from 'react-i18next'
 import i18n from '../../i18next'
 import Intercom from 'react-intercom'
+import I18nStyle from '../../i18nStyle'
 
 class App extends Component {
   render() {
@@ -15,6 +16,7 @@ class App extends Component {
       <I18nextProvider i18n={i18n}>
         <IntlProvider locale='en-US'>
           <div className='wrapper'>
+            <I18nStyle />
             <HeaderContainer tabs={tabs} logout={() => this.logout()} user={config.user} />
             <main>
               {body || children}

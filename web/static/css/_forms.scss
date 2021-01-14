@@ -60,41 +60,28 @@ label {
     top: 50%;
     margin: 0 15%;
     &.csv:before {
-      content: 'Drop your CSV file here, or click to browse';
       text-align: center;
       position: absolute;
       width: 100%;
-      text-align: center;
     }
     &.csv.uploading {
       @extend .blue-text, .lighten-1;
     }
-    &.csv.uploading:before {
-      content: 'Uploading...';
-    }
     &.audio:before {
-      content: 'Drop your MP3 or WAV file here, or click to browse';
       text-align: center;
       position: absolute;
       width: 100%;
-      text-align: center;
     }
   }
   &.active {
     @extend .blue-text, .lighten-1;
     border-color: color("blue", "lighten-1");
-    .drop-text:before {
-      content: 'Drop your file to start uploading';
-    }
   }
   &.rejectedfile {
     @extend .red-text;
     border-color: color("red", "lighten-1");
     .drop-icon:before {
       content: 'block';
-    }
-    .drop-text:before {
-      content: 'Invalid file type';
     }
   }
   &.audio {
@@ -154,7 +141,6 @@ label {
       height: 30px;
     }
     &:before {
-      content: 'Uploading...';
       font-size: .8rem;
       color: #4285f4;
       position: absolute;
