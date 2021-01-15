@@ -8,9 +8,8 @@
     "eslint": "eslint --ext .jsx,.js web/static/js/ test/js"
   },
   "dependencies": {
-    "@instedd/surveda-d3-components": "1.1.1",
     "babel-preset-stage-0": "^6.5.0",
-    "d3": "^3.5.17",
+    "d3": "^4.0.0",
     "date-fns": "^1.27.2",
     "draft-js": "^0.10.0",
     "draft-js-export-html": "^0.5.2",
@@ -38,6 +37,7 @@
     "react-intl": "^2.1.5",
     "react-materialize": "^0.17.0",
     "react-timeago": "^3.4.3",
+    "react-tooltip": "^3.11.1",
     "uuid": "^3.2.1",
     "linkifyjs": "^2.1.9"
   },

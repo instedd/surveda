@@ -1,0 +1,358 @@
+@import url('https://fonts.googleapis.com/css?family=Roboto');
+@import url('https://fonts.googleapis.com/icon?family=Material+Icons');
+
+/*Donut*/
+.donut .background {
+  fill: #d6d6d6;
+}
+
+/*Forecasts*/
+.forecasts {
+  font-family: 'Roboto', sans-serif;
+  font-size: 12px;
+  text-anchor: middle;
+  margin: 0 auto;
+  shape-rendering: crispEdges;
+}
+
+.forecasts .icon {
+  font-family: 'Material Icons';
+  font-size: 24px;
+  baseline-shift: -8px;
+  fill: #999999;
+  text-transform: none;
+}
+
+.forecasts .status {
+  display: inline-flex;
+  align-items: center;
+  text-transform: uppercase;
+  color: #999;
+}
+
+.forecasts .status .icon {
+  margin-right: 6px;
+}
+
+.forecasts .bottom {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.forecasts .line {
+  fill: none;
+  stroke-width: 2px;
+  shape-rendering: auto;
+}
+
+.forecasts .dotted {
+  stroke-dasharray: 0 4;
+  stroke-linecap: round;
+}
+
+.forecasts .axis {
+  text-transform: uppercase;
+  fill: #999;
+}
+
+.forecasts .grid path,
+.forecasts .axis line,
+.forecasts .axis path {
+  display: none;
+}
+
+.forecasts .grid line {
+  opacity: 0.1;
+}
+
+/*QueueSize*/
+.queueSize {
+  font-family: 'Roboto', sans-serif;
+  font-size: 12px;
+  text-anchor: middle;
+  shape-rendering: crispEdges;
+}
+
+.queueSize .icon {
+  font-family: 'Material Icons';
+  font-size: 24px;
+  baseline-shift: -6px;
+  fill: #f44336;
+}
+
+.queueSize .needed {
+  font-size: 18px;
+}
+
+.queueSize .missing {
+  font-size: 18px;
+  fill: #f44336;
+}
+
+.queueSize .queueProgress {
+  fill: #4caf50;
+}
+
+.queueSize .label {
+  text-transform: uppercase;
+  alignment-baseline: middle;
+}
+
+.queueSize .start {
+  text-anchor: start;
+}
+
+.queueSize .end {
+  text-anchor: end;
+}
+
+.queueSize .background {
+  fill: #d6d6d6;
+}
+
+.queueSize .multiplier {
+  fill: #999;
+}
+
+.queueSize .dottedLine {
+  stroke: #ccc;
+  fill: none;
+  stroke-dasharray:1 1
+}
+
+/*References*/
+.references {
+  font-family: 'Roboto', sans-serif;
+  font-size: 10px;
+  margin: 0;
+}
+
+.references .label {
+  text-transform: uppercase;
+  display: block;
+}
+
+.references .reference {
+  display: inline-flex;
+  align-items: center;
+  text-transform: uppercase;
+  color: #999;
+  margin-left: 18px;
+}
+
+.references .circle {
+  margin-right: 6px;
+  width: 12px;
+  height: 12px;
+  border-radius: 6px;
+}
+
+/*RetriesHistogram*/
+.retriesHistogram {
+  font-family: 'Roboto', sans-serif;
+  font-size: 12px;
+  text-anchor: middle;
+  margin: 0 auto;
+  shape-rendering: crispEdges;
+}
+
+.retriesHistogram .icon {
+  font-family: 'Material Icons';
+  font-size: 24px;
+  baseline-shift: -8px;
+  fill: #999999;
+  text-transform: none;
+}
+
+.retriesHistogram .arrow {
+  fill: #d6d6d6;
+}
+
+.retriesHistogram .tick,
+.retriesHistogram .label {
+  text-transform: uppercase;
+  fill: #999;
+  color: #999;
+}
+
+.retriesHistogram .tick line {
+  opacity: 0.1;
+}
+
+.retriesHistogram .bottom {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.retriesHistogram .status {
+  display: inline-flex;
+  align-items: center;
+  text-transform: uppercase;
+  color: #999;
+}
+
+.retriesHistogram .status .icon {
+  margin-right: 6px;
+}
+
+.retriesHistogram .trying {
+  fill: #000;
+  background: #000;
+}
+
+.retriesHistogram .out {
+  pointer-events: none;
+  fill-opacity: .9;
+  fill: #ddd;
+  opacity: .9;
+  background: #ddd;
+}
+
+.retriesHistogram .standby {
+  fill: #999;
+  background: #999;
+}
+
+.retriesHistogram .standby:hover {
+  fill: #666;
+  background: #666;
+}
+
+.retriesHistogram .complete {
+  fill: #4caf50;
+  background: #4caf50;
+}
+
+.retriesHistogram .fix {
+  fill: #fff;
+  background: #fff;
+  opacity: 0.6;
+}
+
+.retriesHistogram .timewindow {
+  fill: #fff;
+  background: #fff;
+}
+
+.retriesHistogram .mask {
+  fill: #dedede;
+}
+
+.retriesHistogram .domain {
+  display: none;
+}
+
+.retriesHistogram .red {
+  color: #f44336;
+  fill: #f44336;
+}
+
+.retriesHistogram .dottedLine {
+  stroke: #ccc;
+  fill: none;
+  stroke-dasharray:1 1
+}
+
+.retriesHistogram .dottedLine.trying {
+  stroke: black;
+}
+
+.retriesHistogram .dottedLine.red {
+  stroke: #f44336;
+}
+
+/*Stats*/
+.stats {
+  font-family: 'Roboto', sans-serif;
+  font-size: 48px;
+  text-align: center;
+  display: grid;
+  grid-template-columns: 25% 25% 25% 25%;
+  margin: 0 auto;
+}
+
+.stats .label {
+  font-size: 10px;
+  text-transform: uppercase;
+  display: block;
+}
+
+/*SuccessRate*/
+.successRate {
+  font-family: 'Roboto', sans-serif;
+  font-size: 12px;
+  text-anchor: middle;
+}
+
+.successRate .percent {
+  font-size: 14px;
+}
+
+.successRate .percent.large {
+  font-size: 72px;
+}
+
+.successRate .percent.middle {
+  alignment-baseline: middle;
+}
+
+.successRate .label {
+  text-transform: uppercase;
+}
+
+.successRate .hanging {
+  alignment-baseline: hanging;
+}
+
+.successRate .dottedLine {
+  stroke: #ccc;
+  fill: none;
+  stroke-dasharray:1 1
+}
+
+.successRate .initial {
+  fill: #ffc106;
+}
+
+.successRate .actual {
+  fill: #ff5621;
+}
+
+.successRate .actual.zero-exhausted {
+  fill: #ccc;
+}
+
+.successRate .progress {
+  fill: #4caf50;
+}
+
+.successRate .icon {
+  font-family: 'Material Icons';
+  font-size: 24px;
+  baseline-shift: -6px;
+  fill: #999;
+}
+.double {
+  display: flex;
+  justify-content: space-between;
+}
+
+.double > * {
+  width: 50%;
+}
+
+.tooltip {
+  background-color: rgba(0,0,0,0.85) !important;
+  font-family: 'Roboto', sans-serif !important;
+  font-size: 11px !important;
+  height: 12px !important;
+  padding: 4px 8px !important;
+  border-radius: 2px !important;
+  border: 0 !important;
+}
+
+.tooltip.place-top:after {
+  border-top-style: hidden !important;
+}

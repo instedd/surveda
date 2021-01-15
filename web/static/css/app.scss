@@ -3,9 +3,8 @@
 @import "materialize/materialize";
 @import "reset-materialize";
 
-@import "@instedd/surveda-d3-components/css/surveda-d3-components";
-
 // NCD
+@import "charts";
 @import "layout";
 @import "card-modal";
 @import "card-table";
