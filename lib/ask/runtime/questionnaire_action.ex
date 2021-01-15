@@ -1,7 +1,16 @@
 defmodule Ask.Runtime.QuestionnaireAction do
+  alias Ask.Runtime.QuestionnaireExport
+
+  def export(questionnaire) do
+    QuestionnaireExport.export(questionnaire)
+  end
+end
+
+defmodule Ask.Runtime.QuestionnaireExport do
   alias Ask.{Questionnaire, Repo, Audio}
 
   def export(questionnaire) do
+    questionnaire = clean_i18n_quiz(questionnaire)
     all_questionnaire_steps = Questionnaire.all_steps(questionnaire)
     audio_ids = collect_steps_audio_ids(all_questionnaire_steps, [])
     audio_ids = collect_settings_audio_ids(questionnaire.settings, audio_ids)
@@ -72,6 +81,53 @@ defmodule Ask.Runtime.QuestionnaireAction do
     end)
   end
 
+  defp clean_i18n_quiz(quiz) do
+    clean_i18n_fields = Map.keys(quiz)
+
+    Enum.reduce(clean_i18n_fields, quiz, fn field, quiz_acc ->
+      clean_i18n_quiz(quiz_acc, field)
+    end)
+  end
+
+  defp clean_i18n_quiz(quiz, :settings = _field) do
+    clean_i18n_settings(quiz)
+  end
+
+  defp clean_i18n_quiz(quiz, field) when field in [:steps, :quota_completed_steps] do
+    clean_18n_steps(quiz, field)
+  end
+
+  defp clean_i18n_quiz(quiz, _field) do
+    quiz
+  end
+
+  defp clean_i18n_settings(quiz) do
+    clean_settings = clean_i18n_entity(quiz.settings, quiz.languages, ".[]")
+    Map.put(quiz, :settings, clean_settings)
+  end
+
+  defp clean_18n_steps(quiz, field) do
+    clean_i18n_paths = [
+      ".[].prompt",
+      ".[].choices.[].responses.[.sms, .ivr, .mobileweb]",
+      ".[].refusal.responses"
+    ]
+
+    steps = Map.get(quiz, field)
+
+    steps =
+      Enum.reduce(clean_i18n_paths, steps, fn path, steps_acc ->
+        clean_i18n_entity(steps_acc, quiz.languages, path)
+      end)
+
+    Map.put(quiz, field, steps)
+  end
+
+  # The path syntax is inspired in JQ (https://stedolan.github.io/jq/)
+  defp clean_i18n_entity(entity, _filter_languages, _path) do
+    entity
+  end
+
   defp collect_settings_audio_ids(settings, audio_ids) do
     audio_ids = collect_setting_audio_id(settings["error_message"], audio_ids)
     collect_setting_audio_id(settings["thank_you_message"], audio_ids)
@@ -90,12 +146,16 @@ defmodule Ask.Runtime.QuestionnaireAction do
   end
 
   defp collect_steps_audio_ids(steps, audio_ids) do
-    steps |> Enum.reduce(audio_ids, fn(step, audio_ids) ->
+    steps
+    |> Enum.reduce(audio_ids, fn step, audio_ids ->
       collect_step_audio_ids(step, audio_ids)
     end)
   end
 
-  defp collect_step_audio_ids(%{"prompt" => %{"ivr" => %{"audio_id" => _audio_id}} = prompt}, audio_ids) do
+  defp collect_step_audio_ids(
+         %{"prompt" => %{"ivr" => %{"audio_id" => _audio_id}} = prompt},
+         audio_ids
+       ) do
     collect_prompt_audio_ids(prompt, audio_ids)
   end
 
@@ -108,7 +168,8 @@ defmodule Ask.Runtime.QuestionnaireAction do
   end
 
   defp collect_lang_prompt_audio_ids(prompt, audio_ids) do
-    prompt |> Enum.reduce(audio_ids, fn {_lang, lang_prompt}, audio_ids ->
+    prompt
+    |> Enum.reduce(audio_ids, fn {_lang, lang_prompt}, audio_ids ->
       collect_prompt_audio_ids(lang_prompt, audio_ids)
     end)
   end
