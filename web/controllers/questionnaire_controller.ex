@@ -265,7 +265,7 @@ defmodule Ask.QuestionnaireController do
     questionnaire = load_questionnaire_not_snapshot(project.id, id)
     all_questionnaire_steps = Questionnaire.all_steps(questionnaire)
     audio_ids = collect_steps_audio_ids(all_questionnaire_steps, [])
-    audio_ids = collect_prompt_audio_ids(questionnaire.settings["error_message"], audio_ids)
+    audio_ids = collect_settings_audio_ids(questionnaire.settings, audio_ids)
     #for each audio: charges it in memory and then streams it.
     audio_resource = Stream.resource(
       fn -> audio_ids end,
@@ -424,6 +424,19 @@ defmodule Ask.QuestionnaireController do
     end
   end
 
+  defp collect_settings_audio_ids(settings, audio_ids) do
+    audio_ids = collect_setting_audio_id(settings["error_message"], audio_ids)
+    collect_setting_audio_id(settings["thank_you_message"], audio_ids)
+  end
+
+  defp collect_setting_audio_id(nil = _setting, audio_ids) do
+    audio_ids
+  end
+
+  defp collect_setting_audio_id(setting, audio_ids) do
+    collect_lang_prompt_audio_ids(setting, audio_ids)
+  end
+
   defp collect_steps_audio_ids(nil, audio_ids) do
     audio_ids
   end
@@ -434,29 +447,30 @@ defmodule Ask.QuestionnaireController do
     end)
   end
 
-  defp collect_step_audio_ids(%{"prompt" => prompt}, audio_ids) do
+  defp collect_step_audio_ids(%{"prompt" => %{"ivr" => %{"audio_id" => _audio_id}} = prompt}, audio_ids) do
     collect_prompt_audio_ids(prompt, audio_ids)
+  end
+
+  defp collect_step_audio_ids(%{"prompt" => prompt}, audio_ids) do
+    collect_lang_prompt_audio_ids(prompt, audio_ids)
   end
 
   defp collect_step_audio_ids(_, audio_ids) do
     audio_ids
   end
 
-  defp collect_prompt_audio_ids(prompt = %{}, audio_ids) do
+
+  defp collect_lang_prompt_audio_ids(prompt, audio_ids) do
     prompt |> Enum.reduce(audio_ids, fn {_lang, lang_prompt}, audio_ids ->
-      collect_lang_prompt_audio_ids(lang_prompt, audio_ids)
+      collect_prompt_audio_ids(lang_prompt, audio_ids)
     end)
   end
 
-  defp collect_prompt_audio_ids(_, audio_ids) do
-    audio_ids
-  end
-
-  defp collect_lang_prompt_audio_ids(%{"ivr" => %{"audio_id" => audio_id}}, audio_ids) do
+  defp collect_prompt_audio_ids(%{"ivr" => %{"audio_id" => audio_id} = _prompt}, audio_ids) do
     [audio_id | audio_ids]
   end
 
-  defp collect_lang_prompt_audio_ids(_, audio_ids) do
+  defp collect_prompt_audio_ids(_, audio_ids) do
     audio_ids
   end
 
