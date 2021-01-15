@@ -109,7 +109,7 @@ defmodule Ask.Runtime.QuestionnaireExport do
   defp clean_18n_steps(quiz, field) do
     clean_i18n_paths = [
       ".[].prompt",
-      ".[].choices.[].responses.[.sms, .ivr, .mobileweb]",
+      ".[].choices.[].responses.[]",
       ".[].refusal.responses"
     ]
 
@@ -124,8 +124,61 @@ defmodule Ask.Runtime.QuestionnaireExport do
   end
 
   # The path syntax is inspired in JQ (https://stedolan.github.io/jq/)
-  defp clean_i18n_entity(entity, _filter_languages, _path) do
-    entity
+  defp clean_i18n_entity(entity, filter_languages, path) do
+    forward_path = fn positions -> String.slice(path, positions..-1) end
+    cond do
+      # Base case
+      path == "" ->
+        clean_i18n_base_case(entity, filter_languages)
+      # Move forward
+      String.starts_with?(path, ".") ->
+        clean_i18n_entity(entity, filter_languages, forward_path.(1))
+      # Clean every map element
+      String.starts_with?(path, "[]") and is_map(entity) ->
+        clean_i18n_entity_map(entity, filter_languages, forward_path)
+      # Clean every list element
+      String.starts_with?(path, "[]") and is_list(entity) ->
+        clean_i18n_entity_list(entity, filter_languages, forward_path)
+      # Clean the requested key of a map
+      !!path and is_map(entity) ->
+        clean_i18n_entity_map_key(entity, filter_languages, path, forward_path)
+      true ->
+        {:error, "Invalid path"}
+    end
+  end
+
+  defp clean_i18n_entity_map_key(entity, langs, path, forward_path) do
+    key = String.split(path, ".")
+    elem = Map.get(entity, key)
+    path = forward_path.(String.length(key))
+    clean_i18n_entity_list(elem, langs, path)
+  end
+
+  defp clean_i18n_entity_list(entity, langs, forward_path) do
+    Enum.map(entity, fn elem ->
+      clean_i18n_entity(elem, langs, forward_path.(2))
+    end)
+  end
+
+  defp clean_i18n_entity_map(entity, langs, forward_path) do
+    Enum.reduce(Map.keys(entity), entity, fn key, entity_acc ->
+      elem = Map.get(entity, key)
+      clean_elem = clean_i18n_entity(elem, langs, forward_path.(2))
+      Map.put(entity_acc, key, clean_elem)
+    end)
+  end
+
+  defp clean_i18n_base_case(entity, langs) do
+    entity_languages = Map.keys(entity)
+
+    deleted_langs =
+      Enum.filter(entity_languages, fn lang ->
+        lang not in langs
+      end)
+
+    Enum.reduce(deleted_langs, entity, fn lang, entity_acc ->
+      Map.delete(entity_acc, lang)
+    end)
   end
 
   defp collect_settings_audio_ids(settings, audio_ids) do
