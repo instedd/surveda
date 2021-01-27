@@ -7,7 +7,7 @@ export function validRespondentStateDisposition(respondent) {
     { disposition: 'breakoff', state: 'cancelled' },
     { disposition: 'contacted', state: 'cancelled' },
     { disposition: 'failed', state: 'cancelled' },
-    { disposition: 'inelegible', state: 'cancelled' },
+    { disposition: 'ineligible', state: 'cancelled' },
     { disposition: 'interim partial', state: 'cancelled' },
     { disposition: 'queued', state: 'cancelled' },
     { disposition: 'refused', state: 'cancelled' },
