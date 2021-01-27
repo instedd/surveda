@@ -39,3 +39,4 @@ yarn-error.log
 /integration_tests/cypress.json
 /integration_tests/cypress/screenshots
 /integration_tests/cypress/videos
+/integration_tests/output

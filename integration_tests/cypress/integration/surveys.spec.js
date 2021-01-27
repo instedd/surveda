@@ -84,10 +84,14 @@ describe('surveys', () => {
       cy.wait(3000)
       cy.waitUntilStale(projectId, surveyId, 10).then(() => {
         cy.surveyRespondents(projectId, surveyId).then(respondents => {
-          const invalidRespondents = respondents.filter(r => !validRespondentStateDisposition(r))
+          cy.writeFile("output/valid-combinations.respondents.all.json", respondents)
 
-          cy.log(JSON.stringify(invalidRespondents))
-          expect(invalidRespondents).to.be.empty
+          const invalidRespondents = respondents.filter(r => !validRespondentStateDisposition(r))
+          cy.writeFile("output/valid-combinations.respondents.invalid.json", invalidRespondents)
+
+          cy.log("invalidRespondents", JSON.stringify(invalidRespondents)).then(() => {
+            expect(invalidRespondents).to.be.empty
+          })
         })
       })
     })
