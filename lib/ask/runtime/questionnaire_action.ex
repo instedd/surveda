@@ -123,6 +123,8 @@ defmodule Ask.Runtime.QuestionnaireExport do
     Map.put(quiz, key, clean_elem)
   end
 
+  def clean_i18n_entity(nil, _filter_languages, _path), do: nil
+
   # The path syntax is inspired in [JQ](https://stedolan.github.io/jq/)
   def clean_i18n_entity(entity, filter_languages, path) do
     forward_path = fn positions -> String.slice(path, positions..-1) end

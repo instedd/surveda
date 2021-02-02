@@ -52,5 +52,13 @@ defmodule Ask.QuestionnaireExportTest do
 
       assert clean == quiz
     end
+
+    test "works when quota_completed_steps is nil" do
+      quiz = insert(:questionnaire, languages: ["en"], quota_completed_steps: nil)
+
+      clean = QuestionnaireExport.clean_i18n_quiz(quiz)
+
+      assert clean == quiz
+    end
   end
 end
