@@ -43,4 +43,14 @@ defmodule Ask.QuestionnaireExportTest do
       assert clean == %{"a" => %{"en" => "foo"}, "b" => %{"en" => "foo", "es" => "bar"}}
     end
   end
+
+  describe "clean_i18n_quiz" do
+    test "doesn't change a quiz with no deleted languages" do
+      quiz = insert(:questionnaire, languages: ["en"])
+
+      clean = QuestionnaireExport.clean_i18n_quiz(quiz)
+
+      assert clean == quiz
+    end
+  end
 end

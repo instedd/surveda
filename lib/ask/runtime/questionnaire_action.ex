@@ -81,7 +81,7 @@ defmodule Ask.Runtime.QuestionnaireExport do
     end)
   end
 
-  defp clean_i18n_quiz(quiz) do
+  def clean_i18n_quiz(quiz) do
     clean_i18n_fields = Map.keys(quiz)
 
     Enum.reduce(clean_i18n_fields, quiz, fn field, quiz_acc ->
