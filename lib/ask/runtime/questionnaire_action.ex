@@ -147,7 +147,10 @@ defmodule Ask.Runtime.QuestionnaireExport do
     end
   end
 
-  defp clean_i18n_entity_map_key(_entity, _langs, _path, _forward_path) do
+  defp clean_i18n_entity_map_key(entity, langs, path, forward_path) do
+    key = if String.contains?(path, "."), do: String.split(path, ".") |> Enum.at(0), else: path
+    path = forward_path.(String.length(key))
+    clean_i18n_entity_map(entity, langs, path, key)
   end
 
   defp clean_i18n_entity_list(entity, langs, path) do
@@ -156,11 +159,18 @@ defmodule Ask.Runtime.QuestionnaireExport do
     end)
   end
 
-  defp clean_i18n_entity_map(entity, langs, path) do
-    Enum.reduce(Map.keys(entity), entity, fn key, entity_acc ->
+  defp clean_i18n_entity_map(entity, langs, path, filter_key \\ nil) do
+    clean_entity_key = fn entity, key ->
       elem = Map.get(entity, key)
-      clean_elem = clean_i18n_entity(elem, langs, path)
-      Map.put(entity_acc, key, clean_elem)
+      if filter_key == nil or filter_key == key do
+        clean_i18n_entity(elem, langs, path)
+      else
+        elem
+      end
+    end
+
+    Enum.reduce(Map.keys(entity), entity, fn key, entity_acc ->
+      Map.put(entity_acc, key, clean_entity_key.(entity, key))
     end)
   end
 
