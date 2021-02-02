@@ -124,7 +124,7 @@ defmodule Ask.Runtime.QuestionnaireExport do
   end
 
   # The path syntax is inspired in JQ (https://stedolan.github.io/jq/)
-  defp clean_i18n_entity(entity, filter_languages, path) do
+  def clean_i18n_entity(entity, filter_languages, path) do
     forward_path = fn positions -> String.slice(path, positions..-1) end
     cond do
       # Base case
