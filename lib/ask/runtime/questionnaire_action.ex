@@ -135,10 +135,10 @@ defmodule Ask.Runtime.QuestionnaireExport do
         clean_i18n_entity(entity, filter_languages, forward_path.(1))
       # Clean every map element
       String.starts_with?(path, "[]") and is_map(entity) ->
-        clean_i18n_entity_map(entity, filter_languages, forward_path)
+        clean_i18n_entity_map(entity, filter_languages, forward_path.(2))
       # Clean every list element
       String.starts_with?(path, "[]") and is_list(entity) ->
-        clean_i18n_entity_list(entity, filter_languages, forward_path)
+        clean_i18n_entity_list(entity, filter_languages, forward_path.(2))
       # Clean the requested key of a map
       !!path and is_map(entity) ->
         clean_i18n_entity_map_key(entity, filter_languages, path, forward_path)
@@ -147,23 +147,19 @@ defmodule Ask.Runtime.QuestionnaireExport do
     end
   end
 
-  defp clean_i18n_entity_map_key(entity, langs, path, forward_path) do
-    key = String.split(path, ".")
-    elem = Map.get(entity, key)
-    path = forward_path.(String.length(key))
-    clean_i18n_entity_list(elem, langs, path)
+  defp clean_i18n_entity_map_key(_entity, _langs, _path, _forward_path) do
   end
 
-  defp clean_i18n_entity_list(entity, langs, forward_path) do
+  defp clean_i18n_entity_list(entity, langs, path) do
     Enum.map(entity, fn elem ->
-      clean_i18n_entity(elem, langs, forward_path.(2))
+      clean_i18n_entity(elem, langs, path)
     end)
   end
 
-  defp clean_i18n_entity_map(entity, langs, forward_path) do
+  defp clean_i18n_entity_map(entity, langs, path) do
     Enum.reduce(Map.keys(entity), entity, fn key, entity_acc ->
       elem = Map.get(entity, key)
-      clean_elem = clean_i18n_entity(elem, langs, forward_path.(2))
+      clean_elem = clean_i18n_entity(elem, langs, path)
       Map.put(entity_acc, key, clean_elem)
     end)
   end
