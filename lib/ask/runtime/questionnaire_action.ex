@@ -90,40 +90,40 @@ defmodule Ask.Runtime.QuestionnaireExport do
   end
 
   defp clean_i18n_quiz(quiz, :settings = _field) do
-    clean_i18n_settings(quiz)
+    paths = [
+      "error_message",
+      "thank_you_message"
+    ]
+
+    clean_i18n_quiz(quiz, :settings, paths)
   end
 
-  defp clean_i18n_quiz(quiz, field) when field in [:steps, :quota_completed_steps] do
-    clean_18n_steps(quiz, field)
+  defp clean_i18n_quiz(quiz, key) when key in [:steps, :quota_completed_steps] do
+    paths = [
+      ".[].prompt",
+      ".[].choices.[].responses.[]",
+      ".[].refusal.responses"
+    ]
+
+    clean_i18n_quiz(quiz, key, paths)
   end
 
   defp clean_i18n_quiz(quiz, _field) do
     quiz
   end
 
-  defp clean_i18n_settings(quiz) do
-    clean_settings = clean_i18n_entity(quiz.settings, quiz.languages, ".[]")
-    Map.put(quiz, :settings, clean_settings)
-  end
+  defp clean_i18n_quiz(quiz, key, paths) do
+    elem = Map.get(quiz, key)
 
-  defp clean_18n_steps(quiz, field) do
-    clean_i18n_paths = [
-      ".[].prompt",
-      ".[].choices.[].responses.[]",
-      ".[].refusal.responses"
-    ]
-
-    steps = Map.get(quiz, field)
-
-    steps =
-      Enum.reduce(clean_i18n_paths, steps, fn path, steps_acc ->
-        clean_i18n_entity(steps_acc, quiz.languages, path)
+    clean_elem =
+      Enum.reduce(paths, elem, fn path, elem_acc ->
+        clean_i18n_entity(elem_acc, quiz.languages, path)
       end)
 
-    Map.put(quiz, field, steps)
+    Map.put(quiz, key, clean_elem)
   end
 
-  # The path syntax is inspired in JQ (https://stedolan.github.io/jq/)
+  # The path syntax is inspired in [JQ](https://stedolan.github.io/jq/)
   def clean_i18n_entity(entity, filter_languages, path) do
     forward_path = fn positions -> String.slice(path, positions..-1) end
     cond do
@@ -174,7 +174,7 @@ defmodule Ask.Runtime.QuestionnaireExport do
     end)
   end
 
-  defp clean_i18n_base_case(entity, langs) do
+  defp clean_i18n_base_case(entity, langs) when is_map(entity) do
     entity_languages = Map.keys(entity)
 
     deleted_langs =
