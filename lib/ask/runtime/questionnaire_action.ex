@@ -83,45 +83,21 @@ defmodule Ask.Runtime.QuestionnaireExport do
   end
 
   def clean_i18n_quiz(quiz) do
-    clean_i18n_fields = Map.keys(quiz)
+    clean = fn (quiz, key, path) ->
+      elem = Map.get(quiz, key)
+      clean_elem = CleanI18n.clean(elem, quiz.languages, path)
+      Map.put(quiz, key, clean_elem)
+    end
 
-    Enum.reduce(clean_i18n_fields, quiz, fn field, quiz_acc ->
-      clean_i18n_quiz(quiz_acc, field)
-    end)
-  end
-
-  defp clean_i18n_quiz(quiz, :settings = _field) do
-    paths = [
-      ".error_message",
-      ".thank_you_message"
-    ]
-
-    clean_i18n_quiz(quiz, :settings, paths)
-  end
-
-  defp clean_i18n_quiz(quiz, key) when key in [:steps, :quota_completed_steps] do
-    paths = [
-      ".[].prompt",
-      ".[].choices.[].responses.[]",
-      ".[].refusal.responses"
-    ]
-
-    clean_i18n_quiz(quiz, key, paths)
-  end
-
-  defp clean_i18n_quiz(quiz, _field) do
     quiz
-  end
-
-  defp clean_i18n_quiz(quiz, key, paths) do
-    elem = Map.get(quiz, key)
-
-    clean_elem =
-      Enum.reduce(paths, elem, fn path, elem_acc ->
-        CleanI18n.clean(elem_acc, quiz.languages, path)
-      end)
-
-    Map.put(quiz, key, clean_elem)
+    |> clean.(:settings, ".error_message")
+    |> clean.(:settings, ".thank_you_message")
+    |> clean.(:steps, ".[].prompt")
+    |> clean.(:steps, ".[].choices.[].responses.[]")
+    |> clean.(:steps, ".[].refusal.responses")
+    |> clean.(:quota_completed_steps, ".[].prompt")
+    |> clean.(:quota_completed_steps, ".[].choices.[].responses.[]")
+    |> clean.(:quota_completed_steps, ".[].refusal.responses")
   end
 
   defp collect_settings_audio_ids(settings, audio_ids) do
