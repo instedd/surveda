@@ -20,7 +20,7 @@ defmodule Ask.Runtime.QuestionnaireExportTest do
     end
   end
 
-  describe "I18N.clean" do
+  describe "CleanI18n" do
     test "base case" do
       entity = %{"en" => "foo", "es" => "bar"}
 
