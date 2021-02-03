@@ -155,8 +155,17 @@ defmodule Ask.Runtime.QuestionnaireExport do
   end
 end
 
-# The path syntax is inspired by [JQ](https://stedolan.github.io/jq/)
+#
 defmodule Ask.Runtime.CleanI18n do
+  @moduledoc """
+  When a language is deleted, its associated settings are still there, but they aren't visible to
+  the end-user. After exporting and importing the questionnaire, the end-user doesn't expect these
+  settings to be still there.
+  This module helps cleaning the questionnaire from the setting related to the deleted languages.
+  The cleaning is done in memory before exporting it, so it doesn't affect the real questionnaire.
+  The path syntax is inspired by [JQ](https://stedolan.github.io/jq/)
+  """
+
   def clean(nil, _filter_languages, _path), do: nil
 
   def clean(entity, filter_languages, path) do
