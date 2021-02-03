@@ -1,0 +1,10 @@
+{
+  "baseUrl": "https://surveda-stg.instedd.org",
+  "env": {
+    "guisso_host": "https://login-stg.instedd.org",
+    "email": "foo@bar.com",
+    "password": "foobar",
+    "project_id": "1",
+    "sms_channel_id": "1"
+  }
+}

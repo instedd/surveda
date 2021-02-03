@@ -1,0 +1,14 @@
+version: '2.0'
+
+volumes:
+  node_modules:
+
+services:
+  cypress:
+    image: cypress/base:12
+    working_dir: /src
+    volumes:
+      - '.:/src'
+      - 'node_modules:/src/node_modules'
+    command: >
+      /bin/sh -c 'yarn && npm run cypress:run'

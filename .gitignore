@@ -34,3 +34,9 @@ yarn-error.log
 # intellij files
 .idea/
 *.iml
+
+/integration_tests/node_modules
+/integration_tests/cypress.json
+/integration_tests/cypress/screenshots
+/integration_tests/cypress/videos
+/integration_tests/output
