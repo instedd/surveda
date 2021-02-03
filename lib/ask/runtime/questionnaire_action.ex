@@ -8,6 +8,7 @@ end
 
 defmodule Ask.Runtime.QuestionnaireExport do
   alias Ask.{Questionnaire, Repo, Audio}
+  alias Ask.Runtime.CleanI18n
 
   def export(questionnaire) do
     questionnaire = clean_i18n_quiz(questionnaire)
@@ -91,8 +92,8 @@ defmodule Ask.Runtime.QuestionnaireExport do
 
   defp clean_i18n_quiz(quiz, :settings = _field) do
     paths = [
-      "error_message",
-      "thank_you_message"
+      ".error_message",
+      ".thank_you_message"
     ]
 
     clean_i18n_quiz(quiz, :settings, paths)
@@ -117,76 +118,10 @@ defmodule Ask.Runtime.QuestionnaireExport do
 
     clean_elem =
       Enum.reduce(paths, elem, fn path, elem_acc ->
-        clean_i18n_entity(elem_acc, quiz.languages, path)
+        CleanI18n.clean(elem_acc, quiz.languages, path)
       end)
 
     Map.put(quiz, key, clean_elem)
-  end
-
-  def clean_i18n_entity(nil, _filter_languages, _path), do: nil
-
-  # The path syntax is inspired in [JQ](https://stedolan.github.io/jq/)
-  def clean_i18n_entity(entity, filter_languages, path) do
-    forward_path = fn positions -> String.slice(path, positions..-1) end
-    cond do
-      # Base case
-      path == "" ->
-        clean_i18n_base_case(entity, filter_languages)
-      # Move forward
-      String.starts_with?(path, ".") ->
-        clean_i18n_entity(entity, filter_languages, forward_path.(1))
-      # Clean every map element
-      String.starts_with?(path, "[]") and is_map(entity) ->
-        clean_i18n_entity_map(entity, filter_languages, forward_path.(2))
-      # Clean every list element
-      String.starts_with?(path, "[]") and is_list(entity) ->
-        clean_i18n_entity_list(entity, filter_languages, forward_path.(2))
-      # Clean the requested key of a map
-      !!path and is_map(entity) ->
-        clean_i18n_entity_map_key(entity, filter_languages, path, forward_path)
-      true ->
-        {:error, "Invalid path"}
-    end
-  end
-
-  defp clean_i18n_entity_map_key(entity, langs, path, forward_path) do
-    key = if String.contains?(path, "."), do: String.split(path, ".") |> Enum.at(0), else: path
-    path = forward_path.(String.length(key))
-    clean_i18n_entity_map(entity, langs, path, key)
-  end
-
-  defp clean_i18n_entity_list(entity, langs, path) do
-    Enum.map(entity, fn elem ->
-      clean_i18n_entity(elem, langs, path)
-    end)
-  end
-
-  defp clean_i18n_entity_map(entity, langs, path, filter_key \\ nil) do
-    clean_entity_key = fn entity, key ->
-      elem = Map.get(entity, key)
-      if filter_key == nil or filter_key == key do
-        clean_i18n_entity(elem, langs, path)
-      else
-        elem
-      end
-    end
-
-    Enum.reduce(Map.keys(entity), entity, fn key, entity_acc ->
-      Map.put(entity_acc, key, clean_entity_key.(entity, key))
-    end)
-  end
-
-  defp clean_i18n_base_case(entity, langs) when is_map(entity) do
-    entity_languages = Map.keys(entity)
-
-    deleted_langs =
-      Enum.filter(entity_languages, fn lang ->
-        lang not in langs
-      end)
-
-    Enum.reduce(deleted_langs, entity, fn lang, entity_acc ->
-      Map.delete(entity_acc, lang)
-    end)
   end
 
   defp collect_settings_audio_ids(settings, audio_ids) do
@@ -241,5 +176,70 @@ defmodule Ask.Runtime.QuestionnaireExport do
 
   defp collect_prompt_audio_ids(_, audio_ids) do
     audio_ids
+  end
+end
+
+# The path syntax is inspired by [JQ](https://stedolan.github.io/jq/)
+defmodule Ask.Runtime.CleanI18n do
+  def clean(nil, _filter_languages, _path), do: nil
+
+  def clean(entity, filter_languages, path) do
+    forward_path = fn positions -> String.slice(path, positions..-1) end
+    cond do
+      # Base case
+      path == "" ->
+        clean_base_case(entity, filter_languages)
+      # Clean every map element
+      String.starts_with?(path, ".[]") and is_map(entity) ->
+        clean_map(entity, filter_languages, forward_path.(3))
+      # Clean every list element
+      String.starts_with?(path, ".[]") and is_list(entity) ->
+        clean_list(entity, filter_languages, forward_path.(3))
+      # Clean the requested key of a map
+      !!path and is_map(entity) ->
+        clean_key(entity, filter_languages, path, forward_path)
+      true ->
+        {:error, "Invalid path"}
+    end
+  end
+
+  defp clean_key(entity, langs, path, forward_path) do
+    key = String.split(path, ".") |> Enum.at(1)
+    path = forward_path.(String.length(key) + 1)
+    clean_map(entity, langs, path, key)
+  end
+
+  defp clean_list(entity, langs, path) do
+    Enum.map(entity, fn elem ->
+      clean(elem, langs, path)
+    end)
+  end
+
+  defp clean_map(entity, langs, path, filter_key \\ nil) do
+    clean_entity_key = fn entity, key ->
+      elem = Map.get(entity, key)
+      if filter_key == nil or filter_key == key do
+        clean(elem, langs, path)
+      else
+        elem
+      end
+    end
+
+    Enum.reduce(Map.keys(entity), entity, fn key, entity_acc ->
+      Map.put(entity_acc, key, clean_entity_key.(entity, key))
+    end)
+  end
+
+  defp clean_base_case(entity, langs) when is_map(entity) do
+    entity_languages = Map.keys(entity)
+
+    deleted_langs =
+      Enum.filter(entity_languages, fn lang ->
+        lang not in langs
+      end)
+
+    Enum.reduce(deleted_langs, entity, fn lang, entity_acc ->
+      Map.delete(entity_acc, lang)
+    end)
   end
 end
