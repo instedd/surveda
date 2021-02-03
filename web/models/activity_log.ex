@@ -19,7 +19,7 @@ defmodule Ask.ActivityLog do
     ["create_invite", "edit_invite", "delete_invite", "edit_collaborator", "remove_collaborator"]
 
   def valid_actions("survey"), do:
-    ["create", "edit", "rename", "change_description", "lock", "unlock", "delete", "start", "repeat", "request_cancel", "completed_cancel", "download", "enable_public_link", "regenerate_public_link", "disable_public_link", "change_folder"]
+    ["create", "edit", "rename", "change_description", "lock", "unlock", "delete", "start", "repeat", "request_cancel", "completed_cancel", "download", "enable_public_link", "regenerate_public_link", "disable_public_link", "change_folder", "add_respondents"]
 
   def valid_actions("questionnaire"), do:
     ["create", "edit", "rename", "delete", "add_mode", "remove_mode", "add_language", "remove_language", "create_step", "delete_step", "rename_step", "edit_step", "edit_settings", "create_section", "rename_section", "delete_section", "edit_section", "archive", "unarchive"]
@@ -153,6 +153,14 @@ defmodule Ask.ActivityLog do
     create("rename", project, conn, survey, %{
       old_survey_name: old_survey_name,
       new_survey_name: new_survey_name
+    })
+  end
+
+  def add_respondents(project, conn, survey, %{respondent_group_name: respondent_group_name, respondents_count: respondents_count}) do
+    create("add_respondents", project, conn, survey, %{
+      survey_name: survey.name,
+      respondent_group_name: respondent_group_name,
+      respondents_count: respondents_count
     })
   end
 

@@ -85,6 +85,9 @@ class ActivityDescription extends Component {
             return t('Disabled <i>{{surveyName}}</i> {{reportType}} link', {surveyName: surveyName, reportType: reportType})
           case 'regenerate_public_link':
             return t('Reset <i>{{surveyName}}</i> {{reportType}} link', {surveyName: surveyName, reportType: reportType})
+          case 'add_respondents':
+            const {respondentsCount, respondentGroupName} = metadata
+            return t('Added {{respondentsCount}} respondents to <i>{{respondentGroupName}}</i> respondents list in <i>{{surveyName}}</i>', {surveyName, respondentsCount, respondentGroupName})
           default:
             return ''
         }
