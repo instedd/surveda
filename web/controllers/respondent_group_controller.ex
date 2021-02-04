@@ -85,7 +85,7 @@ defmodule Ask.RespondentGroupController do
           if Survey.launched?(survey) and respondents_count > 0 do
             ActivityLog.add_respondents(project, conn, survey, %{
               respondent_group_name: respondent_group.name,
-              respondents_count: Enum.count(file_phone_numbers)
+              respondents_count: respondents_count
             }) |> Repo.insert!
           end
 
