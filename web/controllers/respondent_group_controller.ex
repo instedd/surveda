@@ -1,6 +1,6 @@
 defmodule Ask.RespondentGroupController do
   use Ask.Web, :api_controller
-  alias Ask.{Project, Survey, Respondent, RespondentGroup, Logger}
+  alias Ask.{Project, Survey, Respondent, RespondentGroup, Logger, ActivityLog}
 
   plug :find_and_check_survey_state when action in [:create, :update, :delete, :replace]
 
@@ -79,6 +79,15 @@ defmodule Ask.RespondentGroupController do
           |> remove_duplicates_with_respect_to(respondent_group)
 
           Ask.Runtime.RespondentGroup.insert_respondents(file_phone_numbers, respondent_group)
+
+          respondents_count = Enum.count(file_phone_numbers)
+
+          if Survey.launched?(survey) and respondents_count > 0 do
+            ActivityLog.add_respondents(project, conn, survey, %{
+              file_name: file.filename,
+              respondents_count: respondents_count
+            }) |> Repo.insert!
+          end
 
           new_count = respondent_group.respondents_count + length(file_phone_numbers)
           new_sample = merge_sample(respondent_group.sample, file_phone_numbers)

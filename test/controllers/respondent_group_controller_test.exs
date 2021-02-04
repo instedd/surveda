@@ -2,7 +2,7 @@ defmodule Ask.RespondentGroupControllerTest do
   use Ask.ConnCase
   use Ask.TestHelpers
 
-  alias Ask.{Project, RespondentGroup, Respondent, Channel, RespondentGroupChannel, Stats}
+  alias Ask.{Project, RespondentGroup, Respondent, Channel, RespondentGroupChannel, Stats, ActivityLog}
 
   setup %{conn: conn} do
     user = insert(:user)
@@ -461,12 +461,16 @@ defmodule Ask.RespondentGroupControllerTest do
       project = create_project_for_user(user)
       survey = insert(:survey, project: project)
       perform_add_test_for_survey(conn, project, survey)
+      # It doesn't log if the survey isn't running
+      refute Repo.get_by(ActivityLog, action: "add_respondents", entity_id: survey.id)
     end
 
     test "uploads CSV with more respondents even if the survey is running", %{conn: conn, user: user} do
       project = create_project_for_user(user)
       survey = insert(:survey, project: project, state: "running")
       perform_add_test_for_survey(conn, project, survey)
+      # It logs if the survey is running
+      assert Repo.get_by(ActivityLog, action: "add_respondents", entity_id: survey.id)
     end
 
     def perform_add_test_for_survey(conn, project, survey) do
