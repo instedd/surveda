@@ -156,10 +156,10 @@ defmodule Ask.ActivityLog do
     })
   end
 
-  def add_respondents(project, conn, survey, %{respondent_group_name: respondent_group_name, respondents_count: respondents_count}) do
+  def add_respondents(project, conn, survey, %{file_name: file_name, respondents_count: respondents_count}) do
     create("add_respondents", project, conn, survey, %{
       survey_name: survey.name,
-      respondent_group_name: respondent_group_name,
+      file_name: file_name,
       respondents_count: respondents_count
     })
   end

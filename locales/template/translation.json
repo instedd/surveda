@@ -37,7 +37,7 @@
   "Added mode <i>{{mode}}</i> to <i>{{questionnaireName}}": "",
   "Added section <i>{{sectionTitle}}</i> to <i>{{questionnaireName}}</i>": "",
   "Added step <i>{{stepTitle}}</i> to <i>{{questionnaireName}}</i>": "",
-  "Added {{respondentsCount}} respondents to <i>{{respondentGroupName}}</i> respondents list in <i>{{surveyName}}</i>": "",
+  "Added {{respondentsCount}} respondents from <i>{{fileName}}</i> to <i>{{surveyName}}</i>": "",
   "Admin": "",
   "All changes saved": "",
   "All quota fields are required, please fill them to continue": "",
