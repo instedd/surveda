@@ -191,6 +191,7 @@ defmodule Ask.SurveyActionTest do
   end
 
   defp insert_respondents(survey, channel, mode, phone_numbers) do
+    phone_numbers = Ask.Runtime.RespondentGroup.loaded_phone_numbers(phone_numbers)
     group = Ask.Runtime.RespondentGroup.create(UUID.uuid4(), phone_numbers, survey)
     Ask.Runtime.RespondentGroup.update_channels(group.id, [%{"id" => channel.id, "mode" => mode}])
   end

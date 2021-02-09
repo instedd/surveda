@@ -57,6 +57,7 @@ defmodule Ask.Runtime.PanelSurvey do
             select: r.phone_number
           )
           |> Repo.all()
+          |> Ask.Runtime.RespondentGroup.loaded_phone_numbers
 
         new_respondent_group =
           Ask.Runtime.RespondentGroup.create(respondent_group.name, phone_numbers, new_occurrence)

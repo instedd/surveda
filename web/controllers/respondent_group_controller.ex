@@ -22,8 +22,8 @@ defmodule Ask.RespondentGroupController do
     project = conn.assigns.loaded_project
     survey = conn.assigns.loaded_survey
 
-    process_file(conn, survey, file, fn file_phone_numbers ->
-      respondent_group = Ask.Runtime.RespondentGroup.create(file.filename, file_phone_numbers, survey)
+    process_file(conn, survey, file, fn loaded_entries ->
+      respondent_group = Ask.Runtime.RespondentGroup.create(file.filename, loaded_entries, survey)
       project |> Project.touch!
       conn
       |> put_status(:created)
@@ -74,13 +74,14 @@ defmodule Ask.RespondentGroupController do
 
     case survey.locked do
       false ->
-        process_file(conn, survey, file, fn file_phone_numbers ->
-          file_phone_numbers = file_phone_numbers
+        process_file(conn, survey, file, fn loaded_entries ->
+          phone_numbers = Ask.Runtime.RespondentGroup.map_phone_numbers_from_loaded_entries(loaded_entries)
           |> remove_duplicates_with_respect_to(respondent_group)
+          loaded_entries = clean_entries(loaded_entries, phone_numbers)
 
-          Ask.Runtime.RespondentGroup.insert_respondents(file_phone_numbers, respondent_group)
+          Ask.Runtime.RespondentGroup.insert_respondents(phone_numbers, respondent_group)
 
-          respondents_count = Enum.count(file_phone_numbers)
+          respondents_count = Enum.count(phone_numbers)
 
           if Survey.launched?(survey) and respondents_count > 0 do
             ActivityLog.add_respondents(project, conn, survey, %{
@@ -89,8 +90,8 @@ defmodule Ask.RespondentGroupController do
             }) |> Repo.insert!
           end
 
-          new_count = respondent_group.respondents_count + length(file_phone_numbers)
-          new_sample = merge_sample(respondent_group.sample, file_phone_numbers)
+          new_count = respondent_group.respondents_count + length(phone_numbers)
+          new_sample = Ask.Runtime.RespondentGroup.merge_sample(respondent_group.sample, loaded_entries)
 
           respondent_group = respondent_group
           |> RespondentGroup.changeset(%{"respondents_count" => new_count, "sample" => new_sample})
@@ -106,6 +107,10 @@ defmodule Ask.RespondentGroupController do
       end
   end
 
+  defp clean_entries(loaded_entries, phone_numbers) do
+    Enum.filter(loaded_entries, fn %{phone_number: phone_number} -> phone_number in phone_numbers end)
+  end
+
   def replace(conn, %{"respondent_group_id" => id, "file" => file}) do
     project = conn.assigns.loaded_project
     survey = conn.assigns.loaded_survey
@@ -114,16 +119,17 @@ defmodule Ask.RespondentGroupController do
     |> assoc(:respondent_groups)
     |> Repo.get!(id)
 
-    process_file(conn, survey, file, fn file_phone_numbers ->
+    process_file(conn, survey, file, fn loaded_entries ->
+      phone_numbers = Ask.Runtime.RespondentGroup.map_phone_numbers_from_loaded_entries(loaded_entries)
       # First delete existing respondents from that group
       Repo.delete_all(from r in Respondent,
         where: r.respondent_group_id == ^respondent_group.id)
 
       # Then create respondents from the CSV file
-      Ask.Runtime.RespondentGroup.insert_respondents(file_phone_numbers, respondent_group)
+      Ask.Runtime.RespondentGroup.insert_respondents(phone_numbers, respondent_group)
 
-      sample = file_phone_numbers |> Enum.take(5)
-      respondents_count = file_phone_numbers |> length
+      sample = Ask.Runtime.RespondentGroup.take_sample(loaded_entries)
+      respondents_count = phone_numbers |> length
 
       respondent_group = respondent_group
       |> RespondentGroup.changeset(%{
@@ -196,39 +202,113 @@ defmodule Ask.RespondentGroupController do
 
   defp process_file(conn, survey, file, func) do
     if Path.extname(file.filename) == ".csv" do
-      rows =
+      entries =
         file.path
-        |> File.read!
-        |> Ask.BomParser.parse
+        |> File.read!()
+        |> Ask.BomParser.parse()
         |> csv_rows
-        |> Enum.uniq_by(&keep_digits/1)
+        |> Enum.to_list
 
-      if length(rows) == 0 do
-        render_invalid(conn, file.filename, [])
-      else
-        invalid_entries = rows
-          |> Stream.with_index
-          |> Stream.filter(fn {row, _} -> !Regex.match?(~r/^([0-9]|\(|\)|\+|\-| )+$/, row) end)
-          |> Stream.map(fn {row, index} -> %{phone_number: row, line_number: index + 1} end)
-          |> Enum.to_list
+      case validate_entries(entries) do
+        :ok ->
+          loaded_entries = load_entries(entries, survey)
 
-        case invalid_entries do
-          [] -> func.(rows)
-          _ -> render_invalid(conn, file.filename, invalid_entries)
-        end
+          case validate_loaded_entries(loaded_entries, entries) do
+            :ok ->
+              func.(loaded_entries)
+
+            {:error, invalid_entries} ->
+              render_invalid(conn, file.filename, invalid_entries)
+          end
+
+        {:error, invalid_entries} ->
+          render_invalid(conn, file.filename, invalid_entries)
+
       end
     else
-      Logger.warn "Error when creating respondent group for survey: #{inspect survey}"
+      Logger.warn("Error when creating respondent group for survey: #{inspect(survey)}")
       render_unprocessable_entity(conn)
     end
   end
 
-  defp merge_sample(old_sample, new_phone_numbers) do
-    if length(old_sample) == 5 do
-      old_sample
+  defp validate_entries(entries) do
+    if length(entries) == 0 do
+      {:error, []}
     else
-      old_sample ++ Enum.take(new_phone_numbers, 5 - length(old_sample))
+      invalid_entries =
+        entries
+        |> Stream.with_index()
+        |> Stream.filter(fn {entry, _} -> !is_phone_number?(entry) end)
+        |> Stream.filter(fn {entry, _} -> !is_respondent_id?(entry) end)
+        |> Stream.map(fn {entry, index} -> %{entry: entry, line_number: index + 1} end)
+        |> Enum.to_list()
+
+      case invalid_entries do
+        [] ->
+          :ok
+
+        _ ->
+          {:error, invalid_entries}
+      end
     end
+  end
+
+  defp validate_loaded_entries(loaded_entries, entries) do
+    loaded_respondent_ids = Enum.filter(loaded_entries, fn loaded_entry -> Map.has_key?(loaded_entry, :hashed_number) end)
+    |> Enum.map(fn %{hashed_number: hashed_number} -> hashed_number end)
+
+    invalid_entries =
+      entries
+      |> Stream.with_index()
+      |> Stream.filter(fn {entry, _} -> is_respondent_id?(entry) and not entry in loaded_respondent_ids end)
+      |> Stream.map(fn {entry, index} -> %{entry: entry, line_number: index + 1, type: "not-found"} end)
+      |> Enum.to_list()
+
+    case invalid_entries do
+      [] ->
+        :ok
+
+      _ ->
+        {:error, invalid_entries}
+    end
+  end
+
+  defp is_phone_number?(entry), do: Regex.match?(~r/^([0-9]|\(|\)|\+|\-| )+$/, entry)
+
+  defp is_respondent_id?(entry), do: Regex.match?(~r/^r([a-zA-Z0-9]){12}$/, entry)
+
+  defp load_entries(entries, survey) do
+    keep_digits = fn phone_number ->
+      Regex.replace(~r/\D/, phone_number, "", [:global])
+    end
+
+    respondent_ids = Enum.filter(entries, fn entry -> String.starts_with?(entry, "r") end)
+    phone_numbers = Enum.filter(entries, fn entry -> not String.starts_with?(entry, "r") end)
+    phone_numbers_from_respondent_ids = phone_numbers_from_respondent_ids(survey, respondent_ids)
+
+    Enum.map(phone_numbers, fn phone_number -> %{phone_number: phone_number} end)
+    |> Enum.concat(phone_numbers_from_respondent_ids)
+    |> Enum.uniq_by(fn %{phone_number: phone_number} -> keep_digits.(phone_number) end)
+  end
+
+  defp phone_numbers_from_respondent_ids(survey, respondent_ids) do
+    respondents =
+      Repo.all(
+        from(s in Survey,
+          join: r in Respondent,
+          where:
+            s.project_id == ^survey.project_id and
+              r.hashed_number in ^respondent_ids,
+          select: [r.phone_number, r.hashed_number]
+        )
+      )
+
+    Enum.map(respondents, fn [phone_number, hashed_number] ->
+      %{
+        phone_number: phone_number,
+        hashed_number: hashed_number
+      }
+    end)
   end
 
   defp remove_duplicates_with_respect_to(phone_numbers, group) do
@@ -245,10 +325,6 @@ defmodule Ask.RespondentGroupController do
     Enum.reject(phone_numbers, fn num ->
       Respondent.canonicalize_phone_number(num) in existing_numbers
     end)
-  end
-
-  defp keep_digits(string) do
-    Regex.replace(~r/\D/, string, "", [:global])
   end
 
   defp find_and_check_survey_state(conn, _options) do

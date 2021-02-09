@@ -2,9 +2,13 @@ defmodule Ask.Runtime.RespondentGroup do
   import Ecto.Query
   alias Ask.{Survey, Repo, Respondent, Stats, RespondentGroup, RespondentGroupChannel}
   alias Ecto.Changeset
+  @sample_size 5
 
-  def create(name, phone_numbers, survey) do
-    sample = phone_numbers |> Enum.take(5)
+  def create(name, loaded_entries, survey) do
+    phone_numbers = map_phone_numbers_from_loaded_entries(loaded_entries)
+
+    sample = take_sample(loaded_entries)
+
     respondents_count = phone_numbers |> length
 
     respondent_group =
@@ -28,6 +32,31 @@ defmodule Ask.Runtime.RespondentGroup do
     |> Repo.update!()
 
     respondent_group
+  end
+
+  def take_sample(loaded_entries) do
+    Enum.take(loaded_entries, @sample_size)
+    |> entries_for_sample()
+  end
+
+  def map_phone_numbers_from_loaded_entries(loaded_entries) do
+    Enum.map(loaded_entries, fn %{phone_number: phone_number} -> phone_number end)
+  end
+
+  def loaded_phone_numbers(phone_numbers),
+    do:
+      Enum.map(phone_numbers, fn phone_number -> %{phone_number: phone_number} end)
+
+  def merge_sample(old_sample, loaded_entries) do
+    new_sample = old_sample ++ entries_for_sample(loaded_entries)
+    Enum.take(new_sample, @sample_size)
+  end
+
+  defp entries_for_sample(loaded_entries) do
+    Enum.map(loaded_entries, fn %{phone_number: phone_number} = loaded_entry ->
+      respondent_id = Map.get(loaded_entry, :hashed_number)
+      if respondent_id, do: respondent_id, else: phone_number
+    end)
   end
 
   def insert_respondents(phone_numbers, respondent_group) do
