@@ -1,6 +1,7 @@
 defmodule Ask.RespondentGroupController do
   use Ask.Web, :api_controller
-  alias Ask.{Project, Survey, Respondent, RespondentGroup, Logger, ActivityLog}
+  alias Ask.{Project, Survey, Respondent, RespondentGroup, Logger}
+  alias Ask.Runtime.RespondentGroupAction
 
   plug :find_and_check_survey_state when action in [:create, :update, :delete, :replace]
 
@@ -23,7 +24,7 @@ defmodule Ask.RespondentGroupController do
     survey = conn.assigns.loaded_survey
 
     process_file(conn, survey, file, fn loaded_entries ->
-      respondent_group = Ask.Runtime.RespondentGroup.create(file.filename, loaded_entries, survey)
+      respondent_group = RespondentGroupAction.create(file.filename, loaded_entries, survey)
       project |> Project.touch!
       conn
       |> put_status(:created)
@@ -75,27 +76,7 @@ defmodule Ask.RespondentGroupController do
     case survey.locked do
       false ->
         process_file(conn, survey, file, fn loaded_entries ->
-          phone_numbers = Ask.Runtime.RespondentGroup.map_phone_numbers_from_loaded_entries(loaded_entries)
-          |> remove_duplicates_with_respect_to(respondent_group)
-          loaded_entries = clean_entries(loaded_entries, phone_numbers)
-
-          Ask.Runtime.RespondentGroup.insert_respondents(phone_numbers, respondent_group)
-
-          respondents_count = Enum.count(phone_numbers)
-
-          if Survey.launched?(survey) and respondents_count > 0 do
-            ActivityLog.add_respondents(project, conn, survey, %{
-              file_name: file.filename,
-              respondents_count: respondents_count
-            }) |> Repo.insert!
-          end
-
-          new_count = respondent_group.respondents_count + length(phone_numbers)
-          new_sample = Ask.Runtime.RespondentGroup.merge_sample(respondent_group.sample, loaded_entries)
-
-          respondent_group = respondent_group
-          |> RespondentGroup.changeset(%{"respondents_count" => new_count, "sample" => new_sample})
-          |> Repo.update!
+          respondent_group = RespondentGroupAction.add_respondents(respondent_group, loaded_entries, file.filename, conn)
 
           conn
           |> render("show.json", respondent_group: respondent_group)
@@ -107,10 +88,6 @@ defmodule Ask.RespondentGroupController do
       end
   end
 
-  defp clean_entries(loaded_entries, phone_numbers) do
-    Enum.filter(loaded_entries, fn %{phone_number: phone_number} -> phone_number in phone_numbers end)
-  end
-
   def replace(conn, %{"respondent_group_id" => id, "file" => file}) do
     project = conn.assigns.loaded_project
     survey = conn.assigns.loaded_survey
@@ -120,24 +97,7 @@ defmodule Ask.RespondentGroupController do
     |> Repo.get!(id)
 
     process_file(conn, survey, file, fn loaded_entries ->
-      phone_numbers = Ask.Runtime.RespondentGroup.map_phone_numbers_from_loaded_entries(loaded_entries)
-      # First delete existing respondents from that group
-      Repo.delete_all(from r in Respondent,
-        where: r.respondent_group_id == ^respondent_group.id)
-
-      # Then create respondents from the CSV file
-      Ask.Runtime.RespondentGroup.insert_respondents(phone_numbers, respondent_group)
-
-      sample = Ask.Runtime.RespondentGroup.take_sample(loaded_entries)
-      respondents_count = phone_numbers |> length
-
-      respondent_group = respondent_group
-      |> RespondentGroup.changeset(%{
-        "sample" => sample,
-        "respondents_count" => respondents_count,
-      })
-      |> Repo.update!
-      |> Repo.preload(:respondent_group_channels)
+      respondent_group = RespondentGroupAction.replace_respondents(respondent_group, loaded_entries)
 
       project |> Project.touch!
 
@@ -147,7 +107,7 @@ defmodule Ask.RespondentGroupController do
   end
 
   defp update_channels(id, %{"channels" => channels}) do
-    Ask.Runtime.RespondentGroup.update_channels(id, channels)
+    RespondentGroupAction.update_channels(id, channels)
   end
 
   defp update_channels(_, _), do: nil
@@ -308,22 +268,6 @@ defmodule Ask.RespondentGroupController do
         phone_number: phone_number,
         hashed_number: hashed_number
       }
-    end)
-  end
-
-  defp remove_duplicates_with_respect_to(phone_numbers, group) do
-    # Select numbers that already exist in the DB
-    canonical_numbers = Enum.map(phone_numbers, &Respondent.canonicalize_phone_number/1)
-    existing_numbers = Repo.all(from r in Respondent,
-      where: r.respondent_group_id == ^group.id,
-      where: r.canonical_phone_number in ^canonical_numbers,
-      select: r.canonical_phone_number)
-
-    # And then remove them from phone_numbers (because they are duplicates)
-    # (no easier way to do this, plus we expect `existing_numbers` to
-    # be empty or near empty)
-    Enum.reject(phone_numbers, fn num ->
-      Respondent.canonicalize_phone_number(num) in existing_numbers
     end)
   end
 

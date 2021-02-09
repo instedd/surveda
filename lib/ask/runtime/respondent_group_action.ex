@@ -1,6 +1,16 @@
-defmodule Ask.Runtime.RespondentGroup do
+defmodule Ask.Runtime.RespondentGroupAction do
   import Ecto.Query
-  alias Ask.{Survey, Repo, Respondent, Stats, RespondentGroup, RespondentGroupChannel}
+
+  alias Ask.{
+    Survey,
+    Repo,
+    Respondent,
+    Stats,
+    RespondentGroup,
+    RespondentGroupChannel,
+    ActivityLog
+  }
+
   alias Ecto.Changeset
   @sample_size 5
 
@@ -34,6 +44,90 @@ defmodule Ask.Runtime.RespondentGroup do
     respondent_group
   end
 
+  def add_respondents(respondent_group, loaded_entries, file_name, conn) do
+    respondent_group = Repo.preload(respondent_group, survey: :project)
+    survey = respondent_group.survey
+
+    phone_numbers =
+      map_phone_numbers_from_loaded_entries(loaded_entries)
+      |> remove_duplicates_with_respect_to(respondent_group)
+
+    loaded_entries = clean_entries(loaded_entries, phone_numbers)
+
+    insert_respondents(phone_numbers, respondent_group)
+
+    respondents_count = Enum.count(phone_numbers)
+
+    if Survey.launched?(survey) and respondents_count > 0 do
+      ActivityLog.add_respondents(survey.project, conn, survey, %{
+        file_name: file_name,
+        respondents_count: respondents_count
+      })
+      |> Repo.insert!()
+    end
+
+    new_count = respondent_group.respondents_count + length(phone_numbers)
+
+    new_sample = merge_sample(respondent_group.sample, loaded_entries)
+
+    respondent_group
+    |> RespondentGroup.changeset(%{"respondents_count" => new_count, "sample" => new_sample})
+    |> Repo.update!()
+  end
+
+  def replace_respondents(respondent_group, loaded_entries) do
+    respondent_group = Repo.preload(respondent_group, :survey)
+    phone_numbers = map_phone_numbers_from_loaded_entries(loaded_entries)
+
+    # First delete existing respondents from that group
+    Repo.delete_all(
+      from(r in Respondent,
+        where: r.respondent_group_id == ^respondent_group.id
+      )
+    )
+
+    # Then create respondents from the CSV file
+    insert_respondents(phone_numbers, respondent_group)
+
+    sample = take_sample(loaded_entries)
+    respondents_count = phone_numbers |> length
+
+    respondent_group
+    |> RespondentGroup.changeset(%{
+      "sample" => sample,
+      "respondents_count" => respondents_count
+    })
+    |> Repo.update!()
+    |> Repo.preload(:respondent_group_channels)
+  end
+
+  defp clean_entries(loaded_entries, phone_numbers) do
+    Enum.filter(loaded_entries, fn %{phone_number: phone_number} ->
+      phone_number in phone_numbers
+    end)
+  end
+
+  defp remove_duplicates_with_respect_to(phone_numbers, group) do
+    # Select numbers that already exist in the DB
+    canonical_numbers = Enum.map(phone_numbers, &Respondent.canonicalize_phone_number/1)
+
+    existing_numbers =
+      Repo.all(
+        from(r in Respondent,
+          where: r.respondent_group_id == ^group.id,
+          where: r.canonical_phone_number in ^canonical_numbers,
+          select: r.canonical_phone_number
+        )
+      )
+
+    # And then remove them from phone_numbers (because they are duplicates)
+    # (no easier way to do this, plus we expect `existing_numbers` to
+    # be empty or near empty)
+    Enum.reject(phone_numbers, fn num ->
+      Respondent.canonicalize_phone_number(num) in existing_numbers
+    end)
+  end
+
   def take_sample(loaded_entries) do
     Enum.take(loaded_entries, @sample_size)
     |> entries_for_sample()
@@ -44,8 +138,7 @@ defmodule Ask.Runtime.RespondentGroup do
   end
 
   def loaded_phone_numbers(phone_numbers),
-    do:
-      Enum.map(phone_numbers, fn phone_number -> %{phone_number: phone_number} end)
+    do: Enum.map(phone_numbers, fn phone_number -> %{phone_number: phone_number} end)
 
   def merge_sample(old_sample, loaded_entries) do
     new_sample = old_sample ++ entries_for_sample(loaded_entries)
