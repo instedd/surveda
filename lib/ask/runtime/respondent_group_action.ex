@@ -242,14 +242,21 @@ defmodule Ask.Runtime.RespondentGroupAction do
   end
 
   defp validate_loaded_entries(loaded_entries, entries) do
-    loaded_respondent_ids = Enum.filter(loaded_entries, fn loaded_entry -> Map.has_key?(loaded_entry, :hashed_number) end)
-    |> Enum.map(fn %{hashed_number: hashed_number} -> hashed_number end)
+    loaded_respondent_ids =
+      Enum.filter(loaded_entries, fn loaded_entry ->
+        Map.has_key?(loaded_entry, :hashed_number)
+      end)
+      |> Enum.map(fn %{hashed_number: hashed_number} -> hashed_number end)
 
     invalid_entries =
       entries
       |> Stream.with_index()
-      |> Stream.filter(fn {entry, _} -> is_respondent_id?(entry) and not entry in loaded_respondent_ids end)
-      |> Stream.map(fn {entry, index} -> %{entry: entry, line_number: index + 1, type: "not-found"} end)
+      |> Stream.filter(fn {entry, _} ->
+        is_respondent_id?(entry) and not (entry in loaded_respondent_ids)
+      end)
+      |> Stream.map(fn {entry, index} ->
+        %{entry: entry, line_number: index + 1, type: "not-found"}
+      end)
       |> Enum.to_list()
 
     case invalid_entries do
@@ -274,9 +281,18 @@ defmodule Ask.Runtime.RespondentGroupAction do
     phone_numbers = Enum.filter(entries, fn entry -> not String.starts_with?(entry, "r") end)
     phone_numbers_from_respondent_ids = phone_numbers_from_respondent_ids(survey, respondent_ids)
 
-    Enum.map(phone_numbers, fn phone_number -> %{phone_number: phone_number} end)
-    |> Enum.concat(phone_numbers_from_respondent_ids)
-    |> Enum.uniq_by(fn %{phone_number: phone_number} -> keep_digits.(phone_number) end)
+    loaded_entries =
+      Enum.map(phone_numbers, fn phone_number -> %{phone_number: phone_number} end)
+      |> Enum.concat(phone_numbers_from_respondent_ids)
+      |> Enum.uniq_by(fn %{phone_number: phone_number} -> keep_digits.(phone_number) end)
+
+    # Restore the initial entries order
+    Enum.map(entries, fn entry ->
+      Enum.find(loaded_entries, fn %{phone_number: phone_number} = loaded_entry ->
+        entry == phone_number or entry == Map.get(loaded_entry, :hashed_number)
+      end)
+    end)
+    |> Enum.filter(&(!is_nil(&1)))
   end
 
   defp phone_numbers_from_respondent_ids(survey, respondent_ids) do
