@@ -31,7 +31,7 @@ defmodule Ask.Runtime.RespondentGroupActionTest do
       assert loaded_entries == [%{phone_number: phone_number, hashed_number: respondent_id}]
     end
 
-    test "loads phone_number and respondent_id together", %{survey: survey} do
+    test "loads a phone_number and an existing respondent_id together", %{survey: survey} do
       phone_number_1 = "1000000001"
       phone_number_2 = "1000000002"
 
@@ -49,6 +49,24 @@ defmodule Ask.Runtime.RespondentGroupActionTest do
                %{phone_number: phone_number_1, hashed_number: respondent_id},
                %{phone_number: phone_number_2}
              ]
+    end
+
+    test "validates an invalid entry", %{survey: survey} do
+      [entry] = entries = ["foo"]
+
+      {result, invalid_entries} = RespondentGroupAction.load_entries(entries, survey)
+
+      assert result == :error
+      assert invalid_entries == [%{entry: entry, line_number: 1}]
+    end
+
+    test "validates a non-existent respondent_id", %{survey: survey} do
+      [respondent_id] = entries = ["r000000000001"]
+
+      {result, invalid_entries} = RespondentGroupAction.load_entries(entries, survey)
+
+      assert result == :error
+      assert invalid_entries == [%{entry: respondent_id, line_number: 1, type: "not-found"}]
     end
   end
 

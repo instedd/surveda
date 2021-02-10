@@ -284,7 +284,6 @@ defmodule Ask.Runtime.RespondentGroupAction do
     loaded_entries =
       Enum.map(phone_numbers, fn phone_number -> %{phone_number: phone_number} end)
       |> Enum.concat(phone_numbers_from_respondent_ids)
-      |> Enum.uniq_by(fn %{phone_number: phone_number} -> keep_digits.(phone_number) end)
 
     # Restore the initial entries order
     Enum.map(entries, fn entry ->
@@ -293,6 +292,7 @@ defmodule Ask.Runtime.RespondentGroupAction do
       end)
     end)
     |> Enum.filter(&(!is_nil(&1)))
+    |> Enum.uniq_by(fn %{phone_number: phone_number} -> keep_digits.(phone_number) end)
   end
 
   defp phone_numbers_from_respondent_ids(survey, respondent_ids) do
