@@ -300,6 +300,7 @@ defmodule Ask.Runtime.RespondentGroupAction do
       Repo.all(
         from(s in Survey,
           join: r in Respondent,
+          on: r.survey_id == s.id,
           where:
             s.project_id == ^survey.project_id and
               r.hashed_number in ^respondent_ids,

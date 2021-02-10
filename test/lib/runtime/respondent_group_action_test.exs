@@ -17,10 +17,11 @@ defmodule Ask.Runtime.RespondentGroupActionTest do
     end
 
     test "loads an existing respondent_id", %{survey: survey} do
+      other_survey = insert(:survey, project: survey.project)
       phone_number = "1000000001"
 
       respondent_id =
-        (add_survey_respondents(survey, [phone_number])
+        (add_survey_respondents(other_survey, [phone_number])
          |> Enum.at(0)).hashed_number
 
       entries = [respondent_id]
@@ -35,8 +36,10 @@ defmodule Ask.Runtime.RespondentGroupActionTest do
       phone_number_1 = "1000000001"
       phone_number_2 = "1000000002"
 
+      other_survey = insert(:survey, project: survey.project)
+
       respondent_id =
-        (add_survey_respondents(survey, [phone_number_1])
+        (add_survey_respondents(other_survey, [phone_number_1])
          |> Enum.at(0)).hashed_number
 
       entries = [respondent_id, phone_number_2]
@@ -67,6 +70,37 @@ defmodule Ask.Runtime.RespondentGroupActionTest do
 
       assert result == :error
       assert invalid_entries == [%{entry: respondent_id, line_number: 1, type: "not-found"}]
+    end
+
+    test "validates a non-existent respondent_id (but existent in another project)", %{survey: survey} do
+      other_survey = insert(:survey)
+
+      respondent_id =
+        (add_survey_respondents(other_survey, ["1000000001"])
+         |> Enum.at(0)).hashed_number
+
+      entries = [respondent_id]
+
+      {result, invalid_entries} = RespondentGroupAction.load_entries(entries, survey)
+
+      assert result == :error
+      assert invalid_entries == [%{entry: respondent_id, line_number: 1, type: "not-found"}]
+    end
+  end
+
+  describe "create" do
+    test "includes the respondent_id in the sample", %{survey: survey} do
+      other_survey = insert(:survey, project: survey.project)
+
+      respondent_id =
+      (add_survey_respondents(other_survey, ["1000000001"])
+       |> Enum.at(0)).hashed_number
+
+      {:ok, loaded_entries} = RespondentGroupAction.load_entries([respondent_id], survey)
+
+      respondent_group = RespondentGroupAction.create("foo", loaded_entries, survey)
+
+      assert respondent_group.sample == [respondent_id]
     end
   end
 
