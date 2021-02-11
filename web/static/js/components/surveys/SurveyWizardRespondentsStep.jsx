@@ -64,8 +64,8 @@ class SurveyWizardRespondentsStep extends Component {
         </div>
       )
     } else {
-      const invalidPhoneNumberEntries = data.invalidEntries.filter(invalidEntry => invalidEntry.type != 'not-found')
-      const invalidRespondentIdEntries = data.invalidEntries.filter(invalidEntry => invalidEntry.type == 'not-found')
+      const invalidPhoneNumberEntries = data.invalidEntries.filter(invalidEntry => invalidEntry.type == 'invalid-phone-number')
+      const invalidRespondentIdEntries = data.invalidEntries.filter(invalidEntry => invalidEntry.type == 'invalid-respondent-id')
 
       const invalidPhoneNumberLineNumbers = invalidPhoneNumberEntries.slice(0, 3).map((entry) => entry.line_number)
       const invalidRespondentIdLineNumbers = invalidRespondentIdEntries.slice(0, 3).map((entry) => entry.line_number)

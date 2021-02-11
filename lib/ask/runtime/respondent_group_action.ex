@@ -228,7 +228,9 @@ defmodule Ask.Runtime.RespondentGroupAction do
         |> Stream.with_index()
         |> Stream.filter(fn {entry, _} -> !is_phone_number?(entry) end)
         |> Stream.filter(fn {entry, _} -> !is_respondent_id?(entry) end)
-        |> Stream.map(fn {entry, index} -> %{entry: entry, line_number: index + 1} end)
+        |> Stream.map(fn {entry, index} ->
+          %{entry: entry, line_number: index + 1, type: "invalid-phone-number"}
+        end)
         |> Enum.to_list()
 
       case invalid_entries do
@@ -255,7 +257,7 @@ defmodule Ask.Runtime.RespondentGroupAction do
         is_respondent_id?(entry) and not (entry in loaded_respondent_ids)
       end)
       |> Stream.map(fn {entry, index} ->
-        %{entry: entry, line_number: index + 1, type: "not-found"}
+        %{entry: entry, line_number: index + 1, type: "invalid-respondent-id"}
       end)
       |> Enum.to_list()
 

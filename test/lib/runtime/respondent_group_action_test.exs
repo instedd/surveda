@@ -72,7 +72,7 @@ defmodule Ask.Runtime.RespondentGroupActionTest do
 
       # Assert
       assert result == :error
-      assert invalid_entries == [%{entry: entry, line_number: 1}]
+      assert invalid_entries == [%{entry: entry, line_number: 1, type: "invalid-phone-number"}]
     end
 
     test "validates a non-existent respondent_id", %{survey: survey} do
@@ -84,7 +84,7 @@ defmodule Ask.Runtime.RespondentGroupActionTest do
 
       # Assert
       assert result == :error
-      assert invalid_entries == [%{entry: respondent_id, line_number: 1, type: "not-found"}]
+      assert invalid_entries == [%{entry: respondent_id, line_number: 1, type: "invalid-respondent-id"}]
     end
 
     test "validates a non-existent respondent_id (but existent in another project)", %{
@@ -104,7 +104,7 @@ defmodule Ask.Runtime.RespondentGroupActionTest do
 
       # Assert
       assert result == :error
-      assert invalid_entries == [%{entry: respondent_id, line_number: 1, type: "not-found"}]
+      assert invalid_entries == [%{entry: respondent_id, line_number: 1, type: "invalid-respondent-id"}]
     end
   end
 
