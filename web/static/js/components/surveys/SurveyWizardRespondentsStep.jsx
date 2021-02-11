@@ -59,22 +59,31 @@ class SurveyWizardRespondentsStep extends Component {
     if (data.invalidEntries.length == 0) {
       content = (
         <div className='card-content card-error'>
-          <div><b>{t('The file you uploaded does not contain any phone number')}</b></div>
+          <div><b>{t('The file you uploaded does not contain any phone number or respondent id')}</b></div>
           <div>{t('Please upload antother file.')}</div>
         </div>
       )
     } else {
-      const lineNumbers = data.invalidEntries.slice(0, 3).map((entry) => entry.line_number)
+      const invalidPhoneNumberEntries = data.invalidEntries.filter(invalidEntry => invalidEntry.type != 'not-found')
+      const invalidRespondentIdEntries = data.invalidEntries.filter(invalidEntry => invalidEntry.type == 'not-found')
 
-      const invalidEntriesText = t('An invalid entry was found at line {{lineNumbers}}', {count: data.invalidEntries.length, lineNumbers: lineNumbers.join(', ')})
+      const invalidPhoneNumberLineNumbers = invalidPhoneNumberEntries.slice(0, 3).map((entry) => entry.line_number)
+      const invalidRespondentIdLineNumbers = invalidRespondentIdEntries.slice(0, 3).map((entry) => entry.line_number)
 
-      const extraLinesCount = data.invalidEntries.length - lineNumbers.length
-      const lineNumbersText = (extraLinesCount > 0 ? t('and {{count}} more.', {count: String(extraLinesCount)}) : '')
+      const invalidPhoneNumberText = t('An invalid phone number was found at line {{lineNumbers}}', {lineNumbers: invalidPhoneNumberLineNumbers.join(', ')})
+      const invalidRespondentIdText = t('An invalid respondent id was found at line {{lineNumbers}}', {lineNumbers: invalidRespondentIdLineNumbers.join(', ')})
+
+      const invalidPhoneNumberExtraLinesCount = invalidPhoneNumberEntries.length - invalidPhoneNumberLineNumbers.length
+      const invalidRespondentIdExtraLinesCount = invalidRespondentIdEntries.length - invalidRespondentIdLineNumbers.length
+
+      const invalidPhoneNumberLineNumbersText = (invalidPhoneNumberExtraLinesCount > 0 ? t('and {{count}} more.', {count: String(invalidPhoneNumberExtraLinesCount)}) : '')
+      const invalidRespondentIdLineNumbersText = (invalidRespondentIdExtraLinesCount > 0 ? t('and {{count}} more.', {count: String(invalidRespondentIdExtraLinesCount)}) : '')
 
       content = (
         <div className='card-content card-error'>
           <div><b>{t('Errors found at \'{{filename}}\', file was not imported', {filename: data.filename})}</b></div>
-          <div>{invalidEntriesText} {lineNumbersText}</div>
+          {invalidPhoneNumberEntries.length > 0 ? <div>{invalidPhoneNumberText} {invalidPhoneNumberLineNumbersText}</div> : null}
+          {invalidRespondentIdEntries.length > 0 ? <div>{invalidRespondentIdText} {invalidRespondentIdLineNumbersText}</div> : null}
           <div>{t('Please fix those errors and upload again.')}</div>
         </div>
       )
