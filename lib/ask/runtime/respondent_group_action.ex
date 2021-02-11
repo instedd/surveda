@@ -226,8 +226,8 @@ defmodule Ask.Runtime.RespondentGroupAction do
       invalid_entries =
         entries
         |> Stream.with_index()
-        |> Stream.filter(fn {entry, _} -> !is_phone_number?(entry) end)
-        |> Stream.filter(fn {entry, _} -> !is_respondent_id?(entry) end)
+        |> Stream.filter(fn {entry, _} -> !Respondent.is_phone_number?(entry) end)
+        |> Stream.filter(fn {entry, _} -> !Respondent.is_respondent_id?(entry) end)
         |> Stream.map(fn {entry, index} ->
           %{entry: entry, line_number: index + 1, type: "invalid-phone-number"}
         end)
@@ -254,7 +254,7 @@ defmodule Ask.Runtime.RespondentGroupAction do
       entries
       |> Stream.with_index()
       |> Stream.filter(fn {entry, _} ->
-        is_respondent_id?(entry) and not (entry in loaded_respondent_ids)
+        Respondent.is_respondent_id?(entry) and not (entry in loaded_respondent_ids)
       end)
       |> Stream.map(fn {entry, index} ->
         %{entry: entry, line_number: index + 1, type: "invalid-respondent-id"}
@@ -269,10 +269,6 @@ defmodule Ask.Runtime.RespondentGroupAction do
         {:error, invalid_entries}
     end
   end
-
-  defp is_phone_number?(entry), do: Regex.match?(~r/^([0-9]|\(|\)|\+|\-| )+$/, entry)
-
-  defp is_respondent_id?(entry), do: Regex.match?(~r/^r([a-zA-Z0-9]){12}$/, entry)
 
   defp load_validated_entries(entries, survey) do
     keep_digits = fn phone_number ->

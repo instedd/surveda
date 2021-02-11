@@ -88,12 +88,23 @@ defmodule Ask.Respondent do
     "r" <> (String.slice(:crypto.hash(:md5, salt <> phone_number) |> Base.encode16(case: :lower), -12, 12))
   end
 
-  def mask_phone_number(phone_number) do
-    Enum.join([replace_alphanumeric_by_hash(String.slice(phone_number, 0..-5)), String.slice(phone_number, -4, 4)], "")
+  def mask_respondent_entry(entry) do
+    if is_respondent_id?(entry) do
+      entry
+    else
+      mask_phone_number(entry)
+    end
   end
 
-  def replace_alphanumeric_by_hash(string) do
-    Regex.replace(~r/[a-zA-Z0-9]/, string, "#")
+  def mask_phone_number(phone_number) do
+    Enum.join([replace_numbers_by_hash(String.slice(phone_number, 0..-5)), String.slice(phone_number, -4, 4)], "")
+  end
+
+  def is_phone_number?(entry), do: Regex.match?(~r/^([0-9]|\(|\)|\+|\-| )+$/, entry)
+  def is_respondent_id?(entry), do: Regex.match?(~r/^r([a-zA-Z0-9]){12}$/, entry)
+
+  def replace_numbers_by_hash(string) do
+    Regex.replace(~r/[0-9]/, string, "#")
   end
 
   def show_disposition(disposition) do
