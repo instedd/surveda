@@ -13,6 +13,11 @@ export const RespondentsContainer = translate()(({ children, t }) => {
           <p className='flow-text'>
             <Trans>Upload a CSV file like <a href='#' onClick={onClick} download={download}>this one</a> with your respondents. You can define how many of these respondents need to successfully answer the survey by setting up cutoff rules.</Trans>
           </p>
+          <p>
+            <b>
+              { t('Uploading a CSV with respondent ids will disable incentive download') }
+            </b>
+          </p>
         </div>
       </div>
       <div className='row'>
