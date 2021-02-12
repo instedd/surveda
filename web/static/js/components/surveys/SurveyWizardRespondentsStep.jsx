@@ -55,15 +55,13 @@ class SurveyWizardRespondentsStep extends Component {
     if (filteredInvalidEntries.length == 0) return null
 
     const lineNumbers = filteredInvalidEntries.slice(0, 3).map((entry) => entry.line_number)
-    const entryType = () => {
-      if (invalidEntryType == 'invalid-phone-number') return 'phone number'
-      else if (invalidEntryType == 'invalid-respondent-id') return 'respondent id'
-    }
+    const entryType = {'invalid-phone-number': 'phone number', 'invalid-respondent-id': 'respondent id'}[invalidEntryType]
     const extraLines = filteredInvalidEntries.length - lineNumbers.length
+    const lineNumbersText = lineNumbers.join(', ')
 
     return extraLines > 0
-      ? t('An invalid {{entryType}} was found at line {{lineNumbers}} and {{count}} more.', { lineNumbers: lineNumbers.join(', '), entryType: entryType(), count: String(extraLines) })
-      : t('An invalid {{entryType}} was found at line {{lineNumbers}}.', { lineNumbers: lineNumbers.join(', '), entryType: entryType() })
+      ? t('An invalid {{entryType}} was found at line {{lineNumbers}} and {{count}} more.', { lineNumbers: lineNumbersText, entryType: entryType, count: String(extraLines) })
+      : t('An invalid {{entryType}} was found at line {{lineNumbers}}.', { lineNumbers: lineNumbersText, entryType: entryType })
   }
 
   invalidRespondentsContent(data) {
