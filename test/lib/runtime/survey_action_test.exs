@@ -1,6 +1,6 @@
 defmodule Ask.SurveyActionTest do
   use Ask.ModelCase
-  alias Ask.Runtime.SurveyAction
+  alias Ask.Runtime.{SurveyAction, RespondentGroupAction}
   alias Ask.{Survey, Repo, TestChannel, Respondent, ActivityLog}
 
   describe "repeat" do
@@ -191,8 +191,9 @@ defmodule Ask.SurveyActionTest do
   end
 
   defp insert_respondents(survey, channel, mode, phone_numbers) do
-    group = Ask.Runtime.RespondentGroup.create(UUID.uuid4(), phone_numbers, survey)
-    Ask.Runtime.RespondentGroup.update_channels(group.id, [%{"id" => channel.id, "mode" => mode}])
+    phone_numbers = RespondentGroupAction.loaded_phone_numbers(phone_numbers)
+    group = RespondentGroupAction.create(UUID.uuid4(), phone_numbers, survey)
+    RespondentGroupAction.update_channels(group.id, [%{"id" => channel.id, "mode" => mode}])
   end
 
   defp refuse_one_respondent(survey) do

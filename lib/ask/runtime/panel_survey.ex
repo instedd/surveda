@@ -1,6 +1,7 @@
 defmodule Ask.Runtime.PanelSurvey do
   import Ecto.Query
   alias Ask.{Survey, Repo, Respondent, RespondentGroupChannel}
+  alias Ask.Runtime.RespondentGroupAction
   alias Ecto.Multi
 
   def new_ocurrence_changeset(survey) do
@@ -57,9 +58,10 @@ defmodule Ask.Runtime.PanelSurvey do
             select: r.phone_number
           )
           |> Repo.all()
+          |> RespondentGroupAction.loaded_phone_numbers
 
         new_respondent_group =
-          Ask.Runtime.RespondentGroup.create(respondent_group.name, phone_numbers, new_occurrence)
+          RespondentGroupAction.create(respondent_group.name, phone_numbers, new_occurrence)
 
         copy_respondent_group_channels(respondent_group, new_respondent_group)
         new_respondent_group.id

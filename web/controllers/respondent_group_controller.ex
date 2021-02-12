@@ -1,6 +1,7 @@
 defmodule Ask.RespondentGroupController do
   use Ask.Web, :api_controller
-  alias Ask.{Project, Survey, Respondent, RespondentGroup, Logger, ActivityLog}
+  alias Ask.{Project, Survey, Respondent, RespondentGroup, Logger}
+  alias Ask.Runtime.RespondentGroupAction
 
   plug :find_and_check_survey_state when action in [:create, :update, :delete, :replace]
 
@@ -22,13 +23,22 @@ defmodule Ask.RespondentGroupController do
     project = conn.assigns.loaded_project
     survey = conn.assigns.loaded_survey
 
-    process_file(conn, survey, file, fn file_phone_numbers ->
-      respondent_group = Ask.Runtime.RespondentGroup.create(file.filename, file_phone_numbers, survey)
-      project |> Project.touch!
-      conn
-      |> put_status(:created)
-      |> render("show.json", respondent_group: respondent_group)
-    end)
+    entries = entries_from_csv(file)
+    if entries do
+      case RespondentGroupAction.load_entries(entries, survey) do
+        {:ok, loaded_entries} ->
+          respondent_group = RespondentGroupAction.create(file.filename, loaded_entries, survey)
+          project |> Project.touch!
+          conn
+          |> put_status(:created)
+          |> render("show.json", respondent_group: respondent_group)
+        {:error, invalid_entries} ->
+          render_invalid(conn, file.filename, invalid_entries)
+      end
+    else
+      Logger.warn("Error when creating respondent group for survey: #{inspect(survey)}")
+      render_unprocessable_entity(conn)
+    end
   end
 
   def update(conn, %{"id" => id, "respondent_group" => respondent_group_params}) do
@@ -74,31 +84,19 @@ defmodule Ask.RespondentGroupController do
 
     case survey.locked do
       false ->
-        process_file(conn, survey, file, fn file_phone_numbers ->
-          file_phone_numbers = file_phone_numbers
-          |> remove_duplicates_with_respect_to(respondent_group)
-
-          Ask.Runtime.RespondentGroup.insert_respondents(file_phone_numbers, respondent_group)
-
-          respondents_count = Enum.count(file_phone_numbers)
-
-          if Survey.launched?(survey) and respondents_count > 0 do
-            ActivityLog.add_respondents(project, conn, survey, %{
-              file_name: file.filename,
-              respondents_count: respondents_count
-            }) |> Repo.insert!
+        entries = entries_from_csv(file)
+        if entries do
+          case RespondentGroupAction.load_entries(entries, survey) do
+            {:ok, loaded_entries} ->
+              respondent_group = RespondentGroupAction.add_respondents(respondent_group, loaded_entries, file.filename, conn)
+              render(conn, "show.json", respondent_group: respondent_group)
+            {:error, invalid_entries} ->
+              render_invalid(conn, file.filename, invalid_entries)
           end
-
-          new_count = respondent_group.respondents_count + length(file_phone_numbers)
-          new_sample = merge_sample(respondent_group.sample, file_phone_numbers)
-
-          respondent_group = respondent_group
-          |> RespondentGroup.changeset(%{"respondents_count" => new_count, "sample" => new_sample})
-          |> Repo.update!
-
-          conn
-          |> render("show.json", respondent_group: respondent_group)
-        end)
+        else
+          Logger.warn("Error when creating respondent group for survey: #{inspect(survey)}")
+          render_unprocessable_entity(conn)
+        end
       true ->
         conn
         |> put_status(:unprocessable_entity)
@@ -114,37 +112,31 @@ defmodule Ask.RespondentGroupController do
     |> assoc(:respondent_groups)
     |> Repo.get!(id)
 
-    process_file(conn, survey, file, fn file_phone_numbers ->
-      # First delete existing respondents from that group
-      Repo.delete_all(from r in Respondent,
-        where: r.respondent_group_id == ^respondent_group.id)
-
-      # Then create respondents from the CSV file
-      Ask.Runtime.RespondentGroup.insert_respondents(file_phone_numbers, respondent_group)
-
-      sample = file_phone_numbers |> Enum.take(5)
-      respondents_count = file_phone_numbers |> length
-
-      respondent_group = respondent_group
-      |> RespondentGroup.changeset(%{
-        "sample" => sample,
-        "respondents_count" => respondents_count,
-      })
-      |> Repo.update!
-      |> Repo.preload(:respondent_group_channels)
-
-      project |> Project.touch!
-
-      conn
-      |> render("show.json", respondent_group: respondent_group)
-    end)
+    entries = entries_from_csv(file)
+    if entries do
+      case RespondentGroupAction.load_entries(entries, survey) do
+        {:ok, loaded_entries} ->
+          respondent_group = RespondentGroupAction.replace_respondents(respondent_group, loaded_entries)
+          project |> Project.touch!
+          render(conn, "show.json", respondent_group: respondent_group)
+        {:error, invalid_entries} ->
+          render_invalid(conn, file.filename, invalid_entries)
+      end
+    else
+      Logger.warn("Error when creating respondent group for survey: #{inspect(survey)}")
+      render_unprocessable_entity(conn)
+    end
   end
 
-  defp update_channels(id, %{"channels" => channels}) do
-    Ask.Runtime.RespondentGroup.update_channels(id, channels)
+  defp entries_from_csv(file) do
+    if Path.extname(file.filename) == ".csv" do
+      file.path
+      |> File.read!()
+      |> Ask.BomParser.parse()
+      |> csv_rows
+      |> Enum.to_list
+    end
   end
-
-  defp update_channels(_, _), do: nil
 
   defp csv_rows(csv_string) do
     csv_string
@@ -152,6 +144,12 @@ defmodule Ask.RespondentGroupController do
     |> Stream.map(fn r -> r |> String.split(",") |> Enum.at(0) |> String.trim end)
     |> Stream.filter(fn r -> String.length(r) != 0 end)
   end
+
+  defp update_channels(id, %{"channels" => channels}) do
+    RespondentGroupAction.update_channels(id, channels)
+  end
+
+  defp update_channels(_, _), do: nil
 
   defp render_unprocessable_entity(conn) do
     conn
@@ -192,63 +190,6 @@ defmodule Ask.RespondentGroupController do
     conn
       |> put_status(:ok)
       |> render("empty.json", %{})
-  end
-
-  defp process_file(conn, survey, file, func) do
-    if Path.extname(file.filename) == ".csv" do
-      rows =
-        file.path
-        |> File.read!
-        |> Ask.BomParser.parse
-        |> csv_rows
-        |> Enum.uniq_by(&keep_digits/1)
-
-      if length(rows) == 0 do
-        render_invalid(conn, file.filename, [])
-      else
-        invalid_entries = rows
-          |> Stream.with_index
-          |> Stream.filter(fn {row, _} -> !Regex.match?(~r/^([0-9]|\(|\)|\+|\-| )+$/, row) end)
-          |> Stream.map(fn {row, index} -> %{phone_number: row, line_number: index + 1} end)
-          |> Enum.to_list
-
-        case invalid_entries do
-          [] -> func.(rows)
-          _ -> render_invalid(conn, file.filename, invalid_entries)
-        end
-      end
-    else
-      Logger.warn "Error when creating respondent group for survey: #{inspect survey}"
-      render_unprocessable_entity(conn)
-    end
-  end
-
-  defp merge_sample(old_sample, new_phone_numbers) do
-    if length(old_sample) == 5 do
-      old_sample
-    else
-      old_sample ++ Enum.take(new_phone_numbers, 5 - length(old_sample))
-    end
-  end
-
-  defp remove_duplicates_with_respect_to(phone_numbers, group) do
-    # Select numbers that already exist in the DB
-    canonical_numbers = Enum.map(phone_numbers, &Respondent.canonicalize_phone_number/1)
-    existing_numbers = Repo.all(from r in Respondent,
-      where: r.respondent_group_id == ^group.id,
-      where: r.canonical_phone_number in ^canonical_numbers,
-      select: r.canonical_phone_number)
-
-    # And then remove them from phone_numbers (because they are duplicates)
-    # (no easier way to do this, plus we expect `existing_numbers` to
-    # be empty or near empty)
-    Enum.reject(phone_numbers, fn num ->
-      Respondent.canonicalize_phone_number(num) in existing_numbers
-    end)
-  end
-
-  defp keep_digits(string) do
-    Regex.replace(~r/\D/, string, "", [:global])
   end
 
   defp find_and_check_survey_state(conn, _options) do
