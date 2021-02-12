@@ -69,6 +69,9 @@ defmodule Ask.Survey do
     field :links, :any, virtual: true
     field :floip_package_id, :string
     field :down_channels, JSON, virtual: true, default: []
+    # The option of downloading incentive files is disabled for a survey after creating 1 or more
+    # respondents using a file with hashed_numbers (instead of phone_numbers)
+    field :incentives_enabled, :boolean, default: true
 
     has_many :respondent_groups, RespondentGroup
     has_many :respondents, Respondent
@@ -103,7 +106,7 @@ defmodule Ask.Survey do
   """
   def changeset(struct, params \\ %{}) do
     struct
-    |> cast(params, [:name, :description, :project_id, :folder_id, :mode, :state, :locked, :exit_code, :exit_message, :cutoff, :schedule, :sms_retry_configuration, :ivr_retry_configuration, :mobileweb_retry_configuration, :fallback_delay, :started_at, :quotas, :quota_vars, :comparisons, :count_partial_results, :simulation, :ended_at, :panel_survey_of, :latest_panel_survey])
+    |> cast(params, [:name, :description, :project_id, :folder_id, :mode, :state, :locked, :exit_code, :exit_message, :cutoff, :schedule, :sms_retry_configuration, :ivr_retry_configuration, :mobileweb_retry_configuration, :fallback_delay, :started_at, :quotas, :quota_vars, :comparisons, :count_partial_results, :simulation, :ended_at, :panel_survey_of, :latest_panel_survey, :incentives_enabled])
     |> set_floip_package_id
     |> validate_required([:project_id, :state, :schedule])
     |> foreign_key_constraint(:project_id)
