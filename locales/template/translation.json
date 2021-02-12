@@ -1,6 +1,4 @@
 {
-  " and {{count}} more.": "",
-  " and {{count}} more._plural": "",
   "\"Mobile web\" must not be blank": "",
   "\"Phone call\" must not be blank": "",
   "\"Phone call\" must only consist of single digits, \"#\" or \"*\"": "",
@@ -47,7 +45,9 @@
   "All the respondent information will be lost and cannot be undone.": "",
   "Amount of respondents that are estimated we need to contact to reach the target completes. It increases when the success rate decreases and viceversa.": "",
   "An audio file must be uploaded": "",
-  "An invalid {{entryType}} was found at line {{lineNumbers}}": "",
+  "An invalid {{entryType}} was found at line {{lineNumbers}} and {{count}} more.": "",
+  "An invalid {{entryType}} was found at line {{lineNumbers}} and {{count}} more._plural": "",
+  "An invalid {{entryType}} was found at line {{lineNumbers}}.": "",
   "Apply patterns for numbers cleanup": "",
   "Archive": "",
   "Archived": "",

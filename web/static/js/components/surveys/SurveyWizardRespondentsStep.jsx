@@ -59,10 +59,11 @@ class SurveyWizardRespondentsStep extends Component {
       if (invalidEntryType == 'invalid-phone-number') return 'phone number'
       else if (invalidEntryType == 'invalid-respondent-id') return 'respondent id'
     }
-    const text = t('An invalid {{entryType}} was found at line {{lineNumbers}}', {lineNumbers: lineNumbers.join(', '), entryType: entryType()})
     const extraLines = filteredInvalidEntries.length - lineNumbers.length
 
-    return `${text}${extraLines > 0 ? t(' and {{count}} more.', {count: String(extraLines)}) : ''}`
+    return extraLines > 0
+      ? t('An invalid {{entryType}} was found at line {{lineNumbers}} and {{count}} more.', { lineNumbers: lineNumbers.join(', '), entryType: entryType(), count: String(extraLines) })
+      : t('An invalid {{entryType}} was found at line {{lineNumbers}}.', { lineNumbers: lineNumbers.join(', '), entryType: entryType() })
   }
 
   invalidRespondentsContent(data) {
