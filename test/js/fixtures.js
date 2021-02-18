@@ -365,7 +365,8 @@ const bareSurvey: Survey = {
   mode: [['sms']],
   nextScheduleTime: null,
   isPanelSurvey: false,
-  isRepeatable: false
+  isRepeatable: false,
+  incentivesEnabled: true
 }
 
 const bareFolder: Folder = {
