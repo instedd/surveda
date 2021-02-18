@@ -111,6 +111,20 @@
           clear: both;
           zoom: 1;
         }
+        .button {
+          background-color: color("grey", "darken-1");
+        }
+        .title {
+          @extend .black-text;
+        }
+        &[disabled] {
+          .button {
+            background-color: color("grey", "lighten-1");
+          }
+          .title {
+            color: color("grey", "lighten-1");
+          }
+        }
       }
       .access-link {
         padding: 0.5rem 0;

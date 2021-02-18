@@ -181,7 +181,8 @@ defmodule Ask.SurveyControllerTest do
         "down_channels" => [],
         "folder_id" => nil,
         "is_panel_survey" => false,
-        "is_repeatable" => false
+        "is_repeatable" => false,
+        "incentives_enabled" => true
       }
     end
 
@@ -277,7 +278,8 @@ defmodule Ask.SurveyControllerTest do
         "down_channels" => [],
         "folder_id" => nil,
         "is_panel_survey" => false,
-        "is_repeatable" => false
+        "is_repeatable" => false,
+        "incentives_enabled" => true
       }
     end
 
@@ -347,7 +349,8 @@ defmodule Ask.SurveyControllerTest do
         "down_channels" => [],
         "folder_id" => nil,
         "is_panel_survey" => false,
-        "is_repeatable" => false
+        "is_repeatable" => false,
+        "incentives_enabled" => true
       }
     end
 
@@ -409,7 +412,8 @@ defmodule Ask.SurveyControllerTest do
         "down_channels" => [],
         "folder_id" => nil,
         "is_panel_survey" => false,
-        "is_repeatable" => false
+        "is_repeatable" => false,
+        "incentives_enabled" => true
       }
     end
 

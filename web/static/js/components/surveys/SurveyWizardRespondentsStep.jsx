@@ -267,7 +267,7 @@ class SurveyWizardRespondentsStep extends Component {
     }
 
     return (
-      <RespondentsContainer>
+      <RespondentsContainer incentivesEnabled={survey.incentivesEnabled}>
         {Object.keys(respondentGroups).map(groupId => this.renderGroup(respondentGroups[groupId], channels, allModes, readOnly, surveyStarted, respondentGroupsUploadingExisting[groupId]))}
 
         <ConfirmationModal modalId='addOrReplaceGroup' ref='addOrReplaceModal' header={t('Add or replace respondents')} />

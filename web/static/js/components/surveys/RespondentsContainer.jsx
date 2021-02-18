@@ -1,7 +1,7 @@
 import React, { PropTypes } from 'react'
 import { translate, Trans } from 'react-i18next'
 
-export const RespondentsContainer = translate()(({ children, t }) => {
+export const RespondentsContainer = translate()(({ children, t, incentivesEnabled }) => {
   const onClick = (e) => { e.preventDefault(); window.open('/files/phone_numbers_example.csv') }
   const download = 'phone_numbers_example.csv'
 
@@ -15,7 +15,11 @@ export const RespondentsContainer = translate()(({ children, t }) => {
           </p>
           <p>
             <b>
-              { t('Uploading a CSV with respondent ids will disable incentive download') }
+              {
+                incentivesEnabled
+                ? t('Uploading a CSV with respondent ids will disable incentive download')
+                : t('Uploading a CSV with respondent ids has disabled incentive download')
+              }
             </b>
           </p>
         </div>
@@ -31,5 +35,6 @@ export const RespondentsContainer = translate()(({ children, t }) => {
 
 RespondentsContainer.propTypes = {
   t: PropTypes.func,
-  children: PropTypes.node
+  children: PropTypes.node,
+  incentiveDisabled: PropTypes.boolean
 }

@@ -331,8 +331,17 @@ class RespondentIndex extends Component<Props, State> {
     const { t, totalCount, filter } = this.props
     const titleDescription = item => (
       <div>
-        <p className='black-text'><b>{item.title}</b></p>
+        <p className='title'><b>{item.title}</b></p>
         <p>{item.description}</p>
+        {
+           item.disabled
+           ? <p className='disabledText'>
+             <b>
+               { item.disabledText }
+             </b>
+           </p>
+           : null
+        }
       </div>
     )
 
@@ -342,8 +351,8 @@ class RespondentIndex extends Component<Props, State> {
         {
           itemType == 'file'
           ? (
-            <a href='#' className='download' onClick={e => { e.preventDefault(); item.onDownload() }}>
-              <div>
+            <a disabled={item.disabled} href='#' className='download' onClick={e => { if (item.disabled) return; e.preventDefault(); item.onDownload() }}>
+              <div className='button'>
                 <i className='material-icons'>get_app</i>
               </div>
               { titleDescription(item) }
@@ -381,9 +390,12 @@ class RespondentIndex extends Component<Props, State> {
           onDownload: () => this.downloadDispositionHistoryCSV()
         })
       case 'incentives':
+        const disabled = !this.props.survey.incentivesEnabled
         return render({
           title: t('Incentives file'),
           description: t('One line for each respondent that completed the survey, including the experiment version and the full phone number'),
+          disabledText: disabled ? t('Disabled because a CSV with respondent ids was uploaded') : null,
+          disabled: disabled,
           downloadLink: this.downloadLink(this.incentivesAccessLink(), this.toggleIncentivesLink, this.refreshIncentivesLink, 'incentivesLink'),
           onDownload: () => this.downloadIncentivesCSV()
         })
