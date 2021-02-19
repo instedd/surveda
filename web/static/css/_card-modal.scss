@@ -114,16 +114,22 @@
         .button {
           background-color: color("grey", "darken-1");
         }
+        .button[disabled] {
+          border: 1px rgba(0,0,0,0.1) solid;
+          background-color: transparent
+        }
         .title {
           @extend .black-text;
         }
-        &[disabled] {
-          .button {
-            background-color: color("grey", "lighten-1");
-          }
-          .title {
-            color: color("grey", "lighten-1");
-          }
+        .title[disabled] {
+          @extend .grey-text;
+        }
+        .disabled-clarification {
+          border: 1px rgba(0,0,0,0.1) solid;
+          padding: 4px 8px;
+          border-radius: 4px;
+          margin-top: 12px;
+          width: fit-content;
         }
       }
       .access-link {

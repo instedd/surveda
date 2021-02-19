@@ -1483,6 +1483,11 @@ body.bdfh {
   width: 24px;
   margin-right: 12px;
 }
+.file-download-off-icon[disabled] {
+  opacity: 0.25;
+  margin-left: 11px;
+  margin-top: 11px;
+}
 
 .color-palette-wrapper {
   display: inline-block;

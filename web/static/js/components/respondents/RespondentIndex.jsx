@@ -329,7 +329,14 @@ class RespondentIndex extends Component<Props, State> {
 
   downloadItem(id, itemType) {
     const { t, totalCount, filter } = this.props
-    let item = null
+    let item: ?{
+      title: String,
+      description: String,
+      disabledText?: String,
+      disabled?: boolean,
+      downloadLink: any,
+      onDownload: Function
+    } = null
     switch (id) {
       case 'filtered-results':
         item = {
@@ -363,7 +370,7 @@ class RespondentIndex extends Component<Props, State> {
         item = {
           title: t('Incentives file'),
           description: t('One line for each respondent that completed the survey, including the experiment version and the full phone number'),
-          disabledText: disabled ? t('Disabled because a CSV with respondent ids was uploaded') : null,
+          disabledText: t('Disabled because a CSV with respondent ids was uploaded'),
           disabled: disabled,
           downloadLink: this.downloadLink(this.incentivesAccessLink(), this.toggleIncentivesLink, this.refreshIncentivesLink, 'incentivesLink'),
           onDownload: () => this.downloadIncentivesCSV()
@@ -381,16 +388,15 @@ class RespondentIndex extends Component<Props, State> {
     if (item == null) {
       return null
     } else {
+      const disabled = item.disabled
       const titleDescription = (
         <div>
-          <p className='title'><b>{item.title}</b></p>
+          <p disabled={disabled} className='title'><b>{item.title}</b></p>
           <p>{item.description}</p>
           {
-              item.disabled
-              ? <p className='disabledText'>
-                <b>
-                  { item.disabledText }
-                </b>
+              disabled
+              ? <p className='disabled-clarification'>
+                { item.disabledText }
               </p>
               : null
           }
@@ -398,13 +404,17 @@ class RespondentIndex extends Component<Props, State> {
       )
 
       return (
-        <li className='collection-item'>
+        <li disabled={disabled} className='collection-item'>
           {
             itemType == 'file'
             ? (
-              <a disabled={item && item.disabled} href='#' className='download' onClick={e => { if (item && item.disabled) return; e.preventDefault(); item && item.onDownload() }}>
-                <div className='button'>
-                  <i className='material-icons'>get_app</i>
+              <a href='#' className='download' onClick={e => { if (disabled) return; e.preventDefault(); item && item.onDownload() }}>
+                <div disabled={disabled} className='button'>
+                  {
+                    disabled
+                    ? <div disabled={disabled} className='file-download-off-icon' />
+                    : <i className='material-icons'>get_app</i>
+                  }
                 </div>
                 { titleDescription }
               </a>
