@@ -11,16 +11,20 @@ export const RespondentsContainer = translate()(({ children, t, incentivesEnable
         <div className='col s12'>
           <h4>{t('Upload your respondents list')}</h4>
           <p className='flow-text'>
-            <Trans>Upload a CSV file like <a href='#' onClick={onClick} download={download}>this one</a> with your respondents. You can define how many of these respondents need to successfully answer the survey by setting up cutoff rules.</Trans>
-          </p>
-          <p>
-            <b>
-              {
-                incentivesEnabled
-                ? t('Uploading a CSV with respondent ids will disable incentive download')
-                : t('Uploading a CSV with respondent ids has disabled incentive download')
-              }
-            </b>
+            <Trans>Upload a CSV file like <a href='#' onClick={onClick} download={download}>this one</a> with your respondents. You can define how many of these respondents need to successfully answer the survey by setting up cutoff rules. </Trans>
+            { t('Uploading a CSV with respondent ids disables incentive download.') }
+            {
+              incentivesEnabled
+              ? null
+              : (
+                <div className='valign-wrapper upload-csv-warning'>
+                  <i className='file-download-off-icon' />
+                  <p>
+                    { t('Incentive download was disabled because respondent ids were uploaded') }
+                  </p>
+                </div>
+              )
+            }
           </p>
         </div>
       </div>
