@@ -7,7 +7,7 @@ const initialState = {
   items: null,
   surveyId: null,
   invalidRespondents: null,
-  invalidRespondentsForGroup: false
+  invalidRespondentsForGroup: null
 }
 
 export default (state = initialState, action) => {
@@ -118,14 +118,17 @@ const clearInvalids = (state, action) => {
   }
 }
 
-const receiveInvalidsForGroup = (state, action) => ({
-  ...state,
-  invalidRespondentsForGroup: true
-})
+const receiveInvalidsForGroup = (state, action) => {
+  const first = action.invalidRespondents.invalidEntries[0]
+  return {
+    ...state,
+    invalidRespondentsForGroup: {type: first.type, lineNumber: first.line_number}
+  }
+}
 
 const clearInvalidsForGroup = (state, action) => ({
   ...state,
-  invalidRespondentsForGroup: false
+  invalidRespondentsForGroup: null
 })
 
 const selectChannels = (state, action) => {
@@ -140,4 +143,3 @@ const selectChannels = (state, action) => {
     }
   }
 }
-
