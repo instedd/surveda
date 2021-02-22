@@ -244,7 +244,9 @@ class SurveyWizardRespondentsStep extends Component {
   componentDidUpdate() {
     let { actions, invalidGroup, t } = this.props
     if (invalidGroup) {
-      window.Materialize.toast(t('Couldn\'t upload CSV: it contains rows that are not phone numbers'), 5000)
+      const entryType = {'invalid-phone-number': 'phone number', 'invalid-respondent-id': 'respondent id'}[invalidGroup.type]
+      t('An invalid {{entryType}} was found at line {{lineNumber}}.', { lineNumber: invalidGroup.lineNumber, entryType: entryType })
+      window.Materialize.toast(t('Couldn\'t upload CSV: an invalid {{entryType}} was found at line {{lineNumber}}.', { lineNumber: invalidGroup.lineNumber, entryType: entryType }), 5000)
       actions.clearInvalidsRespondentsForGroup()
     }
   }
