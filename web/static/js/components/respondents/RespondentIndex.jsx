@@ -329,35 +329,17 @@ class RespondentIndex extends Component<Props, State> {
 
   downloadItem(id, itemType) {
     const { t, totalCount, filter } = this.props
-    const titleDescription = item => (
-      <div>
-        <p className='black-text'><b>{item.title}</b></p>
-        <p>{item.description}</p>
-      </div>
-    )
-
-    const render = item =>
-    (
-      <li className='collection-item'>
-        {
-          itemType == 'file'
-          ? (
-            <a href='#' className='download' onClick={e => { e.preventDefault(); item.onDownload() }}>
-              <div>
-                <i className='material-icons'>get_app</i>
-              </div>
-              { titleDescription(item) }
-            </a>
-          )
-          : <div className='link'>{titleDescription(item)}</div>
-        }
-        { itemType == 'link' ? item.downloadLink : null }
-      </li>
-    )
-
+    let item: ?{
+      title: String,
+      description: String,
+      disabledText?: String,
+      disabled?: boolean,
+      downloadLink: any,
+      onDownload: Function
+    } = null
     switch (id) {
       case 'filtered-results':
-        return render({
+        item = {
           title: t('Filtered survey results'),
           description: t(
             '{{totalCount}} respondents resulting from applying the current filter: {{filter}}',
@@ -365,35 +347,83 @@ class RespondentIndex extends Component<Props, State> {
           ),
           downloadLink: null,
           onDownload: () => this.downloadCSV(true)
-        })
+        }
+        break
       case 'results':
-        return render({
+        item = {
           title: t('Survey results'),
           description: t('One line per respondent, with a column for each variable in the questionnaire, including disposition and timestamp'),
           downloadLink: this.downloadLink(this.resultsAccessLink(), this.toggleResultsLink, this.refreshResultsLink, 'resultsLink'),
           onDownload: () => this.downloadCSV()
-        })
+        }
+        break
       case 'disposition-history':
-        return render({
+        item = {
           title: t('Disposition History'),
           description: t('One line for each time the disposition of a respondent changed, including the timestamp'),
           downloadLink: this.downloadLink(this.dispositionHistoryAccessLink(), this.toggleDispositionHistoryLink, this.refreshDispositionHistoryLink, 'dispositionHistoryLink'),
           onDownload: () => this.downloadDispositionHistoryCSV()
-        })
+        }
+        break
       case 'incentives':
-        return render({
+        const disabled = !this.props.survey.incentivesEnabled
+        item = {
           title: t('Incentives file'),
           description: t('One line for each respondent that completed the survey, including the experiment version and the full phone number'),
+          disabledText: t('Disabled because a CSV with respondent ids was uploaded'),
+          disabled: disabled,
           downloadLink: this.downloadLink(this.incentivesAccessLink(), this.toggleIncentivesLink, this.refreshIncentivesLink, 'incentivesLink'),
           onDownload: () => this.downloadIncentivesCSV()
-        })
+        }
+        break
       case 'interactions':
-        return render({
+        item = {
           title: t('Interactions'),
           description: t('One line per respondent interaction, with a column describing the action type and data, including disposition and timestamp'),
           downloadLink: this.downloadLink(this.interactionsAccessLink(), this.toggleInteractionsLink, this.refreshInteractionsLink, 'interactionsLink'),
           onDownload: () => this.downloadInteractionsCSV()
-        })
+        }
+    }
+
+    if (item == null) {
+      return null
+    } else {
+      const disabled = item.disabled
+      const titleDescription = (
+        <div>
+          <p disabled={disabled} className='title'><b>{item.title}</b></p>
+          <p>{item.description}</p>
+          {
+              disabled
+              ? <p className='disabled-clarification'>
+                { item.disabledText }
+              </p>
+              : null
+          }
+        </div>
+      )
+
+      return (
+        <li disabled={disabled} className='collection-item'>
+          {
+            itemType == 'file'
+            ? (
+              <a href='#' className='download' onClick={e => { if (disabled) return; e.preventDefault(); item && item.onDownload() }}>
+                <div disabled={disabled} className='button'>
+                  {
+                    disabled
+                    ? <div disabled={disabled} className='file-download-off-icon' />
+                    : <i className='material-icons'>get_app</i>
+                  }
+                </div>
+                { titleDescription }
+              </a>
+            )
+            : <div className='link'>{titleDescription}</div>
+          }
+          { itemType == 'link' ? item.downloadLink : null }
+        </li>
+      )
     }
   }
 

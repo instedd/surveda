@@ -36,7 +36,8 @@ export type Survey = {
   comparisons: Comparison[],
   nextScheduleTime: ?string,
   isPanelSurvey: boolean,
-  isRepeatable: boolean
+  isRepeatable: boolean,
+  incentivesEnabled: boolean
 };
 
 export type Link = {

@@ -93,7 +93,8 @@ defmodule Ask.SurveyView do
       folder_id: survey.folder_id,
       # Preserve the UI from handling the panel survey implementation details
       is_panel_survey: Survey.panel_survey?(survey),
-      is_repeatable: Survey.repeatable?(survey)
+      is_repeatable: Survey.repeatable?(survey),
+      incentives_enabled: survey.incentives_enabled
     }
 
     if Ask.Survey.launched?(survey) || survey.simulation do

@@ -219,6 +219,14 @@ defmodule Ask.Runtime.RespondentGroupAction do
     end
   end
 
+  def disable_incentive_if_respondent_id!(entries, survey) do
+    if survey.incentives_enabled and
+         Enum.any?(entries, fn entry -> Respondent.is_respondent_id?(entry) end),
+       do:
+         Survey.changeset(survey, %{incentives_enabled: false})
+         |> Repo.update!()
+  end
+
   defp validate_entries(entries) do
     if length(entries) == 0 do
       {:error, []}

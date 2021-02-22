@@ -145,6 +145,11 @@
   }
 }
 
+.upload-csv-warning {
+  @extend .grey-text;
+  font-size: 1.24rem;
+  margin-top: 1rem;
+}
 
 .comparisons { // class for last step on surveys when comparison checked
   p.grey-text {
@@ -1469,6 +1474,19 @@ body.bdfh {
       background-image: url('../images/header_icon_bloomberg.svg');
     }
   }
+}
+
+.file-download-off-icon {
+  opacity: 40%;
+  background-image: url('../images/file_download_off.svg');
+  height: 24px;
+  width: 24px;
+  margin-right: 12px;
+}
+.file-download-off-icon[disabled] {
+  opacity: 0.25;
+  margin-left: 11px;
+  margin-top: 11px;
 }
 
 .color-palette-wrapper {

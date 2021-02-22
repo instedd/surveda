@@ -871,6 +871,7 @@ defmodule Ask.RespondentController do
     # Check that the survey is in the project
     survey = project
     |> assoc(:surveys)
+    |> where([s], s.incentives_enabled)
     |> Repo.get!(survey_id)
 
     csv_rows = (from r in Respondent,

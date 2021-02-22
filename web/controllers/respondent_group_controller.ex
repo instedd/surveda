@@ -27,6 +27,7 @@ defmodule Ask.RespondentGroupController do
     if entries do
       case RespondentGroupAction.load_entries(entries, survey) do
         {:ok, loaded_entries} ->
+          RespondentGroupAction.disable_incentive_if_respondent_id!(entries, survey)
           respondent_group = RespondentGroupAction.create(file.filename, loaded_entries, survey)
           project |> Project.touch!
           conn
@@ -88,6 +89,7 @@ defmodule Ask.RespondentGroupController do
         if entries do
           case RespondentGroupAction.load_entries(entries, survey) do
             {:ok, loaded_entries} ->
+              RespondentGroupAction.disable_incentive_if_respondent_id!(entries, survey)
               respondent_group = RespondentGroupAction.add_respondents(respondent_group, loaded_entries, file.filename, conn)
               render(conn, "show.json", respondent_group: respondent_group)
             {:error, invalid_entries} ->
@@ -116,6 +118,7 @@ defmodule Ask.RespondentGroupController do
     if entries do
       case RespondentGroupAction.load_entries(entries, survey) do
         {:ok, loaded_entries} ->
+          RespondentGroupAction.disable_incentive_if_respondent_id!(entries, survey)
           respondent_group = RespondentGroupAction.replace_respondents(respondent_group, loaded_entries)
           project |> Project.touch!
           render(conn, "show.json", respondent_group: respondent_group)

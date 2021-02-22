@@ -38,6 +38,7 @@ defmodule Ask.RespondentGroupControllerTest do
         "sample" => sample,
         "respondents_count" => group.respondents_count,
         "channels" => [%{"id" => channel.id, "mode" => channel.type}],
+        "incentives_enabled" => true
       }]
     end
   end
@@ -60,6 +61,7 @@ defmodule Ask.RespondentGroupControllerTest do
         "sample" => sample,
         "respondents_count" => group.respondents_count,
         "channels" => [],
+        "incentives_enabled" => true
       }
 
       respondents = Repo.all(from r in Respondent, where: r.survey_id == ^survey.id)
@@ -287,6 +289,7 @@ defmodule Ask.RespondentGroupControllerTest do
         "sample" => group.sample,
         "respondents_count" => group.respondents_count,
         "channels" => [%{"id" => channel.id, "mode" => channel.type}],
+        "incentives_enabled" => true
       }
 
       group = RespondentGroup
@@ -498,6 +501,7 @@ defmodule Ask.RespondentGroupControllerTest do
         "sample" => sample,
         "respondents_count" => 15,
         "channels" => [],
+        "incentives_enabled" => true
       }
 
       respondents = Repo.all(from r in Respondent, where: r.survey_id == ^survey.id)
@@ -580,6 +584,7 @@ defmodule Ask.RespondentGroupControllerTest do
         "sample" => sample,
         "respondents_count" => 14,
         "channels" => [],
+        "incentives_enabled" => true
       }
 
       respondents = Repo.all(from r in Respondent, where: r.survey_id == ^survey.id)
