@@ -7,7 +7,8 @@ const initialState = {
   items: null,
   surveyId: null,
   invalidRespondents: null,
-  invalidRespondentsForGroup: null
+  invalidRespondentsForGroup: null,
+  incentivesEnabled: true
 }
 
 export default (state = initialState, action) => {
@@ -90,7 +91,11 @@ const receiveRespondentGroup = (state, action) => {
     items: {
       ...state.items,
       [group.id]: group
-    }
+    },
+    // TODO: presenting this survey flag in the respondent group is a workaround
+    // In the future we should handle the survey / respondent_group UI updates better
+    incentivesEnabled: group.incentivesEnabled
+
   }
 }
 

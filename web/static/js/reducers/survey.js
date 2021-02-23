@@ -1,6 +1,5 @@
 // @flow
 import * as actions from '../actions/survey'
-import * as respondentGroupActions from '../actions/respondentGroups'
 import fetchReducer from './fetch'
 import drop from 'lodash/drop'
 import flatten from 'lodash/flatten'
@@ -49,7 +48,6 @@ export const dataReducer = (state: Survey, action: any): Survey => {
     case actions.REFRESH_LINK: return refreshLink(state, action)
     case actions.DELETE_LINK: return deleteLink(state, action)
     case actions.SAVED: return saved(state, action)
-    case respondentGroupActions.RECEIVE_RESPONDENT_GROUP: return receiveRespondentGroup(state, action)
     default: return state
   }
 }
@@ -610,15 +608,5 @@ const deleteLink = (state, action) => {
   return {
     ...state,
     links: without(state.links, action.link)
-  }
-}
-
-const receiveRespondentGroup = (state, action) => {
-  const group = action.respondentGroup
-  return {
-    ...state,
-    // TODO: presenting this survey flag in the respondent group is a workaround
-    // In the future we should handle the survey / respondent_group UI updates better
-    incentivesEnabled: group.incentivesEnabled
   }
 }

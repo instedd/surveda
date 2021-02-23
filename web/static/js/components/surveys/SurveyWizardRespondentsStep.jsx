@@ -24,7 +24,8 @@ class SurveyWizardRespondentsStep extends Component {
     channels: PropTypes.object,
     actions: PropTypes.object.isRequired,
     readOnly: PropTypes.bool.isRequired,
-    surveyStarted: PropTypes.bool.isRequired
+    surveyStarted: PropTypes.bool.isRequired,
+    incentivesEnabled: PropTypes.bool
   }
 
   handleSubmit(files) {
@@ -252,7 +253,7 @@ class SurveyWizardRespondentsStep extends Component {
   }
 
   render() {
-    let { survey, channels, respondentGroups, respondentGroupsUploading, respondentGroupsUploadingExisting, invalidRespondents, readOnly, surveyStarted, t } = this.props
+    let { survey, channels, respondentGroups, respondentGroupsUploading, respondentGroupsUploadingExisting, invalidRespondents, readOnly, surveyStarted, t, incentivesEnabled } = this.props
     let invalidRespondentsCard = this.invalidRespondentsContent(invalidRespondents)
     if (!survey || !channels) {
       return <div>{t('Loading...')}</div>
@@ -269,7 +270,7 @@ class SurveyWizardRespondentsStep extends Component {
     }
 
     return (
-      <RespondentsContainer incentivesEnabled={survey.incentivesEnabled}>
+      <RespondentsContainer incentivesEnabled={incentivesEnabled}>
         {Object.keys(respondentGroups).map(groupId => this.renderGroup(respondentGroups[groupId], channels, allModes, readOnly, surveyStarted, respondentGroupsUploadingExisting[groupId]))}
 
         <ConfirmationModal modalId='addOrReplaceGroup' ref='addOrReplaceModal' header={t('Add or replace respondents')} />
@@ -286,8 +287,17 @@ class SurveyWizardRespondentsStep extends Component {
   }
 }
 
+const mapStateToProps = state => {
+  // TODO: presenting this survey flag in the respondent group is a workaround
+  // In the future we should handle the survey / respondent_group UI updates better
+  const { survey, respondentGroups } = state
+  const incentivesEnabled = survey.data.incentivesEnabled &&
+    respondentGroups.incentivesEnabled
+  return { incentivesEnabled }
+}
+
 const mapDispatchToProps = (dispatch) => ({
   actions: bindActionCreators(actions, dispatch)
 })
 
-export default translate()(connect(null, mapDispatchToProps)(SurveyWizardRespondentsStep))
+export default translate()(connect(mapStateToProps, mapDispatchToProps)(SurveyWizardRespondentsStep))
