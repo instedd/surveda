@@ -31,7 +31,8 @@ defmodule Ask.Runtime.PanelSurvey do
       mobileweb_retry_configuration: survey.mobileweb_retry_configuration,
       fallback_delay: survey.fallback_delay,
       quota_vars: survey.quota_vars,
-      quotas: survey.quotas
+      quotas: survey.quotas,
+      incentives_enabled: survey.incentives_enabled
     }
 
     questionnaire_ids = Enum.map(survey.questionnaires, fn q -> q.id end)

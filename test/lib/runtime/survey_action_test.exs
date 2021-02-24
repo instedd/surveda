@@ -19,6 +19,25 @@ defmodule Ask.SurveyActionTest do
       refute survey.latest_panel_survey
     end
 
+    test "preserves the incentives enabled flag" do
+      # Incentives enabled
+      survey = completed_panel_survey()
+
+      {:ok, %{survey: %{incentives_enabled: incentives_enabled}}} = SurveyAction.repeat(survey)
+
+      assert incentives_enabled
+
+      # Incentives disabled
+      survey =
+        completed_panel_survey()
+        |> Survey.changeset(%{incentives_enabled: false})
+        |> Repo.update!()
+
+      {:ok, %{survey: %{incentives_enabled: incentives_enabled}}} = SurveyAction.repeat(survey)
+
+      refute incentives_enabled
+    end
+
     test "doesn't repeat a regular survey" do
       survey = regular_survey()
 
