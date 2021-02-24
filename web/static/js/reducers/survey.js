@@ -70,6 +70,7 @@ const dirtyPredicate = (action, oldData, newData) => {
     case actions.CHANGE_NAME: return false
     case actions.CHANGE_DESCRIPTION: return false
     case actions.UPDATE_LOCK: return false
+    case respondentGroupActions.RECEIVE_RESPONDENT_GROUP: return false
     default: return true
   }
 }
