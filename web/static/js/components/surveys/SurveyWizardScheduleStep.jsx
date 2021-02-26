@@ -2,7 +2,7 @@ import * as actions from '../../actions/survey'
 import * as uiActions from '../../actions/ui'
 import { connect } from 'react-redux'
 import React, { PropTypes, Component } from 'react'
-import { TimeDropdown, DatePicker, dayLabel } from '../ui'
+import { TimeDropdown, DatePicker, dayLabel, Card, InputWithLabel } from '../ui'
 import SurveyWizardRetryAttempts from './SurveyWizardRetryAttempts'
 import { translate } from 'react-i18next'
 import TimezoneAutocomplete from '../timezones/TimezoneAutocomplete'
@@ -67,6 +67,15 @@ class SurveyWizardScheduleStep extends Component {
     dispatch(actions.toggleDay(day))
   }
 
+  dateFromString(date: string) {
+    const splitted = date.split('-')
+    return new Date(parseInt(splitted[0]), parseInt(splitted[1]) - 1, parseInt(splitted[2]))
+  }
+
+  formatDate(date: string) {
+    return dateformat(this.dateFromString(date), 'mmm dd, yyyy')
+  }
+
   render() {
     const { survey, readOnly, ui, t, dispatch } = this.props
     const days = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat']
@@ -106,13 +115,27 @@ class SurveyWizardScheduleStep extends Component {
           <TimeDropdown label={t('From')} defaultValue={defaultFrom} onChange={this.updateFrom} readOnly={readOnly} min={null} extraOption={{ at: 0, item: { label: '12:00 AM', value: '00:00:00' } }} />
           <TimeDropdown label={t('To')} defaultValue={defaultTo} onChange={this.updateTo} readOnly={readOnly} min={defaultFrom} extraOption={{ at: 23, item: { label: '12:00 AM', value: '23:59:59' } }} />
         </div>
-        <InfiniteCalendar selected={startDate} onSelect={date => {
-          const formattedDate = dateformat(date, 'yyyy-mm-dd')
-          const selectedDate = isEqual(formattedDate, startDate)
-          ? null
-          : formattedDate
-          dispatch(actions.selectScheduleStartDate(selectedDate))
-        }} />
+        <div className='row'>
+          <div className='col s12'>
+            <label className='grey-text'>{this.props.t('Start date')}</label>
+            <input
+              type='text'
+              value={(startDate && this.formatDate(startDate)) || ''}
+            />
+          </div>
+        </div>
+        <span className='right datepicker'>
+          <a className='black-text' href='#' onClick={this.toggleDatePicker}><i className='material-icons'>today</i></a>
+          <Card className='datepicker-card'>
+            <InfiniteCalendar selected={startDate} onSelect={date => {
+              const formattedDate = dateformat(date, 'yyyy-mm-dd')
+              const selectedDate = isEqual(formattedDate, startDate)
+              ? null
+              : formattedDate
+              dispatch(actions.selectScheduleStartDate(selectedDate))
+            }} />
+          </Card>
+        </span>
         <div className='row'>
           <div className='col s12'>
             <div className='input-field'>
