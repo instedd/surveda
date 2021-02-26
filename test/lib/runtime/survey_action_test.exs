@@ -38,6 +38,21 @@ defmodule Ask.SurveyActionTest do
       refute incentives_enabled
     end
 
+    test "removes the start date of the schedule" do
+      survey = completed_panel_survey()
+      start_date = ~D[2016-01-01]
+      survey = set_start_date(survey, start_date)
+
+      {result, data} = SurveyAction.repeat(survey)
+      assert result == :ok
+      assert survey.schedule
+      assert survey.schedule.start_date == start_date
+      new_occurrence = Map.get(data, :survey)
+      assert new_occurrence
+      assert new_occurrence.schedule
+      refute new_occurrence.schedule.start_date
+    end
+
     test "doesn't repeat a regular survey" do
       survey = regular_survey()
 
@@ -187,6 +202,13 @@ defmodule Ask.SurveyActionTest do
       repeated_survey: Repo.get(Survey, survey.id),
       new_occurrence: new_occurrence
     }
+  end
+
+  defp set_start_date(survey, start_date) do
+    schedule = Map.put(survey.schedule, :start_date, start_date)
+
+    Survey.changeset(survey, %{schedule: schedule})
+    |> Repo.update!()
   end
 
   defp repeated_survey() do

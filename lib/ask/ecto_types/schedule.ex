@@ -11,7 +11,7 @@ defmodule Ask.Schedule do
   alias __MODULE__
   alias Ask.DayOfWeek
 
-  defstruct [:day_of_week, :start_time, :end_time, :blocked_days, :timezone]
+  defstruct [:day_of_week, :start_time, :end_time, :blocked_days, :timezone, :start_date]
 
   def type, do: :text
 
@@ -24,11 +24,14 @@ defmodule Ask.Schedule do
   def cast(%{end_time: end_time} = schedule) when is_binary(end_time) do
     cast(%{schedule | end_time: Time.from_iso8601!(end_time)})
   end
-  def cast(%{day_of_week: day_of_week, start_time: start_time, end_time: end_time, blocked_days: blocked_days, timezone: timezone}) do
+  def cast(%{start_date: start_date} = schedule) when is_binary(start_date) do
+    cast(%{schedule | start_date: Date.from_iso8601!(start_date)})
+  end
+  def cast(%{day_of_week: day_of_week, start_time: start_time, end_time: end_time, blocked_days: blocked_days, timezone: timezone, start_date: start_date}) do
     case DayOfWeek.cast(day_of_week) do
       :error -> :error
       {:ok, dow} ->
-        {:ok, %Schedule{day_of_week: dow, start_time: start_time, end_time: end_time, blocked_days: cast_blocked_days(blocked_days), timezone: timezone}}
+        {:ok, %Schedule{day_of_week: dow, start_time: start_time, end_time: end_time, blocked_days: cast_blocked_days(blocked_days), timezone: timezone, start_date: start_date}}
     end
   end
   def cast(%{} = map) do
@@ -37,7 +40,8 @@ defmodule Ask.Schedule do
       start_time: map["start_time"],
       end_time: map["end_time"],
       blocked_days: map["blocked_days"],
-      timezone: map["timezone"]
+      timezone: map["timezone"],
+      start_date: map["start_date"]
     })
   end
   def cast(string) when is_binary(string), do: load(string)
@@ -88,16 +92,18 @@ defmodule Ask.Schedule do
     end
   end
 
-  def intersect?(%Schedule{day_of_week: days, start_time: start_time, end_time: end_time, timezone: timezone, blocked_days: blocked_days}, %DateTime{} = date_time) do
+  def intersect?(%Schedule{day_of_week: days, start_time: start_time, end_time: end_time, timezone: timezone, blocked_days: blocked_days, start_date: start_date}, %DateTime{} = date_time) do
     date_time = date_time
     |> Timex.to_datetime(timezone)
 
     time = DateTime.to_time(date_time)
+    date = DateTime.to_date(date_time)
 
     DayOfWeek.intersect?(days, DayOfWeek.from(date_time))
       && !Enum.member?(blocked_days, date_time |> Timex.to_date)
       && Time.compare(start_time, time) != :gt
       && Time.compare(end_time, time) != :lt
+      && (!start_date || Date.compare(start_date, date) != :gt)
   end
 
   def business_day(), do:
@@ -172,6 +178,10 @@ defmodule Ask.Schedule do
     Timex.Timezone.resolve(timezone, {erlang_date, erlang_time})
   end
 
+  def remove_start_date(schedule) do
+    Map.put(schedule, :start_date, nil)
+  end
+
   defp compare_time(%Schedule{start_time: start_time, end_time: end_time}, time) do
     case Time.compare(time, start_time) do
       :lt -> :before
@@ -204,7 +214,8 @@ defmodule Ask.Schedule do
     end
   end
 
-  defp day_of_week_available?(%Schedule{day_of_week: day_of_week, blocked_days: blocked_days}, erl_date) do
+  defp day_of_week_available?(%Schedule{day_of_week: day_of_week, blocked_days: blocked_days, start_date: start_date}, erl_date) do
+    date = Date.from_erl!(erl_date)
     if day_of_week == DayOfWeek.never do
       # Just in case a schedule remains empty (can happen in a test)
       true
@@ -217,7 +228,8 @@ defmodule Ask.Schedule do
         5 -> day_of_week.fri
         6 -> day_of_week.sat
         7 -> day_of_week.sun
-      end && !Enum.member?(blocked_days, erl_date |> Date.from_erl!)
+      end && !Enum.member?(blocked_days, date)
+      && (!start_date || Date.compare(start_date, date) != :gt)
     end
   end
 
