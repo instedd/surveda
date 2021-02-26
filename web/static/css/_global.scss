@@ -1626,6 +1626,12 @@ a.disabled {
     right: 0;
     width: 400px;
   }
+  &.start-date {
+    top: -65px;
+    i[disabled] {
+      @extend .grey-text;
+    }
+  }
 }
 
 .Cal__Header__root {
