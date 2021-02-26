@@ -6,6 +6,9 @@ import { TimeDropdown, DatePicker, dayLabel } from '../ui'
 import SurveyWizardRetryAttempts from './SurveyWizardRetryAttempts'
 import { translate } from 'react-i18next'
 import TimezoneAutocomplete from '../timezones/TimezoneAutocomplete'
+import InfiniteCalendar from 'react-infinite-calendar'
+import { isEqual } from 'lodash'
+import dateformat from 'dateformat'
 
 class SurveyWizardScheduleStep extends Component {
   static propTypes = {
@@ -65,7 +68,7 @@ class SurveyWizardScheduleStep extends Component {
   }
 
   render() {
-    const { survey, readOnly, ui, t } = this.props
+    const { survey, readOnly, ui, t, dispatch } = this.props
     const days = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat']
 
     // Survey might be loaded without details
@@ -75,6 +78,8 @@ class SurveyWizardScheduleStep extends Component {
     if (!survey || !survey.schedule || !survey.schedule.dayOfWeek) {
       return <div>{t('Loading...')}</div>
     }
+
+    const { startDate } = survey.schedule
 
     return (
       <div>
@@ -98,9 +103,16 @@ class SurveyWizardScheduleStep extends Component {
           ))}
         </div>
         <div className='row'>
-          <TimeDropdown label={t('From')} defaultValue={defaultFrom} onChange={this.updateFrom} readOnly={readOnly} min={null} extraOption={{at: 0, item: {label: '12:00 AM', value: '00:00:00'}}} />
-          <TimeDropdown label={t('To')} defaultValue={defaultTo} onChange={this.updateTo} readOnly={readOnly} min={defaultFrom} extraOption={{at: 23, item: {label: '12:00 AM', value: '23:59:59'}}} />
+          <TimeDropdown label={t('From')} defaultValue={defaultFrom} onChange={this.updateFrom} readOnly={readOnly} min={null} extraOption={{ at: 0, item: { label: '12:00 AM', value: '00:00:00' } }} />
+          <TimeDropdown label={t('To')} defaultValue={defaultTo} onChange={this.updateTo} readOnly={readOnly} min={defaultFrom} extraOption={{ at: 23, item: { label: '12:00 AM', value: '23:59:59' } }} />
         </div>
+        <InfiniteCalendar selected={startDate} onSelect={date => {
+          const formattedDate = dateformat(date, 'yyyy-mm-dd')
+          const selectedDate = isEqual(formattedDate, startDate)
+          ? null
+          : formattedDate
+          dispatch(actions.selectScheduleStartDate(selectedDate))
+        }} />
         <div className='row'>
           <div className='col s12'>
             <div className='input-field'>
