@@ -171,4 +171,28 @@ defmodule Ask.ScheduleTest do
       assert Elixir.Timex.equal?(end_time, DateTime.from_naive!(~N[2019-12-08 01:00:00], "Etc/UTC"))
     end
   end
+
+  describe "start date" do
+    test "is honored by intersect?" do
+      {:ok, dt_out, _} = DateTime.from_iso8601("2021-02-11T12:00:00Z")
+      {:ok, dt_in, _} = DateTime.from_iso8601("2021-02-25T12:00:00Z")
+      schedule = %{Schedule.always() | start_date: ~D[2021-02-19]}
+
+      dt_out_intersect? = Schedule.intersect?(schedule, dt_out)
+      dt_in_intersect? = Schedule.intersect?(schedule, dt_in)
+
+      refute dt_out_intersect?
+      assert dt_in_intersect?
+    end
+
+    test "is honored by next_available_date_time" do
+      {:ok, dt, _} = DateTime.from_iso8601("2021-02-11T00:00:00Z")
+      schedule = %{Schedule.always() | start_date: ~D[2021-02-19], start_time: ~T[14:00:00]}
+
+      next_available_date_time = Schedule.next_available_date_time(schedule, dt)
+      {:ok, expected_next_available_date_time, _} = DateTime.from_iso8601("2021-02-19T14:00:00Z")
+
+      assert next_available_date_time == expected_next_available_date_time
+    end
+  end
 end
