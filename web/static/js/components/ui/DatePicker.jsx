@@ -9,6 +9,28 @@ import 'react-infinite-calendar/styles.css'
 
 import i18n from '../../i18next'
 
+export const datePickerDisplayOptions = {
+  showHeader: true,
+  showWeekdays: true
+}
+
+export const datePickerTheme = {
+  accentColor: '#4CAF50',
+  floatingNav: {
+    background: 'rgba(245, 245, 245, 0.94)',
+    chevron: '#9a9a9a',
+    color: '#9a9a9a'
+  },
+  headerColor: '#FFF',
+  selectionColor: '#FFF',
+  textColor: {
+    active: '#9a9a9a',
+    default: '#333'
+  },
+  todayColor: '#e0e0e0',
+  weekdayColor: '#FFF'
+}
+
 const MultipleDatesCalendar = withMultipleDates(Calendar)
 
 const enLocale = {
@@ -45,6 +67,12 @@ const frLocale = {
   },
   weekdays: ['Dim', 'Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam'],
   weekStartsOn: 1
+}
+
+export const datePickerLocales = {
+  'en': enLocale,
+  'es': esLocale,
+  'fr': frLocale
 }
 
 export class DatePicker extends Component<any, any> {
@@ -137,27 +165,9 @@ export class DatePicker extends Component<any, any> {
                 ? <Card className='datepicker-card'>
                   <InfiniteCalendar
                     Component={MultipleDatesCalendar}
-                    theme={{
-                      accentColor: '#4CAF50',
-                      floatingNav: {
-                        background: 'rgba(245, 245, 245, 0.94)',
-                        chevron: '#9a9a9a',
-                        color: '#9a9a9a'
-                      },
-                      headerColor: '#FFF',
-                      selectionColor: '#FFF',
-                      textColor: {
-                        active: '#9a9a9a',
-                        default: '#333'
-                      },
-                      todayColor: '#e0e0e0',
-                      weekdayColor: '#FFF'
-                    }}
-                    displayOptions={{
-                      showHeader: true,
-                      showWeekdays: true
-                    }}
-                    locale={this.getLocale(i18n.language)}
+                    theme={datePickerTheme}
+                    displayOptions={datePickerDisplayOptions}
+                    locale={datePickerLocales[i18n.language]}
                     width='100%'
                     displayDate={false}
                     height={300}
