@@ -1,5 +1,24 @@
 # InSTEDD Surveda Changelog
 
+## 0.31.0
+
+### Features
+
+- Upload sample files with RespondentID. [#1837](https://github.com/instedd/surveda/pull/1837)
+- Disable downloading incentives when respondents were add via RespondentID. [#1842](https://github.com/instedd/surveda/pull/1842)
+
+### Bugfixes
+
+- Fix missing audios in export. [#1823](https://github.com/instedd/surveda/pull/1823)
+- Internationalize some missing texts. [#1829](https://github.com/instedd/surveda/pull/1829)
+- Export only the questionnaire's settings of enabled languages. [#1832](https://github.com/instedd/surveda/pull/1832)
+- Log that respondents were added when survey is running. [#1835](https://github.com/instedd/surveda/pull/1835)
+
+### Others
+
+- Vendor d3 components to handle internationalization. [#1827](https://github.com/instedd/surveda/pull/1827)
+- Initial cypress integration tests. [#1831](https://github.com/instedd/surveda/pull/1831)
+
 ## 0.30.0
 
 ### Features
