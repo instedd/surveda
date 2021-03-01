@@ -1638,7 +1638,7 @@ a.disabled {
   display:none;
 }
 
-.Cal__Day__selection:before {
+.multi-date-picker .Cal__Day__selection:before {
   content: 'block';
   font-family: 'Material Icons';
   font-weight: normal;
@@ -1653,7 +1653,7 @@ a.disabled {
   right: -5px;
   opacity: 0.9;
 }
-.Cal__Day__selection {
+.multi-date-picker .Cal__Day__selection {
   color: #ff551b !important;
 }
 

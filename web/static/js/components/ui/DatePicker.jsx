@@ -131,7 +131,7 @@ export class DatePicker extends Component<any, any> {
           }
           {
             !readOnly
-            ? <span className='right datepicker'>
+            ? <span className='right datepicker multi-date-picker'>
               <a className='black-text' href='#' onClick={this.toggleDatePicker}><i className='material-icons'>today</i></a>
               { this.state.showDatePicker
                 ? <Card className='datepicker-card'>
@@ -176,4 +176,3 @@ export class DatePicker extends Component<any, any> {
     )
   }
 }
-
