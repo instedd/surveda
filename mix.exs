@@ -5,7 +5,7 @@ defmodule Ask.Mixfile do
     [app: :ask,
      build_path: "/_build",
      deps_path: "/deps",
-     version: "0.30.0",
+     version: "0.31.0",
      elixir: "~> 1.5",
      elixirc_paths: elixirc_paths(Mix.env),
      compilers: [:phoenix, :gettext] ++ Mix.compilers,
