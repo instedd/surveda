@@ -2,13 +2,13 @@ import * as actions from '../../actions/survey'
 import * as uiActions from '../../actions/ui'
 import { connect } from 'react-redux'
 import React, { PropTypes, Component } from 'react'
-import { TimeDropdown, DatePicker, dayLabel, Card } from '../ui'
+import { TimeDropdown, DatePicker, dayLabel } from '../ui'
 import SurveyWizardRetryAttempts from './SurveyWizardRetryAttempts'
 import { translate } from 'react-i18next'
 import TimezoneAutocomplete from '../timezones/TimezoneAutocomplete'
-import InfiniteCalendar from 'react-infinite-calendar'
-import { isEqual } from 'lodash'
 import dateformat from 'dateformat'
+import { isEqual } from 'lodash'
+import SingleDatePicker from '../ui/SingleDatePicker'
 
 class SurveyWizardScheduleStep extends Component {
   static propTypes = {
@@ -133,26 +133,13 @@ class SurveyWizardScheduleStep extends Component {
               value={(startDate && this.formatDate(startDate)) || ''}
               disabled={readOnly}
             />
-            <div className='right datepicker start-date'>
-              {
-                readOnly
-                ? <i disabled className='material-icons'>today</i>
-                : <a className='black-text' href='#' onClick={event => { this.toggleStartDatePicker(event) }}><i className='material-icons'>today</i></a>
-              }
-              {
-                this.state.showStartDatePicker
-                  ? <Card className='datepicker-card'>
-                    <InfiniteCalendar selected={startDate} onSelect={date => {
-                      const formattedDate = dateformat(date, 'yyyy-mm-dd')
-                      const selectedDate = isEqual(formattedDate, startDate)
-                      ? null
-                      : formattedDate
-                      dispatch(actions.selectScheduleStartDate(selectedDate))
-                    }} />
-                  </Card>
-                : null
-              }
-            </div>
+            <SingleDatePicker readOnly={readOnly} selected={startDate} onSelect={date => {
+              const formattedDate = dateformat(date, 'yyyy-mm-dd')
+              const selectedDate = isEqual(formattedDate, startDate)
+              ? null
+              : formattedDate
+              dispatch(actions.selectScheduleStartDate(selectedDate))
+            }} />
           </div>
         </div>
         <div className='row'>
