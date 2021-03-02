@@ -88,7 +88,7 @@ class SurveyWizardScheduleStep extends Component {
       return <div>{t('Loading...')}</div>
     }
 
-    const { startDate } = survey.schedule
+    const { startDate, endDate } = survey.schedule
 
     return (
       <div>
@@ -116,7 +116,7 @@ class SurveyWizardScheduleStep extends Component {
           <TimeDropdown label={t('To')} defaultValue={defaultTo} onChange={this.updateTo} readOnly={readOnly} min={defaultFrom} extraOption={{ at: 23, item: { label: '12:00 AM', value: '23:59:59' } }} />
         </div>
         <div className='row mb0'>
-          <div className='col s12'>
+          <div className='col s6'>
             <label className='grey-text'>{this.props.t('Start date')}</label>
             <input
               type='text'
@@ -129,6 +129,21 @@ class SurveyWizardScheduleStep extends Component {
               ? null
               : formattedDate
               dispatch(actions.selectScheduleStartDate(selectedDate))
+            }} />
+          </div>
+          <div className='col s6'>
+            <label className='grey-text'>{this.props.t('End date')}</label>
+            <input
+              type='text'
+              value={(endDate && this.formatDate(endDate)) || ''}
+              disabled={readOnly}
+            />
+            <SingleDatePicker readOnly={readOnly} selected={endDate} onSelect={date => {
+              const formattedDate = dateformat(date, 'yyyy-mm-dd')
+              const selectedDate = isEqual(formattedDate, endDate)
+              ? null
+              : formattedDate
+              dispatch(actions.selectScheduleEndDate(selectedDate))
             }} />
           </div>
         </div>

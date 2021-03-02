@@ -16,6 +16,7 @@ export const SET_SCHEDULE_TO = 'SURVEY_SET_SCHEDULE_TO'
 export const SET_SCHEDULE_FROM = 'SURVEY_SET_SCHEDULE_FROM'
 export const ADD_SCHEDULE_BLOCKED_DAY = 'SURVEY_ADD_SCHEDULE_BLOCKED_DAY'
 export const SELECT_SCHEDULE_START_DATE = 'SURVEY_SELECT_SCHEDULE_START_DATE'
+export const SELECT_SCHEDULE_END_DATE = 'SURVEY_SELECT_SCHEDULE_END_DATE'
 export const REMOVE_SCHEDULE_BLOCKED_DAY = 'SURVEY_REMOVE_SCHEDULE_BLOCKED_DAY'
 export const CLEAR_SCHEDULE_BLOCKED_DAYS = 'SURVEY_CLEAR_SCHEDULE_BLOCKED_DAYS'
 export const SELECT_MODE = 'SURVEY_SELECT_MODE'
@@ -219,6 +220,11 @@ export const clearBlockedDays = () => ({
 
 export const selectScheduleStartDate = (date: string) => ({
   type: SELECT_SCHEDULE_START_DATE,
+  date
+})
+
+export const selectScheduleEndDate = (date: string) => ({
+  type: SELECT_SCHEDULE_END_DATE,
   date
 })
 
