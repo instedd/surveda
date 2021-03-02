@@ -11,7 +11,7 @@ defmodule Ask.Schedule do
   alias __MODULE__
   alias Ask.DayOfWeek
 
-  defstruct [:day_of_week, :start_time, :end_time, :blocked_days, :timezone, :start_date]
+  defstruct [:day_of_week, :start_time, :end_time, :blocked_days, :timezone, :start_date, :end_date]
 
   def type, do: :text
 
@@ -27,11 +27,14 @@ defmodule Ask.Schedule do
   def cast(%{start_date: start_date} = schedule) when is_binary(start_date) do
     cast(%{schedule | start_date: Date.from_iso8601!(start_date)})
   end
-  def cast(%{day_of_week: day_of_week, start_time: start_time, end_time: end_time, blocked_days: blocked_days, timezone: timezone, start_date: start_date}) do
+  def cast(%{end_date: end_date} = schedule) when is_binary(end_date) do
+    cast(%{schedule | end_date: Date.from_iso8601!(end_date)})
+  end
+  def cast(%{day_of_week: day_of_week, start_time: start_time, end_time: end_time, blocked_days: blocked_days, timezone: timezone, start_date: start_date, end_date: end_date}) do
     case DayOfWeek.cast(day_of_week) do
       :error -> :error
       {:ok, dow} ->
-        {:ok, %Schedule{day_of_week: dow, start_time: start_time, end_time: end_time, blocked_days: cast_blocked_days(blocked_days), timezone: timezone, start_date: start_date}}
+        {:ok, %Schedule{day_of_week: dow, start_time: start_time, end_time: end_time, blocked_days: cast_blocked_days(blocked_days), timezone: timezone, start_date: start_date, end_date: end_date}}
     end
   end
   def cast(%{} = map) do
@@ -41,7 +44,8 @@ defmodule Ask.Schedule do
       end_time: map["end_time"],
       blocked_days: map["blocked_days"],
       timezone: map["timezone"],
-      start_date: map["start_date"]
+      start_date: map["start_date"],
+      end_date: map["end_date"]
     })
   end
   def cast(string) when is_binary(string), do: load(string)
@@ -180,6 +184,20 @@ defmodule Ask.Schedule do
 
   def remove_start_date(schedule) do
     Map.put(schedule, :start_date, nil)
+  end
+
+  def end_date_passed?(%{end_date: nil} = _schedule) do
+    false
+  end
+
+  def end_date_passed?(
+        %{end_date: end_date, timezone: timezone} = _schedule,
+        date_time \\ DateTime.utc_now()
+      ) do
+    date_time
+    |> Timex.to_datetime(timezone)
+    |> DateTime.to_date()
+    |> Date.compare(end_date) != :lt
   end
 
   defp compare_time(%Schedule{start_time: start_time, end_time: end_time}, time) do

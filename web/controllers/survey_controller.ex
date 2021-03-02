@@ -4,7 +4,6 @@ defmodule Ask.SurveyController do
   alias Ask.{Project, Folder, Survey, Questionnaire, Logger, RespondentGroup, Respondent, Channel, ShortLink, ActivityLog, RetriesHistogram}
   alias Ask.Runtime.{Session, SurveyAction}
   alias Ecto.Multi
-  alias Ask.SurveyCanceller
 
   def index(conn, %{"project_id" => project_id} = params) do
     project = conn
@@ -613,52 +612,43 @@ defmodule Ask.SurveyController do
     end
   end
 
-  def stop(conn, %{"survey_id" => id}) do
-    survey = Repo.get!(Survey, id)
-    |> Repo.preload([:quota_buckets])
+  def stop(conn, %{"project_id" => project_id, "survey_id" => id}) do
+    project =
+      conn
+      |> load_project_for_change(project_id)
 
-    case [survey.state, survey.locked] do
-      ["terminated", false] ->
-        # Cancelling a cancelled survey is idempotent.
-        # We must not error, because this can happen if a user has the survey
-        # UI open with the cancel button, and meanwhile the survey is cancelled
-        # from another tab.
-        # Cancelling a completed survey should have no effect.
-        # We must not error, because this can happen if a user has the survey
-        # UI open with the cancel button, and meanwhile the survey finished
+    survey =
+      project
+      |> assoc(:surveys)
+      |> Repo.get!(id)
+
+    case SurveyAction.stop(survey, conn) do
+      {:ok, %{survey: survey, cancellers_pids: cancellers_pids}} ->
         conn
-          |> render("show.json", survey: survey |> Repo.preload(:questionnaires) |> Survey.with_links(user_level(survey.project_id, current_user(conn).id)))
-      ["running", false] ->
-        project = conn
-          |> load_project_for_change(survey.project_id)
+        |> assign(:processors_pids, cancellers_pids)
+        |> render_with_links(survey)
 
-        changeset = Survey.changeset(survey, %{"state": "cancelling", "exit_code": 1, "exit_message": "Cancelled by user"})
-
-        multi = Multi.new
-        |> Multi.update(:survey, changeset)
-        |> Multi.insert(:log, ActivityLog.request_cancel(project, conn, survey))
-        |> Repo.transaction
-
-        case multi do
-          {:ok, %{survey: survey}} ->
-            project |> Project.touch!
-            cancellers_pids = cancel_messages_and_respondents(id)
-            conn = conn |> assign(:processors_pids, cancellers_pids)
-            render(conn, "show.json", survey: survey |> Repo.preload(:questionnaires) |> Survey.with_links(user_level(survey.project_id, current_user(conn).id)))
-          {:error, _, changeset, _} ->
-            Logger.warn "Error when stopping survey #{inspect survey}"
-            conn
-            |> put_status(:unprocessable_entity)
-            |> render(Ask.ChangesetView, "error.json", changeset: changeset)
-        end
-      [_, _] ->
-        # Cancelling a pending survey, a survey in any other state or that it
-        # is locked, should result in an error.
-        Logger.warn "Error when stopping survey #{inspect survey}: Wrong state or locked"
+      {:ok, %{survey: survey}} ->
         conn
-          |> put_status(:unprocessable_entity)
-          |> render("show.json", survey: survey |> Repo.preload(:questionnaires) |> Survey.with_links(user_level(survey.project_id, current_user(conn).id)))
-      end
+        |> render_with_links(survey)
+
+      {:error, %{changeset: changeset}} ->
+        conn
+        |> put_status(:unprocessable_entity)
+        |> render(Ask.ChangesetView, "error.json", changeset: changeset)
+
+      {:error, %{survey: survey}} ->
+        conn
+        |> put_status(:unprocessable_entity)
+        |> render_with_links(survey)
+    end
+  end
+
+  defp render_with_links(conn, survey) do
+    survey = Repo.preload(survey, :questionnaires)
+    user_level = user_level(survey.project_id, current_user(conn).id)
+    survey_with_links = Survey.with_links(survey, user_level)
+    render(conn, "show.json", survey: survey_with_links)
   end
 
   def update_locked_status(conn, %{"project_id" => project_id, "survey_id" => survey_id, "locked" => locked}) do
@@ -743,7 +733,4 @@ defmodule Ask.SurveyController do
   defp render_initial_state(conn, _survey_id, _mode) do
     json(conn, %{"data" => %{}})
   end
-
-  defp cancel_messages_and_respondents(survey_id), do: SurveyCanceller.start_cancelling(survey_id).consumers_pids
-
 end

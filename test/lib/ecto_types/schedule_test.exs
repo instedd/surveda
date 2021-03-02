@@ -14,19 +14,19 @@ defmodule Ask.ScheduleTest do
 
   describe "dump:" do
     test "should dump weekdays" do
-      assert {:ok, "{\"timezone\":\"Etc/UTC\",\"start_time\":\"09:00:00\",\"start_date\":null,\"end_time\":\"18:00:00\",\"day_of_week\":[\"mon\",\"tue\",\"wed\",\"thu\",\"fri\"],\"blocked_days\":[]}"} == Schedule.dump(%Schedule{day_of_week: %DayOfWeek{mon: true, tue: true, wed: true, thu: true, fri: true}, start_time: ~T[09:00:00], end_time: ~T[18:00:00], timezone: Schedule.default_timezone()})
+      assert {:ok, "{\"timezone\":\"Etc/UTC\",\"start_time\":\"09:00:00\",\"start_date\":null,\"end_time\":\"18:00:00\",\"end_date\":null,\"day_of_week\":[\"mon\",\"tue\",\"wed\",\"thu\",\"fri\"],\"blocked_days\":[]}"} == Schedule.dump(%Schedule{day_of_week: %DayOfWeek{mon: true, tue: true, wed: true, thu: true, fri: true}, start_time: ~T[09:00:00], end_time: ~T[18:00:00], timezone: Schedule.default_timezone()})
     end
 
     test "should dump default" do
-      assert {:ok, "{\"timezone\":\"Etc/UTC\",\"start_time\":\"09:00:00\",\"start_date\":null,\"end_time\":\"18:00:00\",\"day_of_week\":[],\"blocked_days\":[]}"} == Schedule.dump(Schedule.default())
+      assert {:ok, "{\"timezone\":\"Etc/UTC\",\"start_time\":\"09:00:00\",\"start_date\":null,\"end_time\":\"18:00:00\",\"end_date\":null,\"day_of_week\":[],\"blocked_days\":[]}"} == Schedule.dump(Schedule.default())
     end
 
     test "should dump always" do
-      assert {:ok, "{\"timezone\":\"Etc/UTC\",\"start_time\":\"00:00:00\",\"start_date\":null,\"end_time\":\"23:59:59\",\"day_of_week\":[\"sun\",\"mon\",\"tue\",\"wed\",\"thu\",\"fri\",\"sat\"],\"blocked_days\":[]}"} == Schedule.dump(Schedule.always())
+      assert {:ok, "{\"timezone\":\"Etc/UTC\",\"start_time\":\"00:00:00\",\"start_date\":null,\"end_time\":\"23:59:59\",\"end_date\":null,\"day_of_week\":[\"sun\",\"mon\",\"tue\",\"wed\",\"thu\",\"fri\",\"sat\"],\"blocked_days\":[]}"} == Schedule.dump(Schedule.always())
     end
 
     test "should dump blocked_days" do
-      assert {:ok, "{\"timezone\":\"Etc/UTC\",\"start_time\":\"09:00:00\",\"start_date\":null,\"end_time\":\"18:00:00\",\"day_of_week\":[\"mon\",\"tue\",\"wed\",\"thu\",\"fri\"],\"blocked_days\":[\"2016-01-01\",\"2017-02-03\"]}"} == Schedule.dump(%Schedule{day_of_week: %DayOfWeek{mon: true, tue: true, wed: true, thu: true, fri: true}, start_time: ~T[09:00:00], end_time: ~T[18:00:00], timezone: Schedule.default_timezone(), blocked_days: [~D[2016-01-01], ~D[2017-02-03]]})
+      assert {:ok, "{\"timezone\":\"Etc/UTC\",\"start_time\":\"09:00:00\",\"start_date\":null,\"end_time\":\"18:00:00\",\"end_date\":null,\"day_of_week\":[\"mon\",\"tue\",\"wed\",\"thu\",\"fri\"],\"blocked_days\":[\"2016-01-01\",\"2017-02-03\"]}"} == Schedule.dump(%Schedule{day_of_week: %DayOfWeek{mon: true, tue: true, wed: true, thu: true, fri: true}, start_time: ~T[09:00:00], end_time: ~T[18:00:00], timezone: Schedule.default_timezone(), blocked_days: [~D[2016-01-01], ~D[2017-02-03]]})
     end
   end
 
@@ -52,19 +52,18 @@ defmodule Ask.ScheduleTest do
     test "shuld cast to itself" do
       assert {:ok, %Schedule{day_of_week: %DayOfWeek{}, start_time: ~T[09:00:00], end_time: ~T[18:00:00], blocked_days: [], timezone: "Etc/UTC"}} == Schedule.cast(Schedule.default())
     end
-
     test "should cast string times" do
       assert {
         :ok,
-        %Schedule{day_of_week: %DayOfWeek{sun: true, mon: true, tue: true, wed: true, thu: true, fri: false, sat: true}, start_time: ~T[09:00:00], start_date: nil, end_time: ~T[19:00:00], blocked_days: [], timezone: "Etc/UTC"}
-      } == Schedule.cast(%{day_of_week: %{sun: true, mon: true, tue: true, wed: true, thu: true, fri: false, sat: true}, start_time: "09:00:00", start_date: nil, end_time: "19:00:00", timezone: "Etc/UTC", blocked_days: []})
+        %Schedule{day_of_week: %DayOfWeek{sun: true, mon: true, tue: true, wed: true, thu: true, fri: false, sat: true}, start_time: ~T[09:00:00], start_date: nil, end_date: nil, end_time: ~T[19:00:00], blocked_days: [], timezone: "Etc/UTC"}
+      } == Schedule.cast(%{day_of_week: %{sun: true, mon: true, tue: true, wed: true, thu: true, fri: false, sat: true}, start_time: "09:00:00", start_date: nil, end_date: nil, end_time: "19:00:00", timezone: "Etc/UTC", blocked_days: []})
     end
 
     test "should cast string days" do
       assert {
         :ok,
-        %Schedule{day_of_week: %DayOfWeek{sun: true, mon: true, tue: true, wed: true, thu: true, fri: false, sat: true}, start_time: ~T[09:00:00], start_date: nil, end_time: ~T[19:00:00], blocked_days: [~D[2016-01-01], ~D[2017-02-03]], timezone: "Etc/UTC"}
-      } == Schedule.cast(%{day_of_week: %{sun: true, mon: true, tue: true, wed: true, thu: true, fri: false, sat: true}, start_time: ~T[09:00:00], start_date: nil, end_time: "19:00:00", timezone: "Etc/UTC", blocked_days: ["2016-01-01", "2017-02-03"]})
+        %Schedule{day_of_week: %DayOfWeek{sun: true, mon: true, tue: true, wed: true, thu: true, fri: false, sat: true}, start_time: ~T[09:00:00], start_date: nil, end_date: nil, end_time: ~T[19:00:00], blocked_days: [~D[2016-01-01], ~D[2017-02-03]], timezone: "Etc/UTC"}
+      } == Schedule.cast(%{day_of_week: %{sun: true, mon: true, tue: true, wed: true, thu: true, fri: false, sat: true}, start_time: ~T[09:00:00], start_date: nil, end_date: nil, end_time: "19:00:00", timezone: "Etc/UTC", blocked_days: ["2016-01-01", "2017-02-03"]})
     end
 
     test "should cast string times with string keys" do
