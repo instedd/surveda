@@ -186,14 +186,17 @@ defmodule Ask.Schedule do
     Map.put(schedule, :start_date, nil)
   end
 
-  def end_date_passed?(%{end_date: nil} = _schedule) do
+  def end_date_passed?(schedule, date_time \\ DateTime.utc_now())
+
+  def end_date_passed?(%{end_date: nil} = _schedule, _date_time) do
     false
   end
 
   def end_date_passed?(
         %{end_date: end_date, timezone: timezone} = _schedule,
-        date_time \\ DateTime.utc_now()
+        date_time
       ) do
+
     date_time
     |> Timex.to_datetime(timezone)
     |> DateTime.to_date()

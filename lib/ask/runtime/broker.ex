@@ -74,8 +74,17 @@ defmodule Ask.Runtime.Broker do
     |> RespondentDispositionHistory.create(respondent.disposition, primary_mode)
   end
 
-  defp poll_survey(survey) do
-    if (Schedule.end_date_passed?(survey.schedule)) do
+  defp poll_active_surveys(now) do
+    all_running_surveys = Repo.all(from s in Survey,
+                                   where: s.state == "running",
+                                   preload: [respondent_groups: [respondent_group_channels: :channel]])
+    all_running_surveys
+    |> Enum.filter(&Schedule.intersect?(&1.schedule, now))
+    |> Enum.each(fn survey -> poll_survey(survey, now) end)
+  end
+
+  defp poll_survey(survey, now) do
+    if Schedule.end_date_passed?(survey.schedule, now) do
       stop_survey(survey)
     else
       channels = survey |> Survey.survey_channels
@@ -83,40 +92,15 @@ defmodule Ask.Runtime.Broker do
         status = c.id |> ChannelStatusServer.get_channel_status
         (status != :up && status != :unknown)
       end)
-      poll_survey(survey, channel_is_down?)
+      poll_survey(survey, now, channel_is_down?)
     end
   end
 
-  defp stop_survey(survey) do
-    try do
-      {:ok, _} = SurveyAction.stop(survey)
-      :ok
-    rescue
-      e ->
-        handle_exception(survey, e, "Error occurred while stopping survey (id: #{survey.id})")
-        Sentry.capture_exception(e, [
-          stacktrace: System.stacktrace(),
-          extra: %{survey_id: survey.id}])
-    end
-  end
-
-  defp handle_exception(survey, e, message) do
-    if Mix.env == :test do
-      IO.inspect e
-      IO.inspect System.stacktrace()
-      raise e
-    end
-    Logger.error(e, message)
-    Sentry.capture_exception(e, [
-      stacktrace: System.stacktrace(),
-      extra: %{survey_id: survey.id}])
-  end
-
-  defp poll_survey(survey, true = _channel_is_down) do
+  defp poll_survey(survey, _now, true = _channel_is_down) do
     ChannelStatusServer.log_info "Survey #{survey.id} was not polled because a channel is down"
   end
 
-  defp poll_survey(survey, false = _channel_is_down) do
+  defp poll_survey(survey, _now, false = _channel_is_down) do
     try do
       by_state = Survey.respondents_by_state(survey)
       %{
@@ -149,13 +133,29 @@ defmodule Ask.Runtime.Broker do
     end
   end
 
-  defp poll_active_surveys(now) do
-    all_running_surveys = Repo.all(from s in Survey,
-                                   where: s.state == "running",
-                                   preload: [respondent_groups: [respondent_group_channels: :channel]])
-    all_running_surveys
-    |> Enum.filter(&Schedule.intersect?(&1.schedule, now))
-    |> Enum.each(&poll_survey/1)
+  defp stop_survey(survey) do
+    try do
+      {:ok, _} = SurveyAction.stop(survey)
+      :ok
+    rescue
+      e ->
+        handle_exception(survey, e, "Error occurred while stopping survey (id: #{survey.id})")
+        Sentry.capture_exception(e, [
+          stacktrace: System.stacktrace(),
+          extra: %{survey_id: survey.id}])
+    end
+  end
+
+  defp handle_exception(survey, e, message) do
+    if Mix.env == :test do
+      IO.inspect e
+      IO.inspect System.stacktrace()
+      raise e
+    end
+    Logger.error(e, message)
+    Sentry.capture_exception(e, [
+      stacktrace: System.stacktrace(),
+      extra: %{survey_id: survey.id}])
   end
 
   defp retry_respondents(now) do

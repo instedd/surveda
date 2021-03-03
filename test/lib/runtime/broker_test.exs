@@ -591,6 +591,47 @@ defmodule Ask.Runtime.BrokerTest do
       assert survey2.state == "running"
     end
 
+    @tag :skip
+    test "stops the survey if end_date is today" do
+      {:ok, now, _} = DateTime.from_iso8601("2021-02-19T12:00:00Z")
+      schedule = %{Schedule.always() | end_date: ~D[2021-02-19]}
+      survey = insert(:survey, %{schedule: schedule, state: "running"})
+
+      Broker.handle_info(:poll, nil, now)
+
+      survey = Repo.get(Ask.Survey, survey.id)
+      assert survey.state == "cancelling"
+
+      # TODO: wait_all_cancellations before finishing the test to avoid error:
+      # owner #PID<0.1148.0> exited while client #PID<0.1154.0> is still running with: shutdown
+    end
+
+    @tag :skip
+    test "stops the survey if end_date has passed" do
+      {:ok, now, _} = DateTime.from_iso8601("2021-02-19T12:00:00Z")
+      schedule = %{Schedule.always() | end_date: ~D[2021-02-11]}
+      survey = insert(:survey, %{schedule: schedule, state: "running"})
+
+      Broker.handle_info(:poll, nil, now)
+
+      survey = Repo.get(Ask.Survey, survey.id)
+      assert survey.state == "cancelling"
+
+      # TODO: wait_all_cancellations before finishing the test to avoid error:
+      # owner #PID<0.1148.0> exited while client #PID<0.1154.0> is still running with: shutdown
+    end
+
+    test "doesn't stop the survey if end_date hasn't passed" do
+      {:ok, now, _} = DateTime.from_iso8601("2021-02-11T12:00:00Z")
+      schedule = %{Schedule.always() | end_date: ~D[2021-02-19]}
+      survey = insert(:survey, %{schedule: schedule, state: "running"})
+
+      Broker.handle_info(:poll, nil, now)
+
+      survey = Repo.get(Ask.Survey, survey.id)
+      assert Ask.Survey.completed?(survey)
+    end
+
     test "only polls surveys if today is not blocked" do
       survey1 = insert(:survey, %{schedule: Schedule.always(), state: "running"})
       survey2 = insert(:survey, %{schedule: Map.merge(Schedule.always(), %{blocked_days: [Date.utc_today()]}), state: "running"})

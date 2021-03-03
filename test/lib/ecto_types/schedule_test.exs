@@ -194,4 +194,52 @@ defmodule Ask.ScheduleTest do
       assert next_available_date_time == expected_next_available_date_time
     end
   end
+
+  describe "end date" do
+    setup do
+      {:ok, dt_not_passed, _} = DateTime.from_iso8601("2021-02-11T12:00:00Z")
+      {:ok, dt_today, _} = DateTime.from_iso8601("2021-02-19T19:00:00Z")
+      {:ok, dt_passed, _} = DateTime.from_iso8601("2021-02-25T12:00:00Z")
+
+      {
+        :ok,
+        end_date: ~D[2021-02-19],
+        dt_not_passed: dt_not_passed,
+        dt_today: dt_today,
+        dt_passed: dt_passed
+      }
+    end
+
+    test "end_date_passed? returns false when there's no end_date in the schedule" do
+      schedule = Schedule.always()
+
+      end_date_passed? = Schedule.end_date_passed?(schedule)
+
+      assert end_date_passed? == false
+    end
+
+    test "end_date_passed? returns false when the end_date didn't passed", %{end_date: end_date, dt_not_passed: dt_not_passed} do
+      schedule = %{Schedule.always() | end_date: end_date}
+
+      end_date_passed? = Schedule.end_date_passed?(schedule, dt_not_passed)
+
+      assert end_date_passed? == false
+    end
+
+    test "end_date_passed? returns true when end_date is today", %{end_date: end_date, dt_today: dt_today} do
+      schedule = %{Schedule.always() | end_date: end_date}
+
+      end_date_passed? = Schedule.end_date_passed?(schedule, dt_today)
+
+      assert end_date_passed? == true
+    end
+
+    test "end_date_passed? returns true when the end_date passed", %{end_date: end_date, dt_today: dt_passed} do
+      schedule = %{Schedule.always() | end_date: end_date}
+
+      end_date_passed? = Schedule.end_date_passed?(schedule, dt_passed)
+
+      assert end_date_passed? == true
+    end
+  end
 end
