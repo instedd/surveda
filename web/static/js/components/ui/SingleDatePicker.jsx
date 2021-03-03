@@ -32,7 +32,7 @@ export default class SingleDatePicker extends Component<Props, State> {
 
   render() {
     const { readOnly, selected, onSelect } = this.props
-    return <div className='right datepicker start-date'>
+    return <div className='right datepicker single-date-picker'>
       {
         readOnly
         ? <i disabled className='material-icons'>today</i>

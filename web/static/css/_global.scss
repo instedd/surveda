@@ -1626,7 +1626,7 @@ a.disabled {
     right: 0;
     width: 400px;
   }
-  &.start-date {
+  &.single-date-picker {
     top: -65px;
     i[disabled] {
       @extend .grey-text;
@@ -1636,6 +1636,11 @@ a.disabled {
 
 .Cal__Header__root {
   display:none;
+}
+
+.single-date-picker .Cal__Day__selection {
+  background-color: color("green", "base") !important;
+  color: #fff !important;
 }
 
 .multi-date-picker .Cal__Day__selection:before {
