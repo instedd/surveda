@@ -83,7 +83,7 @@ defmodule Ask.Runtime.Broker do
     |> Enum.each(fn survey -> poll_survey(survey, now) end)
   end
 
-  defp poll_survey(survey, now) do
+  def poll_survey(survey, now) do
     if Schedule.end_date_passed?(survey.schedule, now) do
       stop_survey(survey)
     else
@@ -135,8 +135,7 @@ defmodule Ask.Runtime.Broker do
 
   defp stop_survey(survey) do
     try do
-      {:ok, _} = SurveyAction.stop(survey)
-      :ok
+      SurveyAction.stop(survey)
     rescue
       e ->
         handle_exception(survey, e, "Error occurred while stopping survey (id: #{survey.id})")

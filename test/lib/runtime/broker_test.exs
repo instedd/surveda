@@ -591,34 +591,36 @@ defmodule Ask.Runtime.BrokerTest do
       assert survey2.state == "running"
     end
 
-    @tag :skip
     test "stops the survey if end_date is today" do
       {:ok, now, _} = DateTime.from_iso8601("2021-02-19T12:00:00Z")
       schedule = %{Schedule.always() | end_date: ~D[2021-02-19]}
       survey = insert(:survey, %{schedule: schedule, state: "running"})
 
-      Broker.handle_info(:poll, nil, now)
+      {:ok, %{processes: processes}} = Broker.poll_survey(survey, now)
 
       survey = Repo.get(Ask.Survey, survey.id)
       assert survey.state == "cancelling"
 
-      # TODO: wait_all_cancellations before finishing the test to avoid error:
-      # owner #PID<0.1148.0> exited while client #PID<0.1154.0> is still running with: shutdown
+      wait_all_cancellations_from_pids(processes)
+
+      survey = Repo.get(Ask.Survey, survey.id)
+      assert survey.state == "terminated"
     end
 
-    @tag :skip
     test "stops the survey if end_date has passed" do
       {:ok, now, _} = DateTime.from_iso8601("2021-02-19T12:00:00Z")
       schedule = %{Schedule.always() | end_date: ~D[2021-02-11]}
       survey = insert(:survey, %{schedule: schedule, state: "running"})
 
-      Broker.handle_info(:poll, nil, now)
+      {:ok, %{processes: processes}} = Broker.poll_survey(survey, now)
 
       survey = Repo.get(Ask.Survey, survey.id)
       assert survey.state == "cancelling"
 
-      # TODO: wait_all_cancellations before finishing the test to avoid error:
-      # owner #PID<0.1148.0> exited while client #PID<0.1154.0> is still running with: shutdown
+      wait_all_cancellations_from_pids(processes)
+
+      survey = Repo.get(Ask.Survey, survey.id)
+      assert survey.state == "terminated"
     end
 
     test "doesn't stop the survey if end_date hasn't passed" do
@@ -1382,5 +1384,17 @@ defmodule Ask.Runtime.BrokerTest do
   defp refute_respondent_state(respondent_id, state) do
     respondent = Repo.get!(Respondent, respondent_id)
     refute respondent.state == state
+  end
+
+  def wait_all_cancellations_from_pids(pids) do
+    pids
+    |> Enum.map(fn {_, pid} -> Process.monitor(pid) end)
+    |> Enum.each(&receive_down/1)
+  end
+
+  def receive_down(ref) do
+    receive do
+      {:DOWN, ^ref, _, _, _} -> :task_is_down
+    end
   end
 end

@@ -72,8 +72,8 @@ defmodule Ask.Runtime.SurveyAction do
         case multi do
           {:ok, %{survey: survey}} ->
             survey.project |> Project.touch!
-            cancellers_pids = SurveyCanceller.start_cancelling(survey.id).consumers_pids
-            {:ok, %{survey: survey, cancellers_pids: cancellers_pids}}
+            %{consumers_pids: consumers_pids, processes: processes} = SurveyCanceller.start_cancelling(survey.id)
+            {:ok, %{survey: survey, cancellers_pids: consumers_pids, processes: processes}}
           {:error, _, changeset, _} ->
             Logger.warn "Error when stopping survey #{inspect survey}"
             {:error, %{changeset: changeset}}
