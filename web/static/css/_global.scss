@@ -1638,6 +1638,10 @@ a.disabled {
   display:none;
 }
 
+.row.start-date {
+  margin-bottom: 0;
+}
+
 .single-date-picker .Cal__Day__selection {
   background-color: color("green", "base") !important;
   color: #fff !important;

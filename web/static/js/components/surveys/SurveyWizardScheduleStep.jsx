@@ -125,7 +125,7 @@ class SurveyWizardScheduleStep extends Component {
           <TimeDropdown label={t('From')} defaultValue={defaultFrom} onChange={this.updateFrom} readOnly={readOnly} min={null} extraOption={{ at: 0, item: { label: '12:00 AM', value: '00:00:00' } }} />
           <TimeDropdown label={t('To')} defaultValue={defaultTo} onChange={this.updateTo} readOnly={readOnly} min={defaultFrom} extraOption={{ at: 23, item: { label: '12:00 AM', value: '23:59:59' } }} />
         </div>
-        <div className='row'>
+        <div className='row start-date'>
           <div className='col s12'>
             <label className='grey-text'>{this.props.t('Start date')}</label>
             <input
