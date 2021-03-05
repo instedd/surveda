@@ -163,11 +163,7 @@ class ActivityDescription extends Component {
             return t('Deleted folder <i>{{folderName}}', {folderName})
           case 'rename':
             const {oldFolderName, newFolderName} = metadata
-            if (oldFolderName) {
-              return t('Renamed <i>{{oldFolderName}}</i> folder to <i>{{newFolderName}}</i>', {oldFolderName, newFolderName})
-            } else {
-              return t('Named folder as <i>{{newFolderName}}</i>', {newFolderName})
-            }
+            return t('Renamed <i>{{oldFolderName}}</i> folder to <i>{{newFolderName}}</i>', {oldFolderName, newFolderName})
         }
         break
       default:
