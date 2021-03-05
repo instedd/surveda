@@ -3,7 +3,7 @@ defmodule Ask.FolderControllerTest do
   use Ask.DummySteps
   use Ask.TestHelpers
 
-  alias Ask.{Folder, Project}
+  alias Ask.{Folder, Project, ActivityLog}
   @valid_attrs %{name: "some content"}
 
   setup %{conn: conn} do
@@ -19,10 +19,21 @@ defmodule Ask.FolderControllerTest do
     test "creates and renders resource when data is valid", %{conn: conn, user: user} do
       project = create_project_for_user(user)
 
-      conn = post conn, project_folder_path(conn, :create, project.id), folder: Map.merge(@valid_attrs, %{project_id: project.id})
+      conn =
+        post(conn, project_folder_path(conn, :create, project.id),
+          folder: Map.merge(@valid_attrs, %{project_id: project.id})
+        )
+
       response = json_response(conn, 201)
-      assert response["data"]["id"]
-      assert Repo.get_by(Folder, @valid_attrs)
+      folder_id = response["data"]["id"]
+      assert folder_id
+      assert Repo.get_by(Folder, @valid_attrs) == Repo.get(Folder, folder_id)
+
+      assert Repo.get_by(ActivityLog, %{
+               entity_type: "folder",
+               entity_id: folder_id,
+               action: "create"
+             })
     end
 
     test "forbids creation of folder for a project that belongs to another user", %{conn: conn} do
@@ -113,10 +124,17 @@ defmodule Ask.FolderControllerTest do
       assert Repo.get(Folder, folder1.id)
       assert Repo.get(Folder, folder2.id)
 
-      conn = delete conn, project_folder_path(conn, :delete, project, folder1)
+      conn = delete(conn, project_folder_path(conn, :delete, project, folder1))
       assert response(conn, 204)
 
       refute Repo.get(Folder, folder1.id)
+
+      assert Repo.get_by(ActivityLog, %{
+               entity_type: "folder",
+               entity_id: folder1.id,
+               action: "delete"
+             })
+
       assert Repo.get(Folder, folder2.id)
     end
 
@@ -187,12 +205,25 @@ defmodule Ask.FolderControllerTest do
   describe "set_name" do
     test "set name of a folder", %{conn: conn, user: user} do
       project = create_project_for_user(user)
-      folder = insert(:folder, project: project)
+      old_name = "old_name"
+      new_name = "new_name"
+      folder = insert(:folder, project: project, name: old_name)
 
-      conn = post conn, project_folder_folder_path(conn, :set_name, project, folder), name: "new name"
+      conn =
+        post(conn, project_folder_folder_path(conn, :set_name, project, folder), name: new_name)
 
       assert response(conn, 204)
-      assert Repo.get(Folder, folder.id).name == "new name"
+      assert Repo.get(Folder, folder.id).name == new_name
+
+      assert Repo.get_by(ActivityLog, %{
+               entity_type: "folder",
+               entity_id: folder.id,
+               action: "rename",
+               metadata: %{
+                 old_folder_name: old_name,
+                 new_folder_name: new_name
+               }
+             })
     end
 
     test "rejects set_name if the folder doesn't belong to the current user", %{conn: conn} do
