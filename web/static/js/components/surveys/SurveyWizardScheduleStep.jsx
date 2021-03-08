@@ -27,16 +27,6 @@ class SurveyWizardScheduleStep extends Component {
     this.updateFrom = this.updateFrom.bind(this)
     this.updateTo = this.updateTo.bind(this)
     this.toggleBlockedDays = this.toggleBlockedDays.bind(this)
-    this.state = {
-      showStartDatePicker: false
-    }
-  }
-
-  toggleStartDatePicker(event: any) {
-    this.setState({
-      showStartDatePicker: !this.state.showStartDatePicker
-    })
-    event.preventDefault()
   }
 
   updateFrom(event) {
