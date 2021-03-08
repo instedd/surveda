@@ -85,6 +85,9 @@ defmodule Ask.Runtime.Broker do
 
   def poll_survey(survey, now) do
     if Schedule.end_date_passed?(survey.schedule, now) do
+      # Between the 00:00 of the end_date and this survey poll (the poll_interval is 1 minute)
+      # the survey will be active during a short but unexpected time window.
+      # We explicitly decided to ignore this corner case to gain solidity and simplicity
       stop_survey(survey)
     else
       channels = survey |> Survey.survey_channels
