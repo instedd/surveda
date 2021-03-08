@@ -160,7 +160,7 @@ class ActivityDescription extends Component {
           case 'create':
             return t('Created folder <i>{{folderName}}</i>', {folderName})
           case 'delete':
-            return t('Deleted folder <i>{{folderName}}', {folderName})
+            return t('Deleted folder <i>{{folderName}}</i>', {folderName})
           case 'rename':
             const {oldFolderName, newFolderName} = metadata
             return t('Renamed <i>{{oldFolderName}}</i> folder to <i>{{newFolderName}}</i>', {oldFolderName, newFolderName})
