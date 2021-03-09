@@ -5,20 +5,25 @@ defmodule Ask.FolderController do
   alias Ecto.Multi
 
   def create(conn, %{"project_id" => project_id, "folder" => %{"name" => name}}) do
-    project = conn
-    |> load_project_for_change(project_id)
+    project =
+      conn
+      |> load_project_for_change(project_id)
 
-    %Folder{}
-    |> Folder.changeset(%{name: name, project_id: project_id})
-    |> Repo.insert()
+    Multi.new()
+    |> Multi.insert(:folder, Folder.changeset(%Folder{}, %{name: name, project_id: project_id}))
+    |> Multi.run(:log, fn %{folder: folder} ->
+      ActivityLog.create_folder(project, conn, folder) |> Repo.insert()
+    end)
+    |> Repo.transaction()
     |> case do
-      {:ok, folder} ->
-        project |> Project.touch!
+      {:ok, %{folder: folder}} ->
+        project |> Project.touch!()
+
         conn
         |> put_status(:created)
         |> render("show.json", folder: folder)
 
-      {:error, %Ecto.Changeset{} = changeset} ->
+      {:error, :folder, %Ecto.Changeset{} = changeset, _} ->
         conn
         |> put_status(:unprocessable_entity)
         |> render(Ask.ChangesetView, "error.json", changeset: changeset)
@@ -38,21 +43,26 @@ defmodule Ask.FolderController do
   end
 
   def delete(conn, %{"project_id" => project_id, "id" => folder_id}) do
-    project = conn
-    |> load_project_for_change(project_id)
+    project =
+      conn
+      |> load_project_for_change(project_id)
 
     folder =
       project
       |> assoc(:folders)
       |> Repo.get!(folder_id)
 
-    result = folder |> Folder.delete_changeset |> Repo.delete
-
-    case result do
+    Multi.new()
+    |> Multi.delete(:delete, Folder.delete_changeset(folder))
+    |> Multi.insert(:log, ActivityLog.delete_folder(project, conn, folder))
+    |> Repo.transaction()
+    |> case do
       {:ok, _} ->
         send_resp(conn, :no_content, "")
-      {:error, changeset} ->
-        Logger.warn "Error when deleting folder #{folder.id}"
+
+      {:error, :delete, changeset, _} ->
+        Logger.warn("Error when deleting folder #{folder.id}")
+
         conn
         |> put_status(:unprocessable_entity)
         |> render(Ask.ChangesetView, "error.json", changeset: changeset)

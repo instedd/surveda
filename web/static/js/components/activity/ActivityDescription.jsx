@@ -114,7 +114,7 @@ class ActivityDescription extends Component {
           case 'create':
             return t('Created questionnaire')
           case 'delete':
-            return t('Deleted questionnaire <i>{{questionnaireName}}', {questionnaireName})
+            return t('Deleted questionnaire <i>{{questionnaireName}}</i>', {questionnaireName})
           case 'rename':
             const {oldQuestionnaireName, newQuestionnaireName} = metadata
             if (oldQuestionnaireName) {
@@ -152,6 +152,18 @@ class ActivityDescription extends Component {
             const oldSectionTitle = metadata['oldSectionTitle'] || t('Untitled section')
             const newSectionTitle = metadata['newSectionTitle'] || t('Untitled section')
             return t('Section <i>{{oldSectionTitle}}</i> of <i>{{questionnaireName}}</i> renamed to <i>{{newSectionTitle}}</i>', {oldSectionTitle, questionnaireName, newSectionTitle})
+        }
+        break
+      case 'folder':
+        const folderName = metadata['folderName']
+        switch (activity.action) {
+          case 'create':
+            return t('Created folder <i>{{folderName}}</i>', {folderName})
+          case 'delete':
+            return t('Deleted folder <i>{{folderName}}</i>', {folderName})
+          case 'rename':
+            const {oldFolderName, newFolderName} = metadata
+            return t('Renamed <i>{{oldFolderName}}</i> folder to <i>{{newFolderName}}</i>', {oldFolderName, newFolderName})
         }
         break
       default:

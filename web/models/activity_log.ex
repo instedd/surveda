@@ -25,7 +25,7 @@ defmodule Ask.ActivityLog do
     ["create", "edit", "rename", "delete", "add_mode", "remove_mode", "add_language", "remove_language", "create_step", "delete_step", "rename_step", "edit_step", "edit_settings", "create_section", "rename_section", "delete_section", "edit_section", "archive", "unarchive"]
 
   def valid_actions("folder"), do:
-    ["rename"]
+    ["create", "rename", "delete"]
 
   def valid_actions(_), do: []
 
@@ -164,11 +164,19 @@ defmodule Ask.ActivityLog do
     })
   end
 
+  def create_folder(project, conn, folder) do
+    create("create", project, conn, folder, %{folder_name: folder.name})
+  end
+
   def rename_folder(project, conn, folder, old_folder_name, new_folder_name) do
     create("rename", project, conn, folder, %{
       old_folder_name: old_folder_name,
       new_folder_name: new_folder_name
     })
+  end
+
+  def delete_folder(project, conn, folder) do
+    create("delete", project, conn, folder, %{folder_name: folder.name})
   end
 
   def change_folder(project, conn, survey, old_folder_name, new_folder_name) do
