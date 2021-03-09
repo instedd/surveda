@@ -31,6 +31,7 @@ export const dataReducer = (state: Survey, action: any): Survey => {
     case actions.SET_SCHEDULE_TO: return setScheduleTo(state, action)
     case actions.SET_SCHEDULE_FROM: return setScheduleFrom(state, action)
     case actions.ADD_SCHEDULE_BLOCKED_DAY: return addScheduleBlockedDay(state, action)
+    case actions.SELECT_SCHEDULE_START_DATE: return selectScheduleStartDate(state, action)
     case actions.REMOVE_SCHEDULE_BLOCKED_DAY: return removeScheduleBlockedDay(state, action)
     case actions.CLEAR_SCHEDULE_BLOCKED_DAYS: return clearScheduleBlockedDays(state, action)
     case actions.SELECT_MODE: return selectMode(state, action)
@@ -422,6 +423,16 @@ const addScheduleBlockedDay = (state, action) => {
         ...state.schedule.blockedDays,
         action.day
       ]))
+    }
+  }
+}
+
+const selectScheduleStartDate = (state, action) => {
+  return {
+    ...state,
+    schedule: {
+      ...state.schedule,
+      startDate: action.date
     }
   }
 }

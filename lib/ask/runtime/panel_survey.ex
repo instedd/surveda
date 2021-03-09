@@ -1,6 +1,6 @@
 defmodule Ask.Runtime.PanelSurvey do
   import Ecto.Query
-  alias Ask.{Survey, Repo, Respondent, RespondentGroupChannel}
+  alias Ask.{Survey, Repo, Respondent, RespondentGroupChannel, Schedule}
   alias Ask.Runtime.RespondentGroupAction
   alias Ecto.Multi
 
@@ -25,7 +25,7 @@ defmodule Ask.Runtime.PanelSurvey do
       # advanced settings
       cutoff: survey.cutoff,
       count_partial_results: survey.count_partial_results,
-      schedule: survey.schedule,
+      schedule: Schedule.remove_start_date(survey.schedule),
       sms_retry_configuration: survey.sms_retry_configuration,
       ivr_retry_configuration: survey.ivr_retry_configuration,
       mobileweb_retry_configuration: survey.mobileweb_retry_configuration,

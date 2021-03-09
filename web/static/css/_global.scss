@@ -1626,13 +1626,28 @@ a.disabled {
     right: 0;
     width: 400px;
   }
+  &.single-date-picker {
+    top: -65px;
+    i[disabled] {
+      @extend .grey-text;
+    }
+  }
 }
 
 .Cal__Header__root {
   display:none;
 }
 
-.Cal__Day__selection:before {
+.row.mb0 {
+  margin-bottom: 0;
+}
+
+.single-date-picker .Cal__Day__selection {
+  background-color: color("green", "base") !important;
+  color: #fff !important;
+}
+
+.multi-date-picker .Cal__Day__selection:before {
   content: 'block';
   font-family: 'Material Icons';
   font-weight: normal;
@@ -1647,7 +1662,7 @@ a.disabled {
   right: -5px;
   opacity: 0.9;
 }
-.Cal__Day__selection {
+.multi-date-picker .Cal__Day__selection {
   color: #ff551b !important;
 }
 
