@@ -150,6 +150,7 @@
   "Editor": "",
   "Email": "",
   "Enabled <i>{{surveyName}}</i> {{reportType}} link": "",
+  "End date": "",
   "End section": "",
   "Enter a delay like 10m, 3h or 1d to express a time unit (default 1h, use values greater than 10m)": "",
   "Enter collaborator's email": "",

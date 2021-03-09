@@ -591,6 +591,49 @@ defmodule Ask.Runtime.BrokerTest do
       assert survey2.state == "running"
     end
 
+    test "stops the survey if end_date is today" do
+      {:ok, now, _} = DateTime.from_iso8601("2021-02-19T12:00:00Z")
+      schedule = %{Schedule.always() | end_date: ~D[2021-02-19]}
+      survey = insert(:survey, %{schedule: schedule, state: "running"})
+
+      {:ok, %{processes: processes}} = Broker.poll_survey(survey, now)
+
+      survey = Repo.get(Ask.Survey, survey.id)
+      assert survey.state == "cancelling"
+
+      wait_all_cancellations_from_pids(processes)
+
+      survey = Repo.get(Ask.Survey, survey.id)
+      assert survey.state == "terminated"
+    end
+
+    test "stops the survey if end_date has passed" do
+      {:ok, now, _} = DateTime.from_iso8601("2021-02-19T12:00:00Z")
+      schedule = %{Schedule.always() | end_date: ~D[2021-02-11]}
+      survey = insert(:survey, %{schedule: schedule, state: "running"})
+
+      {:ok, %{processes: processes}} = Broker.poll_survey(survey, now)
+
+      survey = Repo.get(Ask.Survey, survey.id)
+      assert survey.state == "cancelling"
+
+      wait_all_cancellations_from_pids(processes)
+
+      survey = Repo.get(Ask.Survey, survey.id)
+      assert survey.state == "terminated"
+    end
+
+    test "doesn't stop the survey if end_date hasn't passed" do
+      {:ok, now, _} = DateTime.from_iso8601("2021-02-11T12:00:00Z")
+      schedule = %{Schedule.always() | end_date: ~D[2021-02-19]}
+      survey = insert(:survey, %{schedule: schedule, state: "running"})
+
+      Broker.handle_info(:poll, nil, now)
+
+      survey = Repo.get(Ask.Survey, survey.id)
+      assert Ask.Survey.completed?(survey)
+    end
+
     test "only polls surveys if today is not blocked" do
       survey1 = insert(:survey, %{schedule: Schedule.always(), state: "running"})
       survey2 = insert(:survey, %{schedule: Map.merge(Schedule.always(), %{blocked_days: [Date.utc_today()]}), state: "running"})
@@ -1341,5 +1384,17 @@ defmodule Ask.Runtime.BrokerTest do
   defp refute_respondent_state(respondent_id, state) do
     respondent = Repo.get!(Respondent, respondent_id)
     refute respondent.state == state
+  end
+
+  def wait_all_cancellations_from_pids(pids) do
+    pids
+    |> Enum.map(fn {_, pid} -> Process.monitor(pid) end)
+    |> Enum.each(&receive_down/1)
+  end
+
+  def receive_down(ref) do
+    receive do
+      {:DOWN, ^ref, _, _, _} -> :task_is_down
+    end
   end
 end

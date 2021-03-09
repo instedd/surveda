@@ -3,7 +3,7 @@ defmodule Ask.Runtime.Broker do
   import Ecto.Query
   import Ecto
   alias Ask.{Repo, Logger, Survey, Respondent, RespondentGroup, QuotaBucket, RespondentDispositionHistory, SystemTime, Schedule, SurvedaMetrics}
-  alias Ask.Runtime.{Session, RetriesHistogram, ChannelStatusServer}
+  alias Ask.Runtime.{Session, RetriesHistogram, ChannelStatusServer, SurveyAction}
 
   @poll_interval :timer.minutes(1)
   @server_ref {:global, __MODULE__}
@@ -74,64 +74,90 @@ defmodule Ask.Runtime.Broker do
     |> RespondentDispositionHistory.create(respondent.disposition, primary_mode)
   end
 
-  defp poll_survey(survey) do
-    channels = survey |> Survey.survey_channels
-    channel_is_down = channels |> Enum.any?(fn c ->
-      status = c.id |> ChannelStatusServer.get_channel_status
-      (status != :up && status != :unknown)
-    end)
-    case channel_is_down do
-      false ->
-        try do
-          by_state = Survey.respondents_by_state(survey)
-          %{
-            "active" => active,
-            "pending" => pending,
-            "completed" => completed,
-          } = by_state
-
-          reached_quotas = reached_quotas?(survey)
-          survey_completed = survey.cutoff <= completed || reached_quotas
-          batch_size = batch_size(survey, by_state)
-          Logger.info "Polling survey #{survey.id} (active=#{active}, pending=#{pending}, completed=#{completed}, batch_size=#{batch_size})"
-          SurvedaMetrics.increment_counter_with_label(:surveda_survey_poll, [survey.id])
-
-          cond do
-            (active == 0 && (pending == 0 || survey_completed)) ->
-              Logger.info "Survey #{survey.id} completed"
-              complete(survey)
-
-            active < batch_size && pending > 0 && !survey_completed ->
-              count = batch_size - active
-              Logger.info "Survey #{survey.id}. Starting up to #{count} respondents."
-              start_some(survey, count)
-
-            true -> :ok
-          end
-        rescue
-          e ->
-            if Mix.env == :test do
-              IO.inspect e
-              IO.inspect System.stacktrace()
-              raise e
-            end
-            Logger.error(e, "Error occurred while polling survey (id: #{survey.id})")
-            Sentry.capture_exception(e, [
-              stacktrace: System.stacktrace(),
-              extra: %{survey_id: survey.id}])
-        end
-      true ->
-        ChannelStatusServer.log_info "Survey #{survey.id} was not polled because a channel is down"
-    end
-  end
-
   defp poll_active_surveys(now) do
     all_running_surveys = Repo.all(from s in Survey,
                                    where: s.state == "running",
                                    preload: [respondent_groups: [respondent_group_channels: :channel]])
     all_running_surveys
     |> Enum.filter(&Schedule.intersect?(&1.schedule, now))
-    |> Enum.each(&poll_survey/1)
+    |> Enum.each(fn survey -> poll_survey(survey, now) end)
+  end
+
+  def poll_survey(survey, now) do
+    if Schedule.end_date_passed?(survey.schedule, now) do
+      # Between the 00:00 of the end_date and this survey poll (the poll_interval is 1 minute)
+      # the survey will be active during a short but unexpected time window.
+      # We explicitly decided to ignore this corner case to gain solidity and simplicity
+      stop_survey(survey)
+    else
+      channels = survey |> Survey.survey_channels
+      channel_is_down? = channels |> Enum.any?(fn c ->
+        status = c.id |> ChannelStatusServer.get_channel_status
+        (status != :up && status != :unknown)
+      end)
+      poll_survey(survey, now, channel_is_down?)
+    end
+  end
+
+  defp poll_survey(survey, _now, true = _channel_is_down) do
+    ChannelStatusServer.log_info "Survey #{survey.id} was not polled because a channel is down"
+  end
+
+  defp poll_survey(survey, _now, false = _channel_is_down) do
+    try do
+      by_state = Survey.respondents_by_state(survey)
+      %{
+        "active" => active,
+        "pending" => pending,
+        "completed" => completed,
+      } = by_state
+
+      reached_quotas = reached_quotas?(survey)
+      survey_completed = survey.cutoff <= completed || reached_quotas
+      batch_size = batch_size(survey, by_state)
+      Logger.info "Polling survey #{survey.id} (active=#{active}, pending=#{pending}, completed=#{completed}, batch_size=#{batch_size})"
+      SurvedaMetrics.increment_counter_with_label(:surveda_survey_poll, [survey.id])
+
+      cond do
+        (active == 0 && (pending == 0 || survey_completed)) ->
+          Logger.info "Survey #{survey.id} completed"
+          complete(survey)
+
+        active < batch_size && pending > 0 && !survey_completed ->
+          count = batch_size - active
+          Logger.info "Survey #{survey.id}. Starting up to #{count} respondents."
+          start_some(survey, count)
+
+        true -> :ok
+      end
+    rescue
+      e ->
+        handle_exception(survey, e, "Error occurred while polling survey (id: #{survey.id})")
+    end
+  end
+
+  defp stop_survey(survey) do
+    try do
+      SurveyAction.stop(survey)
+    rescue
+      e ->
+        handle_exception(survey, e, "Error occurred while stopping survey (id: #{survey.id})")
+        Sentry.capture_exception(e, [
+          stacktrace: System.stacktrace(),
+          extra: %{survey_id: survey.id}])
+    end
+  end
+
+  defp handle_exception(survey, e, message) do
+    if Mix.env == :test do
+      IO.inspect e
+      IO.inspect System.stacktrace()
+      raise e
+    end
+    Logger.error(e, message)
+    Sentry.capture_exception(e, [
+      stacktrace: System.stacktrace(),
+      extra: %{survey_id: survey.id}])
   end
 
   defp retry_respondents(now) do

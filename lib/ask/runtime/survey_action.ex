@@ -1,5 +1,5 @@
 defmodule Ask.Runtime.SurveyAction do
-  alias Ask.{Survey, Logger, Repo, Questionnaire, ActivityLog}
+  alias Ask.{Survey, Logger, Repo, Questionnaire, ActivityLog, SurveyCanceller, Project}
   alias Ask.Runtime.PanelSurvey
   alias Ecto.Multi
 
@@ -46,6 +46,44 @@ defmodule Ask.Runtime.SurveyAction do
       Logger.warn("Error when launching survey #{survey.id}. State is not ready ")
       {:error, %{survey: survey}}
     end
+  end
+
+  def stop(survey, conn \\ nil) do
+    survey = Repo.preload(survey, [:quota_buckets, :project])
+
+    case [survey.state, survey.locked] do
+      ["terminated", false] ->
+        # Cancelling a cancelled survey is idempotent.
+        # We must not error, because this can happen if a user has the survey
+        # UI open with the cancel button, and meanwhile the survey is cancelled
+        # from another tab.
+        # Cancelling a completed survey should have no effect.
+        # We must not error, because this can happen if a user has the survey
+        # UI open with the cancel button, and meanwhile the survey finished
+        {:ok, %{survey: survey}}
+      ["running", false] ->
+        changeset = Survey.changeset(survey, %{"state": "cancelling", "exit_code": 1, "exit_message": "Cancelled by user"})
+
+        multi = Multi.new
+        |> Multi.update(:survey, changeset)
+        |> Multi.insert(:log, ActivityLog.request_cancel(survey.project, conn, survey))
+        |> Repo.transaction
+
+        case multi do
+          {:ok, %{survey: survey}} ->
+            survey.project |> Project.touch!
+            %{consumers_pids: consumers_pids, processes: processes} = SurveyCanceller.start_cancelling(survey.id)
+            {:ok, %{survey: survey, cancellers_pids: consumers_pids, processes: processes}}
+          {:error, _, changeset, _} ->
+            Logger.warn "Error when stopping survey #{inspect survey}"
+            {:error, %{changeset: changeset}}
+        end
+      [_, _] ->
+        # Cancelling a pending survey, a survey in any other state or that it
+        # is locked, should result in an error.
+        Logger.warn "Error when stopping survey #{inspect survey}: Wrong state or locked"
+        {:error, %{survey: survey}}
+      end
   end
 
   def repeat(survey) do
