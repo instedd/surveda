@@ -54,7 +54,9 @@ defmodule Ask.SurveyView do
       updated_at: survey.updated_at,
       down_channels: survey.down_channels,
       folder_id: survey.folder_id,
-      first_window_started_at: first_window_started_at(survey)
+      first_window_started_at: first_window_started_at(survey),
+      is_panel_survey: Survey.panel_survey?(survey),
+      latest_panel_survey: survey.latest_panel_survey
     }
   end
   def render("survey_detail.json", %{survey: survey}) do
