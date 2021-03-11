@@ -8,7 +8,6 @@ import * as surveyActions from '../../actions/survey'
 import * as projectActions from '../../actions/project'
 import * as folderActions from '../../actions/folder'
 import { AddButton, EmptyPage, UntitledIfEmpty, ConfirmationModal, PagingFooter } from '../ui'
-import * as channelsActions from '../../actions/channels'
 import * as respondentActions from '../../actions/respondents'
 import SurveyCard from '../surveys/SurveyCard'
 import * as routes from '../../routes'
@@ -47,7 +46,6 @@ class FolderShow extends Component<any, any> {
         }
       }
     })
-    dispatch(channelsActions.fetchChannels())
     dispatch(folderActions.fetchFolders(projectId))
   }
 
@@ -166,7 +164,6 @@ const mapStateToProps = (state, ownProps) => {
     name: name,
     project: state.project.data,
     surveys,
-    channels: state.channels.items,
     respondentsStats: state.respondentsStats,
     startIndex,
     endIndex,
