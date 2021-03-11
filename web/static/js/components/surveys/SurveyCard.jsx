@@ -10,7 +10,6 @@ import { Card, UntitledIfEmpty, Dropdown, DropdownItem, ConfirmationModal } from
 import RespondentsChart from '../respondents/RespondentsChart'
 import SurveyStatus from '../surveys/SurveyStatus'
 import MoveSurveyForm from './MoveSurveyForm'
-import classNames from 'classnames/bind'
 
 class SurveyCard extends Component<any> {
   props: {
@@ -80,53 +79,62 @@ class SurveyCard extends Component<any> {
     if (hidePanelSurvey) return null
     const showPanelSurveyAsFolder = !inPanelSurveyFolder && survey.latestPanelSurvey
 
+    const redirectTo = showPanelSurveyAsFolder
+    ? routes.panelSurveyFolder(survey.projectId, survey.panelSurveyOf)
+    : routes.showOrEditSurvey(survey)
+    const surveyCard = <div className='survey-card'>
+      <Card>
+        <div className='card-content'>
+          <div className='survey-card-status'>
+            <Link className='grey-text' to={redirectTo}>
+              {t('{{percentage}}% of target completed', {percentage: String(Math.round(completionPercentage))})}
+            </Link>
+            { readOnly || (<Dropdown className='options' dataBelowOrigin={false} label={<i className='material-icons'>more_vert</i>}>
+              <DropdownItem className='dots'>
+                <i className='material-icons'>more_vert</i>
+              </DropdownItem>
+              <DropdownItem>
+                <a onClick={e => this.moveSurvey()}><i className='material-icons'>folder</i>{t('Move to')}</a>
+              </DropdownItem>
+              {
+                survey.state == 'running'
+                  ? null
+                  : <DropdownItem>
+                    <a onClick={e => this.deleteSurvey()}><i className='material-icons'>delete</i>{t('Delete')}</a>
+                  </DropdownItem>
+              }
+            </Dropdown>
+            ) }
+          </div>
+          <div className='card-chart'>
+            <RespondentsChart cumulativePercentages={cumulativePercentages} />
+          </div>
+          <div className='card-status'>
+            <Link className='card-title black-text truncate' title={survey.name} to={redirectTo}>
+              <UntitledIfEmpty text={survey.name} emptyText={t('Untitled survey')} />
+            </Link>
+            <Link to={redirectTo}>
+              {description}
+              <SurveyStatus survey={survey} short />
+            </Link>
+          </div>
+        </div>
+      </Card>
+    </div>
+
     return (
       <div className='col s12 m6 l4'>
-        <div className={classNames({'panel-survey-card-0': showPanelSurveyAsFolder})}>
-          <div className={classNames({'panel-survey-card-1': showPanelSurveyAsFolder})}>
-            <div className={classNames({'panel-survey-card-2': showPanelSurveyAsFolder})}>
-              <div className='survey-card'>
-                <Card>
-                  <div className='card-content'>
-                    <div className='survey-card-status'>
-                      <Link className='grey-text' to={routes.showOrEditSurvey(survey)}>
-                        {t('{{percentage}}% of target completed', {percentage: String(Math.round(completionPercentage))})}
-                      </Link>
-                      { readOnly || (<Dropdown className='options' dataBelowOrigin={false} label={<i className='material-icons'>more_vert</i>}>
-                        <DropdownItem className='dots'>
-                          <i className='material-icons'>more_vert</i>
-                        </DropdownItem>
-                        <DropdownItem>
-                          <a onClick={e => this.moveSurvey()}><i className='material-icons'>folder</i>{t('Move to')}</a>
-                        </DropdownItem>
-                        {
-                          survey.state == 'running'
-                            ? null
-                            : <DropdownItem>
-                              <a onClick={e => this.deleteSurvey()}><i className='material-icons'>delete</i>{t('Delete')}</a>
-                            </DropdownItem>
-                        }
-                      </Dropdown>
-                      ) }
-                    </div>
-                    <div className='card-chart'>
-                      <RespondentsChart cumulativePercentages={cumulativePercentages} />
-                    </div>
-                    <div className='card-status'>
-                      <Link className='card-title black-text truncate' title={survey.name} to={routes.showOrEditSurvey(survey)}>
-                        <UntitledIfEmpty text={survey.name} emptyText={t('Untitled survey')} />
-                      </Link>
-                      <Link to={routes.showOrEditSurvey(survey)}>
-                        {description}
-                        <SurveyStatus survey={survey} short />
-                      </Link>
-                    </div>
-                  </div>
-                </Card>
+        {
+          showPanelSurveyAsFolder
+          ? <div className='panel-survey-card-0'>
+            <div className='panel-survey-card-1'>
+              <div className='panel-survey-card-2'>
+                { surveyCard }
               </div>
             </div>
           </div>
-        </div>
+          : surveyCard
+        }
         <ConfirmationModal modalId='survey_index_move_survey' ref='moveSurveyConfirmationModal' confirmationText={t('Move')} header={t('Move survey')} showCancel />
         <ConfirmationModal modalId='survey_index_delete' ref='deleteConfirmationModal' confirmationText={t('Delete')} header={t('Delete survey')} showCancel />
       </div>

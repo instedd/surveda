@@ -12,6 +12,7 @@ import * as respondentActions from '../../actions/respondents'
 import SurveyCard from '../surveys/SurveyCard'
 import * as routes from '../../routes'
 import { translate, Trans } from 'react-i18next'
+import { RepeatButton } from '../ui/RepeatButton'
 
 class FolderShow extends Component<any, any> {
   state = {}
@@ -27,10 +28,11 @@ class FolderShow extends Component<any, any> {
     totalCount: PropTypes.number.isRequired,
     respondentsStats: PropTypes.object.isRequired,
     params: PropTypes.object,
-    id: PropTypes.number,
+    folderId: PropTypes.number,
     name: PropTypes.string,
     loadingFolder: PropTypes.bool,
-    loadingSurveys: PropTypes.bool
+    loadingSurveys: PropTypes.bool,
+    isPanelSurveyFolder: PropTypes.bool
   }
 
   componentWillMount() {
@@ -49,10 +51,24 @@ class FolderShow extends Component<any, any> {
     dispatch(folderActions.fetchFolders(projectId))
   }
 
-  newSurvey() {
-    const { dispatch, router, projectId, id } = this.props
+  isPanelSurveyRepeatable() {
+    const { isPanelSurveyFolder, surveys, t } = this.props
+    if (!isPanelSurveyFolder || !surveys) return false
+    const repeatableSurveys = surveys.filter(survey => survey.isRepeatable)
 
-    dispatch(surveyActions.createSurvey(projectId, id)).then(survey =>
+    if (repeatableSurveys.length == 1) {
+      return true
+    } else if (repeatableSurveys.length == 0) {
+      return false
+    } else {
+      throw new Error(t('Multiple repeatable occurrences were found in the same panel survey'))
+    }
+  }
+
+  newSurvey() {
+    const { dispatch, router, projectId, folderId } = this.props
+
+    dispatch(surveyActions.createSurvey(projectId, folderId)).then(survey =>
       router.push(routes.surveyEdit(projectId, survey))
     )
   }
@@ -87,7 +103,7 @@ class FolderShow extends Component<any, any> {
   }
 
   render() {
-    const { loadingFolder, loadingSurveys, surveys, respondentsStats, project, startIndex, endIndex, totalCount, t, name, projectId } = this.props
+    const { loadingFolder, loadingSurveys, surveys, respondentsStats, project, startIndex, endIndex, totalCount, t, name, projectId, isPanelSurveyFolder } = this.props
     const folder = name ? (<Link to={routes.project(projectId)} className='folder-header'><i className='material-icons black-text'>arrow_back</i>{name}</Link>) : null
     if ((!surveys && loadingSurveys)) {
       return (
@@ -102,25 +118,50 @@ class FolderShow extends Component<any, any> {
 
     const readOnly = !project || project.readOnly
 
-    let addButton = null
+    let primaryButton = null
     if (!readOnly) {
-      addButton = (
-        <AddButton text={t('Add survey')} onClick={() => this.newSurvey()} />
-      )
+      if (isPanelSurveyFolder) {
+        primaryButton = (
+          <RepeatButton text={t('Repeat survey')} disabled={!this.isPanelSurveyRepeatable()} onClick={() => console.log('--------Repeat!!!')} />
+        )
+      } else {
+        primaryButton = (
+          <AddButton text={t('Add survey')} onClick={() => this.newSurvey()} />
+        )
+      }
+    }
+
+    const emptyFolder = surveys && surveys.length == 0
+    if (isPanelSurveyFolder && emptyFolder) {
+      throw new Error(t('Empty panel survey'))
+    }
+
+    let hint = null
+    if (isPanelSurveyFolder) {
+      hint = <div className='repeat-survey row'>
+        <div className='col s12 hint'>
+          {
+            this.isPanelSurveyRepeatable()
+            ? t('The last occurence of the panel survey is complete, you may follow up with a new survey sent to a subset of the respondents of this panel survey')
+            : t("The last occurence of the panel survey isn't complete yet. After that, you may follow up with a new survey sent to a subset of the respondents of this panel survey")
+          }
+        </div>
+      </div>
     }
 
     return (
       <div className='folder-show'>
-        {addButton}
+        {primaryButton}
         {folder}
-        { (surveys && surveys.length == 0)
+        { emptyFolder
         ? <EmptyPage icon='assignment_turned_in' title={t('You have no surveys in this folder')} onClick={(e) => this.newSurvey()} readOnly={readOnly} createText={t('Create one', {context: 'survey'})} />
         : (
           <div>
+            {hint}
             <div className='row'>
               { surveys && surveys.map(survey => {
                 return (
-                  <SurveyCard survey={survey} respondentsStats={respondentsStats[survey.id]} onDelete={this.deleteSurvey} key={survey.id} readOnly={readOnly} t={t} />
+                  <SurveyCard survey={survey} respondentsStats={respondentsStats[survey.id]} onDelete={this.deleteSurvey} key={survey.id} readOnly={readOnly} t={t} inPanelSurveyFolder={isPanelSurveyFolder} />
                 )
               }) }
             </div>
@@ -135,14 +176,38 @@ class FolderShow extends Component<any, any> {
   }
 }
 
+const panelSurveyName = (isPanelSurveyFolder, surveys, t) => {
+  if (!isPanelSurveyFolder || !surveys) return ''
+  const latestPanelSurveys = surveys.filter(survey => survey.latestPanelSurvey)
+
+  if (latestPanelSurveys.length == 1) {
+    return latestPanelSurveys[0].name
+  } else if (latestPanelSurveys.length == 0) {
+    throw new Error(t('No latest occurrence was found in the panel survey'))
+  } else {
+    throw new Error(t('Multiple latest occurrences were found in the same panel survey'))
+  }
+}
+
 const mapStateToProps = (state, ownProps) => {
-  const id = parseInt(ownProps.params.folderId)
+  const { params, t } = ownProps
+  const { projectId } = params
+
+  let folderId = params.folderId && parseInt(params.folderId)
+  let panelSurveyId = params.panelSurveyId && parseInt(params.panelSurveyId)
+  const isPanelSurveyFolder = !!panelSurveyId
+
+  if (!folderId && !panelSurveyId) throw new Error(t('Missing param: folderId or panelSurveyId'))
 
   // Right now we show all surveys: they are not paginated nor sorted
   let surveys = state.surveys.items
 
   if (surveys) {
-    surveys = values(surveys).filter(s => s.folderId == id)
+    if (isPanelSurveyFolder) {
+      surveys = values(surveys).filter(s => s.panelSurveyOf == panelSurveyId)
+    } else {
+      surveys = values(surveys).filter(s => s.folderId == folderId)
+    }
   }
   const totalCount = surveys ? surveys.length : 0
   const pageIndex = state.surveys.page.index
@@ -156,11 +221,13 @@ const mapStateToProps = (state, ownProps) => {
   }
   const startIndex = Math.min(totalCount, pageIndex + 1)
   const endIndex = Math.min(pageIndex + pageSize, totalCount)
-  const name = state.folder.folders && state.folder.folders[id].name
+  const name = isPanelSurveyFolder
+  ? panelSurveyName(isPanelSurveyFolder, surveys, t)
+  : state.folder.folders && state.folder.folders[folderId].name
 
   return {
-    projectId: ownProps.params.projectId,
-    id: id,
+    projectId: projectId,
+    folderId,
     name: name,
     project: state.project.data,
     surveys,
@@ -169,7 +236,8 @@ const mapStateToProps = (state, ownProps) => {
     endIndex,
     totalCount,
     loadingSurveys: state.surveys.fetching,
-    loadingFolder: state.folder.loading
+    loadingFolder: isPanelSurveyFolder ? false : state.folder.loading,
+    isPanelSurveyFolder
   }
 }
 

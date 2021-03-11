@@ -29,6 +29,13 @@
   background-color: transparent !important;
 }
 
+.primary-button {
+  &[disabled] i {
+    color: $off-black !important;
+    background-color: $input-disabled-color;
+  }
+}
+
 .folder-header {
   @extend .black-text;
 

@@ -56,7 +56,9 @@ defmodule Ask.SurveyView do
       folder_id: survey.folder_id,
       first_window_started_at: first_window_started_at(survey),
       is_panel_survey: Survey.panel_survey?(survey),
-      latest_panel_survey: survey.latest_panel_survey
+      latest_panel_survey: survey.latest_panel_survey,
+      panel_survey_of: survey.panel_survey_of,
+      is_repeatable: Survey.repeatable?(survey)
     }
   end
   def render("survey_detail.json", %{survey: survey}) do
