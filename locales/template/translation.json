@@ -121,7 +121,7 @@
   "Delete survey": "",
   "Delete the respondents list": "",
   "Deleted <i>{{surveyName}}</i> survey": "",
-  "Deleted folder <i>{{folderName}}": "",
+  "Deleted folder <i>{{folderName}}</i>": "",
   "Deleted invitation for {{collaboratorEmail}} as {{role}}": "",
   "Deleted questionnaire <i>{{questionnaireName}}</i>": "",
   "Deleted {{role}} membership for {{collaboratorName}}": "",
