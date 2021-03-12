@@ -188,7 +188,8 @@ defmodule Ask.SurveyControllerTest do
         "is_panel_survey" => false,
         "is_repeatable" => false,
         "incentives_enabled" => true,
-        "first_window_started_at" => nil
+        "first_window_started_at" => nil,
+        "panel_survey_of" => nil
       }
     end
 
@@ -288,7 +289,8 @@ defmodule Ask.SurveyControllerTest do
         "is_panel_survey" => false,
         "is_repeatable" => false,
         "incentives_enabled" => true,
-        "first_window_started_at" => nil
+        "first_window_started_at" => nil,
+        "panel_survey_of" => nil
       }
     end
 
@@ -362,7 +364,8 @@ defmodule Ask.SurveyControllerTest do
         "is_panel_survey" => false,
         "is_repeatable" => false,
         "incentives_enabled" => true,
-        "first_window_started_at" => nil
+        "first_window_started_at" => nil,
+        "panel_survey_of" => nil
       }
     end
 
@@ -428,7 +431,8 @@ defmodule Ask.SurveyControllerTest do
         "is_panel_survey" => false,
         "is_repeatable" => false,
         "incentives_enabled" => true,
-        "first_window_started_at" => nil
+        "first_window_started_at" => nil,
+        "panel_survey_of" => nil
       }
     end
 

@@ -100,7 +100,8 @@ defmodule Ask.SurveyView do
       is_panel_survey: Survey.panel_survey?(survey),
       is_repeatable: Survey.repeatable?(survey),
       incentives_enabled: survey.incentives_enabled,
-      first_window_started_at: first_window_started_at(survey)
+      first_window_started_at: first_window_started_at(survey),
+      panel_survey_of: survey.panel_survey_of
     }
 
     if Ask.Survey.launched?(survey) || survey.simulation do

@@ -13,6 +13,7 @@ import SurveyCard from '../surveys/SurveyCard'
 import * as routes from '../../routes'
 import { translate, Trans } from 'react-i18next'
 import { RepeatButton } from '../ui/RepeatButton'
+import { surveyFolder } from '../layout/HeaderContainer'
 
 class FolderShow extends Component<any, any> {
   state = {}
@@ -32,7 +33,8 @@ class FolderShow extends Component<any, any> {
     name: PropTypes.string,
     loadingFolder: PropTypes.bool,
     loadingSurveys: PropTypes.bool,
-    isPanelSurveyFolder: PropTypes.bool
+    isPanelSurveyFolder: PropTypes.bool,
+    surveyFolder: PropTypes.object
   }
 
   componentWillMount() {
@@ -103,8 +105,9 @@ class FolderShow extends Component<any, any> {
   }
 
   render() {
-    const { loadingFolder, loadingSurveys, surveys, respondentsStats, project, startIndex, endIndex, totalCount, t, name, projectId, isPanelSurveyFolder } = this.props
-    const folder = name ? (<Link to={routes.project(projectId)} className='folder-header'><i className='material-icons black-text'>arrow_back</i>{name}</Link>) : null
+    const { loadingFolder, loadingSurveys, surveys, respondentsStats, project, startIndex, endIndex, totalCount, t, name, projectId, isPanelSurveyFolder, surveyFolder } = this.props
+    const to = surveyFolder ? routes.folder(projectId, surveyFolder.id) : routes.project(projectId)
+    const folder = name ? (<Link to={to} className='folder-header'><i className='material-icons black-text'>arrow_back</i>{name}</Link>) : null
     if ((!surveys && loadingSurveys)) {
       return (
         <div className='folder-show'>{folder}{t('Loading surveys...')}</div>
@@ -221,6 +224,7 @@ const mapStateToProps = (state, ownProps) => {
   }
   const startIndex = Math.min(totalCount, pageIndex + 1)
   const endIndex = Math.min(pageIndex + pageSize, totalCount)
+  const folders = state.folder && state.folder.folders
   const name = isPanelSurveyFolder
   ? panelSurveyName(isPanelSurveyFolder, surveys, t)
   : state.folder.folders && state.folder.folders[folderId].name
@@ -237,7 +241,8 @@ const mapStateToProps = (state, ownProps) => {
     totalCount,
     loadingSurveys: state.surveys.fetching,
     loadingFolder: isPanelSurveyFolder ? false : state.folder.loading,
-    isPanelSurveyFolder
+    isPanelSurveyFolder,
+    surveyFolder: surveyFolder(null, state.surveys.items, folders, panelSurveyId)
   }
 }
 

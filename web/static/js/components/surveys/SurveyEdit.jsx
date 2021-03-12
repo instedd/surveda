@@ -2,6 +2,7 @@ import React, { PropTypes, Component } from 'react'
 import { connect } from 'react-redux'
 import { withRouter } from 'react-router'
 import * as actions from '../../actions/survey'
+import * as surveysActions from '../../actions/surveys'
 import * as projectActions from '../../actions/project'
 import * as channelsActions from '../../actions/channels'
 import * as questionnairesActions from '../../actions/questionnaires'
@@ -41,6 +42,8 @@ class SurveyEdit extends Component {
 
       // Fetch folders for breadcrumb
       dispatch(folderActions.fetchFolders(projectId))
+      // Fetch surveys for breadcrumb
+      dispatch(surveysActions.fetchSurveys(projectId))
     }
   }
 
