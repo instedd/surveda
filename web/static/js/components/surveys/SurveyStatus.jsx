@@ -190,7 +190,7 @@ class SurveyStatus extends PureComponent {
     let component = (
       <span>
         <i className='material-icons survey-status'>{icon}</i>
-        { text}
+        { text }
       </span>
     )
 
