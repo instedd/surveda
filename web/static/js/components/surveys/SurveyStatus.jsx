@@ -10,6 +10,7 @@ import DownChannelsStatus from '../channels/DownChannelsStatus'
 import dateformat from 'dateformat'
 import map from 'lodash/map'
 import min from 'lodash/min'
+import i18n from '../../i18next'
 
 class SurveyStatus extends PureComponent {
   static propTypes = {
@@ -211,10 +212,9 @@ class SurveyStatus extends PureComponent {
 }
 
 const mapStateToProps = (state) => {
-  const { settings } = state.userSettings
   return {
     timezones: state.timezones,
-    language: settings && settings.language || 'en'
+    language: i18n.language
   }
 }
 
