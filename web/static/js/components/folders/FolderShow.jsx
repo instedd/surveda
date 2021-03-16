@@ -14,6 +14,7 @@ import * as routes from '../../routes'
 import { translate, Trans } from 'react-i18next'
 import { RepeatButton } from '../ui/RepeatButton'
 import { surveyFolder } from '../layout/HeaderContainer'
+import { repeatSurvey } from '../../api'
 
 class FolderShow extends Component<any, any> {
   state = {}
@@ -51,6 +52,19 @@ class FolderShow extends Component<any, any> {
       }
     })
     dispatch(folderActions.fetchFolders(projectId))
+  }
+
+  repeatSurvey() {
+    const { projectId, router, isPanelSurveyFolder, surveys, t } = this.props
+    const latest = latestPanelSurvey(isPanelSurveyFolder, surveys, t)
+    if (!latest) throw new Error(t('The latest panel survey is missing'))
+    if (!latest.isRepeatable) throw new Error(t('The latest panel survey isn\'t repeatable'))
+
+    repeatSurvey(projectId, latest.id)
+      .then(response => {
+        const survey = response.entities.surveys[response.result]
+        router.push(routes.surveyEdit(projectId, survey.id))
+      })
   }
 
   isPanelSurveyRepeatable() {
@@ -125,7 +139,7 @@ class FolderShow extends Component<any, any> {
     if (!readOnly) {
       if (isPanelSurveyFolder) {
         primaryButton = (
-          <RepeatButton text={t('Repeat survey')} disabled={!this.isPanelSurveyRepeatable()} onClick={() => console.log('--------Repeat!!!')} />
+          <RepeatButton text={t('Repeat survey')} disabled={!this.isPanelSurveyRepeatable()} onClick={() => this.repeatSurvey()} />
         )
       } else {
         primaryButton = (
@@ -179,17 +193,23 @@ class FolderShow extends Component<any, any> {
   }
 }
 
-const panelSurveyName = (isPanelSurveyFolder, surveys, t) => {
-  if (!isPanelSurveyFolder || !surveys) return ''
+const latestPanelSurvey = (isPanelSurveyFolder, surveys, t) => {
+  if (!isPanelSurveyFolder || !surveys) return null
   const latestPanelSurveys = surveys.filter(survey => survey.latestPanelSurvey)
 
   if (latestPanelSurveys.length == 1) {
-    return latestPanelSurveys[0].name
+    return latestPanelSurveys[0]
   } else if (latestPanelSurveys.length == 0) {
     throw new Error(t('No latest occurrence was found in the panel survey'))
   } else {
     throw new Error(t('Multiple latest occurrences were found in the same panel survey'))
   }
+}
+
+const panelSurveyName = (isPanelSurveyFolder, surveys, t) => {
+  const latest = latestPanelSurvey(isPanelSurveyFolder, surveys, t)
+  if (!latest) return ''
+  return latest.name
 }
 
 const mapStateToProps = (state, ownProps) => {
