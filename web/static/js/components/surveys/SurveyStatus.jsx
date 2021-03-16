@@ -81,7 +81,7 @@ class SurveyStatus extends PureComponent {
       hour: 'numeric'
     }
     let dateString = date.toLocaleDateString(language, options).replace(/[,]/g, '')
-    if (language == 'es') dateString = dateString.replace(/a\..m\./, 'AM')
+    if (language == 'es') dateString = dateString.replace(/a\..m\./, 'AM').replace(/p\..m\./, 'PM')
     const timezone = formatTimezone(survey.schedule.timezone)
     return t('Scheduled for {{dateString}} ({{timezone}})', {dateString, timezone})
   }
