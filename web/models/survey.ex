@@ -648,4 +648,16 @@ defmodule Ask.Survey do
   def delete_multi(survey) do
     Multi.delete(Multi.new, :survey, survey)
   end
+
+  def first_window_started_at(%{started_at: nil} = _survey), do: nil
+
+  def first_window_started_at(%{schedule: schedule, started_at: started_at} = _survey) do
+    calculated_started_at = Schedule.next_available_date_time(schedule, started_at)
+    actually_started? = DateTime.compare(calculated_started_at, SystemTime.time.now) in [:lt, :eq]
+    if actually_started? do
+      calculated_started_at
+    else
+      nil
+    end
+  end
 end

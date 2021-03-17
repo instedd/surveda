@@ -136,7 +136,7 @@ class SurveyStatus extends PureComponent {
             }
           } else {
             icon = 'play_arrow'
-            text = <TimeAgo date={survey.startedAt} live={false} formatter={this.bindedStartedFormatter} />
+            text = <TimeAgo date={survey.firstWindowStartedAt} live={false} formatter={this.bindedStartedFormatter} />
           }
           color = 'green-text'
           break

@@ -53,7 +53,8 @@ defmodule Ask.SurveyView do
       next_schedule_time: next_schedule_time(survey),
       updated_at: survey.updated_at,
       down_channels: survey.down_channels,
-      folder_id: survey.folder_id
+      folder_id: survey.folder_id,
+      first_window_started_at: Survey.first_window_started_at(survey) |> format_date
     }
   end
   def render("survey_detail.json", %{survey: survey}) do
@@ -94,7 +95,8 @@ defmodule Ask.SurveyView do
       # Preserve the UI from handling the panel survey implementation details
       is_panel_survey: Survey.panel_survey?(survey),
       is_repeatable: Survey.repeatable?(survey),
-      incentives_enabled: survey.incentives_enabled
+      incentives_enabled: survey.incentives_enabled,
+      first_window_started_at: Survey.first_window_started_at(survey) |> format_date
     }
 
     if Ask.Survey.launched?(survey) || survey.simulation do
