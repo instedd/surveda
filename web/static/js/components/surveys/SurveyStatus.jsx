@@ -4,7 +4,6 @@ import { connect } from 'react-redux'
 import { formatTimezone } from '../timezones/util'
 import { Tooltip } from '../ui'
 import { fetchTimezones } from '../../actions/timezones'
-import TimeAgo from 'react-timeago'
 import classNames from 'classnames/bind'
 import DownChannelsStatus from '../channels/DownChannelsStatus'
 import dateformat from 'dateformat'
@@ -22,58 +21,16 @@ class SurveyStatus extends PureComponent {
     language: PropTypes.string
   }
 
-  constructor(props) {
-    super(props)
-    this.bindedFormatter = this.formatter.bind(this)
-    this.bindedStartedFormatter = this.startedFormatter.bind(this)
-  }
-
   componentDidMount() {
     const { dispatch } = this.props
     dispatch(fetchTimezones())
   }
 
-  formatter(number, unit, suffix, date, defaultFormatter) {
-    const { t } = this.props
-
-    switch (unit) {
-      case 'second':
-        return t('{{count}} second from now', { count: number })
-      case 'minute':
-        return t('{{count}} minute from now', { count: number })
-      case 'hour':
-        return t('{{count}} hour from now', { count: number })
-      case 'day':
-        return t('{{count}} day from now', { count: number })
-      case 'week':
-        return t('{{count}} week from now', { count: number })
-      case 'month':
-        return t('{{count}} month from now', { count: number })
-      case 'year':
-        return t('{{count}} year from now', { count: number })
-    }
-  }
-
-  startedFormatter(number, unit, suffix, date, defaultFormatter) {
-    const { t, survey } = this.props
-
-    if (unit == 'second') {
-      return t('Started {{count}} second ago', { count: number })
-    } else if (unit == 'minute') {
-      return t('Started {{count}} minute ago', { count: number })
-    } else if (unit == 'hour') {
-      return t('Started {{count}} hour ago', { count: number })
-    } else if (unit == 'day') {
-      return t('Started {{count}} day ago', { count: number })
-    } else {
-      return t('Started {{date}}', { date: dateformat(survey.startedAt, 'mmm d, yyyy HH:MM (Z)') })
-    }
-  }
-
-  nextCallDescription(survey, date) {
-    const { timezones, t, language } = this.props
-    let options = {
-      timeZone: timezones.items[survey.schedule.timezone],
+  formatDate(date, timezone) {
+    const { timezones, language } = this.props
+    if (!timezones.items) return null
+    const options = {
+      timeZone: timezones.items[timezone],
       year: 'numeric',
       month: 'short',
       day: 'numeric',
@@ -82,8 +39,12 @@ class SurveyStatus extends PureComponent {
     }
     let dateString = date.toLocaleDateString(language, options).replace(/[,]/g, '')
     if (language == 'es') dateString = dateString.replace(/a\..m\./, 'AM').replace(/p\..m\./, 'PM')
-    const timezone = formatTimezone(survey.schedule.timezone)
-    return t('Scheduled for {{dateString}} ({{timezone}})', {dateString, timezone})
+    return `${dateString} ${formatTimezone(timezone)}`
+  }
+
+  nextCallDescription(survey, date) {
+    const dateString = this.formatDate(date, survey.schedule.timezone)
+    return this.props.t('Scheduled for {{dateString}}', {dateString})
   }
 
   surveyRanDescription(survey) {
@@ -97,8 +58,22 @@ class SurveyStatus extends PureComponent {
     return t('Ran from {{startDate}} to {{endDate}}', { startDate, endDate })
   }
 
+  startedOnMessage() {
+    const { survey, t } = this.props
+    if (!survey.firstWindowStartedAt) return ('Didn\'t start yet')
+    return t('Started on {{firstWindowStartedAt}}', {firstWindowStartedAt: this.formatDate(new Date(survey.firstWindowStartedAt), survey.schedule.timezone)})
+  }
+
+  endsOnMessage() {
+    const { survey, t } = this.props
+    const { endDate } = survey.schedule
+    if (!endDate) return null
+    const dateString = dateformat(endDate, 'yyyy-mm-dd')
+    return t('and will end on {{endDate}}', {endDate: dateString})
+  }
+
   render() {
-    const { survey, t, timezones } = this.props
+    const { survey, t, timezones, short } = this.props
 
     if (!survey) {
       return <p>{t('Loading...')}</p>
@@ -108,6 +83,7 @@ class SurveyStatus extends PureComponent {
     let color = 'black-text'
     let text = null
     let tooltip = null
+    let scheduleClarificationMessage = null
 
     switch (survey.state) {
       case 'not_ready':
@@ -121,6 +97,8 @@ class SurveyStatus extends PureComponent {
         break
 
       case 'running':
+        const endsOnMessage = this.endsOnMessage()
+        scheduleClarificationMessage = `${this.startedOnMessage()}${endsOnMessage ? ` ${endsOnMessage}` : ''}`
         if (survey.downChannels.length > 0) {
           icon = 'cancel'
           const timestamp = min(map(survey.downChannels, (channel) => channel.timestamp))
@@ -136,15 +114,19 @@ class SurveyStatus extends PureComponent {
             }
           } else {
             icon = 'play_arrow'
-            text = <TimeAgo date={survey.firstWindowStartedAt} live={false} formatter={this.bindedStartedFormatter} />
+            text = short ? this.startedOnMessage() : 'Running'
           }
           color = 'green-text'
           break
         }
 
       case 'terminated':
-        let description = this.surveyRanDescription(survey)
-        let status = state => t(`${state}. ${description}`, { context: 'survey' })
+        let status = state => t(`${state}${description}`, { context: 'survey' })
+        const surveyRanDescription = this.surveyRanDescription(survey)
+        // Don't include this description on the survey overview message.
+        // The same information is in the schedule clarification message.
+        let description = short ? `. ${surveyRanDescription}.` : ''
+        scheduleClarificationMessage = surveyRanDescription
         switch (survey.exitCode) {
           case 0:
             icon = 'done'
@@ -203,10 +185,23 @@ class SurveyStatus extends PureComponent {
       )
     }
 
+    const scheduleClarification = scheduleClarificationMessage && !short &&
+      (
+      <span>
+        <i className='material-icons survey-status'>event</i>
+        { scheduleClarificationMessage }
+      </span>
+    )
+
     return (
-      <p className={classNames(color, 'truncate', 'survey-status-container')}>
-        {component}
-      </p>
+      <div>
+        <p>
+          {scheduleClarification}
+        </p>
+        <p className={classNames(color, 'truncate', 'survey-status-container')}>
+          {component}
+        </p>
+      </div>
     )
   }
 }

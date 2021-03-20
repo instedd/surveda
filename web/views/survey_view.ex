@@ -54,7 +54,7 @@ defmodule Ask.SurveyView do
       updated_at: survey.updated_at,
       down_channels: survey.down_channels,
       folder_id: survey.folder_id,
-      first_window_started_at: Survey.first_window_started_at(survey) |> format_date
+      first_window_started_at: first_window_started_at(survey)
     }
   end
   def render("survey_detail.json", %{survey: survey}) do
@@ -96,7 +96,7 @@ defmodule Ask.SurveyView do
       is_panel_survey: Survey.panel_survey?(survey),
       is_repeatable: Survey.repeatable?(survey),
       incentives_enabled: survey.incentives_enabled,
-      first_window_started_at: Survey.first_window_started_at(survey) |> format_date
+      first_window_started_at: first_window_started_at(survey)
     }
 
     if Ask.Survey.launched?(survey) || survey.simulation do
@@ -143,6 +143,17 @@ defmodule Ask.SurveyView do
     else
       next_schedule_time
       |> Timex.Timezone.convert(survey.schedule.timezone)
+    end
+  end
+
+  defp first_window_started_at(survey) do
+    first_window_started_at = Survey.first_window_started_at(survey)
+    if (first_window_started_at) do
+      first_window_started_at
+      |> Timex.Timezone.convert(survey.schedule.timezone)
+      |> format_date
+    else
+      nil
     end
   end
 end
