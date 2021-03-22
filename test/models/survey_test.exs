@@ -3,9 +3,9 @@ defmodule Ask.SurveyTest do
   use Ask.TestHelpers
   use Ask.MockTime
 
-  alias Ask.Survey
+  alias Ask.{Survey, Schedule, TimeMock, Repo}
 
-  @valid_attrs %{name: "some content", schedule: Ask.Schedule.default()}
+  @valid_attrs %{name: "some content", schedule: Schedule.default()}
   @invalid_attrs %{}
 
   test "changeset with valid attributes" do
@@ -88,7 +88,7 @@ defmodule Ask.SurveyTest do
   @tag :time_mock
   test "changeset with terminated state has ended_at field set" do
     test_now = Timex.now
-    Ask.TimeMock
+    TimeMock
     |> expect(:now, fn () -> test_now end)
 
     changeset = Survey.changeset(%Survey{state: "terminated"})
@@ -126,10 +126,50 @@ defmodule Ask.SurveyTest do
     insert(:respondent_group_channel, channel: channel_1, respondent_group: group_1, mode: "sms")
     insert(:respondent_group_channel, channel: channel_2, respondent_group: group_1, mode: "sms")
     insert(:respondent_group_channel, channel: channel_3, respondent_group: group_2, mode: "sms")
-    survey = survey |> Ask.Repo.preload(respondent_groups: [respondent_group_channels: :channel])
+    survey = survey |> Repo.preload(respondent_groups: [respondent_group_channels: :channel])
 
     survey_channels_ids = Survey.survey_channels(survey) |> Enum.map(& &1.id)
 
     assert survey_channels_ids == [channel_1.id, channel_2.id, channel_3.id]
+  end
+
+  @tag :time_mock
+  describe "first_window_started_at" do
+    setup do
+      started_at = Timex.parse!("2021-02-22T09:00:00Z", "{ISO:Extended}")
+      mock_time(started_at)
+
+      {
+        :ok,
+        survey:
+          insert(:survey,
+            started_at: started_at,
+            schedule: %{Schedule.business_day() | start_date: ~D[2021-02-24]}
+          ),
+        first_time_window_beggining: Timex.parse!("2021-02-24T09:00:00Z", "{ISO:Extended}")
+      }
+    end
+
+    test "first_window_started_at is nil when the survey didn't actually started", %{
+      survey: survey,
+      first_time_window_beggining: first_time_window_beggining
+    } do
+      now = Timex.shift(first_time_window_beggining, hours: -1)
+      mock_time(now)
+
+      first_window_started_at = Survey.first_window_started_at(survey)
+
+      assert first_window_started_at == nil
+    end
+
+    test "first_window_started_at equals the first time window beginning when the survey actually started",
+         %{survey: survey, first_time_window_beggining: first_time_window_beggining} do
+      now = Timex.shift(first_time_window_beggining, hours: 1)
+      mock_time(now)
+
+      first_window_started_at = Survey.first_window_started_at(survey)
+
+      assert first_window_started_at == Timex.parse!("2021-02-24T09:00:00Z", "{ISO:Extended}")
+    end
   end
 end
