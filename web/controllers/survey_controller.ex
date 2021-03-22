@@ -1,7 +1,7 @@
 defmodule Ask.SurveyController do
   use Ask.Web, :api_controller
 
-  alias Ask.{Project, Folder, Survey, Questionnaire, Logger, RespondentGroup, Respondent, Channel, ShortLink, ActivityLog, RetriesHistogram}
+  alias Ask.{Project, Folder, Survey, Questionnaire, Logger, RespondentGroup, Respondent, Channel, ShortLink, ActivityLog, RetriesHistogram, NotAllowedError}
   alias Ask.Runtime.{Session, SurveyAction}
   alias Ecto.Multi
 
@@ -189,6 +189,11 @@ defmodule Ask.SurveyController do
       project
       |> assoc(:surveys)
       |> Repo.get!(survey_id)
+
+    # All occurences of the same panel survey should be always together in the same folder.
+    # This is why it's forbidden to change the folder of panel survey occurrences.
+    # This option is cheaper than the moving all the panel survey occurrences together.
+    if Survey.panel_survey?(survey), do: raise NotAllowedError
 
     old_folder_name = if survey.folder_id, do: Repo.get(Folder, survey.folder_id).name, else: "No Folder"
 

@@ -1309,6 +1309,17 @@ defmodule Ask.SurveyControllerTest do
       assert Repo.get(Survey, survey.id).folder_id == nil
     end
 
+    test "rejects set_folder_id if the survey is a panel survey", %{conn: conn, user: user} do
+      project = create_project_for_user(user)
+      survey = insert(:survey, project: project)
+      survey = Survey.changeset(survey, %{panel_survey_of: survey.id}) |> Repo.update!
+      folder = insert(:folder, project: project)
+
+      assert_error_sent :method_not_allowed, fn ->
+        post conn, project_survey_survey_path(conn, :set_folder_id, project, survey), folder_id: folder.id
+      end
+    end
+
     test "rejects set_folder_id if the survey doesn't belong to the current user", %{conn: conn} do
       survey = insert(:survey)
       folder = insert(:folder)

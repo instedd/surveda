@@ -93,9 +93,16 @@ class SurveyCard extends Component<any> {
               <DropdownItem className='dots'>
                 <i className='material-icons'>more_vert</i>
               </DropdownItem>
-              <DropdownItem>
-                <a onClick={e => this.moveSurvey()}><i className='material-icons'>folder</i>{t('Move to')}</a>
-              </DropdownItem>
+              {
+                // All occurences of the same panel survey should be always together in the same folder.
+                // This is why it's forbidden to change the folder of panel survey occurrences.
+                // This option is cheaper than the moving all the panel survey occurrences together.
+                survey.isPanelSurvey
+                ? null
+                : <DropdownItem>
+                  <a onClick={e => this.moveSurvey()}><i className='material-icons'>folder</i>{t('Move to')}</a>
+                </DropdownItem>
+              }
               {
                 survey.state == 'running'
                   ? null
