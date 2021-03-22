@@ -628,5 +628,6 @@
     "You should define at least two response options": "Vous devriez définir au moins deux options de réponse",
     "You won't be able to access this project anymore": "Vous ne pourrez plus accéder à ce projet",
     "You'll be able to manage surveys, questionnaires, content and collaborators": "Vous pourrez gérer les sondages, questionnaires, contenus et collaborateurs",
-    "You'll be able to see surveys, questionnaires, content and collaborators": "Vous pourrez voir les sondages, questionnaires, contenus et collaborateurs"
+    "You'll be able to see surveys, questionnaires, content and collaborators": "Vous pourrez voir les sondages, questionnaires, contenus et collaborateurs",
+    "Scheduled for {{dateString}} ({{timezone}})": "Planifié pour {{dateString}} ({{timezone}})"
 }

@@ -1,15 +1,16 @@
 import React, { PureComponent, PropTypes } from 'react'
-import { translate, Trans } from 'react-i18next'
+import { translate } from 'react-i18next'
 import { connect } from 'react-redux'
 import { formatTimezone } from '../timezones/util'
 import { Tooltip } from '../ui'
-import {fetchTimezones} from '../../actions/timezones'
+import { fetchTimezones } from '../../actions/timezones'
 import TimeAgo from 'react-timeago'
 import classNames from 'classnames/bind'
 import DownChannelsStatus from '../channels/DownChannelsStatus'
 import dateformat from 'dateformat'
 import map from 'lodash/map'
 import min from 'lodash/min'
+import i18n from '../../i18next'
 
 class SurveyStatus extends PureComponent {
   static propTypes = {
@@ -17,7 +18,8 @@ class SurveyStatus extends PureComponent {
     dispatch: PropTypes.func.isRequired,
     survey: PropTypes.object.isRequired,
     short: PropTypes.bool,
-    timezones: PropTypes.object
+    timezones: PropTypes.object,
+    language: PropTypes.string
   }
 
   constructor(props) {
@@ -36,19 +38,19 @@ class SurveyStatus extends PureComponent {
 
     switch (unit) {
       case 'second':
-        return t('{{count}} second from now', {count: number})
+        return t('{{count}} second from now', { count: number })
       case 'minute':
-        return t('{{count}} minute from now', {count: number})
+        return t('{{count}} minute from now', { count: number })
       case 'hour':
-        return t('{{count}} hour from now', {count: number})
+        return t('{{count}} hour from now', { count: number })
       case 'day':
-        return t('{{count}} day from now', {count: number})
+        return t('{{count}} day from now', { count: number })
       case 'week':
-        return t('{{count}} week from now', {count: number})
+        return t('{{count}} week from now', { count: number })
       case 'month':
-        return t('{{count}} month from now', {count: number})
+        return t('{{count}} month from now', { count: number })
       case 'year':
-        return t('{{count}} year from now', {count: number})
+        return t('{{count}} year from now', { count: number })
     }
   }
 
@@ -56,37 +58,32 @@ class SurveyStatus extends PureComponent {
     const { t, survey } = this.props
 
     if (unit == 'second') {
-      return t('Started {{count}} second ago', {count: number})
+      return t('Started {{count}} second ago', { count: number })
     } else if (unit == 'minute') {
-      return t('Started {{count}} minute ago', {count: number})
+      return t('Started {{count}} minute ago', { count: number })
     } else if (unit == 'hour') {
-      return t('Started {{count}} hour ago', {count: number})
+      return t('Started {{count}} hour ago', { count: number })
     } else if (unit == 'day') {
-      return t('Started {{count}} day ago', {count: number})
+      return t('Started {{count}} day ago', { count: number })
     } else {
-      return t('Started {{date}}', {date: dateformat(survey.startedAt, 'mmm d, yyyy HH:MM (Z)')})
+      return t('Started {{date}}', { date: dateformat(survey.startedAt, 'mmm d, yyyy HH:MM (Z)') })
     }
   }
 
   nextCallDescription(survey, date) {
-    const hour = this.hourDescription(survey, date)
-    if (this.props.short) {
-      return <Trans>Scheduled at {{hour}}</Trans>
-    } else {
-      return <Trans>Next contact <TimeAgo date={date} formatter={this.bindedFormatter} /> at {{hour}}</Trans>
-    }
-  }
-
-  hourDescription(survey, date) {
-    const { timezones } = this.props
-    let locale = Intl.DateTimeFormat().resolvedOptions().locale || 'en-US'
+    const { timezones, t, language } = this.props
     let options = {
       timeZone: timezones.items[survey.schedule.timezone],
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
       hour12: true,
       hour: 'numeric'
     }
-    let time = date.toLocaleTimeString(locale, options)
-    return `${time} (${formatTimezone(survey.schedule.timezone)})`
+    let dateString = date.toLocaleDateString(language, options).replace(/[,]/g, '')
+    if (language == 'es') dateString = dateString.replace(/a\..m\./, 'AM').replace(/p\..m\./, 'PM')
+    const timezone = formatTimezone(survey.schedule.timezone)
+    return t('Scheduled for {{dateString}} ({{timezone}})', {dateString, timezone})
   }
 
   surveyRanDescription(survey) {
@@ -95,9 +92,9 @@ class SurveyStatus extends PureComponent {
     let startDate = formatDate(survey.startedAt)
     let endDate = formatDate(survey.endedAt)
     if (startDate === endDate) {
-      return t('Ran only on {{startDate}}', {startDate})
+      return t('Ran only on {{startDate}}', { startDate })
     }
-    return t('Ran from {{startDate}} to {{endDate}}', {startDate, endDate})
+    return t('Ran from {{startDate}} to {{endDate}}', { startDate, endDate })
   }
 
   render() {
@@ -115,12 +112,12 @@ class SurveyStatus extends PureComponent {
     switch (survey.state) {
       case 'not_ready':
         icon = 'mode_edit'
-        text = t('Editing', {context: 'survey'})
+        text = t('Editing', { context: 'survey' })
         break
 
       case 'ready':
         icon = 'play_circle_outline'
-        text = t('Ready to launch', {context: 'survey'})
+        text = t('Ready to launch', { context: 'survey' })
         break
 
       case 'running':
@@ -147,7 +144,7 @@ class SurveyStatus extends PureComponent {
 
       case 'terminated':
         let description = this.surveyRanDescription(survey)
-        let status = state => t(`${state}. ${description}`, {context: 'survey'})
+        let status = state => t(`${state}. ${description}`, { context: 'survey' })
         switch (survey.exitCode) {
           case 0:
             icon = 'done'
@@ -172,14 +169,14 @@ class SurveyStatus extends PureComponent {
         switch (survey.exitCode) {
           case 1:
             icon = 'error'
-            text = t('Cancelling', {context: 'survey'})
+            text = t('Cancelling', { context: 'survey' })
             tooltip = survey.exitMessage
             break
 
           default:
             icon = 'error'
             color = 'text-error'
-            text = t('Failed', {context: 'survey'})
+            text = t('Failed', { context: 'survey' })
             tooltip = survey.exitMessage
             break
         }
@@ -188,7 +185,7 @@ class SurveyStatus extends PureComponent {
       default:
         icon = 'warning'
         color = 'text-error'
-        text = t('Unknown', {context: 'survey'})
+        text = t('Unknown', { context: 'survey' })
     }
 
     let component = (
@@ -216,7 +213,8 @@ class SurveyStatus extends PureComponent {
 
 const mapStateToProps = (state) => {
   return {
-    timezones: state.timezones
+    timezones: state.timezones,
+    language: i18n.language
   }
 }
 
