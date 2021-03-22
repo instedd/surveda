@@ -69,7 +69,7 @@ class SurveyStatus extends PureComponent {
     const { endDate } = survey.schedule
     if (!endDate) return null
     const dateString = dateformat(endDate, 'yyyy-mm-dd')
-    return t('and will end on {{endDate}}', {endDate: dateString})
+    return t('and will be canceled on {{endDate}}', {endDate: dateString})
   }
 
   render() {
