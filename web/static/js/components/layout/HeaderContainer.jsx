@@ -92,8 +92,6 @@ const mapStateToProps = (state, ownProps) => {
   const panelSurveyId = params.panelSurveyId && parseInt(params.panelSurveyId)
   const surveys = state.surveys.items
 
-  if (survey && survey.isPanelSurvey) {
-  }
   return {
     params: ownProps.params,
     project: state.project.data,
