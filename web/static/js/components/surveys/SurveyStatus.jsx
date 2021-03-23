@@ -60,7 +60,7 @@ class SurveyStatus extends PureComponent {
 
   startedOnMessage() {
     const { survey, t } = this.props
-    if (!survey.firstWindowStartedAt) return ('Didn\'t start yet')
+    if (!survey.firstWindowStartedAt) return (t('Didn\'t start yet'))
     return t('Started on {{firstWindowStartedAt}}', {firstWindowStartedAt: this.formatDate(new Date(survey.firstWindowStartedAt), survey.schedule.timezone)})
   }
 

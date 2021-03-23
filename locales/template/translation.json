@@ -127,6 +127,7 @@
   "Deleted {{role}} membership for {{collaboratorName}}": "",
   "Delimiter \"{{delimiter}}\" must be a number": "",
   "Delimiter {{delimiter}} must be greater than the previous one ({{previous}})": "",
+  "Didn't start yet": "",
   "Disabled <i>{{surveyName}}</i> {{reportType}} link": "",
   "Disabled because a CSV with respondent ids was uploaded": "",
   "Disposition": "",
