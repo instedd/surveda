@@ -132,44 +132,4 @@ defmodule Ask.SurveyTest do
 
     assert survey_channels_ids == [channel_1.id, channel_2.id, channel_3.id]
   end
-
-  @tag :time_mock
-  describe "first_window_started_at" do
-    setup do
-      started_at = Timex.parse!("2021-02-22T09:00:00Z", "{ISO:Extended}")
-      mock_time(started_at)
-
-      {
-        :ok,
-        survey:
-          insert(:survey,
-            started_at: started_at,
-            schedule: %{Schedule.business_day() | start_date: ~D[2021-02-24]}
-          ),
-        first_time_window_beggining: Timex.parse!("2021-02-24T09:00:00Z", "{ISO:Extended}")
-      }
-    end
-
-    test "first_window_started_at is nil when the survey didn't actually started", %{
-      survey: survey,
-      first_time_window_beggining: first_time_window_beggining
-    } do
-      now = Timex.shift(first_time_window_beggining, hours: -1)
-      mock_time(now)
-
-      first_window_started_at = Survey.first_window_started_at(survey)
-
-      assert first_window_started_at == nil
-    end
-
-    test "first_window_started_at equals the first time window beginning when the survey actually started",
-         %{survey: survey, first_time_window_beggining: first_time_window_beggining} do
-      now = Timex.shift(first_time_window_beggining, hours: 1)
-      mock_time(now)
-
-      first_window_started_at = Survey.first_window_started_at(survey)
-
-      assert first_window_started_at == Timex.parse!("2021-02-24T09:00:00Z", "{ISO:Extended}")
-    end
-  end
 end

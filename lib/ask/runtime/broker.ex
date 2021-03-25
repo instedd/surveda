@@ -115,6 +115,11 @@ defmodule Ask.Runtime.Broker do
       reached_quotas = reached_quotas?(survey)
       survey_completed = survey.cutoff <= completed || reached_quotas
       batch_size = batch_size(survey, by_state)
+      survey = if survey.first_window_started_at do
+        survey
+      else
+        Survey.changeset(survey, %{first_window_started_at: SystemTime.time.now}) |> Repo.update!
+      end
       Logger.info "Polling survey #{survey.id} (active=#{active}, pending=#{pending}, completed=#{completed}, batch_size=#{batch_size})"
       SurvedaMetrics.increment_counter_with_label(:surveda_survey_poll, [survey.id])
 

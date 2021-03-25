@@ -562,7 +562,10 @@ defmodule Ask.Runtime.BrokerTest do
   end
 
   describe "polling surveys" do
+    @tag :time_mock
     test "only polls surveys schedule for todays weekday" do
+      now = Timex.parse!("2021-03-25T09:00:00Z", "{ISO:Extended}")
+      mock_time(now)
       week_day = Timex.weekday(Timex.today)
       schedule1 = %Ask.DayOfWeek{
         mon: week_day == 1,
@@ -587,8 +590,13 @@ defmodule Ask.Runtime.BrokerTest do
 
       survey1 = Repo.get(Ask.Survey, survey1.id)
       survey2 = Repo.get(Ask.Survey, survey2.id)
+
       assert Ask.Survey.completed?(survey1)
       assert survey2.state == "running"
+
+      # Only polled surveys have first_window_started_at
+      assert survey1.first_window_started_at == now
+      refute survey2.first_window_started_at
     end
 
     test "stops the survey if end_date is today" do

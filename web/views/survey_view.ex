@@ -146,14 +146,13 @@ defmodule Ask.SurveyView do
     end
   end
 
-  defp first_window_started_at(survey) do
-    first_window_started_at = Survey.first_window_started_at(survey)
-    if (first_window_started_at) do
-      first_window_started_at
-      |> Timex.Timezone.convert(survey.schedule.timezone)
-      |> format_date
-    else
-      nil
-    end
+  defp first_window_started_at(%{first_window_started_at: nil}), do: nil
+
+  defp first_window_started_at(%{
+         first_window_started_at: first_window_started_at,
+         schedule: %{timezone: timezone}
+       }) do
+    Timex.Timezone.convert(first_window_started_at, timezone)
+    |> format_date
   end
 end
