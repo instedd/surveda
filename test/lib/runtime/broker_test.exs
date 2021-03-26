@@ -566,7 +566,7 @@ defmodule Ask.Runtime.BrokerTest do
     test "only polls surveys schedule for todays weekday" do
       now = Timex.parse!("2021-03-25T09:00:00Z", "{ISO:Extended}")
       mock_time(now)
-      week_day = Timex.weekday(Timex.today)
+      week_day = Timex.weekday(now)
       schedule1 = %Ask.DayOfWeek{
         mon: week_day == 1,
         tue: week_day == 2,
