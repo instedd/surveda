@@ -115,8 +115,16 @@ class SurveyStatus extends PureComponent {
           } else {
             icon = 'play_arrow'
             if (survey.firstWindowStartedAt) {
-              text = short ? this.startedOnMessage() : t('Running')
+              text = short
+              ? this.startedOnMessage()
+              // On the survey overview, the "started on" message is included in the
+              // scheduleClarification message, above the main message.
+              : t('Running')
             } else {
+              // When the survey will start immediately (there will be no distance between
+              // started_at and first_window_started_at) there is a little time window while
+              // the survey isn't active only because its first survey_poll didn't occur yet.
+              // During this time window we tell the user that the survey is starting.
               text = t('Starting')
             }
           }
@@ -127,9 +135,11 @@ class SurveyStatus extends PureComponent {
       case 'terminated':
         let status = state => t(`${state}${description}`, { context: 'survey' })
         const surveyRanDescription = this.surveyRanDescription(survey)
-        // Don't include this description on the survey overview message.
-        // The same information is in the schedule clarification message.
-        let description = short ? `. ${surveyRanDescription}.` : ''
+        let description = short
+          ? `. ${surveyRanDescription}.`
+          // Don't include this description on the survey overview message.
+          // The same information is in the schedule clarification message.
+          : ''
         scheduleClarificationMessage = surveyRanDescription
         switch (survey.exitCode) {
           case 0:
