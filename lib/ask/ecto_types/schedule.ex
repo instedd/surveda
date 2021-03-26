@@ -186,6 +186,10 @@ defmodule Ask.Schedule do
     Map.put(schedule, :start_date, nil)
   end
 
+  def remove_end_date(schedule) do
+    Map.put(schedule, :end_date, nil)
+  end
+
   def end_date_passed?(schedule, date_time \\ DateTime.utc_now())
 
   def end_date_passed?(%{end_date: nil} = _schedule, _date_time) do
