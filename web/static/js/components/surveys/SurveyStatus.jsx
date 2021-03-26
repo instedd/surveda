@@ -114,7 +114,11 @@ class SurveyStatus extends PureComponent {
             }
           } else {
             icon = 'play_arrow'
-            text = short ? this.startedOnMessage() : 'Running'
+            if (survey.firstWindowStartedAt) {
+              text = short ? this.startedOnMessage() : t('Running')
+            } else {
+              text = t('Starting')
+            }
           }
           color = 'green-text'
           break
