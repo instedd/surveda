@@ -56,7 +56,12 @@ defmodule Ask.Survey do
     field :cutoff, :integer
     field :count_partial_results, :boolean, default: false
     field :schedule, Schedule, default: Schedule.default()
+    # The moment when the survey changes to %{state: "running"} and the moment when the survey
+    # becomes actually active may differ because of its schedule configuration.
+    # started_at: the moment when the survey change to %{state: "running"}.
     field :started_at, Timex.Ecto.DateTime
+    # first_window_started_at: the moment when the survey becomes actually active for the first time.
+    field :first_window_started_at, Timex.Ecto.DateTime
     field :ended_at, Timex.Ecto.DateTime
     field :sms_retry_configuration, :string
     field :ivr_retry_configuration, :string
@@ -106,7 +111,7 @@ defmodule Ask.Survey do
   """
   def changeset(struct, params \\ %{}) do
     struct
-    |> cast(params, [:name, :description, :project_id, :folder_id, :mode, :state, :locked, :exit_code, :exit_message, :cutoff, :schedule, :sms_retry_configuration, :ivr_retry_configuration, :mobileweb_retry_configuration, :fallback_delay, :started_at, :quotas, :quota_vars, :comparisons, :count_partial_results, :simulation, :ended_at, :panel_survey_of, :latest_panel_survey, :incentives_enabled])
+    |> cast(params, [:name, :description, :project_id, :folder_id, :mode, :state, :locked, :exit_code, :exit_message, :cutoff, :schedule, :sms_retry_configuration, :ivr_retry_configuration, :mobileweb_retry_configuration, :fallback_delay, :started_at, :quotas, :quota_vars, :comparisons, :count_partial_results, :simulation, :ended_at, :panel_survey_of, :latest_panel_survey, :incentives_enabled, :first_window_started_at])
     |> set_floip_package_id
     |> validate_required([:project_id, :state, :schedule])
     |> foreign_key_constraint(:project_id)

@@ -1,5 +1,5 @@
 defmodule Ask.Runtime.SurveyAction do
-  alias Ask.{Survey, Logger, Repo, Questionnaire, ActivityLog, SurveyCanceller, Project}
+  alias Ask.{Survey, Logger, Repo, Questionnaire, ActivityLog, SurveyCanceller, Project, SystemTime}
   alias Ask.Runtime.PanelSurvey
   alias Ecto.Multi
 
@@ -105,7 +105,7 @@ defmodule Ask.Runtime.SurveyAction do
   end
 
   defp perform_start(survey, repetition?) do
-    changeset = Survey.changeset(survey, %{state: "running", started_at: Timex.now()})
+    changeset = Survey.changeset(survey, %{state: "running", started_at: SystemTime.time.now})
 
     case Repo.update(changeset) do
       {:ok, survey} ->

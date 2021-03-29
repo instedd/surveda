@@ -3,9 +3,9 @@ defmodule Ask.SurveyTest do
   use Ask.TestHelpers
   use Ask.MockTime
 
-  alias Ask.Survey
+  alias Ask.{Survey, Schedule, TimeMock, Repo}
 
-  @valid_attrs %{name: "some content", schedule: Ask.Schedule.default()}
+  @valid_attrs %{name: "some content", schedule: Schedule.default()}
   @invalid_attrs %{}
 
   test "changeset with valid attributes" do
@@ -88,7 +88,7 @@ defmodule Ask.SurveyTest do
   @tag :time_mock
   test "changeset with terminated state has ended_at field set" do
     test_now = Timex.now
-    Ask.TimeMock
+    TimeMock
     |> expect(:now, fn () -> test_now end)
 
     changeset = Survey.changeset(%Survey{state: "terminated"})
@@ -126,7 +126,7 @@ defmodule Ask.SurveyTest do
     insert(:respondent_group_channel, channel: channel_1, respondent_group: group_1, mode: "sms")
     insert(:respondent_group_channel, channel: channel_2, respondent_group: group_1, mode: "sms")
     insert(:respondent_group_channel, channel: channel_3, respondent_group: group_2, mode: "sms")
-    survey = survey |> Ask.Repo.preload(respondent_groups: [respondent_group_channels: :channel])
+    survey = survey |> Repo.preload(respondent_groups: [respondent_group_channels: :channel])
 
     survey_channels_ids = Survey.survey_channels(survey) |> Enum.map(& &1.id)
 
