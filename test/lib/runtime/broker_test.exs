@@ -561,6 +561,55 @@ defmodule Ask.Runtime.BrokerTest do
     end
   end
 
+  describe "first_window_started_at" do
+    setup do
+      now = Timex.parse!("2021-03-25T09:00:00Z", "{ISO:Extended}")
+      mock_time(now)
+      [survey, _, _, _, _] = create_running_survey_with_channel_and_respondent()
+      {:ok, now: now, survey: survey}
+    end
+
+    @tag :time_mock
+    test "isn't set before the 1st survey poll", %{survey: survey} do
+      refute survey.first_window_started_at
+    end
+
+    @tag :time_mock
+    test "properly sets on the 1st survey poll", %{now: now, survey: survey} do
+      Broker.handle_info(:poll, nil)
+
+      survey = Repo.get(Ask.Survey, survey.id)
+      assert survey.first_window_started_at == now
+    end
+
+    @tag :time_mock
+    test "doesn't change on the following survey polls", %{now: now, survey: survey} do
+      Broker.handle_info(:poll, nil)
+
+      time_passes(hours: 1)
+      Broker.handle_info(:poll, nil)
+
+      survey = Repo.get(Ask.Survey, survey.id)
+      # Time passed, so "now" isn't now here.
+      # "now" is the time of the first survey poll.
+      assert survey.first_window_started_at == now
+    end
+
+    @tag :time_mock
+    test "doesn't set if there's no survey poll", %{now: now} do
+      # Start date is set for tomorrow, so the survey isn't poll yet.
+      start_date = Timex.shift(now, days: 1) |> Timex.to_date()
+      schedule = %{Schedule.always() | start_date: start_date}
+      survey = insert(:survey, %{schedule: schedule, state: "running"})
+
+      Broker.handle_info(:poll, nil)
+
+      survey = Repo.get(Ask.Survey, survey.id)
+      refute survey.first_window_started_at
+    end
+
+  end
+
   describe "polling surveys" do
     @tag :time_mock
     test "only polls surveys schedule for todays weekday" do
