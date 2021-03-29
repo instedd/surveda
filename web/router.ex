@@ -74,6 +74,7 @@ defmodule Ask.Router do
           post "/set_name", FolderController, :set_name
           resources "/surveys", SurveyController, only: [:create]
         end
+        resources "/panel_surveys", PanelSurveyController, only: [:index, :show]
         delete "/memberships/remove", MembershipController, :remove, as: :membership_remove
         put "/memberships/update", MembershipController, :update, as: :membership_update
         resources "/channels", ChannelController, only: [:index]

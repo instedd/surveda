@@ -7,7 +7,8 @@ export type Store = {
   channel: Channel,
   channels: ChannelList,
   projects: ProjectList,
-  integrations: IndexedList<Integration>
+  integrations: IndexedList<Integration>,
+  panelSurvey: PanelSurvey
 };
 
 export type DataStore<T> = {

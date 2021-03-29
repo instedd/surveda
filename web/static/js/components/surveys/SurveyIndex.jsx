@@ -7,6 +7,7 @@ import * as actions from '../../actions/surveys'
 import * as surveyActions from '../../actions/survey'
 import * as projectActions from '../../actions/project'
 import * as folderActions from '../../actions/folder'
+import * as panelSurveysActions from '../../actions/panelSurveys'
 import {
   EmptyPage,
   ConfirmationModal,
@@ -40,7 +41,8 @@ class SurveyIndex extends Component<any, State> {
     startIndex: PropTypes.number.isRequired,
     endIndex: PropTypes.number.isRequired,
     totalCount: PropTypes.number.isRequired,
-    respondentsStats: PropTypes.object.isRequired
+    respondentsStats: PropTypes.object.isRequired,
+    panelSurveys: PropTypes.array
   }
 
   constructor(props) {
@@ -70,6 +72,7 @@ class SurveyIndex extends Component<any, State> {
     })
     dispatch(channelsActions.fetchChannels())
     dispatch(folderActions.fetchFolders(projectId))
+    dispatch(panelSurveysActions.fetchPanelSurveys(projectId))
   }
 
   newSurvey() {
@@ -126,7 +129,7 @@ class SurveyIndex extends Component<any, State> {
   }
 
   render() {
-    const { folders, loadingFolders, loadingSurveys, surveys, respondentsStats, project, startIndex, endIndex, totalCount, t } = this.props
+    const { folders, loadingFolders, loadingSurveys, surveys, respondentsStats, project, startIndex, endIndex, totalCount, t, panelSurveys } = this.props
     if ((!surveys && loadingSurveys) || (!folders && loadingFolders)) {
       return (
         <div>{t('Loading surveys...')}</div>
@@ -164,7 +167,7 @@ class SurveyIndex extends Component<any, State> {
             <div className='row'>
               { surveys && surveys.map(survey => {
                 return (
-                  <SurveyCard survey={survey} respondentsStats={respondentsStats[survey.id]} key={survey.id} readOnly={readOnly} t={t} />
+                  <SurveyCard survey={survey} respondentsStats={respondentsStats[survey.id]} key={survey.id} readOnly={readOnly} t={t} panelSurvey={panelSurveys.filter(ps => ps.latestPanelSurveyId == survey.id)[0]} />
                 )
               }) }
             </div>
@@ -209,6 +212,7 @@ const mapStateToProps = (state, ownProps) => {
     totalCount,
     loadingSurveys: state.surveys.fetching,
     loadingFolders: state.folder.loadingFetch,
+    panelSurveys: state.panelSurveys.items,
     folders: state.folder.folders && Object.values(state.folder.folders)
   }
 }

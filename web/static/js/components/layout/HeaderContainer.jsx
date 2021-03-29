@@ -16,11 +16,11 @@ class HeaderContainer extends Component {
   }
 
   render() {
-    const { tabs, logout, user, project, surveyFolder, panelSurveyFolder } = this.props
-    const { projectId, surveyId, questionnaireId, folderId, panelSurveyId } = this.props.params
+    const { tabs, logout, user, project, surveyFolder, panelSurvey } = this.props
+    const { projectId, surveyId, questionnaireId, folderId } = this.props.params
 
     let showProjectLink = true
-    if (!project || (!surveyId && !questionnaireId && !folderId && !panelSurveyId)) {
+    if (!project || (!surveyId && !questionnaireId && !folderId && !panelSurvey)) {
       showProjectLink = false
     }
 
@@ -35,7 +35,7 @@ class HeaderContainer extends Component {
     }
 
     return (
-      <Header tabs={tabs} logout={logout} user={user} showProjectLink={showProjectLink} showQuestionnairesLink={!!questionnaireId} project={project || null} surveyFolder={surveyFolder} panelSurveyFolder={panelSurveyFolder} />
+      <Header tabs={tabs} logout={logout} user={user} showProjectLink={showProjectLink} showQuestionnairesLink={!!questionnaireId} project={project || null} surveyFolder={surveyFolder} panelSurvey={panelSurvey} />
     )
   }
 }
@@ -48,55 +48,33 @@ HeaderContainer.propTypes = {
   logout: PropTypes.func.isRequired,
   user: PropTypes.string.isRequired,
   surveyFolder: PropTypes.object,
-  panelSurveyFolder: PropTypes.object
-}
-
-export const surveyFolder = (surveyId, surveys, folders, panelSurveyId) => {
-  if (!surveys || !folders) return null
-  let survey = null
-  if (panelSurveyId) {
-    survey = surveys[panelSurveyId]
-  } else {
-    survey = surveys[surveyId]
-  }
-  if (!survey) return null
-  const folder = folders[survey.folderId]
-  if (!folder) return null
-
-  return folder
-}
-
-const panelSurveyFolder = (survey, surveys, t) => {
-  if (!survey || !survey.isPanelSurvey || !surveys) return null
-  const firstPanelSurvey = surveys[survey.panelSurveyOf]
-  const latestPanelSurvey = Object.values(surveys).filter(s => s.latestPanelSurvey && s.panelSurveyOf == survey.panelSurveyOf)[0]
-  if (!firstPanelSurvey || !latestPanelSurvey) {
-    // This isn't an normally expected state, but it's present the first time a survey is marked as repeatable.
-    // We don't throw an error here because of this corner case.
-    return null
-  }
-  // All the panel survey occurences are linked by the first occurrence via their `panelSurveyOf` property.
-  // But the latest occurrence is the current (or at least the more recent) so its name is used to represent the panel survey as a folder.
-  return {
-    name: latestPanelSurvey.name,
-    id: firstPanelSurvey.id,
-    projectId: firstPanelSurvey.projectId
-  }
+  panelSurvey: PropTypes.object
 }
 
 const mapStateToProps = (state, ownProps) => {
-  const { params, t } = ownProps
+  const { params } = ownProps
   const folders = state.folder && state.folder.folders
   const survey = state.survey && state.survey.data
-  const surveyId = survey && survey.id
   const panelSurveyId = params.panelSurveyId && parseInt(params.panelSurveyId)
-  const surveys = state.surveys.items
+
+  let panelSurvey = null
+  if (state.panelSurvey && state.panelSurvey.id == panelSurveyId) {
+    panelSurvey = state.panelSurvey
+  }
+
+  let folder = null
+  if (folders) {
+    let folderId = null
+    if (panelSurvey) folderId = panelSurvey.folderId
+    else if (survey) folderId = survey.folderId
+    if (folders[folderId]) folder = folders[folderId]
+  }
 
   return {
     params: ownProps.params,
     project: state.project.data,
-    surveyFolder: (params.panelSurveyId || params.surveyId) && surveyFolder(surveyId, surveys, folders, panelSurveyId),
-    panelSurveyFolder: params.surveyId && panelSurveyFolder(survey, surveys, t)
+    surveyFolder: folder,
+    panelSurvey: panelSurvey
   }
 }
 

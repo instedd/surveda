@@ -5,7 +5,7 @@ import { UntitledIfEmpty, Dropdown, DropdownItem, DropdownDivider } from '../ui'
 import * as routes from '../../routes'
 import { translate } from 'react-i18next'
 
-const Header = ({ tabs, logout, user, project, surveyFolder, showProjectLink, showQuestionnairesLink, t, panelSurveyFolder }) => {
+const Header = ({ tabs, logout, user, project, surveyFolder, showProjectLink, showQuestionnairesLink, t, panelSurvey }) => {
   let projectLink, questionnairesLink
 
   if (showProjectLink) {
@@ -34,10 +34,10 @@ const Header = ({ tabs, logout, user, project, surveyFolder, showProjectLink, sh
     )
     : null
 
-  const panelSurveyFolderLink = panelSurveyFolder
+  const panelSurveyLink = panelSurvey
     ? (
       <li className='breadcrumb-item'>
-        <Link to={routes.panelSurveyFolder(panelSurveyFolder.projectId, panelSurveyFolder.id)} className=''>{panelSurveyFolder.name}</Link>
+        <Link to={routes.panelSurvey(panelSurvey.projectId, panelSurvey.id)} className=''>{panelSurvey.name}</Link>
       </li>
     )
     : null
@@ -55,7 +55,7 @@ const Header = ({ tabs, logout, user, project, surveyFolder, showProjectLink, sh
                 { projectLink }
                 { questionnairesLink }
                 { surveyFolderLink }
-                { panelSurveyFolderLink }
+                { panelSurveyLink }
                 <li className='channels-tab'>
                   <Link to={routes.channels}>{t('Channels')}</Link>
                 </li>
@@ -95,7 +95,7 @@ Header.propTypes = {
   surveyFolder: PropTypes.object,
   showProjectLink: PropTypes.bool,
   showQuestionnairesLink: PropTypes.bool,
-  panelSurveyFolder: PropTypes.object
+  panelSurvey: PropTypes.object
 }
 
 export default translate()(Header)

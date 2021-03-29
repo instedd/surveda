@@ -26,6 +26,8 @@ import integrations from './integrations'
 import folder from './folder'
 import surveyStats from './surveyStats'
 import surveyRetriesHistograms from './surveyRetriesHistograms'
+import panelSurveys from './panelSurveys'
+import panelSurvey from './panelSurvey'
 
 export default combineReducers({
   activities,
@@ -54,5 +56,7 @@ export default combineReducers({
   integrations,
   folder,
   surveyStats,
-  surveyRetriesHistograms
+  surveyRetriesHistograms,
+  panelSurveys,
+  panelSurvey
 })

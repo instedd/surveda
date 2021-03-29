@@ -170,6 +170,10 @@ export const fetchSurvey = (projectId, id) => {
   return apiFetchJSON(`projects/${projectId}/surveys/${id}`, surveySchema)
 }
 
+export const fetchPanelSurvey = (projectId, id) => {
+  return apiFetchJSON(`projects/${projectId}/panel_surveys/${id}`)
+}
+
 export const createProject = (project) => {
   return apiPostJSON('projects', projectSchema, { project })
 }
@@ -394,6 +398,10 @@ export const removeCollaborator = (projectId, collaboratorEmail) => {
 
 export const updateCollaboratorLevel = (projectId, collaboratorEmail, newLevel) => {
   return apiPutJSON(`projects/${projectId}/memberships/update`, {}, { email: collaboratorEmail, level: newLevel })
+}
+
+export const fetchPanelSurveys = (projectId) => {
+  return apiFetchJSON(`projects/${projectId}/panel_surveys`)
 }
 
 export const fetchActivities = (projectId, pageSize, pageNumber, sortBy, sortAsc) => {

@@ -4,7 +4,6 @@ import { translate, Trans } from 'react-i18next'
 import { Link } from 'react-router'
 import * as routes from '../../routes'
 import * as surveyActions from '../../actions/survey'
-import { connect } from 'react-redux'
 
 import { Card, UntitledIfEmpty, Dropdown, DropdownItem, ConfirmationModal } from '../ui'
 import RespondentsChart from '../respondents/RespondentsChart'
@@ -19,7 +18,8 @@ class SurveyCard extends Component<any> {
     survey: Survey,
     onDelete: (survey: Survey) => void,
     readOnly: boolean,
-    inPanelSurveyFolder: boolean
+    inPanelSurveyFolder: boolean,
+    panelSurvey: ?Object
   };
 
   constructor(props) {
@@ -66,7 +66,7 @@ class SurveyCard extends Component<any> {
   }
 
   render() {
-    const { survey, respondentsStats, readOnly, t, inPanelSurveyFolder } = this.props
+    const { survey, respondentsStats, readOnly, t, inPanelSurveyFolder, panelSurvey } = this.props
 
     let cumulativePercentages = respondentsStats ? (respondentsStats['cumulativePercentages'] || {}) : {}
     let completionPercentage = respondentsStats ? (respondentsStats['completionPercentage'] || 0) : 0
@@ -75,13 +75,15 @@ class SurveyCard extends Component<any> {
       {survey.description}
     </div>
 
-    const hidePanelSurvey = !inPanelSurveyFolder && survey.isPanelSurvey && !survey.latestPanelSurvey
-    if (hidePanelSurvey) return null
-    const showPanelSurveyAsFolder = !inPanelSurveyFolder && survey.latestPanelSurvey
+    const hideSurveyCard = !inPanelSurveyFolder && survey.isPanelSurvey && !panelSurvey
+    if (hideSurveyCard) return null
 
-    const redirectTo = showPanelSurveyAsFolder
-    ? routes.panelSurveyFolder(survey.projectId, survey.panelSurveyOf)
+    const redirectTo = panelSurvey
+    ? routes.panelSurvey(panelSurvey.projectId, panelSurvey.id)
     : routes.showOrEditSurvey(survey)
+
+    const name = panelSurvey ? panelSurvey.name : survey.name
+
     const surveyCard = <div className='survey-card'>
       <Card>
         <div className='card-content'>
@@ -117,8 +119,8 @@ class SurveyCard extends Component<any> {
             <RespondentsChart cumulativePercentages={cumulativePercentages} />
           </div>
           <div className='card-status'>
-            <Link className='card-title black-text truncate' title={survey.name} to={redirectTo}>
-              <UntitledIfEmpty text={survey.name} emptyText={t('Untitled survey')} />
+            <Link className='card-title black-text truncate' title={name} to={redirectTo}>
+              <UntitledIfEmpty text={name} emptyText={t('Untitled survey')} />
             </Link>
             <Link to={redirectTo}>
               {description}
@@ -132,7 +134,7 @@ class SurveyCard extends Component<any> {
     return (
       <div className='col s12 m6 l4'>
         {
-          showPanelSurveyAsFolder
+          panelSurvey
           ? <div className='panel-survey-card-0'>
             <div className='panel-survey-card-1'>
               <div className='panel-survey-card-2'>
@@ -149,6 +151,4 @@ class SurveyCard extends Component<any> {
   }
 }
 
-const mapStateToProps = (state, ownProps) => ownProps
-
-export default translate()(connect(mapStateToProps)(SurveyCard))
+export default translate()(SurveyCard)

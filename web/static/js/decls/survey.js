@@ -40,6 +40,15 @@ export type Survey = {
   incentivesEnabled: boolean
 };
 
+export type PanelSurvey = {
+  id: number,
+  name: string,
+  folderId: number,
+  projectId: number,
+  isRepeatable: boolean,
+  latestPanelSurveyId: number
+}
+
 export type Link = {
   name: string,
   url: string

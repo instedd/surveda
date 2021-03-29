@@ -99,7 +99,7 @@ export const root = '/'
 export const projects = '/projects'
 export const project = (id) => `${projects}/${id}`
 export const folder = (projectId, folderId) => `${project(projectId)}/folders/${folderId}`
-export const panelSurveyFolder = (projectId, panelSurveyId) => `${project(projectId)}/folders/panel/${panelSurveyId}`
+export const panelSurvey = (projectId, panelSurveyId) => `${project(projectId)}/panelSurveys/${panelSurveyId}`
 export const surveyIndex = (projectId) => `${project(projectId)}/surveys`
 export const survey = (projectId, surveyId) => `${surveyIndex(projectId)}/${surveyId}`
 export const surveySimulation = (projectId, surveyId, mode) => `${surveyIndex(projectId)}/${surveyId}/simulation/${mode}`
