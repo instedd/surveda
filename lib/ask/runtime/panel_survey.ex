@@ -11,6 +11,11 @@ defmodule Ask.Runtime.PanelSurvey do
       survey
       |> Repo.preload([:project])
 
+    schedule =
+      survey.schedule
+      |> Schedule.remove_start_date()
+      |> Schedule.remove_end_date()
+
     new_ocurrence = %{
       # basic settings
       project_id: survey.project_id,
@@ -25,7 +30,7 @@ defmodule Ask.Runtime.PanelSurvey do
       # advanced settings
       cutoff: survey.cutoff,
       count_partial_results: survey.count_partial_results,
-      schedule: Schedule.remove_start_date(survey.schedule),
+      schedule: schedule,
       sms_retry_configuration: survey.sms_retry_configuration,
       ivr_retry_configuration: survey.ivr_retry_configuration,
       mobileweb_retry_configuration: survey.mobileweb_retry_configuration,
