@@ -42,7 +42,7 @@ export default (
       <Route path=':projectId' title={ProjectTitle}>
         <IndexRedirect to='surveys' />
         <Route path='folders/:folderId' components={{ body: FolderShow, tabs: ProjectTabs }} />
-        <Route path='folders/panel/:panelSurveyId' components={{ body: FolderShow, tabs: ProjectTabs }} />
+        <Route path='panelSurveys/:panelSurveyId' components={{ body: FolderShow, tabs: ProjectTabs }} />
 
         <Route path='surveys'>
           <IndexRoute components={{ body: SurveyIndex, tabs: ProjectTabs }} />
