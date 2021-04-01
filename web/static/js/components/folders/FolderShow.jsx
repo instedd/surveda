@@ -164,7 +164,7 @@ class FolderShow extends Component<any, any> {
             <div className='row'>
               { surveys && surveys.map(survey => {
                 return (
-                  <SurveyCard survey={survey} respondentsStats={respondentsStats[survey.id]} onDelete={this.deleteSurvey} key={survey.id} readOnly={readOnly} t={t} inPanelSurveyFolder={!!panelSurvey} />
+                  <SurveyCard survey={survey} respondentsStats={respondentsStats[survey.id]} onDelete={this.deleteSurvey} key={survey.id} readOnly={readOnly} t={t} panelSurveyId={panelSurvey.id} />
                 )
               }) }
             </div>

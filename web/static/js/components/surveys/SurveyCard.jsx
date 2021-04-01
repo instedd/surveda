@@ -18,7 +18,7 @@ class SurveyCard extends Component<any> {
     survey: Survey,
     onDelete: (survey: Survey) => void,
     readOnly: boolean,
-    panelSurvey: ?Object
+    panelSurveyId: ?number
   };
 
   constructor(props) {
@@ -64,8 +64,20 @@ class SurveyCard extends Component<any> {
     })
   }
 
+  deletable(survey) {
+    // Running surveys aren't deletable
+    if (survey.state == 'running') return false
+
+    // There isn't a way of deleting the whole panel survey yet
+    if (survey.panelSurvey) return false
+
+    // There isn't a way of deleting the first occurrence of a panel survey yet
+    if (survey.id == this.props.panelSurveyId) return false
+  }
+
   render() {
-    const { survey, respondentsStats, readOnly, t, panelSurvey } = this.props
+    const { survey, respondentsStats, readOnly, t } = this.props
+    const { panelSurvey } = survey
 
     let cumulativePercentages = respondentsStats ? (respondentsStats['cumulativePercentages'] || {}) : {}
     let completionPercentage = respondentsStats ? (respondentsStats['completionPercentage'] || 0) : 0
@@ -102,11 +114,11 @@ class SurveyCard extends Component<any> {
                 </DropdownItem>
               }
               {
-                survey.state == 'running'
-                  ? null
-                  : <DropdownItem>
+                this.deletable(survey)
+                  ? <DropdownItem>
                     <a onClick={e => this.deleteSurvey()}><i className='material-icons'>delete</i>{t('Delete')}</a>
                   </DropdownItem>
+                  : null
               }
             </Dropdown>
             ) }
