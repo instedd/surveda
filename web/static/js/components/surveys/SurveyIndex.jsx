@@ -179,21 +179,21 @@ class SurveyIndex extends Component<any, State> {
   }
 }
 
-const surveysFromState = (state, includePanelSurveys = false) => {
+const surveysFromState = (state, folderId, includePanelSurveys = false) => {
   const { items } = state.surveys
   if (!items) return null
   return values(items).filter(survey =>
-    !survey.folderId &&
+    survey.folderId == folderId &&
     (includePanelSurveys || !survey.isPanelSurvey)
   )
 }
 
-const panelSurveysFromState = state => {
-  const surveys = surveysFromState(state, true)
+const panelSurveysFromState = (state, folderId) => {
+  const surveys = surveysFromState(state, folderId, true)
   if (!surveys) return null
   const { items } = state.panelSurveys
   if (!items) return null
-  return values(items).filter(panelSurvey => !panelSurvey.folderId).map(panelSurvey => ({
+  return values(items).filter(panelSurvey => panelSurvey.folderId == folderId).map(panelSurvey => ({
     ...panelSurvey,
     latestSurvey: surveys.find(s => s.id == panelSurvey.latestSurveyId)
   }))
@@ -207,23 +207,47 @@ const mergePanelSurveysIntoSurveys = (surveys, panelSurveys) => {
   })).concat(surveys)
 }
 
-const mapStateToProps = (state, ownProps) => {
-  let surveys = surveysFromState(state)
-  const panelSurveys = panelSurveysFromState(state)
-  surveys = mergePanelSurveysIntoSurveys(surveys, panelSurveys)
+export const surveyIndexProps = (state: any, { panelSurveyId, folderId }: { panelSurveyId: ?number, folderId: ?number} = {
+  panelSurveyId: null,
+  folderId: null
+}) => {
+  // If panelSurveyId, list the surveys for the panel survey view.
+  // The panel survey view is the only one that shows every panel survey occurrence.
+  // Other views show each panel survey grouped in a single card.
+  let surveys = surveysFromState(state, folderId, !!panelSurveyId)
+  if (!panelSurveyId) {
+    surveys = mergePanelSurveysIntoSurveys(surveys, panelSurveysFromState(state, folderId))
+  }
   const totalCount = surveys ? surveys.length : 0
   const pageIndex = state.surveys.page.index
   const pageSize = state.surveys.page.size
 
   if (surveys) {
+    if (panelSurveyId) {
+      surveys = surveys.filter(s => s.panelSurveyOf == panelSurveyId)
+    }
+    if (folderId) {
+      surveys = surveys.filter(s => s.folderId == folderId)
+    }
+
     // Sort by updated at, descending
     surveys = surveys.sort((x, y) => y.updatedAt.localeCompare(x.updatedAt))
     // Show only the current page
-    surveys = values(surveys).slice(pageIndex, pageIndex + pageSize)
+    surveys = surveys.slice(pageIndex, pageIndex + pageSize)
   }
   const startIndex = Math.min(totalCount, pageIndex + 1)
   const endIndex = Math.min(pageIndex + pageSize, totalCount)
 
+  return {
+    surveys,
+    startIndex,
+    endIndex,
+    totalCount
+  }
+}
+
+const mapStateToProps = (state, ownProps) => {
+  const { surveys, startIndex, endIndex, totalCount } = surveyIndexProps(state)
   return {
     projectId: ownProps.params.projectId,
     project: state.project.data,

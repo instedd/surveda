@@ -172,7 +172,7 @@ export const fetchSurvey = (projectId, id) => {
 }
 
 export const fetchPanelSurvey = (projectId, id) => {
-  return apiFetchJSON(`projects/${projectId}/panel_surveys/${id}`)
+  return apiFetchJSON(`projects/${projectId}/panel_surveys/${id}`, panelSurveySchema)
 }
 
 export const createProject = (project) => {

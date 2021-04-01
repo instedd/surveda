@@ -2,7 +2,6 @@
 import React, { Component, PropTypes } from 'react'
 import { connect } from 'react-redux'
 import { withRouter, Link } from 'react-router'
-import values from 'lodash/values'
 import * as actions from '../../actions/surveys'
 import * as surveyActions from '../../actions/survey'
 import * as projectActions from '../../actions/project'
@@ -15,6 +14,7 @@ import * as routes from '../../routes'
 import { translate, Trans } from 'react-i18next'
 import { RepeatButton } from '../ui/RepeatButton'
 import { repeatSurvey } from '../../api'
+import { surveyIndexProps } from '../../components/surveys/SurveyIndex'
 
 class FolderShow extends Component<any, any> {
   state = {}
@@ -31,6 +31,7 @@ class FolderShow extends Component<any, any> {
     respondentsStats: PropTypes.object.isRequired,
     params: PropTypes.object,
     folderId: PropTypes.number,
+    panelSurveyId: PropTypes.number,
     name: PropTypes.string,
     loadingFolder: PropTypes.bool,
     loadingSurveys: PropTypes.bool,
@@ -39,7 +40,7 @@ class FolderShow extends Component<any, any> {
   }
 
   componentWillMount() {
-    const { dispatch, projectId, panelSurvey } = this.props
+    const { dispatch, projectId, panelSurvey, panelSurveyId } = this.props
 
     dispatch(projectActions.fetchProject(projectId))
 
@@ -52,8 +53,8 @@ class FolderShow extends Component<any, any> {
       }
     })
     dispatch(folderActions.fetchFolders(projectId))
-    if (panelSurvey) {
-      dispatch(panelSurveyActions.fetchPanelSurvey(panelSurvey.projectId, panelSurvey.id))
+    if (panelSurveyId && !panelSurvey) {
+      dispatch(panelSurveyActions.fetchPanelSurvey(projectId, panelSurveyId))
     }
   }
 
@@ -105,10 +106,15 @@ class FolderShow extends Component<any, any> {
   }
 
   render() {
-    const { loadingFolder, loadingSurveys, surveys, respondentsStats, project, startIndex, endIndex, totalCount, t, name, projectId, surveyFolder, panelSurvey } = this.props
+    const { loadingFolder, loadingSurveys, surveys, respondentsStats, project, startIndex, endIndex, totalCount, t, name, projectId, surveyFolder, panelSurvey, panelSurveyId } = this.props
     const to = surveyFolder ? routes.folder(projectId, surveyFolder.id) : routes.project(projectId)
     const folder = name ? (<Link to={to} className='folder-header'><i className='material-icons black-text'>arrow_back</i>{name}</Link>) : null
-    if ((!surveys && loadingSurveys)) {
+    if (panelSurveyId && !panelSurvey) {
+      return (
+        <div className='folder-show'>{folder}{t('Loading panel survey...')}</div>
+      )
+    }
+    if (!surveys && loadingSurveys) {
       return (
         <div className='folder-show'>{folder}{t('Loading surveys...')}</div>
       )
@@ -125,7 +131,7 @@ class FolderShow extends Component<any, any> {
     if (!readOnly) {
       if (panelSurvey) {
         primaryButton = (
-          <RepeatButton text={t('Repeat survey')} disabled={panelSurvey.isRepeatable} onClick={() => this.repeatSurvey()} />
+          <RepeatButton text={t('Repeat survey')} disabled={!panelSurvey.isRepeatable} onClick={() => this.repeatSurvey()} />
         )
       } else {
         primaryButton = (
@@ -164,7 +170,7 @@ class FolderShow extends Component<any, any> {
             <div className='row'>
               { surveys && surveys.map(survey => {
                 return (
-                  <SurveyCard survey={survey} respondentsStats={respondentsStats[survey.id]} onDelete={this.deleteSurvey} key={survey.id} readOnly={readOnly} t={t} panelSurveyId={panelSurvey.id} />
+                  <SurveyCard survey={survey} respondentsStats={respondentsStats[survey.id]} onDelete={this.deleteSurvey} key={survey.id} readOnly={readOnly} t={t} panelSurveyId={panelSurveyId} />
                 )
               }) }
             </div>
@@ -187,37 +193,20 @@ const mapStateToProps = (state, ownProps) => {
   const panelSurveyId = params.panelSurveyId && parseInt(params.panelSurveyId)
   if (!folderId && !panelSurveyId) throw new Error(t('Missing param: folderId or panelSurveyId'))
   let panelSurvey = null
-  if (state.panelSurvey && panelSurveyId == state.panelSurvey.id) {
-    panelSurvey = state.panelSurvey
+  if (state.panelSurvey.data && state.panelSurvey.data.id == panelSurveyId) {
+    panelSurvey = state.panelSurvey.data
   }
-  // Right now we show all surveys: they are not paginated nor sorted
-  let surveys = state.surveys.items
-
-  if (surveys) {
-    if (panelSurvey) {
-      surveys = values(surveys).filter(s => panelSurvey && s.panelSurveyOf == panelSurvey.id)
-    } else {
-      surveys = values(surveys).filter(s => s.folderId == folderId)
-    }
-  }
-  const totalCount = surveys ? surveys.length : 0
-  const pageIndex = state.surveys.page.index
-  const pageSize = state.surveys.page.size
-
-  if (surveys) {
-    // Sort by updated at, descending
-    surveys = surveys.sort((x, y) => y.updatedAt.localeCompare(x.updatedAt))
-    // Show only the current page
-    surveys = values(surveys).slice(pageIndex, pageIndex + pageSize)
-  }
-  const startIndex = Math.min(totalCount, pageIndex + 1)
-  const endIndex = Math.min(pageIndex + pageSize, totalCount)
+  const { surveys, startIndex, endIndex, totalCount } = surveyIndexProps(state, {
+    folderId: folderId || (panelSurvey && panelSurvey.folderId) || null,
+    panelSurveyId: panelSurveyId || null
+  })
   const folders = state.folder && state.folder.folders
   const surveyFolder = folders && folders[folderId]
 
   return {
     projectId: projectId,
     folderId,
+    panelSurveyId,
     project: state.project.data,
     surveys,
     respondentsStats: state.respondentsStats,
