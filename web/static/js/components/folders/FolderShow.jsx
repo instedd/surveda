@@ -60,7 +60,7 @@ class FolderShow extends Component<any, any> {
   repeatSurvey() {
     const { projectId, router, panelSurvey } = this.props
 
-    repeatSurvey(projectId, panelSurvey.latestPanelSurveyId)
+    repeatSurvey(projectId, panelSurvey.latestSurveyId)
       .then(response => {
         const survey = response.entities.surveys[response.result]
         router.push(routes.surveyEdit(projectId, survey.id))

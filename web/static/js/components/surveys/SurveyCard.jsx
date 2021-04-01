@@ -18,7 +18,6 @@ class SurveyCard extends Component<any> {
     survey: Survey,
     onDelete: (survey: Survey) => void,
     readOnly: boolean,
-    inPanelSurveyFolder: boolean,
     panelSurvey: ?Object
   };
 
@@ -66,7 +65,7 @@ class SurveyCard extends Component<any> {
   }
 
   render() {
-    const { survey, respondentsStats, readOnly, t, inPanelSurveyFolder, panelSurvey } = this.props
+    const { survey, respondentsStats, readOnly, t, panelSurvey } = this.props
 
     let cumulativePercentages = respondentsStats ? (respondentsStats['cumulativePercentages'] || {}) : {}
     let completionPercentage = respondentsStats ? (respondentsStats['completionPercentage'] || 0) : 0
@@ -74,9 +73,6 @@ class SurveyCard extends Component<any> {
     let description = <div className='grey-text card-description'>
       {survey.description}
     </div>
-
-    const hideSurveyCard = !inPanelSurveyFolder && survey.isPanelSurvey && !panelSurvey
-    if (hideSurveyCard) return null
 
     const redirectTo = panelSurvey
     ? routes.panelSurvey(panelSurvey.projectId, panelSurvey.id)
@@ -99,7 +95,7 @@ class SurveyCard extends Component<any> {
                 // All occurences of the same panel survey should be always together in the same folder.
                 // This is why it's forbidden to change the folder of panel survey occurrences.
                 // This option is cheaper than the moving all the panel survey occurrences together.
-                survey.isPanelSurvey
+                panelSurvey
                 ? null
                 : <DropdownItem>
                   <a onClick={e => this.moveSurvey()}><i className='material-icons'>folder</i>{t('Move to')}</a>

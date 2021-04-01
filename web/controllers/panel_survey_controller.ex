@@ -41,7 +41,7 @@ defmodule Ask.PanelSurveyController do
       name: name,
       folder_id: folder_id,
       is_repeatable: Survey.repeatable?(latest_panel_survey),
-      latest_panel_survey_id: id,
+      latest_survey_id: id,
       project_id: project_id
     }
   end

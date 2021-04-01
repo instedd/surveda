@@ -165,11 +165,14 @@ class SurveyIndex extends Component<any, State> {
               { folders && folders.map(folder => <FolderCard key={folder.id} {...folder} t={t} onDelete={this.deleteFolder} onRename={this.renameFolder} readOnly={readOnly} />)}
             </div>
             <div className='row'>
-              { surveys && surveys.map(survey => {
-                return (
-                  <SurveyCard survey={survey} respondentsStats={respondentsStats[survey.id]} key={survey.id} readOnly={readOnly} t={t} panelSurvey={panelSurveys.filter(ps => ps.latestPanelSurveyId == survey.id)[0]} />
-                )
-              }) }
+              { panelSurveys && panelSurveys.map(panelSurvey => (
+                <SurveyCard survey={panelSurvey.latestSurvey} respondentsStats={respondentsStats[panelSurvey.latestSurvey.id]} key={panelSurvey.id} readOnly={readOnly} t={t} panelSurvey={panelSurvey} />
+              ))}
+            </div>
+            <div className='row'>
+              {surveys && surveys.map(survey => (
+                <SurveyCard survey={survey} respondentsStats={respondentsStats[survey.id]} key={survey.id} readOnly={readOnly} t={t} />
+              ))}
             </div>
             { footer }
           </div>
@@ -182,12 +185,28 @@ class SurveyIndex extends Component<any, State> {
   }
 }
 
+const surveysFromState = (state, includePanelSurveys = false) => {
+  const { items } = state.surveys
+  if (!items) return null
+  return values(items).filter(survey =>
+    !survey.folderId &&
+    (includePanelSurveys || !survey.isPanelSurvey)
+  )
+}
+
+const panelSurveysFromState = state => {
+  const surveys = surveysFromState(state, true)
+  if (!surveys) return null
+  const { items } = state.panelSurveys
+  if (!items) return null
+  return values(items).filter(panelSurvey => !panelSurvey.folderId).map(panelSurvey => ({
+    ...panelSurvey,
+    latestSurvey: surveys.find(s => s.id == panelSurvey.latestSurveyId)
+  }))
+}
+
 const mapStateToProps = (state, ownProps) => {
-  // Right now we show all surveys: they are not paginated nor sorted
-  let surveys = state.surveys.items
-  if (surveys) {
-    surveys = values(surveys).filter(s => !s.folderId)
-  }
+  let surveys = surveysFromState(state)
   const totalCount = surveys ? surveys.length : 0
   const pageIndex = state.surveys.page.index
   const pageSize = state.surveys.page.size
@@ -212,7 +231,7 @@ const mapStateToProps = (state, ownProps) => {
     totalCount,
     loadingSurveys: state.surveys.fetching,
     loadingFolders: state.folder.loadingFetch,
-    panelSurveys: state.panelSurveys.items,
+    panelSurveys: panelSurveysFromState(state),
     folders: state.folder.folders && Object.values(state.folder.folders)
   }
 }

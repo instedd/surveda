@@ -14,7 +14,7 @@ defmodule Ask.PanelSurveyView do
           folder_id: folder_id,
           id: id,
           is_repeatable: is_repeatable,
-          latest_panel_survey_id: latest_panel_survey_id,
+          latest_survey_id: latest_survey_id,
           name: name,
           project_id: project_id
         }
@@ -23,7 +23,7 @@ defmodule Ask.PanelSurveyView do
       folder_id: folder_id,
       id: id,
       is_repeatable: is_repeatable,
-      latest_panel_survey_id: latest_panel_survey_id,
+      latest_survey_id: latest_survey_id,
       name: name,
       project_id: project_id
     }
