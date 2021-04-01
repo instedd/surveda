@@ -41,8 +41,7 @@ class SurveyIndex extends Component<any, State> {
     startIndex: PropTypes.number.isRequired,
     endIndex: PropTypes.number.isRequired,
     totalCount: PropTypes.number.isRequired,
-    respondentsStats: PropTypes.object.isRequired,
-    panelSurveys: PropTypes.array
+    respondentsStats: PropTypes.object.isRequired
   }
 
   constructor(props) {
@@ -129,7 +128,7 @@ class SurveyIndex extends Component<any, State> {
   }
 
   render() {
-    const { folders, loadingFolders, loadingSurveys, surveys, respondentsStats, project, startIndex, endIndex, totalCount, t, panelSurveys } = this.props
+    const { folders, loadingFolders, loadingSurveys, surveys, respondentsStats, project, startIndex, endIndex, totalCount, t } = this.props
     if ((!surveys && loadingSurveys) || (!folders && loadingFolders)) {
       return (
         <div>{t('Loading surveys...')}</div>
@@ -165,13 +164,8 @@ class SurveyIndex extends Component<any, State> {
               { folders && folders.map(folder => <FolderCard key={folder.id} {...folder} t={t} onDelete={this.deleteFolder} onRename={this.renameFolder} readOnly={readOnly} />)}
             </div>
             <div className='row'>
-              { panelSurveys && panelSurveys.map(panelSurvey => (
-                <SurveyCard survey={panelSurvey.latestSurvey} respondentsStats={respondentsStats[panelSurvey.latestSurvey.id]} key={panelSurvey.id} readOnly={readOnly} t={t} panelSurvey={panelSurvey} />
-              ))}
-            </div>
-            <div className='row'>
               {surveys && surveys.map(survey => (
-                <SurveyCard survey={survey} respondentsStats={respondentsStats[survey.id]} key={survey.id} readOnly={readOnly} t={t} />
+                <SurveyCard survey={survey} respondentsStats={respondentsStats[survey.id]} key={survey.id} readOnly={readOnly} t={t} panelSurvey={survey.panelSurvey || null} />
               ))}
             </div>
             { footer }
@@ -205,8 +199,18 @@ const panelSurveysFromState = state => {
   }))
 }
 
+const mergePanelSurveysIntoSurveys = (surveys, panelSurveys) => {
+  if (panelSurveys == null) return surveys
+  return panelSurveys.map(panelSurvey => ({
+    ...panelSurvey.latestSurvey,
+    panelSurvey: panelSurvey
+  })).concat(surveys)
+}
+
 const mapStateToProps = (state, ownProps) => {
   let surveys = surveysFromState(state)
+  const panelSurveys = panelSurveysFromState(state)
+  surveys = mergePanelSurveysIntoSurveys(surveys, panelSurveys)
   const totalCount = surveys ? surveys.length : 0
   const pageIndex = state.surveys.page.index
   const pageSize = state.surveys.page.size
@@ -231,7 +235,6 @@ const mapStateToProps = (state, ownProps) => {
     totalCount,
     loadingSurveys: state.surveys.fetching,
     loadingFolders: state.folder.loadingFetch,
-    panelSurveys: panelSurveysFromState(state),
     folders: state.folder.folders && Object.values(state.folder.folders)
   }
 }
