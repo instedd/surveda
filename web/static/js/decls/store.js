@@ -8,7 +8,8 @@ export type Store = {
   channels: ChannelList,
   projects: ProjectList,
   integrations: IndexedList<Integration>,
-  panelSurvey: PanelSurvey
+  panelSurvey: PanelSurvey,
+  panelSurveys: PanelSurveyList
 };
 
 export type DataStore<T> = {
@@ -87,6 +88,10 @@ export type ArchiveFilter = {
 };
 
 export type SurveyList = ListStore<Survey> & {
+  filter: ?ListFilter,
+};
+
+export type PanelSurveyList = ListStore<PanelSurvey> & {
   filter: ?ListFilter,
 };
 
