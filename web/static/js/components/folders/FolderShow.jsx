@@ -202,7 +202,8 @@ const mapStateToProps = (state, ownProps) => {
   })
   const folders = state.folder && state.folder.folders
   const surveyFolder = folders && folders[folderId]
-  const name = surveyFolder && surveyFolder.name
+  const name = (panelSurvey && (panelSurvey.name || t('Untitled survey'))) ||
+    (surveyFolder && surveyFolder.name)
 
   return {
     projectId: projectId,
