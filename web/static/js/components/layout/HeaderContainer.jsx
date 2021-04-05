@@ -16,11 +16,11 @@ class HeaderContainer extends Component {
   }
 
   render() {
-    const { tabs, logout, user, project, surveyFolder, panelSurvey } = this.props
+    const { tabs, logout, user, project, surveyFolder, panelSurveyId, panelSurvey } = this.props
     const { projectId, surveyId, questionnaireId, folderId } = this.props.params
 
     let showProjectLink = true
-    if (!project || (!surveyId && !questionnaireId && !folderId && !panelSurvey)) {
+    if (!project || (!surveyId && !questionnaireId && !folderId && !panelSurveyId)) {
       showProjectLink = false
     }
 
@@ -48,33 +48,41 @@ HeaderContainer.propTypes = {
   logout: PropTypes.func.isRequired,
   user: PropTypes.string.isRequired,
   surveyFolder: PropTypes.object,
+  panelSurveyId: PropTypes.number,
   panelSurvey: PropTypes.object
+}
+
+const folder = (params, state) => {
+  const { surveyId, panelSurveyId } = params
+  let folderId = null
+  if (state.survey.data && state.survey.data.id == surveyId) {
+    folderId = state.survey.data.folderId
+  } else if (state.panelSurvey.data && state.panelSurvey.data.id == panelSurveyId) {
+    folderId = state.panelSurvey.data.folderId
+  }
+  const folder = state.folder && state.folder.folders && state.folder.folders[folderId]
+  return folder || null
+}
+
+const panelSurvey = (surveyId, state) => {
+  if (surveyId && state.survey && state.survey.data && state.survey.data.id == surveyId) {
+    const survey = state.survey.data
+    if (state.panelSurveys.items && state.panelSurveys.items[survey.panelSurveyOf]) {
+      return state.panelSurveys.items[survey.panelSurveyOf]
+    }
+  }
+  return null
 }
 
 const mapStateToProps = (state, ownProps) => {
   const { params } = ownProps
-  const folders = state.folder && state.folder.folders
-  const survey = state.survey && state.survey.data
   const panelSurveyId = params.panelSurveyId && parseInt(params.panelSurveyId)
-
-  let panelSurvey = null
-  if (state.panelSurvey && state.panelSurvey.id == panelSurveyId) {
-    panelSurvey = state.panelSurvey
-  }
-
-  let folder = null
-  if (folders) {
-    let folderId = null
-    if (panelSurvey) folderId = panelSurvey.folderId
-    else if (survey) folderId = survey.folderId
-    if (folders[folderId]) folder = folders[folderId]
-  }
-
+  const surveyId = params.surveyId && parseInt(params.surveyId)
   return {
-    params: ownProps.params,
     project: state.project.data,
-    surveyFolder: folder,
-    panelSurvey: panelSurvey
+    panelSurveyId,
+    surveyFolder: folder(params, state),
+    panelSurvey: panelSurvey(surveyId, state)
   }
 }
 

@@ -7,6 +7,7 @@ import * as surveyActions from '../../actions/survey'
 import * as projectActions from '../../actions/project'
 import * as folderActions from '../../actions/folder'
 import * as panelSurveyActions from '../../actions/panelSurvey'
+import * as panelSurveysActions from '../../actions/panelSurveys'
 import { AddButton, EmptyPage, UntitledIfEmpty, ConfirmationModal, PagingFooter } from '../ui'
 import * as respondentActions from '../../actions/respondents'
 import SurveyCard from '../surveys/SurveyCard'
@@ -52,6 +53,7 @@ class FolderShow extends Component<any, any> {
       }
     })
     dispatch(folderActions.fetchFolders(projectId))
+    dispatch(panelSurveysActions.fetchPanelSurveys(projectId))
     if (panelSurveyId && !panelSurvey) {
       dispatch(panelSurveyActions.fetchPanelSurvey(projectId, panelSurveyId))
     }

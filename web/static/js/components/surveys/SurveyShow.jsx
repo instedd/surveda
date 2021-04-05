@@ -6,6 +6,7 @@ import * as actions from '../../actions/survey'
 import * as surveysActions from '../../actions/surveys'
 import * as respondentActions from '../../actions/respondents'
 import * as folderActions from '../../actions/folder'
+import * as panelSurveysActions from '../../actions/panelSurveys'
 import SurveyStatus from './SurveyStatus'
 import * as routes from '../../routes'
 import { Tooltip, Modal, dispositionGroupLabel, dispositionLabel } from '../ui'
@@ -74,6 +75,8 @@ class SurveyShow extends Component<any, State> {
     dispatch(folderActions.fetchFolders(projectId))
     // Fetch surveys for breadcrumb
     dispatch(surveysActions.fetchSurveys(projectId))
+    // Fetch panel surveys for breadcrumb
+    dispatch(panelSurveysActions.fetchPanelSurveys(projectId))
   }
 
   componentDidUpdate() {
