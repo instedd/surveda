@@ -35,7 +35,6 @@ class FolderShow extends Component<any, any> {
     name: PropTypes.string,
     loadingFolder: PropTypes.bool,
     loadingSurveys: PropTypes.bool,
-    surveyFolder: PropTypes.object,
     panelSurvey: PropTypes.object
   }
 
@@ -106,8 +105,8 @@ class FolderShow extends Component<any, any> {
   }
 
   render() {
-    const { loadingFolder, loadingSurveys, surveys, respondentsStats, project, startIndex, endIndex, totalCount, t, name, projectId, surveyFolder, panelSurvey, panelSurveyId } = this.props
-    const to = surveyFolder ? routes.folder(projectId, surveyFolder.id) : routes.project(projectId)
+    const { loadingFolder, loadingSurveys, surveys, respondentsStats, project, startIndex, endIndex, totalCount, t, name, projectId, panelSurvey, panelSurveyId } = this.props
+    const to = panelSurvey && panelSurvey.folderId ? routes.folder(projectId, panelSurvey.folderId) : routes.project(projectId)
     const folder = name ? (<Link to={to} className='folder-header'><i className='material-icons black-text'>arrow_back</i>{name}</Link>) : null
     if (panelSurveyId && !panelSurvey) {
       return (
@@ -201,9 +200,9 @@ const mapStateToProps = (state, ownProps) => {
     panelSurveyId: panelSurveyId || null
   })
   const folders = state.folder && state.folder.folders
-  const surveyFolder = folders && folders[folderId]
+  const folder = folders && folders[folderId]
   const name = (panelSurvey && (panelSurvey.name || t('Untitled survey'))) ||
-    (surveyFolder && surveyFolder.name)
+    (folder && folder.name)
 
   return {
     projectId: projectId,
@@ -218,7 +217,6 @@ const mapStateToProps = (state, ownProps) => {
     loadingSurveys: state.surveys.fetching,
     loadingFolder: state.panelSurvey.loading || state.folder.loading,
     panelSurvey,
-    surveyFolder,
     name
   }
 }
