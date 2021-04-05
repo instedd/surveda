@@ -202,6 +202,7 @@ const mapStateToProps = (state, ownProps) => {
   })
   const folders = state.folder && state.folder.folders
   const surveyFolder = folders && folders[folderId]
+  const name = surveyFolder && surveyFolder.name
 
   return {
     projectId: projectId,
@@ -216,7 +217,8 @@ const mapStateToProps = (state, ownProps) => {
     loadingSurveys: state.surveys.fetching,
     loadingFolder: state.panelSurvey.loading || state.folder.loading,
     panelSurvey,
-    surveyFolder
+    surveyFolder,
+    name
   }
 }
 
