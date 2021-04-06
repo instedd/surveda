@@ -10,6 +10,8 @@ import RespondentsChart from '../respondents/RespondentsChart'
 import SurveyStatus from '../surveys/SurveyStatus'
 import MoveSurveyForm from './MoveSurveyForm'
 
+import { connect } from 'react-redux'
+
 class SurveyCard extends Component<any> {
   props: {
     t: Function,
@@ -64,7 +66,11 @@ class SurveyCard extends Component<any> {
     })
   }
 
-  deletable(survey) {
+  deletable() {
+    const { survey, readOnly } = this.props
+
+    if (readOnly) return false
+
     // Running surveys aren't deletable
     if (survey.state == 'running') return false
 
@@ -73,10 +79,29 @@ class SurveyCard extends Component<any> {
 
     // There isn't a way of deleting the first occurrence of a panel survey yet
     if (survey.id == this.props.panelSurveyId) return false
+
+    return true
+  }
+
+  movable() {
+    const { survey, panelSurveyId, readOnly } = this.props
+    const { panelSurvey } = survey
+
+    if (readOnly) return false
+    // All occurences of the same panel survey should be always together in the same folder.
+    // For now, it's forbidden to change the folder of any panel survey occurrence.
+    // This option is cheaper than the moving all the panel survey occurrences together.
+    if (panelSurvey || panelSurveyId) return false
+
+    return true
+  }
+
+  actionable() {
+    return this.deletable() || this.movable()
   }
 
   render() {
-    const { survey, respondentsStats, readOnly, t } = this.props
+    const { survey, respondentsStats, t } = this.props
     const { panelSurvey } = survey
 
     let cumulativePercentages = respondentsStats ? (respondentsStats['cumulativePercentages'] || {}) : {}
@@ -92,6 +117,28 @@ class SurveyCard extends Component<any> {
 
     const name = panelSurvey ? panelSurvey.name : survey.name
 
+    const actionMenu = (
+      <Dropdown className='options' dataBelowOrigin={false} label={<i className='material-icons'>more_vert</i>}>
+        <DropdownItem className='dots'>
+          <i className='material-icons'>more_vert</i>
+        </DropdownItem>
+        {
+          this.movable()
+          ? <DropdownItem>
+            <a onClick={e => this.moveSurvey()}><i className='material-icons'>folder</i>{t('Move to')}</a>
+          </DropdownItem>
+          : null
+        }
+        {
+          this.deletable()
+            ? <DropdownItem>
+              <a onClick={e => this.deleteSurvey()}><i className='material-icons'>delete</i>{t('Delete')}</a>
+            </DropdownItem>
+            : null
+        }
+      </Dropdown>
+    )
+
     const surveyCard = <div className='survey-card'>
       <Card>
         <div className='card-content'>
@@ -99,29 +146,7 @@ class SurveyCard extends Component<any> {
             <Link className='grey-text' to={redirectTo}>
               {t('{{percentage}}% of target completed', {percentage: String(Math.round(completionPercentage))})}
             </Link>
-            { readOnly || (<Dropdown className='options' dataBelowOrigin={false} label={<i className='material-icons'>more_vert</i>}>
-              <DropdownItem className='dots'>
-                <i className='material-icons'>more_vert</i>
-              </DropdownItem>
-              {
-                // All occurences of the same panel survey should be always together in the same folder.
-                // This is why it's forbidden to change the folder of panel survey occurrences.
-                // This option is cheaper than the moving all the panel survey occurrences together.
-                panelSurvey
-                ? null
-                : <DropdownItem>
-                  <a onClick={e => this.moveSurvey()}><i className='material-icons'>folder</i>{t('Move to')}</a>
-                </DropdownItem>
-              }
-              {
-                this.deletable(survey)
-                  ? <DropdownItem>
-                    <a onClick={e => this.deleteSurvey()}><i className='material-icons'>delete</i>{t('Delete')}</a>
-                  </DropdownItem>
-                  : null
-              }
-            </Dropdown>
-            ) }
+            { this.actionable() ? actionMenu : null }
           </div>
           <div className='card-chart'>
             <RespondentsChart cumulativePercentages={cumulativePercentages} />
@@ -159,4 +184,4 @@ class SurveyCard extends Component<any> {
   }
 }
 
-export default translate()(SurveyCard)
+export default translate()(connect()(SurveyCard))
