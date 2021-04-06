@@ -41,7 +41,9 @@ class SurveyIndex extends Component<any, State> {
     startIndex: PropTypes.number.isRequired,
     endIndex: PropTypes.number.isRequired,
     totalCount: PropTypes.number.isRequired,
-    respondentsStats: PropTypes.object.isRequired
+    respondentsStats: PropTypes.object.isRequired,
+    panelSurveys: PropTypes.array,
+    loadingPanelSurveys: PropTypes.bool
   }
 
   constructor(props) {
@@ -128,8 +130,8 @@ class SurveyIndex extends Component<any, State> {
   }
 
   render() {
-    const { folders, loadingFolders, loadingSurveys, surveys, respondentsStats, project, startIndex, endIndex, totalCount, t } = this.props
-    if ((!surveys && loadingSurveys) || (!folders && loadingFolders)) {
+    const { folders, loadingFolders, loadingSurveys, surveys, respondentsStats, project, startIndex, endIndex, totalCount, t, panelSurveys, loadingPanelSurveys } = this.props
+    if ((!surveys && loadingSurveys) || (!folders && loadingFolders) || (!panelSurveys && loadingPanelSurveys)) {
       return (
         <div>{t('Loading surveys...')}</div>
       )
@@ -259,7 +261,9 @@ const mapStateToProps = (state, ownProps) => {
     totalCount,
     loadingSurveys: state.surveys.fetching,
     loadingFolders: state.folder.loadingFetch,
-    folders: state.folder.folders && Object.values(state.folder.folders)
+    folders: state.folder.folders && Object.values(state.folder.folders),
+    panelSurveys: state.panelSurveys.items && Object.values(state.panelSurveys.items),
+    loadingPanelSurveys: state.panelSurveys.fetching
   }
 }
 

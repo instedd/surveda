@@ -36,7 +36,9 @@ class FolderShow extends Component<any, any> {
     name: PropTypes.string,
     loadingFolder: PropTypes.bool,
     loadingSurveys: PropTypes.bool,
-    panelSurvey: PropTypes.object
+    panelSurvey: PropTypes.object,
+    panelSurveys: PropTypes.array,
+    loadingPanelSurveys: PropTypes.bool
   }
 
   componentWillMount() {
@@ -106,21 +108,32 @@ class FolderShow extends Component<any, any> {
     dispatch(actions.previousSurveysPage())
   }
 
-  render() {
-    const { loadingFolder, loadingSurveys, surveys, respondentsStats, project, startIndex, endIndex, totalCount, t, name, projectId, panelSurvey, panelSurveyId } = this.props
-    const to = panelSurvey && panelSurvey.folderId ? routes.folder(projectId, panelSurvey.folderId) : routes.project(projectId)
-    const folder = name ? (<Link to={to} className='folder-header'><i className='material-icons black-text'>arrow_back</i>{name}</Link>) : null
+  loadingMessage() {
+    const { loadingSurveys, surveys, t, panelSurvey, panelSurveyId, panelSurveys, loadingPanelSurveys } = this.props
+
     if (panelSurveyId && !panelSurvey) {
-      return (
-        <div className='folder-show'>{folder}{t('Loading panel survey...')}</div>
-      )
+      return t('Loading panel survey...')
+    } else {
+      if (!panelSurveys && loadingPanelSurveys) {
+        return t('Loading surveys...')
+      }
     }
     if (!surveys && loadingSurveys) {
+      return t('Loading surveys...')
+    }
+    return null
+  }
+
+  render() {
+    const { loadingFolder, surveys, respondentsStats, project, startIndex, endIndex, totalCount, t, name, projectId, panelSurvey, panelSurveyId } = this.props
+    const to = panelSurvey && panelSurvey.folderId ? routes.folder(projectId, panelSurvey.folderId) : routes.project(projectId)
+    const titleLink = name ? (<Link to={to} className='folder-header'><i className='material-icons black-text'>arrow_back</i>{name}</Link>) : null
+    const loadingMessage = this.loadingMessage()
+    if (loadingMessage) {
       return (
-        <div className='folder-show'>{folder}{t('Loading surveys...')}</div>
+        <div className='folder-show'>{titleLink}{loadingMessage}</div>
       )
     }
-
     const footer = <PagingFooter
       {...{startIndex, endIndex, totalCount}}
       onPreviousPage={() => this.previousPage()}
@@ -162,7 +175,7 @@ class FolderShow extends Component<any, any> {
     return (
       <div className='folder-show'>
         {primaryButton}
-        {folder}
+        {titleLink}
         { emptyFolder
         ? <EmptyPage icon='assignment_turned_in' title={t('You have no surveys in this folder')} onClick={(e) => this.newSurvey()} readOnly={readOnly} createText={t('Create one', {context: 'survey'})} />
         : (
@@ -219,7 +232,9 @@ const mapStateToProps = (state, ownProps) => {
     loadingSurveys: state.surveys.fetching,
     loadingFolder: state.panelSurvey.loading || state.folder.loading,
     panelSurvey,
-    name
+    name,
+    panelSurveys: state.panelSurveys.items && Object.values(state.panelSurveys.items),
+    loadingPanelSurveys: state.panelSurveys.fetching
   }
 }
 
