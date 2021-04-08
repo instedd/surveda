@@ -16,6 +16,7 @@ const channelSchema = new Schema('channels')
 const audioSchema = new Schema('audios')
 const activitySchema = new Schema('activities')
 const integrationSchema = new Schema('integrations')
+const panelSurveySchema = new Schema('panelSurveys')
 
 export class Unauthorized {
   constructor(response) {
@@ -168,6 +169,10 @@ export const fetchProject = (id) => {
 
 export const fetchSurvey = (projectId, id) => {
   return apiFetchJSON(`projects/${projectId}/surveys/${id}`, surveySchema)
+}
+
+export const fetchPanelSurvey = (projectId, id) => {
+  return apiFetchJSON(`projects/${projectId}/panel_surveys/${id}`, panelSurveySchema)
 }
 
 export const createProject = (project) => {
@@ -394,6 +399,10 @@ export const removeCollaborator = (projectId, collaboratorEmail) => {
 
 export const updateCollaboratorLevel = (projectId, collaboratorEmail, newLevel) => {
   return apiPutJSON(`projects/${projectId}/memberships/update`, {}, { email: collaboratorEmail, level: newLevel })
+}
+
+export const fetchPanelSurveys = (projectId) => {
+  return apiFetchJSON(`projects/${projectId}/panel_surveys`, arrayOf(panelSurveySchema))
 }
 
 export const fetchActivities = (projectId, pageSize, pageNumber, sortBy, sortAsc) => {

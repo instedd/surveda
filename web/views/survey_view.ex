@@ -54,7 +54,10 @@ defmodule Ask.SurveyView do
       updated_at: survey.updated_at,
       down_channels: survey.down_channels,
       folder_id: survey.folder_id,
-      first_window_started_at: first_window_started_at(survey)
+      first_window_started_at: first_window_started_at(survey),
+      is_panel_survey: Survey.panel_survey?(survey),
+      panel_survey_of: survey.panel_survey_of,
+      is_repeatable: Survey.repeatable?(survey)
     }
   end
   def render("survey_detail.json", %{survey: survey}) do
@@ -96,7 +99,8 @@ defmodule Ask.SurveyView do
       is_panel_survey: Survey.panel_survey?(survey),
       is_repeatable: Survey.repeatable?(survey),
       incentives_enabled: survey.incentives_enabled,
-      first_window_started_at: first_window_started_at(survey)
+      first_window_started_at: first_window_started_at(survey),
+      panel_survey_of: survey.panel_survey_of
     }
 
     if Ask.Survey.launched?(survey) || survey.simulation do

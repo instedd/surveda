@@ -7,6 +7,7 @@ import * as actions from '../../actions/surveys'
 import * as surveyActions from '../../actions/survey'
 import * as projectActions from '../../actions/project'
 import * as folderActions from '../../actions/folder'
+import * as panelSurveysActions from '../../actions/panelSurveys'
 import {
   EmptyPage,
   ConfirmationModal,
@@ -40,7 +41,9 @@ class SurveyIndex extends Component<any, State> {
     startIndex: PropTypes.number.isRequired,
     endIndex: PropTypes.number.isRequired,
     totalCount: PropTypes.number.isRequired,
-    respondentsStats: PropTypes.object.isRequired
+    respondentsStats: PropTypes.object.isRequired,
+    panelSurveys: PropTypes.array,
+    loadingPanelSurveys: PropTypes.bool
   }
 
   constructor(props) {
@@ -70,6 +73,7 @@ class SurveyIndex extends Component<any, State> {
     })
     dispatch(channelsActions.fetchChannels())
     dispatch(folderActions.fetchFolders(projectId))
+    dispatch(panelSurveysActions.fetchPanelSurveys(projectId))
   }
 
   newSurvey() {
@@ -126,8 +130,8 @@ class SurveyIndex extends Component<any, State> {
   }
 
   render() {
-    const { folders, loadingFolders, loadingSurveys, surveys, respondentsStats, project, startIndex, endIndex, totalCount, t } = this.props
-    if ((!surveys && loadingSurveys) || (!folders && loadingFolders)) {
+    const { folders, loadingFolders, loadingSurveys, surveys, respondentsStats, project, startIndex, endIndex, totalCount, t, panelSurveys, loadingPanelSurveys } = this.props
+    if ((!surveys && loadingSurveys) || (!folders && loadingFolders) || (!panelSurveys && loadingPanelSurveys)) {
       return (
         <div>{t('Loading surveys...')}</div>
       )
@@ -162,11 +166,9 @@ class SurveyIndex extends Component<any, State> {
               { folders && folders.map(folder => <FolderCard key={folder.id} {...folder} t={t} onDelete={this.deleteFolder} onRename={this.renameFolder} readOnly={readOnly} />)}
             </div>
             <div className='row'>
-              { surveys && surveys.map(survey => {
-                return (
-                  <SurveyCard survey={survey} respondentsStats={respondentsStats[survey.id]} key={survey.id} readOnly={readOnly} t={t} />
-                )
-              }) }
+              {surveys && surveys.map(survey => (
+                <SurveyCard survey={survey} respondentsStats={respondentsStats[survey.id]} key={survey.id} readOnly={readOnly} t={t} />
+              ))}
             </div>
             { footer }
           </div>
@@ -179,25 +181,75 @@ class SurveyIndex extends Component<any, State> {
   }
 }
 
-const mapStateToProps = (state, ownProps) => {
-  // Right now we show all surveys: they are not paginated nor sorted
-  let surveys = state.surveys.items
-  if (surveys) {
-    surveys = values(surveys).filter(s => !s.folderId)
+const surveysFromState = (state, folderId, includePanelSurveys = false) => {
+  const { items } = state.surveys
+  if (!items) return null
+  return values(items).filter(survey =>
+    survey.folderId == folderId &&
+    (includePanelSurveys || !survey.isPanelSurvey)
+  )
+}
+
+const panelSurveysFromState = (state, folderId) => {
+  const surveys = surveysFromState(state, folderId, true)
+  if (!surveys) return null
+  const { items } = state.panelSurveys
+  if (!items) return null
+  return values(items).filter(panelSurvey => panelSurvey.folderId == folderId).map(panelSurvey => ({
+    ...panelSurvey,
+    latestSurvey: surveys.find(s => s.id == panelSurvey.latestSurveyId)
+  }))
+}
+
+const mergePanelSurveysIntoSurveys = (surveys, panelSurveys) => {
+  if (panelSurveys == null) return surveys
+  return panelSurveys.map(panelSurvey => ({
+    ...panelSurvey.latestSurvey,
+    panelSurvey: panelSurvey
+  })).concat(surveys)
+}
+
+export const surveyIndexProps = (state: any, { panelSurveyId, folderId }: { panelSurveyId: ?number, folderId: ?number} = {
+  panelSurveyId: null,
+  folderId: null
+}) => {
+  // If panelSurveyId, list the surveys for the panel survey view.
+  // The panel survey view is the only one that shows every panel survey occurrence.
+  // Other views show each panel survey grouped in a single card.
+  let surveys = surveysFromState(state, folderId, !!panelSurveyId)
+  if (!panelSurveyId) {
+    surveys = mergePanelSurveysIntoSurveys(surveys, panelSurveysFromState(state, folderId))
   }
   const totalCount = surveys ? surveys.length : 0
   const pageIndex = state.surveys.page.index
   const pageSize = state.surveys.page.size
 
   if (surveys) {
+    if (panelSurveyId) {
+      surveys = surveys.filter(s => s.panelSurveyOf == panelSurveyId)
+    }
+    if (folderId) {
+      surveys = surveys.filter(s => s.folderId == folderId)
+    }
+
     // Sort by updated at, descending
     surveys = surveys.sort((x, y) => y.updatedAt.localeCompare(x.updatedAt))
     // Show only the current page
-    surveys = values(surveys).slice(pageIndex, pageIndex + pageSize)
+    surveys = surveys.slice(pageIndex, pageIndex + pageSize)
   }
   const startIndex = Math.min(totalCount, pageIndex + 1)
   const endIndex = Math.min(pageIndex + pageSize, totalCount)
 
+  return {
+    surveys,
+    startIndex,
+    endIndex,
+    totalCount
+  }
+}
+
+const mapStateToProps = (state, ownProps) => {
+  const { surveys, startIndex, endIndex, totalCount } = surveyIndexProps(state)
   return {
     projectId: ownProps.params.projectId,
     project: state.project.data,
@@ -209,7 +261,9 @@ const mapStateToProps = (state, ownProps) => {
     totalCount,
     loadingSurveys: state.surveys.fetching,
     loadingFolders: state.folder.loadingFetch,
-    folders: state.folder.folders && Object.values(state.folder.folders)
+    folders: state.folder.folders && Object.values(state.folder.folders),
+    panelSurveys: state.panelSurveys.items && Object.values(state.panelSurveys.items),
+    loadingPanelSurveys: state.panelSurveys.fetching
   }
 }
 

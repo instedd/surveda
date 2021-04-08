@@ -4,12 +4,13 @@ import { translate, Trans } from 'react-i18next'
 import { Link } from 'react-router'
 import * as routes from '../../routes'
 import * as surveyActions from '../../actions/survey'
-import { connect } from 'react-redux'
 
 import { Card, UntitledIfEmpty, Dropdown, DropdownItem, ConfirmationModal } from '../ui'
 import RespondentsChart from '../respondents/RespondentsChart'
 import SurveyStatus from '../surveys/SurveyStatus'
 import MoveSurveyForm from './MoveSurveyForm'
+
+import { connect } from 'react-redux'
 
 class SurveyCard extends Component<any> {
   props: {
@@ -18,7 +19,8 @@ class SurveyCard extends Component<any> {
     respondentsStats: Object,
     survey: Survey,
     onDelete: (survey: Survey) => void,
-    readOnly: boolean
+    readOnly: boolean,
+    panelSurveyId: ?number
   };
 
   constructor(props) {
@@ -64,8 +66,43 @@ class SurveyCard extends Component<any> {
     })
   }
 
+  deletable() {
+    const { survey, readOnly } = this.props
+
+    if (readOnly) return false
+
+    // Running surveys aren't deletable
+    if (survey.state == 'running') return false
+
+    // There isn't a way of deleting the whole panel survey yet
+    if (survey.panelSurvey) return false
+
+    // There isn't a way of deleting the first occurrence of a panel survey yet
+    if (survey.id == this.props.panelSurveyId) return false
+
+    return true
+  }
+
+  movable() {
+    const { survey, panelSurveyId, readOnly } = this.props
+    const { panelSurvey } = survey
+
+    if (readOnly) return false
+    // All occurences of the same panel survey should be always together in the same folder.
+    // For now, it's forbidden to change the folder of any panel survey occurrence.
+    // This option is cheaper than the moving all the panel survey occurrences together.
+    if (panelSurvey || panelSurveyId) return false
+
+    return true
+  }
+
+  actionable() {
+    return this.deletable() || this.movable()
+  }
+
   render() {
-    const { survey, respondentsStats, readOnly, t } = this.props
+    const { survey, respondentsStats, t } = this.props
+    const { panelSurvey } = survey
 
     let cumulativePercentages = respondentsStats ? (respondentsStats['cumulativePercentages'] || {}) : {}
     let completionPercentage = respondentsStats ? (respondentsStats['completionPercentage'] || 0) : 0
@@ -74,47 +111,72 @@ class SurveyCard extends Component<any> {
       {survey.description}
     </div>
 
+    const redirectTo = panelSurvey
+    ? routes.panelSurvey(panelSurvey.projectId, panelSurvey.id)
+    : routes.showOrEditSurvey(survey)
+
+    const name = panelSurvey ? panelSurvey.name : survey.name
+
+    const actionMenu = (
+      <Dropdown className='options' dataBelowOrigin={false} label={<i className='material-icons'>more_vert</i>}>
+        <DropdownItem className='dots'>
+          <i className='material-icons'>more_vert</i>
+        </DropdownItem>
+        {
+          this.movable()
+          ? <DropdownItem>
+            <a onClick={e => this.moveSurvey()}><i className='material-icons'>folder</i>{t('Move to')}</a>
+          </DropdownItem>
+          : null
+        }
+        {
+          this.deletable()
+            ? <DropdownItem>
+              <a onClick={e => this.deleteSurvey()}><i className='material-icons'>delete</i>{t('Delete')}</a>
+            </DropdownItem>
+            : null
+        }
+      </Dropdown>
+    )
+
+    const surveyCard = <div className='survey-card'>
+      <Card>
+        <div className='card-content'>
+          <div className='survey-card-status'>
+            <Link className='grey-text' to={redirectTo}>
+              {t('{{percentage}}% of target completed', {percentage: String(Math.round(completionPercentage))})}
+            </Link>
+            { this.actionable() ? actionMenu : null }
+          </div>
+          <div className='card-chart'>
+            <RespondentsChart cumulativePercentages={cumulativePercentages} />
+          </div>
+          <div className='card-status'>
+            <Link className='card-title black-text truncate' title={name} to={redirectTo}>
+              <UntitledIfEmpty text={name} emptyText={t('Untitled survey')} />
+            </Link>
+            <Link to={redirectTo}>
+              {description}
+              <SurveyStatus survey={survey} short />
+            </Link>
+          </div>
+        </div>
+      </Card>
+    </div>
+
     return (
       <div className='col s12 m6 l4'>
-        <div className='survey-card'>
-          <Card>
-            <div className='card-content'>
-              <div className='survey-card-status'>
-                <Link className='grey-text' to={routes.showOrEditSurvey(survey)}>
-                  {t('{{percentage}}% of target completed', {percentage: String(Math.round(completionPercentage))})}
-                </Link>
-                { readOnly || (<Dropdown className='options' dataBelowOrigin={false} label={<i className='material-icons'>more_vert</i>}>
-                  <DropdownItem className='dots'>
-                    <i className='material-icons'>more_vert</i>
-                  </DropdownItem>
-                  <DropdownItem>
-                    <a onClick={e => this.moveSurvey()}><i className='material-icons'>folder</i>{t('Move to')}</a>
-                  </DropdownItem>
-                  {
-                    survey.state == 'running'
-                      ? null
-                      : <DropdownItem>
-                        <a onClick={e => this.deleteSurvey()}><i className='material-icons'>delete</i>{t('Delete')}</a>
-                      </DropdownItem>
-                  }
-                </Dropdown>
-                ) }
-              </div>
-              <div className='card-chart'>
-                <RespondentsChart cumulativePercentages={cumulativePercentages} />
-              </div>
-              <div className='card-status'>
-                <Link className='card-title black-text truncate' title={survey.name} to={routes.showOrEditSurvey(survey)}>
-                  <UntitledIfEmpty text={survey.name} emptyText={t('Untitled survey')} />
-                </Link>
-                <Link to={routes.showOrEditSurvey(survey)}>
-                  {description}
-                  <SurveyStatus survey={survey} short />
-                </Link>
+        {
+          panelSurvey
+          ? <div className='panel-survey-card-0'>
+            <div className='panel-survey-card-1'>
+              <div className='panel-survey-card-2'>
+                { surveyCard }
               </div>
             </div>
-          </Card>
-        </div>
+          </div>
+          : surveyCard
+        }
         <ConfirmationModal modalId='survey_index_move_survey' ref='moveSurveyConfirmationModal' confirmationText={t('Move')} header={t('Move survey')} showCancel />
         <ConfirmationModal modalId='survey_index_delete' ref='deleteConfirmationModal' confirmationText={t('Delete')} header={t('Delete survey')} showCancel />
       </div>
@@ -122,6 +184,4 @@ class SurveyCard extends Component<any> {
   }
 }
 
-const mapStateToProps = (state, ownProps) => ownProps
-
-export default translate()(connect(mapStateToProps)(SurveyCard))
+export default translate()(connect()(SurveyCard))

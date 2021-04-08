@@ -4,6 +4,7 @@ import { connect } from 'react-redux'
 import { withRouter } from 'react-router'
 import Header from './Header'
 import * as projectActions from '../../actions/project'
+import { translate } from 'react-i18next'
 
 class HeaderContainer extends Component {
   componentDidMount() {
@@ -15,15 +16,13 @@ class HeaderContainer extends Component {
   }
 
   render() {
-    const { tabs, logout, user, project, surveyFolder } = this.props
+    const { tabs, logout, user, project, surveyFolder, panelSurveyId, panelSurvey } = this.props
     const { projectId, surveyId, questionnaireId, folderId } = this.props.params
 
     let showProjectLink = true
-    if (!project || (!surveyId && !questionnaireId && !folderId)) {
+    if (!project || (!surveyId && !questionnaireId && !folderId && !panelSurveyId)) {
       showProjectLink = false
     }
-
-    const showFolderLink = !!(surveyId && surveyFolder)
 
     if (projectId && !project) {
       // If there's a projectId and there's no project loaded
@@ -36,7 +35,7 @@ class HeaderContainer extends Component {
     }
 
     return (
-      <Header tabs={tabs} logout={logout} user={user} showProjectLink={showProjectLink} showQuestionnairesLink={!!questionnaireId} project={project || null} surveyFolder={surveyFolder} showFolderLink={showFolderLink} />
+      <Header tabs={tabs} logout={logout} user={user} showProjectLink={showProjectLink} showQuestionnairesLink={!!questionnaireId} project={project || null} surveyFolder={surveyFolder} panelSurvey={panelSurvey} />
     )
   }
 }
@@ -48,17 +47,42 @@ HeaderContainer.propTypes = {
   tabs: PropTypes.node,
   logout: PropTypes.func.isRequired,
   user: PropTypes.string.isRequired,
-  surveyFolder: PropTypes.object
+  surveyFolder: PropTypes.object,
+  panelSurveyId: PropTypes.number,
+  panelSurvey: PropTypes.object
+}
+
+const folder = (params, state) => {
+  const { surveyId, panelSurveyId } = params
+  let folderId = null
+  if (state.survey.data && state.survey.data.id == surveyId) {
+    folderId = state.survey.data.folderId
+  } else if (state.panelSurvey.data && state.panelSurvey.data.id == panelSurveyId) {
+    folderId = state.panelSurvey.data.folderId
+  }
+  const folder = state.folder && state.folder.folders && state.folder.folders[folderId]
+  return folder || null
+}
+
+const panelSurvey = (surveyId, state) => {
+  if (surveyId && state.survey && state.survey.data && state.survey.data.id == surveyId) {
+    const survey = state.survey.data
+    if (state.panelSurveys.items && state.panelSurveys.items[survey.panelSurveyOf]) {
+      return state.panelSurveys.items[survey.panelSurveyOf]
+    }
+  }
+  return null
 }
 
 const mapStateToProps = (state, ownProps) => {
-  const folders = state.folder && state.folder.folders
-  const survey = state.survey && state.survey.data
-  const surveyFolder = survey && folders && folders[survey.folderId]
+  const { params } = ownProps
+  const panelSurveyId = params.panelSurveyId && parseInt(params.panelSurveyId)
+  const surveyId = params.surveyId && parseInt(params.surveyId)
   return {
-    params: ownProps.params,
     project: state.project.data,
-    surveyFolder: surveyFolder || null
+    panelSurveyId,
+    surveyFolder: folder(params, state),
+    panelSurvey: panelSurvey(surveyId, state)
   }
 }
 
@@ -66,4 +90,4 @@ const mapDispatchToProps = (dispatch) => ({
   projectActions: bindActionCreators(projectActions, dispatch)
 })
 
-export default withRouter(connect(mapStateToProps, mapDispatchToProps)(HeaderContainer))
+export default translate()(withRouter(connect(mapStateToProps, mapDispatchToProps)(HeaderContainer)))
