@@ -1869,9 +1869,12 @@ defmodule Ask.SurveyControllerTest do
     assert (Timex.between?(started_at, Timex.shift(now, seconds: -3), Timex.shift(now, seconds: 3)))
   end
 
+  @tag :time_mock
   test "sets last_window_ends_at with proper datetime value when a survey is launched", %{conn: conn, user: user} do
     project = create_project_for_user(user)
     end_date = ~D[2021-04-01]
+    now = Date.add(end_date, -1)
+    mock_time(Timex.to_datetime(now))
     schedule = %{completed_schedule() | end_date: end_date}
     survey = insert(:survey, project: project, state: "ready", schedule: schedule)
 

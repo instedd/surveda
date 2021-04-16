@@ -4,7 +4,7 @@ defmodule Ask.SurveyView do
   alias Ask.Repo
   use Ask.Web, :view
 
-  alias Ask.Survey
+  alias Ask.{Survey, SystemTime}
 
   def render("index.json", %{surveys: surveys}) do
     %{data: render_many(surveys, Ask.SurveyView, "survey.json")}
@@ -142,7 +142,7 @@ defmodule Ask.SurveyView do
   end
 
   defp next_schedule_time(survey) do
-    now = DateTime.utc_now
+    now = SystemTime.time.now
     next_schedule_time = Survey.next_available_date_time(survey, now)
     if next_schedule_time == now  do
       nil

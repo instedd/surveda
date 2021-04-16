@@ -1,6 +1,6 @@
 defmodule Ask.ScheduleTest do
   use Ask.ModelCase
-  alias Ask.{Schedule, DayOfWeek}
+  alias Ask.{Schedule, DayOfWeek, ScheduleError}
 
   @default_schedule Schedule.default()
 
@@ -106,7 +106,8 @@ defmodule Ask.ScheduleTest do
       day_of_week: %Ask.DayOfWeek{sun: true, wed: true},
       timezone: "America/Argentina/Buenos_Aires",
       start_date: ~D[2017-03-03],
-      blocked_days: [~D[2017-10-08]]
+      blocked_days: [~D[2017-10-08]],
+      end_date: ~D[2017-11-01]
     }
 
     test "gets next available time: free slot" do
@@ -151,6 +152,17 @@ defmodule Ask.ScheduleTest do
       # The beginning of the first active window after the start date
       assert time == DateTime.from_naive!(~N[2017-03-05 12:00:00], "Etc/UTC")
     end
+
+    test "gets next available time: not found" do
+      # Long before the end date
+      base = DateTime.from_naive!(~N[2018-01-01 00:00:00], "Etc/UTC")
+
+      # It breaks
+      assert_raise(ScheduleError, "next active window not found", fn ->
+        Schedule.next_available_date_time(@schedule, base)
+      end)
+    end
+
   end
 
   describe "Survey.last_window_ends_at/1" do
@@ -214,7 +226,7 @@ defmodule Ask.ScheduleTest do
       schedule = %{base_schedule | end_date: end_date}
 
       # It breaks
-      assert_raise(FunctionClauseError, "no function clause matching in Date.from_erl/2", fn ->
+      assert_raise(ScheduleError, "last active window not found", fn ->
         Schedule.last_window_ends_at(schedule)
       end)
     end
