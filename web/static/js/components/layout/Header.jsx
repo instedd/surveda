@@ -37,7 +37,7 @@ const Header = ({ tabs, logout, user, project, surveyFolder, showProjectLink, sh
   const panelSurveyLink = panelSurvey
     ? (
       <li className='breadcrumb-item'>
-        <Link to={routes.panelSurvey(panelSurvey.projectId, panelSurvey.id)} className=''>{panelSurvey.name}</Link>
+        <Link to={routes.panelSurvey(panelSurvey.projectId, panelSurvey.id)} className=''>{panelSurvey.name || t('Untitled survey')}</Link>
       </li>
     )
     : null
