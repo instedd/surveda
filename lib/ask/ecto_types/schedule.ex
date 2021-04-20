@@ -210,25 +210,22 @@ defmodule Ask.Schedule do
   end
 
   def select_available_date(schedule, erl_date, time, backward, limit) do
-    if day_of_week_available?(schedule, erl_date) do
-      case compare_time(schedule, time) do
-        :before ->
-          if backward do
-            next_available_date(schedule, erl_date, backward, limit)
-          else
-            erl_date
-          end
-        :after ->
-          if backward do
-            erl_date
-          else
-            next_available_date(schedule, erl_date, backward, limit)
-          end
-      end
+    date_to_return = if day_of_week_available?(schedule, erl_date) do
+      pick_date_based_on_time_and_direction(compare_time(schedule, time), backward)
     else
-      next_available_date(schedule, erl_date, backward, limit)
+      :next_date
+    end
+
+    case date_to_return do
+      :given_date -> erl_date
+      :next_date -> next_available_date(schedule, erl_date, backward, limit)
     end
   end
+
+  defp pick_date_based_on_time_and_direction(:before = _time_is, true = _backward), do: :next_date
+  defp pick_date_based_on_time_and_direction(:before = _time_is, false = _backward), do: :given_date
+  defp pick_date_based_on_time_and_direction(:after = _time_is, true = _backward), do: :given_date
+  defp pick_date_based_on_time_and_direction(:after = _time_is, false = _backward), do: :next_date
 
   def at_end_time(%Schedule{end_time: end_time, timezone: timezone}, %DateTime{} = date_time) do
     {erlang_date, _} = date_time |> Timex.Timezone.convert(timezone) |> Timex.to_erl
