@@ -269,11 +269,11 @@ defmodule Ask.Schedule do
       erl_date
     else
       shift_days = if backward, do: -1, else: 1
-      erl_date = Timex.shift(erl_date, days: shift_days)
-      if day_of_week_available?(schedule, erl_date) do
-        erl_date
+      next_date = Timex.shift(erl_date, days: shift_days)
+      if day_of_week_available?(schedule, next_date) do
+        next_date
       else
-        next_available_date(schedule, erl_date, backward, limit)
+        next_available_date(schedule, next_date, backward, limit)
       end
     end
   end
