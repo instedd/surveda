@@ -181,7 +181,7 @@ class FolderShow extends Component<any, any> {
         : (
           <div>
             {hint}
-            <div className='row'>
+            <div className='survey-index-grid'>
               { surveys && surveys.map(survey => {
                 return (
                   <SurveyCard survey={survey} respondentsStats={respondentsStats[survey.id]} onDelete={this.deleteSurvey} key={survey.id} readOnly={readOnly} t={t} panelSurveyId={panelSurveyId} />

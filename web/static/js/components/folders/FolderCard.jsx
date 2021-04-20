@@ -29,19 +29,17 @@ class FolderCard extends PureComponent {
     </Dropdown>
 
     return (
-      <div className='col s12 m6 l4'>
-        <Card>
-          <div className='folder-card'>
-            <div className='card-content'>
-              <Link className='folder-card-title' to={routes.folder(projectId, id)}>
-                <i className='material-icons'>folder</i>
-                {name}
-              </Link>
-              {readOnly || options}
-            </div>
+      <Card>
+        <div className='folder-card'>
+          <div className='card-content'>
+            <Link className='folder-card-title' to={routes.folder(projectId, id)}>
+              <i className='material-icons'>folder</i>
+              {name}
+            </Link>
+            {readOnly || options}
           </div>
-        </Card>
-      </div>
+        </div>
+      </Card>
     )
   }
 }

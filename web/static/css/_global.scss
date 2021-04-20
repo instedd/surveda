@@ -346,6 +346,12 @@ path.respondentsData.referenceStrokeColor15 { stroke: var(--reference-color15); 
 
 // ------- Survey Card index page ----
 
+.survey-index-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  column-gap: 18px;
+}
+
 .survey-card .card {
   @extend .black-text;
   padding: 0px;
