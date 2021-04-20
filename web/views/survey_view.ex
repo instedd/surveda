@@ -4,7 +4,7 @@ defmodule Ask.SurveyView do
   alias Ask.Repo
   use Ask.Web, :view
 
-  alias Ask.Survey
+  alias Ask.{Survey, SystemTime, ScheduleError}
 
   def render("index.json", %{surveys: surveys}) do
     %{data: render_many(surveys, Ask.SurveyView, "survey.json")}
@@ -57,7 +57,8 @@ defmodule Ask.SurveyView do
       first_window_started_at: first_window_started_at(survey),
       is_panel_survey: Survey.panel_survey?(survey),
       panel_survey_of: survey.panel_survey_of,
-      is_repeatable: Survey.repeatable?(survey)
+      is_repeatable: Survey.repeatable?(survey),
+      last_window_ends_at: survey.last_window_ends_at
     }
   end
   def render("survey_detail.json", %{survey: survey}) do
@@ -100,7 +101,8 @@ defmodule Ask.SurveyView do
       is_repeatable: Survey.repeatable?(survey),
       incentives_enabled: survey.incentives_enabled,
       first_window_started_at: first_window_started_at(survey),
-      panel_survey_of: survey.panel_survey_of
+      panel_survey_of: survey.panel_survey_of,
+      last_window_ends_at: survey.last_window_ends_at
     }
 
     if Ask.Survey.launched?(survey) || survey.simulation do
@@ -140,9 +142,14 @@ defmodule Ask.SurveyView do
   end
 
   defp next_schedule_time(survey) do
-    now = DateTime.utc_now
-    next_schedule_time = Survey.next_available_date_time(survey, now)
-    if next_schedule_time == now  do
+    now = SystemTime.time.now
+    next_schedule_time = try do
+      Survey.next_available_date_time(survey, now)
+    rescue
+      # If there're surveys with bad schedule configuration, avoid the UI crash
+      ScheduleError -> nil
+    end
+    if next_schedule_time in [now, nil] do
       nil
     else
       next_schedule_time

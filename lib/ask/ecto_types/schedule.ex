@@ -9,7 +9,7 @@ defmodule Ask.Schedule do
   @behaviour Ecto.Type
 
   alias __MODULE__
-  alias Ask.DayOfWeek
+  alias Ask.{DayOfWeek, ScheduleError, SystemTime}
 
   defstruct [:day_of_week, :start_time, :end_time, :blocked_days, :timezone, :start_date, :end_date]
 
@@ -143,38 +143,77 @@ defmodule Ask.Schedule do
     "Etc/UTC"
   end
 
-  def next_available_date_time(%Schedule{} = schedule, %DateTime{} = date_time \\ DateTime.utc_now) do
-    # TODO: Remove the necessity of converting this to erl dates
-    date_time = date_time
-    |> Timex.to_datetime(schedule.timezone)
+  # Find the beggining of the first active window, going forward
+  def next_available_date_time(%Schedule{end_date: end_date, start_date: start_date} = schedule, %DateTime{} = from_date_time \\ SystemTime.time.now) do
+    from_date_time = select_from_date_time(from_date_time, start_date)
+    backward = false
+    limit = end_date
+    reversible_next_available_date_time(schedule, from_date_time, backward, limit)
+  end
 
-    {erl_date, erl_time} = date_time |> Timex.to_erl
+  defp select_from_date_time(from_date_time, nil = _start_date), do: from_date_time
 
-    {:ok, time} = erl_time
-    |> Time.from_erl
-
-    # If this day is enabled in the schedule
-    date_time = if day_of_week_available?(schedule, erl_date) do
-      # Check if the time is inside the schedule time range
-      case compare_time(schedule, time) do
-        :before ->
-          # If it's before the time range, move it to the beginning of the range
-          at_start_time(schedule, erl_date)
-        :inside ->
-          # If it's inside there's nothing to do
-          date_time
-        :after ->
-          # If it's after the time range, find the next day
-          next_available_date_time_internal(schedule, erl_date)
-      end
+  defp select_from_date_time(from_date_time, start_date) do
+    # 1 -- the from_date_time comes after the start_date
+    if Timex.compare(from_date_time, start_date) > 0 do
+      from_date_time
     else
-      # If the day is not enabled, find the next day
-      next_available_date_time_internal(schedule, erl_date)
+      start_date
+    end
+  end
+
+  # Find the ending of the last active window, going backward from the last minute of the end_date
+  def last_window_ends_at(%{end_date: nil} = _schedule), do: nil
+  def last_window_ends_at(%{end_date: end_date, start_date: start_date} = schedule) do
+    backward = true
+    limit = start_date
+    from_date_time = Date.add(end_date, 1)
+    reversible_next_available_date_time(schedule, from_date_time, backward, limit)
+  end
+
+  # Why do we need this reversible function? Because we need to calculate:
+  # 1. The start_time of the first active window (backward = false)
+  # 2. The end_time of the last active window (backward = true)
+  # And the logic for doing that is pretty much the same.
+  defp reversible_next_available_date_time(schedule, date_time, backward, limit) do
+    date_time = Timex.to_datetime(date_time, schedule.timezone)
+
+    # TODO: Remove the necessity of converting this to erl dates
+    {erl_date, erl_time} = Timex.to_erl(date_time)
+    {:ok, time} = Time.from_erl(erl_time)
+
+    selected_datetime = if day_of_week_available?(schedule, erl_date) && compare_time(schedule, time) == :inside do
+      date_time
+    else
+      selected_date = select_available_date(schedule, erl_date, time, backward, limit)
+      select_time_for_date(schedule, selected_date, backward)
     end
 
-    date_time
+    selected_datetime
     |> Timex.Timezone.convert("Etc/UTC")
   end
+
+  def select_time_for_date(schedule, erl_date, backward) do
+    if backward, do: at_end_time_erl(schedule, erl_date), else: at_start_time(schedule, erl_date)
+  end
+
+  def select_available_date(schedule, erl_date, time, backward, limit) do
+    date_to_return = if day_of_week_available?(schedule, erl_date) do
+      pick_date_based_on_time_and_direction(compare_time(schedule, time), backward)
+    else
+      :next_date
+    end
+
+    case date_to_return do
+      :given_date -> erl_date
+      :next_date -> next_available_date(schedule, erl_date, backward, limit)
+    end
+  end
+
+  defp pick_date_based_on_time_and_direction(:before = _time_is, true = _backward), do: :next_date
+  defp pick_date_based_on_time_and_direction(:before = _time_is, false = _backward), do: :given_date
+  defp pick_date_based_on_time_and_direction(:after = _time_is, true = _backward), do: :given_date
+  defp pick_date_based_on_time_and_direction(:after = _time_is, false = _backward), do: :next_date
 
   def at_end_time(%Schedule{end_time: end_time, timezone: timezone}, %DateTime{} = date_time) do
     {erlang_date, _} = date_time |> Timex.Timezone.convert(timezone) |> Timex.to_erl
@@ -188,23 +227,6 @@ defmodule Ask.Schedule do
 
   def remove_end_date(schedule) do
     Map.put(schedule, :end_date, nil)
-  end
-
-  def end_date_passed?(schedule, date_time \\ DateTime.utc_now())
-
-  def end_date_passed?(%{end_date: nil} = _schedule, _date_time) do
-    false
-  end
-
-  def end_date_passed?(
-        %{end_date: end_date, timezone: timezone} = _schedule,
-        date_time
-      ) do
-
-    date_time
-    |> Timex.to_datetime(timezone)
-    |> DateTime.to_date()
-    |> Date.compare(end_date) != :lt
   end
 
   defp compare_time(%Schedule{start_time: start_time, end_time: end_time}, time) do
@@ -225,21 +247,47 @@ defmodule Ask.Schedule do
     Timex.Timezone.resolve(schedule.timezone, {erl_date, erl_time})
   end
 
-  defp next_available_date_time_internal(schedule, erl_date) do
-    erl_date = next_available_date(schedule, erl_date)
-    at_start_time(schedule, erl_date)
+  defp at_end_time_erl(schedule, erl_date) do
+    erl_time = schedule.end_time |> Time.to_erl
+    Timex.Timezone.resolve(schedule.timezone, {erl_date, erl_time})
   end
 
-  defp next_available_date(schedule, erl_date) do
-    erl_date = Timex.shift(erl_date, days: 1)
-    if day_of_week_available?(schedule, erl_date) do
-      erl_date
+  defp next_available_date(schedule, erl_date, backward, limit) do
+    raise_if_date_exceeds_limit(erl_date, backward, limit)
+
+    shift_days = if backward, do: -1, else: 1
+    next_date = Timex.shift(erl_date, days: shift_days)
+    if day_of_week_available?(schedule, next_date) do
+      next_date
     else
-      next_available_date(schedule, erl_date)
+      next_available_date(schedule, next_date, backward, limit)
     end
   end
 
-  defp day_of_week_available?(%Schedule{day_of_week: day_of_week, blocked_days: blocked_days, start_date: start_date}, erl_date) do
+  defp raise_if_date_exceeds_limit(date_time, backward, limit), do:
+    if date_exceeds_limit?(date_time, backward, limit), do:
+      raise_date_exceeds_limit(backward)
+
+  defp raise_date_exceeds_limit(true = _backward), do:
+    raise ScheduleError, "last active window not found"
+
+  defp raise_date_exceeds_limit(false = _backward), do:
+    raise ScheduleError, "next active window not found"
+
+  defp date_exceeds_limit?(_date_time, _backward, nil = _limit), do: false
+
+  defp date_exceeds_limit?(date_time, backward, limit) do
+    comparison = Timex.compare(date_time, limit)
+    if backward do
+      # -1 -- date_time comes before the limit
+      comparison < 0
+    else
+      # 1 -- date_time comes after the limit
+      comparison > 0
+    end
+  end
+
+  defp day_of_week_available?(%Schedule{day_of_week: day_of_week, blocked_days: blocked_days}, erl_date) do
     date = Date.from_erl!(erl_date)
     if day_of_week == DayOfWeek.never do
       # Just in case a schedule remains empty (can happen in a test)
@@ -254,7 +302,6 @@ defmodule Ask.Schedule do
         6 -> day_of_week.sat
         7 -> day_of_week.sun
       end && !Enum.member?(blocked_days, date)
-      && (!start_date || Date.compare(start_date, date) != :gt)
     end
   end
 

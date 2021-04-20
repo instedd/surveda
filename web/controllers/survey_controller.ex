@@ -1,7 +1,7 @@
 defmodule Ask.SurveyController do
   use Ask.Web, :api_controller
 
-  alias Ask.{Project, Folder, Survey, Questionnaire, Logger, RespondentGroup, Respondent, Channel, ShortLink, ActivityLog, RetriesHistogram, NotAllowedError}
+  alias Ask.{Project, Folder, Survey, Questionnaire, Logger, RespondentGroup, Respondent, Channel, ShortLink, ActivityLog, RetriesHistogram, NotAllowedError, ScheduleError}
   alias Ask.Runtime.{Session, SurveyAction}
   alias Ecto.Multi
 
@@ -306,7 +306,13 @@ defmodule Ask.SurveyController do
   end
 
   def launch(conn, %{"project_id" => project_id, "survey_id" => survey_id}) do
-    perform_action = fn survey -> SurveyAction.start(survey) end
+    perform_action = fn survey ->
+      try do
+        SurveyAction.start(survey)
+      rescue
+        ScheduleError -> send_resp(conn, :conflict, "Bad schedule configuration")
+      end
+    end
     activity_log = fn survey -> ActivityLog.start(survey.project, conn, survey) end
     launch_or_repeat(conn, project_id, survey_id, perform_action, activity_log)
   end
