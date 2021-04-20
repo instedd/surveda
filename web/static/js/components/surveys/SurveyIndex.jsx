@@ -162,10 +162,10 @@ class SurveyIndex extends Component<any, State> {
         ? <EmptyPage icon='assignment_turned_in' title={t('You have no surveys on this project')} onClick={(e) => this.newSurvey()} readOnly={readOnly} createText={t('Create one', {context: 'survey'})} />
         : (
           <div>
-            <div className='row'>
+            <div className='survey-index-grid'>
               { folders && folders.map(folder => <FolderCard key={folder.id} {...folder} t={t} onDelete={this.deleteFolder} onRename={this.renameFolder} readOnly={readOnly} />)}
             </div>
-            <div className='row'>
+            <div className='survey-index-grid'>
               {surveys && surveys.map(survey => (
                 <SurveyCard survey={survey} respondentsStats={respondentsStats[survey.id]} key={survey.id} readOnly={readOnly} t={t} />
               ))}
