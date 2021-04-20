@@ -150,7 +150,7 @@ defmodule Ask.Schedule do
     limit = end_date
     next_available_date = reversible_next_available_date_time(schedule, from_date_time, backward, limit)
 
-    if limit_exceed(next_available_date, backward, limit) do
+    if date_exceeds_limit?(next_available_date, backward, limit) do
       raise ScheduleError, "next active window not found"
     else
       next_available_date
@@ -176,7 +176,7 @@ defmodule Ask.Schedule do
     from_date_time = Date.add(end_date, 1)
     last_window_end = reversible_next_available_date_time(schedule, from_date_time, backward, limit)
 
-    if limit_exceed(last_window_end, backward, limit) do
+    if date_exceeds_limit?(last_window_end, backward, limit) do
       raise ScheduleError, "last active window not found"
     else
       last_window_end
@@ -268,7 +268,7 @@ defmodule Ask.Schedule do
   end
 
   defp next_available_date(schedule, erl_date, backward, limit) do
-    if limit_exceed(erl_date, backward, limit) do
+    if date_exceeds_limit?(erl_date, backward, limit) do
       erl_date
     else
       shift_days = if backward, do: -1, else: 1
@@ -281,9 +281,9 @@ defmodule Ask.Schedule do
     end
   end
 
-  defp limit_exceed(_date_time, _backward, nil = _limit), do: false
+  defp date_exceeds_limit?(_date_time, _backward, nil = _limit), do: false
 
-  defp limit_exceed(date_time, backward, limit) do
+  defp date_exceeds_limit?(date_time, backward, limit) do
     comparison = Timex.compare(date_time, limit)
     if backward do
       # -1 -- date_time comes before the limit
