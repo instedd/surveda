@@ -148,13 +148,7 @@ defmodule Ask.Schedule do
     from_date_time = select_from_date_time(from_date_time, start_date)
     backward = false
     limit = end_date
-    next_available_date = reversible_next_available_date_time(schedule, from_date_time, backward, limit)
-
-    if date_exceeds_limit?(next_available_date, backward, limit) do
-      raise ScheduleError, "next active window not found"
-    else
-      next_available_date
-    end
+    reversible_next_available_date_time(schedule, from_date_time, backward, limit)
   end
 
   defp select_from_date_time(from_date_time, nil = _start_date), do: from_date_time
@@ -174,13 +168,7 @@ defmodule Ask.Schedule do
     backward = true
     limit = start_date
     from_date_time = Date.add(end_date, 1)
-    last_window_end = reversible_next_available_date_time(schedule, from_date_time, backward, limit)
-
-    if date_exceeds_limit?(last_window_end, backward, limit) do
-      raise ScheduleError, "last active window not found"
-    else
-      last_window_end
-    end
+    reversible_next_available_date_time(schedule, from_date_time, backward, limit)
   end
 
   # Why do we need this reversible function? Because we need to calculate:
@@ -265,18 +253,26 @@ defmodule Ask.Schedule do
   end
 
   defp next_available_date(schedule, erl_date, backward, limit) do
-    if date_exceeds_limit?(erl_date, backward, limit) do
-      erl_date
+    raise_if_date_exceeds_limit(erl_date, backward, limit)
+
+    shift_days = if backward, do: -1, else: 1
+    next_date = Timex.shift(erl_date, days: shift_days)
+    if day_of_week_available?(schedule, next_date) do
+      next_date
     else
-      shift_days = if backward, do: -1, else: 1
-      next_date = Timex.shift(erl_date, days: shift_days)
-      if day_of_week_available?(schedule, next_date) do
-        next_date
-      else
-        next_available_date(schedule, next_date, backward, limit)
-      end
+      next_available_date(schedule, next_date, backward, limit)
     end
   end
+
+  defp raise_if_date_exceeds_limit(date_time, backward, limit), do:
+    if date_exceeds_limit?(date_time, backward, limit), do:
+      raise_date_exceeds_limit(backward)
+
+  defp raise_date_exceeds_limit(true = _backward), do:
+    raise ScheduleError, "last active window not found"
+
+  defp raise_date_exceeds_limit(false = _backward), do:
+    raise ScheduleError, "next active window not found"
 
   defp date_exceeds_limit?(_date_time, _backward, nil = _limit), do: false
 
