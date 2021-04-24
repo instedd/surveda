@@ -1,8 +1,96 @@
 defmodule Ask.Runtime.QuestionnaireExportTest do
   use Ask.ModelCase
-  alias Ask.Runtime.{QuestionnaireExport, CleanI18n}
+  alias Ask.Questionnaire
+  alias Ask.Runtime.{QuestionnaireExport, CleanI18n, QuestionnaireAction}
 
-  describe "clean_i18n_quiz" do
+  describe "QuestionnaireAction.export/1" do
+    setup do
+      empty_step = %{
+        type: "multiple-choice",
+        title: "",
+        store: "",
+        prompt: %{
+          en: %{
+            sms: "",
+            mobileweb: "",
+            ivr: %{
+              text: "",
+              audio_source: "tts"
+            }
+          }
+        },
+        id: "e7590b58-5adb-48d1-a5db-4a118418ea88",
+        choices: []
+      }
+
+      empty_quiz = %Questionnaire{
+        steps: [empty_step],
+        settings: %{},
+        quota_completed_steps: nil,
+        partial_relevant_config: nil,
+        name: nil,
+        modes: [
+          "sms"
+        ],
+        languages: [
+          "en"
+        ],
+        default_language: "en"
+      }
+
+      simple_quiz = %Questionnaire{
+        empty_quiz
+        | name: "My questionnaire title",
+          settings: %{
+            thank_you_message: %{
+              en: %{
+                sms: "My thank you message"
+              }
+            },
+            error_message: %{
+              en: %{
+                sms: "My error message"
+              }
+            }
+          },
+          steps: [
+            %{
+              type: "multiple-choice",
+              title: "My question title",
+              store: "My variable name",
+              prompt: %{
+                en: %{
+                  sms: "My question prompt",
+                  mobileweb: "",
+                  ivr: %{
+                    text: "",
+                    audio_source: "tts"
+                  }
+                }
+              },
+              id: "0b11a399-9b81-4552-a603-7df50d52f991",
+              choices: []
+            }
+          ]
+      }
+
+      {:ok, empty_quiz: empty_quiz, simple_quiz: simple_quiz}
+    end
+
+    test "exports an empty questionnaire", %{empty_quiz: quiz} do
+      _zip_file = QuestionnaireAction.export(quiz)
+
+      # TODO: Assert the zip file content
+    end
+
+    test "exports a simple questionnaire", %{simple_quiz: quiz} do
+      _zip_file = QuestionnaireAction.export(quiz)
+
+      # TODO: Assert the zip file content
+    end
+  end
+
+  describe "QuestionnaireExport.clean_i18n_quiz/1" do
     test "doesn't change a quiz with no deleted languages" do
       quiz = insert(:questionnaire, languages: ["en"])
 
