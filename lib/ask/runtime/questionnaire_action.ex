@@ -1,8 +1,9 @@
 defmodule Ask.Runtime.QuestionnaireAction do
   alias Ask.Runtime.QuestionnaireExport
 
-  def export(questionnaire) do
+  def export_and_zip(questionnaire) do
     QuestionnaireExport.export(questionnaire)
+    |> QuestionnaireExport.zip_export()
   end
 end
 
@@ -12,9 +13,60 @@ defmodule Ask.Runtime.QuestionnaireExport do
 
   def export(questionnaire) do
     questionnaire = clean_i18n_quiz(questionnaire)
+
+    %{
+      audio_files: audio_files,
+      audio_entries: audio_entries
+    } = collect_audios(questionnaire)
+
+    manifest = %{
+      name: questionnaire.name,
+      modes: questionnaire.modes,
+      steps: questionnaire.steps,
+      quota_completed_steps: questionnaire.quota_completed_steps,
+      settings: questionnaire.settings,
+      partial_relevant_config: questionnaire.partial_relevant_config,
+      languages: questionnaire.languages,
+      default_language: questionnaire.default_language,
+      audio_files: audio_files
+    }
+
+    %{
+      manifest: manifest,
+      audio_entries: audio_entries
+    }
+  end
+
+  def zip_export(%{
+        manifest: manifest,
+        audio_entries: audio_entries
+      }) do
+    {:ok, json} = Poison.encode(manifest)
+
+    json_entry =
+      Stream.map([json], fn json ->
+        Zstream.entry("manifest.json", [json])
+      end)
+
+    zip_entries = Stream.concat(audio_entries, json_entry)
+    # since audio binary data is created as list for Zstream
+    # flatten is needed to allow the data to be sent in chunks
+    # otherwise the connection sends the whole list as a chunk
+    # and times out.
+    Zstream.zip(zip_entries)
+    |> Stream.flat_map(fn element ->
+      case is_list(element) do
+        true -> List.flatten(element)
+        false -> element
+      end
+    end)
+  end
+
+  defp collect_audios(questionnaire) do
     all_questionnaire_steps = Questionnaire.all_steps(questionnaire)
     audio_ids = collect_steps_audio_ids(all_questionnaire_steps, [])
     audio_ids = collect_settings_audio_ids(questionnaire.settings, audio_ids)
+
     # for each audio: charges it in memory and then streams it.
     audio_resource =
       Stream.resource(
@@ -49,41 +101,14 @@ defmodule Ask.Runtime.QuestionnaireExport do
         Zstream.entry("audios/" <> Audio.exported_audio_file_name(audio.uuid), [audio.data])
       end)
 
-    manifest = %{
-      name: questionnaire.name,
-      modes: questionnaire.modes,
-      steps: questionnaire.steps,
-      quota_completed_steps: questionnaire.quota_completed_steps,
-      settings: questionnaire.settings,
-      partial_relevant_config: questionnaire.partial_relevant_config,
-      languages: questionnaire.languages,
-      default_language: questionnaire.default_language,
-      audio_files: audio_files
+    %{
+      audio_files: audio_files,
+      audio_entries: audio_entries
     }
-
-    {:ok, json} = Poison.encode(manifest)
-
-    json_entry =
-      Stream.map([json], fn json ->
-        Zstream.entry("manifest.json", [json])
-      end)
-
-    zip_entries = Stream.concat(audio_entries, json_entry)
-    # since audio binary data is created as list for Zstream
-    # flatten is needed to allow the data to be sent in chunks
-    # otherwise the connection sends the whole list as a chunk
-    # and times out.
-    Zstream.zip(zip_entries)
-    |> Stream.flat_map(fn element ->
-      case is_list(element) do
-        true -> List.flatten(element)
-        false -> element
-      end
-    end)
   end
 
   def clean_i18n_quiz(quiz) do
-    clean = fn (quiz, key, path) ->
+    clean = fn quiz, key, path ->
       elem = Map.get(quiz, key)
       clean_elem = CleanI18n.clean(elem, quiz.languages, path)
       Map.put(quiz, key, clean_elem)
@@ -170,19 +195,24 @@ defmodule Ask.Runtime.CleanI18n do
 
   def clean(entity, filter_languages, path) do
     forward_path = fn positions -> String.slice(path, positions..-1) end
+
     cond do
       # Base case
       path == "" ->
         clean_base_case(entity, filter_languages)
+
       # Clean every map element
       String.starts_with?(path, ".[]") and is_map(entity) ->
         clean_map(entity, filter_languages, forward_path.(3))
+
       # Clean every list element
       String.starts_with?(path, ".[]") and is_list(entity) ->
         clean_list(entity, filter_languages, forward_path.(3))
+
       # Clean the requested key of a map
       !!path and is_map(entity) ->
         clean_key(entity, filter_languages, path, forward_path)
+
       true ->
         {:error, "Invalid path"}
     end
@@ -203,6 +233,7 @@ defmodule Ask.Runtime.CleanI18n do
   defp clean_map(entity, langs, path, filter_key \\ nil) do
     clean_entity_key = fn entity, key ->
       elem = Map.get(entity, key)
+
       if filter_key == nil or filter_key == key do
         clean(elem, langs, path)
       else
