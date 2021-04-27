@@ -28,16 +28,16 @@ defmodule Ask.Runtime.QuestionnaireExportTest do
       quota_completed_steps: nil,
       partial_relevant_config: nil,
       name: nil,
-      modes: [
-        "sms"
-      ],
       languages: [
         "en"
       ],
       default_language: "en"
     }
 
-    @simple_quiz_settings %{
+    @sms_empty_quiz Map.put(@empty_quiz, :modes, ["sms"])
+    @ivr_empty_quiz Map.put(@empty_quiz, :modes, ["ivr"])
+
+    @sms_simple_quiz_settings %{
       thank_you_message: %{
         en: %{
           sms: "My thank you message"
@@ -50,51 +50,154 @@ defmodule Ask.Runtime.QuestionnaireExportTest do
       }
     }
 
+    @ivr_simple_quiz_settings %{
+      error_message: %{
+        en: %{ivr: %{audio_source: "tts", text: "My IVR error message"}}
+      },
+      thank_you_message: %{
+        en: %{ivr: %{audio_source: "tts", text: "My IVR thank you message"}}
+      }
+    }
+
     @simple_choice_step %{
       type: "multiple-choice",
       title: "My question title",
       store: "My variable name",
-      prompt: %{
-        en: %{
-          sms: "My question prompt",
-          mobileweb: "",
-          ivr: %{
-            text: "",
-            audio_source: "tts"
-          }
+      id: "0b11a399-9b81-4552-a603-7df50d52f991"
+    }
+
+    @sms_question_prompt %{
+      en: %{
+        sms: "My question prompt",
+        mobileweb: "",
+        ivr: %{
+          text: "",
+          audio_source: "tts"
         }
-      },
-      id: "0b11a399-9b81-4552-a603-7df50d52f991",
-      choices: []
+      }
     }
 
-    @simple_quiz %{
-      @empty_quiz
-      | name: "My questionnaire title",
-        settings: @simple_quiz_settings,
-        steps: [
-          @simple_choice_step
+    @ivr_question_prompt %{
+      sms: "",
+      mobileweb: "",
+      ivr: %{
+        text: "My IVR question prompt",
+        audio_source: "tts"
+      }
+    }
+
+    @sms_simple_choice %{
+      value: "My SMS response 1",
+      skip_logic: nil,
+      responses: %{
+        sms: %{
+          en: [
+            "1"
+          ]
+        },
+        mobileweb: %{
+          en: ""
+        },
+        ivr: []
+      }
+    }
+
+    @ivr_simple_choice %{
+      value: "My IVR response 1",
+      skip_logic: nil,
+      responses: %{
+        sms: %{
+          en: []
+        },
+        mobileweb: %{
+          en: ""
+        },
+        ivr: [
+          "1"
         ]
+      }
     }
 
-    test "exports an empty questionnaire" do
-      empty_quiz = Map.merge(%Questionnaire{}, @empty_quiz)
+    @sms_simple_choice_step Map.merge(
+                              @simple_choice_step,
+                              %{
+                                prompt: @sms_question_prompt,
+                                id: "0b11a399-9b81-4552-a603-7df50d52f991",
+                                choices: [@sms_simple_choice]
+                              }
+                            )
 
-      empty_quiz_export = QuestionnaireExport.export(empty_quiz)
+    @ivr_simple_choice_step Map.merge(
+                              @simple_choice_step,
+                              %{
+                                prompt: @ivr_question_prompt,
+                                id: "0b11a399-9b81-4552-a603-7df50d52f991",
+                                choices: [@ivr_simple_choice]
+                              }
+                            )
 
-      assert empty_quiz_export == %{
-               manifest: @empty_quiz,
+    @sms_simple_quiz Map.merge(
+                       @sms_empty_quiz,
+                       %{
+                         name: "My questionnaire title",
+                         settings: @sms_simple_quiz_settings,
+                         steps: [
+                           @sms_simple_choice_step
+                         ]
+                       }
+                     )
+
+    @ivr_simple_quiz Map.merge(
+                       @ivr_empty_quiz,
+                       %{
+                         name: "My questionnaire title",
+                         settings: @ivr_simple_quiz_settings,
+                         steps: [
+                           @ivr_simple_choice_step
+                         ]
+                       }
+                     )
+
+    test "SMS - exports an empty questionnaire" do
+      sms_empty_quiz = Map.merge(%Questionnaire{}, @sms_empty_quiz)
+
+      sms_empty_quiz_export = QuestionnaireExport.export(sms_empty_quiz)
+
+      assert sms_empty_quiz_export == %{
+               manifest: @sms_empty_quiz,
                audio_ids: []
              }
     end
 
-    test "exports a simple questionnaire" do
-      simple_quiz = Map.merge(%Questionnaire{}, @simple_quiz)
+    test "SMS - exports a simple questionnaire" do
+      sms_simple_quiz = Map.merge(%Questionnaire{}, @sms_simple_quiz)
 
-      simple_quiz_export = QuestionnaireExport.export(simple_quiz)
+      simple_quiz_export = QuestionnaireExport.export(sms_simple_quiz)
 
       assert simple_quiz_export == %{
-               manifest: @simple_quiz,
+               manifest: @sms_simple_quiz,
+               audio_ids: []
+             }
+    end
+
+    test "IVR - exports an empty questionnaire" do
+      ivr_empty_quiz = Map.merge(%Questionnaire{}, @ivr_empty_quiz)
+
+      ivr_empty_quiz_export = QuestionnaireExport.export(ivr_empty_quiz)
+
+      assert ivr_empty_quiz_export == %{
+               manifest: @ivr_empty_quiz,
+               audio_ids: []
+             }
+    end
+
+    test "IVR - exports a simple questionnaire" do
+      ivr_simple_quiz = Map.merge(%Questionnaire{}, @ivr_simple_quiz)
+
+      ivr_simple_quiz_export = QuestionnaireExport.export(ivr_simple_quiz)
+
+      assert ivr_simple_quiz_export == %{
+               manifest: @ivr_simple_quiz,
                audio_ids: []
              }
     end
