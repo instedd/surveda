@@ -260,6 +260,100 @@ defmodule Ask.Runtime.QuestionnaireExportTest do
                              }
                            )
 
+    @multilingual_quiz %Questionnaire{
+      steps: [
+        %{
+          type: "language-selection",
+          title: "Language selection",
+          store: "language",
+          prompt: %{},
+          language_choices: [
+            "en",
+            "es"
+          ],
+          id: "324370d4-4bc4-4a2c-927b-226cafda0699"
+        },
+        %{
+          type: "multiple-choice",
+          title: "My multilingual question",
+          store: "",
+          prompt: %{
+            es: %{
+              sms: "Mi pregunta en español",
+              mobileweb: "",
+              ivr: %{
+                text: "",
+                audio_source: "tts"
+              }
+            },
+            en: %{
+              sms: "My question in english",
+              mobileweb: "",
+              ivr: %{
+                text: "",
+                audio_source: "tts"
+              }
+            }
+          },
+          id: "19f58c61-8377-4303-bc8f-e919f1946220",
+          choices: []
+        }
+      ],
+      settings: %{},
+      quota_completed_steps: nil,
+      partial_relevant_config: nil,
+      name: "My multilingual questionnaire",
+      modes: [
+        "sms"
+      ],
+      languages: [
+        "en",
+        "es"
+      ],
+      default_language: "en"
+    }
+
+    @deleted_language_simple_quiz %Questionnaire{
+      steps: [
+        %{
+          "type" => "multiple-choice",
+          "title" => "My multilingual question",
+          "store" => "",
+          "prompt" => %{
+            "es" => %{
+              "sms" => "Mi pregunta en español",
+              "mobileweb" => "",
+              "ivr" => %{
+                "text" => "",
+                "audio_source" => "tts"
+              }
+            },
+            "en" => %{
+              "sms" => "My question in english",
+              "mobileweb" => "",
+              "ivr" => %{
+                "text" => "",
+                "audio_source" => "tts"
+              }
+            }
+          },
+          "id" => "19f58c61-8377-4303-bc8f-e919f1946220",
+          "choices" => []
+        }
+      ],
+      settings: %{},
+      quota_completed_steps: nil,
+      partial_relevant_config: nil,
+      name: "My multilingual questionnaire",
+      modes: [
+        "sms"
+      ],
+      languages: [
+        "en"
+      ],
+      default_language: "en"
+    }
+
     test "SMS - exports an empty questionnaire" do
       sms_empty_quiz = Map.merge(%Questionnaire{}, @sms_empty_quiz)
 
@@ -312,6 +406,87 @@ defmodule Ask.Runtime.QuestionnaireExportTest do
       assert mobileweb_simple_quiz_export == %{
                manifest: @mobileweb_simple_quiz,
                audio_ids: []
+             }
+    end
+
+    test "exports a multilingual questionnaire" do
+      quiz_export = QuestionnaireExport.export(@multilingual_quiz)
+
+      manifest =
+        Map.get(quiz_export, :manifest)
+        |> Map.delete(:audio_files)
+
+      assert manifest == %{
+               default_language: "en",
+               languages: ["en", "es"],
+               modes: ["sms"],
+               name: "My multilingual questionnaire",
+               partial_relevant_config: nil,
+               quota_completed_steps: nil,
+               settings: %{},
+               steps: [
+                 %{
+                   id: "324370d4-4bc4-4a2c-927b-226cafda0699",
+                   language_choices: ["en", "es"],
+                   prompt: %{},
+                   store: "language",
+                   title: "Language selection",
+                   type: "language-selection"
+                 },
+                 %{
+                   choices: [],
+                   id: "19f58c61-8377-4303-bc8f-e919f1946220",
+                   prompt: %{
+                     en: %{
+                       ivr: %{audio_source: "tts", text: ""},
+                       mobileweb: "",
+                       sms: "My question in english"
+                     },
+                     es: %{
+                       ivr: %{audio_source: "tts", text: ""},
+                       mobileweb: "",
+                       sms: "Mi pregunta en español"
+                     }
+                   },
+                   store: "",
+                   title: "My multilingual question",
+                   type: "multiple-choice"
+                 }
+               ]
+             }
+    end
+
+    test "exports a deleted language simple questionnaire" do
+      quiz_export = QuestionnaireExport.export(@deleted_language_simple_quiz)
+
+      manifest =
+        Map.get(quiz_export, :manifest)
+        |> Map.delete(:audio_files)
+
+      assert manifest == %{
+               default_language: "en",
+               languages: ["en"],
+               modes: ["sms"],
+               name: "My multilingual questionnaire",
+               partial_relevant_config: nil,
+               quota_completed_steps: nil,
+               settings: %{},
+               steps: [
+                 %{
+                   "choices" => [],
+                   "id" => "19f58c61-8377-4303-bc8f-e919f1946220",
+                   "prompt" => %{
+                     "en" => %{
+                       "ivr" => %{"audio_source" => "tts", "text" => ""},
+                       "mobileweb" => "",
+                       "sms" => "My question in english"
+                     }
+                   },
+                   "store" => "",
+                   "title" => "My multilingual question",
+                   "type" => "multiple-choice"
+                 }
+               ]
              }
     end
   end
