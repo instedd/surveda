@@ -54,36 +54,37 @@ defmodule Ask.Runtime.QuestionnaireExportTest do
     end
 
     test "doesn't crash when the content of the requested key isn't a map" do
-      # A real case that was making it crash:
-      # entity = [
-      #   %{
-      #     "choices" => [
-      #       %{
-      #         "responses" => %{"ivr" => [], "mobileweb" => %{"en" => ""}, "sms" => %{"en" => []}},
-      #         "skip_logic" => nil,
-      #         "value" => ""
-      #       }
-      #     ],
-      #     "id" => "caad462b-afa4-4c9c-839d-c9e3e7ee4dc1",
-      #     "prompt" => %{
-      #       "en" => %{
-      #         "ivr" => %{"audio_source" => "tts", "text" => ""},
-      #         "mobileweb" => "",
-      #         "sms" => ""
-      #       }
-      #     },
-      #     "store" => "",
-      #     "title" => "",
-      #     "type" => "multiple-choice"
-      #   }
-      # ]
-      # clean = CleanI18n.clean(entity, ["en"], ".[].choices.[].responses.[]")
-
       entity = %{"foo" => "bar"}
 
       clean = CleanI18n.clean(entity, ["baz"], ".foo")
 
       assert clean == %{"foo" => "bar"}
+    end
+
+    test "cleans choices (when the content of one of the requested keys isn't a map)" do
+      # A real case cut that was making it crash.
+      # What was making it crash: `"ivr" => []`. Because [] isn't a map.
+      entity = [
+        %{
+          "choices" => [
+            %{
+              "responses" => %{"ivr" => [], "mobileweb" => %{"en" => "foo", "es" => "bar"}}
+            }
+          ]
+        }
+      ]
+
+      clean = CleanI18n.clean(entity, ["en"], ".[].choices.[].responses.[]")
+
+      assert clean == [
+               %{
+                 "choices" => [
+                   %{
+                     "responses" => %{"ivr" => [], "mobileweb" => %{"en" => "foo"}}
+                   }
+                 ]
+               }
+             ]
     end
   end
 end
