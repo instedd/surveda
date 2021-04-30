@@ -629,5 +629,6 @@
     "You won't be able to access this project anymore": "No podrá acceder más a este proyecto",
     "You'll be able to manage surveys, questionnaires, content and collaborators": "Podrá administrar encuestas, cuestionarios, contenido y colaboradores",
     "You'll be able to see surveys, questionnaires, content and collaborators": "Podrá ver encuestas, cuestionarios, contenido y colaboradores",
-    "Scheduled for {{dateString}} ({{timezone}})": "Programada para {{dateString}} ({{timezone}})"
+    "Scheduled for {{dateString}} ({{timezone}})": "Programada para {{dateString}} ({{timezone}})",
+    "Jump to the end of the questionnaire": "Ir al final del cuestionario"
 }
