@@ -96,18 +96,22 @@ defmodule Ask.SurveyActionTest do
       assert respondent_channels(survey) == respondent_channels(new_occurrence)
     end
 
-    test "doesn't preserves the refused respondents" do
+    test "doesn't promote the refused respondents" do
       survey = completed_panel_survey_with_respondents()
-      refused_respondent = refuse_one_respondent(survey)
+      refused_respondent = set_one_respondent_disposition(survey, "refused")
 
       {result, data} = SurveyAction.repeat(survey)
 
-      assert result == :ok
-      new_occurrence = Map.get(data, :survey)
-      assert new_occurrence
-      refute respondent_channels(survey) == respondent_channels(new_occurrence)
-      assert respondent_in_survey?(survey, refused_respondent.hashed_number)
-      refute respondent_in_survey?(new_occurrence, refused_respondent.hashed_number)
+      assert_repeated_without_respondent(survey, result, data, refused_respondent)
+    end
+
+    test "doesn't promote the ineligible respondents" do
+      survey = completed_panel_survey_with_respondents()
+      ineligible_respondent = set_one_respondent_disposition(survey, "ineligible")
+
+      {result, data} = SurveyAction.repeat(survey)
+
+      assert_repeated_without_respondent(survey, result, data, ineligible_respondent)
     end
   end
 
@@ -248,12 +252,12 @@ defmodule Ask.SurveyActionTest do
     RespondentGroupAction.update_channels(group.id, [%{"id" => channel.id, "mode" => mode}])
   end
 
-  defp refuse_one_respondent(survey) do
+  defp set_one_respondent_disposition(survey, disposition) do
     survey
     |> assoc(:respondents)
     |> limit(1)
     |> Repo.one!()
-    |> Respondent.changeset(%{disposition: "refused"})
+    |> Respondent.changeset(%{disposition: disposition})
     |> Repo.update!()
   end
 
@@ -303,5 +307,14 @@ defmodule Ask.SurveyActionTest do
     } = repeat(second)
     third = complete(third)
     [first, second, third]
+  end
+
+  defp assert_repeated_without_respondent(survey, result, data, unpromoted_respondent) do
+    assert result == :ok
+    new_occurrence = Map.get(data, :survey)
+    assert new_occurrence
+    refute respondent_channels(survey) == respondent_channels(new_occurrence)
+    assert respondent_in_survey?(survey, unpromoted_respondent.hashed_number)
+    refute respondent_in_survey?(new_occurrence, unpromoted_respondent.hashed_number)
   end
 end
