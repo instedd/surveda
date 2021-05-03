@@ -66,7 +66,7 @@ class SkipLogic extends Component<Props, State> {
 
     skipOptions.unshift({
       id: 'end',
-      title: t('Finish survey as completed'),
+      title: t('Jump to the end of the questionnaire'),
       enabled: true
     })
 
