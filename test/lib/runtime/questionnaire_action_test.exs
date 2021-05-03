@@ -80,65 +80,65 @@ defmodule Ask.Runtime.QuestionnaireExportTest do
     test "exports an empty questionnaire", %{empty_quiz: quiz} do
       quiz_export = QuestionnaireExport.export(quiz)
 
-      manifest =
-        Map.get(quiz_export, :manifest)
-        |> Map.delete(:audio_files)
-
-      assert manifest == %{
-               default_language: "en",
-               languages: ["en"],
-               modes: ["sms"],
-               name: nil,
-               partial_relevant_config: nil,
-               quota_completed_steps: nil,
-               settings: %{},
-               steps: [
-                 %{
-                   choices: [],
-                   id: "e7590b58-5adb-48d1-a5db-4a118418ea88",
-                   prompt: %{en: %{ivr: %{audio_source: "tts", text: ""}, mobileweb: "", sms: ""}},
-                   store: "",
-                   title: "",
-                   type: "multiple-choice"
-                 }
-               ]
+      assert quiz_export == %{
+               manifest: %{
+                 default_language: "en",
+                 languages: ["en"],
+                 modes: ["sms"],
+                 name: nil,
+                 partial_relevant_config: nil,
+                 quota_completed_steps: nil,
+                 settings: %{},
+                 steps: [
+                   %{
+                     choices: [],
+                     id: "e7590b58-5adb-48d1-a5db-4a118418ea88",
+                     prompt: %{
+                       en: %{ivr: %{audio_source: "tts", text: ""}, mobileweb: "", sms: ""}
+                     },
+                     store: "",
+                     title: "",
+                     type: "multiple-choice"
+                   }
+                 ]
+               },
+               audio_ids: []
              }
     end
 
     test "exports a simple questionnaire", %{simple_quiz: quiz} do
       quiz_export = QuestionnaireExport.export(quiz)
 
-      manifest =
-        Map.get(quiz_export, :manifest)
-        |> Map.delete(:audio_files)
-
-      assert manifest == %{
-               default_language: "en",
-               languages: ["en"],
-               modes: ["sms"],
-               name: "My questionnaire title",
-               partial_relevant_config: nil,
-               quota_completed_steps: nil,
-               settings: %{
-                 error_message: %{en: %{sms: "My error message"}},
-                 thank_you_message: %{en: %{sms: "My thank you message"}}
+      assert quiz_export == %{
+               manifest: %{
+                 default_language: "en",
+                 languages: ["en"],
+                 modes: ["sms"],
+                 name: "My questionnaire title",
+                 partial_relevant_config: nil,
+                 quota_completed_steps: nil,
+                 settings: %{
+                   error_message: %{en: %{sms: "My error message"}},
+                   thank_you_message: %{en: %{sms: "My thank you message"}}
+                 },
+                 steps: [
+                   %{
+                     choices: [],
+                     id: "0b11a399-9b81-4552-a603-7df50d52f991",
+                     prompt: %{
+                       en: %{
+                         ivr: %{audio_source: "tts", text: ""},
+                         mobileweb: "",
+                         sms: "My question prompt"
+                       }
+                     },
+                     store: "My variable name",
+                     title: "My question title",
+                     type: "multiple-choice"
+                   }
+                 ]
                },
-               steps: [
-                 %{
-                   choices: [],
-                   id: "0b11a399-9b81-4552-a603-7df50d52f991",
-                   prompt: %{
-                     en: %{
-                       ivr: %{audio_source: "tts", text: ""},
-                       mobileweb: "",
-                       sms: "My question prompt"
-                     }
-                   },
-                   store: "My variable name",
-                   title: "My question title",
-                   type: "multiple-choice"
-                 }
-               ]
+               audio_ids: []
              }
     end
   end

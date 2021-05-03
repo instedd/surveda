@@ -3,6 +3,7 @@ defmodule Ask.Runtime.QuestionnaireAction do
 
   def export_and_zip(questionnaire) do
     QuestionnaireExport.export(questionnaire)
+    |> QuestionnaireExport.collect_audios()
     |> QuestionnaireExport.zip_export()
   end
 end
@@ -13,11 +14,7 @@ defmodule Ask.Runtime.QuestionnaireExport do
 
   def export(questionnaire) do
     questionnaire = clean_i18n_quiz(questionnaire)
-
-    %{
-      audio_files: audio_files,
-      audio_entries: audio_entries
-    } = collect_audios(questionnaire)
+    audio_ids = collect_audio_ids(questionnaire)
 
     manifest = %{
       name: questionnaire.name,
@@ -27,46 +24,25 @@ defmodule Ask.Runtime.QuestionnaireExport do
       settings: questionnaire.settings,
       partial_relevant_config: questionnaire.partial_relevant_config,
       languages: questionnaire.languages,
-      default_language: questionnaire.default_language,
-      audio_files: audio_files
+      default_language: questionnaire.default_language
     }
 
     %{
       manifest: manifest,
-      audio_entries: audio_entries
+      audio_ids: audio_ids
     }
   end
 
-  def zip_export(%{
-        manifest: manifest,
-        audio_entries: audio_entries
-      }) do
-    {:ok, json} = Poison.encode(manifest)
-
-    json_entry =
-      Stream.map([json], fn json ->
-        Zstream.entry("manifest.json", [json])
-      end)
-
-    zip_entries = Stream.concat(audio_entries, json_entry)
-    # since audio binary data is created as list for Zstream
-    # flatten is needed to allow the data to be sent in chunks
-    # otherwise the connection sends the whole list as a chunk
-    # and times out.
-    Zstream.zip(zip_entries)
-    |> Stream.flat_map(fn element ->
-      case is_list(element) do
-        true -> List.flatten(element)
-        false -> element
-      end
-    end)
-  end
-
-  defp collect_audios(questionnaire) do
+  defp collect_audio_ids(questionnaire) do
     all_questionnaire_steps = Questionnaire.all_steps(questionnaire)
     audio_ids = collect_steps_audio_ids(all_questionnaire_steps, [])
-    audio_ids = collect_settings_audio_ids(questionnaire.settings, audio_ids)
+    collect_settings_audio_ids(questionnaire.settings, audio_ids)
+  end
 
+  def collect_audios(%{
+        manifest: manifest,
+        audio_ids: audio_ids
+      }) do
     # for each audio: charges it in memory and then streams it.
     audio_resource =
       Stream.resource(
@@ -102,9 +78,34 @@ defmodule Ask.Runtime.QuestionnaireExport do
       end)
 
     %{
-      audio_files: audio_files,
+      manifest: Map.put(manifest, :audio_files, audio_files),
       audio_entries: audio_entries
     }
+  end
+
+  def zip_export(%{
+        manifest: manifest,
+        audio_entries: audio_entries
+      }) do
+    {:ok, json} = Poison.encode(manifest)
+
+    json_entry =
+      Stream.map([json], fn json ->
+        Zstream.entry("manifest.json", [json])
+      end)
+
+    zip_entries = Stream.concat(audio_entries, json_entry)
+    # since audio binary data is created as list for Zstream
+    # flatten is needed to allow the data to be sent in chunks
+    # otherwise the connection sends the whole list as a chunk
+    # and times out.
+    Zstream.zip(zip_entries)
+    |> Stream.flat_map(fn element ->
+      case is_list(element) do
+        true -> List.flatten(element)
+        false -> element
+      end
+    end)
   end
 
   def clean_i18n_quiz(quiz) do
