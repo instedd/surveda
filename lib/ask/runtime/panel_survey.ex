@@ -60,11 +60,13 @@ defmodule Ask.Runtime.PanelSurvey do
       Enum.map(current_occurrence.respondent_groups, fn respondent_group ->
         phone_numbers =
           from(r in Respondent,
-            where: r.respondent_group_id == ^respondent_group.id and r.disposition != "refused",
+            where:
+              r.respondent_group_id == ^respondent_group.id and r.disposition != "refused" and
+                r.disposition != "ineligible",
             select: r.phone_number
           )
           |> Repo.all()
-          |> RespondentGroupAction.loaded_phone_numbers
+          |> RespondentGroupAction.loaded_phone_numbers()
 
         new_respondent_group =
           RespondentGroupAction.create(respondent_group.name, phone_numbers, new_occurrence)
