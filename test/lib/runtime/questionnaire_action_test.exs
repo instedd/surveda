@@ -4,143 +4,110 @@ defmodule Ask.Runtime.QuestionnaireExportTest do
   alias Ask.Runtime.{QuestionnaireExport, CleanI18n}
 
   describe "Ask.Runtime.QuestionnaireExport/1" do
-    setup do
-      empty_step = %{
-        type: "multiple-choice",
-        title: "",
-        store: "",
-        prompt: %{
-          en: %{
-            sms: "",
-            mobileweb: "",
-            ivr: %{
-              text: "",
-              audio_source: "tts"
-            }
+    test "exports an empty questionnaire" do
+      empty_quiz = Map.merge(%Questionnaire{}, empty_quiz())
+
+      empty_quiz_export = QuestionnaireExport.export(empty_quiz)
+
+      assert empty_quiz_export == %{
+               manifest: empty_quiz(),
+               audio_ids: []
+             }
+    end
+
+    test "exports a simple questionnaire" do
+      simple_quiz = Map.merge(%Questionnaire{}, simple_quiz())
+
+      simple_quiz_export = QuestionnaireExport.export(simple_quiz)
+
+      assert simple_quiz_export == %{
+               manifest: simple_quiz(),
+               audio_ids: []
+             }
+    end
+  end
+
+  defp empty_quiz() do
+    %{
+      steps: [empty_step()],
+      settings: %{},
+      quota_completed_steps: nil,
+      partial_relevant_config: nil,
+      name: nil,
+      modes: [
+        "sms"
+      ],
+      languages: [
+        "en"
+      ],
+      default_language: "en"
+    }
+  end
+
+  defp empty_step() do
+    %{
+      type: "multiple-choice",
+      title: "",
+      store: "",
+      prompt: %{
+        en: %{
+          sms: "",
+          mobileweb: "",
+          ivr: %{
+            text: "",
+            audio_source: "tts"
           }
-        },
-        id: "e7590b58-5adb-48d1-a5db-4a118418ea88",
-        choices: []
+        }
+      },
+      id: "e7590b58-5adb-48d1-a5db-4a118418ea88",
+      choices: []
+    }
+  end
+
+  defp simple_quiz() do
+    %{
+      empty_quiz()
+      | name: "My questionnaire title",
+        settings: simple_quiz_settings(),
+        steps: [
+          simple_choice_step()
+        ]
+    }
+  end
+
+  defp simple_choice_step() do
+    %{
+      type: "multiple-choice",
+      title: "My question title",
+      store: "My variable name",
+      prompt: %{
+        en: %{
+          sms: "My question prompt",
+          mobileweb: "",
+          ivr: %{
+            text: "",
+            audio_source: "tts"
+          }
+        }
+      },
+      id: "0b11a399-9b81-4552-a603-7df50d52f991",
+      choices: []
+    }
+  end
+
+  defp simple_quiz_settings() do
+    %{
+      thank_you_message: %{
+        en: %{
+          sms: "My thank you message"
+        }
+      },
+      error_message: %{
+        en: %{
+          sms: "My error message"
+        }
       }
-
-      empty_quiz = %Questionnaire{
-        steps: [empty_step],
-        settings: %{},
-        quota_completed_steps: nil,
-        partial_relevant_config: nil,
-        name: nil,
-        modes: [
-          "sms"
-        ],
-        languages: [
-          "en"
-        ],
-        default_language: "en"
-      }
-
-      simple_quiz = %Questionnaire{
-        empty_quiz
-        | name: "My questionnaire title",
-          settings: %{
-            thank_you_message: %{
-              en: %{
-                sms: "My thank you message"
-              }
-            },
-            error_message: %{
-              en: %{
-                sms: "My error message"
-              }
-            }
-          },
-          steps: [
-            %{
-              type: "multiple-choice",
-              title: "My question title",
-              store: "My variable name",
-              prompt: %{
-                en: %{
-                  sms: "My question prompt",
-                  mobileweb: "",
-                  ivr: %{
-                    text: "",
-                    audio_source: "tts"
-                  }
-                }
-              },
-              id: "0b11a399-9b81-4552-a603-7df50d52f991",
-              choices: []
-            }
-          ]
-      }
-
-      {:ok, empty_quiz: empty_quiz, simple_quiz: simple_quiz}
-    end
-
-    test "exports an empty questionnaire", %{empty_quiz: quiz} do
-      quiz_export = QuestionnaireExport.export(quiz)
-
-      assert quiz_export == %{
-               manifest: %{
-                 default_language: "en",
-                 languages: ["en"],
-                 modes: ["sms"],
-                 name: nil,
-                 partial_relevant_config: nil,
-                 quota_completed_steps: nil,
-                 settings: %{},
-                 steps: [
-                   %{
-                     choices: [],
-                     id: "e7590b58-5adb-48d1-a5db-4a118418ea88",
-                     prompt: %{
-                       en: %{ivr: %{audio_source: "tts", text: ""}, mobileweb: "", sms: ""}
-                     },
-                     store: "",
-                     title: "",
-                     type: "multiple-choice"
-                   }
-                 ]
-               },
-               audio_ids: []
-             }
-    end
-
-    test "exports a simple questionnaire", %{simple_quiz: quiz} do
-      quiz_export = QuestionnaireExport.export(quiz)
-
-      assert quiz_export == %{
-               manifest: %{
-                 default_language: "en",
-                 languages: ["en"],
-                 modes: ["sms"],
-                 name: "My questionnaire title",
-                 partial_relevant_config: nil,
-                 quota_completed_steps: nil,
-                 settings: %{
-                   error_message: %{en: %{sms: "My error message"}},
-                   thank_you_message: %{en: %{sms: "My thank you message"}}
-                 },
-                 steps: [
-                   %{
-                     choices: [],
-                     id: "0b11a399-9b81-4552-a603-7df50d52f991",
-                     prompt: %{
-                       en: %{
-                         ivr: %{audio_source: "tts", text: ""},
-                         mobileweb: "",
-                         sms: "My question prompt"
-                       }
-                     },
-                     store: "My variable name",
-                     title: "My question title",
-                     type: "multiple-choice"
-                   }
-                 ]
-               },
-               audio_ids: []
-             }
-    end
+    }
   end
 
   describe "QuestionnaireExport.clean_i18n_quiz/1" do
