@@ -4,48 +4,7 @@ defmodule Ask.Runtime.QuestionnaireExportTest do
   alias Ask.Runtime.{QuestionnaireExport, CleanI18n}
 
   describe "Ask.Runtime.QuestionnaireExport/1" do
-    test "exports an empty questionnaire" do
-      empty_quiz = Map.merge(%Questionnaire{}, empty_quiz())
-
-      empty_quiz_export = QuestionnaireExport.export(empty_quiz)
-
-      assert empty_quiz_export == %{
-               manifest: empty_quiz(),
-               audio_ids: []
-             }
-    end
-
-    test "exports a simple questionnaire" do
-      simple_quiz = Map.merge(%Questionnaire{}, simple_quiz())
-
-      simple_quiz_export = QuestionnaireExport.export(simple_quiz)
-
-      assert simple_quiz_export == %{
-               manifest: simple_quiz(),
-               audio_ids: []
-             }
-    end
-  end
-
-  defp empty_quiz() do
-    %{
-      steps: [empty_step()],
-      settings: %{},
-      quota_completed_steps: nil,
-      partial_relevant_config: nil,
-      name: nil,
-      modes: [
-        "sms"
-      ],
-      languages: [
-        "en"
-      ],
-      default_language: "en"
-    }
-  end
-
-  defp empty_step() do
-    %{
+    @empty_step %{
       type: "multiple-choice",
       title: "",
       store: "",
@@ -62,21 +21,36 @@ defmodule Ask.Runtime.QuestionnaireExportTest do
       id: "e7590b58-5adb-48d1-a5db-4a118418ea88",
       choices: []
     }
-  end
 
-  defp simple_quiz() do
-    %{
-      empty_quiz()
-      | name: "My questionnaire title",
-        settings: simple_quiz_settings(),
-        steps: [
-          simple_choice_step()
-        ]
+    @empty_quiz %{
+      steps: [@empty_step],
+      settings: %{},
+      quota_completed_steps: nil,
+      partial_relevant_config: nil,
+      name: nil,
+      modes: [
+        "sms"
+      ],
+      languages: [
+        "en"
+      ],
+      default_language: "en"
     }
-  end
 
-  defp simple_choice_step() do
-    %{
+    @simple_quiz_settings %{
+      thank_you_message: %{
+        en: %{
+          sms: "My thank you message"
+        }
+      },
+      error_message: %{
+        en: %{
+          sms: "My error message"
+        }
+      }
+    }
+
+    @simple_choice_step %{
       type: "multiple-choice",
       title: "My question title",
       store: "My variable name",
@@ -93,21 +67,37 @@ defmodule Ask.Runtime.QuestionnaireExportTest do
       id: "0b11a399-9b81-4552-a603-7df50d52f991",
       choices: []
     }
-  end
 
-  defp simple_quiz_settings() do
-    %{
-      thank_you_message: %{
-        en: %{
-          sms: "My thank you message"
-        }
-      },
-      error_message: %{
-        en: %{
-          sms: "My error message"
-        }
-      }
+    @simple_quiz %{
+      @empty_quiz
+      | name: "My questionnaire title",
+        settings: @simple_quiz_settings,
+        steps: [
+          @simple_choice_step
+        ]
     }
+
+    test "exports an empty questionnaire" do
+      empty_quiz = Map.merge(%Questionnaire{}, @empty_quiz)
+
+      empty_quiz_export = QuestionnaireExport.export(empty_quiz)
+
+      assert empty_quiz_export == %{
+               manifest: @empty_quiz,
+               audio_ids: []
+             }
+    end
+
+    test "exports a simple questionnaire" do
+      simple_quiz = Map.merge(%Questionnaire{}, @simple_quiz)
+
+      simple_quiz_export = QuestionnaireExport.export(simple_quiz)
+
+      assert simple_quiz_export == %{
+               manifest: @simple_quiz,
+               audio_ids: []
+             }
+    end
   end
 
   describe "QuestionnaireExport.clean_i18n_quiz/1" do
