@@ -227,4 +227,6 @@ defmodule Ask.Runtime.CleanI18n do
       Map.delete(entity_acc, lang)
     end)
   end
+
+  defp clean_base_case(entity, _langs), do: entity
 end

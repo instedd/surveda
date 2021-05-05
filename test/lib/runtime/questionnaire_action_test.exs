@@ -20,8 +20,8 @@ defmodule Ask.Runtime.QuestionnaireExportTest do
     end
   end
 
-  describe "CleanI18n" do
-    test "base case" do
+  describe "CleanI18n.clean/3" do
+    test "cleans a base case" do
       entity = %{"en" => "foo", "es" => "bar"}
 
       clean = CleanI18n.clean(entity, ["en"], "")
@@ -29,7 +29,7 @@ defmodule Ask.Runtime.QuestionnaireExportTest do
       assert clean == %{"en" => "foo"}
     end
 
-    test "clean every map element" do
+    test "cleans every map element" do
       entity = %{"bar" => %{"en" => "foo", "es" => "bar"}}
 
       clean = CleanI18n.clean(entity, ["en"], ".[]")
@@ -37,7 +37,7 @@ defmodule Ask.Runtime.QuestionnaireExportTest do
       assert clean == %{"bar" => %{"en" => "foo"}}
     end
 
-    test "clean every list element" do
+    test "cleans every list element" do
       entity = [%{"en" => "foo", "es" => "bar"}]
 
       clean = CleanI18n.clean(entity, ["en"], ".[]")
@@ -45,12 +45,46 @@ defmodule Ask.Runtime.QuestionnaireExportTest do
       assert clean == [%{"en" => "foo"}]
     end
 
-    test "clean the requested key of a map" do
+    test "cleans the requested key of a map" do
       entity = %{"a" => %{"en" => "foo", "es" => "bar"}, "b" => %{"en" => "foo", "es" => "bar"}}
 
       clean = CleanI18n.clean(entity, ["en"], ".a")
 
       assert clean == %{"a" => %{"en" => "foo"}, "b" => %{"en" => "foo", "es" => "bar"}}
+    end
+
+    test "doesn't crash when the content of the requested key isn't a map" do
+      entity = %{"foo" => "bar"}
+
+      clean = CleanI18n.clean(entity, ["baz"], ".foo")
+
+      assert clean == %{"foo" => "bar"}
+    end
+
+    test "cleans choices (when the content of one of the requested keys isn't a map)" do
+      # A real case cut that was making it crash.
+      # What was making it crash: `"ivr" => []`. Because [] isn't a map.
+      entity = [
+        %{
+          "choices" => [
+            %{
+              "responses" => %{"ivr" => [], "mobileweb" => %{"en" => "foo", "es" => "bar"}}
+            }
+          ]
+        }
+      ]
+
+      clean = CleanI18n.clean(entity, ["en"], ".[].choices.[].responses.[]")
+
+      assert clean == [
+               %{
+                 "choices" => [
+                   %{
+                     "responses" => %{"ivr" => [], "mobileweb" => %{"en" => "foo"}}
+                   }
+                 ]
+               }
+             ]
     end
   end
 end
