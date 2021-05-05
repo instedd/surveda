@@ -1,8 +1,106 @@
 defmodule Ask.Runtime.QuestionnaireExportTest do
   use Ask.ModelCase
+  alias Ask.Questionnaire
   alias Ask.Runtime.{QuestionnaireExport, CleanI18n}
 
-  describe "clean_i18n_quiz" do
+  describe "Ask.Runtime.QuestionnaireExport/1" do
+    @empty_step %{
+      type: "multiple-choice",
+      title: "",
+      store: "",
+      prompt: %{
+        en: %{
+          sms: "",
+          mobileweb: "",
+          ivr: %{
+            text: "",
+            audio_source: "tts"
+          }
+        }
+      },
+      id: "e7590b58-5adb-48d1-a5db-4a118418ea88",
+      choices: []
+    }
+
+    @empty_quiz %{
+      steps: [@empty_step],
+      settings: %{},
+      quota_completed_steps: nil,
+      partial_relevant_config: nil,
+      name: nil,
+      modes: [
+        "sms"
+      ],
+      languages: [
+        "en"
+      ],
+      default_language: "en"
+    }
+
+    @simple_quiz_settings %{
+      thank_you_message: %{
+        en: %{
+          sms: "My thank you message"
+        }
+      },
+      error_message: %{
+        en: %{
+          sms: "My error message"
+        }
+      }
+    }
+
+    @simple_choice_step %{
+      type: "multiple-choice",
+      title: "My question title",
+      store: "My variable name",
+      prompt: %{
+        en: %{
+          sms: "My question prompt",
+          mobileweb: "",
+          ivr: %{
+            text: "",
+            audio_source: "tts"
+          }
+        }
+      },
+      id: "0b11a399-9b81-4552-a603-7df50d52f991",
+      choices: []
+    }
+
+    @simple_quiz %{
+      @empty_quiz
+      | name: "My questionnaire title",
+        settings: @simple_quiz_settings,
+        steps: [
+          @simple_choice_step
+        ]
+    }
+
+    test "exports an empty questionnaire" do
+      empty_quiz = Map.merge(%Questionnaire{}, @empty_quiz)
+
+      empty_quiz_export = QuestionnaireExport.export(empty_quiz)
+
+      assert empty_quiz_export == %{
+               manifest: @empty_quiz,
+               audio_ids: []
+             }
+    end
+
+    test "exports a simple questionnaire" do
+      simple_quiz = Map.merge(%Questionnaire{}, @simple_quiz)
+
+      simple_quiz_export = QuestionnaireExport.export(simple_quiz)
+
+      assert simple_quiz_export == %{
+               manifest: @simple_quiz,
+               audio_ids: []
+             }
+    end
+  end
+
+  describe "QuestionnaireExport.clean_i18n_quiz/1" do
     test "doesn't change a quiz with no deleted languages" do
       quiz = insert(:questionnaire, languages: ["en"])
 

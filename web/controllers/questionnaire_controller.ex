@@ -268,7 +268,7 @@ defmodule Ask.QuestionnaireController do
 
     questionnaire = load_questionnaire_not_snapshot(project.id, id)
 
-    zip_file = QuestionnaireAction.export(questionnaire)
+    zip_file = QuestionnaireAction.export_and_zip(questionnaire)
 
     conn = conn
            |> put_resp_content_type("application/octet-stream")
