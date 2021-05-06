@@ -120,6 +120,20 @@ defmodule Ask.Runtime.QuestionnaireExportTest do
       }
     }
 
+    @ivr_audio_id "6fe2fac8-18bf-48f7-970c-204d2f3408b0"
+
+    @ivr_audio_question_prompt %{
+      "en" => %{
+        "sms" => "",
+        "mobileweb" => "",
+        "ivr" => %{
+          "text" => "",
+          "audio_source" => "upload",
+          "audio_id" => @ivr_audio_id
+        }
+      }
+    }
+
     @sms_simple_choice %{
       value: "My SMS response 1",
       skip_logic: nil,
@@ -190,6 +204,14 @@ defmodule Ask.Runtime.QuestionnaireExportTest do
                                     }
                                   )
 
+    @ivr_audio_simple_choice_step Map.merge(
+                                    @simple_choice_step,
+                                    %{
+                                      "prompt" => @ivr_audio_question_prompt,
+                                      "choices" => [@ivr_simple_choice]
+                                    }
+                                  )
+
     @sms_simple_quiz Map.merge(
                        @sms_empty_quiz,
                        %{
@@ -219,6 +241,17 @@ defmodule Ask.Runtime.QuestionnaireExportTest do
                                settings: @mobileweb_simple_quiz_settings,
                                steps: [
                                  @mobileweb_simple_choice_step
+                               ]
+                             }
+                           )
+
+    @ivr_audio_simple_quiz Map.merge(
+                             @ivr_empty_quiz,
+                             %{
+                               name: "My questionnaire title",
+                               settings: @ivr_simple_quiz_settings,
+                               steps: [
+                                 @ivr_audio_simple_choice_step
                                ]
                              }
                            )
@@ -264,6 +297,17 @@ defmodule Ask.Runtime.QuestionnaireExportTest do
       assert mobileweb_simple_quiz_export == %{
                manifest: @mobileweb_simple_quiz,
                audio_ids: []
+             }
+    end
+
+    test "IVR - exports a simple questionnaire with audios" do
+      ivr_audio_simple_quiz = Map.merge(%Questionnaire{}, @ivr_audio_simple_quiz)
+
+      ivr_audio_simple_quiz_export = QuestionnaireExport.export(ivr_audio_simple_quiz)
+
+      assert ivr_audio_simple_quiz_export == %{
+               manifest: @ivr_audio_simple_quiz,
+               audio_ids: [@ivr_audio_id]
              }
     end
   end
