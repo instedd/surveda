@@ -293,17 +293,6 @@ defmodule Ask.Runtime.QuestionnaireExportTest do
              }
     end
 
-    test "Mobile Web - exports a simple questionnaire" do
-      mobileweb_simple_quiz = Map.merge(%Questionnaire{}, @mobileweb_simple_quiz)
-
-      mobileweb_simple_quiz_export = QuestionnaireExport.export(mobileweb_simple_quiz)
-
-      assert mobileweb_simple_quiz_export == %{
-               manifest: @mobileweb_simple_quiz,
-               audio_ids: []
-             }
-    end
-
     test "IVR - exports a simple questionnaire with audios" do
       ivr_audio_simple_quiz = Map.merge(%Questionnaire{}, @ivr_audio_simple_quiz)
 
@@ -312,6 +301,17 @@ defmodule Ask.Runtime.QuestionnaireExportTest do
       assert ivr_audio_simple_quiz_export == %{
                manifest: @ivr_audio_simple_quiz,
                audio_ids: [@ivr_audio_id]
+             }
+    end
+
+    test "Mobile Web - exports a simple questionnaire" do
+      mobileweb_simple_quiz = Map.merge(%Questionnaire{}, @mobileweb_simple_quiz)
+
+      mobileweb_simple_quiz_export = QuestionnaireExport.export(mobileweb_simple_quiz)
+
+      assert mobileweb_simple_quiz_export == %{
+               manifest: @mobileweb_simple_quiz,
+               audio_ids: []
              }
     end
   end
