@@ -72,26 +72,26 @@ defmodule Ask.Runtime.QuestionnaireExportTest do
     end
 
     test "SMS - exports a deleted language simple questionnaire" do
-      deleted_language_simple_quiz = Map.merge(%Questionnaire{}, @deleted_language_simple_quiz)
+      sms_deleted_language_simple_quiz = Map.merge(%Questionnaire{}, @sms_deleted_language_simple_quiz)
 
-      deleted_language_simple_quiz_export =
-        QuestionnaireExport.export(deleted_language_simple_quiz)
+      sms_deleted_language_simple_quiz_export =
+        QuestionnaireExport.export(sms_deleted_language_simple_quiz)
 
-      assert deleted_language_simple_quiz_export == %{
-               manifest: @deleted_language_simple_quiz_export,
+      assert sms_deleted_language_simple_quiz_export == %{
+               manifest: @sms_deleted_language_simple_quiz_export,
                audio_ids: []
              }
     end
 
     test "SMS - exports a deleted language with section questionnaire" do
-      deleted_language_quiz_with_section =
-        Map.merge(%Questionnaire{}, @deleted_language_quiz_with_section)
+      sms_deleted_language_quiz_with_section =
+        Map.merge(%Questionnaire{}, @sms_deleted_language_quiz_with_section)
 
-      deleted_language_quiz_with_section_export =
-        QuestionnaireExport.export(deleted_language_quiz_with_section)
+      sms_deleted_language_quiz_with_section_export =
+        QuestionnaireExport.export(sms_deleted_language_quiz_with_section)
 
-      assert deleted_language_quiz_with_section_export == %{
-               manifest: @deleted_language_quiz_with_section_export,
+      assert sms_deleted_language_quiz_with_section_export == %{
+               manifest: @sms_deleted_language_quiz_with_section_export,
                audio_ids: []
              }
     end

@@ -302,7 +302,7 @@ defmodule Ask.DummyQuestionnaires do
                                }
                              )
 
-      @deleted_language_simple_quiz Map.merge(
+      @sms_deleted_language_simple_quiz Map.merge(
                                       @sms_multilingual_quiz,
                                       %{
                                         steps: [
@@ -314,8 +314,8 @@ defmodule Ask.DummyQuestionnaires do
                                       }
                                     )
 
-      @deleted_language_simple_quiz_export Map.merge(
-                                             @deleted_language_simple_quiz,
+      @sms_deleted_language_simple_quiz_export Map.merge(
+                                             @sms_deleted_language_simple_quiz,
                                              %{
                                                steps: [
                                                  @sms_monolingual_choice_step
@@ -333,7 +333,7 @@ defmodule Ask.DummyQuestionnaires do
         "id" => "e7493b26-b589-432d-bea3-e395d8394339"
       }
 
-      @deleted_language_monolingual_section %{
+      @sms_deleted_language_monolingual_section %{
         "type" => "section",
         "title" => "",
         "steps" => [
@@ -353,7 +353,7 @@ defmodule Ask.DummyQuestionnaires do
         "id" => "e7493b26-b589-432d-bea3-e395d8394339"
       }
 
-      @deleted_language_quiz_with_section Map.merge(
+      @sms_deleted_language_quiz_with_section Map.merge(
                                             @sms_multilingual_quiz,
                                             %{
                                               steps: [
@@ -365,11 +365,11 @@ defmodule Ask.DummyQuestionnaires do
                                             }
                                           )
 
-      @deleted_language_quiz_with_section_export Map.merge(
-                                                   @deleted_language_simple_quiz,
+      @sms_deleted_language_quiz_with_section_export Map.merge(
+                                                   @sms_deleted_language_simple_quiz,
                                                    %{
                                                      steps: [
-                                                       @deleted_language_monolingual_section
+                                                       @sms_deleted_language_monolingual_section
                                                      ]
                                                    }
                                                  )
