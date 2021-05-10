@@ -326,6 +326,57 @@ defmodule Ask.Runtime.QuestionnaireExportTest do
                                            }
                                          )
 
+    @deleted_language_multilingual_section %{
+      "type" => "section",
+      "title" => "",
+      "steps" => [
+        @sms_multilingual_choice_step
+      ],
+      "randomize" => false,
+      "id" => "e7493b26-b589-432d-bea3-e395d8394339"
+    }
+
+    @deleted_language_monolingual_section %{
+      "type" => "section",
+      "title" => "",
+      "steps" => [
+        @sms_monolingual_choice_step
+      ],
+      "randomize" => false,
+      "id" => "e7493b26-b589-432d-bea3-e395d8394339"
+    }
+
+    @deleted_language_multilingual_section %{
+      "type" => "section",
+      "title" => "",
+      "steps" => [
+        @sms_multilingual_choice_step
+      ],
+      "randomize" => false,
+      "id" => "e7493b26-b589-432d-bea3-e395d8394339"
+    }
+
+    @deleted_language_quiz_with_section Map.merge(
+                                          @sms_multilingual_quiz,
+                                          %{
+                                            steps: [
+                                              @deleted_language_multilingual_section
+                                            ],
+                                            languages: [
+                                              "en"
+                                            ]
+                                          }
+                                        )
+
+    @deleted_language_quiz_with_section_export Map.merge(
+                                                 @deleted_language_simple_quiz,
+                                                 %{
+                                                   steps: [
+                                                     @deleted_language_monolingual_section
+                                                   ]
+                                                 }
+                                               )
+
     test "SMS - exports an empty questionnaire" do
       sms_empty_quiz = Map.merge(%Questionnaire{}, @sms_empty_quiz)
 
@@ -400,6 +451,19 @@ defmodule Ask.Runtime.QuestionnaireExportTest do
 
       assert deleted_language_simple_quiz_export == %{
                manifest: @deleted_language_simple_quiz_export,
+               audio_ids: []
+             }
+    end
+
+    test "SMS - exports a deleted language with section questionnaire" do
+      deleted_language_quiz_with_section =
+        Map.merge(%Questionnaire{}, @deleted_language_quiz_with_section)
+
+      deleted_language_quiz_with_section_export =
+        QuestionnaireExport.export(deleted_language_quiz_with_section)
+
+      assert deleted_language_quiz_with_section_export == %{
+               manifest: @deleted_language_quiz_with_section_export,
                audio_ids: []
              }
     end
