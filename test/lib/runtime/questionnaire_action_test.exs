@@ -4,22 +4,24 @@ defmodule Ask.Runtime.QuestionnaireExportTest do
   alias Ask.Runtime.{QuestionnaireExport, CleanI18n}
 
   describe "Ask.Runtime.QuestionnaireExport/1" do
+    @quiz_title "My questionnaire title"
+
     @empty_step %{
-      type: "multiple-choice",
-      title: "",
-      store: "",
-      prompt: %{
-        en: %{
-          sms: "",
-          mobileweb: "",
-          ivr: %{
-            text: "",
-            audio_source: "tts"
+      "type" => "multiple-choice",
+      "title" => "",
+      "store" => "",
+      "prompt" => %{
+        "en" => %{
+          "sms" => "",
+          "mobileweb" => "",
+          "ivr" => %{
+            "text" => "",
+            "audio_source" => "tts"
           }
         }
       },
-      id: "e7590b58-5adb-48d1-a5db-4a118418ea88",
-      choices: []
+      "id" => "e7590b58-5adb-48d1-a5db-4a118418ea88",
+      "choices" => []
     }
 
     @empty_quiz %{
@@ -28,73 +30,287 @@ defmodule Ask.Runtime.QuestionnaireExportTest do
       quota_completed_steps: nil,
       partial_relevant_config: nil,
       name: nil,
-      modes: [
-        "sms"
-      ],
       languages: [
         "en"
       ],
       default_language: "en"
     }
 
-    @simple_quiz_settings %{
-      thank_you_message: %{
-        en: %{
-          sms: "My thank you message"
+    @sms_empty_quiz Map.put(@empty_quiz, :modes, ["sms"])
+    @ivr_empty_quiz Map.put(@empty_quiz, :modes, ["ivr"])
+    @mobileweb_empty_quiz Map.put(@empty_quiz, :modes, ["mobileweb"])
+
+    @sms_simple_quiz_settings %{
+      "thank_you_message" => %{
+        "en" => %{
+          "sms" => "My thank you message"
         }
       },
-      error_message: %{
-        en: %{
-          sms: "My error message"
+      "error_message" => %{
+        "en" => %{
+          "sms" => "My error message"
+        }
+      }
+    }
+
+    @ivr_simple_quiz_settings %{
+      "error_message" => %{
+        "en" => %{"ivr" => %{"audio_source" => "tts", "text" => "My IVR error message"}}
+      },
+      "thank_you_message" => %{
+        "en" => %{"ivr" => %{"audio_source" => "tts", "text" => "My IVR thank you message"}}
+      }
+    }
+
+    @mobileweb_simple_quiz_settings %{
+      "title" => %{
+        "en" => "My MW title"
+      },
+      "thank_you_message" => %{
+        "en" => %{
+          "mobileweb" => "<p>My MW thank you message</p>"
+        }
+      },
+      "survey_already_taken_message" => %{
+        "en" => "<p>My MW survey already taken message</p>"
+      },
+      "mobileweb_survey_is_over_message" => "<p>My MW survey is over message</p>",
+      "mobileweb_sms_message" => "My MW SMS message",
+      "mobileweb_intro_message" => "<p>My MW intro message</p>",
+      "error_message" => %{
+        "en" => %{
+          "mobileweb" => "<p>My MW error message</p>"
         }
       }
     }
 
     @simple_choice_step %{
-      type: "multiple-choice",
-      title: "My question title",
-      store: "My variable name",
-      prompt: %{
-        en: %{
-          sms: "My question prompt",
-          mobileweb: "",
-          ivr: %{
-            text: "",
-            audio_source: "tts"
-          }
+      "type" => "multiple-choice",
+      "title" => "My question title",
+      "store" => "My variable name",
+      "id" => "0b11a399-9b81-4552-a603-7df50d52f991"
+    }
+
+    @sms_question_prompt %{
+      "en" => %{
+        "sms" => "My question prompt",
+        "mobileweb" => "",
+        "ivr" => %{
+          "text" => "",
+          "audio_source" => "tts"
         }
-      },
-      id: "0b11a399-9b81-4552-a603-7df50d52f991",
-      choices: []
+      }
     }
 
-    @simple_quiz %{
-      @empty_quiz
-      | name: "My questionnaire title",
-        settings: @simple_quiz_settings,
-        steps: [
-          @simple_choice_step
+    @ivr_question_prompt %{
+      "en" => %{
+        "ivr" => %{
+          "audio_source" => "tts",
+          "text" => "Foo"
+        },
+        "mobileweb" => "",
+        "sms" => ""
+      }
+    }
+
+    @mobileweb_question_prompt %{
+      "en" => %{
+        "sms" => "",
+        "mobileweb" => "<p>My MW question prompt</p>",
+        "ivr" => %{
+          "text" => "",
+          "audio_source" => "tts"
+        }
+      }
+    }
+
+    @ivr_audio_id "6fe2fac8-18bf-48f7-970c-204d2f3408b0"
+
+    @ivr_audio_question_prompt %{
+      "en" => %{
+        "sms" => "",
+        "mobileweb" => "",
+        "ivr" => %{
+          "text" => "",
+          "audio_source" => "upload",
+          "audio_id" => @ivr_audio_id
+        }
+      }
+    }
+
+    @sms_simple_choice %{
+      "value" => "My SMS response 1",
+      "skip_logic" => nil,
+      "responses" => %{
+        "sms" => %{
+          "en" => [
+            "1"
+          ]
+        },
+        "mobileweb" => %{
+          "en" => ""
+        },
+        "ivr" => []
+      }
+    }
+
+    @ivr_simple_choice %{
+      "value" => "My IVR response 1",
+      "skip_logic" => nil,
+      "responses" => %{
+        "sms" => %{
+          "en" => []
+        },
+        "mobileweb" => %{
+          "en" => ""
+        },
+        "ivr" => [
+          "1"
         ]
+      }
     }
 
-    test "exports an empty questionnaire" do
-      empty_quiz = Map.merge(%Questionnaire{}, @empty_quiz)
+    @mobileweb_simple_choice %{
+      "value" => "My MW response 1",
+      "skip_logic" => nil,
+      "responses" => %{
+        "sms" => %{
+          "en" => []
+        },
+        "mobileweb" => %{
+          "en" => "1"
+        },
+        "ivr" => []
+      }
+    }
 
-      empty_quiz_export = QuestionnaireExport.export(empty_quiz)
+    @sms_simple_choice_step Map.merge(
+                              @simple_choice_step,
+                              %{
+                                "prompt" => @sms_question_prompt,
+                                "choices" => [@sms_simple_choice]
+                              }
+                            )
 
-      assert empty_quiz_export == %{
-               manifest: @empty_quiz,
+    @ivr_simple_choice_step Map.merge(
+                              @simple_choice_step,
+                              %{
+                                "prompt" => @ivr_question_prompt,
+                                "choices" => [@ivr_simple_choice]
+                              }
+                            )
+
+    @mobileweb_simple_choice_step Map.merge(
+                                    @simple_choice_step,
+                                    %{
+                                      "prompt" => @mobileweb_question_prompt,
+                                      "choices" => [@mobileweb_simple_choice]
+                                    }
+                                  )
+
+    @ivr_audio_simple_choice_step Map.merge(
+                                    @simple_choice_step,
+                                    %{
+                                      "prompt" => @ivr_audio_question_prompt,
+                                      "choices" => [@ivr_simple_choice]
+                                    }
+                                  )
+
+    @sms_simple_quiz Map.merge(
+                       @sms_empty_quiz,
+                       %{
+                         name: @quiz_title,
+                         settings: @sms_simple_quiz_settings,
+                         steps: [
+                           @sms_simple_choice_step
+                         ]
+                       }
+                     )
+
+    @ivr_simple_quiz Map.merge(
+                       @ivr_empty_quiz,
+                       %{
+                         name: @quiz_title,
+                         settings: @ivr_simple_quiz_settings,
+                         steps: [
+                           @ivr_simple_choice_step
+                         ]
+                       }
+                     )
+
+    @mobileweb_simple_quiz Map.merge(
+                             @mobileweb_empty_quiz,
+                             %{
+                               name: @quiz_title,
+                               settings: @mobileweb_simple_quiz_settings,
+                               steps: [
+                                 @mobileweb_simple_choice_step
+                               ]
+                             }
+                           )
+
+    @ivr_audio_simple_quiz Map.merge(
+                             @ivr_empty_quiz,
+                             %{
+                               name: @quiz_title,
+                               settings: @ivr_simple_quiz_settings,
+                               steps: [
+                                 @ivr_audio_simple_choice_step
+                               ]
+                             }
+                           )
+
+    test "SMS - exports an empty questionnaire" do
+      sms_empty_quiz = Map.merge(%Questionnaire{}, @sms_empty_quiz)
+
+      sms_empty_quiz_export = QuestionnaireExport.export(sms_empty_quiz)
+
+      assert sms_empty_quiz_export == %{
+               manifest: @sms_empty_quiz,
                audio_ids: []
              }
     end
 
-    test "exports a simple questionnaire" do
-      simple_quiz = Map.merge(%Questionnaire{}, @simple_quiz)
+    test "SMS - exports a simple questionnaire" do
+      sms_simple_quiz = Map.merge(%Questionnaire{}, @sms_simple_quiz)
 
-      simple_quiz_export = QuestionnaireExport.export(simple_quiz)
+      simple_quiz_export = QuestionnaireExport.export(sms_simple_quiz)
 
       assert simple_quiz_export == %{
-               manifest: @simple_quiz,
+               manifest: @sms_simple_quiz,
+               audio_ids: []
+             }
+    end
+
+    test "IVR - exports a simple questionnaire" do
+      ivr_simple_quiz = Map.merge(%Questionnaire{}, @ivr_simple_quiz)
+
+      ivr_simple_quiz_export = QuestionnaireExport.export(ivr_simple_quiz)
+
+      assert ivr_simple_quiz_export == %{
+               manifest: @ivr_simple_quiz,
+               audio_ids: []
+             }
+    end
+
+    test "IVR - exports a simple questionnaire with audios" do
+      ivr_audio_simple_quiz = Map.merge(%Questionnaire{}, @ivr_audio_simple_quiz)
+
+      ivr_audio_simple_quiz_export = QuestionnaireExport.export(ivr_audio_simple_quiz)
+
+      assert ivr_audio_simple_quiz_export == %{
+               manifest: @ivr_audio_simple_quiz,
+               audio_ids: [@ivr_audio_id]
+             }
+    end
+
+    test "Mobile Web - exports a simple questionnaire" do
+      mobileweb_simple_quiz = Map.merge(%Questionnaire{}, @mobileweb_simple_quiz)
+
+      mobileweb_simple_quiz_export = QuestionnaireExport.export(mobileweb_simple_quiz)
+
+      assert mobileweb_simple_quiz_export == %{
+               manifest: @mobileweb_simple_quiz,
                audio_ids: []
              }
     end
