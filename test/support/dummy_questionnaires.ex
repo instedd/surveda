@@ -1,4 +1,65 @@
+defmodule Ask.DummyQuestionnaireBuilder do
+  alias Ask.Questionnaire
+
+  def simple_choice(response) do
+    %{
+      "value" => "My response 1",
+      "skip_logic" => nil,
+      "responses" => response
+    }
+  end
+
+  def section_with_step(step) do
+    %{
+      "type" => "section",
+      "title" => "",
+      "steps" => [
+        step
+      ],
+      "randomize" => false,
+      "id" => "e7493b26-b589-432d-bea3-e395d8394339"
+    }
+  end
+
+  def build_quiz(quiz, options \\ []) do
+    steps = Keyword.get(options, :steps)
+    languages = Keyword.get(options, :languages)
+    settings = Keyword.get(options, :settings)
+    name = Keyword.get(options, :name)
+
+    quiz = if steps, do: Map.put(quiz, :steps, steps), else: quiz
+    quiz = if languages, do: Map.put(quiz, :languages, languages), else: quiz
+    quiz = if settings, do: Map.put(quiz, :settings, settings), else: quiz
+    quiz = if name, do: Map.put(quiz, :name, name), else: quiz
+
+    quiz
+  end
+
+  def build_step(step, options \\ []) do
+    prompt = Keyword.get(options, :prompt)
+    choices = Keyword.get(options, :choices)
+
+    step = if prompt, do: Map.put(step, "prompt", prompt), else: step
+    step = if prompt, do: Map.put(step, "choices", choices), else: step
+
+    step
+  end
+
+  def modelize_quiz(quiz) do
+    Map.merge(%Questionnaire{}, quiz)
+  end
+
+  def build_expected_export(quiz, audio_ids \\ []) do
+    %{
+      manifest: quiz,
+      audio_ids: audio_ids
+    }
+  end
+end
+
 defmodule Ask.DummyQuestionnaires do
+  import Ask.DummyQuestionnaireBuilder
+
   defmacro __using__(_) do
     quote do
       @quiz_title "My questionnaire title"
@@ -149,230 +210,101 @@ defmodule Ask.DummyQuestionnaires do
         }
       }
 
-      @sms_simple_choice %{
-        "value" => "My SMS response 1",
-        "skip_logic" => nil,
-        "responses" => %{
-          "sms" => %{
-            "en" => [
-              "1"
-            ]
-          },
-          "mobileweb" => %{
-            "en" => ""
-          },
-          "ivr" => []
-        }
-      }
-
-      @ivr_simple_choice %{
-        "value" => "My IVR response 1",
-        "skip_logic" => nil,
-        "responses" => %{
-          "sms" => %{
-            "en" => []
-          },
-          "mobileweb" => %{
-            "en" => ""
-          },
-          "ivr" => [
+      @sms_simple_response %{
+        "sms" => %{
+          "en" => [
             "1"
           ]
-        }
+        },
+        "mobileweb" => %{
+          "en" => ""
+        },
+        "ivr" => []
       }
 
-      @mobileweb_simple_choice %{
-        "value" => "My MW response 1",
-        "skip_logic" => nil,
-        "responses" => %{
-          "sms" => %{
-            "en" => []
-          },
-          "mobileweb" => %{
-            "en" => "1"
-          },
-          "ivr" => []
-        }
+      @sms_simple_choice simple_choice(@sms_simple_response)
+
+      @ivr_simple_response %{
+        "sms" => %{
+          "en" => []
+        },
+        "mobileweb" => %{
+          "en" => ""
+        },
+        "ivr" => [
+          "1"
+        ]
       }
 
-      @sms_simple_choice_step Map.merge(
-                                @simple_choice_step,
-                                %{
-                                  "prompt" => @sms_question_prompt,
-                                  "choices" => [@sms_simple_choice]
-                                }
+      @ivr_simple_choice simple_choice(@ivr_simple_response)
+
+      @mobileweb_simple_response %{
+        "sms" => %{
+          "en" => []
+        },
+        "mobileweb" => %{
+          "en" => "1"
+        },
+        "ivr" => []
+      }
+
+      @mobileweb_simple_choice simple_choice(@mobileweb_simple_response)
+
+      @sms_simple_choice_step build_step(@simple_choice_step,
+                                prompt: @sms_question_prompt,
+                                choices: [@sms_simple_choice]
                               )
 
-      @sms_multilingual_choice_step Map.merge(
+      @sms_multilingual_choice_step build_step(
                                       @simple_choice_step,
-                                      %{
-                                        "prompt" => @sms_multilingual_question_prompt,
-                                        "choices" => []
-                                      }
+                                      prompt: @sms_multilingual_question_prompt,
+                                      choices: []
                                     )
 
-      @sms_monolingual_choice_step Map.merge(
+      @sms_monolingual_choice_step build_step(
                                      @sms_simple_choice_step,
-                                     %{
-                                       "prompt" => @sms_question_prompt,
-                                       "choices" => []
-                                     }
+                                     prompt: @sms_question_prompt,
+                                     choices: []
                                    )
 
-      @ivr_simple_choice_step Map.merge(
+      @ivr_simple_choice_step build_step(
                                 @simple_choice_step,
-                                %{
-                                  "prompt" => @ivr_question_prompt,
-                                  "choices" => [@ivr_simple_choice]
-                                }
+                                prompt: @ivr_question_prompt,
+                                choices: [@ivr_simple_choice]
                               )
 
-      @mobileweb_simple_choice_step Map.merge(
+      @mobileweb_simple_choice_step build_step(
                                       @simple_choice_step,
-                                      %{
-                                        "prompt" => @mobileweb_question_prompt,
-                                        "choices" => [@mobileweb_simple_choice]
-                                      }
+                                      prompt: @mobileweb_question_prompt,
+                                      choices: [@mobileweb_simple_choice]
                                     )
 
-      @ivr_audio_simple_choice_step Map.merge(
+      @ivr_audio_simple_choice_step build_step(
                                       @simple_choice_step,
-                                      %{
-                                        "prompt" => @ivr_audio_question_prompt,
-                                        "choices" => [@ivr_simple_choice]
-                                      }
+                                      prompt: @ivr_audio_question_prompt,
+                                      choices: [@ivr_simple_choice]
                                     )
 
-      @sms_simple_quiz Map.merge(
-                         @sms_empty_quiz,
-                         %{
-                           name: @quiz_title,
-                           settings: @sms_simple_quiz_settings,
-                           steps: [
-                             @sms_simple_choice_step
-                           ]
-                         }
-                       )
-
-      @ivr_simple_quiz Map.merge(
-                         @ivr_empty_quiz,
-                         %{
-                           name: @quiz_title,
-                           settings: @ivr_simple_quiz_settings,
-                           steps: [
-                             @ivr_simple_choice_step
-                           ]
-                         }
-                       )
-
-      @mobileweb_simple_quiz Map.merge(
-                               @mobileweb_empty_quiz,
-                               %{
-                                 name: @quiz_title,
-                                 settings: @mobileweb_simple_quiz_settings,
-                                 steps: [
-                                   @mobileweb_simple_choice_step
-                                 ]
-                               }
+      @sms_multilingual_quiz build_quiz(@sms_empty_quiz,
+                               name: @quiz_title,
+                               settings: @sms_simple_quiz_settings,
+                               steps: [
+                                 @sms_multilingual_choice_step
+                               ],
+                               languages: [
+                                 "en",
+                                 "es"
+                               ]
                              )
 
-      @ivr_audio_simple_quiz Map.merge(
-                               @ivr_empty_quiz,
-                               %{
-                                 name: @quiz_title,
-                                 settings: @ivr_simple_quiz_settings,
-                                 steps: [
-                                   @ivr_audio_simple_choice_step
-                                 ]
-                               }
-                             )
-
-      @sms_multilingual_quiz Map.merge(
-                               @sms_empty_quiz,
-                               %{
-                                 name: @quiz_title,
-                                 settings: @sms_simple_quiz_settings,
-                                 steps: [
-                                   @sms_multilingual_choice_step
-                                 ],
-                                 languages: [
-                                   "en",
-                                   "es"
-                                 ]
-                               }
-                             )
-
-      @sms_deleted_language_simple_quiz Map.merge(
-                                      @sms_multilingual_quiz,
-                                      %{
-                                        steps: [
-                                          @sms_multilingual_choice_step
-                                        ],
-                                        languages: [
-                                          "en"
-                                        ]
-                                      }
-                                    )
-
-      @sms_deleted_language_simple_quiz_export Map.merge(
-                                             @sms_deleted_language_simple_quiz,
-                                             %{
-                                               steps: [
-                                                 @sms_monolingual_choice_step
-                                               ]
-                                             }
-                                           )
-
-      @deleted_language_multilingual_section %{
-        "type" => "section",
-        "title" => "",
-        "steps" => [
-          @sms_multilingual_choice_step
-        ],
-        "randomize" => false,
-        "id" => "e7493b26-b589-432d-bea3-e395d8394339"
-      }
-
-      @sms_deleted_language_monolingual_section %{
-        "type" => "section",
-        "title" => "",
-        "steps" => [
-          @sms_monolingual_choice_step
-        ],
-        "randomize" => false,
-        "id" => "e7493b26-b589-432d-bea3-e395d8394339"
-      }
-
-      @deleted_language_multilingual_section %{
-        "type" => "section",
-        "title" => "",
-        "steps" => [
-          @sms_multilingual_choice_step
-        ],
-        "randomize" => false,
-        "id" => "e7493b26-b589-432d-bea3-e395d8394339"
-      }
-
-      @sms_deleted_language_quiz_with_section Map.merge(
-                                            @sms_multilingual_quiz,
-                                            %{
-                                              steps: [
-                                                @deleted_language_multilingual_section
-                                              ],
-                                              languages: [
-                                                "en"
-                                              ]
-                                            }
-                                          )
-
-      @sms_deleted_language_quiz_with_section_export Map.merge(
-                                                   @sms_deleted_language_simple_quiz,
-                                                   %{
-                                                     steps: [
-                                                       @sms_deleted_language_monolingual_section
-                                                     ]
-                                                   }
-                                                 )
+      @sms_deleted_language_simple_quiz build_quiz(@sms_multilingual_quiz,
+                                          steps: [
+                                            @sms_multilingual_choice_step
+                                          ],
+                                          languages: [
+                                            "en"
+                                          ]
+                                        )
     end
   end
 end

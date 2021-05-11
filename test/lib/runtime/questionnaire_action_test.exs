@@ -1,99 +1,134 @@
 defmodule Ask.Runtime.QuestionnaireExportTest do
   use Ask.ModelCase
   use Ask.DummyQuestionnaires
-  alias Ask.Questionnaire
+  import Ask.DummyQuestionnaireBuilder
   alias Ask.Runtime.{QuestionnaireExport, CleanI18n}
 
   describe "Ask.Runtime.QuestionnaireExport/1" do
     test "SMS - exports an empty questionnaire" do
-      sms_empty_quiz = Map.merge(%Questionnaire{}, @sms_empty_quiz)
+      quiz = @sms_empty_quiz
 
-      sms_empty_quiz_export = QuestionnaireExport.export(sms_empty_quiz)
+      export_result =
+        modelize_quiz(quiz)
+        |> QuestionnaireExport.export()
 
-      assert sms_empty_quiz_export == %{
-               manifest: @sms_empty_quiz,
-               audio_ids: []
-             }
+      assert export_result == build_expected_export(quiz)
     end
 
     test "SMS - exports a simple questionnaire" do
-      sms_simple_quiz = Map.merge(%Questionnaire{}, @sms_simple_quiz)
+      quiz =
+        build_quiz(
+          @sms_empty_quiz,
+          name: @quiz_title,
+          settings: @sms_simple_quiz_settings,
+          steps: [
+            @sms_simple_choice_step
+          ]
+        )
 
-      simple_quiz_export = QuestionnaireExport.export(sms_simple_quiz)
+      export_result = modelize_quiz(quiz) |> QuestionnaireExport.export()
 
-      assert simple_quiz_export == %{
-               manifest: @sms_simple_quiz,
-               audio_ids: []
-             }
+      assert export_result == build_expected_export(quiz)
     end
 
     test "IVR - exports a simple questionnaire" do
-      ivr_simple_quiz = Map.merge(%Questionnaire{}, @ivr_simple_quiz)
+      quiz =
+        build_quiz(
+          @ivr_empty_quiz,
+          name: @quiz_title,
+          settings: @ivr_simple_quiz_settings,
+          steps: [
+            @ivr_simple_choice_step
+          ]
+        )
 
-      ivr_simple_quiz_export = QuestionnaireExport.export(ivr_simple_quiz)
+      export_result = modelize_quiz(quiz) |> QuestionnaireExport.export()
 
-      assert ivr_simple_quiz_export == %{
-               manifest: @ivr_simple_quiz,
-               audio_ids: []
-             }
+      assert export_result == build_expected_export(quiz)
     end
 
     test "IVR - exports a simple questionnaire with audios" do
-      ivr_audio_simple_quiz = Map.merge(%Questionnaire{}, @ivr_audio_simple_quiz)
+      quiz =
+        build_quiz(
+          @ivr_empty_quiz,
+          name: @quiz_title,
+          settings: @ivr_simple_quiz_settings,
+          steps: [
+            @ivr_audio_simple_choice_step
+          ]
+        )
 
-      ivr_audio_simple_quiz_export = QuestionnaireExport.export(ivr_audio_simple_quiz)
+      export_result = modelize_quiz(quiz) |> QuestionnaireExport.export()
 
-      assert ivr_audio_simple_quiz_export == %{
-               manifest: @ivr_audio_simple_quiz,
-               audio_ids: [@ivr_audio_id]
-             }
+      assert export_result ==
+               build_expected_export(quiz, [@ivr_audio_id])
     end
 
     test "Mobile Web - exports a simple questionnaire" do
-      mobileweb_simple_quiz = Map.merge(%Questionnaire{}, @mobileweb_simple_quiz)
+      quiz =
+        build_quiz(
+          @mobileweb_empty_quiz,
+          name: @quiz_title,
+          settings: @mobileweb_simple_quiz_settings,
+          steps: [
+            @mobileweb_simple_choice_step
+          ]
+        )
 
-      mobileweb_simple_quiz_export = QuestionnaireExport.export(mobileweb_simple_quiz)
+      export_result = modelize_quiz(quiz) |> QuestionnaireExport.export()
 
-      assert mobileweb_simple_quiz_export == %{
-               manifest: @mobileweb_simple_quiz,
-               audio_ids: []
-             }
+      assert export_result ==
+               build_expected_export(quiz)
     end
 
     test "SMS - exports a multilingual questionnaire" do
-      sms_multilingual_quiz = Map.merge(%Questionnaire{}, @sms_multilingual_quiz)
+      quiz = @sms_multilingual_quiz
 
-      sms_multilingual_quiz_export = QuestionnaireExport.export(sms_multilingual_quiz)
+      export_result =
+        modelize_quiz(quiz)
+        |> QuestionnaireExport.export()
 
-      assert sms_multilingual_quiz_export == %{
-               manifest: @sms_multilingual_quiz,
-               audio_ids: []
-             }
+      assert export_result == build_expected_export(quiz)
     end
 
     test "SMS - exports a deleted language simple questionnaire" do
-      sms_deleted_language_simple_quiz = Map.merge(%Questionnaire{}, @sms_deleted_language_simple_quiz)
+      quiz =
+        build_quiz(
+          @sms_multilingual_quiz,
+          steps: [@sms_multilingual_choice_step],
+          languages: ["en"]
+        )
+        |> modelize_quiz()
 
-      sms_deleted_language_simple_quiz_export =
-        QuestionnaireExport.export(sms_deleted_language_simple_quiz)
+      export_result = QuestionnaireExport.export(quiz)
 
-      assert sms_deleted_language_simple_quiz_export == %{
-               manifest: @sms_deleted_language_simple_quiz_export,
-               audio_ids: []
-             }
+      expected_quiz =
+        build_quiz(@sms_deleted_language_simple_quiz,
+          steps: [@sms_monolingual_choice_step],
+          languages: ["en"]
+        )
+
+      assert export_result == build_expected_export(expected_quiz)
     end
 
     test "SMS - exports a deleted language with section questionnaire" do
-      sms_deleted_language_quiz_with_section =
-        Map.merge(%Questionnaire{}, @sms_deleted_language_quiz_with_section)
+      quiz =
+        build_quiz(
+          @sms_multilingual_quiz,
+          steps: [section_with_step(@sms_multilingual_choice_step)],
+          languages: ["en"]
+        )
+        |> modelize_quiz()
 
-      sms_deleted_language_quiz_with_section_export =
-        QuestionnaireExport.export(sms_deleted_language_quiz_with_section)
+      export_result = QuestionnaireExport.export(quiz)
 
-      assert sms_deleted_language_quiz_with_section_export == %{
-               manifest: @sms_deleted_language_quiz_with_section_export,
-               audio_ids: []
-             }
+      expected_quiz =
+        build_quiz(@sms_deleted_language_simple_quiz,
+          steps: [section_with_step(@sms_monolingual_choice_step)],
+          languages: ["en"]
+        )
+
+      assert export_result == build_expected_export(expected_quiz)
     end
   end
 
