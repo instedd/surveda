@@ -19,7 +19,8 @@ defmodule Ask.Survey do
     Folder,
     RespondentStats,
     ConfigHelper,
-    SystemTime
+    SystemTime,
+    PanelSurvey
   }
   alias Ask.Runtime.ChannelStatusServer
   alias Ask.Ecto.Type.JSON
@@ -103,6 +104,7 @@ defmodule Ask.Survey do
 
     belongs_to :project, Project
     belongs_to :folder, Folder
+    belongs_to :panel_survey, PanelSurvey
 
     timestamps()
   end

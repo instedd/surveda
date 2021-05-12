@@ -1,12 +1,18 @@
 defmodule Ask.Folder do
   use Ask.Web, :model
-  alias Ask.{Project, Survey}
+  alias Ask.{PanelSurvey, Project, Survey}
 
   schema "folders" do
     field :name, :string
     has_many :surveys, Survey
+    has_many :panel_surveys, PanelSurvey
     belongs_to :project, Project
-    timestamps()
+
+    # Avoid microseconds. Mysql doesn't support them.
+    # See [usec in datetime](https://hexdocs.pm/ecto_sql/Ecto.Adapters.MyXQL.html#module-usec-in-datetime)
+    @timestamps_opts [usec: false]
+
+    timestamps(@timestamps_opts)
   end
 
   @doc """

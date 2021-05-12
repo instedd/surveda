@@ -10,13 +10,18 @@ defmodule Ask.Project do
     has_many :questionnaires, Ask.Questionnaire
     has_many :surveys, Ask.Survey
     has_many :folders, Ask.Folder
+    has_many :panel_surveys, Ask.PanelSurvey
     many_to_many :users, Ask.User, join_through: Ask.ProjectMembership, on_replace: :delete
     has_many :project_memberships, Ask.ProjectMembership
     many_to_many :channels, Ask.Channel, join_through: Ask.ProjectChannel, on_replace: :delete
     has_many :project_channels, Ask.ProjectChannel
     has_many :activity_logs, Ask.ActivityLog
 
-    timestamps()
+    # Avoid microseconds. Mysql doesn't support them.
+    # See [usec in datetime](https://hexdocs.pm/ecto_sql/Ecto.Adapters.MyXQL.html#module-usec-in-datetime)
+    @timestamps_opts [usec: false]
+
+    timestamps(@timestamps_opts)
   end
 
   @doc """

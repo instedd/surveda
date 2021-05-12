@@ -29,7 +29,8 @@ defmodule Ask.Factory do
   def project_factory do
     %Ask.Project{
       name: sequence(:project, &"Project #{&1}"),
-      salt: Ecto.UUID.generate
+      salt: Ecto.UUID.generate,
+      colour_scheme: "default"
     }
   end
 
