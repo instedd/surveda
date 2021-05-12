@@ -116,11 +116,17 @@ defmodule Ask.Runtime.QuestionnaireExport do
     end
 
     quiz
+    # Clean settings
     |> clean.(:settings, ".error_message")
     |> clean.(:settings, ".thank_you_message")
     |> clean.(:steps, ".[].prompt")
     |> clean.(:steps, ".[].choices.[].responses.[]")
     |> clean.(:steps, ".[].refusal.responses")
+    # Clean steps inside sections
+    |> clean.(:steps, ".[].steps.[].prompt")
+    |> clean.(:steps, ".[].steps.[].choices.[].responses.[]")
+    |> clean.(:steps, ".[].steps.[].refusal.responses")
+    # Clean quota completed steps
     |> clean.(:quota_completed_steps, ".[].prompt")
     |> clean.(:quota_completed_steps, ".[].choices.[].responses.[]")
     |> clean.(:quota_completed_steps, ".[].refusal.responses")
