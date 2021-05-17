@@ -103,6 +103,11 @@ defmodule Ask.TestHelpers do
                      select: {r.state, count("*")}) |> Enum.into(%{})
         [by_state["active"] || 0, by_state["pending"] || 0]
       end
+
+      # Format a timestamp without microseconds the same way the controller does.
+      defp to_iso8601(timestamp) do
+        Timex.to_datetime(timestamp) |> DateTime.to_iso8601() |> String.replace("Z", ".000000")
+      end
     end
   end
 end

@@ -671,6 +671,9 @@ defmodule Ask.Survey do
 
     date_time
     |> Timex.to_datetime(timezone)
-    |> DateTime.compare(expiration_date_time) != :lt
+    # -1 -- the first date comes before the second one
+    # 0 -- both arguments represent the same date when coalesced to the same timezone.
+    # 1 -- the first date comes after the second one
+    |> Timex.compare(expiration_date_time) > -1
   end
 end

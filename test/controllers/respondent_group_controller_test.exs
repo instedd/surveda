@@ -246,7 +246,9 @@ defmodule Ask.RespondentGroupControllerTest do
       post conn, project_survey_respondent_group_path(conn, :create, project.id, survey.id), file: file
 
       project = Project |> Repo.get(project.id)
-      assert DateTime.compare(project.updated_at, datetime) == :gt
+
+      # 1 -- the first date comes after the second one
+      assert Timex.compare(project.updated_at, datetime) == 1
     end
 
     test "forbids upload for project reader", %{conn: conn, user: user}  do
@@ -402,7 +404,9 @@ defmodule Ask.RespondentGroupControllerTest do
       delete conn, project_survey_respondent_group_path(conn, :delete, survey.project.id, survey.id, group.id)
 
       project = Project |> Repo.get(project.id)
-      assert DateTime.compare(project.updated_at, datetime) == :gt
+
+      # 1 -- the first date comes after the second one
+      assert Timex.compare(project.updated_at, datetime) == 1
     end
 
     test "forbids the deletion of a group if the project is from another user", %{conn: conn} do

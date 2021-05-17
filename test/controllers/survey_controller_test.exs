@@ -993,7 +993,9 @@ defmodule Ask.SurveyControllerTest do
       post conn, project_survey_path(conn, :create, project.id)
 
       project = Project |> Repo.get(project.id)
-      assert DateTime.compare(project.updated_at, datetime) == :gt
+
+      # 1 -- the first date comes after the second one
+      assert Timex.compare(project.updated_at, datetime) == 1
     end
 
     test "forbids creation if project is archived", %{conn: conn, user: user} do
@@ -1248,7 +1250,9 @@ defmodule Ask.SurveyControllerTest do
       put conn, project_survey_path(conn, :update, survey.project, survey), survey: %{name: "New name"}
 
       project = Project |> Repo.get(project.id)
-      assert DateTime.compare(project.updated_at, datetime) == :gt
+
+      # 1 -- the first date comes after the second one
+      assert Timex.compare(project.updated_at, datetime) == 1
     end
   end
 
@@ -1484,7 +1488,9 @@ defmodule Ask.SurveyControllerTest do
       delete conn, project_survey_path(conn, :delete, survey.project, survey)
 
       project = Project |> Repo.get(project.id)
-      assert DateTime.compare(project.updated_at, datetime) == :gt
+
+      # 1 -- the first date comes after the second one
+      assert Timex.compare(project.updated_at, datetime) == 1
     end
 
     test "delete survey and all contents", %{conn: conn, user: user} do
@@ -1892,7 +1898,9 @@ defmodule Ask.SurveyControllerTest do
     post conn, project_survey_survey_path(conn, :launch, survey.project, survey)
 
     project = Project |> Repo.get(project.id)
-    assert DateTime.compare(project.updated_at, datetime) == :gt
+
+    # 1 -- the first date comes after the second one
+    assert Timex.compare(project.updated_at, datetime) == 1
   end
 
   describe "stopping survey" do
