@@ -9,7 +9,7 @@ defmodule Ask.PanelSurvey do
     Survey
   }
 
-  schema "surveys" do
+  schema "panel_surveys" do
     field(:name, :string)
     belongs_to(:project, Project)
     belongs_to(:folder, Folder)

@@ -1,8 +1,9 @@
 defmodule Ask.PanelSurveyView do
   use Ask.Web, :view
+  alias Ask.PanelSurveyView
 
   def render("index.json", %{panel_surveys: panel_surveys}) do
-    %{data: render_many(panel_surveys, Ask.PanelSurveyView, "panel_survey.json")}
+    %{data: render_many(panel_surveys, PanelSurveyView, "panel_survey.json")}
   end
 
   def render("show.json", %{panel_survey: panel_survey}) do
@@ -13,17 +14,13 @@ defmodule Ask.PanelSurveyView do
         panel_survey: %{
           folder_id: folder_id,
           id: id,
-          is_repeatable: is_repeatable,
-          latest_survey_id: latest_survey_id,
-          name: name,
-          project_id: project_id
+          project_id: project_id,
+          name: name
         }
       }) do
     %{
       folder_id: folder_id,
       id: id,
-      is_repeatable: is_repeatable,
-      latest_survey_id: latest_survey_id,
       name: name,
       project_id: project_id
     }

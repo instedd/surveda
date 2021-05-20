@@ -1,9 +1,7 @@
 defmodule Ask.PanelSurveyTest do
   use Ask.ModelCase
+  use Ask.TestHelpers
   alias Ask.{PanelSurvey, Repo}
-
-  @foo_string "foo"
-  @bar_string "bar"
 
   test "create_panel_survey/1 with valid data creates a panel_survey" do
     project = insert(:project)
@@ -240,23 +238,5 @@ defmodule Ask.PanelSurveyTest do
   test "change_panel_survey/1 returns a panel_survey changeset" do
     panel_survey = dummy_panel_survey()
     assert %Ecto.Changeset{} = PanelSurvey.change_panel_survey(panel_survey)
-  end
-
-  defp dummy_panel_survey() do
-    project = insert(:project)
-    name = @foo_string
-
-    {:ok, panel_survey} = PanelSurvey.create_panel_survey(%{name: name, project_id: project.id})
-
-    panel_survey
-  end
-
-  defp dummy_panel_survey_inside_folder() do
-    project = insert(:project)
-    name = @foo_string
-    folder = insert(:folder)
-    {:ok, panel_survey} = PanelSurvey.create_panel_survey(%{name: name, project_id: project.id, folder_id: folder.id})
-
-    panel_survey
   end
 end

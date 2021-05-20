@@ -57,7 +57,6 @@ defmodule Ask.SurveyView do
       first_window_started_at: first_window_started_at(survey),
       is_panel_survey: Survey.panel_survey?(survey),
       panel_survey_of: survey.panel_survey_of,
-      is_repeatable: Survey.repeatable?(survey),
       last_window_ends_at: survey.last_window_ends_at
     }
   end
@@ -98,7 +97,6 @@ defmodule Ask.SurveyView do
       folder_id: survey.folder_id,
       # Preserve the UI from handling the panel survey implementation details
       is_panel_survey: Survey.panel_survey?(survey),
-      is_repeatable: Survey.repeatable?(survey),
       incentives_enabled: survey.incentives_enabled,
       first_window_started_at: first_window_started_at(survey),
       panel_survey_of: survey.panel_survey_of,

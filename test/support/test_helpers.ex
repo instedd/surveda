@@ -3,7 +3,10 @@ defmodule Ask.TestHelpers do
     quote do
       use Ask.DummySteps
       alias Ask.Runtime.{Broker, Flow}
-      alias Ask.{Repo, Respondent}
+      alias Ask.{PanelSurvey, Repo, Respondent}
+
+      @foo_string "foo"
+      @bar_string "bar"
 
       def create_project_for_user(user, options \\ []) do
         level = options[:level] || "owner"
@@ -107,6 +110,19 @@ defmodule Ask.TestHelpers do
       # Format a timestamp without microseconds the same way the controller does.
       defp to_iso8601(timestamp) do
         Timex.to_datetime(timestamp) |> DateTime.to_iso8601() |> String.replace("Z", ".000000")
+      end
+
+      defp dummy_panel_survey(project \\ nil) do
+        project = if project, do: project, else: insert(:project)
+        {:ok, panel_survey} = PanelSurvey.create_panel_survey(%{name: @foo_string, project_id: project.id})
+        panel_survey
+      end
+
+      defp dummy_panel_survey_inside_folder(project \\ nil) do
+        project = if project, do: project, else: insert(:project)
+        folder = insert(:folder)
+        {:ok, panel_survey} = PanelSurvey.create_panel_survey(%{name: @foo_string, project_id: project.id, folder_id: folder.id})
+        panel_survey
       end
     end
   end

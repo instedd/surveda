@@ -106,7 +106,11 @@ defmodule Ask.Survey do
     belongs_to :folder, Folder
     belongs_to :panel_survey, PanelSurvey
 
-    timestamps()
+    # Avoid microseconds. Mysql doesn't support them.
+    # See [usec in datetime](https://hexdocs.pm/ecto_sql/Ecto.Adapters.MyXQL.html#module-usec-in-datetime)
+    @timestamps_opts [usec: false]
+
+    timestamps(@timestamps_opts)
   end
 
   @doc """
@@ -114,11 +118,12 @@ defmodule Ask.Survey do
   """
   def changeset(struct, params \\ %{}) do
     struct
-    |> cast(params, [:name, :description, :project_id, :folder_id, :mode, :state, :locked, :exit_code, :exit_message, :cutoff, :schedule, :sms_retry_configuration, :ivr_retry_configuration, :mobileweb_retry_configuration, :fallback_delay, :started_at, :quotas, :quota_vars, :comparisons, :count_partial_results, :simulation, :ended_at, :panel_survey_of, :latest_panel_survey, :incentives_enabled, :first_window_started_at, :last_window_ends_at])
+    |> cast(params, [:name, :description, :project_id, :folder_id, :mode, :state, :locked, :exit_code, :exit_message, :cutoff, :schedule, :sms_retry_configuration, :ivr_retry_configuration, :mobileweb_retry_configuration, :fallback_delay, :started_at, :quotas, :quota_vars, :comparisons, :count_partial_results, :simulation, :ended_at, :panel_survey_of, :latest_panel_survey, :incentives_enabled, :first_window_started_at, :last_window_ends_at, :panel_survey_id])
     |> set_floip_package_id
     |> validate_required([:project_id, :state, :schedule])
     |> foreign_key_constraint(:project_id)
     |> foreign_key_constraint(:panel_survey_of)
+    |> foreign_key_constraint(:panel_survey_id)
     |> validate_from_less_than_to
     |> validate_number(:cutoff, greater_than_or_equal_to: 0, less_than: @max_int)
     |> translate_quotas
@@ -579,8 +584,10 @@ defmodule Ask.Survey do
 
   def successful_respondents(quota_completed, _, _), do: quota_completed |> Decimal.to_integer
 
+  # TODO: replace panel_survey_of by panel_survey_id
   def panel_survey?(%{panel_survey_of: panel_survey_of}), do: !!panel_survey_of
 
+  # TODO: a survey shouldn't be repeatable, only its panel survey (or survey panel)
   def repeatable?(survey), do: terminated?(survey) and panel_survey?(survey) and survey.latest_panel_survey
 
   defp exhausted_respondents(respondents_by_disposition, count_partial_results) do
@@ -616,7 +623,7 @@ defmodule Ask.Survey do
     Enum.any?(partial_relevant_configs, fn config -> Questionnaire.partial_relevant_enabled?(config) end)
   end
 
-  defp terminated?(survey), do: survey.state == "terminated"
+  def terminated?(survey), do: survey.state == "terminated"
 
   def succeeded?(survey), do: terminated?(survey) and survey.exit_code == 0
 

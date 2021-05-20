@@ -26,6 +26,13 @@ defmodule Ask.Factory do
     }
   end
 
+  def panel_survey_factory do
+    %Ask.PanelSurvey{
+      name: sequence(:project, &"Panel survey #{&1}"),
+      project: build(:project)
+    }
+  end
+
   def project_factory do
     %Ask.Project{
       name: sequence(:project, &"Project #{&1}"),
