@@ -89,6 +89,24 @@ defmodule Ask.PanelSurveyControllerTest do
     end
   end
 
+  describe "delete" do
+    test "deletes chosen panel_survey", %{conn: conn, user: user} do
+      panel_survey = panel_survey(user)
+
+      conn = delete conn, project_panel_survey_path(conn, :delete, panel_survey.project_id, panel_survey.id)
+
+      assert_deleted_panel_survey(conn, panel_survey.id)
+    end
+
+    test "deletes chosen panel_survey inside a folder", %{conn: conn, user: user} do
+      panel_survey = panel_survey_inside_folder(user)
+
+      conn = delete conn, project_panel_survey_path(conn, :delete, panel_survey.project_id, panel_survey.id)
+
+      assert_deleted_panel_survey(conn, panel_survey.id)
+    end
+  end
+
   defp panel_survey_inside_folder(user) do
     panel_survey(user, true)
   end
@@ -97,6 +115,11 @@ defmodule Ask.PanelSurveyControllerTest do
     project = create_project_for_user(user)
     folder = if inside_folder, do: insert(:folder, project: project), else: nil
     insert(:panel_survey, project: project, folder: folder)
+  end
+
+  defp assert_deleted_panel_survey(conn, panel_survey_id) do
+    assert response(conn, 204) == ""
+    assert Repo.get(PanelSurvey, panel_survey_id) == nil
   end
 
   defp assert_created_panel_survey(conn, %{
