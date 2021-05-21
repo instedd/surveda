@@ -56,6 +56,18 @@ defmodule Ask.PanelSurveyControllerTest do
 
       assert_showed_panel_survey(conn, panel_survey)
     end
+
+    test "shows a panel survey with surveys", %{conn: conn, user: user} do
+      panel_survey = panel_survey_with_surveys(user)
+
+      conn =
+        get(
+          conn,
+          project_panel_survey_path(conn, :show, panel_survey.project_id, panel_survey.id)
+        )
+
+      assert_showed_panel_survey(conn, panel_survey)
+    end
   end
 
   describe "create" do
@@ -107,6 +119,12 @@ defmodule Ask.PanelSurveyControllerTest do
     end
   end
 
+  defp panel_survey_with_surveys(user) do
+    panel_survey = panel_survey(user)
+    insert(:survey, project: panel_survey.project, panel_survey: panel_survey)
+    Repo.get!(PanelSurvey, panel_survey.id) |> Repo.preload(:surveys)
+  end
+
   defp panel_survey_inside_folder(user) do
     panel_survey(user, true)
   end
@@ -139,28 +157,44 @@ defmodule Ask.PanelSurveyControllerTest do
     assert created_panel_survey.folder_id == folder_id
   end
 
-  defp assert_showed_panel_survey(conn, base) do
+  defp assert_showed_panel_survey(conn, base_panel_survey) do
     body = json_response(conn, 200)
     showed_panel_survey = body["data"]
 
-    assert assert_panel_survey(showed_panel_survey, base)
+    assert assert_panel_survey(showed_panel_survey, base_panel_survey)
   end
 
-  defp assert_listed_panel_survey(conn, base) do
+  defp assert_listed_panel_survey(conn, base_panel_survey) do
     body = json_response(conn, 200)
     data = body["data"]
     assert data
     listed_panel_survey = Enum.at(data, 0)
 
-    assert assert_panel_survey(listed_panel_survey, base)
+    assert assert_panel_survey(listed_panel_survey, base_panel_survey)
   end
 
-  defp assert_panel_survey(panel_survey, base) do
-    assert panel_survey == %{
-             "folder_id" => base.folder_id,
-             "id" => base.id,
-             "name" => base.name,
-             "project_id" => base.project_id
+  defp assert_panel_survey(panel_survey, base_panel_survey) do
+    base_panel_survey = Repo.preload(base_panel_survey, :surveys)
+
+    # It's easier to compare with the base panel without surveys.
+    panel_survey_without_surveys = Map.delete(panel_survey, "surveys")
+
+    assert panel_survey_without_surveys == %{
+             "folder_id" => base_panel_survey.folder_id,
+             "id" => base_panel_survey.id,
+             "name" => base_panel_survey.name,
+             "project_id" => base_panel_survey.project_id
            }
+
+    # And then, it's also easier to compare only the surveys ids.
+    assert survey_ids(panel_survey["surveys"]) == survey_ids(base_panel_survey.surveys)
   end
+
+  defp survey_ids(surveys) do
+    Enum.map(surveys, fn survey -> survey_id(survey) end)
+  end
+
+  defp survey_id(%{"id" => id} = _survey), do: id
+
+  defp survey_id(%{id: id} = _survey), do: id
 end

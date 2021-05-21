@@ -1,6 +1,7 @@
 defmodule Ask.PanelSurveyView do
   use Ask.Web, :view
   alias Ask.PanelSurveyView
+  alias Ask.Repo
 
   def render("index.json", %{panel_surveys: panel_surveys}) do
     %{data: render_many(panel_surveys, PanelSurveyView, "panel_survey.json")}
@@ -11,18 +12,22 @@ defmodule Ask.PanelSurveyView do
   end
 
   def render("panel_survey.json", %{
-        panel_survey: %{
-          folder_id: folder_id,
-          id: id,
-          project_id: project_id,
-          name: name
-        }
+        panel_survey:
+          %{
+            folder_id: folder_id,
+            id: id,
+            project_id: project_id,
+            name: name
+          } = panel_survey
       }) do
+    surveys = Repo.preload(panel_survey, :surveys).surveys
+
     %{
       folder_id: folder_id,
       id: id,
       name: name,
-      project_id: project_id
+      project_id: project_id,
+      surveys: render_many(surveys, Ask.SurveyView, "survey.json")
     }
   end
 end
