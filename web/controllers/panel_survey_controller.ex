@@ -3,8 +3,14 @@ defmodule Ask.PanelSurveyController do
 
   alias Ask.{PanelSurvey, Repo}
 
-  def index(conn, _params) do
-    panel_surveys = PanelSurvey.list_panel_surveys()
+  def index(conn, %{"project_id" => project_id}) do
+    project = conn
+    |> load_project(project_id)
+
+    panel_surveys = project
+      |> assoc(:panel_surveys)
+      |> Repo.all()
+
     render(conn, "index.json", panel_surveys: panel_surveys)
   end
 
@@ -24,13 +30,26 @@ defmodule Ask.PanelSurveyController do
 
   def show(conn, %{"project_id" => project_id, "id" => id}) do
     project = conn
-    |> load_project_for_change(project_id)
+    |> load_project(project_id)
 
     panel_survey = project
       |> assoc(:panel_surveys)
       |> Repo.get!(id)
 
     render(conn, "show.json", panel_survey: panel_survey)
+  end
+
+  def update(conn, %{"project_id" => project_id, "id" => id, "panel_survey" => panel_survey_params}) do
+    project = conn
+    |> load_project_for_change(project_id)
+
+    panel_survey = project
+      |> assoc(:panel_surveys)
+      |> Repo.get!(id)
+
+    with {:ok, %PanelSurvey{} = panel_survey} <- PanelSurvey.update_panel_survey(panel_survey, panel_survey_params) do
+      render(conn, "show.json", panel_survey: panel_survey)
+    end
   end
 
   def delete(conn, %{"project_id" => project_id, "id" => id}) do

@@ -90,6 +90,8 @@ defmodule Ask.PanelSurveyTest do
     assert updated_panel_survey.name == updated_name
   end
 
+  # TODO: updating a panel survey project shouldn't be allowed.
+  # Where do we put this restriction. At the model level or at the controller level?
   test "update_panel_survey/2 with valid data updates the panel_survey (project)" do
     panel_survey = dummy_panel_survey()
     updated_project = insert(:project)

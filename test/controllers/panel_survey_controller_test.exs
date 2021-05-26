@@ -101,11 +101,36 @@ defmodule Ask.PanelSurveyControllerTest do
     end
   end
 
+  describe "update panel_survey" do
+    test "updates a panel survey", %{conn: conn, user: user} do
+      panel_survey = panel_survey(user) |> Repo.preload(:project)
+      folder = insert(:folder, project: panel_survey.project)
+      name = @bar_string
+
+      conn =
+        put(
+          conn,
+          project_panel_survey_path(conn, :update, panel_survey.project_id, panel_survey.id),
+          panel_survey: %{name: name, folder_id: folder.id}
+        )
+
+      assert_updated_panel_survey(conn, %{
+        name: name,
+        project_id: panel_survey.project_id,
+        folder_id: folder.id
+      })
+    end
+  end
+
   describe "delete" do
     test "deletes chosen panel_survey", %{conn: conn, user: user} do
       panel_survey = panel_survey(user)
 
-      conn = delete conn, project_panel_survey_path(conn, :delete, panel_survey.project_id, panel_survey.id)
+      conn =
+        delete(
+          conn,
+          project_panel_survey_path(conn, :delete, panel_survey.project_id, panel_survey.id)
+        )
 
       assert_deleted_panel_survey(conn, panel_survey.id)
     end
@@ -113,7 +138,11 @@ defmodule Ask.PanelSurveyControllerTest do
     test "deletes chosen panel_survey inside a folder", %{conn: conn, user: user} do
       panel_survey = panel_survey_inside_folder(user)
 
-      conn = delete conn, project_panel_survey_path(conn, :delete, panel_survey.project_id, panel_survey.id)
+      conn =
+        delete(
+          conn,
+          project_panel_survey_path(conn, :delete, panel_survey.project_id, panel_survey.id)
+        )
 
       assert_deleted_panel_survey(conn, panel_survey.id)
     end
@@ -141,11 +170,38 @@ defmodule Ask.PanelSurveyControllerTest do
   end
 
   defp assert_created_panel_survey(conn, %{
+    project_id: project_id,
+    name: name,
+    folder_id: folder_id
+  }) do
+    assert_panel_survey_action(conn, %{
+      project_id: project_id,
+      name: name,
+      folder_id: folder_id,
+      code: 201
+    })
+  end
+
+  defp assert_updated_panel_survey(conn, %{
+    project_id: project_id,
+    name: name,
+    folder_id: folder_id
+  }) do
+    assert_panel_survey_action(conn, %{
+      project_id: project_id,
+      name: name,
+      folder_id: folder_id,
+      code: 200
+    })
+  end
+
+  defp assert_panel_survey_action(conn, %{
          project_id: project_id,
          name: name,
-         folder_id: folder_id
+         folder_id: folder_id,
+         code: code
        }) do
-    body = json_response(conn, 201)
+    body = json_response(conn, code)
     data = body["data"]
     assert data
     id = data["id"]
