@@ -267,6 +267,21 @@ defmodule Ask.DummyQuestionnaires do
                                      choices: []
                                    )
 
+      @ivr_language_selection_step %{
+        "type" => "language-selection",
+        "title" => "Language selection",
+        "store" => "language",
+        "prompt" => %{
+          "sms" => "",
+          "mobileweb" => "",
+          "ivr" => %{
+            "text" => "foo",
+            "audio_source" => "upload",
+            "audio_id" => @ivr_audio_id
+          }
+        }
+      }
+
       @ivr_simple_choice_step build_step(
                                 @simple_choice_step,
                                 prompt: @ivr_question_prompt,

@@ -64,6 +64,25 @@ defmodule Ask.Runtime.QuestionnaireExportTest do
                build_expected_export(quiz, [@ivr_audio_id])
     end
 
+    test "IVR - exports a questionnaire with language selection step" do
+      quiz =
+        build_quiz(
+          @ivr_empty_quiz,
+          name: @quiz_title,
+          settings: @ivr_simple_quiz_settings,
+          steps: [
+            @ivr_language_selection_step
+          ]
+        )
+
+      export_result = modelize_quiz(quiz) |> QuestionnaireExport.export()
+
+      assert export_result ==
+               build_expected_export(quiz, [@ivr_audio_id])
+    end
+
+
+
     test "Mobile Web - exports a simple questionnaire" do
       quiz =
         build_quiz(
@@ -189,6 +208,17 @@ defmodule Ask.Runtime.QuestionnaireExportTest do
       clean = CleanI18n.clean(entity, ["baz"], ".foo")
 
       assert clean == %{"foo" => "bar"}
+    end
+
+    test "doesn't clean the language selection prompt" do
+      step = %{
+        "type" => "language-selection",
+        "prompt" => %{"foo" => "bar"}
+      }
+
+      clean = CleanI18n.clean(step, ["baz"], ".prompt")
+
+      assert clean == step
     end
 
     test "cleans choices (when the content of one of the requested keys isn't a map)" do
