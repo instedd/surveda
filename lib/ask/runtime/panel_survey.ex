@@ -1,12 +1,10 @@
 defmodule Ask.Runtime.PanelSurvey do
   import Ecto.Query
-  alias Ask.{Survey, Repo, Respondent, RespondentGroupChannel, Schedule}
+  alias Ask.{Survey, Repo, Respondent, RespondentGroupChannel, Schedule, PanelSurvey}
   alias Ask.Runtime.RespondentGroupAction
   alias Ecto.Multi
 
   def new_ocurrence_changeset(survey) do
-    unless Survey.repeatable?(survey), do: raise("Panel survey isn't repeatable")
-
     survey =
       survey
       |> Repo.preload([:project])
@@ -25,8 +23,7 @@ defmodule Ask.Runtime.PanelSurvey do
       mode: survey.mode,
       state: "ready",
       started_at: Timex.now(),
-      panel_survey_of: survey.panel_survey_of,
-      latest_panel_survey: true,
+      panel_survey_id: survey.panel_survey_id,
       # advanced settings
       cutoff: survey.cutoff,
       count_partial_results: survey.count_partial_results,
@@ -105,50 +102,25 @@ defmodule Ask.Runtime.PanelSurvey do
     end)
   end
 
-  def delete_multi(survey) do
-    Multi.append(pre_delete_multi(survey), Survey.delete_multi(survey))
+  def create_panel_survey_occurrence(panel_survey) do
+    latest_occurrence = PanelSurvey.latest_occurrence(panel_survey)
+      |> Repo.preload([:project])
+      |> Repo.preload([:questionnaires])
+      |> Repo.preload([:respondent_groups])
+
+    if Survey.terminated?(latest_occurrence) do
+      new_occurrence = new_occurrence_from_latest(latest_occurrence)
+      {:ok, %{new_occurrence: new_occurrence}}
+    else
+      {:error, %{error: "Last panel survey occurrence isn't terminated"}}
+    end
   end
 
-  defp pre_delete_multi(survey), do: pre_delete_multi(survey, Multi.new)
+  defp new_occurrence_from_latest(latest) do
+    new_occurrence = new_ocurrence_changeset(latest)
+    |> Repo.insert!()
 
-  # If it's the only one, just drop it
-  defp pre_delete_multi(%{latest_panel_survey: true, id: id, panel_survey_of: panel_survey_of} = survey, multi) when id == panel_survey_of do
-    Multi.update(multi, :pre_delete_current, pre_delete_current_changeset(survey))
+    new_occurrence = copy_respondents(latest, new_occurrence)
+    new_occurrence
   end
-
-  # Removing the original should make the second one to act as the original
-  defp pre_delete_multi(%{latest_panel_survey: false, id: id, panel_survey_of: panel_survey_of} = survey, multi) when id == panel_survey_of do
-    following_survey_id = Repo.one(from s in Survey,
-    select: s.id,
-    where: s.panel_survey_of == ^id and s.id > ^id,
-    order_by: [asc: :id],
-    limit: 1)
-    following_surveys_query = from(s in Survey, where: s.panel_survey_of == ^id and s.id > ^id)
-
-    multi
-     |> Multi.update_all(:pre_delete_following, following_surveys_query, set: [panel_survey_of: following_survey_id])
-     |> Multi.update(:pre_delete_current, pre_delete_current_changeset(survey))
-  end
-
-  # Removing one in the middle is fine
-  defp pre_delete_multi(%{latest_panel_survey: false} = survey, multi) do
-    Multi.update(multi, :pre_delete_current, pre_delete_current_changeset(survey))
-  end
-
-  # Removing the last one should allow the user to create a new incarnation from the previous one from the normal flow.
-  defp pre_delete_multi(%{latest_panel_survey: true, panel_survey_of: panel_survey_of, id: id} = survey, multi) do
-
-    previous_survey = Repo.one(from s in Survey,
-      where: s.panel_survey_of == ^panel_survey_of and s.id < ^id,
-      order_by: [desc: :id],
-      limit: 1)
-
-    previous_changeset = Survey.changeset(previous_survey, %{latest_panel_survey: true})
-
-    multi
-      |> Multi.update(:pre_delete_previous, previous_changeset)
-      |> Multi.update(:pre_delete_current, pre_delete_current_changeset(survey))
-  end
-
-  defp pre_delete_current_changeset(survey), do: Survey.changeset(survey, %{panel_survey_of: nil})
 end

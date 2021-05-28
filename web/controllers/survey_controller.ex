@@ -126,18 +126,6 @@ defmodule Ask.SurveyController do
       |> assoc(:surveys)
       |> Repo.get!(id)
 
-    # Preserve the UI from handling the panel survey implementation details
-    {is_panel_survey_param, survey_params} = Map.pop(survey_params, "is_panel_survey")
-    # "is_repeatable" is a read-only and calculated field
-    survey_params = Map.delete(survey_params, "is_repeatable")
-
-    survey_params =
-      if is_panel_survey_param do
-        Map.merge(survey_params, %{"panel_survey_of" => id, "latest_panel_survey" => true})
-      else
-        Map.merge(survey_params, %{"panel_survey_of" => nil, "latest_panel_survey" => false})
-      end
-
     if survey |> Survey.editable? do
       changeset = survey
         |> Repo.preload([:questionnaires])
@@ -190,10 +178,8 @@ defmodule Ask.SurveyController do
       |> assoc(:surveys)
       |> Repo.get!(survey_id)
 
-    # All occurences of the same panel survey should be always together in the same folder.
-    # This is why it's forbidden to change the folder of panel survey occurrences.
-    # This option is cheaper than the moving all the panel survey occurrences together.
-    if Survey.panel_survey?(survey), do: raise NotAllowedError
+    # Panel surveys can belong to a folder, but their occurences don't.
+    if Survey.belongs_to_panel_survey?(survey), do: raise NotAllowedError
 
     old_folder_name = if survey.folder_id, do: Repo.get(Folder, survey.folder_id).name, else: "No Folder"
 
@@ -313,17 +299,9 @@ defmodule Ask.SurveyController do
         ScheduleError -> send_resp(conn, :conflict, "Bad schedule configuration")
       end
     end
+
     activity_log = fn survey -> ActivityLog.start(survey.project, conn, survey) end
-    launch_or_repeat(conn, project_id, survey_id, perform_action, activity_log)
-  end
 
-  def repeat(conn, %{"project_id" => project_id, "survey_id" => survey_id}) do
-    perform_action = fn survey -> SurveyAction.repeat(survey) end
-    activity_log = fn survey -> ActivityLog.repeat(survey.project, conn, survey) end
-    launch_or_repeat(conn, project_id, survey_id, perform_action, activity_log)
-  end
-
-  defp launch_or_repeat(conn, project_id, survey_id, perform_action, activity_log) do
     project =
       conn
       |> load_project_for_change(project_id)
