@@ -3,7 +3,7 @@ defmodule Ask.TestHelpers do
     quote do
       use Ask.DummySteps
       alias Ask.Runtime.{Broker, Flow}
-      alias Ask.{PanelSurvey, Repo, Respondent}
+      alias Ask.{PanelSurvey, Repo, Respondent, Survey}
 
       @foo_string "foo"
       @bar_string "bar"
@@ -123,6 +123,31 @@ defmodule Ask.TestHelpers do
         folder = insert(:folder)
         {:ok, panel_survey} = PanelSurvey.create_panel_survey(%{name: @foo_string, project_id: project.id, folder_id: folder.id})
         panel_survey
+      end
+
+      defp panel_survey_with_occurrence() do
+        panel_survey = insert(:panel_survey)
+        insert(:survey, panel_survey:  panel_survey)
+        # Reload the panel survey. One of its surveys has changed, so it's outdated
+        Repo.get!(Ask.PanelSurvey, panel_survey.id)
+      end
+
+      defp terminate_survey(survey) do
+        Survey.changeset(survey, %{state: "terminated"})
+        |> Repo.update!()
+      end
+
+      defp complete_panel_survey(panel_survey) do
+        Ask.PanelSurvey.latest_occurrence(panel_survey)
+        |> terminate_survey()
+
+        # Reload the panel survey. One of its surveys has changed, so it's outdated
+        Repo.get!(Ask.PanelSurvey, panel_survey.id)
+      end
+
+      defp completed_panel_survey() do
+        panel_survey_with_occurrence()
+        |> complete_panel_survey()
       end
     end
   end

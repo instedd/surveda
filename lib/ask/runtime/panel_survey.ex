@@ -2,7 +2,6 @@ defmodule Ask.Runtime.PanelSurvey do
   import Ecto.Query
   alias Ask.{Survey, Repo, Respondent, RespondentGroupChannel, Schedule, PanelSurvey}
   alias Ask.Runtime.RespondentGroupAction
-  alias Ecto.Multi
 
   def new_ocurrence_changeset(survey) do
     survey =
@@ -102,7 +101,7 @@ defmodule Ask.Runtime.PanelSurvey do
     end)
   end
 
-  def create_panel_survey_occurrence(panel_survey) do
+  def new_occurrence(panel_survey) do
     latest_occurrence = PanelSurvey.latest_occurrence(panel_survey)
       |> Repo.preload([:project])
       |> Repo.preload([:questionnaires])

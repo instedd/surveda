@@ -8,7 +8,7 @@ defmodule Ask.Runtime.PanelSurveyTest do
     test "creates a new ready occurrence" do
       panel_survey = completed_panel_survey()
 
-      {result, data} = PanelSurvey.create_panel_survey_occurrence(panel_survey)
+      {result, data} = PanelSurvey.new_occurrence(panel_survey)
 
       assert result == :ok
       new_occurrence = Map.get(data, :new_occurrence)
@@ -20,13 +20,13 @@ defmodule Ask.Runtime.PanelSurveyTest do
     test "preserves the incentives enabled flag" do
       panel_survey = incentives_enabled_panel_survey()
 
-      {:ok, %{new_occurrence: new_occurrence}} = PanelSurvey.create_panel_survey_occurrence(panel_survey)
+      {:ok, %{new_occurrence: new_occurrence}} = PanelSurvey.new_occurrence(panel_survey)
 
       assert_incentives_enabled(new_occurrence)
 
       panel_survey = incentives_disabled_panel_survey()
 
-      {:ok, %{new_occurrence: new_occurrence}} = PanelSurvey.create_panel_survey_occurrence(panel_survey)
+      {:ok, %{new_occurrence: new_occurrence}} = PanelSurvey.new_occurrence(panel_survey)
 
       assert_incentives_disabled(new_occurrence)
     end
@@ -35,7 +35,7 @@ defmodule Ask.Runtime.PanelSurveyTest do
       panel_survey = scheduled_panel_survey()
       schedule = Ask.PanelSurvey.latest_occurrence(panel_survey).schedule
 
-      {:ok, %{new_occurrence: new_occurrence}} = PanelSurvey.create_panel_survey_occurrence(panel_survey)
+      {:ok, %{new_occurrence: new_occurrence}} = PanelSurvey.new_occurrence(panel_survey)
 
       assert new_occurrence.schedule ==
         clean_dates(schedule)
@@ -44,7 +44,7 @@ defmodule Ask.Runtime.PanelSurveyTest do
     test "errors when the latest ocurrence isn't terminated" do
       panel_survey = panel_survey_with_occurrence()
 
-      {result, data} = PanelSurvey.create_panel_survey_occurrence(panel_survey)
+      {result, data} = PanelSurvey.new_occurrence(panel_survey)
 
       assert result == :error
       assert Map.get(data, :error) == "Last panel survey occurrence isn't terminated"
@@ -55,7 +55,7 @@ defmodule Ask.Runtime.PanelSurveyTest do
       previous_occurrence = Ask.PanelSurvey.latest_occurrence(panel_survey)
       latest_occurrence = insert(:survey, panel_survey: panel_survey, state: "terminated")
 
-      {:ok, %{new_occurrence: new_occurrence}} = PanelSurvey.create_panel_survey_occurrence(panel_survey)
+      {:ok, %{new_occurrence: new_occurrence}} = PanelSurvey.new_occurrence(panel_survey)
 
       # TODO: Don't compare the name, compare something more meaningfull
       refute new_occurrence.name == previous_occurrence.name
@@ -66,7 +66,7 @@ defmodule Ask.Runtime.PanelSurveyTest do
       panel_survey = completed_panel_survey_with_respondents()
       latest_occurrence = Ask.PanelSurvey.latest_occurrence(panel_survey)
 
-      {:ok, %{new_occurrence: new_occurrence}} = PanelSurvey.create_panel_survey_occurrence(panel_survey)
+      {:ok, %{new_occurrence: new_occurrence}} = PanelSurvey.new_occurrence(panel_survey)
 
       assert respondent_channels(latest_occurrence) == respondent_channels(new_occurrence)
     end
@@ -76,7 +76,7 @@ defmodule Ask.Runtime.PanelSurveyTest do
       latest_occurrence = Ask.PanelSurvey.latest_occurrence(panel_survey)
       refused_respondent = set_one_respondent_disposition(latest_occurrence, "refused")
 
-      {:ok, %{new_occurrence: new_occurrence}} = PanelSurvey.create_panel_survey_occurrence(panel_survey)
+      {:ok, %{new_occurrence: new_occurrence}} = PanelSurvey.new_occurrence(panel_survey)
 
       assert_repeated_without_respondent(latest_occurrence, new_occurrence, refused_respondent)
     end
@@ -86,7 +86,7 @@ defmodule Ask.Runtime.PanelSurveyTest do
       latest_occurrence = Ask.PanelSurvey.latest_occurrence(panel_survey)
       ineligible_respondent = set_one_respondent_disposition(latest_occurrence, "ineligible")
 
-      {:ok, %{new_occurrence: new_occurrence}} = PanelSurvey.create_panel_survey_occurrence(panel_survey)
+      {:ok, %{new_occurrence: new_occurrence}} = PanelSurvey.new_occurrence(panel_survey)
 
       assert_repeated_without_respondent(latest_occurrence, new_occurrence, ineligible_respondent)
     end
@@ -121,28 +121,6 @@ defmodule Ask.Runtime.PanelSurveyTest do
   defp disable_incentives(survey) do
     Survey.changeset(survey, %{incentives_enabled: false})
     |> Repo.update!()
-  end
-
-  defp panel_survey_with_occurrence() do
-    panel_survey = insert(:panel_survey)
-    insert(:survey, panel_survey:  panel_survey)
-    # Reload the panel survey. One of its surveys has changed, so it's outdated
-    Repo.get!(Ask.PanelSurvey, panel_survey.id)
-  end
-
-  defp terminate(survey) do
-    Survey.changeset(survey, %{state: "terminated"})
-    |> Repo.update!()
-  end
-
-  defp completed_panel_survey() do
-    panel_survey = panel_survey_with_occurrence()
-
-    Ask.PanelSurvey.latest_occurrence(panel_survey)
-    |> terminate()
-
-    # Reload the panel survey. One of its surveys has changed, so it's outdated
-    Repo.get!(Ask.PanelSurvey, panel_survey.id)
   end
 
   defp incentives_enabled_panel_survey() do
@@ -202,7 +180,7 @@ defmodule Ask.Runtime.PanelSurveyTest do
 
     insert_respondents.("sms", ["1", "2", "3"])
     insert_respondents.("ivr", ["3", "4"])
-    terminate(latest_occurrence)
+    terminate_survey(latest_occurrence)
 
     # Reload the panel survey. One of its surveys has changed, so it's outdated
     Repo.get!(Ask.PanelSurvey, panel_survey.id)
