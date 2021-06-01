@@ -8,11 +8,7 @@ defmodule Ask.Folder do
     has_many :panel_surveys, PanelSurvey
     belongs_to :project, Project
 
-    # Avoid microseconds. Mysql doesn't support them.
-    # See [usec in datetime](https://hexdocs.pm/ecto_sql/Ecto.Adapters.MyXQL.html#module-usec-in-datetime)
-    @timestamps_opts [usec: false]
-
-    timestamps(@timestamps_opts)
+    timestamps()
   end
 
   @doc """

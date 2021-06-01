@@ -15,11 +15,7 @@ defmodule Ask.PanelSurvey do
     belongs_to(:folder, Folder)
     has_many(:surveys, Survey)
 
-    # Avoid microseconds. Mysql doesn't support them.
-    # See [usec in datetime](https://hexdocs.pm/ecto_sql/Ecto.Adapters.MyXQL.html#module-usec-in-datetime)
-    @timestamps_opts [usec: false]
-
-    timestamps(@timestamps_opts)
+    timestamps()
   end
 
   @doc """

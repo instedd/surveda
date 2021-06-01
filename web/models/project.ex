@@ -17,11 +17,7 @@ defmodule Ask.Project do
     has_many :project_channels, Ask.ProjectChannel
     has_many :activity_logs, Ask.ActivityLog
 
-    # Avoid microseconds. Mysql doesn't support them.
-    # See [usec in datetime](https://hexdocs.pm/ecto_sql/Ecto.Adapters.MyXQL.html#module-usec-in-datetime)
-    @timestamps_opts [usec: false]
-
-    timestamps(@timestamps_opts)
+    timestamps()
   end
 
   @doc """

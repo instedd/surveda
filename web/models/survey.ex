@@ -106,11 +106,7 @@ defmodule Ask.Survey do
     belongs_to :folder, Folder
     belongs_to :panel_survey, PanelSurvey
 
-    # Avoid microseconds. Mysql doesn't support them.
-    # See [usec in datetime](https://hexdocs.pm/ecto_sql/Ecto.Adapters.MyXQL.html#module-usec-in-datetime)
-    @timestamps_opts [usec: false]
-
-    timestamps(@timestamps_opts)
+    timestamps()
   end
 
   @doc """

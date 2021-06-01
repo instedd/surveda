@@ -109,7 +109,7 @@ defmodule Ask.TestHelpers do
 
       # Format a timestamp without microseconds the same way the controller does.
       defp to_iso8601(timestamp) do
-        Timex.to_datetime(timestamp) |> DateTime.to_iso8601() |> String.replace("Z", ".000000")
+        Timex.to_datetime(timestamp) |> DateTime.to_iso8601()
       end
 
       defp dummy_panel_survey(project \\ nil) do
