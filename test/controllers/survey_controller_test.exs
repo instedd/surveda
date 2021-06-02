@@ -2571,7 +2571,7 @@ defmodule Ask.SurveyControllerTest do
       %{project: project}
     end
 
-    test "shows a panel survey", %{conn: conn, project: project} do
+    test "shows a survey that belongs to a panel survey", %{conn: conn, project: project} do
       panel_survey = insert(:panel_survey, project: project)
       survey = insert(:survey, project: project, panel_survey: panel_survey)
 
