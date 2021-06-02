@@ -195,6 +195,7 @@ defmodule Ask.SurveyTest do
       created_survey = Repo.get!(Survey, survey.id) |> Repo.preload([:project, panel_survey: :project])
 
       assert created_survey == survey
+      assert survey.panel_survey_id
     end
   end
 end
