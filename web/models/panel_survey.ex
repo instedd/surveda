@@ -88,6 +88,12 @@ defmodule Ask.PanelSurvey do
       {:error, %Ecto.Changeset{}}
 
   """
+
+  def update_panel_survey(%{project_id: current} = _panel_survey, %{project_id: new} = _attrs)
+    when current != new do
+    {:error, "Project can't be changed"}
+  end
+
   def update_panel_survey(%PanelSurvey{} = panel_survey, attrs) do
     panel_survey
     |> changeset(attrs)
@@ -108,19 +114,5 @@ defmodule Ask.PanelSurvey do
   """
   def delete_panel_survey(%PanelSurvey{} = panel_survey) do
     Repo.delete(panel_survey)
-  end
-
-  @doc """
-  Returns an `%Ecto.Changeset{}` for tracking panel_survey changes.
-
-  ## Examples
-
-      iex> change_panel_survey(panel_survey)
-      %Ecto.Changeset{source: %PanelSurvey{}}
-
-  """
-  # TODO: find out the purpose of this function
-  def change_panel_survey(%PanelSurvey{} = panel_survey) do
-    changeset(panel_survey, %{})
   end
 end
