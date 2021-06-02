@@ -3,7 +3,7 @@ defmodule Ask.Runtime.PanelSurvey do
   alias Ask.{Survey, Repo, Respondent, RespondentGroupChannel, Schedule, PanelSurvey}
   alias Ask.Runtime.RespondentGroupAction
 
-  def new_ocurrence_changeset(survey) do
+  defp new_ocurrence_changeset(survey) do
     survey =
       survey
       |> Repo.preload([:project])
