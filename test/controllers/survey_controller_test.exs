@@ -1309,7 +1309,7 @@ defmodule Ask.SurveyControllerTest do
       assert Repo.get(Survey, survey.id).folder_id == nil
     end
 
-    test "rejects set_folder_id if the survey is belongs to a panel survey", %{conn: conn, user: user} do
+    test "rejects set_folder_id if the survey belongs to a panel survey", %{conn: conn, user: user} do
       project = create_project_for_user(user)
       panel_survey = insert(:panel_survey, project: project)
       survey = insert(:survey, project: project, panel_survey: panel_survey)
