@@ -150,7 +150,7 @@ defmodule Ask.PanelSurveyControllerTest do
 
   describe "new_occurrence" do
     test "creates a new occurrence", %{conn: conn, user: user} do
-      panel_survey = completed_panel_survey(user)
+      panel_survey = panel_survey_with_last_occurrence_terminated(user)
       previous_occurrence = PanelSurvey.latest_occurrence(panel_survey)
 
       conn = post(
@@ -171,9 +171,9 @@ defmodule Ask.PanelSurveyControllerTest do
     assert assert_panel_survey(response_panel_survey, panel_survey)
   end
 
-  defp completed_panel_survey(user) do
+  defp panel_survey_with_last_occurrence_terminated(user) do
     panel_survey_with_surveys(user)
-    |> complete_panel_survey()
+    |> complete_last_occurrence_of_panel_survey()
   end
 
   defp panel_survey_with_surveys(user) do

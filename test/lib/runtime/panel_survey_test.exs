@@ -6,7 +6,7 @@ defmodule Ask.Runtime.PanelSurveyTest do
 
   describe "new occurence" do
     test "creates a new ready occurrence" do
-      panel_survey = completed_panel_survey()
+      panel_survey = panel_survey_with_last_occurrence_terminated()
 
       {result, data} = PanelSurvey.new_occurrence(panel_survey)
 
@@ -51,7 +51,7 @@ defmodule Ask.Runtime.PanelSurveyTest do
     end
 
     test "the new occurence is based on the latest occurrence" do
-      panel_survey = completed_panel_survey()
+      panel_survey = panel_survey_with_last_occurrence_terminated()
       previous_occurrence = Ask.PanelSurvey.latest_occurrence(panel_survey)
       latest_occurrence = insert(:survey, panel_survey: panel_survey, state: "terminated")
 
@@ -124,12 +124,12 @@ defmodule Ask.Runtime.PanelSurveyTest do
   end
 
   defp incentives_enabled_panel_survey() do
-    completed_panel_survey()
+    panel_survey_with_last_occurrence_terminated()
   end
 
   defp incentives_disabled_panel_survey() do
     panel_survey =
-      completed_panel_survey()
+      panel_survey_with_last_occurrence_terminated()
 
     Ask.PanelSurvey.latest_occurrence(panel_survey)
     |> disable_incentives()
@@ -139,7 +139,7 @@ defmodule Ask.Runtime.PanelSurveyTest do
   end
 
   defp scheduled_panel_survey() do
-    panel_survey = completed_panel_survey()
+    panel_survey = panel_survey_with_last_occurrence_terminated()
     latest_occurrence = Ask.PanelSurvey.latest_occurrence(panel_survey)
     start_date = ~D[2016-01-01]
     end_date = ~D[2016-02-01]

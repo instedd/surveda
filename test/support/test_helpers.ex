@@ -137,7 +137,7 @@ defmodule Ask.TestHelpers do
         |> Repo.update!()
       end
 
-      defp complete_panel_survey(panel_survey) do
+      defp complete_last_occurrence_of_panel_survey(panel_survey) do
         Ask.PanelSurvey.latest_occurrence(panel_survey)
         |> terminate_survey()
 
@@ -145,9 +145,9 @@ defmodule Ask.TestHelpers do
         Repo.get!(Ask.PanelSurvey, panel_survey.id)
       end
 
-      defp completed_panel_survey() do
+      defp panel_survey_with_last_occurrence_terminated() do
         panel_survey_with_occurrence()
-        |> complete_panel_survey()
+        |> complete_last_occurrence_of_panel_survey()
       end
     end
   end
