@@ -4,7 +4,7 @@ defmodule Ask.Runtime.PanelSurveyTest do
   alias Ask.Runtime.{PanelSurvey, RespondentGroupAction}
   alias Ask.{Survey, Repo, TestChannel, Respondent}
 
-  describe "new occurence" do
+  describe "new_occurrence/1" do
     test "creates a new ready occurrence" do
       panel_survey = panel_survey_with_last_occurrence_terminated()
 
@@ -15,6 +15,70 @@ defmodule Ask.Runtime.PanelSurveyTest do
       assert new_occurrence
       assert new_occurrence.state == "ready"
       assert new_occurrence.panel_survey_id == panel_survey.id
+    end
+
+    # TODO: test different survey configurations
+    test "preserves the basic settings" do
+      panel_survey = completed_panel_survey_with_respondents()
+      latest_occurrence = Ask.PanelSurvey.latest_occurrence(panel_survey)
+
+      {:ok, %{new_occurrence: new_occurrence}} = PanelSurvey.new_occurrence(panel_survey)
+
+      assert new_occurrence.project_id == panel_survey.project_id
+      assert new_occurrence.project_id == latest_occurrence.project_id
+      assert new_occurrence.folder_id == latest_occurrence.folder_id
+      assert new_occurrence.name == latest_occurrence.name
+      assert new_occurrence.description == latest_occurrence.description
+      assert new_occurrence.mode == latest_occurrence.mode
+      refute new_occurrence.started_at == latest_occurrence.started_at
+      refute latest_occurrence.started_at
+      assert new_occurrence.panel_survey_id == latest_occurrence.panel_survey_id
+    end
+
+    # TODO: test different survey configurations
+    test "preserves the advanced settings" do
+      panel_survey = completed_panel_survey_with_respondents()
+      latest_occurrence = Ask.PanelSurvey.latest_occurrence(panel_survey)
+
+      {:ok, %{new_occurrence: new_occurrence}} = PanelSurvey.new_occurrence(panel_survey)
+
+      assert new_occurrence.cutoff == latest_occurrence.cutoff
+      assert new_occurrence.count_partial_results == latest_occurrence.count_partial_results
+      assert new_occurrence.sms_retry_configuration == latest_occurrence.sms_retry_configuration
+      assert new_occurrence.ivr_retry_configuration == latest_occurrence.ivr_retry_configuration
+      assert new_occurrence.mobileweb_retry_configuration == latest_occurrence.mobileweb_retry_configuration
+      assert new_occurrence.fallback_delay == latest_occurrence.fallback_delay
+      assert new_occurrence.quota_vars == latest_occurrence.quota_vars
+      assert new_occurrence.quotas == latest_occurrence.quotas
+    end
+
+    test "preserves every respondent with their hashed phone number and mode/channel associations" do
+      panel_survey = completed_panel_survey_with_respondents()
+      latest_occurrence = Ask.PanelSurvey.latest_occurrence(panel_survey)
+
+      {:ok, %{new_occurrence: new_occurrence}} = PanelSurvey.new_occurrence(panel_survey)
+
+      assert respondent_channels(latest_occurrence) == respondent_channels(new_occurrence)
+    end
+
+    test "doesn't promote the refused respondents" do
+      panel_survey = completed_panel_survey_with_respondents()
+      latest_occurrence = Ask.PanelSurvey.latest_occurrence(panel_survey)
+      refused_respondent = set_one_respondent_disposition(latest_occurrence, "refused")
+
+      {:ok, %{new_occurrence: new_occurrence}} = PanelSurvey.new_occurrence(panel_survey)
+
+      assert_repeated_without_respondent(latest_occurrence, new_occurrence, refused_respondent)
+    end
+
+    test "doesn't promote the ineligible respondents" do
+      panel_survey = completed_panel_survey_with_respondents()
+      latest_occurrence = Ask.PanelSurvey.latest_occurrence(panel_survey)
+      ineligible_respondent = set_one_respondent_disposition(latest_occurrence, "ineligible")
+
+      {:ok, %{new_occurrence: new_occurrence}} = PanelSurvey.new_occurrence(panel_survey)
+
+      assert_repeated_without_respondent(latest_occurrence, new_occurrence, ineligible_respondent)
     end
 
     test "preserves the incentives enabled flag" do
@@ -48,47 +112,6 @@ defmodule Ask.Runtime.PanelSurveyTest do
 
       assert result == :error
       assert Map.get(data, :error) == "Last panel survey occurrence isn't terminated"
-    end
-
-    test "the new occurence is based on the latest occurrence" do
-      panel_survey = panel_survey_with_last_occurrence_terminated()
-      previous_occurrence = Ask.PanelSurvey.latest_occurrence(panel_survey)
-      latest_occurrence = insert(:survey, panel_survey: panel_survey, state: "terminated")
-
-      {:ok, %{new_occurrence: new_occurrence}} = PanelSurvey.new_occurrence(panel_survey)
-
-      # TODO: Don't compare the name, compare something more meaningfull
-      refute new_occurrence.name == previous_occurrence.name
-      assert latest_occurrence.name == new_occurrence.name
-    end
-
-    test "preserves every respondent with their hashed phone number and mode/channel associations" do
-      panel_survey = completed_panel_survey_with_respondents()
-      latest_occurrence = Ask.PanelSurvey.latest_occurrence(panel_survey)
-
-      {:ok, %{new_occurrence: new_occurrence}} = PanelSurvey.new_occurrence(panel_survey)
-
-      assert respondent_channels(latest_occurrence) == respondent_channels(new_occurrence)
-    end
-
-    test "doesn't promote the refused respondents" do
-      panel_survey = completed_panel_survey_with_respondents()
-      latest_occurrence = Ask.PanelSurvey.latest_occurrence(panel_survey)
-      refused_respondent = set_one_respondent_disposition(latest_occurrence, "refused")
-
-      {:ok, %{new_occurrence: new_occurrence}} = PanelSurvey.new_occurrence(panel_survey)
-
-      assert_repeated_without_respondent(latest_occurrence, new_occurrence, refused_respondent)
-    end
-
-    test "doesn't promote the ineligible respondents" do
-      panel_survey = completed_panel_survey_with_respondents()
-      latest_occurrence = Ask.PanelSurvey.latest_occurrence(panel_survey)
-      ineligible_respondent = set_one_respondent_disposition(latest_occurrence, "ineligible")
-
-      {:ok, %{new_occurrence: new_occurrence}} = PanelSurvey.new_occurrence(panel_survey)
-
-      assert_repeated_without_respondent(latest_occurrence, new_occurrence, ineligible_respondent)
     end
   end
 

@@ -127,7 +127,7 @@ defmodule Ask.TestHelpers do
 
       defp panel_survey_with_occurrence() do
         panel_survey = insert(:panel_survey)
-        insert(:survey, panel_survey:  panel_survey)
+        insert(:survey, panel_survey:  panel_survey, project: panel_survey.project)
         # Reload the panel survey. One of its surveys has changed, so it's outdated
         Repo.get!(Ask.PanelSurvey, panel_survey.id)
       end
