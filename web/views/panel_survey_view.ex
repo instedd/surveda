@@ -20,14 +20,14 @@ defmodule Ask.PanelSurveyView do
             name: name
           } = panel_survey
       }) do
-    surveys = Repo.preload(panel_survey, :surveys).surveys
+    occurrences = Repo.preload(panel_survey, :occurrences).occurrences
 
     %{
       folder_id: folder_id,
       id: id,
       name: name,
       project_id: project_id,
-      surveys: render_many(surveys, Ask.SurveyView, "survey.json")
+      occurrences: render_many(occurrences, Ask.SurveyView, "survey.json")
     }
   end
 end

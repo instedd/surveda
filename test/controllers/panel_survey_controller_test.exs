@@ -151,7 +151,7 @@ defmodule Ask.PanelSurveyControllerTest do
   defp panel_survey_with_surveys(user) do
     panel_survey = panel_survey(user)
     insert(:survey, project: panel_survey.project, panel_survey: panel_survey)
-    Repo.get!(PanelSurvey, panel_survey.id) |> Repo.preload(:surveys)
+    Repo.get!(PanelSurvey, panel_survey.id) |> Repo.preload(:occurrences)
   end
 
   defp panel_survey_inside_folder(user) do
@@ -230,10 +230,10 @@ defmodule Ask.PanelSurveyControllerTest do
   end
 
   defp assert_panel_survey(panel_survey, base_panel_survey) do
-    base_panel_survey = Repo.preload(base_panel_survey, :surveys)
+    base_panel_survey = Repo.preload(base_panel_survey, :occurrences)
 
     # It's easier to compare with the base panel without surveys.
-    panel_survey_without_surveys = Map.delete(panel_survey, "surveys")
+    panel_survey_without_surveys = Map.delete(panel_survey, "occurrences")
 
     assert panel_survey_without_surveys == %{
              "folder_id" => base_panel_survey.folder_id,
@@ -243,7 +243,7 @@ defmodule Ask.PanelSurveyControllerTest do
            }
 
     # And then, it's also easier to compare only the surveys ids.
-    assert survey_ids(panel_survey["surveys"]) == survey_ids(base_panel_survey.surveys)
+    assert survey_ids(panel_survey["occurrences"]) == survey_ids(base_panel_survey.occurrences)
   end
 
   defp survey_ids(surveys) do

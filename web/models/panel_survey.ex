@@ -13,7 +13,7 @@ defmodule Ask.PanelSurvey do
     field(:name, :string)
     belongs_to(:project, Project)
     belongs_to(:folder, Folder)
-    has_many(:surveys, Survey)
+    has_many(:occurrences, Survey)
 
     timestamps()
   end
