@@ -185,4 +185,17 @@ defmodule Ask.SurveyTest do
       assert expired? == true
     end
   end
+
+  describe "panel survey" do
+    test "creates a survey inside a panel survey" do
+      project = insert(:project)
+      panel_survey = insert(:panel_survey, project: project, name: "foo")
+      survey = insert(:survey, project: project, panel_survey: panel_survey)
+
+      created_survey = Repo.get!(Survey, survey.id) |> Repo.preload([:project, panel_survey: :project])
+
+      assert created_survey == survey
+      assert created_survey.panel_survey_id == panel_survey.id
+    end
+  end
 end

@@ -3,7 +3,10 @@ defmodule Ask.TestHelpers do
     quote do
       use Ask.DummySteps
       alias Ask.Runtime.{Broker, Flow}
-      alias Ask.{Repo, Respondent}
+      alias Ask.{PanelSurvey, Repo, Respondent, Survey}
+
+      @foo_string "foo"
+      @bar_string "bar"
 
       def create_project_for_user(user, options \\ []) do
         level = options[:level] || "owner"
@@ -102,6 +105,49 @@ defmodule Ask.TestHelpers do
                      group_by: :state,
                      select: {r.state, count("*")}) |> Enum.into(%{})
         [by_state["active"] || 0, by_state["pending"] || 0]
+      end
+
+      # Format a timestamp without microseconds the same way the controller does.
+      defp to_iso8601(timestamp) do
+        Timex.to_datetime(timestamp) |> DateTime.to_iso8601()
+      end
+
+      defp dummy_panel_survey(project \\ nil) do
+        project = if project, do: project, else: insert(:project)
+        {:ok, panel_survey} = PanelSurvey.create_panel_survey(%{name: @foo_string, project_id: project.id})
+        panel_survey
+      end
+
+      defp dummy_panel_survey_inside_folder(project \\ nil) do
+        project = if project, do: project, else: insert(:project)
+        folder = insert(:folder)
+        {:ok, panel_survey} = PanelSurvey.create_panel_survey(%{name: @foo_string, project_id: project.id, folder_id: folder.id})
+        panel_survey
+      end
+
+      defp panel_survey_with_occurrence() do
+        panel_survey = insert(:panel_survey)
+        insert(:survey, panel_survey:  panel_survey, project: panel_survey.project)
+        # Reload the panel survey. One of its surveys has changed, so it's outdated
+        Repo.get!(Ask.PanelSurvey, panel_survey.id)
+      end
+
+      defp terminate_survey(survey) do
+        Survey.changeset(survey, %{state: "terminated"})
+        |> Repo.update!()
+      end
+
+      defp complete_last_occurrence_of_panel_survey(panel_survey) do
+        Ask.PanelSurvey.latest_occurrence(panel_survey)
+        |> terminate_survey()
+
+        # Reload the panel survey. One of its surveys has changed, so it's outdated
+        Repo.get!(Ask.PanelSurvey, panel_survey.id)
+      end
+
+      defp panel_survey_with_last_occurrence_terminated() do
+        panel_survey_with_occurrence()
+        |> complete_last_occurrence_of_panel_survey()
       end
     end
   end
