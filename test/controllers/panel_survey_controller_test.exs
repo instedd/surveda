@@ -148,6 +148,34 @@ defmodule Ask.PanelSurveyControllerTest do
     end
   end
 
+  describe "new_occurrence" do
+    test "creates a new occurrence", %{conn: conn, user: user} do
+      panel_survey = panel_survey_with_last_occurrence_terminated(user)
+      previous_occurrence = PanelSurvey.latest_occurrence(panel_survey)
+
+      conn = post(
+        conn,
+        project_panel_survey_panel_survey_path(conn, :new_occurrence, panel_survey.project_id, panel_survey.id)
+      )
+
+      response_panel_survey = json_response(conn, 200)["data"]
+      panel_survey = Repo.get!(PanelSurvey, panel_survey.id)
+      assert_new_occurrence(response_panel_survey, previous_occurrence, panel_survey)
+    end
+  end
+
+  defp assert_new_occurrence(response_panel_survey, previous_occurrence, panel_survey) do
+    new_occurrence = PanelSurvey.latest_occurrence(panel_survey)
+    assert new_occurrence.id > previous_occurrence.id
+    assert new_occurrence.state == "ready"
+    assert assert_panel_survey(response_panel_survey, panel_survey)
+  end
+
+  defp panel_survey_with_last_occurrence_terminated(user) do
+    panel_survey_with_surveys(user)
+    |> complete_last_occurrence_of_panel_survey()
+  end
+
   defp panel_survey_with_surveys(user) do
     panel_survey = panel_survey(user)
     insert(:survey, project: panel_survey.project, panel_survey: panel_survey)

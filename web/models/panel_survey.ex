@@ -115,4 +115,9 @@ defmodule Ask.PanelSurvey do
   def delete_panel_survey(%PanelSurvey{} = panel_survey) do
     Repo.delete(panel_survey)
   end
+
+  def latest_occurrence(panel_survey) do
+    Repo.preload(panel_survey, :occurrences).occurrences
+    |> List.last()
+  end
 end

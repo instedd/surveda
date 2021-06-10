@@ -64,4 +64,19 @@ defmodule Ask.PanelSurveyController do
       send_resp(conn, :no_content, "")
     end
   end
+
+  def new_occurrence(conn, %{"project_id" => project_id, "panel_survey_id" => id}) do
+    project = conn
+    |> load_project_for_change(project_id)
+
+    panel_survey = project
+      |> assoc(:panel_surveys)
+      |> Repo.get!(id)
+
+    with {:ok, %{new_occurrence: _new_occurrence}} <- Ask.Runtime.PanelSurvey.new_occurrence(panel_survey) do
+      # Reload the panel survey. One of its surveys has changed, so it's outdated
+      panel_survey = Repo.get!(PanelSurvey, id)
+      render(conn, "show.json", panel_survey: panel_survey)
+    end
+  end
 end

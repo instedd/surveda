@@ -1,16 +1,11 @@
 defmodule Ask.Runtime.SurveyAction do
   alias Ask.{Survey, Logger, Repo, Questionnaire, ActivityLog, SurveyCanceller, Project, SystemTime, Schedule}
-  alias Ask.Runtime.PanelSurvey
   alias Ecto.Multi
 
   def delete(survey, conn) do
     survey = Repo.preload(survey, [:project])
 
-    multi = if Survey.panel_survey?(survey) do
-      PanelSurvey.delete_multi(survey)
-    else
-      Survey.delete_multi(survey)
-    end
+    multi = Survey.delete_multi(survey)
 
     log = ActivityLog.delete_survey(survey.project, conn, survey)
     Multi.insert(multi, :log, log) |> Repo.transaction
@@ -86,24 +81,6 @@ defmodule Ask.Runtime.SurveyAction do
       end
   end
 
-  def repeat(survey) do
-    if Survey.repeatable?(survey) do
-      case create_panel_survey_occurrence(survey) do
-        {:ok, %{survey: new_occurrence}} ->
-          start(new_occurrence, repetition?: true)
-
-        result ->
-          result
-      end
-    else
-      Logger.warn(
-        "Survey #{survey.id} isn't repeatable"
-      )
-
-      {:error, %{survey: survey}}
-    end
-  end
-
   defp perform_start(survey, repetition?) do
     changeset = Survey.changeset(survey, %{
       state: "running",
@@ -169,31 +146,5 @@ defmodule Ask.Runtime.SurveyAction do
     |> Survey.changeset(%{comparisons: comparisons})
     |> Ecto.Changeset.put_assoc(:questionnaires, new_questionnaires)
     |> Repo.update!()
-  end
-
-  defp create_panel_survey_occurrence(survey) do
-    survey =
-      survey
-      |> Repo.preload([:project])
-      |> Repo.preload([:questionnaires])
-      |> Repo.preload([:respondent_groups])
-
-    current_occurrence = Survey.changeset(survey, %{latest_panel_survey: false})
-
-    multi =
-      Multi.new()
-      |> Multi.update(:current_occurrence, current_occurrence)
-      |> Multi.insert(:new_occurrence, PanelSurvey.new_ocurrence_changeset(survey))
-      |> Repo.transaction()
-
-    case multi do
-      {:ok, %{new_occurrence: new_occurrence}} ->
-        new_occurrence = PanelSurvey.copy_respondents(survey, new_occurrence)
-
-        {:ok, %{survey: new_occurrence}}
-
-      {:error, _, changeset, _} ->
-        {:error, %{changeset: changeset}}
-    end
   end
 end

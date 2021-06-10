@@ -74,7 +74,9 @@ defmodule Ask.Router do
           post "/set_name", FolderController, :set_name
           resources "/surveys", SurveyController, only: [:create]
         end
-        resources "/panel_surveys", PanelSurveyController, except: [:new, :edit]
+        resources "/panel_surveys", PanelSurveyController, except: [:new, :edit] do
+          post "/new_occurrence/", PanelSurveyController, :new_occurrence
+        end
         delete "/memberships/remove", MembershipController, :remove, as: :membership_remove
         put "/memberships/update", MembershipController, :update, as: :membership_update
         resources "/channels", ChannelController, only: [:index]
@@ -85,7 +87,6 @@ defmodule Ask.Router do
           post "/launch", SurveyController, :launch
           post "/stop", SurveyController, :stop
           post "/config", SurveyController, :config
-          post "/repeat/", SurveyController, :repeat
           put "/update_locked_status", SurveyController, :update_locked_status, as: :update_locked_status
           get "/config", SurveyController, :config
           get "/stats", SurveyController, :stats
