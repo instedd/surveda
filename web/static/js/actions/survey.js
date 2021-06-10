@@ -174,13 +174,6 @@ export const changeName = (newName: string) => (dispatch: Function, getState: ()
   })
 }
 
-export const changeIsPanelSurvey = (isPanelSurvey: string) => (
-  {
-    type: CHANGE_IS_PANEL_SURVEY,
-    isPanelSurvey
-  }
-)
-
 export const changeFolder = (survey: Survey, folderId: number) => (dispatch: Function, getState: () => Store) => {
   return api.setFolderId(survey.projectId, survey.id, folderId)
     .then(() => dispatch(surveysActions.folderChanged(survey.id, folderId))

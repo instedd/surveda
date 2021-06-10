@@ -267,7 +267,8 @@ defmodule Ask.PanelSurveyControllerTest do
              "folder_id" => base_panel_survey.folder_id,
              "id" => base_panel_survey.id,
              "name" => base_panel_survey.name,
-             "project_id" => base_panel_survey.project_id
+             "project_id" => base_panel_survey.project_id,
+             "updated_at" => to_iso8601(PanelSurvey.updated_at(base_panel_survey))
            }
 
     # And then, it's also easier to compare only the surveys ids.

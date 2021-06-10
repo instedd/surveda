@@ -6,15 +6,15 @@ import * as actions from '../../actions/surveys'
 import * as surveyActions from '../../actions/survey'
 import * as projectActions from '../../actions/project'
 import * as folderActions from '../../actions/folder'
+import * as panelSurveyActions from '../../actions/panelSurvey'
 import * as panelSurveysActions from '../../actions/panelSurveys'
-import { AddButton, EmptyPage, UntitledIfEmpty, ConfirmationModal, PagingFooter } from '../ui'
+import { EmptyPage, UntitledIfEmpty, ConfirmationModal, PagingFooter } from '../ui'
 import * as respondentActions from '../../actions/respondents'
 import SurveyCard from '../surveys/SurveyCard'
 import * as routes from '../../routes'
 import { translate, Trans } from 'react-i18next'
-import { surveyIndexProps } from '../../components/surveys/SurveyIndex'
 
-class FolderShow extends Component<any, any> {
+class PanelSurveyShow extends Component<any, any> {
   state = {}
   static propTypes = {
     t: PropTypes.func,
@@ -29,15 +29,17 @@ class FolderShow extends Component<any, any> {
     respondentsStats: PropTypes.object.isRequired,
     params: PropTypes.object,
     folderId: PropTypes.number,
+    panelSurveyId: PropTypes.number.isRequired,
     name: PropTypes.string,
-    loadingFolder: PropTypes.bool,
+    loadingPanelSurvey: PropTypes.bool,
     loadingSurveys: PropTypes.bool,
+    panelSurvey: PropTypes.object,
     panelSurveys: PropTypes.array,
     loadingPanelSurveys: PropTypes.bool
   }
 
   componentWillMount() {
-    const { dispatch, projectId } = this.props
+    const { dispatch, projectId, panelSurvey, panelSurveyId } = this.props
 
     dispatch(projectActions.fetchProject(projectId))
 
@@ -51,6 +53,9 @@ class FolderShow extends Component<any, any> {
     })
     dispatch(folderActions.fetchFolders(projectId))
     dispatch(panelSurveysActions.fetchPanelSurveys(projectId))
+    if (!panelSurvey) {
+      dispatch(panelSurveyActions.fetchPanelSurvey(projectId, panelSurveyId))
+    }
   }
 
   newSurvey() {
@@ -91,18 +96,24 @@ class FolderShow extends Component<any, any> {
   }
 
   loadingMessage() {
-    const { loadingSurveys, surveys, t } = this.props
+    const { loadingSurveys, t, panelSurvey } = this.props
 
-    if (!surveys && loadingSurveys) {
+    if (!panelSurvey) {
+      return t('Loading panel survey...')
+    } else if (loadingSurveys) {
       return t('Loading surveys...')
     }
     return null
   }
 
   render() {
-    const { loadingFolder, surveys, respondentsStats, project, startIndex, endIndex, totalCount, t, name, projectId } = this.props
-    const to = routes.project(projectId)
-    const titleLink = name ? (<Link to={to} className='folder-header'><i className='material-icons black-text'>arrow_back</i>{name}</Link>) : null
+    const { surveys, respondentsStats, project, startIndex, endIndex, totalCount, t, projectId, panelSurvey } = this.props
+    const to = panelSurvey
+      ? panelSurvey.folderId
+        ? routes.folder(projectId, panelSurvey.folderId)
+        : routes.project(projectId)
+      : null
+    const titleLink = panelSurvey ? (<Link to={to} className='folder-header'><i className='material-icons black-text'>arrow_back</i>{panelSurvey.name || t('Untitled panel survey')}</Link>) : null
     const loadingMessage = this.loadingMessage()
     if (loadingMessage) {
       return (
@@ -116,21 +127,13 @@ class FolderShow extends Component<any, any> {
 
     const readOnly = !project || project.readOnly
 
-    let primaryButton = null
-    if (!readOnly) {
-      primaryButton = (
-        <AddButton text={t('Add survey')} onClick={() => this.newSurvey()} />
-      )
-    }
-
-    const emptyFolder = surveys && surveys.length == 0
+    const empty = surveys && surveys.length == 0
 
     return (
       <div className='folder-show'>
-        {primaryButton}
         {titleLink}
-        { emptyFolder
-        ? <EmptyPage icon='assignment_turned_in' title={t('You have no surveys in this folder')} onClick={(e) => this.newSurvey()} readOnly={readOnly} createText={t('Create one', {context: 'survey'})} />
+        { empty
+        ? <EmptyPage icon='warning' title={t('You have no surveys in this panelSurvey')} />
         : (
           <div>
             <div className='survey-index-grid'>
@@ -144,7 +147,6 @@ class FolderShow extends Component<any, any> {
           </div>
         )
         }
-        <ConfirmationModal disabled={loadingFolder} modalId='survey_index_folder_create' ref='createFolderConfirmationModal' confirmationText={t('Create')} header={t('Create Folder')} showCancel />
         <ConfirmationModal modalId='survey_index_delete' ref='deleteConfirmationModal' confirmationText={t('Delete')} header={t('Delete survey')} showCancel />
       </div>
     )
@@ -155,31 +157,37 @@ const mapStateToProps = (state, ownProps) => {
   const { params, t } = ownProps
   const { projectId } = params
 
-  const folderId = params.folderId && parseInt(params.folderId)
-  if (!folderId) throw new Error(t('Missing param: folderId'))
-  const { surveys, startIndex, endIndex, totalCount } = surveyIndexProps(state, {
-    folderId: folderId,
-    panelSurveyId: null
-  })
-  const folders = state.folder && state.folder.folders
-  const folder = folders && folders[folderId]
-  const name = folder && folder.name
+  const panelSurveyId = params.panelSurveyId && parseInt(params.panelSurveyId)
+  if (!panelSurveyId) throw new Error(t('Missing param: panelSurveyId'))
+  let panelSurvey = null
+  if (state.panelSurvey.data && state.panelSurvey.data.id == panelSurveyId) {
+    panelSurvey = state.panelSurvey.data
+  }
+  const name = panelSurvey && panelSurvey.name || t('Untitled panel survey')
+
+  const occurrences = panelSurvey ? panelSurvey.occurrences : null
+  let totalCount = occurrences ? occurrences.length : 0
+  const pageIndex = 0
+  const pageSize = 0
+  const startIndex = Math.min(totalCount, pageIndex + 1)
+  const endIndex = Math.min(pageIndex + pageSize, totalCount)
 
   return {
     projectId: projectId,
-    folderId,
+    panelSurveyId,
     project: state.project.data,
-    surveys,
+    surveys: occurrences,
     respondentsStats: state.respondentsStats,
     startIndex,
     endIndex,
     totalCount,
     loadingSurveys: state.surveys.fetching,
-    loadingFolder: state.panelSurvey.loading || state.folder.loading,
+    loadingPanelSurvey: state.panelSurvey.loading || state.folder.loading,
+    panelSurvey,
     name,
     panelSurveys: state.panelSurveys.items && Object.values(state.panelSurveys.items),
     loadingPanelSurveys: state.panelSurveys.fetching
   }
 }
 
-export default translate()(withRouter(connect(mapStateToProps)(FolderShow)))
+export default translate()(withRouter(connect(mapStateToProps)(PanelSurveyShow)))

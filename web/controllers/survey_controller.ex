@@ -273,12 +273,15 @@ defmodule Ask.SurveyController do
     |> assoc(:surveys)
     |> Repo.get!(id)
 
-    # TODO: Maybe we should move this validation to SurveyAction in the future
-    case survey.state do
-      "running" ->
-        send_resp(conn, :bad_request, "")
+    # TODO: We should move this validations to SurveyAction in the future
+    cond do
+      survey.state == "running" ->
+        send_resp(conn, :bad_request, "Cannot delete a running survey")
 
-      _ ->
+      only_survey_in_panel_survey?(survey) ->
+        send_resp(conn, :forbidden, "Cannot delete the only survey of a panel survey")
+
+      true ->
         case SurveyAction.delete(survey, conn) do
           {:ok, _} ->
             project |> Project.touch!
@@ -288,6 +291,15 @@ defmodule Ask.SurveyController do
             |> put_status(:unprocessable_entity)
             |> render(Ask.ChangesetView, "error.json", changeset: changeset)
         end
+    end
+  end
+
+  defp only_survey_in_panel_survey?(survey) do
+    if survey.panel_survey_id do
+      survey = Repo.preload(survey, [panel_survey: :occurrences])
+      Enum.count(survey.panel_survey.occurrences) == 1
+    else
+      false
     end
   end
 

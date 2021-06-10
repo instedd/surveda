@@ -120,4 +120,11 @@ defmodule Ask.PanelSurvey do
     Repo.preload(panel_survey, :occurrences).occurrences
     |> List.last()
   end
+
+  def updated_at(panel_survey) do
+    Repo.preload(panel_survey, :occurrences).occurrences
+    |> Enum.map(fn %{updated_at: updated_at} -> updated_at end)
+    |> Enum.concat([panel_survey.updated_at])
+    |> Enum.max()
+  end
 end
