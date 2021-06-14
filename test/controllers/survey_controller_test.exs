@@ -188,7 +188,8 @@ defmodule Ask.SurveyControllerTest do
         "incentives_enabled" => true,
         "first_window_started_at" => nil,
         "panel_survey_id" => nil,
-        "last_window_ends_at" => nil
+        "last_window_ends_at" => nil,
+        "generates_panel_survey" => false
       }
     end
 
@@ -288,7 +289,8 @@ defmodule Ask.SurveyControllerTest do
         "incentives_enabled" => true,
         "first_window_started_at" => nil,
         "panel_survey_id" => nil,
-        "last_window_ends_at" => nil
+        "last_window_ends_at" => nil,
+        "generates_panel_survey" => false
       }
     end
 
@@ -362,7 +364,8 @@ defmodule Ask.SurveyControllerTest do
         "incentives_enabled" => true,
         "first_window_started_at" => nil,
         "panel_survey_id" => nil,
-        "last_window_ends_at" => nil
+        "last_window_ends_at" => nil,
+        "generates_panel_survey" => false
       }
     end
 
@@ -428,7 +431,8 @@ defmodule Ask.SurveyControllerTest do
         "incentives_enabled" => true,
         "first_window_started_at" => nil,
         "panel_survey_id" => nil,
-        "last_window_ends_at" => nil
+        "last_window_ends_at" => nil,
+        "generates_panel_survey" => false
       }
     end
 

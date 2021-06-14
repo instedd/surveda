@@ -98,7 +98,8 @@ defmodule Ask.SurveyView do
       incentives_enabled: survey.incentives_enabled,
       first_window_started_at: first_window_started_at(survey),
       panel_survey_id: survey.panel_survey_id,
-      last_window_ends_at: survey.last_window_ends_at
+      last_window_ends_at: survey.last_window_ends_at,
+      generates_panel_survey: survey.generates_panel_survey
     }
 
     if Ask.Survey.launched?(survey) || survey.simulation do

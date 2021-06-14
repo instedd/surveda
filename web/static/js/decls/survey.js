@@ -36,8 +36,7 @@ export type Survey = {
   comparisons: Comparison[],
   nextScheduleTime: ?string,
   panelSurveyId: ?number,
-  // TODO: add `generatesPanelSurvey` property
-  // generatesPanelSurvey: boolean,
+  generatesPanelSurvey: boolean,
   incentivesEnabled: boolean
 };
 
