@@ -1,6 +1,7 @@
 defmodule Ask.Runtime.PanelSurveyTest do
   use Ask.ModelCase
   use Ask.TestHelpers
+  use Ask.MockTime
   alias Ask.Runtime.{PanelSurvey, RespondentGroupAction}
   alias Ask.{Survey, Repo, TestChannel, Respondent}
 
@@ -27,12 +28,23 @@ defmodule Ask.Runtime.PanelSurveyTest do
       assert new_occurrence.project_id == panel_survey.project_id
       assert new_occurrence.project_id == latest_occurrence.project_id
       assert new_occurrence.folder_id == latest_occurrence.folder_id
-      assert new_occurrence.name == latest_occurrence.name
       assert new_occurrence.description == latest_occurrence.description
       assert new_occurrence.mode == latest_occurrence.mode
       refute new_occurrence.started_at == latest_occurrence.started_at
       refute latest_occurrence.started_at
       assert new_occurrence.panel_survey_id == latest_occurrence.panel_survey_id
+    end
+
+    @tag :time_mock
+    test "renew the new occurrence name" do
+      now = Timex.parse!("2021-06-14T09:00:00Z", "{ISO:Extended}")
+      mock_time(now)
+      expected_occurrence_name = "2021-06-14"
+      panel_survey = completed_panel_survey_with_respondents()
+
+      {:ok, %{new_occurrence: new_occurrence}} = PanelSurvey.new_occurrence(panel_survey)
+
+      assert new_occurrence.name == expected_occurrence_name
     end
 
     # TODO: test different survey configurations
