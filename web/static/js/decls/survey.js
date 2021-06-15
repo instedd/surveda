@@ -46,8 +46,7 @@ export type PanelSurvey = {
   folderId: number,
   projectId: number,
   occurrences: Survey[],
-  // TODO: add `isRepeatable` property
-  // isRepeatable: boolean,
+  isRepeatable: boolean
 }
 
 export type Link = {

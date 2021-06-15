@@ -127,4 +127,9 @@ defmodule Ask.PanelSurvey do
     |> Enum.concat([panel_survey.updated_at])
     |> Enum.max()
   end
+
+  def repeatable?(panel_survey) do
+    latest_occurrence(panel_survey)
+    |> Survey.terminated?()
+  end
 end
