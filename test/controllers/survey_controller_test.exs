@@ -2614,34 +2614,6 @@ defmodule Ask.SurveyControllerTest do
 
       assert json_response(conn, 200)["data"]["panel_survey_id"] == nil
     end
-
-    test "sets a panel survey", %{conn: conn, project: project} do
-      panel_survey = insert(:panel_survey, project: project)
-      survey = insert(:survey, project: project)
-
-      conn =
-        put(conn, project_survey_path(conn, :update, project, survey),
-          survey: %{panel_survey_id: panel_survey.id}
-        )
-
-      survey = Repo.get!(Survey, survey.id)
-      assert json_response(conn, 200)["data"]["panel_survey_id"] == panel_survey.id
-      assert survey.panel_survey_id == panel_survey.id
-    end
-
-    test "unsets a panel survey", %{conn: conn, project: project} do
-      panel_survey = insert(:panel_survey, project: project)
-      survey = insert(:survey, project: project, panel_survey: panel_survey)
-
-      conn =
-        put(conn, project_survey_path(conn, :update, project, survey),
-          survey: %{panel_survey_id: nil}
-        )
-
-      survey = Repo.get!(Survey, survey.id)
-      assert json_response(conn, 200)["data"]["panel_survey_id"] == nil
-      assert survey.panel_survey_id == nil
-    end
   end
 
   def prepare_for_state_update(user) do
