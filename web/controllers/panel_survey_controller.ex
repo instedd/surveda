@@ -1,6 +1,5 @@
 defmodule Ask.PanelSurveyController do
   use Ask.Web, :api_controller
-
   alias Ask.{PanelSurvey, Repo}
 
   def index(conn, %{"project_id" => project_id}) do
@@ -14,13 +13,15 @@ defmodule Ask.PanelSurveyController do
     render(conn, "index.json", panel_surveys: panel_surveys)
   end
 
-  def create(conn, %{"project_id" => project_id, "panel_survey" => panel_survey_params}) do
+  def create(conn, %{"project_id" => project_id, "survey_id" => survey_id}) do
     project = conn
-    |> load_project_for_change(project_id)
+      |> load_project_for_change(project_id)
 
-    panel_survey_params = Map.put(panel_survey_params, "project_id", project.id)
+    survey = project
+      |> assoc(:surveys)
+      |> Repo.get!(survey_id)
 
-    with {:ok, %PanelSurvey{} = panel_survey} <- PanelSurvey.create_panel_survey(panel_survey_params) do
+    with {:ok, %PanelSurvey{} = panel_survey} <- PanelSurvey.create_panel_survey_from_survey(survey) do
       conn
       |> put_status(:created)
       |> put_resp_header("location", project_panel_survey_path(conn, :show, project.id, panel_survey))

@@ -1,6 +1,7 @@
 defmodule Ask.Runtime.SurveyActionTest do
   use Ask.ModelCase
   use Ask.MockTime
+  use Ask.TestHelpers
   alias Ask.Runtime.SurveyAction
   alias Ask.Survey
 
@@ -37,7 +38,7 @@ defmodule Ask.Runtime.SurveyActionTest do
     end
 
     test "pass the survey folder to its panel survey" do
-      survey = panel_survey_generator_survey_with_folder()
+      survey = panel_survey_generator_survey_in_folder()
       expected_folder_id = survey.folder_id
 
       {:ok, %{survey: survey}} = SurveyAction.start(survey)
@@ -86,22 +87,5 @@ defmodule Ask.Runtime.SurveyActionTest do
     project = insert(:project)
     insert(:survey, state: "ready", project: project)
     |> include_in_folder(project)
-  end
-
-  defp panel_survey_generator_survey() do
-    project = insert(:project)
-    insert(:survey, state: "ready", project: project, generates_panel_survey: true)
-  end
-
-  defp panel_survey_generator_survey_with_folder() do
-    project = insert(:project)
-    insert(:survey, state: "ready", project: project, generates_panel_survey: true)
-    |> include_in_folder(project)
-  end
-
-  defp include_in_folder(survey, project) do
-    folder = insert(:folder, project: project)
-    Survey.changeset(survey, %{folder_id: folder.id})
-    |> Repo.update!()
   end
 end

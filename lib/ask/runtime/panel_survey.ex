@@ -45,8 +45,13 @@ defmodule Ask.Runtime.PanelSurvey do
   end
 
   def new_occurrence_name() do
-    SystemTime.time.now |> Timex.format!("{YYYY}-{0M}-{D}")
+    now_yyyy_mm_dd()
   end
+
+  def new_panel_survey_name(nil = _survey_name), do: "Panel Survey #{now_yyyy_mm_dd()}"
+  def new_panel_survey_name(survey_name), do: survey_name
+
+  defp now_yyyy_mm_dd(), do: SystemTime.time.now |> Timex.format!("{YYYY}-{0M}-{D}")
 
   def copy_respondents(current_occurrence, new_occurrence) do
     current_occurrence =

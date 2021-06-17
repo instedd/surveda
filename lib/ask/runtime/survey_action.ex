@@ -43,17 +43,9 @@ defmodule Ask.Runtime.SurveyAction do
   end
 
   defp generate_panel_survey_if_needed(%{generates_panel_survey: true} = survey) do
-    {:ok, panel_survey} = PanelSurvey.create_panel_survey(%{
-      name: survey.name,
-      project_id: survey.project_id,
-      folder_id: survey.folder_id
-    })
-    Survey.changeset(survey, %{
-      panel_survey_id: panel_survey.id,
-      name: Ask.Runtime.PanelSurvey.new_occurrence_name(),
-      folder_id: nil
-    })
-    |> Repo.update!()
+    {:ok, panel_survey} = PanelSurvey.create_panel_survey_from_survey(survey)
+    PanelSurvey.latest_occurrence(panel_survey)
+    |> Repo.preload(:questionnaires)
   end
 
   defp generate_panel_survey_if_needed(survey), do: survey

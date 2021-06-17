@@ -112,16 +112,34 @@ defmodule Ask.TestHelpers do
         Timex.to_datetime(timestamp) |> DateTime.to_iso8601()
       end
 
+      defp panel_survey_generator_survey(project \\ nil) do
+        project = if project, do: project, else: insert(:project)
+        insert(:survey, state: "ready", project: project, generates_panel_survey: true)
+      end
+
+      defp panel_survey_generator_survey_in_folder(project \\ nil) do
+        project = if project, do: project, else: insert(:project)
+        insert(:survey, state: "ready", project: project, generates_panel_survey: true)
+        |> include_in_folder(project)
+      end
+
+      defp include_in_folder(survey, project) do
+        folder = insert(:folder, project: project)
+        Survey.changeset(survey, %{folder_id: folder.id})
+        |> Repo.update!()
+      end
+
       defp dummy_panel_survey(project \\ nil) do
         project = if project, do: project, else: insert(:project)
-        {:ok, panel_survey} = PanelSurvey.create_panel_survey(%{name: @foo_string, project_id: project.id})
+        survey = panel_survey_generator_survey(project)
+        {:ok, panel_survey} = PanelSurvey.create_panel_survey_from_survey(survey)
         panel_survey
       end
 
-      defp dummy_panel_survey_inside_folder(project \\ nil) do
+      defp dummy_panel_survey_in_folder(project \\ nil) do
         project = if project, do: project, else: insert(:project)
-        folder = insert(:folder)
-        {:ok, panel_survey} = PanelSurvey.create_panel_survey(%{name: @foo_string, project_id: project.id, folder_id: folder.id})
+        survey = panel_survey_generator_survey_in_folder(project)
+        {:ok, panel_survey} = PanelSurvey.create_panel_survey_from_survey(survey)
         panel_survey
       end
 
