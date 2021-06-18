@@ -119,6 +119,7 @@ defmodule Ask.Runtime.SurveyAction do
   end
 
   defp create_survey_questionnaires_snapshot(survey) do
+    survey = Repo.preload(survey, :project)
     # Create copies of questionnaires
     new_questionnaires =
       Enum.map(survey.questionnaires, fn questionnaire ->
