@@ -8,7 +8,7 @@ import * as projectActions from '../../actions/project'
 import * as folderActions from '../../actions/folder'
 import * as panelSurveyActions from '../../actions/panelSurvey'
 import * as panelSurveysActions from '../../actions/panelSurveys'
-import { EmptyPage, UntitledIfEmpty, ConfirmationModal, PagingFooter } from '../ui'
+import { UntitledIfEmpty, ConfirmationModal, PagingFooter } from '../ui'
 import * as respondentActions from '../../actions/respondents'
 import SurveyCard from '../surveys/SurveyCard'
 import * as routes from '../../routes'
@@ -128,25 +128,23 @@ class PanelSurveyShow extends Component<any, any> {
     const readOnly = !project || project.readOnly
 
     const empty = surveys && surveys.length == 0
+    if (empty) {
+      throw Error(t('Empty panel survey'))
+    }
 
     return (
       <div className='folder-show'>
         {titleLink}
-        { empty
-        ? <EmptyPage icon='warning' title={t('You have no surveys in this panelSurvey')} />
-        : (
-          <div>
-            <div className='survey-index-grid'>
-              { surveys && surveys.map(survey => {
-                return (
-                  <SurveyCard survey={survey} respondentsStats={respondentsStats[survey.id]} onDelete={this.deleteSurvey} key={survey.id} readOnly={readOnly} t={t} />
-                )
-              }) }
-            </div>
-            { footer }
+        <div>
+          <div className='survey-index-grid'>
+            { surveys && surveys.map(survey => {
+              return (
+                <SurveyCard survey={survey} respondentsStats={respondentsStats[survey.id]} onDelete={this.deleteSurvey} key={survey.id} readOnly={readOnly} t={t} />
+              )
+            }) }
           </div>
-        )
-        }
+          { footer }
+        </div>
         <ConfirmationModal modalId='survey_index_delete' ref='deleteConfirmationModal' confirmationText={t('Delete')} header={t('Delete survey')} showCancel />
       </div>
     )
