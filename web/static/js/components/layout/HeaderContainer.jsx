@@ -54,24 +54,15 @@ HeaderContainer.propTypes = {
 
 const getSurveyFromParams = (params, state) => {
   const surveyId = params.surveyId && parseInt(params.surveyId)
-  if (!surveyId) return null
   const survey = state.survey && state.survey.data
-  if (!survey) return null
-  if (survey.id == surveyId) {
-    return survey
-  } else {
-    return null
-  }
+  if (!survey || !surveyId || survey.id != surveyId) return null
+  return survey
 }
 
 const getPanelSurveyFromOccurrence = (survey, state) => {
-  if (survey) {
-    const panelSurvey = state.panelSurveys.items && state.panelSurveys.items[survey.panelSurveyId]
-    if (panelSurvey) {
-      return panelSurvey
-    }
-  }
-  return null
+  if (!survey) return null
+  const panelSurvey = state.panelSurveys.items && state.panelSurveys.items[survey.panelSurveyId]
+  return panelSurvey || null
 }
 
 const getPanelSurveyFromParams = (params, state) => {
