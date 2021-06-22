@@ -78,10 +78,7 @@ const getPanelSurveyFromParams = (params, state) => {
 }
 
 const getFolderFromSurveyOrPanelSurvey = (surveyOrPanelSurvey, state) => {
-  let folderId = null
-  if (surveyOrPanelSurvey) {
-    folderId = surveyOrPanelSurvey.folderId
-  }
+  const folderId = surveyOrPanelSurvey ? surveyOrPanelSurvey.folderId : null
   const folder = state.folder && state.folder.folders && state.folder.folders[folderId]
   return folder || null
 }
