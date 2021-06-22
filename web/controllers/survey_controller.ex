@@ -294,13 +294,11 @@ defmodule Ask.SurveyController do
     end
   end
 
+  defp only_survey_in_panel_survey?(%{panel_survey_id: nil} = _survey), do: false
+
   defp only_survey_in_panel_survey?(survey) do
-    if survey.panel_survey_id do
-      survey = Repo.preload(survey, [panel_survey: :occurrences])
-      Enum.count(survey.panel_survey.occurrences) == 1
-    else
-      false
-    end
+    survey = Repo.preload(survey, [panel_survey: :occurrences])
+    Enum.count(survey.panel_survey.occurrences) == 1
   end
 
   def launch(conn, %{"project_id" => project_id, "survey_id" => survey_id}) do
