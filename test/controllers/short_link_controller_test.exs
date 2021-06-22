@@ -22,7 +22,7 @@ defmodule Ask.ShortLinkControllerTest do
     conn = get conn, short_link_path(conn, :access, link.hash)
 
     assert json_response(conn, 200)["data"] == [
-      %{"cutoff" => survey.cutoff, "id" => survey.id, "mode" => survey.mode, "name" => survey.name, "description" => nil, "project_id" => project.id, "state" => "not_ready", "locked" => false, "exit_code" => nil, "exit_message" => nil, "schedule" => %{"blocked_days" => [], "day_of_week" => %{"fri" => true, "mon" => true, "sat" => true, "sun" => true, "thu" => true, "tue" => true, "wed" => true}, "end_time" => "23:59:59", "start_time" => "00:00:00", "start_date" => nil, "end_date" => nil, "timezone" => "Etc/UTC"}, "next_schedule_time" => nil, "down_channels" => [], "started_at" => nil, "ended_at" => nil, "updated_at" => to_iso8601(survey.updated_at), "folder_id" => nil, "first_window_started_at" => nil, "panel_survey_id" => nil, "last_window_ends_at" => nil}
+      %{"cutoff" => survey.cutoff, "id" => survey.id, "mode" => survey.mode, "name" => survey.name, "description" => nil, "project_id" => project.id, "state" => "not_ready", "locked" => false, "exit_code" => nil, "exit_message" => nil, "schedule" => %{"blocked_days" => [], "day_of_week" => %{"fri" => true, "mon" => true, "sat" => true, "sun" => true, "thu" => true, "tue" => true, "wed" => true}, "end_time" => "23:59:59", "start_time" => "00:00:00", "start_date" => nil, "end_date" => nil, "timezone" => "Etc/UTC"}, "next_schedule_time" => nil, "down_channels" => [], "started_at" => nil, "ended_at" => nil, "updated_at" => to_iso8601(survey.updated_at), "folder_id" => nil, "first_window_started_at" => nil, "panel_survey_id" => nil, "last_window_ends_at" => nil, "is_deletable" => true, "is_movable" => true}
     ]
   end
 end

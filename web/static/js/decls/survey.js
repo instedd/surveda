@@ -37,7 +37,9 @@ export type Survey = {
   nextScheduleTime: ?string,
   panelSurveyId: ?number,
   generatesPanelSurvey: boolean,
-  incentivesEnabled: boolean
+  incentivesEnabled: boolean,
+  isDeletable: boolean,
+  isMovable: boolean
 };
 
 export type PanelSurvey = {

@@ -1,7 +1,7 @@
 defmodule Ask.SurveyController do
   use Ask.Web, :api_controller
 
-  alias Ask.{Project, Folder, Survey, Questionnaire, Logger, RespondentGroup, Respondent, Channel, ShortLink, ActivityLog, RetriesHistogram, NotAllowedError, ScheduleError}
+  alias Ask.{Project, Folder, Survey, Questionnaire, Logger, RespondentGroup, Respondent, Channel, ShortLink, ActivityLog, RetriesHistogram, ScheduleError, ConflictError}
   alias Ask.Runtime.{Session, SurveyAction}
   alias Ecto.Multi
 
@@ -179,7 +179,7 @@ defmodule Ask.SurveyController do
       |> Repo.get!(survey_id)
 
     # Panel surveys can belong to a folder, but their occurences don't.
-    if Survey.belongs_to_panel_survey?(survey), do: raise NotAllowedError
+    if Survey.belongs_to_panel_survey?(survey), do: raise ConflictError
 
     old_folder_name = if survey.folder_id, do: Repo.get(Folder, survey.folder_id).name, else: "No Folder"
 
@@ -273,32 +273,17 @@ defmodule Ask.SurveyController do
     |> assoc(:surveys)
     |> Repo.get!(id)
 
-    # TODO: We should move this validations to SurveyAction in the future
-    cond do
-      survey.state == "running" ->
-        send_resp(conn, :bad_request, "Cannot delete a running survey")
+    unless Survey.deletable?(survey), do: raise ConflictError
 
-      only_survey_in_panel_survey?(survey) ->
-        send_resp(conn, :forbidden, "Cannot delete the only survey of a panel survey")
-
-      true ->
-        case SurveyAction.delete(survey, conn) do
-          {:ok, _} ->
-            project |> Project.touch!
-            send_resp(conn, :no_content, "")
-          {:error, _, changeset, _} ->
-            conn
-            |> put_status(:unprocessable_entity)
-            |> render(Ask.ChangesetView, "error.json", changeset: changeset)
-        end
+    case SurveyAction.delete(survey, conn) do
+      {:ok, _} ->
+        project |> Project.touch!
+        send_resp(conn, :no_content, "")
+      {:error, _, changeset, _} ->
+        conn
+        |> put_status(:unprocessable_entity)
+        |> render(Ask.ChangesetView, "error.json", changeset: changeset)
     end
-  end
-
-  defp only_survey_in_panel_survey?(%{panel_survey_id: nil} = _survey), do: false
-
-  defp only_survey_in_panel_survey?(survey) do
-    survey = Repo.preload(survey, [panel_survey: :occurrences])
-    Enum.count(survey.panel_survey.occurrences) == 1
   end
 
   def launch(conn, %{"project_id" => project_id, "survey_id" => survey_id}) do

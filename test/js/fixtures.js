@@ -366,7 +366,9 @@ const bareSurvey: Survey = {
   nextScheduleTime: null,
   panelSurveyId: null,
   incentivesEnabled: true,
-  generatesPanelSurvey: false
+  generatesPanelSurvey: false,
+  isDeletable: true,
+  isMovable: true
 }
 
 const bareFolder: Folder = {
