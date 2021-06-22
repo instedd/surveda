@@ -1,6 +1,6 @@
 defmodule Ask.PanelSurveyView do
   use Ask.Web, :view
-  alias Ask.PanelSurveyView
+  alias Ask.{PanelSurveyView,PanelSurvey}
   alias Ask.Repo
 
   def render("index.json", %{panel_surveys: panel_surveys}) do
@@ -20,6 +20,7 @@ defmodule Ask.PanelSurveyView do
             name: name
           } = panel_survey
       }) do
+    # if there ins't any occurrence (empty panel survey, which is forbidden) the UI will crash
     occurrences = Repo.preload(panel_survey, :occurrences).occurrences
 
     %{
@@ -27,6 +28,7 @@ defmodule Ask.PanelSurveyView do
       id: id,
       name: name,
       project_id: project_id,
+      updated_at: PanelSurvey.updated_at(panel_survey),
       occurrences: render_many(occurrences, Ask.SurveyView, "survey.json")
     }
   end

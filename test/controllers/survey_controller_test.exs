@@ -1436,6 +1436,29 @@ defmodule Ask.SurveyControllerTest do
       refute Repo.get(Survey, survey.id)
     end
 
+    test "deletes the survey when it's an occurrence of a panel survey", %{conn: conn, user: user} do
+      project = create_project_for_user(user)
+      panel_survey = insert(:panel_survey, project: project)
+      insert(:survey, project: project, panel_survey: panel_survey)
+      survey = insert(:survey, project: project, panel_survey: panel_survey)
+
+      conn = delete conn, project_survey_path(conn, :delete, survey.project, survey)
+
+      assert response(conn, 204)
+      refute Repo.get(Survey, survey.id)
+    end
+
+    test "forbids delete if the survey is the only occurrence of a panel survey", %{conn: conn, user: user} do
+      project = create_project_for_user(user)
+      panel_survey = insert(:panel_survey, project: project)
+      survey = insert(:survey, project: project, panel_survey: panel_survey)
+
+      conn = delete conn, project_survey_path(conn, :delete, survey.project, survey)
+
+      assert response(conn, :forbidden)
+      assert Survey |> Repo.get(survey.id)
+    end
+
     test "forbids delete if the project doesn't belong to the current user", %{conn: conn} do
       survey = insert(:survey)
 

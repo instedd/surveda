@@ -364,8 +364,7 @@ const bareSurvey: Survey = {
   },
   mode: [['sms']],
   nextScheduleTime: null,
-  isPanelSurvey: false,
-  isRepeatable: false,
+  panelSurveyId: null,
   incentivesEnabled: true
 }
 

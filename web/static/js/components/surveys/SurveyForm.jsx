@@ -76,7 +76,7 @@ class SurveyForm extends Component {
       })
 
     const modeStepCompleted = survey.mode != null && survey.mode.length > 0 && this.questionnairesMatchModes(survey.mode, survey.questionnaireIds, questionnaires)
-    const isPanelSurveyStepCompleted = questionnaireStepCompleted
+    const panelSurveyStepCompleted = questionnaireStepCompleted
     const cutoffStepCompleted = cutOffConfigValid && questionnaireStepCompleted
     const validRetryConfiguration = !errors || (!errors.smsRetryConfiguration && !errors.ivrRetryConfiguration && !errors.fallbackDelay)
     const scheduleStepCompleted =
@@ -92,7 +92,7 @@ class SurveyForm extends Component {
       ) && validRetryConfiguration
     let comparisonsStepCompleted = false
 
-    const mandatorySteps = [isPanelSurveyStepCompleted, questionnaireStepCompleted, modeStepCompleted, respondentsStepCompleted, scheduleStepCompleted, cutoffStepCompleted]
+    const mandatorySteps = [panelSurveyStepCompleted, questionnaireStepCompleted, modeStepCompleted, respondentsStepCompleted, scheduleStepCompleted, cutoffStepCompleted]
     if (survey.comparisons.length > 0) {
       comparisonsStepCompleted = sumBy(survey.comparisons, c => c.ratio) == 100
       mandatorySteps.push(comparisonsStepCompleted)
@@ -135,7 +135,7 @@ class SurveyForm extends Component {
                 </div>
               </li>
               {launchComponent}
-              <CollectionItem path='#panel_survey' icon='replay' text={t('Repeat survey')} completed={isPanelSurveyStepCompleted} />
+              <CollectionItem path='#panel_survey' icon='replay' text={t('Repeat survey')} completed={panelSurveyStepCompleted} />
               <CollectionItem path='#questionnaire' icon='assignment' text={t('Select a questionnaire')} completed={!!questionnaireStepCompleted} />
               <CollectionItem path='#channels' icon='settings_input_antenna' text={t('Select mode')} completed={!!modeStepCompleted} />
               <CollectionItem path='#respondents' icon='group' text={t('Upload your respondents list')} completed={!!respondentsStepCompleted} />

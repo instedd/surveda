@@ -7,6 +7,7 @@ import SurveyEdit from './components/surveys/SurveyEdit'
 import SurveyIndex from './components/surveys/SurveyIndex'
 import FolderShow from './components/folders/FolderShow'
 import SurveyShow from './components/surveys/SurveyShow'
+import PanelSurveyShow from './components/surveys/PanelSurveyShow'
 import SurveySettings from './components/surveys/SurveySettings'
 import SurveySimulation from './components/surveys/SurveySimulation'
 import QuestionnaireIndex from './components/questionnaires/QuestionnaireIndex'
@@ -42,7 +43,7 @@ export default (
       <Route path=':projectId' title={ProjectTitle}>
         <IndexRedirect to='surveys' />
         <Route path='folders/:folderId' components={{ body: FolderShow, tabs: ProjectTabs }} />
-        <Route path='panelSurveys/:panelSurveyId' components={{ body: FolderShow, tabs: ProjectTabs }} />
+        <Route path='panelSurveys/:panelSurveyId' components={{ body: PanelSurveyShow, tabs: ProjectTabs }} />
 
         <Route path='surveys'>
           <IndexRoute components={{ body: SurveyIndex, tabs: ProjectTabs }} />

@@ -167,7 +167,6 @@ class SurveyShow extends Component<any, State> {
 
     let stopComponent = null
     let switchComponent = null
-    let repeatComponent = null
     if (!readOnly && survey.state == 'running') {
       if (project.level == 'owner' || project.level == 'admin') {
         let lockOpenClass, lockClass
@@ -195,34 +194,6 @@ class SurveyShow extends Component<any, State> {
             </a>
           </Tooltip>
           { switchComponent }
-        </div>
-      )
-    }
-
-    if (survey.isPanelSurvey) {
-      const hint =
-        survey.isRepeatable
-        ? t('This survey is complete, you may follow up with a new survey sent to a subset of the respondents of this survey')
-          // A panel survey isn't repeatable when any of the following conditions occurs:
-          : survey.state != 'terminated'
-            // 1. The survey isn't terminated
-            ? t("This survey isn't complete yet. After that, you may follow up with a new survey sent to a subset of the respondents of this survey")
-            // 2. The survey has subsequent occurrences
-            : t('This survey is complete, but it has subsequent occurrences. You can follow up only the latest occurrence of a panel survey')
-      repeatComponent = (
-        <div className='repeat-survey'>
-          <div className='row top-separator'>
-            <div className='col s12' />
-          </div>
-          <div className='row'>
-            <div className='col s10 hint'>
-              {hint}
-            </div>
-            <div className='col s2'>
-              <a className={classNames('btn blue right', { disabled: survey.locked || !survey.isRepeatable })}
-                onClick={() => this.repeatSurvey()}>{t('Repeat')}</a>
-            </div>
-          </div>
         </div>
       )
     }
@@ -331,7 +302,6 @@ class SurveyShow extends Component<any, State> {
             <SurveyStatus survey={survey} />
           </div>
         </div>
-        {repeatComponent}
         <div className='row'>
           <div className='col s12'>
             <div className='card' style={{'width': '100%', padding: '60px 30px'}}>
