@@ -59,14 +59,6 @@ class PanelSurveyShow extends Component<any, any> {
     }
   }
 
-  newSurvey() {
-    const { dispatch, router, projectId } = this.props
-
-    dispatch(surveyActions.createSurvey(projectId)).then(survey =>
-      router.push(routes.surveyEdit(projectId, survey))
-    )
-  }
-
   deleteSurvey = (survey: Survey) => {
     const deleteConfirmationModal: ConfirmationModal = this.refs.deleteConfirmationModal
     const { t } = this.props
