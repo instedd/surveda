@@ -118,8 +118,7 @@ defmodule Ask.TestHelpers do
       end
 
       defp panel_survey_generator_survey_in_folder(project \\ nil) do
-        project = if project, do: project, else: insert(:project)
-        insert(:survey, state: "ready", project: project, generates_panel_survey: true)
+        panel_survey_generator_survey(project)
         |> include_in_folder(project)
       end
 
