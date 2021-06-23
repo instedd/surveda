@@ -1,6 +1,6 @@
 defmodule Ask.Runtime.PanelSurvey do
   import Ecto.Query
-  alias Ask.{Survey, Repo, Respondent, RespondentGroupChannel, Schedule, PanelSurvey, SystemTime}
+  alias Ask.{Survey, Repo, Respondent, RespondentGroupChannel, Schedule, PanelSurvey}
   alias Ask.Runtime.RespondentGroupAction
 
   defp new_ocurrence_changeset(survey) do
@@ -17,7 +17,7 @@ defmodule Ask.Runtime.PanelSurvey do
       # basic settings
       project_id: survey.project_id,
       folder_id: survey.folder_id,
-      name: new_occurrence_name(),
+      name: PanelSurvey.new_occurrence_name(),
       description: survey.description,
       mode: survey.mode,
       state: "ready",
@@ -43,15 +43,6 @@ defmodule Ask.Runtime.PanelSurvey do
     |> Survey.changeset(new_ocurrence)
     |> Survey.update_questionnaires(questionnaire_ids)
   end
-
-  def new_occurrence_name() do
-    now_yyyy_mm_dd()
-  end
-
-  def new_panel_survey_name(nil = _survey_name), do: "Panel Survey #{now_yyyy_mm_dd()}"
-  def new_panel_survey_name(survey_name), do: survey_name
-
-  defp now_yyyy_mm_dd(), do: SystemTime.time.now |> Timex.format!("{YYYY}-{0M}-{D}")
 
   def copy_respondents(current_occurrence, new_occurrence) do
     current_occurrence =

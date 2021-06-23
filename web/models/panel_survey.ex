@@ -6,7 +6,8 @@ defmodule Ask.PanelSurvey do
     Folder,
     Project,
     Repo,
-    Survey
+    Survey,
+    SystemTime
   }
   alias Ask.Runtime.SurveyAction
 
@@ -95,13 +96,13 @@ defmodule Ask.PanelSurvey do
   # implicated changes
   def create_panel_survey_from_survey(survey) do
     {:ok, panel_survey} = create_panel_survey(%{
-      name: Ask.Runtime.PanelSurvey.new_panel_survey_name(survey.name),
+      name: new_panel_survey_name(survey.name),
       project_id: survey.project_id,
       folder_id: survey.folder_id
     })
     Survey.changeset(survey, %{
       panel_survey_id: panel_survey.id,
-      name: Ask.Runtime.PanelSurvey.new_occurrence_name(),
+      name: new_occurrence_name(),
       folder_id: nil
     })
     |> Repo.update!()
@@ -166,4 +167,13 @@ defmodule Ask.PanelSurvey do
     latest_occurrence(panel_survey)
     |> Survey.terminated?()
   end
+
+  def new_occurrence_name() do
+    now_yyyy_mm_dd()
+  end
+
+  def new_panel_survey_name(nil = _survey_name), do: "Panel Survey #{now_yyyy_mm_dd()}"
+  def new_panel_survey_name(survey_name), do: survey_name
+
+  defp now_yyyy_mm_dd(), do: SystemTime.time.now |> Timex.format!("{YYYY}-{0M}-{D}")
 end
