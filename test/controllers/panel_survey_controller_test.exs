@@ -32,6 +32,22 @@ defmodule Ask.PanelSurveyControllerTest do
     end
   end
 
+  # Here we're testing the `panel_survey_in_folder` function, which is a ad-hoc function
+  # for these tests. It may be not so pure, but... it doesn't hurt, right?
+  describe "panel_survey/1 and panel_survey_in_folder/1" do
+    test "creates a panel survey with no folder", %{user: user} do
+      panel_survey = panel_survey(user)
+
+      refute panel_survey.folder_id
+    end
+
+    test "creates a panel survey inside a folder", %{user: user} do
+      panel_survey = panel_survey_in_folder(user)
+
+      assert panel_survey.folder_id
+    end
+  end
+
   describe "show" do
     test "shows a panel survey", %{conn: conn, user: user} do
       panel_survey = panel_survey(user)
@@ -189,9 +205,9 @@ defmodule Ask.PanelSurveyControllerTest do
   defp panel_survey(user, inside_folder \\ false) do
     project = create_project_for_user(user)
     if inside_folder do
-      dummy_panel_survey(project)
-    else
       dummy_panel_survey_in_folder(project)
+    else
+      dummy_panel_survey(project)
     end
   end
 
