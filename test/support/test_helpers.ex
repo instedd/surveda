@@ -119,10 +119,11 @@ defmodule Ask.TestHelpers do
 
       defp panel_survey_generator_survey_in_folder(project \\ nil) do
         panel_survey_generator_survey(project)
-        |> include_in_folder(project)
+        |> include_in_folder()
       end
 
-      defp include_in_folder(survey, project) do
+      defp include_in_folder(survey) do
+        project = Repo.preload(survey, :project).project
         folder = insert(:folder, project: project)
         Survey.changeset(survey, %{folder_id: folder.id})
         |> Repo.update!()

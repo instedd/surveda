@@ -84,8 +84,7 @@ defmodule Ask.Runtime.SurveyActionTest do
   end
 
   defp ready_survey_in_folder() do
-    project = insert(:project)
-    insert(:survey, state: "ready", project: project)
-    |> include_in_folder(project)
+    ready_survey()
+    |> include_in_folder()
   end
 end
