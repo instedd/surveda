@@ -147,7 +147,7 @@ defmodule Ask.PanelSurvey do
   """
   def delete_panel_survey(%PanelSurvey{} = panel_survey) do
     Repo.preload(panel_survey, :occurrences).occurrences
-    |> Enum.map(fn survey -> SurveyAction.delete(survey, nil) end)
+    |> Enum.each(fn survey -> SurveyAction.delete(survey, nil) end)
     Repo.delete(panel_survey)
   end
 
