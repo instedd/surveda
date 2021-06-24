@@ -205,6 +205,7 @@ const mergePanelSurveysIntoSurveys = (surveys, panelSurveys) => {
   if (panelSurveys == null) return surveys
   return panelSurveys.map(panelSurvey => ({
     ...panelSurvey.latestSurvey,
+    folderId: panelSurvey.folderId,
     panelSurvey: panelSurvey
   })).concat(surveys)
 }

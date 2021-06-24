@@ -1,61 +1,120 @@
 defmodule Ask.PanelSurveyTest do
   use Ask.ModelCase
+  use Ask.MockTime
   use Ask.TestHelpers
   alias Ask.{PanelSurvey, Repo}
 
   describe "create_panel_survey/1" do
     test "with valid data creates a panel_survey" do
-      project = insert(:project)
-      name = @foo_string
+      survey = panel_survey_generator_survey()
 
       {result, panel_survey} =
-        PanelSurvey.create_panel_survey(%{name: name, project_id: project.id})
+        PanelSurvey.create_panel_survey_from_survey(survey)
 
       assert result == :ok
-      assert panel_survey.name == name
-      assert panel_survey.project_id == project.id
-      panel_survey = Repo.preload(panel_survey, :project)
-      assert panel_survey.project == project
+      assert panel_survey.project_id == survey.project_id
     end
 
-    test "with valid data creates a panel_survey inside a folder" do
-      project = insert(:project)
-      folder = insert(:folder, project: project)
-      name = @foo_string
+    test "takes the name from its first occurence" do
+      survey = panel_survey_generator_survey()
+      expected_name = survey.name
+
+      {:ok, panel_survey} =
+        PanelSurvey.create_panel_survey_from_survey(survey)
+
+      assert panel_survey.name == expected_name
+    end
+
+    test "it's created from its first occurrence" do
+      survey = panel_survey_generator_survey()
+
+      {:ok, panel_survey} =
+        PanelSurvey.create_panel_survey_from_survey(survey)
+
+      occurrences = Repo.preload(panel_survey, :occurrences).occurrences
+      assert length(occurrences) == 1
+      [first_occurrence] = occurrences
+      assert first_occurrence.id == survey.id
+    end
+
+    @tag :time_mock
+    test "renames its first occurence to YYYY-MM-DD" do
+      now = Timex.parse!("2021-06-17T09:00:00Z", "{ISO:Extended}")
+      mock_time(now)
+      survey = panel_survey_generator_survey()
+      expected_occurrence_name = "2021-06-17"
+
+      {:ok, _panel_survey} =
+        PanelSurvey.create_panel_survey_from_survey(survey)
+
+      survey = Repo.get!(Survey, survey.id)
+      assert survey.name == expected_occurrence_name
+    end
+
+    test "takes the folder from its first occurence" do
+      survey = panel_survey_generator_survey_in_folder()
 
       {result, panel_survey} =
-        PanelSurvey.create_panel_survey(%{name: name, project_id: project.id, folder_id: folder.id})
+        PanelSurvey.create_panel_survey_from_survey(survey)
 
       assert result == :ok
-      assert panel_survey.folder_id == folder.id
-      panel_survey = Repo.preload(panel_survey, [folder: :project])
-      assert panel_survey.folder == folder
+      # Assert the panel survey takes its folder from the survey
+      assert panel_survey.folder_id == survey.folder_id
+      # The survey occurrence doesn't belong to the folder. Its panel survey does.
+      # Assert the survey was removed from its folder
+      survey = Repo.get!(Survey, survey.id)
+      refute survey.folder_id
     end
 
-    test "with invalid data returns error changeset (no name)" do
+    test "rejects creating a panel survey when the survey generates_panel_survey flag is OFF" do
+      survey = panel_survey_generator_survey()
+      |> Survey.changeset(%{generates_panel_survey: false})
+      |> Repo.update!()
+
+      {result, error} =
+        PanelSurvey.create_panel_survey_from_survey(survey)
+
+      assert result == :error
+      assert error == "Survey must have generates_panel_survey ON to launch to generate a panel survey"
+    end
+
+    test "rejects creating a panel survey when the survey isn't ready to launch" do
+      survey = panel_survey_generator_survey()
+      |> Survey.changeset(%{state: "not_ready"})
+      |> Repo.update!()
+
+      {result, error} =
+        PanelSurvey.create_panel_survey_from_survey(survey)
+
+      assert result == :error
+      assert error == "Survey must be ready to launch to generate a panel survey"
+    end
+
+    test "rejects creating a panel survey when the survey is a panel survey occurrence" do
+      panel_survey = dummy_panel_survey()
+      survey = panel_survey_generator_survey()
+      |> Survey.changeset(%{panel_survey_id: panel_survey.id})
+      |> Repo.update!()
+
+      {result, error} =
+        PanelSurvey.create_panel_survey_from_survey(survey)
+
+      assert result == :error
+      assert error == "Survey can't be a panel survey occurence to generate a panel survey"
+    end
+
+    @tag :time_mock
+    test "when the survey doesn't have a name it's named `Panel Survey YYYY-MM-DD`" do
+      Timex.parse!("2021-06-17T09:00:00Z", "{ISO:Extended}")
+      |> mock_time()
+      expected_name = "Panel Survey 2021-06-17"
       project = insert(:project)
-      invalid_attrs = %{project_id: project.id}
+      survey = insert(:survey, project: project, generates_panel_survey: true, state: "ready", name: nil)
 
-      {result, changeset} = PanelSurvey.create_panel_survey(invalid_attrs)
+      {result, panel_survey} = PanelSurvey.create_panel_survey_from_survey(survey)
 
-      assert result == :error
-      assert changeset.action == :insert
-      assert changeset.changes == %{project_id: project.id}
-      assert changeset.valid? == false
-      assert changeset.errors == [name: {"can't be blank", [validation: :required]}]
-    end
-
-    test "with invalid data returns error changeset (no project)" do
-      name = @foo_string
-      invalid_attrs = %{name: name}
-
-      {result, changeset} = PanelSurvey.create_panel_survey(invalid_attrs)
-
-      assert result == :error
-      assert changeset.action == :insert
-      assert changeset.changes == %{name: "foo"}
-      assert changeset.valid? == false
-      assert changeset.errors == [project_id: {"can't be blank", [validation: :required]}]
+      assert result == :ok
+      assert panel_survey.name == expected_name
     end
   end
 
@@ -97,7 +156,7 @@ defmodule Ask.PanelSurveyTest do
     end
 
     test "with valid data updates the panel_survey (folder)" do
-      panel_survey = dummy_panel_survey_inside_folder()
+      panel_survey = dummy_panel_survey_in_folder()
       updated_folder = insert(:folder)
       update_attrs = %{folder_id: updated_folder.id}
 
@@ -141,7 +200,7 @@ defmodule Ask.PanelSurveyTest do
     end
 
     test "update_panel_survey/2 with valid data unsets the panel_survey folder" do
-      panel_survey = dummy_panel_survey_inside_folder()
+      panel_survey = dummy_panel_survey_in_folder()
       update_attrs = %{folder_id: nil}
 
       {result, updated_panel_survey} = PanelSurvey.update_panel_survey(panel_survey, update_attrs)
@@ -213,7 +272,7 @@ defmodule Ask.PanelSurveyTest do
     end
 
     test "deletes the panel_survey inside folder" do
-      panel_survey = dummy_panel_survey_inside_folder()
+      panel_survey = dummy_panel_survey_in_folder()
 
       {result, deleted_panel_survey} = PanelSurvey.delete_panel_survey(panel_survey)
 
@@ -225,6 +284,24 @@ defmodule Ask.PanelSurveyTest do
       assert panel_survey.__meta__.state == :loaded
       assert deleted_panel_survey.__meta__.state == :deleted
       assert_raise Ecto.NoResultsError, fn -> PanelSurvey.get_panel_survey!(panel_survey.id) end
+    end
+  end
+
+  describe "repeatable?/1" do
+    test "returns true when the panel survey is repeatable" do
+      panel_survey = completed_panel_survey_with_respondents()
+
+      repeatable_survey? = PanelSurvey.repeatable?(panel_survey)
+
+      assert repeatable_survey? == true
+    end
+
+    test "returns false when the panel survey isn't repeatable" do
+      panel_survey = dummy_panel_survey()
+
+      repeatable_survey? = PanelSurvey.repeatable?(panel_survey)
+
+      assert repeatable_survey? == false
     end
   end
 

@@ -2,16 +2,20 @@ import React, { PropTypes, Component } from 'react'
 import { withRouter } from 'react-router'
 import { connect } from 'react-redux'
 import { translate } from 'react-i18next'
+import {generatesPanelSurveySwitched} from '../../actions/survey'
 
 class SurveyWizardPanelSurveyStep extends Component {
   static propTypes = {
     t: PropTypes.func,
     survey: PropTypes.object.isRequired,
-    readOnly: PropTypes.bool.isRequired
+    readOnly: PropTypes.bool.isRequired,
+    dispatch: PropTypes.func.isRequired
   }
 
   render() {
     const { survey, readOnly, t } = this.props
+    const { generatesPanelSurvey } = survey
+    const { dispatch } = this.props
 
     return (
       <div>
@@ -26,8 +30,8 @@ class SurveyWizardPanelSurveyStep extends Component {
             <p>
               <div className='switch'>
                 <label>
-                  <input type='checkbox' disabled={readOnly} checked={!!survey.panelSurveyId} onChange={() => {
-                    // TODO: change the new property new `generates_panel_survey` property here
+                  <input type='checkbox' disabled={readOnly} checked={generatesPanelSurvey} onChange={() => {
+                    dispatch(generatesPanelSurveySwitched(!generatesPanelSurvey))
                   }} />
                   <span className='lever' />
                 </label>

@@ -10,7 +10,7 @@ import * as panelSurveysActions from '../../actions/panelSurveys'
 import SurveyStatus from './SurveyStatus'
 import * as routes from '../../routes'
 import { Tooltip, Modal, dispositionGroupLabel, dispositionLabel } from '../ui'
-import { stopSurvey, repeatSurvey } from '../../api'
+import { stopSurvey } from '../../api'
 import sum from 'lodash/sum'
 import { modeLabel } from '../../questionnaire.mode'
 import { referenceColorClasses, referenceColors, referenceColorClassForUnassigned, referenceColorForUnassigned } from '../../referenceColors'
@@ -94,15 +94,6 @@ class SurveyShow extends Component<any, State> {
   stopSurvey() {
     this.setState({stopUnderstood: false})
     this.refs.stopModal.open()
-  }
-
-  repeatSurvey() {
-    const { projectId, surveyId, router } = this.props
-    repeatSurvey(projectId, surveyId)
-      .then(response => {
-        const survey = response.entities.surveys[response.result]
-        router.push(routes.surveyEdit(projectId, survey.id))
-      })
   }
 
   toggleStopUnderstood() {

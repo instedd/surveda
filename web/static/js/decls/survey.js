@@ -36,9 +36,10 @@ export type Survey = {
   comparisons: Comparison[],
   nextScheduleTime: ?string,
   panelSurveyId: ?number,
-  // TODO: add `generatesPanelSurvey` property
-  // generatesPanelSurvey: boolean,
-  incentivesEnabled: boolean
+  generatesPanelSurvey: boolean,
+  incentivesEnabled: boolean,
+  isDeletable: boolean,
+  isMovable: boolean
 };
 
 export type PanelSurvey = {
@@ -47,8 +48,7 @@ export type PanelSurvey = {
   folderId: number,
   projectId: number,
   occurrences: Survey[],
-  // TODO: add `isRepeatable` property
-  // isRepeatable: boolean,
+  isRepeatable: boolean
 }
 
 export type Link = {

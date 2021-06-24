@@ -29,7 +29,8 @@ defmodule Ask.PanelSurveyView do
       name: name,
       project_id: project_id,
       updated_at: PanelSurvey.updated_at(panel_survey),
-      occurrences: render_many(occurrences, Ask.SurveyView, "survey.json")
+      occurrences: render_many(occurrences, Ask.SurveyView, "survey.json"),
+      is_repeatable: PanelSurvey.repeatable?(panel_survey)
     }
   end
 end

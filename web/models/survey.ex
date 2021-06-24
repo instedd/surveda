@@ -79,6 +79,7 @@ defmodule Ask.Survey do
     # The option of downloading incentive files is disabled for a survey after creating 1 or more
     # respondents using a file with hashed_numbers (instead of phone_numbers)
     field :incentives_enabled, :boolean, default: true
+    field :generates_panel_survey, :boolean, default: false
 
     has_many :respondent_groups, RespondentGroup
     has_many :respondents, Respondent
@@ -105,7 +106,7 @@ defmodule Ask.Survey do
   """
   def changeset(struct, params \\ %{}) do
     struct
-    |> cast(params, [:name, :description, :project_id, :folder_id, :mode, :state, :locked, :exit_code, :exit_message, :cutoff, :schedule, :sms_retry_configuration, :ivr_retry_configuration, :mobileweb_retry_configuration, :fallback_delay, :started_at, :quotas, :quota_vars, :comparisons, :count_partial_results, :simulation, :ended_at, :incentives_enabled, :first_window_started_at, :last_window_ends_at, :panel_survey_id])
+    |> cast(params, [:name, :description, :project_id, :folder_id, :mode, :state, :locked, :exit_code, :exit_message, :cutoff, :schedule, :sms_retry_configuration, :ivr_retry_configuration, :mobileweb_retry_configuration, :fallback_delay, :started_at, :quotas, :quota_vars, :comparisons, :count_partial_results, :simulation, :ended_at, :incentives_enabled, :first_window_started_at, :last_window_ends_at, :panel_survey_id, :generates_panel_survey])
     |> set_floip_package_id
     |> validate_required([:project_id, :state, :schedule])
     |> foreign_key_constraint(:project_id)
@@ -664,5 +665,22 @@ defmodule Ask.Survey do
     # 0 -- both arguments represent the same date when coalesced to the same timezone.
     # 1 -- the first date comes after the second one
     |> Timex.compare(expiration_date_time) > -1
+  end
+
+  # Running surveys aren't deletable
+  def deletable?(%{state: "running"} = _survey), do: false
+  # Only occurrence of a panel survey isn't deletable (because a panel survey cannot be empty)
+  def deletable?(survey), do: not only_occurrence_of_panel_survey?(survey)
+
+  # Regular survey can always change its folder
+  def movable?(%{panel_survey_id: nil} = _survey), do: true
+  # Panel survey occurrences can't change its folder (because they don't belong to folders)
+  def movable?(_survey), do: false
+
+  defp only_occurrence_of_panel_survey?(%{panel_survey_id: nil} = _survey), do: false
+
+  defp only_occurrence_of_panel_survey?(survey) do
+    survey = Repo.preload(survey, [panel_survey: :occurrences])
+    Enum.count(survey.panel_survey.occurrences) == 1
   end
 end

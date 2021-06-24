@@ -11,6 +11,7 @@ export const CHANGE_QUESTIONNAIRE = 'SURVEY_CHANGE_QUESTIONNAIRE'
 export const CHANGE_NAME = 'SURVEY_CHANGE_NAME'
 export const CHANGE_IS_PANEL_SURVEY = 'SURVEY_CHANGE_IS_PANEL_SURVEY'
 export const CHANGE_DESCRIPTION = 'SURVEY_CHANGE_DESCRIPTION'
+export const SWITCH_GENERATES_PANEL_SURVEY = 'SURVEY_SWITCH_GENERATES_PANEL_SURVEY'
 export const TOGGLE_DAY = 'SURVEY_TOGGLE_DAY'
 export const SET_SCHEDULE_TO = 'SURVEY_SET_SCHEDULE_TO'
 export const SET_SCHEDULE_FROM = 'SURVEY_SET_SCHEDULE_FROM'
@@ -194,6 +195,11 @@ export const descriptionChanged = (newDescription: string) => {
     newDescription
   })
 }
+
+export const generatesPanelSurveySwitched = (newGeneratesPanelSurvey: boolean) => ({
+  type: SWITCH_GENERATES_PANEL_SURVEY,
+  newGeneratesPanelSurvey
+})
 
 export const setScheduleFrom = (hour: string, nextHour: string) => ({
   type: SET_SCHEDULE_FROM,

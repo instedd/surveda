@@ -1,8 +1,9 @@
 defmodule Ask.Runtime.PanelSurveyTest do
   use Ask.ModelCase
   use Ask.TestHelpers
-  alias Ask.Runtime.{PanelSurvey, RespondentGroupAction}
-  alias Ask.{Survey, Repo, TestChannel, Respondent}
+  use Ask.MockTime
+  alias Ask.Runtime.PanelSurvey
+  alias Ask.{Survey, Repo, Respondent}
 
   describe "new_occurrence/1" do
     test "creates a new ready occurrence" do
@@ -27,12 +28,23 @@ defmodule Ask.Runtime.PanelSurveyTest do
       assert new_occurrence.project_id == panel_survey.project_id
       assert new_occurrence.project_id == latest_occurrence.project_id
       assert new_occurrence.folder_id == latest_occurrence.folder_id
-      assert new_occurrence.name == latest_occurrence.name
       assert new_occurrence.description == latest_occurrence.description
       assert new_occurrence.mode == latest_occurrence.mode
       refute new_occurrence.started_at == latest_occurrence.started_at
       refute latest_occurrence.started_at
       assert new_occurrence.panel_survey_id == latest_occurrence.panel_survey_id
+    end
+
+    @tag :time_mock
+    test "renew the new occurrence name" do
+      now = Timex.parse!("2021-06-14T09:00:00Z", "{ISO:Extended}")
+      mock_time(now)
+      expected_occurrence_name = "2021-06-14"
+      panel_survey = completed_panel_survey_with_respondents()
+
+      {:ok, %{new_occurrence: new_occurrence}} = PanelSurvey.new_occurrence(panel_survey)
+
+      assert new_occurrence.name == expected_occurrence_name
     end
 
     # TODO: test different survey configurations
@@ -189,30 +201,6 @@ defmodule Ask.Runtime.PanelSurveyTest do
 
   defp clean_dates(schedule) do
     schedule |> Map.put(:start_date, nil) |> Map.put(:end_date, nil)
-  end
-
-  defp completed_panel_survey_with_respondents() do
-    panel_survey = panel_survey_with_occurrence()
-    latest_occurrence = Ask.PanelSurvey.latest_occurrence(panel_survey)
-
-    insert_respondents = fn mode, phone_numbers ->
-      channel = TestChannel.new()
-      channel = insert(:channel, settings: channel |> TestChannel.settings(), type: mode)
-      insert_respondents(latest_occurrence, channel, mode, phone_numbers)
-    end
-
-    insert_respondents.("sms", ["1", "2", "3"])
-    insert_respondents.("ivr", ["3", "4"])
-    terminate_survey(latest_occurrence)
-
-    # Reload the panel survey. One of its surveys has changed, so it's outdated
-    Repo.get!(Ask.PanelSurvey, panel_survey.id)
-  end
-
-  defp insert_respondents(survey, channel, mode, phone_numbers) do
-    phone_numbers = RespondentGroupAction.loaded_phone_numbers(phone_numbers)
-    group = RespondentGroupAction.create(UUID.uuid4(), phone_numbers, survey)
-    RespondentGroupAction.update_channels(group.id, [%{"id" => channel.id, "mode" => mode}])
   end
 
   defp set_one_respondent_disposition(survey, disposition) do

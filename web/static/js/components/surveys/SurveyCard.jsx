@@ -68,32 +68,14 @@ class SurveyCard extends Component<any> {
 
   deletable() {
     const { survey, readOnly } = this.props
-
     if (readOnly) return false
-
-    // Running surveys aren't deletable
-    if (survey.state == 'running') return false
-
-    // There isn't a way of deleting the whole panel survey yet
-    if (survey.panelSurvey) return false
-
-    // There isn't a way of deleting the first occurrence of a panel survey yet
-    if (survey.id == this.props.panelSurveyId) return false
-
-    return true
+    return survey.isDeletable
   }
 
   movable() {
-    const { survey, panelSurveyId, readOnly } = this.props
-    const { panelSurvey } = survey
-
+    const { survey, readOnly } = this.props
     if (readOnly) return false
-    // All occurences of the same panel survey should be always together in the same folder.
-    // For now, it's forbidden to change the folder of any panel survey occurrence.
-    // This option is cheaper than the moving all the panel survey occurrences together.
-    if (panelSurvey || panelSurveyId) return false
-
-    return true
+    return survey.isMovable
   }
 
   actionable() {

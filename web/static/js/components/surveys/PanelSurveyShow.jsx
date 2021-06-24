@@ -13,6 +13,8 @@ import * as respondentActions from '../../actions/respondents'
 import SurveyCard from '../surveys/SurveyCard'
 import * as routes from '../../routes'
 import { translate, Trans } from 'react-i18next'
+import { RepeatButton } from '../ui/RepeatButton'
+import { newOccurrence } from '../../api'
 
 class PanelSurveyShow extends Component<any, any> {
   state = {}
@@ -28,7 +30,6 @@ class PanelSurveyShow extends Component<any, any> {
     totalCount: PropTypes.number.isRequired,
     respondentsStats: PropTypes.object.isRequired,
     params: PropTypes.object,
-    folderId: PropTypes.number,
     panelSurveyId: PropTypes.number.isRequired,
     name: PropTypes.string,
     loadingPanelSurvey: PropTypes.bool,
@@ -56,14 +57,6 @@ class PanelSurveyShow extends Component<any, any> {
     if (!panelSurvey) {
       dispatch(panelSurveyActions.fetchPanelSurvey(projectId, panelSurveyId))
     }
-  }
-
-  newSurvey() {
-    const { dispatch, router, projectId, folderId } = this.props
-
-    dispatch(surveyActions.createSurvey(projectId, folderId)).then(survey =>
-      router.push(routes.surveyEdit(projectId, survey))
-    )
   }
 
   deleteSurvey = (survey: Survey) => {
@@ -106,6 +99,17 @@ class PanelSurveyShow extends Component<any, any> {
     return null
   }
 
+  newOccurrence() {
+    const { projectId, router, panelSurvey } = this.props
+
+    newOccurrence(projectId, panelSurvey.id)
+      .then(response => {
+        const panelSurvey = response.entities.surveys[response.result]
+        const survey = [...panelSurvey.occurrences].pop()
+        router.push(routes.surveyEdit(projectId, survey.id))
+      })
+  }
+
   render() {
     const { surveys, respondentsStats, project, startIndex, endIndex, totalCount, t, projectId, panelSurvey } = this.props
     const to = panelSurvey
@@ -127,6 +131,13 @@ class PanelSurveyShow extends Component<any, any> {
 
     const readOnly = !project || project.readOnly
 
+    let primaryButton = null
+    if (!readOnly) {
+      primaryButton = (
+        <RepeatButton text={t('Add occurrence')} disabled={!panelSurvey.isRepeatable} onClick={() => this.newOccurrence()} />
+      )
+    }
+
     const empty = surveys && surveys.length == 0
     if (empty) {
       throw Error(t('Empty panel survey'))
@@ -134,6 +145,7 @@ class PanelSurveyShow extends Component<any, any> {
 
     return (
       <div className='folder-show'>
+        {primaryButton}
         {titleLink}
         <div>
           <div className='survey-index-grid'>

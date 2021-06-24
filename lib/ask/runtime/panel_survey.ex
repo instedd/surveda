@@ -17,7 +17,7 @@ defmodule Ask.Runtime.PanelSurvey do
       # basic settings
       project_id: survey.project_id,
       folder_id: survey.folder_id,
-      name: survey.name,
+      name: PanelSurvey.new_occurrence_name(),
       description: survey.description,
       mode: survey.mode,
       state: "ready",

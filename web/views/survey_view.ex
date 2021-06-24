@@ -56,7 +56,9 @@ defmodule Ask.SurveyView do
       folder_id: survey.folder_id,
       first_window_started_at: first_window_started_at(survey),
       panel_survey_id: survey.panel_survey_id,
-      last_window_ends_at: survey.last_window_ends_at
+      last_window_ends_at: survey.last_window_ends_at,
+      is_deletable: Survey.deletable?(survey),
+      is_movable: Survey.movable?(survey)
     }
   end
   def render("survey_detail.json", %{survey: survey}) do
@@ -98,7 +100,8 @@ defmodule Ask.SurveyView do
       incentives_enabled: survey.incentives_enabled,
       first_window_started_at: first_window_started_at(survey),
       panel_survey_id: survey.panel_survey_id,
-      last_window_ends_at: survey.last_window_ends_at
+      last_window_ends_at: survey.last_window_ends_at,
+      generates_panel_survey: survey.generates_panel_survey
     }
 
     if Ask.Survey.launched?(survey) || survey.simulation do

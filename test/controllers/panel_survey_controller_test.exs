@@ -24,11 +24,27 @@ defmodule Ask.PanelSurveyControllerTest do
     end
 
     test "lists a panel_survey inside a folder", %{conn: conn, user: user} do
-      panel_survey = panel_survey_inside_folder(user)
+      panel_survey = panel_survey_in_folder(user)
 
       conn = get(conn, project_panel_survey_path(conn, :index, panel_survey.project_id))
 
       assert_listed_panel_survey(conn, panel_survey)
+    end
+  end
+
+  # Here we're testing the `panel_survey_in_folder` function, which is a ad-hoc function
+  # for these tests. It may be not so pure, but... it doesn't hurt, right?
+  describe "panel_survey/1 and panel_survey_in_folder/1" do
+    test "creates a panel survey with no folder", %{user: user} do
+      panel_survey = panel_survey(user)
+
+      refute panel_survey.folder_id
+    end
+
+    test "creates a panel survey inside a folder", %{user: user} do
+      panel_survey = panel_survey_in_folder(user)
+
+      assert panel_survey.folder_id
     end
   end
 
@@ -46,7 +62,7 @@ defmodule Ask.PanelSurveyControllerTest do
     end
 
     test "shows a panel survey inside a folder", %{conn: conn, user: user} do
-      panel_survey = panel_survey_inside_folder(user)
+      panel_survey = panel_survey_in_folder(user)
 
       conn =
         get(
@@ -73,28 +89,28 @@ defmodule Ask.PanelSurveyControllerTest do
   describe "create" do
     test "creates panel survey", %{conn: conn, user: user} do
       project = create_project_for_user(user)
-      name = @foo_string
+      survey = insert(:survey, project: project, generates_panel_survey: true, state: "ready", name: @foo_string)
 
       conn =
         post(conn, project_panel_survey_path(conn, :create, project.id),
-          panel_survey: %{name: name}
+          survey_id: survey.id
         )
 
-      assert_created_panel_survey(conn, %{name: name, project_id: project.id, folder_id: nil})
+      assert_created_panel_survey(conn, %{name: survey.name, project_id: project.id, folder_id: nil})
     end
 
     test "creates panel survey inside a folder", %{conn: conn, user: user} do
       project = create_project_for_user(user)
       folder = insert(:folder, project: project)
-      name = @foo_string
+      survey = insert(:survey, project: project, generates_panel_survey: true, folder: folder, state: "ready", name: @foo_string)
 
       conn =
         post(conn, project_panel_survey_path(conn, :create, project.id),
-          panel_survey: %{name: name, folder_id: folder.id}
+          survey_id: survey.id
         )
 
       assert_created_panel_survey(conn, %{
-        name: name,
+        name: survey.name,
         project_id: project.id,
         folder_id: folder.id
       })
@@ -136,7 +152,7 @@ defmodule Ask.PanelSurveyControllerTest do
     end
 
     test "deletes chosen panel_survey inside a folder", %{conn: conn, user: user} do
-      panel_survey = panel_survey_inside_folder(user)
+      panel_survey = panel_survey_in_folder(user)
 
       conn =
         delete(
@@ -177,19 +193,22 @@ defmodule Ask.PanelSurveyControllerTest do
   end
 
   defp panel_survey_with_surveys(user) do
-    panel_survey = panel_survey(user)
+    panel_survey = panel_survey(user) |> Repo.preload(:project)
     insert(:survey, project: panel_survey.project, panel_survey: panel_survey)
     Repo.get!(PanelSurvey, panel_survey.id) |> Repo.preload(:occurrences)
   end
 
-  defp panel_survey_inside_folder(user) do
+  defp panel_survey_in_folder(user) do
     panel_survey(user, true)
   end
 
   defp panel_survey(user, inside_folder \\ false) do
     project = create_project_for_user(user)
-    folder = if inside_folder, do: insert(:folder, project: project), else: nil
-    insert(:panel_survey, project: project, folder: folder)
+    if inside_folder do
+      dummy_panel_survey_in_folder(project)
+    else
+      dummy_panel_survey(project)
+    end
   end
 
   defp assert_deleted_panel_survey(conn, panel_survey_id) do
@@ -268,7 +287,8 @@ defmodule Ask.PanelSurveyControllerTest do
              "id" => base_panel_survey.id,
              "name" => base_panel_survey.name,
              "project_id" => base_panel_survey.project_id,
-             "updated_at" => to_iso8601(PanelSurvey.updated_at(base_panel_survey))
+             "updated_at" => to_iso8601(PanelSurvey.updated_at(base_panel_survey)),
+             "is_repeatable" => PanelSurvey.repeatable?(base_panel_survey)
            }
 
     # And then, it's also easier to compare only the surveys ids.
