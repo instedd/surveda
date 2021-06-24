@@ -87,12 +87,18 @@ const mapStateToProps = (state, ownProps) => {
     8. Project -> Folder -> Panel Survey -> Occurrence : <Project | Folder | PanelSurvey>
   */
   const { params } = ownProps
-  const survey = getSurveyFromParams(params, state)
-  const panelSurvey = getPanelSurveyFromParams(params, state)
-  const panelSurveyFromOccurrence = getPanelSurveyFromOccurrence(survey, state)
-  // First evaluate the panel survey from occurrence (case 8)
-  // If the survey is evaluated before (case 6), the folder is missing for the case 8.
-  const surveyOrPanelSurvey = panelSurveyFromOccurrence || panelSurvey || survey
+  const surveyFromParams = getSurveyFromParams(params, state)
+  const panelSurveyFromParams = getPanelSurveyFromParams(params, state)
+  const panelSurveyFromOccurrence = getPanelSurveyFromOccurrence(surveyFromParams, state)
+
+  // Here the order of the factors does alter the product.
+  // Depending on the case, we need to take the folder from the panel survey taken from params,
+  // from the survey taken from params, or from the panel survey taken from its occurrence.
+  // For example evaluating (surveyFromParams || panelSurveyFromOccurrence) would work well but
+  // just for some cases. It would work for getting the folder of a regular survey, but it
+  // wouldn't work for getting the folder of an occurrence of a panel survey.
+  const surveyOrPanelSurvey = panelSurveyFromOccurrence || panelSurveyFromParams || surveyFromParams
+
   const folder = getFolderFromSurveyOrPanelSurvey(surveyOrPanelSurvey, state)
   return {
     project: state.project.data,
