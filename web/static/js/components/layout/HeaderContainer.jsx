@@ -52,29 +52,20 @@ HeaderContainer.propTypes = {
   panelSurveyFromOccurrence: PropTypes.object
 }
 
-const getSurveyFromParams = (params, state) => {
-  const surveyId = params.surveyId && parseInt(params.surveyId)
-  const survey = state.survey && state.survey.data
-  if (!survey || !surveyId || survey.id != surveyId) return null
-  return survey
-}
-
 const getPanelSurveyFromOccurrence = (survey, state) => {
   if (!survey) return null
   const panelSurvey = state.panelSurveys.items && state.panelSurveys.items[survey.panelSurveyId]
   return panelSurvey || null
 }
 
-const getPanelSurveyFromParams = (params, state) => {
-  const panelSurveyId = params.panelSurveyId && parseInt(params.panelSurveyId)
-  if (!panelSurveyId) return null
-  const panelSurvey = state.panelSurvey && state.panelSurvey.data
-  if (!panelSurvey) return null
-  if (panelSurvey.id == panelSurveyId) {
-    return panelSurvey
-  } else {
-    return null
-  }
+const getSurveyFromParams = (params, state) => getEntityFromParams(params, state, 'survey')
+const getPanelSurveyFromParams = (params, state) => getEntityFromParams(params, state, 'panelSurvey')
+
+const getEntityFromParams = (params, state, entityName) => {
+  const entityId = params[`${entityName}Id`] && parseInt(params[`${entityName}Id`])
+  const entity = state[entityName] && state[entityName].data
+  if (!entity || !entityId || entity.id != entityId) return null
+  return entity
 }
 
 const getFolderFromSurveyOrPanelSurvey = (surveyOrPanelSurvey, state) => {
