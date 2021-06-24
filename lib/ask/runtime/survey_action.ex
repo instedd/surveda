@@ -43,7 +43,7 @@ defmodule Ask.Runtime.SurveyAction do
   end
 
   defp generate_panel_survey_if_needed(%{generates_panel_survey: true} = survey) do
-    {:ok, panel_survey} = PanelSurvey.create_panel_survey_from_survey(survey)
+    {:ok, panel_survey} = Ask.Runtime.PanelSurvey.create_panel_survey_from_survey(survey)
     PanelSurvey.latest_occurrence(panel_survey)
     |> Repo.preload(:questionnaires)
   end

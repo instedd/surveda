@@ -132,14 +132,14 @@ defmodule Ask.TestHelpers do
       defp dummy_panel_survey(project \\ nil) do
         project = if project, do: project, else: insert(:project)
         survey = panel_survey_generator_survey(project)
-        {:ok, panel_survey} = PanelSurvey.create_panel_survey_from_survey(survey)
+        {:ok, panel_survey} = Ask.Runtime.PanelSurvey.create_panel_survey_from_survey(survey)
         panel_survey
       end
 
       defp dummy_panel_survey_in_folder(project \\ nil) do
         project = if project, do: project, else: insert(:project)
         survey = panel_survey_generator_survey_in_folder(project)
-        {:ok, panel_survey} = PanelSurvey.create_panel_survey_from_survey(survey)
+        {:ok, panel_survey} = Ask.Runtime.PanelSurvey.create_panel_survey_from_survey(survey)
         panel_survey
       end
 

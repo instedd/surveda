@@ -21,7 +21,7 @@ defmodule Ask.PanelSurveyController do
       |> assoc(:surveys)
       |> Repo.get!(survey_id)
 
-    with {:ok, %PanelSurvey{} = panel_survey} <- PanelSurvey.create_panel_survey_from_survey(survey) do
+    with {:ok, %PanelSurvey{} = panel_survey} <- Ask.Runtime.PanelSurvey.create_panel_survey_from_survey(survey) do
       conn
       |> put_status(:created)
       |> put_resp_header("location", project_panel_survey_path(conn, :show, project.id, panel_survey))
