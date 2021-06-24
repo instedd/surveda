@@ -287,6 +287,24 @@ defmodule Ask.PanelSurveyTest do
     end
   end
 
+  describe "repeatable?/1" do
+    test "returns true when the panel survey is repeatable" do
+      panel_survey = completed_panel_survey_with_respondents()
+
+      repeatable_survey? = PanelSurvey.repeatable?(panel_survey)
+
+      assert repeatable_survey? == true
+    end
+
+    test "returns false when the panel survey isn't repeatable" do
+      panel_survey = dummy_panel_survey()
+
+      repeatable_survey? = PanelSurvey.repeatable?(panel_survey)
+
+      assert repeatable_survey? == false
+    end
+  end
+
   defp assert_panel_survey_didn_changed(panel_survey) do
     assert panel_survey == Repo.get!(PanelSurvey, panel_survey.id)
   end
