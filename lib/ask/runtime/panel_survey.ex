@@ -104,7 +104,14 @@ defmodule Ask.Runtime.PanelSurvey do
 
   # A panel survey only can be created based on a survey
   # This function is responsible for the panel survey creation and its first occurrence
-  # implicated changes
+  # implicated changes:
+  # 1. If the panel survey occurence is inside a folder, put the panel survey inside it. Remove
+  # the survey from its folder. The panel survey occurences aren't inside any folder. They are
+  # inside folders indirectly, when its panel survey is.
+  # 2. Panel survey occurrences have neither cutoff rules nor comparisons. After creating its
+  # panel survey the first occurrence will remain always a panel survey ocurrence. So the related
+  # fields (comparisons, quota_vars, cutoff and count_partial_results) are here set back to their
+  # default values, and they won't change again, ever.
   def create_panel_survey_from_survey(survey) do
     {:ok, panel_survey} = PanelSurvey.create_panel_survey(%{
       name: PanelSurvey.new_panel_survey_name(survey.name),
@@ -114,7 +121,11 @@ defmodule Ask.Runtime.PanelSurvey do
     Survey.changeset(survey, %{
       panel_survey_id: panel_survey.id,
       name: PanelSurvey.new_occurrence_name(),
-      folder_id: nil
+      folder_id: nil,
+      comparisons: [],
+      quota_vars: [],
+      cutoff: nil,
+      count_partial_results: false
     })
     |> Repo.update!()
     {:ok, Repo.get!(PanelSurvey, panel_survey.id)}

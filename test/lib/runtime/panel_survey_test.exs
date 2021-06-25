@@ -177,16 +177,24 @@ defmodule Ask.Runtime.PanelSurveyTest do
     test "takes the folder from its first occurence" do
       survey = panel_survey_generator_survey_in_folder()
 
-      {result, panel_survey} =
+      {:ok, panel_survey} =
         PanelSurvey.create_panel_survey_from_survey(survey)
 
-      assert result == :ok
       # Assert the panel survey takes its folder from the survey
       assert panel_survey.folder_id == survey.folder_id
       # The survey occurrence doesn't belong to the folder. Its panel survey does.
       # Assert the survey was removed from its folder
       survey = Repo.get!(Survey, survey.id)
       refute survey.folder_id
+    end
+
+    test "removes the cutoff and comparisons" do
+      survey = panel_survey_generator_survey_with_cutoff_and_comparisons()
+
+      {:ok, panel_survey} =
+        PanelSurvey.create_panel_survey_from_survey(survey)
+
+      assert_panel_survey_without_cutoff_and_comparisons(panel_survey)
     end
 
     test "rejects creating a panel survey when the survey generates_panel_survey flag is OFF" do
@@ -338,5 +346,13 @@ defmodule Ask.Runtime.PanelSurveyTest do
   defp assert_repeated_without_respondent(latest_occurrence, new_occurrence, unpromoted_respondent) do
     assert respondent_in_survey?(latest_occurrence, unpromoted_respondent.hashed_number)
     refute respondent_in_survey?(new_occurrence, unpromoted_respondent.hashed_number)
+  end
+
+  defp assert_panel_survey_without_cutoff_and_comparisons(panel_survey) do
+    latest = Ask.PanelSurvey.latest_occurrence(panel_survey)
+    assert latest.comparisons == []
+    assert latest.quota_vars == []
+    assert latest.cutoff == nil
+    assert latest.count_partial_results == false
   end
 end

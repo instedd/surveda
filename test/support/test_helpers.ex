@@ -7,6 +7,7 @@ defmodule Ask.TestHelpers do
 
       @foo_string "foo"
       @bar_string "bar"
+      @dummy_int 5
 
       def create_project_for_user(user, options \\ []) do
         level = options[:level] || "owner"
@@ -115,6 +116,18 @@ defmodule Ask.TestHelpers do
       defp panel_survey_generator_survey(project \\ nil) do
         project = if project, do: project, else: insert(:project)
         insert(:survey, state: "ready", project: project, generates_panel_survey: true)
+      end
+
+      defp panel_survey_generator_survey_with_cutoff_and_comparisons() do
+        survey = panel_survey_generator_survey()
+        dummy_cutoff_and_comparisons = %{
+          comparisons: @foo_string,
+          quota_vars: @bar_string,
+          cutoff: @dummy_int,
+          count_partial_results: true
+        }
+        survey = Survey.changeset(survey, dummy_cutoff_and_comparisons)
+        |> Repo.update!()
       end
 
       defp panel_survey_generator_survey_in_folder(project \\ nil) do
