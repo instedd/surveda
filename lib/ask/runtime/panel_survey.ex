@@ -78,6 +78,59 @@ defmodule Ask.Runtime.PanelSurvey do
     |> Repo.update!()
   end
 
+  def create_panel_survey_from_survey(%{
+    generates_panel_survey: generates_panel_survey
+    }) when not generates_panel_survey,
+    do: {
+      :error,
+      "Survey must have generates_panel_survey ON to launch to generate a panel survey"
+    }
+
+  def create_panel_survey_from_survey(%{
+    state: state,
+    }) when state != "ready",
+    do: {
+      :error,
+      "Survey must be ready to launch to generate a panel survey"
+    }
+
+  def create_panel_survey_from_survey(%{
+    panel_survey_id: panel_survey_id
+    }) when panel_survey_id != nil,
+    do: {
+      :error,
+      "Survey can't be a panel survey occurence to generate a panel survey"
+    }
+
+  # A panel survey only can be created based on a survey
+  # This function is responsible for the panel survey creation and its first occurrence
+  # implicated changes:
+  # 1. If the panel survey occurence is inside a folder, put the panel survey inside it. Remove
+  # the survey from its folder. The panel survey occurences aren't inside any folder. They are
+  # inside folders indirectly, when its panel survey is.
+  # 2. Panel survey occurrences have neither cutoff rules nor comparisons. After creating its
+  # panel survey the first occurrence will remain always a panel survey ocurrence. So the related
+  # fields (comparisons, quota_vars, cutoff and count_partial_results) are here set back to their
+  # default values, and they won't change again, ever.
+  def create_panel_survey_from_survey(survey) do
+    {:ok, panel_survey} = PanelSurvey.create_panel_survey(%{
+      name: PanelSurvey.new_panel_survey_name(survey.name),
+      project_id: survey.project_id,
+      folder_id: survey.folder_id
+    })
+    Survey.changeset(survey, %{
+      panel_survey_id: panel_survey.id,
+      name: PanelSurvey.new_occurrence_name(),
+      folder_id: nil,
+      comparisons: [],
+      quota_vars: [],
+      cutoff: nil,
+      count_partial_results: false
+    })
+    |> Repo.update!()
+    {:ok, Repo.get!(PanelSurvey, panel_survey.id)}
+  end
+
   defp copy_respondent_group_channels(respondent_group, new_respondent_group) do
     respondent_group =
       respondent_group

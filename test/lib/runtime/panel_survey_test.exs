@@ -127,6 +127,128 @@ defmodule Ask.Runtime.PanelSurveyTest do
     end
   end
 
+  describe "create_panel_survey_from_survey/1" do
+    test "with valid data creates a panel_survey" do
+      survey = panel_survey_generator_survey()
+
+      {result, panel_survey} =
+        PanelSurvey.create_panel_survey_from_survey(survey)
+
+      assert result == :ok
+      assert panel_survey.project_id == survey.project_id
+    end
+
+    test "takes the name from its first occurence" do
+      survey = panel_survey_generator_survey()
+      expected_name = survey.name
+
+      {:ok, panel_survey} =
+        PanelSurvey.create_panel_survey_from_survey(survey)
+
+      assert panel_survey.name == expected_name
+    end
+
+    test "it's created from its first occurrence" do
+      survey = panel_survey_generator_survey()
+
+      {:ok, panel_survey} =
+        PanelSurvey.create_panel_survey_from_survey(survey)
+
+      occurrences = Repo.preload(panel_survey, :occurrences).occurrences
+      assert length(occurrences) == 1
+      [first_occurrence] = occurrences
+      assert first_occurrence.id == survey.id
+    end
+
+    @tag :time_mock
+    test "renames its first occurence to YYYY-MM-DD" do
+      now = Timex.parse!("2021-06-17T09:00:00Z", "{ISO:Extended}")
+      mock_time(now)
+      survey = panel_survey_generator_survey()
+      expected_occurrence_name = "2021-06-17"
+
+      {:ok, _panel_survey} =
+        PanelSurvey.create_panel_survey_from_survey(survey)
+
+      survey = Repo.get!(Survey, survey.id)
+      assert survey.name == expected_occurrence_name
+    end
+
+    test "takes the folder from its first occurence" do
+      survey = panel_survey_generator_survey_in_folder()
+
+      {:ok, panel_survey} =
+        PanelSurvey.create_panel_survey_from_survey(survey)
+
+      # Assert the panel survey takes its folder from the survey
+      assert panel_survey.folder_id == survey.folder_id
+      # The survey occurrence doesn't belong to the folder. Its panel survey does.
+      # Assert the survey was removed from its folder
+      survey = Repo.get!(Survey, survey.id)
+      refute survey.folder_id
+    end
+
+    test "removes the cutoff and comparisons" do
+      survey = panel_survey_generator_survey_with_cutoff_and_comparisons()
+
+      {:ok, panel_survey} =
+        PanelSurvey.create_panel_survey_from_survey(survey)
+
+      assert_panel_survey_without_cutoff_and_comparisons(panel_survey)
+    end
+
+    test "rejects creating a panel survey when the survey generates_panel_survey flag is OFF" do
+      survey = panel_survey_generator_survey()
+      |> Survey.changeset(%{generates_panel_survey: false})
+      |> Repo.update!()
+
+      {result, error} =
+        PanelSurvey.create_panel_survey_from_survey(survey)
+
+      assert result == :error
+      assert error == "Survey must have generates_panel_survey ON to launch to generate a panel survey"
+    end
+
+    test "rejects creating a panel survey when the survey isn't ready to launch" do
+      survey = panel_survey_generator_survey()
+      |> Survey.changeset(%{state: "not_ready"})
+      |> Repo.update!()
+
+      {result, error} =
+        PanelSurvey.create_panel_survey_from_survey(survey)
+
+      assert result == :error
+      assert error == "Survey must be ready to launch to generate a panel survey"
+    end
+
+    test "rejects creating a panel survey when the survey is a panel survey occurrence" do
+      panel_survey = dummy_panel_survey()
+      survey = panel_survey_generator_survey()
+      |> Survey.changeset(%{panel_survey_id: panel_survey.id})
+      |> Repo.update!()
+
+      {result, error} =
+        PanelSurvey.create_panel_survey_from_survey(survey)
+
+      assert result == :error
+      assert error == "Survey can't be a panel survey occurence to generate a panel survey"
+    end
+
+    @tag :time_mock
+    test "when the survey doesn't have a name it's named `Panel Survey YYYY-MM-DD`" do
+      Timex.parse!("2021-06-17T09:00:00Z", "{ISO:Extended}")
+      |> mock_time()
+      expected_name = "Panel Survey 2021-06-17"
+      project = insert(:project)
+      survey = insert(:survey, project: project, generates_panel_survey: true, state: "ready", name: nil)
+
+      {result, panel_survey} = PanelSurvey.create_panel_survey_from_survey(survey)
+
+      assert result == :ok
+      assert panel_survey.name == expected_name
+    end
+  end
+
   defp respondent_channels(survey) do
     survey =
       survey
@@ -224,5 +346,13 @@ defmodule Ask.Runtime.PanelSurveyTest do
   defp assert_repeated_without_respondent(latest_occurrence, new_occurrence, unpromoted_respondent) do
     assert respondent_in_survey?(latest_occurrence, unpromoted_respondent.hashed_number)
     refute respondent_in_survey?(new_occurrence, unpromoted_respondent.hashed_number)
+  end
+
+  defp assert_panel_survey_without_cutoff_and_comparisons(panel_survey) do
+    latest = Ask.PanelSurvey.latest_occurrence(panel_survey)
+    assert latest.comparisons == []
+    assert latest.quota_vars == []
+    assert latest.cutoff == nil
+    assert latest.count_partial_results == false
   end
 end
