@@ -100,12 +100,13 @@ class PanelSurveyShow extends Component<any, any> {
   }
 
   newOccurrence() {
-    const { projectId, router, panelSurvey } = this.props
+    const { projectId, router, panelSurvey, dispatch, panelSurveyId } = this.props
 
     newOccurrence(projectId, panelSurvey.id)
       .then(response => {
         const panelSurvey = response.entities.surveys[response.result]
         const survey = [...panelSurvey.occurrences].pop()
+        dispatch(panelSurveyActions.fetchPanelSurvey(projectId, panelSurveyId))
         router.push(routes.surveyEdit(projectId, survey.id))
       })
   }
