@@ -7,12 +7,12 @@ import * as surveyActions from '../../actions/survey'
 import * as projectActions from '../../actions/project'
 import * as folderActions from '../../actions/folder'
 import * as panelSurveysActions from '../../actions/panelSurveys'
-import { AddButton, EmptyPage, UntitledIfEmpty, ConfirmationModal, PagingFooter } from '../ui'
+import { AddButton, EmptyPage, ConfirmationModal, PagingFooter } from '../ui'
 import * as respondentActions from '../../actions/respondents'
 import SurveyCard from '../surveys/SurveyCard'
 import * as routes from '../../routes'
-import { translate, Trans } from 'react-i18next'
-import { surveyIndexProps } from '../../components/surveys/SurveyIndex'
+import { translate } from 'react-i18next'
+import { surveyIndexProps } from '../surveys/SurveyIndex'
 
 class FolderShow extends Component<any, any> {
   state = {}
@@ -59,25 +59,6 @@ class FolderShow extends Component<any, any> {
     dispatch(surveyActions.createSurvey(projectId, folderId)).then(survey =>
       router.push(routes.surveyEdit(projectId, survey))
     )
-  }
-
-  deleteSurvey = (survey: Survey) => {
-    const deleteConfirmationModal: ConfirmationModal = this.refs.deleteConfirmationModal
-    const { t } = this.props
-    deleteConfirmationModal.open({
-      modalText: <span>
-        <p>
-          <Trans>
-            Are you sure you want to delete the survey <b><UntitledIfEmpty text={survey.name} emptyText={t('Untitled survey')} /></b>?
-          </Trans>
-        </p>
-        <p>{t('All the respondent information will be lost and cannot be undone.')}</p>
-      </span>,
-      onConfirm: () => {
-        const { dispatch } = this.props
-        dispatch(surveyActions.deleteSurvey(survey))
-      }
-    })
   }
 
   nextPage() {
@@ -136,7 +117,7 @@ class FolderShow extends Component<any, any> {
             <div className='survey-index-grid'>
               { surveys && surveys.map(survey => {
                 return (
-                  <SurveyCard survey={survey} respondentsStats={respondentsStats[survey.id]} onDelete={this.deleteSurvey} key={survey.id} readOnly={readOnly} t={t} />
+                  <SurveyCard survey={survey} respondentsStats={respondentsStats[survey.id]} key={survey.id} readOnly={readOnly} />
                 )
               }) }
             </div>
@@ -145,7 +126,6 @@ class FolderShow extends Component<any, any> {
         )
         }
         <ConfirmationModal disabled={loadingFolder} modalId='survey_index_folder_create' ref='createFolderConfirmationModal' confirmationText={t('Create')} header={t('Create Folder')} showCancel />
-        <ConfirmationModal modalId='survey_index_delete' ref='deleteConfirmationModal' confirmationText={t('Delete')} header={t('Delete survey')} showCancel />
       </div>
     )
   }

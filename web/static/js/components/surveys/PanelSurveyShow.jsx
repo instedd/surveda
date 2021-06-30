@@ -3,16 +3,15 @@ import React, { Component, PropTypes } from 'react'
 import { connect } from 'react-redux'
 import { withRouter, Link } from 'react-router'
 import * as actions from '../../actions/surveys'
-import * as surveyActions from '../../actions/survey'
 import * as projectActions from '../../actions/project'
 import * as folderActions from '../../actions/folder'
 import * as panelSurveyActions from '../../actions/panelSurvey'
 import * as panelSurveysActions from '../../actions/panelSurveys'
-import { UntitledIfEmpty, ConfirmationModal, PagingFooter } from '../ui'
+import { PagingFooter } from '../ui'
 import * as respondentActions from '../../actions/respondents'
 import SurveyCard from '../surveys/SurveyCard'
 import * as routes from '../../routes'
-import { translate, Trans } from 'react-i18next'
+import { translate } from 'react-i18next'
 import { RepeatButton } from '../ui/RepeatButton'
 import { newOccurrence } from '../../api'
 
@@ -57,25 +56,6 @@ class PanelSurveyShow extends Component<any, any> {
     if (!panelSurvey) {
       dispatch(panelSurveyActions.fetchPanelSurvey(projectId, panelSurveyId))
     }
-  }
-
-  deleteSurvey = (survey: Survey) => {
-    const deleteConfirmationModal: ConfirmationModal = this.refs.deleteConfirmationModal
-    const { t } = this.props
-    deleteConfirmationModal.open({
-      modalText: <span>
-        <p>
-          <Trans>
-            Are you sure you want to delete the survey <b><UntitledIfEmpty text={survey.name} emptyText={t('Untitled survey')} /></b>?
-          </Trans>
-        </p>
-        <p>{t('All the respondent information will be lost and cannot be undone.')}</p>
-      </span>,
-      onConfirm: () => {
-        const { dispatch } = this.props
-        dispatch(surveyActions.deleteSurvey(survey))
-      }
-    })
   }
 
   nextPage() {
@@ -152,13 +132,12 @@ class PanelSurveyShow extends Component<any, any> {
           <div className='survey-index-grid'>
             { surveys && surveys.map(survey => {
               return (
-                <SurveyCard survey={survey} respondentsStats={respondentsStats[survey.id]} onDelete={this.deleteSurvey} key={survey.id} readOnly={readOnly} t={t} />
+                <SurveyCard survey={survey} respondentsStats={respondentsStats[survey.id]} key={survey.id} readOnly={readOnly} t={t} />
               )
             }) }
           </div>
           { footer }
         </div>
-        <ConfirmationModal modalId='survey_index_delete' ref='deleteConfirmationModal' confirmationText={t('Delete')} header={t('Delete survey')} showCancel />
       </div>
     )
   }

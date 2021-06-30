@@ -167,7 +167,7 @@ class SurveyIndex extends Component<any, State> {
             </div>
             <div className='survey-index-grid'>
               {surveys && surveys.map(survey => (
-                <SurveyCard survey={survey} respondentsStats={respondentsStats[survey.id]} key={survey.id} readOnly={readOnly} t={t} />
+                <SurveyCard survey={survey} respondentsStats={respondentsStats[survey.id]} key={survey.id} readOnly={readOnly} />
               ))}
             </div>
             { footer }
