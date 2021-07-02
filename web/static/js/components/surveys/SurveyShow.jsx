@@ -7,6 +7,7 @@ import * as surveysActions from '../../actions/surveys'
 import * as respondentActions from '../../actions/respondents'
 import * as folderActions from '../../actions/folder'
 import * as panelSurveysActions from '../../actions/panelSurveys'
+import * as panelSurveyActions from '../../actions/panelSurvey'
 import SurveyStatus from './SurveyStatus'
 import * as routes from '../../routes'
 import { Tooltip, Modal, dispositionGroupLabel, dispositionLabel } from '../ui'
@@ -105,10 +106,18 @@ class SurveyShow extends Component<any, State> {
   }
 
   confirmStopSurvey() {
-    const { projectId, surveyId, router } = this.props
+    const { projectId, surveyId, router, dispatch, survey } = this.props
     this.refs.stopModal.close()
     stopSurvey(projectId, surveyId)
-      .then(() => router.push(routes.surveyEdit(projectId, surveyId)))
+      .then(() => {
+        if (survey.panelSurveyId) {
+          // An occurrence of the panel survey was stopped -> the panel survey has changed.
+          // The Redux store must be updated with the panel survey new state.
+          dispatch(panelSurveyActions.fetchPanelSurvey(survey.projectId, survey.panelSurveyId))
+          dispatch(panelSurveysActions.fetchPanelSurveys(survey.projectId))
+        }
+        router.push(routes.surveyEdit(projectId, surveyId))
+      })
   }
 
   iconForMode(mode: string) {
