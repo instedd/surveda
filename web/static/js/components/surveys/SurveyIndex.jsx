@@ -152,10 +152,10 @@ class SurveyIndex extends Component<any, State> {
 
     const readOnly = !project || project.readOnly
 
-    let mainAction = (
-      <MainAction text='Add' icon='add' className='survey-index-main-action'>
-        <Action text='Survey' icon='assignment_turned_in' onClick={() => this.newSurvey()} />
-        <Action text='Panel Survey' icon='repeat' onClick={() => this.newPanelSurvey()} />
+    const mainAction = (
+      <MainAction text={t('Add')} icon='add' className='survey-index-main-action'>
+        <Action text={t('Survey')} icon='assignment_turned_in' onClick={() => this.newSurvey()} />
+        <Action text={t('Panel Survey')} icon='repeat' onClick={() => this.newPanelSurvey()} />
         <Action text='Folder' icon='folder' onClick={() => this.newFolder()} />
       </MainAction>
     )

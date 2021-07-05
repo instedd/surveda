@@ -7,7 +7,8 @@ import * as surveyActions from '../../actions/survey'
 import * as projectActions from '../../actions/project'
 import * as folderActions from '../../actions/folder'
 import * as panelSurveysActions from '../../actions/panelSurveys'
-import { AddButton, EmptyPage, ConfirmationModal, PagingFooter } from '../ui'
+import * as panelSurveyActions from '../../actions/panelSurvey'
+import { MainAction, Action, EmptyPage, ConfirmationModal, PagingFooter } from '../ui'
 import * as respondentActions from '../../actions/respondents'
 import SurveyCard from '../surveys/SurveyCard'
 import * as routes from '../../routes'
@@ -55,9 +56,15 @@ class FolderShow extends Component<any, any> {
 
   newSurvey() {
     const { dispatch, router, projectId, folderId } = this.props
-
     dispatch(surveyActions.createSurvey(projectId, folderId)).then(survey =>
       router.push(routes.surveyEdit(projectId, survey))
+    )
+  }
+
+  newPanelSurvey() {
+    const { dispatch, projectId, router, folderId } = this.props
+    dispatch(panelSurveyActions.createPanelSurvey(projectId, folderId)).then(firstOccurrence =>
+      router.push(routes.surveyEdit(projectId, firstOccurrence))
     )
   }
 
@@ -97,18 +104,18 @@ class FolderShow extends Component<any, any> {
 
     const readOnly = !project || project.readOnly
 
-    let primaryButton = null
-    if (!readOnly) {
-      primaryButton = (
-        <AddButton text={t('Add survey')} onClick={() => this.newSurvey()} />
-      )
-    }
-
     const emptyFolder = surveys && surveys.length == 0
+
+    const mainAction = (
+      <MainAction text={t('Add')} icon='add' className='folder-main-action' >
+        <Action text={t('Survey')} icon='assignment_turned_in' onClick={() => this.newSurvey()} />
+        <Action text={t('Panel Survey')} icon='repeat' onClick={() => this.newPanelSurvey()} />
+      </MainAction>
+    )
 
     return (
       <div className='folder-show'>
-        {primaryButton}
+        { readOnly ? null : mainAction}
         {titleLink}
         { emptyFolder
         ? <EmptyPage icon='assignment_turned_in' title={t('You have no surveys in this folder')} onClick={(e) => this.newSurvey()} readOnly={readOnly} createText={t('Create one', {context: 'survey'})} />
