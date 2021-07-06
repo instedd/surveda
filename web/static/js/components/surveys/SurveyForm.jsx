@@ -70,7 +70,7 @@ class SurveyForm extends Component {
     const { survey, projectId, questionnaires, channels, respondentGroups, respondentGroupsUploading, respondentGroupsUploadingExisting,
             invalidRespondents, invalidGroup, errors, questionnaire, readOnly, t, cutOffConfigValid } = this.props
     const includeCutoffRulesStep = !survey.generatesPanelSurvey && !survey.panelSurveyId
-    const includePanelSurveyStep = !survey.panelSurveyId
+    const includePanelSurveyStep = survey.generatesPanelSurvey || survey.panelSurveyId
     const questionnaireStepCompleted = survey.questionnaireIds != null && survey.questionnaireIds.length > 0 && this.questionnairesValid(survey.questionnaireIds, questionnaires)
     const respondentsStepCompleted = respondentGroups && Object.keys(respondentGroups).length > 0 &&
       every(values(respondentGroups), group => {
@@ -78,7 +78,6 @@ class SurveyForm extends Component {
       })
 
     const modeStepCompleted = survey.mode != null && survey.mode.length > 0 && this.questionnairesMatchModes(survey.mode, survey.questionnaireIds, questionnaires)
-    const panelSurveyStepCompleted = questionnaireStepCompleted
     const cutoffStepCompleted = cutOffConfigValid && questionnaireStepCompleted
     const validRetryConfiguration = !errors || (!errors.smsRetryConfiguration && !errors.ivrRetryConfiguration && !errors.fallbackDelay)
     const scheduleStepCompleted =
@@ -95,7 +94,6 @@ class SurveyForm extends Component {
     let comparisonsStepCompleted = false
 
     let mandatorySteps = [questionnaireStepCompleted, modeStepCompleted, respondentsStepCompleted, scheduleStepCompleted]
-    if (includePanelSurveyStep) mandatorySteps.push(panelSurveyStepCompleted)
     if (includeCutoffRulesStep) mandatorySteps.push(cutoffStepCompleted)
     if (survey.comparisons.length > 0) {
       comparisonsStepCompleted = sumBy(survey.comparisons, c => c.ratio) == 100
@@ -160,7 +158,7 @@ class SurveyForm extends Component {
               {launchComponent}
               {
                 includePanelSurveyStep
-                ? <CollectionItem path='#panel_survey' icon='replay' text={t('Repeat survey')} completed={panelSurveyStepCompleted} />
+                ? <CollectionItem path='#panel_survey' icon='replay' text={t('Panel survey')} completed />
                 : null
               }
               <CollectionItem path='#questionnaire' icon='assignment' text={t('Select a questionnaire')} completed={!!questionnaireStepCompleted} />
