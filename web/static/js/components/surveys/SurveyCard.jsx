@@ -4,7 +4,7 @@ import { translate, Trans } from 'react-i18next'
 import { Link } from 'react-router'
 import * as routes from '../../routes'
 import * as surveyActions from '../../actions/survey'
-
+import { untitledSurveyTitle } from './SurveyTitle'
 import { Card, UntitledIfEmpty, Dropdown, DropdownItem, ConfirmationModal } from '../ui'
 import RespondentsChart from '../respondents/RespondentsChart'
 import SurveyStatus from '../surveys/SurveyStatus'
@@ -54,7 +54,7 @@ class SurveyCard extends Component<any> {
       modalText: <span>
         <p>
           <Trans>
-            Are you sure you want to delete the survey <b><UntitledIfEmpty text={survey.name} emptyText={t('Untitled survey')} /></b>?
+            Are you sure you want to delete the survey <b><UntitledIfEmpty text={survey.name} emptyText={untitledSurveyTitle(survey, t)} /></b>?
           </Trans>
         </p>
         <p>{t('All the respondent information will be lost and cannot be undone.')}</p>
@@ -135,7 +135,7 @@ class SurveyCard extends Component<any> {
           </div>
           <div className='card-status'>
             <Link className='card-title black-text truncate' title={name} to={redirectTo}>
-              <UntitledIfEmpty text={name} emptyText={t('Untitled survey')} />
+              <UntitledIfEmpty text={name} emptyText={untitledSurveyTitle(survey, t)} />
             </Link>
             <Link to={redirectTo}>
               {description}

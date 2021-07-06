@@ -36,7 +36,7 @@ class SurveyTitle extends Component {
 
     return (
       <div className='title-container'>
-        <EditableTitleLabel title={survey.name} emptyText={t('Untitled survey')} onSubmit={(value) => { this.handleSubmitTitle(value) }} readOnly={readOnly} />
+        <EditableTitleLabel title={survey.name} emptyText={untitledSurveyTitle(survey, t)} onSubmit={(value) => { this.handleSubmitTitle(value) }} readOnly={readOnly} />
         <EditableDescriptionLabel description={survey.description} emptyText={t('Add description')} onSubmit={(value) => { this.handleSubmitDescription(value) }} readOnly={readOnly} />
       </div>
     )
@@ -51,5 +51,7 @@ const mapStateToProps = (state, ownProps) => {
     readOnly: isProjectReadOnly(state)
   }
 }
+
+export const untitledSurveyTitle = (survey, t) => survey.generatesPanelSurvey ? t('Untitled Panel Survey') : t('Untitled Survey')
 
 export default translate()(withRouter(connect(mapStateToProps)(SurveyTitle)))
