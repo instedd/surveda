@@ -5,6 +5,7 @@ import { withRouter } from 'react-router'
 import values from 'lodash/values'
 import * as actions from '../../actions/surveys'
 import * as surveyActions from '../../actions/survey'
+import * as panelSurveyActions from '../../actions/panelSurvey'
 import * as projectActions from '../../actions/project'
 import * as folderActions from '../../actions/folder'
 import * as panelSurveysActions from '../../actions/panelSurveys'
@@ -83,6 +84,13 @@ class SurveyIndex extends Component<any, State> {
     )
   }
 
+  newPanelSurvey() {
+    const { dispatch, projectId, router } = this.props
+    dispatch(panelSurveyActions.createPanelSurvey(projectId)).then(firstOccurrence =>
+      router.push(routes.surveyEdit(projectId, firstOccurrence))
+    )
+  }
+
   changeFolderName(name) {
     this.setState({folderName: name})
   }
@@ -144,13 +152,10 @@ class SurveyIndex extends Component<any, State> {
 
     const readOnly = !project || project.readOnly
 
-    let mainAction = (
-      <MainAction text='Add' icon='add'>
-        <Action
-          text='Survey'
-          icon='assignment_turned_in'
-          onClick={() => this.newSurvey()}
-        />
+    const mainAction = (
+      <MainAction text={t('Add')} icon='add' className='survey-index-main-action'>
+        <Action text={t('Survey')} icon='assignment_turned_in' onClick={() => this.newSurvey()} />
+        <Action text={t('Panel Survey')} icon='repeat' onClick={() => this.newPanelSurvey()} />
         <Action text='Folder' icon='folder' onClick={() => this.newFolder()} />
       </MainAction>
     )

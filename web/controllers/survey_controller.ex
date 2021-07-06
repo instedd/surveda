@@ -51,10 +51,14 @@ defmodule Ask.SurveyController do
     survey_params = Map.get(params, "survey", %{})
     timezone = Map.get(survey_params, "timezone", Ask.Schedule.default_timezone())
     schedule = Map.merge(Ask.Schedule.default(), %{timezone: timezone})
-    props = %{"project_id" => project_id,
-              "folder_id" => folder_id,
-              "name" => "",
-              "schedule" => schedule}
+    generates_panel_survey = Map.get(survey_params, "generates_panel_survey", false)
+    props = %{
+      "project_id" => project_id,
+      "folder_id" => folder_id,
+      "name" => "",
+      "schedule" => schedule,
+      "generates_panel_survey" => generates_panel_survey
+    }
 
     changeset = project
     |> build_assoc(:surveys)

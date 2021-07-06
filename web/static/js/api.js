@@ -195,13 +195,13 @@ export const renameFolder = (projectId, folderId, name) => {
   return apiPostJSON(`projects/${projectId}/folders/${folderId}/set_name`, folderSchema, { name })
 }
 
-export const createSurvey = (projectId, folderId) => {
+export const createSurvey = (projectId, folderId, generatesPanelSurvey = false) => {
   const timezone = getTimezone()
   let data
   if (timezone) {
-    data = {survey: {timezone, folderId: folderId}}
+    data = {survey: {timezone, generatesPanelSurvey}}
   } else {
-    data = null
+    data = {survey: {generatesPanelSurvey}}
   }
   let folderPath = folderId ? `/folders/${folderId}` : ''
   return apiPostJSON(`projects/${projectId}${folderPath}/surveys`, surveySchema, data)

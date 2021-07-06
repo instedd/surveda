@@ -263,6 +263,15 @@ video.responsive-video {
   }
 }
 
+.survey-index-main-action {
+  display: flex;
+  flex-direction: column;
+  top: -3.5rem;
+}
+
+.folder-main-action {
+  top: -1.3rem;
+}
 
 // Parallax
 .parallax-container {

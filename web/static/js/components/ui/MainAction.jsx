@@ -32,12 +32,13 @@ export class Action extends Component<ActionProps> {
 
 type MainActionProps = BaseActionProps & {
   onClick?: Function,
-  children?: any // Array<Action>
+  children?: any, // Array<Action>
+  className?: String
 }
 
 export class MainAction extends Component<MainActionProps> {
   render = () => {
-    const { icon, text, onClick, children } = this.props
+    const { icon, text, onClick, children, className } = this.props
     return (
       <div className='fixed-action-btn click-to-toggle'>
         <a
@@ -50,7 +51,7 @@ export class MainAction extends Component<MainActionProps> {
             <i className='material-icons'>{icon}</i>
           </Tooltip>
         </a>
-        {children ? <ul>{children}</ul> : null}
+        {children ? <ul className={className}>{children}</ul> : null}
       </div>
     )
   }
