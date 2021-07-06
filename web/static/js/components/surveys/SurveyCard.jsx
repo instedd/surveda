@@ -149,7 +149,7 @@ class SurveyCard extends Component<any> {
     return (
       <div className='col s12 m6 l4'>
         {
-          panelSurvey
+          panelSurvey || survey.generatesPanelSurvey
           ? <div className='panel-survey-card-0'>
             <div className='panel-survey-card-1'>
               <div className='panel-survey-card-2'>

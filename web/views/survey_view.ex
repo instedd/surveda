@@ -58,7 +58,8 @@ defmodule Ask.SurveyView do
       panel_survey_id: survey.panel_survey_id,
       last_window_ends_at: survey.last_window_ends_at,
       is_deletable: Survey.deletable?(survey),
-      is_movable: Survey.movable?(survey)
+      is_movable: Survey.movable?(survey),
+      generates_panel_survey: survey.generates_panel_survey
     }
   end
   def render("survey_detail.json", %{survey: survey}) do
