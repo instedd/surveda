@@ -219,7 +219,10 @@ defmodule Ask.FloipPackageTest do
 
       assert length(response) == 7
       {:ok, response_timestamp, _} = DateTime.from_iso8601(Enum.at(response, 0))
-      assert DateTime.compare(response_timestamp, db_response.inserted_at) == :eq
+
+      # 0 -- both arguments represent the same date when coalesced to the same timezone.
+      assert Timex.compare(response_timestamp, db_response.inserted_at) == 0
+
       assert Enum.at(response, 1) == db_response.id
       assert Enum.at(response, 2) == db_response.respondent.hashed_number
       assert Enum.at(response, 3) == db_response.respondent.hashed_number

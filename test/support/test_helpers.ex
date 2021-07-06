@@ -2,8 +2,12 @@ defmodule Ask.TestHelpers do
   defmacro __using__(_) do
     quote do
       use Ask.DummySteps
-      alias Ask.Runtime.{Broker, Flow}
-      alias Ask.{Repo, Respondent}
+      alias Ask.Runtime.{Broker, Flow, RespondentGroupAction}
+      alias Ask.{PanelSurvey, Repo, Respondent, Survey, TestChannel}
+
+      @foo_string "foo"
+      @bar_string "bar"
+      @dummy_int 5
 
       def create_project_for_user(user, options \\ []) do
         level = options[:level] || "owner"
@@ -102,6 +106,103 @@ defmodule Ask.TestHelpers do
                      group_by: :state,
                      select: {r.state, count("*")}) |> Enum.into(%{})
         [by_state["active"] || 0, by_state["pending"] || 0]
+      end
+
+      # Format a timestamp without microseconds the same way the controller does.
+      defp to_iso8601(timestamp) do
+        Timex.to_datetime(timestamp) |> DateTime.to_iso8601()
+      end
+
+      defp panel_survey_generator_survey(project \\ nil) do
+        project = if project, do: project, else: insert(:project)
+        insert(:survey, state: "ready", project: project, generates_panel_survey: true)
+      end
+
+      defp panel_survey_generator_survey_with_cutoff_and_comparisons() do
+        survey = panel_survey_generator_survey()
+        dummy_cutoff_and_comparisons = %{
+          comparisons: @foo_string,
+          quota_vars: @bar_string,
+          cutoff: @dummy_int,
+          count_partial_results: true
+        }
+        survey = Survey.changeset(survey, dummy_cutoff_and_comparisons)
+        |> Repo.update!()
+      end
+
+      defp panel_survey_generator_survey_in_folder(project \\ nil) do
+        panel_survey_generator_survey(project)
+        |> include_in_folder()
+      end
+
+      defp include_in_folder(survey) do
+        project = Repo.preload(survey, :project).project
+        folder = insert(:folder, project: project)
+        Survey.changeset(survey, %{folder_id: folder.id})
+        |> Repo.update!()
+      end
+
+      defp dummy_panel_survey(project \\ nil) do
+        project = if project, do: project, else: insert(:project)
+        survey = panel_survey_generator_survey(project)
+        {:ok, panel_survey} = Ask.Runtime.PanelSurvey.create_panel_survey_from_survey(survey)
+        panel_survey
+      end
+
+      defp dummy_panel_survey_in_folder(project \\ nil) do
+        project = if project, do: project, else: insert(:project)
+        survey = panel_survey_generator_survey_in_folder(project)
+        {:ok, panel_survey} = Ask.Runtime.PanelSurvey.create_panel_survey_from_survey(survey)
+        panel_survey
+      end
+
+      defp panel_survey_with_occurrence() do
+        panel_survey = insert(:panel_survey)
+        insert(:survey, panel_survey:  panel_survey, project: panel_survey.project)
+        # Reload the panel survey. One of its surveys has changed, so it's outdated
+        Repo.get!(Ask.PanelSurvey, panel_survey.id)
+      end
+
+      defp terminate_survey(survey) do
+        Survey.changeset(survey, %{state: "terminated"})
+        |> Repo.update!()
+      end
+
+      defp complete_last_occurrence_of_panel_survey(panel_survey) do
+        Ask.PanelSurvey.latest_occurrence(panel_survey)
+        |> terminate_survey()
+
+        # Reload the panel survey. One of its surveys has changed, so it's outdated
+        Repo.get!(Ask.PanelSurvey, panel_survey.id)
+      end
+
+      defp panel_survey_with_last_occurrence_terminated() do
+        panel_survey_with_occurrence()
+        |> complete_last_occurrence_of_panel_survey()
+      end
+
+      defp completed_panel_survey_with_respondents() do
+        panel_survey = panel_survey_with_occurrence()
+        latest_occurrence = Ask.PanelSurvey.latest_occurrence(panel_survey)
+
+        insert_respondents = fn mode, phone_numbers ->
+          channel = TestChannel.new()
+          channel = insert(:channel, settings: channel |> TestChannel.settings(), type: mode)
+          insert_respondents(latest_occurrence, channel, mode, phone_numbers)
+        end
+
+        insert_respondents.("sms", ["1", "2", "3"])
+        insert_respondents.("ivr", ["3", "4"])
+        terminate_survey(latest_occurrence)
+
+        # Reload the panel survey. One of its surveys has changed, so it's outdated
+        Repo.get!(Ask.PanelSurvey, panel_survey.id)
+      end
+
+      defp insert_respondents(survey, channel, mode, phone_numbers) do
+        phone_numbers = RespondentGroupAction.loaded_phone_numbers(phone_numbers)
+        group = RespondentGroupAction.create(UUID.uuid4(), phone_numbers, survey)
+        RespondentGroupAction.update_channels(group.id, [%{"id" => channel.id, "mode" => mode}])
       end
     end
   end

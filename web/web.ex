@@ -24,7 +24,9 @@ defmodule Ask.Web do
       import Ecto.Changeset
       import Ecto.Query
 
-      @timestamps_opts [type: :utc_datetime]
+      # Avoid microseconds. Mysql doesn't support them.
+      # See [usec in datetime](https://hexdocs.pm/ecto_sql/Ecto.Adapters.MyXQL.html#module-usec-in-datetime)
+      @timestamps_opts [type: :utc_datetime, usec: false]
     end
   end
 

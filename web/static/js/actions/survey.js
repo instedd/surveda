@@ -3,6 +3,8 @@ import * as api from '../api'
 import each from 'lodash/each'
 import { stepStoreValues } from '../reducers/questionnaire'
 import * as surveysActions from './surveys'
+import * as panelSurveyActions from '../actions/panelSurvey'
+import * as panelSurveysActions from '../actions/panelSurveys'
 
 export const CHANGE_CUTOFF = 'SURVEY_CHANGE_CUTOFF'
 export const CHANGE_QUOTA = 'SURVEY_CHANGE_QUOTA'
@@ -11,6 +13,7 @@ export const CHANGE_QUESTIONNAIRE = 'SURVEY_CHANGE_QUESTIONNAIRE'
 export const CHANGE_NAME = 'SURVEY_CHANGE_NAME'
 export const CHANGE_IS_PANEL_SURVEY = 'SURVEY_CHANGE_IS_PANEL_SURVEY'
 export const CHANGE_DESCRIPTION = 'SURVEY_CHANGE_DESCRIPTION'
+export const SWITCH_GENERATES_PANEL_SURVEY = 'SURVEY_SWITCH_GENERATES_PANEL_SURVEY'
 export const TOGGLE_DAY = 'SURVEY_TOGGLE_DAY'
 export const SET_SCHEDULE_TO = 'SURVEY_SET_SCHEDULE_TO'
 export const SET_SCHEDULE_FROM = 'SURVEY_SET_SCHEDULE_FROM'
@@ -174,13 +177,6 @@ export const changeName = (newName: string) => (dispatch: Function, getState: ()
   })
 }
 
-export const changeIsPanelSurvey = (isPanelSurvey: string) => (
-  {
-    type: CHANGE_IS_PANEL_SURVEY,
-    isPanelSurvey
-  }
-)
-
 export const changeFolder = (survey: Survey, folderId: number) => (dispatch: Function, getState: () => Store) => {
   return api.setFolderId(survey.projectId, survey.id, folderId)
     .then(() => dispatch(surveysActions.folderChanged(survey.id, folderId))
@@ -201,6 +197,11 @@ export const descriptionChanged = (newDescription: string) => {
     newDescription
   })
 }
+
+export const generatesPanelSurveySwitched = (newGeneratesPanelSurvey: boolean) => ({
+  type: SWITCH_GENERATES_PANEL_SURVEY,
+  newGeneratesPanelSurvey
+})
 
 export const setScheduleFrom = (hour: string, nextHour: string) => ({
   type: SET_SCHEDULE_FROM,
@@ -289,6 +290,12 @@ export const changeMobileWebRetryConfiguration = (mobilewebRetryConfiguration: s
 export const deleteSurvey = (survey: Survey) => (dispatch: Function) => {
   api.deleteSurvey(survey.projectId, survey)
     .then(response => {
+      if (survey.panelSurveyId) {
+        // An occurrence of the panel survey was deleted -> the panel survey has changed.
+        // The Redux store must be updated with the panel survey new state.
+        dispatch(panelSurveyActions.fetchPanelSurvey(survey.projectId, survey.panelSurveyId))
+        dispatch(panelSurveysActions.fetchPanelSurveys(survey.projectId))
+      }
       return dispatch(surveysActions.deleted(survey))
     })
 }

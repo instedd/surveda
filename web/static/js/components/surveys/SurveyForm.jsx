@@ -69,6 +69,8 @@ class SurveyForm extends Component {
   render() {
     const { survey, projectId, questionnaires, channels, respondentGroups, respondentGroupsUploading, respondentGroupsUploadingExisting,
             invalidRespondents, invalidGroup, errors, questionnaire, readOnly, t, cutOffConfigValid } = this.props
+    const includeCutoffRulesStep = !survey.generatesPanelSurvey && !survey.panelSurveyId
+    const includePanelSurveyStep = !survey.panelSurveyId
     const questionnaireStepCompleted = survey.questionnaireIds != null && survey.questionnaireIds.length > 0 && this.questionnairesValid(survey.questionnaireIds, questionnaires)
     const respondentsStepCompleted = respondentGroups && Object.keys(respondentGroups).length > 0 &&
       every(values(respondentGroups), group => {
@@ -76,7 +78,7 @@ class SurveyForm extends Component {
       })
 
     const modeStepCompleted = survey.mode != null && survey.mode.length > 0 && this.questionnairesMatchModes(survey.mode, survey.questionnaireIds, questionnaires)
-    const isPanelSurveyStepCompleted = questionnaireStepCompleted
+    const panelSurveyStepCompleted = questionnaireStepCompleted
     const cutoffStepCompleted = cutOffConfigValid && questionnaireStepCompleted
     const validRetryConfiguration = !errors || (!errors.smsRetryConfiguration && !errors.ivrRetryConfiguration && !errors.fallbackDelay)
     const scheduleStepCompleted =
@@ -92,7 +94,9 @@ class SurveyForm extends Component {
       ) && validRetryConfiguration
     let comparisonsStepCompleted = false
 
-    const mandatorySteps = [isPanelSurveyStepCompleted, questionnaireStepCompleted, modeStepCompleted, respondentsStepCompleted, scheduleStepCompleted, cutoffStepCompleted]
+    let mandatorySteps = [questionnaireStepCompleted, modeStepCompleted, respondentsStepCompleted, scheduleStepCompleted]
+    if (includePanelSurveyStep) mandatorySteps.push(panelSurveyStepCompleted)
+    if (includeCutoffRulesStep) mandatorySteps.push(cutoffStepCompleted)
     if (survey.comparisons.length > 0) {
       comparisonsStepCompleted = sumBy(survey.comparisons, c => c.ratio) == 100
       mandatorySteps.push(comparisonsStepCompleted)
@@ -122,6 +126,25 @@ class SurveyForm extends Component {
     // she can, for example, change their channel.
     const surveyStarted = survey.state == 'running' || survey.state == 'terminated'
 
+    const cutoffRulesStep = () => <div>
+      <div id='cutoff' className='row scrollspy'>
+        <SurveyWizardCutoffStep survey={survey} questionnaire={questionnaire} readOnly={readOnly || surveyStarted} />
+        {survey.comparisons.length > 0
+        ? <ScrollToLink target='#comparisons'>{t('NEXT: Comparisons')}</ScrollToLink>
+        : ''}
+      </div>
+      {survey.comparisons.length > 0
+        ? <div id='comparisons' className='row scrollspy'>
+          <SurveyWizardComparisonsStep survey={survey} readOnly={readOnly || surveyStarted} questionnaires={questionnaires} />
+        </div>
+      : ''}
+    </div>
+
+    const panelSurveyStep = () => <div id='panel_survey' className='row scrollspy'>
+      <SurveyWizardPanelSurveyStep survey={survey} readOnly={readOnly || surveyStarted} />
+      <ScrollToLink target='#questionnaire'>{t('NEXT: Select Questionnaire')}</ScrollToLink>
+    </div>
+
     return (
       <div className='row'>
         <div className='col s12 m4'>
@@ -135,12 +158,20 @@ class SurveyForm extends Component {
                 </div>
               </li>
               {launchComponent}
-              <CollectionItem path='#panel_survey' icon='replay' text={t('Repeat survey')} completed={isPanelSurveyStepCompleted} />
+              {
+                includePanelSurveyStep
+                ? <CollectionItem path='#panel_survey' icon='replay' text={t('Repeat survey')} completed={panelSurveyStepCompleted} />
+                : null
+              }
               <CollectionItem path='#questionnaire' icon='assignment' text={t('Select a questionnaire')} completed={!!questionnaireStepCompleted} />
               <CollectionItem path='#channels' icon='settings_input_antenna' text={t('Select mode')} completed={!!modeStepCompleted} />
               <CollectionItem path='#respondents' icon='group' text={t('Upload your respondents list')} completed={!!respondentsStepCompleted} />
               <CollectionItem path='#schedule' icon='today' text={t('Setup a schedule')} completed={!!scheduleStepCompleted} />
-              <CollectionItem path='#cutoff' icon='remove_circle' text={t('Setup cutoff rules')} completed={!!cutoffStepCompleted} />
+              {
+                includeCutoffRulesStep
+                ? <CollectionItem path='#cutoff' icon='remove_circle' text={t('Setup cutoff rules')} completed={!!cutoffStepCompleted} />
+                : null
+              }
               {/* <CollectionItem path={`#`} icon='attach_money' text={t('Assign incentives')} completed={cutoffStepCompleted} /> */}
               {survey.comparisons.length > 0
                 ? <CollectionItem path='#comparisons' icon='call_split' text={t('Comparisons')} completed={!!comparisonsStepCompleted} />
@@ -149,10 +180,7 @@ class SurveyForm extends Component {
           </PositionFixer>
         </div>
         <div className='col s12 m7 offset-m1 wizard-content'>
-          <div id='panel_survey' className='row scrollspy'>
-            <SurveyWizardPanelSurveyStep survey={survey} readOnly={readOnly || surveyStarted} />
-            <ScrollToLink target='#questionnaire'>{t('NEXT: Select Questionnaire')}</ScrollToLink>
-          </div>
+          {includePanelSurveyStep ? panelSurveyStep() : null}
           <div id='questionnaire' className='row scrollspy'>
             <SurveyWizardQuestionnaireStep projectId={projectId} survey={survey} questionnaires={questionnaires} readOnly={readOnly || surveyStarted} />
             <ScrollToLink target='#channels'>{t('NEXT: Select Mode')}</ScrollToLink>
@@ -169,17 +197,7 @@ class SurveyForm extends Component {
             <SurveyWizardScheduleStep survey={survey} readOnly={readOnly || surveyStarted} />
             <ScrollToLink target='#cutoff'>{t('NEXT: Setup cutoff rules')}</ScrollToLink>
           </div>
-          <div id='cutoff' className='row scrollspy'>
-            <SurveyWizardCutoffStep survey={survey} questionnaire={questionnaire} readOnly={readOnly || surveyStarted} />
-            {survey.comparisons.length > 0
-            ? <ScrollToLink target='#comparisons'>{t('NEXT: Comparisons')}</ScrollToLink>
-            : ''}
-          </div>
-          {survey.comparisons.length > 0
-            ? <div id='comparisons' className='row scrollspy'>
-              <SurveyWizardComparisonsStep survey={survey} readOnly={readOnly || surveyStarted} questionnaires={questionnaires} />
-            </div>
-          : ''}
+          {includeCutoffRulesStep ? cutoffRulesStep() : null}
           <ScrollToTopButton />
         </div>
       </div>

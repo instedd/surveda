@@ -273,7 +273,9 @@ defmodule Ask.QuestionnaireControllerTest do
       post conn, project_questionnaire_path(conn, :create, project.id), questionnaire: @valid_attrs
 
       project = Project |> Repo.get(project.id)
-      assert DateTime.compare(project.updated_at, datetime) == :gt
+
+      # 1 -- the first date comes after the second one
+      assert Timex.compare(project.updated_at, datetime) == 1
     end
 
     test "creates and recreates variables", %{conn: conn, user: user} do
@@ -535,7 +537,9 @@ defmodule Ask.QuestionnaireControllerTest do
       put conn, project_questionnaire_path(conn, :update, project, questionnaire), questionnaire: @valid_attrs
 
       project = Project |> Repo.get(project.id)
-      assert DateTime.compare(project.updated_at, datetime) == :gt
+
+      # 1 -- the first date comes after the second one
+      assert Timex.compare(project.updated_at, datetime) == 1
     end
 
     test "updates and creates variables", %{conn: conn, user: user} do
@@ -876,7 +880,9 @@ defmodule Ask.QuestionnaireControllerTest do
       delete conn, project_questionnaire_path(conn, :delete, project, questionnaire)
 
       project = Project |> Repo.get(project.id)
-      assert DateTime.compare(project.updated_at, datetime) == :gt
+
+      # 1 -- the first date comes after the second one
+      assert Timex.compare(project.updated_at, datetime) == 1
     end
 
     test "remove reference from survey when questionnaire is deleted", %{conn: conn, user: user} do

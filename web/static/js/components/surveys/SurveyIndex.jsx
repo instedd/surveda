@@ -167,7 +167,7 @@ class SurveyIndex extends Component<any, State> {
             </div>
             <div className='survey-index-grid'>
               {surveys && surveys.map(survey => (
-                <SurveyCard survey={survey} respondentsStats={respondentsStats[survey.id]} key={survey.id} readOnly={readOnly} t={t} />
+                <SurveyCard survey={survey} respondentsStats={respondentsStats[survey.id]} key={survey.id} readOnly={readOnly} />
               ))}
             </div>
             { footer }
@@ -186,7 +186,7 @@ const surveysFromState = (state, folderId, includePanelSurveys = false) => {
   if (!items) return null
   return values(items).filter(survey =>
     survey.folderId == folderId &&
-    (includePanelSurveys || !survey.isPanelSurvey)
+    (includePanelSurveys || !survey.panelSurveyId)
   )
 }
 
@@ -197,7 +197,7 @@ const panelSurveysFromState = (state, folderId) => {
   if (!items) return null
   return values(items).filter(panelSurvey => panelSurvey.folderId == folderId).map(panelSurvey => ({
     ...panelSurvey,
-    latestSurvey: surveys.find(s => s.id == panelSurvey.latestSurveyId)
+    latestSurvey: [...panelSurvey.occurrences].pop()
   }))
 }
 
@@ -205,6 +205,7 @@ const mergePanelSurveysIntoSurveys = (surveys, panelSurveys) => {
   if (panelSurveys == null) return surveys
   return panelSurveys.map(panelSurvey => ({
     ...panelSurvey.latestSurvey,
+    folderId: panelSurvey.folderId,
     panelSurvey: panelSurvey
   })).concat(surveys)
 }

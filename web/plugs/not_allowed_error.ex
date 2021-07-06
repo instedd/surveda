@@ -1,11 +1,11 @@
-defmodule Ask.NotAllowedError do
+defmodule Ask.ConflictError do
   defexception plug_status: 405, message: "not allowed", conn: nil
 
   def exception(_) do
-    %Ask.NotAllowedError{}
+    %Ask.ConflictError{}
   end
 end
 
-defimpl Plug.Exception, for: Ask.NotAllowedError do
-  def status(_), do: 405
+defimpl Plug.Exception, for: Ask.ConflictError do
+  def status(_), do: 409
 end

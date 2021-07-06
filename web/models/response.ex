@@ -6,7 +6,7 @@ defmodule Ask.Response do
     field :value, :string
     belongs_to :respondent, Ask.Respondent
 
-    timestamps(type: :utc_datetime)
+    timestamps()
   end
 
   @doc """

@@ -1,12 +1,9 @@
 defmodule Ask.Runtime.PanelSurvey do
   import Ecto.Query
-  alias Ask.{Survey, Repo, Respondent, RespondentGroupChannel, Schedule}
+  alias Ask.{Survey, Repo, Respondent, RespondentGroupChannel, Schedule, PanelSurvey}
   alias Ask.Runtime.RespondentGroupAction
-  alias Ecto.Multi
 
-  def new_ocurrence_changeset(survey) do
-    unless Survey.repeatable?(survey), do: raise("Panel survey isn't repeatable")
-
+  defp new_ocurrence_changeset(survey) do
     survey =
       survey
       |> Repo.preload([:project])
@@ -20,13 +17,12 @@ defmodule Ask.Runtime.PanelSurvey do
       # basic settings
       project_id: survey.project_id,
       folder_id: survey.folder_id,
-      name: survey.name,
+      name: PanelSurvey.new_occurrence_name(),
       description: survey.description,
       mode: survey.mode,
       state: "ready",
       started_at: Timex.now(),
-      panel_survey_of: survey.panel_survey_of,
-      latest_panel_survey: true,
+      panel_survey_id: survey.panel_survey_id,
       # advanced settings
       cutoff: survey.cutoff,
       count_partial_results: survey.count_partial_results,
@@ -82,6 +78,59 @@ defmodule Ask.Runtime.PanelSurvey do
     |> Repo.update!()
   end
 
+  def create_panel_survey_from_survey(%{
+    generates_panel_survey: generates_panel_survey
+    }) when not generates_panel_survey,
+    do: {
+      :error,
+      "Survey must have generates_panel_survey ON to launch to generate a panel survey"
+    }
+
+  def create_panel_survey_from_survey(%{
+    state: state,
+    }) when state != "ready",
+    do: {
+      :error,
+      "Survey must be ready to launch to generate a panel survey"
+    }
+
+  def create_panel_survey_from_survey(%{
+    panel_survey_id: panel_survey_id
+    }) when panel_survey_id != nil,
+    do: {
+      :error,
+      "Survey can't be a panel survey occurence to generate a panel survey"
+    }
+
+  # A panel survey only can be created based on a survey
+  # This function is responsible for the panel survey creation and its first occurrence
+  # implicated changes:
+  # 1. If the panel survey occurence is inside a folder, put the panel survey inside it. Remove
+  # the survey from its folder. The panel survey occurences aren't inside any folder. They are
+  # inside folders indirectly, when its panel survey is.
+  # 2. Panel survey occurrences have neither cutoff rules nor comparisons. After creating its
+  # panel survey the first occurrence will remain always a panel survey ocurrence. So the related
+  # fields (comparisons, quota_vars, cutoff and count_partial_results) are here set back to their
+  # default values, and they won't change again, ever.
+  def create_panel_survey_from_survey(survey) do
+    {:ok, panel_survey} = PanelSurvey.create_panel_survey(%{
+      name: PanelSurvey.new_panel_survey_name(survey.name),
+      project_id: survey.project_id,
+      folder_id: survey.folder_id
+    })
+    Survey.changeset(survey, %{
+      panel_survey_id: panel_survey.id,
+      name: PanelSurvey.new_occurrence_name(),
+      folder_id: nil,
+      comparisons: [],
+      quota_vars: [],
+      cutoff: nil,
+      count_partial_results: false
+    })
+    |> Repo.update!()
+    {:ok, Repo.get!(PanelSurvey, panel_survey.id)}
+  end
+
   defp copy_respondent_group_channels(respondent_group, new_respondent_group) do
     respondent_group =
       respondent_group
@@ -105,50 +154,25 @@ defmodule Ask.Runtime.PanelSurvey do
     end)
   end
 
-  def delete_multi(survey) do
-    Multi.append(pre_delete_multi(survey), Survey.delete_multi(survey))
+  def new_occurrence(panel_survey) do
+    latest_occurrence = PanelSurvey.latest_occurrence(panel_survey)
+      |> Repo.preload([:project])
+      |> Repo.preload([:questionnaires])
+      |> Repo.preload([:respondent_groups])
+
+    if Survey.terminated?(latest_occurrence) do
+      new_occurrence = new_occurrence_from_latest(latest_occurrence)
+      {:ok, %{new_occurrence: new_occurrence}}
+    else
+      {:error, %{error: "Last panel survey occurrence isn't terminated"}}
+    end
   end
 
-  defp pre_delete_multi(survey), do: pre_delete_multi(survey, Multi.new)
+  defp new_occurrence_from_latest(latest) do
+    new_occurrence = new_ocurrence_changeset(latest)
+    |> Repo.insert!()
 
-  # If it's the only one, just drop it
-  defp pre_delete_multi(%{latest_panel_survey: true, id: id, panel_survey_of: panel_survey_of} = survey, multi) when id == panel_survey_of do
-    Multi.update(multi, :pre_delete_current, pre_delete_current_changeset(survey))
+    new_occurrence = copy_respondents(latest, new_occurrence)
+    new_occurrence
   end
-
-  # Removing the original should make the second one to act as the original
-  defp pre_delete_multi(%{latest_panel_survey: false, id: id, panel_survey_of: panel_survey_of} = survey, multi) when id == panel_survey_of do
-    following_survey_id = Repo.one(from s in Survey,
-    select: s.id,
-    where: s.panel_survey_of == ^id and s.id > ^id,
-    order_by: [asc: :id],
-    limit: 1)
-    following_surveys_query = from(s in Survey, where: s.panel_survey_of == ^id and s.id > ^id)
-
-    multi
-     |> Multi.update_all(:pre_delete_following, following_surveys_query, set: [panel_survey_of: following_survey_id])
-     |> Multi.update(:pre_delete_current, pre_delete_current_changeset(survey))
-  end
-
-  # Removing one in the middle is fine
-  defp pre_delete_multi(%{latest_panel_survey: false} = survey, multi) do
-    Multi.update(multi, :pre_delete_current, pre_delete_current_changeset(survey))
-  end
-
-  # Removing the last one should allow the user to create a new incarnation from the previous one from the normal flow.
-  defp pre_delete_multi(%{latest_panel_survey: true, panel_survey_of: panel_survey_of, id: id} = survey, multi) do
-
-    previous_survey = Repo.one(from s in Survey,
-      where: s.panel_survey_of == ^panel_survey_of and s.id < ^id,
-      order_by: [desc: :id],
-      limit: 1)
-
-    previous_changeset = Survey.changeset(previous_survey, %{latest_panel_survey: true})
-
-    multi
-      |> Multi.update(:pre_delete_previous, previous_changeset)
-      |> Multi.update(:pre_delete_current, pre_delete_current_changeset(survey))
-  end
-
-  defp pre_delete_current_changeset(survey), do: Survey.changeset(survey, %{panel_survey_of: nil})
 end

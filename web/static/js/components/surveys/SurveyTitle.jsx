@@ -5,7 +5,6 @@ import { EditableTitleLabel, EditableDescriptionLabel } from '../ui'
 import * as surveyActions from '../../actions/survey'
 import { translate } from 'react-i18next'
 import { isProjectReadOnly } from '../../reducers/project'
-import * as panelSurveysAction from '../../actions/panelSurveys'
 
 class SurveyTitle extends Component {
   static propTypes = {
@@ -18,17 +17,10 @@ class SurveyTitle extends Component {
   }
 
   handleSubmitTitle(newName) {
-    const { dispatch, survey, projectId } = this.props
+    const { dispatch, survey } = this.props
     if (survey.name == newName) return
 
     dispatch(surveyActions.changeName(newName))
-
-    // Refresh the panel surveys for breadcrumb. So when the panel survey name is changed,
-    // the breadcrumb is updated.
-    // TODO: this is a workaround and should be removed in the future.
-    // It's needed because there is no panel survey model yet, so the panel survey name is being
-    // taken from the last occurrence of the panel survey.
-    if (survey.isPanelSurvey) dispatch(panelSurveysAction.fetchPanelSurveys(projectId))
   }
 
   handleSubmitDescription(newDescription) {

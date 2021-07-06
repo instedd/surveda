@@ -58,7 +58,9 @@ defmodule Ask.FolderControllerTest do
       post conn, project_folder_path(conn, :create, project.id), folder: Map.merge(@valid_attrs, %{project_id: project.id})
 
       project = Project |> Repo.get(project.id)
-      assert DateTime.compare(project.updated_at, datetime) == :gt
+
+      # 1 -- the first date comes after the second one
+      assert Timex.compare(project.updated_at, datetime) == 1
     end
 
     test "returns 404 when the project does not exist", %{conn: conn} do
