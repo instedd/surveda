@@ -79,6 +79,21 @@ defmodule Ask.Survey do
     # The option of downloading incentive files is disabled for a survey after creating 1 or more
     # respondents using a file with hashed_numbers (instead of phone_numbers)
     field :incentives_enabled, :boolean, default: true
+
+    # When this flag is ON, the survey is considered the first wave of a panel survey. It's listed
+    # on the UI as a panel survey and, when it's launched, it generates a panel survey. To see
+    # more details of this process, please take a look at the following function:
+    #  - Ask.Runtime.PanelSurveycreate_panel_survey_from_survey/1
+    # When this flag is OFF, the survey is considered a regular survey. It won't ever generate any
+    # panel survey.
+    # This flag is the result of the iterative approach used to develop panel surveys.
+    # In previous iterations, the survey edition page had a switch and it generated (or not) a
+    # panel survey depending on that setting. Currently, the flag is set only once, when a regular
+    # survey or the first wave of a panel survey is created, and it doesn't ever change.
+    # Considering the current state of panel surveys development, this flag should dissapear. For
+    # doing that, the panel survey creation process must be moved to be part of its first wave
+    # creation process. The only reason why that wasn't done yet is the refactor would take more
+    # time that we have to do it.
     field :generates_panel_survey, :boolean, default: false
 
     has_many :respondent_groups, RespondentGroup
