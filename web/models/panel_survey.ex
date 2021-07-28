@@ -15,6 +15,9 @@ defmodule Ask.PanelSurvey do
     field(:name, :string)
     belongs_to(:project, Project)
     belongs_to(:folder, Folder)
+
+    # TODO: rename "occurrences" to "waves"
+    # See https://github.com/instedd/surveda/issues/1930
     has_many(:occurrences, Survey)
 
     timestamps()
