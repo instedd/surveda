@@ -118,7 +118,7 @@ class PanelSurveyShow extends Component<any, any> {
     let primaryButton = null
     if (!readOnly) {
       primaryButton = (
-        <RepeatButton text={t('Add occurrence')} disabled={!panelSurvey.isRepeatable} onClick={() => this.newOccurrence()} />
+        <RepeatButton text={t('Add wave')} disabled={!panelSurvey.isRepeatable} onClick={() => this.newOccurrence()} />
       )
     }
 
