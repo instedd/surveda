@@ -231,9 +231,6 @@ export const surveyIndexProps = (state: any, { panelSurveyId, folderId }: { pane
   const pageSize = state.surveys.page.size
 
   if (surveys) {
-    if (panelSurveyId) {
-      surveys = surveys.filter(s => s.panelSurveyOf == panelSurveyId)
-    }
     if (folderId) {
       surveys = surveys.filter(s => s.folderId == folderId)
     }
