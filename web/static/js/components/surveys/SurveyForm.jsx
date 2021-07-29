@@ -193,7 +193,11 @@ class SurveyForm extends Component {
           </div>
           <div id='schedule' className='row scrollspy'>
             <SurveyWizardScheduleStep survey={survey} readOnly={readOnly || surveyStarted} />
-            <ScrollToLink target='#cutoff'>{t('NEXT: Setup cutoff rules')}</ScrollToLink>
+            {
+              includeCutoffRulesStep
+              ? <ScrollToLink target='#cutoff'>{t('NEXT: Setup cutoff rules')}</ScrollToLink>
+              : null
+            }
           </div>
           {includeCutoffRulesStep ? cutoffRulesStep() : null}
           <ScrollToTopButton />
