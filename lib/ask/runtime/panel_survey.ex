@@ -36,12 +36,9 @@ defmodule Ask.Runtime.PanelSurvey do
       incentives_enabled: survey.incentives_enabled
     }
 
-    questionnaire_ids = Enum.map(survey.questionnaires, fn q -> q.id end)
-
     survey.project
     |> Ecto.build_assoc(:surveys)
     |> Survey.changeset(new_ocurrence)
-    |> Survey.update_questionnaires(questionnaire_ids)
   end
 
   def copy_respondents(current_occurrence, new_occurrence) do
