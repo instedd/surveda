@@ -17,10 +17,12 @@ import every from 'lodash/every'
 import { launchSurvey } from '../../api'
 import * as routes from '../../routes'
 import { translate } from 'react-i18next'
+import * as panelSurveysActions from '../../actions/panelSurveys'
 
 class SurveyForm extends Component {
   static propTypes = {
     t: PropTypes.func,
+    dispatch: PropTypes.func,
     projectId: PropTypes.any.isRequired,
     survey: PropTypes.object.isRequired,
     surveyId: PropTypes.any.isRequired,
@@ -50,9 +52,17 @@ class SurveyForm extends Component {
   }
 
   launchSurvey() {
-    const { projectId, surveyId, router } = this.props
-    launchSurvey(projectId, surveyId)
-      .then(() => router.push(routes.survey(projectId, surveyId)))
+    const { projectId, survey, router, dispatch } = this.props
+    launchSurvey(projectId, survey.id)
+      .then(() => {
+        if (survey.panelSurveyId) {
+          // An occurrence of the panel survey was launched -> the panel survey has changed.
+          // The Redux store must be updated with the panel survey new state.
+          panelSurveysActions.updateStore(dispatch, projectId, survey.panelSurveyId)
+        }
+
+        router.push(routes.survey(projectId, survey.id))
+      })
   }
 
   questionnairesValid(ids, questionnaires) {

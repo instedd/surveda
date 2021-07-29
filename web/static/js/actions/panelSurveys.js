@@ -1,4 +1,5 @@
 import * as api from '../api'
+import * as panelSurveyActions from './panelSurvey'
 
 export const FETCH = 'PANEL_SURVEYS_FETCH'
 export const RECEIVE = 'PANEL_SURVEYS_RECEIVE'
@@ -15,6 +16,11 @@ export const fetchPanelSurveys = (projectId: number) => (dispatch: Function, get
     .fetchPanelSurveys(projectId)
     .then(response => dispatch(receivePanelSurveys(projectId, response.entities.panelSurveys || {})))
     .then(() => getState().panelSurveys.items)
+}
+
+export const updateStore = (dispatch, projectId, panelSurveyId) => {
+  dispatch(panelSurveyActions.fetchPanelSurvey(projectId, panelSurveyId))
+  dispatch(fetchPanelSurveys(projectId))
 }
 
 export const startFetchingPanelSurveys = (projectId: number) => ({
