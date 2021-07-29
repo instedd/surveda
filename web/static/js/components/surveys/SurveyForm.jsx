@@ -18,7 +18,6 @@ import { launchSurvey } from '../../api'
 import * as routes from '../../routes'
 import { translate } from 'react-i18next'
 import * as panelSurveysActions from '../../actions/panelSurveys'
-import * as panelSurveyActions from '../../actions/panelSurvey'
 
 class SurveyForm extends Component {
   static propTypes = {
@@ -59,8 +58,7 @@ class SurveyForm extends Component {
         if (survey.panelSurveyId) {
           // An occurrence of the panel survey was launched -> the panel survey has changed.
           // The Redux store must be updated with the panel survey new state.
-          dispatch(panelSurveyActions.fetchPanelSurvey(survey.projectId, survey.panelSurveyId))
-          dispatch(panelSurveysActions.fetchPanelSurveys(survey.projectId))
+          panelSurveysActions.updateStore(dispatch, projectId, survey.panelSurveyId)
         }
 
         router.push(routes.survey(projectId, survey.id))

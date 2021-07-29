@@ -88,8 +88,7 @@ class PanelSurveyShow extends Component<any, any> {
         const survey = [...panelSurvey.occurrences].pop()
         // An occurrence of the panel survey was created -> the panel survey has changed.
         // The Redux store must be updated with the panel survey new state.
-        dispatch(panelSurveyActions.fetchPanelSurvey(projectId, panelSurveyId))
-        dispatch(panelSurveysActions.fetchPanelSurveys(survey.projectId))
+        panelSurveysActions.updateStore(dispatch, projectId, panelSurveyId)
         router.push(routes.surveyEdit(projectId, survey.id))
       })
   }
