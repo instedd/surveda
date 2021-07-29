@@ -83,7 +83,7 @@ class SurveyCard extends Component<any> {
   }
 
   render() {
-    const { survey, respondentsStats, t } = this.props
+    const { survey, respondentsStats, t, panelSurveyId } = this.props
     const { panelSurvey } = survey
 
     let cumulativePercentages = respondentsStats ? (respondentsStats['cumulativePercentages'] || {}) : {}
@@ -146,10 +146,14 @@ class SurveyCard extends Component<any> {
       </Card>
     </div>
 
+    const inPanelSurveyIndex = !!panelSurveyId
+    const isWaveOfPanelSurvey = panelSurvey || survey.generatesPanelSurvey
+    const showAsPanelSurveyCard = !inPanelSurveyIndex && isWaveOfPanelSurvey
+
     return (
       <div className='col s12 m6 l4'>
         {
-          panelSurvey || survey.generatesPanelSurvey
+          showAsPanelSurveyCard
           ? <div className='panel-survey-card-0'>
             <div className='panel-survey-card-1'>
               <div className='panel-survey-card-2'>

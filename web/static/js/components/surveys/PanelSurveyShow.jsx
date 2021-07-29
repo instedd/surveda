@@ -95,7 +95,7 @@ class PanelSurveyShow extends Component<any, any> {
   }
 
   render() {
-    const { surveys, respondentsStats, project, startIndex, endIndex, totalCount, t, projectId, panelSurvey } = this.props
+    const { surveys, respondentsStats, project, startIndex, endIndex, totalCount, t, projectId, panelSurvey, panelSurveyId } = this.props
     const to = panelSurvey
       ? panelSurvey.folderId
         ? routes.folder(projectId, panelSurvey.folderId)
@@ -135,7 +135,7 @@ class PanelSurveyShow extends Component<any, any> {
           <div className='survey-index-grid'>
             { surveys && surveys.map(survey => {
               return (
-                <SurveyCard survey={survey} respondentsStats={respondentsStats[survey.id]} key={survey.id} readOnly={readOnly} t={t} />
+                <SurveyCard survey={survey} respondentsStats={respondentsStats[survey.id]} key={survey.id} readOnly={readOnly} t={t} panelSurveyId={panelSurveyId} />
               )
             }) }
           </div>
