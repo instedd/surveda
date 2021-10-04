@@ -158,9 +158,11 @@ const mapStateToProps = (state, ownProps) => {
   const name = panelSurvey && panelSurvey.name || t('Untitled panel survey')
 
   const occurrences = panelSurvey ? panelSurvey.occurrences : null
+
+  // NOTE: we fake pagination (backend doesn't paginate, yet)
   let totalCount = occurrences ? occurrences.length : 0
   const pageIndex = 0
-  const pageSize = 0
+  const pageSize = totalCount
   const startIndex = Math.min(totalCount, pageIndex + 1)
   const endIndex = Math.min(pageIndex + pageSize, totalCount)
 
