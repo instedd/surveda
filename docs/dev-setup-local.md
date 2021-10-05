@@ -82,10 +82,10 @@ services and for services to talk between themselves.
 4. Navigate to <http://web.verboice.lvh.me> and authenticate using Guisso.
 
 5. You may create a Project, but I don't know whether this is required. Maybe
-   Surveda creates one automatically, or doesn't need any.
+   Surveda creates one automatically, or doesn't need any?
 
-   You'll need a project and a call flow if you want Verboice to answer calls;
-   this may be out-of-scope for Surveda that will configure outgoing calls
+   You'll need a project and a call flow if you want Verboice to answer calls.
+   This may be out-of-scope for Surveda that will configure outgoing calls
    with their own call graphs and callbacks, which can be seen live in
    Verboice!
 
@@ -132,8 +132,8 @@ services and for services to talk between themselves.
 1. Checkout the repository and build the Docker images:
 
   ```console
-  $ git clone git@github.com:instedd/verboice.git
-  $ cd verboice/
+  $ git clone git@github.com:instedd/surveda.git
+  $ cd surveda/
   $ ./dev-setup.sh
   ```
 
@@ -154,7 +154,7 @@ services and for services to talk between themselves.
    ```
 
 4. Configure Verboice by editing `config/locals.exs`, using the client id and
-   client id and secret from <http://web.guisso.lvh.me> for the Verboice app:
+   secret from <http://web.guisso.lvh.me> for the Verboice app:
 
    ```elixir
    config :ask, Verboice,
@@ -170,7 +170,7 @@ services and for services to talk between themselves.
    ```
 
 5. Configure Nuntium by editing `config/locals.exs`, using the client id and
-   client id and secret from <http://web.guisso.lvh.me> for the Nuntium app:
+   secret from <http://web.guisso.lvh.me> for the Nuntium app:
 
    ```elixir
    config :ask, Nuntium,
