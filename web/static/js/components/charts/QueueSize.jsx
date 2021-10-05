@@ -105,7 +105,7 @@ class QueueSize extends Component<Props, State> {
               <path style={{display: needed ? 'auto' : 'none'}} className='dottedLine' d={this.connector(left.x1, left.y1, left.x2, left.y2, weight - (left.x1 > left.x2 && right.x1 > right.x2 ? corner : 0), corner)} />
               <path style={{display: needed ? 'auto' : 'none'}} className='dottedLine' d={this.connector(right.x1, right.y1, right.x2, right.y2, weight, corner)} />
               <g ref='content'>
-                <text className='needed'>{t('{{respondentsNeeded}} respondents needed', {needed: toKilo(needed)})}</text>
+                <text className='needed'>{t('{{respondentsNeeded}} respondents needed', {respondentsNeeded: toKilo(needed)})}</text>
                 <text className='multiplier' y={18}>{t('to have {{additionalCompletes}} additional completes', {additionalCompletes: additionalCompletes ? toKilo(additionalCompletes) : 0})}</text>
                 {additionalRespondents ? <text className='missing' y={54} ><tspan className='icon'>warning</tspan>{t('Add {{additionalRespondents}} additional respondents', {additionalRespondents: toKilo(additionalRespondents)})}</text> : null}
               </g>
