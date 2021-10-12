@@ -1128,7 +1128,7 @@ defmodule Ask.QuestionnaireControllerTest do
   describe "start_simulation:" do
     setup [:start_simulator_store]
 
-    test "renders json with the started simulation", %{conn: conn, user: user} do
+    test "renders json with the started SMS simulation", %{conn: conn, user: user} do
       project = create_project_for_user(user)
       steps = @dummy_steps
       questionnaire = insert(:questionnaire, project: project)
@@ -1146,6 +1146,27 @@ defmodule Ask.QuestionnaireControllerTest do
          "body" => "Do you smoke? Reply 1 for YES, 2 for NO"
        },
        ],
+       "current_step" => ^first_step_id,
+       "disposition" => "contacted",
+       "simulation_status" => "active",
+       "questionnaire" => quiz
+      } = json_response(conn, 200)
+      assert questionnaire.steps == quiz["steps"]
+    end
+
+    test "renders json with the started IVR simulation", %{conn: conn, user: user} do
+      project = create_project_for_user(user)
+      steps = @dummy_steps
+      questionnaire = insert(:questionnaire, project: project)
+      |> Questionnaire.changeset(%{steps: steps})
+      |> Repo.update!
+      |> Repo.preload(:project)
+      conn = post conn, project_questionnaire_questionnaires_start_simulation_path(conn, :start_simulation, questionnaire.project, questionnaire), mode: "ivr"
+      first_step_id = hd(steps)["id"]
+
+      assert %{
+       "respondent_id" => _respondent_id,
+       "submissions" => [],
        "current_step" => ^first_step_id,
        "disposition" => "contacted",
        "simulation_status" => "active",
@@ -1215,7 +1236,7 @@ defmodule Ask.QuestionnaireControllerTest do
                       |> Questionnaire.changeset(%{steps: steps})
                       |> Repo.update!
                       |> Repo.preload(:project)
-      conn = post conn, project_questionnaire_questionnaires_start_simulation_path(conn, :start_simulation, questionnaire.project, questionnaire), mode: "ivr"
+      conn = post conn, project_questionnaire_questionnaires_start_simulation_path(conn, :start_simulation, questionnaire.project, questionnaire), mode: "unknown"
       assert %{"error" => "Bad request"} == json_response(conn, 400)
     end
   end
