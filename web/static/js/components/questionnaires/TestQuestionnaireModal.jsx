@@ -90,7 +90,9 @@ class TestQuestionnaireModal extends Component {
     let channelOptions = []
     channelOptions.push(<option key={0} value=''>{t('Select a channel...')}</option>)
 
-    if (['sms', 'mobileweb'].includes(mode)) channelOptions.push(<option key='simulation' value='simulation'>{t('Simulation')}</option>)
+    if (['sms', 'ivr', 'mobileweb'].includes(mode)) {
+      channelOptions.push(<option key='simulation' value='simulation'>{t('Simulation')}</option>)
+    }
 
     for (const channelId in channels) {
       const channel = channels[channelId]
