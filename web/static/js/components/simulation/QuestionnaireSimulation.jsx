@@ -8,6 +8,7 @@ import * as routes from '../../routes'
 import { Tooltip } from '../ui'
 import { startSimulation, messageSimulation, fetchSimulation } from '../../api.js'
 import ChatWindow from './ChatWindow'
+import VoiceWindow from './VoiceWindow'
 import MobileWebWindow from './MobileWebWindow'
 import DispositionChart from './DispositionChart'
 import SimulationSteps from './SimulationSteps'
@@ -83,8 +84,7 @@ class QuestionnaireSimulation extends Component<Props, State> {
     const { projectId, questionnaireId, mode } = this.props
     if (projectId && questionnaireId) {
       this.fetchQuestionnaireForTitle()
-      // We only support SMS for now
-      if (['sms', 'mobileweb'].includes(mode)) {
+      if (['sms', 'ivr', 'mobileweb'].includes(mode)) {
         startSimulation(projectId, questionnaireId, mode).then(result => {
           this.setState({simulation: result})
         })
@@ -134,24 +134,27 @@ class QuestionnaireSimulation extends Component<Props, State> {
     }
   }
 
-  addMessage = message => {
+  addMessage(message) {
     const { simulation } = this.state
-    if (simulation) {
+
+    if (simulation && simulation.messagesHistory) {
       this.setState({
         simulation: {
           ...simulation,
-          messagesHistory: [
-            ...simulation.messagesHistory,
-            message
-          ]
+          messagesHistory: [...simulation.messagesHistory, message]
         }
       })
     }
   }
 
+  closeSimulation = () => {
+    const { router, projectId, questionnaireId } = this.props
+    router.push(routes.editQuestionnaire(projectId, questionnaireId))
+  }
+
   render() {
     const { simulation } = this.state
-    const { router, projectId, questionnaireId, mode, t } = this.props
+    const { mode, t } = this.props
 
     if (!simulation) return <div>{t('Loading...')}</div>
 
@@ -159,17 +162,20 @@ class QuestionnaireSimulation extends Component<Props, State> {
     const closeSimulationButton = (
       <div>
         <Tooltip text='Close Simulation'>
-          <a key='one' className='btn-floating btn-large waves-effect waves-light red right mtop' href='#' onClick={() => router.push(routes.editQuestionnaire(projectId, questionnaireId))}>
+          <a key='one' className='btn-floating btn-large waves-effect waves-light red right mtop' href='#' onClick={this.closeSimulation}>
             <i className='material-icons'>close</i>
           </a>
         </Tooltip>
       </div>
     )
     const phoneWindow = () => {
-      if (mode == 'sms') {
-        return <ChatWindow messages={simulation.messagesHistory} onSendMessage={this.handleATMessage} chatTitle={'SMS mode'} readOnly={!simulationIsActive} scrollToBottom />
-      } else if (mode == 'mobileweb') {
-        return <MobileWebWindow indexUrl={simulation.indexUrl} />
+      switch (mode) {
+        case 'sms':
+          return <ChatWindow messages={simulation.messagesHistory} onSendMessage={this.handleATMessage} chatTitle={'SMS mode'} readOnly={!simulationIsActive} scrollToBottom />
+        case 'ivr':
+          return <VoiceWindow voiceTitle={'Voice mode'} simulation={simulation} onSendMessage={this.handleATMessage} onCloseSimulation={this.closeSimulation} readOnly={!simulationIsActive} />
+        case 'mobileweb':
+          return <MobileWebWindow indexUrl={simulation.indexUrl} />
       }
     }
 

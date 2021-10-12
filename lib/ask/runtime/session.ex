@@ -28,6 +28,7 @@ defmodule Ask.Runtime.Session do
     IVRMode,
     MobileWebMode,
     SMSSimulatorMode,
+    IVRSimulatorMode,
     MobileWebSimulatorMode,
     ChannelPatterns,
     RetriesHistogram
@@ -323,6 +324,16 @@ defmodule Ask.Runtime.Session do
   end
 
   defp mode_start(%Session{flow: flow, respondent: respondent, current_mode: %SMSSimulatorMode{} = current_mode} = session) do
+    case flow |> Flow.step(current_mode  |> SessionMode.visitor, :answer, respondent.disposition) do
+      {:end, _, reply} ->
+        {:end, reply, respondent}
+      {:ok, flow, reply} ->
+        {:ok, %{session | flow: flow, respondent: respondent}, reply, current_timeout(session)}
+    end
+  end
+
+  # FIXME: duplicates above method
+  defp mode_start(%Session{flow: flow, respondent: respondent, current_mode: %IVRSimulatorMode{} = current_mode} = session) do
     case flow |> Flow.step(current_mode  |> SessionMode.visitor, :answer, respondent.disposition) do
       {:end, _, reply} ->
         {:end, reply, respondent}

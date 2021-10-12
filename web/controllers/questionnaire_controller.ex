@@ -339,10 +339,10 @@ defmodule Ask.QuestionnaireController do
     end
   end
 
-  def sync_simulation(conn, %{"project_id" => project_id, "respondent_id" => respondent_id, "response" => response, "mode" => "sms"}) do
+  def sync_simulation(conn, %{"project_id" => project_id, "respondent_id" => respondent_id, "response" => response, "mode" => mode}) do
     # Load project to authorize connection
     conn |> load_project(project_id)
-    with {:ok, simulation_response} <- QuestionnaireSimulator.process_respondent_response(respondent_id, response, "sms"), do:
+    with {:ok, simulation_response} <- QuestionnaireSimulator.process_respondent_response(respondent_id, response, mode), do:
       render(conn, "simulation.json", simulation: simulation_response)
   end
 
