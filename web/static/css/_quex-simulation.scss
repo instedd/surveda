@@ -169,7 +169,7 @@ $smallChatWindowBodyHeight: $smallSimulationHeight -
     }
   }
 }
-.chat-header{
+.chat-header {
   @extend .white-text;
   background: $chatBorderBackground;
   text-align: center;
@@ -260,7 +260,7 @@ $smallChatWindowBodyHeight: $smallSimulationHeight -
   font-size: 16px;
   font-style: normal;
   color: #888888;
-  padding-bottom: 48px;
+  padding: 0 10px 48px 10px;
 }
 .voice-buttons {
   width: 200px;
