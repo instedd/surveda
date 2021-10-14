@@ -38,4 +38,22 @@ defmodule Ask.AudioController do
     |> put_resp_header("cache-control", "max-age=31556926")
     |> send_resp(200, audio.data)
   end
+
+  def tts(conn, %{"text" => text}) do
+    File.write(input = tmpfile(), text)
+    output = tmpfile()
+    System.cmd("/usr/bin/text2wave", ["-o", output, input], parallelism: true)
+
+    conn
+    |> put_resp_header("cache-control", "max-age=31556926")
+    |> put_resp_header("content-type", "audio/x-wav")
+    |> send_file(200, output)
+
+    File.rm(input)
+    File.rm(output)
+  end
+
+  defp tmpfile do
+    to_string(:lib.nonl(:os.cmd('/bin/mktemp')))
+  end
 end

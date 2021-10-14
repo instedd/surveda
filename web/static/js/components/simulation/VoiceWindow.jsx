@@ -74,7 +74,7 @@ class VoiceWindow extends Component<VoiceWindowProps> {
 
     if (ivr) {
       if (ivr.audioSource == 'tts') {
-        console.warn(`TODO: transform text-to-speech '${ivr.text}'`)
+        return `/api/v1/audios/tts?text=${encodeURIComponent(ivr.text)}`
       } else {
         return `/api/v1/audios/${ivr.audioId}`
       }
