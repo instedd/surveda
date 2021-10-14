@@ -6,6 +6,12 @@ type Message = {
   type: string
 }
 
+type IVR = {
+  text: string,
+  audioSource: string,
+  audioId: string
+}
+
 type VoiceWindowProps = {
   simulation: any,
   voiceTitle: string,
@@ -18,8 +24,23 @@ class VoiceWindow extends Component<VoiceWindowProps> {
   message: string
   timer: TimeoutID
 
+  previousAudioURL: ?string
+  audio: ?HTMLAudioElement
+
   componentDidMount() {
     this.message = ''
+    this.play()
+  }
+
+  componentDidUpdate() {
+    this.play()
+  }
+
+  play() {
+    if (this.audio && this.previousAudioURL != this.audio.src) {
+      this.previousAudioURL = this.audio.src
+      this.audio.play()
+    }
   }
 
   entered(character: string): void {
@@ -34,20 +55,30 @@ class VoiceWindow extends Component<VoiceWindowProps> {
     }, 2000)
   }
 
-  currentPrompt(): string {
+  currentIVR(): ?IVR {
     const { simulation } = this.props
     const { currentStep, questionnaire } = simulation
     const step = questionnaire.steps.find(step => step.id == currentStep)
-
     if (step) {
-      const ivr = step.prompt[questionnaire.defaultLanguage].ivr
-      switch (ivr.audioSource) {
-        case "tts":
-          return step.prompt[questionnaire.defaultLanguage].ivr.text
-        // TODO: support other types
+      return step.prompt[questionnaire.defaultLanguage].ivr
+    }
+  }
+
+  currentPrompt(): string {
+    const ivr = this.currentIVR()
+    return ivr ? ivr.text : ''
+  }
+
+  currentAudioURL(): ?string {
+    const ivr = this.currentIVR()
+
+    if (ivr) {
+      if (ivr.audioSource == 'tts') {
+        console.warn(`TODO: transform text-to-speech '${ivr.text}'`)
+      } else {
+        return `/api/v1/audios/${ivr.audioId}`
       }
     }
-    return ""
   }
 
   render() {
@@ -73,7 +104,16 @@ class VoiceWindow extends Component<VoiceWindowProps> {
           <i className='material-icons'>call_end</i>
         </div>
       </div>
+
+      {this.renderAudioElement()}
     </div>
+  }
+
+  renderAudioElement() {
+    const url = this.currentAudioURL()
+    if (url) {
+      return <audio ref={audio => { this.audio = audio }} preload src={url}></audio>
+    }
   }
 }
 
