@@ -9,7 +9,6 @@ import { Tooltip } from '../ui'
 import { startSimulation, messageSimulation, fetchSimulation } from '../../api.js'
 import ChatWindow from './ChatWindow'
 import VoiceWindow from './VoiceWindow'
-import type { IVR } from './VoiceWindow'
 import MobileWebWindow from './MobileWebWindow'
 import DispositionChart from './DispositionChart'
 import SimulationSteps from './SimulationSteps'
@@ -25,9 +24,15 @@ type Submission = {
   response: ?string
 }
 
+type IVRPrompt = {
+  text: string,
+  audioSource: string,
+  audioId: string
+}
+
 type Simulation = {
   messagesHistory: Array<ChatMessage>,
-  prompts: Array<IVR>,
+  prompts: Array<IVRPrompt>,
   submissions: Array<Submission>,
   simulationStatus: string,
   disposition: string,

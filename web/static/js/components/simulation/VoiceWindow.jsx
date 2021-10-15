@@ -7,16 +7,16 @@ type Message = {
   type: string
 }
 
-export type IVR = {
+export type IVRPrompt = {
   text: string,
   audioSource: string,
   audioId: string
 }
 
 type VoiceWindowProps = {
-  prompts: Array<IVR>,
+  prompts: Array<IVRPrompt>,
   voiceTitle: string,
-  onSendMessage: (Message) => void,
+  onSendMessage: Message => void,
   onCloseSimulation: () => void,
   readOnly: boolean
 }
@@ -25,7 +25,7 @@ type VoiceWindowState = {
   currentPrompt: string
 }
 
-function audioURL(ivr: IVR): string {
+function audioURL(ivr: IVRPrompt): string {
   if (!ivr) {
     return ''
   }
@@ -69,19 +69,20 @@ const VoiceWindow = translate()(class extends Component<VoiceWindowProps, VoiceW
   }
 
   entered(character: string): void {
-    if (this.messageTimer) {
-      clearTimeout(this.messageTimer)
-    }
+    if (this.props.readOnly) return
+    if (this.messageTimer) clearTimeout(this.messageTimer)
     this.message += character
 
     this.messageTimer = setTimeout(() => {
+      if (this.props.readOnly) return
+
       this.props.onSendMessage({ body: this.message, type: 'at' })
       this.message = ''
     }, 2000)
   }
 
   render() {
-    const { voiceTitle, readOnly, onCloseSimulation } = this.props
+    const { voiceTitle, onCloseSimulation } = this.props
 
     return <div className='voice-window quex-simulation-voice'>
       <div className='voice-header'>{voiceTitle}</div>
@@ -104,7 +105,7 @@ const VoiceWindow = translate()(class extends Component<VoiceWindowProps, VoiceW
         </div>
       </div>
 
-      <audio ref={audio => { if (audio) this.audio = audio }} preload></audio>
+      <audio ref={audio => { if (audio) this.audio = audio }} preload />
     </div>
   }
 })
