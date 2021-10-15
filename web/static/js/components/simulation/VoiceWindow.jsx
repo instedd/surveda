@@ -1,84 +1,83 @@
 // @flow
 import React, { Component } from 'react'
+import { translate } from 'react-i18next'
 
 type Message = {
   body: string,
   type: string
 }
 
-type IVR = {
+export type IVR = {
   text: string,
   audioSource: string,
   audioId: string
 }
 
 type VoiceWindowProps = {
-  simulation: any,
+  prompts: Array<IVR>,
   voiceTitle: string,
   onSendMessage: (Message) => void,
   onCloseSimulation: () => void,
   readOnly: boolean
 }
 
-class VoiceWindow extends Component<VoiceWindowProps> {
-  message: string
-  timer: TimeoutID
+type VoiceWindowState = {
+  currentPrompt: string
+}
 
-  previousAudioURL: ?string
-  audio: ?HTMLAudioElement
+function audioURL(ivr: IVR): string {
+  if (!ivr) {
+    return ''
+  }
+  if (ivr.audioSource == 'tts') {
+    return `/api/v1/audios/tts?text=${encodeURIComponent(ivr.text)}`
+  }
+  return `/api/v1/audios/${ivr.audioId}`
+}
+
+const VoiceWindow = translate()(class extends Component<VoiceWindowProps, VoiceWindowState> {
+  audio: HTMLAudioElement
+
+  message: string
+  messageTimer: TimeoutID
+
+  constructor(props) {
+    super(props)
+    this.state = { currentPrompt: '' }
+  }
 
   componentDidMount() {
     this.message = ''
     this.play()
   }
 
-  componentDidUpdate() {
-    this.play()
+  componentDidUpdate(prevProps) {
+    if (prevProps.prompts !== this.props.prompts) {
+      this.play()
+    }
   }
 
   play() {
-    if (this.audio && this.previousAudioURL != this.audio.src) {
-      this.previousAudioURL = this.audio.src
+    const ivr = this.props.prompts.shift()
+    if (ivr) {
+      this.setState({ currentPrompt: ivr.text })
+      this.audio.pause()
+      this.audio.src = audioURL(ivr)
+      this.audio.onended = () => { this.play() }
       this.audio.play()
     }
   }
 
   entered(character: string): void {
-    if (this.timer) {
-      clearTimeout(this.timer)
+    if (this.messageTimer) {
+      clearTimeout(this.messageTimer)
     }
     this.message += character
 
-    this.timer = setTimeout(() => {
+    this.messageTimer = setTimeout(() => {
       this.props.onSendMessage({ body: this.message, type: 'at' })
       this.message = ''
     }, 2000)
-  }
-
-  currentIVR(): ?IVR {
-    const { simulation } = this.props
-    const { currentStep, questionnaire } = simulation
-    const step = questionnaire.steps.find(step => step.id == currentStep)
-    if (step) {
-      return step.prompt[questionnaire.defaultLanguage].ivr
-    }
-  }
-
-  currentPrompt(): string {
-    const ivr = this.currentIVR()
-    return ivr ? ivr.text : ''
-  }
-
-  currentAudioURL(): ?string {
-    const ivr = this.currentIVR()
-
-    if (ivr) {
-      if (ivr.audioSource == 'tts') {
-        return `/api/v1/audios/tts?text=${encodeURIComponent(ivr.text)}`
-      } else {
-        return `/api/v1/audios/${ivr.audioId}`
-      }
-    }
   }
 
   render() {
@@ -86,7 +85,7 @@ class VoiceWindow extends Component<VoiceWindowProps> {
 
     return <div className='voice-window quex-simulation-voice'>
       <div className='voice-header'>{voiceTitle}</div>
-      <div className='voice-question'>{this.currentPrompt()}</div>
+      <div className='voice-question'>{this.state.currentPrompt}</div>
       <div className='voice-buttons'>
         <div onClick={() => this.entered('1')} className='voice-button'>1</div>
         <div onClick={() => this.entered('2')} className='voice-button'>2</div>
@@ -105,16 +104,9 @@ class VoiceWindow extends Component<VoiceWindowProps> {
         </div>
       </div>
 
-      {this.renderAudioElement()}
+      <audio ref={audio => { if (audio) this.audio = audio }} preload></audio>
     </div>
   }
-
-  renderAudioElement() {
-    const url = this.currentAudioURL()
-    if (url) {
-      return <audio ref={audio => { this.audio = audio }} preload src={url}></audio>
-    }
-  }
-}
+})
 
 export default VoiceWindow
