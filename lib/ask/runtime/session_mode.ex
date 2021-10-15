@@ -77,33 +77,6 @@ defmodule Ask.Runtime.SMSSimulatorMode do
   end
 end
 
-# FIXME: duplicate of Ask.Runtime.SMSSimulatorMode
-defmodule Ask.Runtime.IVRSimulatorMode do
-  alias __MODULE__
-  alias Ask.Runtime.Flow.TextVisitor
-
-  defstruct [:channel, :retries]
-
-  def new(channel, retries), do: %IVRSimulatorMode{channel: channel, retries: retries}
-  def load(_mode_dump), do: %IVRSimulatorMode{}
-
-  defimpl Ask.Runtime.SessionMode, for: Ask.Runtime.IVRSimulatorMode do
-    def dump(%IVRSimulatorMode{}) do
-      %{
-        mode: "ivr",
-      }
-    end
-
-    def visitor(_) do
-      TextVisitor.new("ivr")
-    end
-
-    def mode(_) do
-      "ivr"
-    end
-  end
-end
-
 defmodule Ask.Runtime.SMSMode do
   alias __MODULE__
   alias Ask.Runtime.Flow.TextVisitor
@@ -141,6 +114,31 @@ defmodule Ask.Runtime.SMSMode do
   end
 end
 
+defmodule Ask.Runtime.IVRSimulatorMode do
+  alias __MODULE__
+  alias Ask.Runtime.Flow.TextVisitor
+
+  defstruct [:channel, :retries]
+
+  def new(channel, retries), do: %IVRSimulatorMode{channel: channel, retries: retries}
+  def load(_mode_dump), do: %IVRSimulatorMode{}
+
+  defimpl Ask.Runtime.SessionMode, for: Ask.Runtime.IVRSimulatorMode do
+    def dump(%IVRSimulatorMode{}) do
+      %{
+        mode: "ivr",
+      }
+    end
+
+    def visitor(_) do
+      TextVisitor.new("ivr")
+    end
+
+    def mode(_) do
+      "ivr"
+    end
+  end
+end
 
 defmodule Ask.Runtime.IVRMode do
   alias __MODULE__

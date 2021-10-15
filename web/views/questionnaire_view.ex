@@ -1,5 +1,5 @@
 defmodule Ask.QuestionnaireView do
-  alias Ask.QuestionnaireSmsSimulationStep
+  alias Ask.{QuestionnaireSmsSimulationStep, QuestionnaireIvrSimulationStep}
   use Ask.Web, :view
 
   def render("index.json", %{questionnaires: questionnaires}) do
@@ -44,6 +44,14 @@ defmodule Ask.QuestionnaireView do
   } = simulation) do
     simulation = prepare_simulation(simulation)
     simulation = Map.put(simulation, :messages_history, messages_history)
+    render_prepared_simulation(simulation)
+  end
+
+  defp render_simulation(%QuestionnaireIvrSimulationStep{
+    prompts: prompts,
+  } = simulation) do
+    simulation = prepare_simulation(simulation)
+    simulation = Map.put(simulation, :prompts, prompts)
     render_prepared_simulation(simulation)
   end
 
