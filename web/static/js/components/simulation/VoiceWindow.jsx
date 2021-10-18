@@ -82,24 +82,24 @@ const VoiceWindow = translate()(class extends Component<VoiceWindowProps, VoiceW
   }
 
   render() {
-    const { voiceTitle, readOnly, onCloseSimulation } = this.props
+    const { voiceTitle, onCloseSimulation } = this.props
 
     return <div className='voice-window quex-simulation-voice'>
       <div className='voice-header'>{voiceTitle}</div>
       <div className='voice-question'>{this.state.currentPrompt}</div>
       <div className='voice-buttons'>
-        <div onClick={() => this.entered('1')}   className='waves-effect waves-circle voice-button'>1</div>
-        <div onClick={() => this.entered('2')}   className='waves-effect waves-circle voice-button'>2</div>
-        <div onClick={() => this.entered('3')}   className='waves-effect waves-circle voice-button'>3</div>
-        <div onClick={() => this.entered('4')}   className='waves-effect waves-circle voice-button'>4</div>
-        <div onClick={() => this.entered('5')}   className='waves-effect waves-circle voice-button'>5</div>
-        <div onClick={() => this.entered('6')}   className='waves-effect waves-circle voice-button'>6</div>
-        <div onClick={() => this.entered('7')}   className='waves-effect waves-circle voice-button'>7</div>
-        <div onClick={() => this.entered('8')}   className='waves-effect waves-circle voice-button'>8</div>
-        <div onClick={() => this.entered('9')}   className='waves-effect waves-circle voice-button'>9</div>
-        <div onClick={() => this.entered('*')}   className='waves-effect waves-circle voice-button'>*</div>
-        <div onClick={() => this.entered('0')}   className='waves-effect waves-circle voice-button'>0</div>
-        <div onClick={() => this.entered('#')}   className='waves-effect waves-circle voice-button'>#</div>
+        <div onClick={() => this.entered('1')} className='waves-effect waves-circle voice-button'>1</div>
+        <div onClick={() => this.entered('2')} className='waves-effect waves-circle voice-button'>2</div>
+        <div onClick={() => this.entered('3')} className='waves-effect waves-circle voice-button'>3</div>
+        <div onClick={() => this.entered('4')} className='waves-effect waves-circle voice-button'>4</div>
+        <div onClick={() => this.entered('5')} className='waves-effect waves-circle voice-button'>5</div>
+        <div onClick={() => this.entered('6')} className='waves-effect waves-circle voice-button'>6</div>
+        <div onClick={() => this.entered('7')} className='waves-effect waves-circle voice-button'>7</div>
+        <div onClick={() => this.entered('8')} className='waves-effect waves-circle voice-button'>8</div>
+        <div onClick={() => this.entered('9')} className='waves-effect waves-circle voice-button'>9</div>
+        <div onClick={() => this.entered('*')} className='waves-effect waves-circle voice-button'>*</div>
+        <div onClick={() => this.entered('0')} className='waves-effect waves-circle voice-button'>0</div>
+        <div onClick={() => this.entered('#')} className='waves-effect waves-circle voice-button'>#</div>
         <div onClick={() => onCloseSimulation()} className='waves-effect waves-circle voice-button voice-button-end-call'>
           <i className='material-icons'>call_end</i>
         </div>
