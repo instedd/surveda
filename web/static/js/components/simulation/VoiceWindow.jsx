@@ -37,6 +37,7 @@ function audioURL(ivr: IVRPrompt): string {
 const VoiceWindow = translate()(class extends Component<VoiceWindowProps, VoiceWindowState> {
   audio: HTMLAudioElement
   playPromise: Promise<any>
+  spectrum: VoiceSpectrum
 
   message: string
   messageTimer: TimeoutID
@@ -44,6 +45,7 @@ const VoiceWindow = translate()(class extends Component<VoiceWindowProps, VoiceW
   constructor(props) {
     super(props)
     this.state = { currentPrompt: '' }
+    this.spectrum = new VoiceSpectrum()
   }
 
   componentDidMount() {
@@ -55,6 +57,10 @@ const VoiceWindow = translate()(class extends Component<VoiceWindowProps, VoiceW
     if (prevProps.prompts !== this.props.prompts) {
       this.play()
     }
+  }
+
+  componentWillUnmount() {
+    this.spectrum?.stop()
   }
 
   play() {
@@ -70,6 +76,8 @@ const VoiceWindow = translate()(class extends Component<VoiceWindowProps, VoiceW
         // first audio prompt and/or older browser didn't return a promise on play
         this.playIVR(ivr)
       }
+    } else {
+      this.spectrum.stop()
     }
   }
 
@@ -82,6 +90,7 @@ const VoiceWindow = translate()(class extends Component<VoiceWindowProps, VoiceW
     this.audio.src = audioURL(ivr)
     this.audio.onended = () => { this.play() }
     this.playPromise = this.audio.play()
+    this.spectrum.start(this.audio)
   }
 
   entered(character: string): void {
@@ -108,7 +117,13 @@ const VoiceWindow = translate()(class extends Component<VoiceWindowProps, VoiceW
 
     return <div className='voice-window quex-simulation-voice'>
       <div className='voice-header'>{voiceTitle}</div>
+
+      <div className='voice-spectrum'>
+        <canvas ref={canvas => this.spectrum.setCanvas(canvas)} className='voice-spectrum-bands' />
+      </div>
+
       <div className='voice-question'>{this.state.currentPrompt}</div>
+
       <div className='voice-buttons'>
         <div onClick={() => this.entered('1')} className='waves-effect waves-circle voice-button'>1</div>
         <div onClick={() => this.entered('2')} className='waves-effect waves-circle voice-button'>2</div>
@@ -127,9 +142,120 @@ const VoiceWindow = translate()(class extends Component<VoiceWindowProps, VoiceW
         </div>
       </div>
 
-      <audio ref={audio => { if (audio) this.audio = audio }} preload />
+      <audio ref={audio => { this.setAudio(audio) }} preload />
     </div>
   }
+
+  setAudio(element) {
+    if (!element) return
+    this.audio = element
+  }
 })
+
+class VoiceSpectrum {
+  audioContext: AudioContext
+  audioData: AnalyserNode
+  amplitudeData: Uint8Array
+  canvas: HTMLCanvasElement
+  context: CanvasRenderingContext2D
+  sizes: { width: number, height: number, halfHeight: number }
+  playing: boolean
+
+  constructor() {
+    this.audioContext = new AudioContext()
+    this.audioData = new AnalyserNode(this.audioContext, { fftSize: 256 })
+    this.amplitudeData = new Uint8Array(0)
+    this.playing = false
+  }
+
+  setCanvas(canvas) {
+    if (canvas) {
+      this.canvas = canvas
+      this.context = canvas.getContext("2d")
+
+      // fix canvas' size for HiDPI from its CSS size (DPI=1)
+      const ratio = window.devicePixelRatio || 1
+      const width = canvas.offsetWidth
+      const height = canvas.offsetHeight
+      canvas.width = canvas.offsetWidth * ratio
+      canvas.height = canvas.offsetHeight * ratio
+      this.context.scale(ratio, ratio)
+
+      this.sizes = {
+        width,
+        height,
+        halfHeight: height / 2
+      }
+    }
+  }
+
+  start(audio) {
+    const audioSource = this.audioContext.createMediaElementSource(audio)
+    audioSource.connect(this.audioContext.destination)
+    audioSource.connect(this.audioData)
+
+    this.amplitudeData = new Uint8Array(this.audioData.frequencyBinCount)
+    this.playing = true
+
+    requestAnimationFrame(() => this.run())
+  }
+
+  run() {
+    if (this.playing) {
+      this.audioData.getByteFrequencyData(this.amplitudeData)
+      this.updateCanvas()
+      requestAnimationFrame(() => this.run())
+    }
+  }
+
+  stop() {
+    requestAnimationFrame(() => {
+      this.amplitudeData.fill(0)
+      this.updateCanvas()
+      this.playing = false
+    })
+  }
+
+  updateCanvas() {
+    if (!this.canvas) return
+
+    const ctx = this.context
+    const bufferLength = this.amplitudeData.length
+    const { width, height, halfHeight } = this.sizes
+
+    const barGap = 3
+    const barWidth = 4
+    const radii = 2
+    let x = barGap
+
+    ctx.clearRect(0, 0, width, height)
+    ctx.fillStyle = 'rgb(255, 255, 255)'
+
+    // only use some entries in the fft, to increase diversity and movement
+    for (let i = 5; i < bufferLength; i += 5) {
+      const v = this.amplitudeData[i] / 256
+      const y = parseInt(v * halfHeight)
+
+      this._roundRect(x, halfHeight - y, barWidth, y * 2, radii)
+      ctx.fill()
+
+      x += barWidth + barGap
+      if (x > width) break
+    }
+  }
+
+  _roundRect(x, y, width, height, radii) {
+    const ctx = this.context
+    if (width < 2 * radii) radii = width / 2;
+    if (height < 2 * radii) radii = height / 2;
+    ctx.beginPath();
+    ctx.moveTo(x + radii, y);
+    ctx.arcTo(x + width, y, x + width, y + height, radii)
+    ctx.arcTo(x + width, y + height, x, y + height, radii)
+    ctx.arcTo(x, y + height, x, y, radii)
+    ctx.arcTo(x, y, x + width, y, radii)
+    ctx.closePath()
+  }
+}
 
 export default VoiceWindow

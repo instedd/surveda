@@ -297,3 +297,13 @@ $smallChatWindowBodyHeight: $smallSimulationHeight -
     border: 0;
   }
 }
+
+.voice-spectrum {
+  display: flex;
+  padding-bottom: 20px;
+}
+.voice-spectrum-bands {
+  width: 45px;
+  height: 20px;
+  margin: 0 auto;
+}
