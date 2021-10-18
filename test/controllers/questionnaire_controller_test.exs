@@ -1165,12 +1165,15 @@ defmodule Ask.QuestionnaireControllerTest do
       first_step_id = hd(steps)["id"]
 
       assert %{
-       "respondent_id" => _respondent_id,
-       "submissions" => [],
-       "current_step" => ^first_step_id,
-       "disposition" => "contacted",
-       "simulation_status" => "active",
-       "questionnaire" => quiz
+        "respondent_id" => _respondent_id,
+        "submissions" => [],
+        "prompts" => [
+          %{"audio_source" => "tts", "text" => "Do you smoke? Press 8 for YES, 9 for NO"},
+        ],
+        "current_step" => ^first_step_id,
+        "disposition" => "contacted",
+        "simulation_status" => "active",
+        "questionnaire" => quiz
       } = json_response(conn, 200)
       assert questionnaire.steps == quiz["steps"]
     end

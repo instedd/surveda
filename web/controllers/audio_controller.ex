@@ -40,17 +40,21 @@ defmodule Ask.AudioController do
   end
 
   def tts(conn, %{"text" => text}) do
-    File.write(input = tmpfile(), text)
+    input = tmpfile()
     output = tmpfile()
-    System.cmd("/usr/bin/text2wave", ["-o", output, input], parallelism: true)
 
-    conn
-    |> put_resp_header("cache-control", "max-age=31556926")
-    |> put_resp_header("content-type", "audio/x-wav")
-    |> send_file(200, output)
+    try do
+      File.write(input, text)
+      System.cmd("/usr/bin/text2wave", ["-o", output, input], parallelism: true)
 
-    File.rm(input)
-    File.rm(output)
+      conn
+      |> put_resp_header("cache-control", "max-age=31556926")
+      |> put_resp_header("content-type", "audio/x-wav")
+      |> send_file(200, output)
+    after
+      File.rm(input)
+      File.rm(output)
+    end
   end
 
   defp tmpfile do
