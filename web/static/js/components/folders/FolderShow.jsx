@@ -9,7 +9,6 @@ import * as folderActions from '../../actions/folder'
 import * as panelSurveysActions from '../../actions/panelSurveys'
 import * as panelSurveyActions from '../../actions/panelSurvey'
 import { MainAction, Action, EmptyPage, ConfirmationModal, PagingFooter } from '../ui'
-import * as respondentActions from '../../actions/respondents'
 import SurveyCard from '../surveys/SurveyCard'
 import * as routes from '../../routes'
 import { translate } from 'react-i18next'
@@ -27,7 +26,6 @@ class FolderShow extends Component<any, any> {
     startIndex: PropTypes.number.isRequired,
     endIndex: PropTypes.number.isRequired,
     totalCount: PropTypes.number.isRequired,
-    respondentsStats: PropTypes.object.isRequired,
     params: PropTypes.object,
     folderId: PropTypes.number,
     name: PropTypes.string,
@@ -43,13 +41,6 @@ class FolderShow extends Component<any, any> {
     dispatch(projectActions.fetchProject(projectId))
 
     dispatch(actions.fetchSurveys(projectId))
-    .then(value => {
-      for (const surveyId in value) {
-        if (value[surveyId].state != 'not_ready') {
-          dispatch(respondentActions.fetchRespondentsStats(projectId, surveyId))
-        }
-      }
-    })
     dispatch(folderActions.fetchFolders(projectId))
     dispatch(panelSurveysActions.fetchPanelSurveys(projectId))
   }
@@ -88,7 +79,7 @@ class FolderShow extends Component<any, any> {
   }
 
   render() {
-    const { loadingFolder, surveys, respondentsStats, project, startIndex, endIndex, totalCount, t, name, projectId } = this.props
+    const { loadingFolder, surveys, project, startIndex, endIndex, totalCount, t, name, projectId } = this.props
     const to = routes.project(projectId)
     const titleLink = name ? (<Link to={to} className='folder-header'><i className='material-icons black-text'>arrow_back</i>{name}</Link>) : null
     const loadingMessage = this.loadingMessage()
@@ -124,7 +115,7 @@ class FolderShow extends Component<any, any> {
             <div className='survey-index-grid'>
               { surveys && surveys.map(survey => {
                 return (
-                  <SurveyCard survey={survey} respondentsStats={respondentsStats[survey.id]} key={survey.id} readOnly={readOnly} />
+                  <SurveyCard survey={survey} key={survey.id} readOnly={readOnly} />
                 )
               }) }
             </div>
@@ -157,7 +148,6 @@ const mapStateToProps = (state, ownProps) => {
     folderId,
     project: state.project.data,
     surveys,
-    respondentsStats: state.respondentsStats,
     startIndex,
     endIndex,
     totalCount,
