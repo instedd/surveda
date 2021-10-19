@@ -47,7 +47,7 @@ export type PanelSurvey = {
   name: string,
   folderId: number,
   projectId: number,
-  occurrences: Survey[],
+  latestOccurrence: ?Survey,
   isRepeatable: boolean
 }
 

@@ -34,8 +34,9 @@ defmodule Ask.PanelSurveyController do
     |> load_project(project_id)
 
     panel_survey = project
-      |> assoc(:panel_surveys)
-      |> Repo.get!(id)
+    |> assoc(:panel_surveys)
+    |> Repo.get!(id)
+    |> Repo.preload(:occurrences)
 
     render(conn, "show.json", panel_survey: panel_survey)
   end

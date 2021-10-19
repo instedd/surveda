@@ -193,7 +193,7 @@ const panelSurveysFromState = (state, folderId) => {
   if (!items) return null
   return values(items).filter(panelSurvey => panelSurvey.folderId == folderId).map(panelSurvey => ({
     ...panelSurvey,
-    latestSurvey: [...panelSurvey.occurrences].pop()
+    latestSurvey: panelSurvey.latestOccurrence
   }))
 }
 

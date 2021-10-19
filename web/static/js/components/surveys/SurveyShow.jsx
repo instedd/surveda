@@ -3,7 +3,7 @@ import React, { Component, PropTypes } from 'react'
 import { connect } from 'react-redux'
 import { withRouter } from 'react-router'
 import * as actions from '../../actions/survey'
-import * as surveysActions from '../../actions/surveys'
+// import * as surveysActions from '../../actions/surveys'
 import * as respondentActions from '../../actions/respondents'
 import * as folderActions from '../../actions/folder'
 import * as panelSurveysActions from '../../actions/panelSurveys'
@@ -72,11 +72,11 @@ class SurveyShow extends Component<any, State> {
     dispatch(actions.fetchSurveyStats(projectId, surveyId))
 
     // Fetch folders for breadcrumb
-    dispatch(folderActions.fetchFolders(projectId))
+    // dispatch(folderActions.fetchFolders(projectId))
     // Fetch surveys for breadcrumb
-    dispatch(surveysActions.fetchSurveys(projectId))
+    // dispatch(surveysActions.fetchSurveys(projectId))
     // Fetch panel surveys for breadcrumb
-    dispatch(panelSurveysActions.fetchPanelSurveys(projectId))
+    // dispatch(panelSurveysActions.fetchPanelSurveys(projectId))
   }
 
   componentDidUpdate() {
