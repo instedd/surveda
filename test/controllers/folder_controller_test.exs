@@ -117,6 +117,44 @@ defmodule Ask.FolderControllerTest do
 
   end
 
+  describe "show" do
+    test "the folder with its surveys and panel surveys", %{conn: conn, user: user} do
+      project = create_project_for_user(user)
+      folder = insert(:folder, project: project)
+      survey = insert(:survey, project: project, folder: folder)
+
+      panel_survey = insert(:panel_survey, project: project, folder: folder)
+      occurrence = insert(:survey, project: project, panel_survey: panel_survey, generates_panel_survey: true)
+
+      conn = get conn, project_folder_path(conn, :show, project.id, folder.id)
+      data = json_response(conn, 200)["data"]
+
+      base = data
+      |> Map.delete("panel_surveys")
+      |> Map.delete("surveys")
+
+      assert base == %{
+        "id" => folder.id,
+        "name" => folder.name,
+        "project_id" => project.id
+      }
+      assert data["panel_surveys"] == [
+        %{
+          "folder_id" => panel_survey.folder_id,
+          "id" => panel_survey.id,
+          "name" => panel_survey.name,
+          "project_id" => panel_survey.project_id,
+          "updated_at" => to_iso8601(panel_survey.updated_at),
+          "is_repeatable" => PanelSurvey.repeatable?(panel_survey),
+          "latest_occurrence" => %{"cutoff" => occurrence.cutoff, "id" => occurrence.id, "mode" => occurrence.mode, "name" => occurrence.name, "description" => nil, "project_id" => project.id, "state" => "not_ready", "locked" => false, "exit_code" => nil, "exit_message" => nil, "schedule" => %{"blocked_days" => [], "day_of_week" => %{"fri" => true, "mon" => true, "sat" => true, "sun" => true, "thu" => true, "tue" => true, "wed" => true}, "end_time" => "23:59:59", "start_time" => "00:00:00", "start_date" => nil, "end_date" => nil, "timezone" => "Etc/UTC"}, "next_schedule_time" => nil, "started_at" => nil, "ended_at" => nil, "updated_at" => to_iso8601(occurrence.updated_at), "down_channels" => [], "folder_id" => nil, "first_window_started_at" => nil, "panel_survey_id" => panel_survey.id, "last_window_ends_at" => nil, "is_deletable" => false, "is_movable" => false, "generates_panel_survey" => true}
+        }
+      ]
+      assert data["surveys"] == [
+        %{"cutoff" => survey.cutoff, "id" => survey.id, "mode" => survey.mode, "name" => survey.name, "description" => nil, "project_id" => project.id, "state" => "not_ready", "locked" => false, "exit_code" => nil, "exit_message" => nil, "schedule" => %{"blocked_days" => [], "day_of_week" => %{"fri" => true, "mon" => true, "sat" => true, "sun" => true, "thu" => true, "tue" => true, "wed" => true}, "end_time" => "23:59:59", "start_time" => "00:00:00", "start_date" => nil, "end_date" => nil, "timezone" => "Etc/UTC"}, "next_schedule_time" => nil, "started_at" => nil, "ended_at" => nil, "updated_at" => to_iso8601(survey.updated_at), "down_channels" => [], "folder_id" => folder.id, "first_window_started_at" => nil, "panel_survey_id" => nil, "last_window_ends_at" => nil, "is_deletable" => true, "is_movable" => true, "generates_panel_survey" => false}
+      ]
+    end
+  end
+
   describe "delete" do
     test "deletes chosen resource", %{conn: conn, user: user} do
       project = create_project_for_user(user)
