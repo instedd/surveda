@@ -70,7 +70,7 @@ const getEntityFromParams = (params, state, entityName) => {
 
 const getFolderFromSurveyOrPanelSurvey = (surveyOrPanelSurvey, state) => {
   const folderId = surveyOrPanelSurvey ? surveyOrPanelSurvey.folderId : null
-  const folder = state.folder && state.folder.folders && state.folder.folders[folderId]
+  const folder = state.folders && state.folders.items && state.folders.items[folderId]
   return folder || null
 }
 

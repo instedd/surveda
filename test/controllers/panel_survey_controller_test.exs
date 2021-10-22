@@ -23,12 +23,12 @@ defmodule Ask.PanelSurveyControllerTest do
       assert_listed_panel_survey(conn, panel_survey)
     end
 
-    test "lists a panel_survey inside a folder", %{conn: conn, user: user} do
+    test "won't list a panel_survey inside a folder", %{conn: conn, user: user} do
       panel_survey = panel_survey_in_folder(user)
 
       conn = get(conn, project_panel_survey_path(conn, :index, panel_survey.project_id))
 
-      assert_listed_panel_survey(conn, panel_survey)
+      assert json_response(conn, 200)["data"] == []
     end
   end
 

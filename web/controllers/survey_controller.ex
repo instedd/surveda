@@ -9,7 +9,7 @@ defmodule Ask.SurveyController do
     project = conn
     |> load_project(project_id)
 
-    dynamic = dynamic([s], s.project_id == ^project.id)
+    dynamic = dynamic([s], s.project_id == ^project.id and is_nil(s.folder_id) and is_nil(s.panel_survey_id))
 
     # Hide simulations from the index
     dynamic = dynamic([s], s.simulation == false and ^dynamic)

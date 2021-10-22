@@ -1,8 +1,8 @@
 import * as api from '../api'
 import * as panelSurveyActions from './panelSurvey'
 
-export const FETCH = 'PANEL_SURVEYS_FETCH'
-export const RECEIVE = 'PANEL_SURVEYS_RECEIVE'
+export const FETCH = 'FETCH_PANEL_SURVEYS'
+export const RECEIVE = 'RECEIVE_PANEL_SURVEYS'
 
 export const fetchPanelSurveys = (projectId: number) => (dispatch: Function, getState: () => Store): Promise<?SurveyList> => {
   const state = getState()

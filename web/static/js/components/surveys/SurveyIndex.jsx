@@ -2,12 +2,12 @@
 import React, { Component, PropTypes } from 'react'
 import { connect } from 'react-redux'
 import { withRouter } from 'react-router'
-import values from 'lodash/values'
 import * as actions from '../../actions/surveys'
 import * as surveyActions from '../../actions/survey'
 import * as panelSurveyActions from '../../actions/panelSurvey'
-import * as projectActions from '../../actions/project'
+// import * as projectActions from '../../actions/project'
 import * as folderActions from '../../actions/folder'
+import * as foldersActions from '../../actions/folders'
 import * as panelSurveysActions from '../../actions/panelSurveys'
 import {
   EmptyPage,
@@ -18,7 +18,7 @@ import {
 } from '../ui'
 import FolderCard from '../folders/FolderCard'
 import SurveyCard from './SurveyCard'
-import * as channelsActions from '../../actions/channels'
+//import * as channelsActions from '../../actions/channels'
 import FolderForm from './FolderForm'
 import * as routes from '../../routes'
 import { translate } from 'react-i18next'
@@ -60,11 +60,10 @@ class SurveyIndex extends Component<any, State> {
     const { dispatch, projectId } = this.props
 
     // Fetch project for title
-    dispatch(projectActions.fetchProject(projectId))
-
+    // dispatch(projectActions.fetchProject(projectId))
     dispatch(actions.fetchSurveys(projectId))
-    dispatch(channelsActions.fetchChannels())
-    dispatch(folderActions.fetchFolders(projectId))
+    // dispatch(channelsActions.fetchChannels())
+    dispatch(foldersActions.fetchFolders(projectId))
     dispatch(panelSurveysActions.fetchPanelSurveys(projectId))
   }
 
@@ -103,19 +102,19 @@ class SurveyIndex extends Component<any, State> {
 
   newFolder() {
     const { projectId, t } = this.props
-    const onDispatch = folderName => folderActions.createFolder(projectId, folderName)
+    const onDispatch = folderName => foldersActions.createFolder(projectId, folderName)
     this.folderModal(onDispatch, t('Please write the name of the folder you want to create'), this.refs.createFolderConfirmationModal)
   }
 
   renameFolder = (id, name) => {
     const { projectId, t } = this.props
-    const onDispatch = folderName => folderActions.renameFolder(projectId, id, folderName)
+    const onDispatch = folderName => foldersActions.renameFolder(projectId, id, folderName)
     this.folderModal(onDispatch, t('Please write the new folder name'), this.refs.renameFolderConfirmationModal, id)
   }
 
   deleteFolder = (id) => {
     const { dispatch, projectId, t } = this.props
-    dispatch(folderActions.deleteFolder(projectId, id)).then(({ error }) => error ? window.Materialize.toast(t(error), 5000, 'error-toast') : null)
+    dispatch(foldersActions.deleteFolder(projectId, id)).then(({ error }) => error ? window.Materialize.toast(t(error), 5000, 'error-toast') : null)
   }
 
   nextPage() {
@@ -177,62 +176,37 @@ class SurveyIndex extends Component<any, State> {
   }
 }
 
-const surveysFromState = (state, folderId, includePanelSurveys = false) => {
-  const { items } = state.surveys
-  if (!items) return null
-  return values(items).filter(survey =>
-    survey.folderId == folderId &&
-    (includePanelSurveys || !survey.panelSurveyId)
-  )
-}
-
-const panelSurveysFromState = (state, folderId) => {
-  const surveys = surveysFromState(state, folderId, true)
-  if (!surveys) return null
-  const { items } = state.panelSurveys
-  if (!items) return null
-  return values(items).filter(panelSurvey => panelSurvey.folderId == folderId).map(panelSurvey => ({
-    ...panelSurvey,
-    latestSurvey: panelSurvey.latestOccurrence
-  }))
-}
-
 const mergePanelSurveysIntoSurveys = (surveys, panelSurveys) => {
-  if (panelSurveys == null) return surveys
-  return panelSurveys.map(panelSurvey => ({
-    ...panelSurvey.latestSurvey,
-    folderId: panelSurvey.folderId,
-    panelSurvey: panelSurvey
-  })).concat(surveys)
+  return panelSurveys
+    .map(panelSurvey => ({
+      ...panelSurvey.latestOccurrence,
+      panelSurvey: panelSurvey
+    }))
+    .concat(surveys)
 }
 
-export const surveyIndexProps = (state: any, { panelSurveyId, folderId }: { panelSurveyId: ?number, folderId: ?number} = {
-  panelSurveyId: null,
-  folderId: null
-}) => {
-  // If panelSurveyId, list the surveys for the panel survey view.
-  // The panel survey view is the only one that shows every panel survey occurrence.
-  // Other views show each panel survey grouped in a single card.
-  let surveys = surveysFromState(state, folderId, !!panelSurveyId)
-  if (!panelSurveyId) {
-    surveys = mergePanelSurveysIntoSurveys(surveys, panelSurveysFromState(state, folderId))
+// Merges the latest panel survey occurrence into surveys, sorts the resulting
+// collection, and eventually paginates the result, generating props to display
+// a list of surveys and panel surveys.
+//
+// At least used by the FolderShow and PanelSurveyShow components.
+export const surveyIndexProps = (state: any, surveys: ?Array<Survey>, panelSurveys: ?Array<PanelSurvey>) => {
+  if (surveys && panelSurveys) {
+    surveys = mergePanelSurveysIntoSurveys(surveys, panelSurveys)
   }
+
   const totalCount = surveys ? surveys.length : 0
   const pageIndex = state.surveys.page.index
   const pageSize = state.surveys.page.size
+  const startIndex = Math.min(totalCount, pageIndex + 1)
+  const endIndex = Math.min(pageIndex + pageSize, totalCount)
 
   if (surveys) {
-    if (folderId) {
-      surveys = surveys.filter(s => s.folderId == folderId)
-    }
-
     // Sort by updated at, descending
     surveys = surveys.sort((x, y) => y.updatedAt.localeCompare(x.updatedAt))
     // Show only the current page
     surveys = surveys.slice(pageIndex, pageIndex + pageSize)
   }
-  const startIndex = Math.min(totalCount, pageIndex + 1)
-  const endIndex = Math.min(pageIndex + pageSize, totalCount)
 
   return {
     surveys,
@@ -243,19 +217,20 @@ export const surveyIndexProps = (state: any, { panelSurveyId, folderId }: { pane
 }
 
 const mapStateToProps = (state, ownProps) => {
-  const { surveys, startIndex, endIndex, totalCount } = surveyIndexProps(state)
+  const { folders, surveys, panelSurveys } = state
+
+  const values = (obj) => {
+    if (obj) return Object.values(obj)
+  }
+
   return {
+    ...surveyIndexProps(state, values(surveys.items), values(panelSurveys.items)),
     projectId: ownProps.params.projectId,
     project: state.project.data,
-    surveys,
-    channels: state.channels.items,
-    startIndex,
-    endIndex,
-    totalCount,
-    loadingSurveys: state.surveys.fetching,
-    loadingFolders: state.folder.loadingFetch,
-    folders: state.folder.folders && Object.values(state.folder.folders),
-    panelSurveys: state.panelSurveys.items && Object.values(state.panelSurveys.items),
+    loadingSurveys: surveys && surveys.fetching,
+    loadingFolders: folders && folders.loadingFetch,
+    folders: values(folders.items),
+    panelSurveys: values(panelSurveys.items),
     loadingPanelSurveys: state.panelSurveys.fetching
   }
 }

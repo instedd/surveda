@@ -5,7 +5,7 @@ import { withRouter } from 'react-router'
 import * as actions from '../../actions/survey'
 // import * as surveysActions from '../../actions/surveys'
 import * as respondentActions from '../../actions/respondents'
-import * as folderActions from '../../actions/folder'
+//import * as foldersActions from '../../actions/folders'
 import * as panelSurveysActions from '../../actions/panelSurveys'
 import SurveyStatus from './SurveyStatus'
 import * as routes from '../../routes'
@@ -72,7 +72,7 @@ class SurveyShow extends Component<any, State> {
     dispatch(actions.fetchSurveyStats(projectId, surveyId))
 
     // Fetch folders for breadcrumb
-    // dispatch(folderActions.fetchFolders(projectId))
+    // dispatch(foldersActions.fetchFolders(projectId))
     // Fetch surveys for breadcrumb
     // dispatch(surveysActions.fetchSurveys(projectId))
     // Fetch panel surveys for breadcrumb

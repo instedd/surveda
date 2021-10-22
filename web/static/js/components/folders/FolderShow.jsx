@@ -2,11 +2,11 @@
 import React, { Component, PropTypes } from 'react'
 import { connect } from 'react-redux'
 import { withRouter, Link } from 'react-router'
-import * as actions from '../../actions/surveys'
+import * as surveysActions from '../../actions/surveys'
 import * as surveyActions from '../../actions/survey'
-import * as projectActions from '../../actions/project'
-import * as folderActions from '../../actions/folder'
-import * as panelSurveysActions from '../../actions/panelSurveys'
+// import * as projectActions from '../../actions/project'
+import * as actions from '../../actions/folder'
+// import * as panelSurveysActions from '../../actions/panelSurveys'
 import * as panelSurveyActions from '../../actions/panelSurvey'
 import { MainAction, Action, EmptyPage, ConfirmationModal, PagingFooter } from '../ui'
 import SurveyCard from '../surveys/SurveyCard'
@@ -36,13 +36,13 @@ class FolderShow extends Component<any, any> {
   }
 
   componentWillMount() {
-    const { dispatch, projectId } = this.props
+    const { dispatch, projectId, folderId } = this.props
 
-    dispatch(projectActions.fetchProject(projectId))
-
-    dispatch(actions.fetchSurveys(projectId))
-    dispatch(folderActions.fetchFolders(projectId))
-    dispatch(panelSurveysActions.fetchPanelSurveys(projectId))
+    // dispatch(projectActions.fetchProject(projectId))
+    dispatch(actions.fetchFolder(projectId, folderId))
+    // dispatch(surveysActions.fetchSurveys(projectId))
+    // dispatch(foldersActions.fetchFolders(projectId))
+    // dispatch(panelSurveysActions.fetchPanelSurveys(projectId))
   }
 
   newSurvey() {
@@ -61,18 +61,18 @@ class FolderShow extends Component<any, any> {
 
   nextPage() {
     const { dispatch } = this.props
-    dispatch(actions.nextSurveysPage())
+    dispatch(surveysActions.nextSurveysPage())
   }
 
   previousPage() {
     const { dispatch } = this.props
-    dispatch(actions.previousSurveysPage())
+    dispatch(surveysActions.previousSurveysPage())
   }
 
   loadingMessage() {
-    const { loadingSurveys, surveys, t } = this.props
+    const { loading, surveys, t } = this.props
 
-    if (!surveys && loadingSurveys) {
+    if (!surveys && loading) {
       return t('Loading surveys...')
     }
     return null
@@ -135,27 +135,25 @@ const mapStateToProps = (state, ownProps) => {
 
   const folderId = params.folderId && parseInt(params.folderId)
   if (!folderId) throw new Error(t('Missing param: folderId'))
-  const { surveys, startIndex, endIndex, totalCount } = surveyIndexProps(state, {
-    folderId: folderId,
-    panelSurveyId: null
-  })
-  const folders = state.folder && state.folder.folders
-  const folder = folders && folders[folderId]
-  const name = folder && folder.name
+
+  let folder, name, surveys, panelSurveys
+  if (state.folder.data && state.folder.data.id == folderId) {
+    folder = state.folder.data
+    name = folder.name
+    surveys = folder.surveys
+    panelSurveys = folder.panelSurveys
+  }
 
   return {
+    ...surveyIndexProps(state, surveys, panelSurveys),
     projectId: projectId,
     folderId,
     project: state.project.data,
-    surveys,
-    startIndex,
-    endIndex,
-    totalCount,
-    loadingSurveys: state.surveys.fetching,
-    loadingFolder: state.panelSurvey.loading || state.folder.loading,
+    loading: state.folder.fetching,
+    loadingFolder: state.folders.loading || state.folders.loading,
     name,
-    panelSurveys: state.panelSurveys.items && Object.values(state.panelSurveys.items),
-    loadingPanelSurveys: state.panelSurveys.fetching
+    //panelSurveys: state.panelSurveys.items && Object.values(state.panelSurveys.items),
+    //loadingPanelSurveys: state.panelSurveys.fetching
   }
 }
 
