@@ -39,11 +39,7 @@ module.exports = {
           /static\/vendor/
         ],
         use: {
-          loader: 'babel-loader',
-          options: {
-            presets: ['es2015', 'react', 'stage-0', 'flow'],
-            plugins: ['transform-object-rest-spread']
-          }
+          loader: 'babel-loader'
         }
       },
       {

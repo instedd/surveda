@@ -1,4 +1,4 @@
-import 'babel-polyfill'
+import '@babel/polyfill'
 import 'jquery'
 import './errors'
 import React from 'react'
