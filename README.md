@@ -1,61 +1,33 @@
 # Surveda
 
 ## Dockerized development
+You can setup your local environment following different approaches.  
 
-To get started checkout the project, then execute `./dev-setup.sh`. There is [a guide](./docs/dev-setup-cloud.md) that can walk you through the setup of a development environment that will use cloud instances of Nuntium and Verboice.
+### Approach #1: Without Verboice nor Nuntium
+If you don't need to connect to Verboice nor Nuntium, you can move forward with this setup.
 
-To run the app: `docker-compose up`
+1. You need to use [dockerdev](https://github.com/waj/dockerdev) to access the web app at `app.surveda.lvh.me` and ngrok at `ngrok.surveda.lvh.me`.  Just follow the project's readme.  **WARNING:** You should install `dockerdev` _before_ creating your stack's network in Docker. If you have already run `./dev-setup.sh`, you may want to run `docker-compose down -v` to **delete every container, data and other artifacts** from the project and start from scratch _after_ running `dockerdev`.
+2. Clone this repository.
+3. In the project's root, execute `./dev-setup.sh`.
+4. Start the app with `docker-compose up`.
+5. Once the app is up and running, you can visit [`http://app.surveda.lvh.me/`](http://app.surveda.lvh.me/) from your browser.
+6. You will be able to Create an Account and Login with a built-in authentication.  However, you might fail to receive the needed emails that are sent during this flow.  You can check the CLI console where you'll be able to see logs with the email content, including the links that you need to complete the workflow.
 
-Now you can visit [`localhost:4000`](http://localhost:4000) from your browser.
+If needed, you can change the authentication mechanism to Guisso.  This will take your local app 1 step closer to similarity with the production environment.  The section "Guisso" in this document, explains how to achieve this.
 
-To open a shell in a container: `docker-compose exec db bash`, where `db` is the service name. You can list the services `docker-compose ps --services`.
+**Tips**
+- To open a shell in a container: `docker-compose exec db bash`, where `db` is the service name. You can list the services `docker-compose ps --services`.
+- To start an Elixir console in your running Phoenix app container: `docker-compose exec app iex -S mix`.
 
-To start an Elixir console in your running Phoenix app container: `docker-compose exec app iex -S mix`.
 
-## Exposing your containers as *.surveda.lvh.me
+### Approaches #2 and #3: with Verboice and Nuntium
+There are 2 approaches for connecting your local Surveda with Verboice and Nuntium:
+2. You can install and setup Verboice and Nuntium locally.  To Do: add link to local setup guide that was added in [this PR](https://github.com/instedd/surveda/pull/1958).
+3. You can use Verboice and Nuntium from the cloud in the Staging environment.  You can use this [guide](./docs/dev-setup-cloud.md) which will walk you through the setup of a development environment that will use cloud instances of these tools.
 
-You can use [dockerdev](https://github.com/waj/dockerdev) to access the web app at `app.surveda.lvh.me` and ngrok at `ngrok.surveda.lvh.me`.
+The 2 guides above, will also include setting up Guisso, so you can ignore the GUISSO section in this document.
 
-Just follow the instructions at the README of dockerdev.
 
-**WARNING:** You should install `dockerdev` _before_ creating your stack's network in Docker. If you have already run `./dev-setup.sh`, you may want to run `docker-compose down -v` to **delete every container, data and other artifacts** from the project and start from scratch _after_ running `dockerdev`.
-
-## Linting and Formatting
-
-To help us keep a consistent coding style, we're using StandardJS. Follow their instructions to install it: http://standardjs.com/#install
-
-If you're using Sublime, you can setup a Build System that will use StandardJS to format your code when you hit `Ctrl+B`. To do so:
-
-1. In Sublime, go to `Tools -> Build System -> New Build System...`
-1. A file will open, replace its contents with:
-
-```
-{
-  "cmd": ["standard", "--fix", "$file"],
-  "selector": "source.js"
-}
-```
-1. Save. That's it. When you want to format, just hit `Ctrl+B`. Note that the formatter is a bit slow, so it's not a good idea to format on save.
-
-## IVR channels with Verboice
-
-To setup a channel you need to create it using the console. For that you need to create a channel with the folowing settings:
-
-```
-%Ask.Channel{name: "Channel name",
-  provider: "verboice",
-  settings: %{
-    "channel" => "Verboice Channel name in Verboice",
-    "username" => "Your Verboice username",
-    "password" => "Your Verboice password",
-    "url" => "http://verboice.instedd.org"
-  },
-  type: "ivr",
-  user_id: your ask user id
-}
-```
-
-In order for it to work, that Verboice channel must be associated to a dummy flow of a dummy Verboice project. Otherwise it will fail and won't log anything.
 
 ## GUISSO
 
@@ -85,7 +57,29 @@ config :ask, Ask.Endpoint,
   url: [host: "app.surveda.lvh.me"] # or "abcd123.ngrok.io" for a cloud GUISSO
 ```
 
-### Verboice Channel
+
+## IVR channels with Verboice
+
+To setup a channel you need to create it using the console. For that you need to create a channel with the folowing settings:
+
+```
+%Ask.Channel{name: "Channel name",
+  provider: "verboice",
+  settings: %{
+    "channel" => "Verboice Channel name in Verboice",
+    "username" => "Your Verboice username",
+    "password" => "Your Verboice password",
+    "url" => "http://verboice.instedd.org"
+  },
+  type: "ivr",
+  user_id: your ask user id
+}
+```
+
+In order for it to work, that Verboice channel must be associated to a dummy flow of a dummy Verboice project. Otherwise it will fail and won't log anything.
+
+
+## Verboice Channel
 
 Once you have GUISSO enabled on Surveda, you can connect a Verboice instance that's already registered with GUISSO by adding this fragment to your `config/local.exs`:
 
@@ -144,3 +138,21 @@ For editing/creating a new api-key:
 
 The minimum supported screen resolution is 1366x768.
 Mobile devices and screen resolutions less than 1366x768 are not supported.
+
+
+## Linting and Formatting
+
+To help us keep a consistent coding style, we're using StandardJS. Follow their instructions to install it: http://standardjs.com/#install
+
+If you're using Sublime, you can setup a Build System that will use StandardJS to format your code when you hit `Ctrl+B`. To do so:
+
+1. In Sublime, go to `Tools -> Build System -> New Build System...`
+2. A file will open, replace its contents with:
+
+```
+{
+  "cmd": ["standard", "--fix", "$file"],
+  "selector": "source.js"
+}
+```
+3. Save. That's it. When you want to format, just hit `Ctrl+B`. Note that the formatter is a bit slow, so it's not a good idea to format on save.
