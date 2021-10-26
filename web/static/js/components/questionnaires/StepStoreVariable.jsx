@@ -114,7 +114,6 @@ class StepStoreVariable extends Component<Props, State> {
     </li>
     )
   }
-
 }
 
 const mapStateToProps = (state, ownProps) => ({

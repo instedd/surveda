@@ -70,4 +70,3 @@ export const createChannel = (providerType: string, baseUrl: string, channel: Ob
       .createChannel(providerType, baseUrl, channel)
       .then(() => dispatch(fetchChannels()))
   }
-

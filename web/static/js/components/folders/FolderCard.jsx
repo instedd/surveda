@@ -14,6 +14,7 @@ class FolderCard extends PureComponent {
     onRename: Function,
     readOnly: PropTypes.bool
   }
+
   render() {
     const { name, projectId, id, t, onDelete, onRename, readOnly } = this.props
     const options = <Dropdown className='options' dataBelowOrigin={false} label={<i className='material-icons'>more_vert</i>}>

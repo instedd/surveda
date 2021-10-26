@@ -1,6 +1,6 @@
+import * as api from '../api'
 export const RECEIVE_TIMEZONES = 'RECEIVE_TIMEZONES'
 export const FETCH_TIMEZONES = 'FETCH_TIMEZONES'
-import * as api from '../api'
 
 export const fetchTimezones = () => (dispatch, getState) => {
   const state = getState()

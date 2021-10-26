@@ -55,6 +55,7 @@ export default class RetriesHistogram extends Component<Props> {
   componentWillUnmount() {
     window.removeEventListener('resize', this.calculateSize)
   }
+
   componentWillReceiveProps() {
     this.setState(this.calculateSize())
   }

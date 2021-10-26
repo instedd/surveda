@@ -13,4 +13,3 @@ const guissoToken = (state, action) => ({
     ...action.token
   }
 })
-
