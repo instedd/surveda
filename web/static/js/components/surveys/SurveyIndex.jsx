@@ -205,7 +205,7 @@ export const surveyIndexProps = (state: any, surveys: ?Array<Survey>, panelSurve
     // Sort by updated at, descending
     surveys = surveys.sort((x, y) => y.updatedAt.localeCompare(x.updatedAt))
     // Show only the current page
-    surveys = surveys.slice(pageIndex, pageIndex + pageSize)
+    surveys = (surveys.slice(pageIndex, pageIndex + pageSize): Array<Survey>)
   }
 
   return {
@@ -219,8 +219,10 @@ export const surveyIndexProps = (state: any, surveys: ?Array<Survey>, panelSurve
 const mapStateToProps = (state, ownProps) => {
   const { folders, surveys, panelSurveys } = state
 
-  const values = (obj) => {
-    if (obj) return Object.values(obj)
+  function values<T>(obj: ?Map<number, T>): ?Array<T> {
+    if (obj) {
+      return (Object.values(obj): any)
+    }
   }
 
   return {

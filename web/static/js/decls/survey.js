@@ -39,7 +39,8 @@ export type Survey = {
   generatesPanelSurvey: boolean,
   incentivesEnabled: boolean,
   isDeletable: boolean,
-  isMovable: boolean
+  isMovable: boolean,
+  updatedAt: Date
 };
 
 export type PanelSurvey = {
