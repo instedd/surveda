@@ -30,10 +30,9 @@ class SurveyCard extends Component<any> {
     this.state = {
       folderId: props.survey.folderId || ''
     }
-    this.loadRespondentsStats()
   }
 
-  loadRespondentsStats() {
+  componentDidMount() {
     const { survey, dispatch } = this.props
 
     if (survey.state != 'not_ready') {
