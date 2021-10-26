@@ -28,7 +28,7 @@ class PanelSurveyShow extends Component<any, any> {
     params: PropTypes.object,
     panelSurveyId: PropTypes.number.isRequired,
     loadingPanelSurvey: PropTypes.bool,
-    panelSurvey: PropTypes.object,
+    panelSurvey: PropTypes.object
   }
 
   componentWillMount() {
@@ -102,7 +102,7 @@ class PanelSurveyShow extends Component<any, any> {
   }
 
   titleLink() {
-    const { t, projectId, panelSurvey, panelSurveyId } = this.props
+    const { t, projectId, panelSurvey } = this.props
 
     if (panelSurvey) {
       const to = panelSurvey.folderId
@@ -147,7 +147,7 @@ const mapStateToProps = (state, ownProps) => {
     panelSurveyId,
     project: state.project.data,
     loadingPanelSurvey: state.panelSurvey.loading || state.panelSurvey.fetching,
-    panelSurvey,
+    panelSurvey
   }
 }
 

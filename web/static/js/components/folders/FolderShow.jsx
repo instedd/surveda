@@ -29,10 +29,9 @@ class FolderShow extends Component<any, any> {
     params: PropTypes.object,
     folderId: PropTypes.number,
     name: PropTypes.string,
+    loading: PropTypes.bool,
     loadingFolder: PropTypes.bool,
-    loadingSurveys: PropTypes.bool,
-    panelSurveys: PropTypes.array,
-    loadingPanelSurveys: PropTypes.bool
+    panelSurveys: PropTypes.array
   }
 
   componentWillMount() {
@@ -151,9 +150,7 @@ const mapStateToProps = (state, ownProps) => {
     project: state.project.data,
     loading: state.folder.fetching,
     loadingFolder: state.folders.loading || state.folders.loading,
-    name,
-    //panelSurveys: state.panelSurveys.items && Object.values(state.panelSurveys.items),
-    //loadingPanelSurveys: state.panelSurveys.fetching
+    name
   }
 }
 
