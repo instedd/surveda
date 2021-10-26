@@ -29,6 +29,17 @@ defmodule Ask.PanelSurveyView do
       is_repeatable: PanelSurvey.repeatable?(panel_survey)
     }
 
+    data =
+      if panel_survey.folder_id && Ecto.assoc_loaded?(panel_survey.folder) do
+        Map.put(data, :folder, %{
+          id: panel_survey.folder.id,
+          project_id: panel_survey.folder.project_id,
+          name: panel_survey.folder.name
+        })
+      else
+        data
+      end
+
     if Ecto.assoc_loaded?(occurrences) do
       Map.put(data, :occurrences, render_many(occurrences, Ask.SurveyView, "survey.json"))
     else

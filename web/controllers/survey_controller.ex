@@ -74,10 +74,18 @@ defmodule Ask.SurveyController do
     case multi do
       {:ok, %{survey: survey}} ->
         project |> Project.touch!
+
+        survey = survey
+        |> Repo.preload([:quota_buckets])
+        |> Repo.preload(:questionnaires)
+        # |> Repo.preload(:folder)
+        # |> Repo.preload(panel_survey: [:folder])
+        |> Survey.with_links(user_level(project_id, current_user(conn).id))
+
         conn
         |> put_status(:created)
         |> put_resp_header("location", project_survey_path(conn, :show, project_id, survey))
-        |> render("show.json", survey: survey |> Repo.preload([:quota_buckets]) |> Repo.preload(:questionnaires) |> Survey.with_links(user_level(project_id, current_user(conn).id)))
+        |> render("show.json", survey: survey)
       {:error, _, changeset, _} ->
         Logger.warn "Error when creating a survey: #{inspect changeset}"
         conn
@@ -93,6 +101,8 @@ defmodule Ask.SurveyController do
     |> Repo.get!(id)
     |> Repo.preload([:quota_buckets])
     |> Repo.preload(:questionnaires)
+    |> Repo.preload(:folder)
+    |> Repo.preload(panel_survey: [:folder])
     |> Repo.preload(respondent_groups: [respondent_group_channels: :channel])
     |> Survey.with_links(user_level(project_id, current_user(conn).id))
     |> Survey.with_down_channels

@@ -1,7 +1,7 @@
 import * as api from '../api'
 
-export const FETCH = 'FOLDER_FETCH'
-export const RECEIVE = 'FOLDER_RECEIVE'
+export const FETCH = 'FETCH_FOLDER'
+export const RECEIVE = 'RECEIVE_FOLDER'
 
 export const fetchFolder = (projectId: number, id: number) => (dispatch: Function, getState: () => Store): Folder => {
   dispatch(fetching(projectId, id))

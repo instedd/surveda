@@ -105,6 +105,29 @@ defmodule Ask.SurveyView do
       generates_panel_survey: survey.generates_panel_survey
     }
 
+    map =
+      if survey.folder_id && Ecto.assoc_loaded?(survey.folder) do
+        Map.put(map, :folder, render_folder(survey.folder))
+      else
+        map
+      end
+
+    map =
+      if survey.panel_survey_id && Ecto.assoc_loaded?(survey.panel_survey) do
+        panel_survey = survey.panel_survey
+
+        Map.put(map, :panel_survey, %{
+          id: panel_survey.id,
+          project_id: panel_survey.project_id,
+          name: panel_survey.name,
+          folder: if panel_survey.folder_id && Ecto.assoc_loaded?(panel_survey.folder) do
+            render_folder(panel_survey.folder)
+          end
+        })
+      else
+        map
+      end
+
     if Ask.Survey.launched?(survey) || survey.simulation do
       qs = survey.questionnaires
       |> Enum.map(fn q ->
@@ -132,6 +155,14 @@ defmodule Ask.SurveyView do
     %{
       "name" => link.name,
       "url" => short_link_url(Endpoint, :access, link.hash)
+    }
+  end
+
+  defp render_folder(folder) do
+    %{
+      id: folder.id,
+      project_id: folder.project_id,
+      name: folder.name
     }
   end
 

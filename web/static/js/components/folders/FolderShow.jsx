@@ -4,9 +4,7 @@ import { connect } from 'react-redux'
 import { withRouter, Link } from 'react-router'
 import * as surveysActions from '../../actions/surveys'
 import * as surveyActions from '../../actions/survey'
-// import * as projectActions from '../../actions/project'
 import * as actions from '../../actions/folder'
-// import * as panelSurveysActions from '../../actions/panelSurveys'
 import * as panelSurveyActions from '../../actions/panelSurvey'
 import { MainAction, Action, EmptyPage, ConfirmationModal, PagingFooter } from '../ui'
 import SurveyCard from '../surveys/SurveyCard'
@@ -34,14 +32,9 @@ class FolderShow extends Component<any, any> {
     panelSurveys: PropTypes.array
   }
 
-  componentWillMount() {
+  componentDidMount() {
     const { dispatch, projectId, folderId } = this.props
-
-    // dispatch(projectActions.fetchProject(projectId))
     dispatch(actions.fetchFolder(projectId, folderId))
-    // dispatch(surveysActions.fetchSurveys(projectId))
-    // dispatch(foldersActions.fetchFolders(projectId))
-    // dispatch(panelSurveysActions.fetchPanelSurveys(projectId))
   }
 
   newSurvey() {

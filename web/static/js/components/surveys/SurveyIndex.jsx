@@ -5,8 +5,6 @@ import { withRouter } from 'react-router'
 import * as actions from '../../actions/surveys'
 import * as surveyActions from '../../actions/survey'
 import * as panelSurveyActions from '../../actions/panelSurvey'
-// import * as projectActions from '../../actions/project'
-// import * as folderActions from '../../actions/folder'
 import * as foldersActions from '../../actions/folders'
 import * as panelSurveysActions from '../../actions/panelSurveys'
 import {
@@ -18,7 +16,6 @@ import {
 } from '../ui'
 import FolderCard from '../folders/FolderCard'
 import SurveyCard from './SurveyCard'
-// import * as channelsActions from '../../actions/channels'
 import FolderForm from './FolderForm'
 import * as routes from '../../routes'
 import { translate } from 'react-i18next'
@@ -58,11 +55,7 @@ class SurveyIndex extends Component<any, State> {
 
   initialFetch() {
     const { dispatch, projectId } = this.props
-
-    // Fetch project for title
-    // dispatch(projectActions.fetchProject(projectId))
     dispatch(actions.fetchSurveys(projectId))
-    // dispatch(channelsActions.fetchChannels())
     dispatch(foldersActions.fetchFolders(projectId))
     dispatch(panelSurveysActions.fetchPanelSurveys(projectId))
   }
