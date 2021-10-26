@@ -11,20 +11,20 @@ describe('folder reducer', () => {
 
   const playActions = playActionsFromState(initialState, reducer)
 
-  it('receives folders', () => {
+  it('receives folder', () => {
     const state = playActions([
-      actions.fetchFolders(1),
-      actions.fetchedFolders(1, [folder, { ...folder, id: 2 }])
+      actions.fetching(1),
+      actions.receive(1, 2, { ...folder, id: 2 })
     ])
-    expect(state.loading).toEqual(false)
-    expect(state.folders).toEqual([folder, { ...folder, id: 2 }])
+    expect(state.fetching).toEqual(false)
+    expect(state.data).toEqual({ ...folder, id: 2 })
   })
 
-  it('sets loading state when loading folders', () => {
+  it('sets loading state when loading folder', () => {
     const state = playActions([
-      actions.fetchingFolders(1)
+      actions.fetching(1)
     ])
-    expect(state.loadingFetch).toEqual(true)
-    expect(state.folders).toEqual(null)
+    expect(state.fetching).toEqual(true)
+    expect(state.data).toEqual(null)
   })
 })
