@@ -8,3 +8,5 @@
 web/static/js/decls/
 [options]
 munge_underscores=true
+esproposal.optional_chaining=enable
+esproposal.nullish_coalescing=enable
