@@ -113,4 +113,13 @@ defmodule Ask.AudioControllerTest do
 
   end
 
+  describe "tts" do
+    test "transforms text to speech", %{conn: conn} do
+      conn = get conn, audio_path(conn, :tts, text: "lorem ipsum")
+
+      assert conn.status == 200
+      assert ["audio/x-wav"] = get_resp_header(conn, "content-type")
+      assert byte_size(conn.resp_body) > 0
+    end
+  end
 end

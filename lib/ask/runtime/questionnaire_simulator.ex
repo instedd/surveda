@@ -6,6 +6,10 @@ defmodule Ask.QuestionnaireSmsSimulation do
   defstruct [:respondent, :questionnaire, :section_order, messages: [], submissions: []]
 end
 
+defmodule Ask.QuestionnaireIvrSimulation do
+  defstruct [:respondent, :questionnaire, :section_order, submissions: []]
+end
+
 defmodule Ask.QuestionnaireSimulationStep do
   alias Ask.Simulation.Status
   alias __MODULE__
@@ -61,6 +65,20 @@ defmodule Ask.QuestionnaireSmsSimulationStep do
   end
 end
 
+defmodule Ask.QuestionnaireIvrSimulationStep do
+  defstruct [:respondent_id, :simulation_status, :disposition, :current_step, :questionnaire, prompts: [], submissions: []]
+
+  def start_build(simulation, current_step, status, prompts) do
+    simulation_step = Ask.QuestionnaireSimulationStep.build(simulation, current_step, status, true)
+    Map.merge(%Ask.QuestionnaireIvrSimulationStep{prompts: prompts}, simulation_step)
+  end
+
+  def sync_build(simulation, current_step, status, prompts) do
+    simulation_step = Ask.QuestionnaireSimulationStep.build(simulation, current_step, status, false)
+    Map.merge(%Ask.QuestionnaireIvrSimulationStep{prompts: prompts}, simulation_step)
+  end
+end
+
 defmodule Ask.Runtime.SimulatorChannel do
   defstruct patterns: []
 end
@@ -68,13 +86,15 @@ end
 defmodule Ask.Runtime.QuestionnaireSimulator do
   alias Ask.{Survey, Respondent, Questionnaire, Project, SystemTime, Runtime, QuestionnaireSimulationStep}
   alias Ask.Simulation.{Status, AOMessage, SubmittedStep, Response}
-  alias Ask.Runtime.{Session, QuestionnaireSimulatorStore, QuestionnaireSmsSimulator, QuestionnaireMobileWebSimulator}
+  alias Ask.Runtime.{Session, QuestionnaireSimulatorStore, QuestionnaireSmsSimulator, QuestionnaireIvrSimulator, QuestionnaireMobileWebSimulator}
 
   def start_simulation(project, questionnaire, mode) do
     if valid_questionnaire?(questionnaire, mode) do
       case mode do
         "sms" ->
           QuestionnaireSmsSimulator.start(project, questionnaire)
+        "ivr" ->
+          QuestionnaireIvrSimulator.start(project, questionnaire)
         "mobileweb" ->
           QuestionnaireMobileWebSimulator.start(project, questionnaire)
         _ ->
@@ -89,6 +109,8 @@ defmodule Ask.Runtime.QuestionnaireSimulator do
     case mode do
       "sms" ->
         Ask.Runtime.QuestionnaireSmsSimulator.process_respondent_response(respondent_id, response)
+      "ivr" ->
+        Ask.Runtime.QuestionnaireIvrSimulator.process_respondent_response(respondent_id, response)
       "mobileweb" ->
         Ask.Runtime.QuestionnaireMobileWebSimulator.process_respondent_response(respondent_id, response)
     end
@@ -329,6 +351,62 @@ defmodule Ask.Runtime.QuestionnaireSmsSimulator do
   end
 end
 
+defmodule Ask.Runtime.QuestionnaireIvrSimulator do
+  alias Ask.Runtime.{Survey, QuestionnaireSimulator, Flow}
+  alias Ask.{QuestionnaireIvrSimulation, QuestionnaireIvrSimulationStep}
+  alias Ask.Simulation.{IvrPrompt, Status, Response, SubmittedStep}
+
+  def start(project, questionnaire) do
+    start_build = fn respondent, reply ->
+      base_simulation = QuestionnaireSimulator.base_simulation(questionnaire, respondent)
+      prompts = IvrPrompt.create_all(reply)
+
+      simulation = Map.merge(base_simulation, %{
+        submissions: SubmittedStep.new_explanations(reply),
+      })
+      simulation = Map.merge(%QuestionnaireIvrSimulation{}, simulation)
+      current_step = QuestionnaireSimulator.current_step(reply)
+
+      response =
+        simulation
+        |> QuestionnaireIvrSimulationStep.start_build(current_step, Status.active, prompts)
+        |> Response.success
+
+      %{simulation: simulation, response: response}
+    end
+
+    delivery_confirm = fn respondent ->
+      # Simulating Verboice confirmation on message delivery
+      %{respondent: respondent} = Survey.delivery_confirm(QuestionnaireSimulator.sync_respondent(respondent), "", "ivr", false)
+      respondent
+    end
+
+    QuestionnaireSimulator.start(project, questionnaire, "ivr", start_build, delivery_confirm: delivery_confirm)
+  end
+
+  def process_respondent_response(respondent_id, response) do
+    build_simulation = fn simulation, _simulation_response ->
+      Map.merge(%QuestionnaireIvrSimulation{}, simulation)
+    end
+
+    handle_app_reply = fn simulation, respondent, reply, status ->
+      sync_build = fn simulation, current_step, status, reply ->
+        prompts = IvrPrompt.create_all(reply)
+        QuestionnaireIvrSimulationStep.sync_build(simulation, current_step, status, prompts)
+      end
+
+      QuestionnaireSimulator.handle_app_reply(simulation, respondent, reply, status, sync_build)
+    end
+
+    sync_simulation = fn simulation, response ->
+      reply = Flow.Message.reply(response)
+      QuestionnaireSimulator.sync_simulation(simulation, reply, "ivr", handle_app_reply)
+    end
+
+    QuestionnaireSimulator.process_respondent_response(respondent_id, response, build_simulation, sync_simulation)
+  end
+end
+
 defmodule Ask.Simulation.SubmittedStep do
   alias Ask.Runtime.Reply
   alias Ask.Questionnaire
@@ -362,6 +440,15 @@ defmodule Ask.Simulation.AOMessage do
   def create_all(reply) do
     Enum.map Ask.Runtime.Reply.prompts(reply), fn prompt ->
         %{body: prompt, type: "ao"}
+      end
+  end
+end
+
+defmodule Ask.Simulation.IvrPrompt do
+  def create_all(nil), do: []
+  def create_all(reply) do
+    Enum.map Ask.Runtime.Reply.prompts(reply), fn prompt ->
+        prompt
       end
   end
 end

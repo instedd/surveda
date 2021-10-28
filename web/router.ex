@@ -128,6 +128,7 @@ defmodule Ask.Router do
         put "/update_archived_status", ProjectController, :update_archived_status, as: :update_archived_status
       end
       resources "/channels", ChannelController, except: [:new, :edit]
+      get "/audios/tts", AudioController, :tts
       resources "/audios", AudioController, only: [:create, :show]
       resources "/authorizations", OAuthClientController, only: [:index, :delete]
       get "/authorizations/synchronize", OAuthClientController, :synchronize

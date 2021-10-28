@@ -169,7 +169,7 @@ $smallChatWindowBodyHeight: $smallSimulationHeight -
     }
   }
 }
-.chat-header{
+.chat-header {
   @extend .white-text;
   background: $chatBorderBackground;
   text-align: center;
@@ -232,6 +232,58 @@ $smallChatWindowBodyHeight: $smallSimulationHeight -
 
 .info-messages .content-text {
   max-width: none !important;
+}
+
+.voice-window {
+  @extend .z-depth-5;
+  @extend .white-text;
+  background: $chatBorderBackground;
+  border-radius: 5px;
+  max-height: $simulationHeight;
+  padding: 0;
+  overflow: auto;
+
+  @media #{$medium-and-down} {
+    height: $smallSimulationHeight;
+  }
+}
+.voice-header {
+  text-align: center;
+  font-size: 24px;
+  font-style: normal;
+  border-top-left-radius: 5px;
+  border-top-right-radius: 5px;
+  padding-top: 24px;
+}
+.voice-question {
+  text-align: center;
+  font-size: 16px;
+  font-style: normal;
+  color: #888888;
+  padding: 0 10px 48px 10px;
+}
+.voice-buttons {
+  width: 200px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-gap: 10px;
+  justify-items: center;
+}
+.voice-button {
+  width: 60px;
+  height: 60px;
+  border: 2px solid rgba(#000, 0.1);
+  border-radius: 99px;
+  font-size: 30px;
+  line-height: 55px;
+  text-align: center;
+  cursor: pointer;
+}
+.voice-button-end-call {
+  grid-column: 2;
+  grid-row: 6;
+  line-height: 60px;
 }
 
 .mobile-web-iframe-container {
