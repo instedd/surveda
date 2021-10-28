@@ -19,7 +19,6 @@ import {
 import FolderCard from '../folders/FolderCard'
 import SurveyCard from './SurveyCard'
 import * as channelsActions from '../../actions/channels'
-import * as respondentActions from '../../actions/respondents'
 import FolderForm from './FolderForm'
 import * as routes from '../../routes'
 import { translate } from 'react-i18next'
@@ -42,7 +41,6 @@ class SurveyIndex extends Component<any, State> {
     startIndex: PropTypes.number.isRequired,
     endIndex: PropTypes.number.isRequired,
     totalCount: PropTypes.number.isRequired,
-    respondentsStats: PropTypes.object.isRequired,
     panelSurveys: PropTypes.array,
     loadingPanelSurveys: PropTypes.bool
   }
@@ -65,13 +63,6 @@ class SurveyIndex extends Component<any, State> {
     dispatch(projectActions.fetchProject(projectId))
 
     dispatch(actions.fetchSurveys(projectId))
-    .then(value => {
-      for (const surveyId in value) {
-        if (value[surveyId].state != 'not_ready') {
-          dispatch(respondentActions.fetchRespondentsStats(projectId, surveyId))
-        }
-      }
-    })
     dispatch(channelsActions.fetchChannels())
     dispatch(folderActions.fetchFolders(projectId))
     dispatch(panelSurveysActions.fetchPanelSurveys(projectId))
@@ -138,7 +129,7 @@ class SurveyIndex extends Component<any, State> {
   }
 
   render() {
-    const { folders, loadingFolders, loadingSurveys, surveys, respondentsStats, project, startIndex, endIndex, totalCount, t, panelSurveys, loadingPanelSurveys } = this.props
+    const { folders, loadingFolders, loadingSurveys, surveys, project, startIndex, endIndex, totalCount, t, panelSurveys, loadingPanelSurveys } = this.props
     if ((!surveys && loadingSurveys) || (!folders && loadingFolders) || (!panelSurveys && loadingPanelSurveys)) {
       return (
         <div>{t('Loading surveys...')}</div>
@@ -172,7 +163,7 @@ class SurveyIndex extends Component<any, State> {
             </div>
             <div className='survey-index-grid'>
               {surveys && surveys.map(survey => (
-                <SurveyCard survey={survey} respondentsStats={respondentsStats[survey.id]} key={survey.id} readOnly={readOnly} />
+                <SurveyCard survey={survey} key={survey.id} readOnly={readOnly} />
               ))}
             </div>
             { footer }
@@ -258,7 +249,6 @@ const mapStateToProps = (state, ownProps) => {
     project: state.project.data,
     surveys,
     channels: state.channels.items,
-    respondentsStats: state.respondentsStats,
     startIndex,
     endIndex,
     totalCount,

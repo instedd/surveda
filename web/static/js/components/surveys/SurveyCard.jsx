@@ -4,6 +4,7 @@ import { translate, Trans } from 'react-i18next'
 import { Link } from 'react-router'
 import * as routes from '../../routes'
 import * as surveyActions from '../../actions/survey'
+import { fetchRespondentsStats } from '../../actions/respondents'
 import { untitledSurveyTitle } from './SurveyTitle'
 import { Card, UntitledIfEmpty, Dropdown, DropdownItem, ConfirmationModal } from '../ui'
 import RespondentsChart from '../respondents/RespondentsChart'
@@ -16,7 +17,7 @@ class SurveyCard extends Component<any> {
   props: {
     t: Function,
     dispatch: Function,
-    respondentsStats: Object,
+    respondentsStats: ?Object,
     survey: Survey,
     onDelete: (survey: Survey) => void,
     readOnly: boolean,
@@ -28,6 +29,14 @@ class SurveyCard extends Component<any> {
 
     this.state = {
       folderId: props.survey.folderId || ''
+    }
+  }
+
+  componentDidMount() {
+    const { survey, dispatch } = this.props
+
+    if (survey.state != 'not_ready') {
+      fetchRespondentsStats(survey.projectId, survey.id)(dispatch)
     }
   }
 
