@@ -64,7 +64,9 @@ const VoiceWindow = translate()(class extends Component<VoiceWindowProps, VoiceW
       this.audio.pause()
       this.audio.src = audioURL(ivr)
       this.audio.onended = () => { this.play() }
-      this.audio.play()
+
+      const promise = this.audio.play()
+      promise && promise.catch(() => {}) // silence async play errors
     }
   }
 
