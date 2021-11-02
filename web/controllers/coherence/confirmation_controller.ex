@@ -88,7 +88,7 @@ defmodule Ask.Coherence.ConfirmationController do
         else
           changeset = Helpers.changeset(:confirmation, user_schema, user, %{
             confirmation_token: nil,
-            confirmed_at: Ecto.DateTime.utc,
+            confirmed_at: DateTime.utc_now,
             })
           case Config.repo.update(changeset) do
             {:ok, _user} ->

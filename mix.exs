@@ -21,8 +21,24 @@ defmodule Ask.Mixfile do
   # Type `mix help compile.app` for more information.
   def application do
     [mod: {Ask, []},
-     applications: [:phoenix, :phoenix_pubsub, :phoenix_html, :cowboy, :logger, :gettext, :alto_guisso,
-                    :phoenix_ecto, :mariaex, :oauth2, :timex_ecto, :sentry, :coherence, :prometheus_phoenix, :prometheus_plugs]]
+      applications: [
+        :phoenix,
+        :phoenix_pubsub,
+        :phoenix_html,
+        :cowboy,
+        :logger,
+        :gettext,
+        :alto_guisso,
+        :phoenix_ecto,
+        :mariaex,
+        :oauth2,
+        :timex,
+        :sentry,
+        :coherence,
+        :prometheus_phoenix,
+        :prometheus_plugs
+      ]
+    ]
   end
 
   # Specifies which paths to compile per environment.
@@ -48,7 +64,6 @@ defmodule Ask.Mixfile do
       {:mutex, "~> 1.1.3"},
       {:mox, "~> 0.5", only: :test},
       {:timex, "~> 3.0", override: true},
-      {:timex_ecto, "~> 3.0", override: true},
       {:sentry, "~> 6.0"},
       {:hackney, "~> 1.0"},
       {:ex_json_schema, "~> 0.5.2"},

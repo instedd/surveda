@@ -60,11 +60,11 @@ defmodule Ask.Survey do
     # The moment when the survey changes to %{state: "running"} and the moment when the survey
     # becomes actually active may differ because of its schedule configuration.
     # started_at: the moment when the survey change to %{state: "running"}.
-    field :started_at, Timex.Ecto.DateTime
+    field :started_at, :utc_datetime
     # first_window_started_at: the moment when the survey becomes actually active for the first time.
-    field :first_window_started_at, Timex.Ecto.DateTime
-    field :ended_at, Timex.Ecto.DateTime
-    field :last_window_ends_at, Timex.Ecto.DateTime
+    field :first_window_started_at, :utc_datetime
+    field :ended_at, :utc_datetime
+    field :last_window_ends_at, :utc_datetime
     field :sms_retry_configuration, :string
     field :ivr_retry_configuration, :string
     field :mobileweb_retry_configuration, :string

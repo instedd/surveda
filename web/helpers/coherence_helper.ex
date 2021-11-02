@@ -1,8 +1,8 @@
-# This file contains alternative implementations to wrap 
+# This file contains alternative implementations to wrap
 # Coherence's. This is to overcome Coherence bugs (instead of forking).
 defmodule Ask.Coherence.Helper do
   use Coherence.Config
-  
+
   @doc """
   Checks if the confirmation token has expired.
 
@@ -16,7 +16,7 @@ defmodule Ask.Coherence.Helper do
   @doc """
   Test if a datetime has expired.
 
-  Convert the datetime from Ecto.DateTime format to Timex format to do
+  Convert the datetime from DateTime format to Timex format to do
   the comparison given the time during in opts.
 
   ## Examples
@@ -24,13 +24,14 @@ defmodule Ask.Coherence.Helper do
       expired?(user.expire_at, days: 5)
       expired?(user.expire_at, minutes: 10)
 
-      iex> Ecto.DateTime.utc
+      iex> DateTime.utc_now
       ...> |> Coherence.ControllerHelpers.expired?(days: 1)
       false
 
-      iex> Ecto.DateTime.utc
+      iex> DateTime.utc_now
       ...> |> Coherence.ControllerHelpers.shift(days: -2)
-      ...> |> Ecto.DateTime.cast!
+      ...> |> DateTime.from_iso8601
+      ...> |> elem(1)
       ...> |> Coherence.ControllerHelpers.expired?(days: 1)
       true
   """
@@ -41,20 +42,22 @@ defmodule Ask.Coherence.Helper do
   end
 
   @doc """
-  Shift a Ecto.DateTime.
+  Shift a DateTime.
 
   ## Examples
 
-      iex> Ecto.DateTime.cast!("2016-10-10 10:10:10")
+      iex> DateTime.from_iso8601("2016-10-10T10:10:10Z")
+      ...> |> elem(1)
       ...> |> Coherence.ControllerHelpers.shift(days: -2)
-      ...> |> Ecto.DateTime.cast!
+      ...> |> DateTime.from_iso8601
+      ...> |> elem(1)
       ...> |> to_string
-      "2016-10-08 10:10:10"
+      "2016-10-08 10:10:10Z"
   """
   @spec shift(struct, Keyword.t) :: struct
   def shift(datetime, opts) do
     datetime
-    |> Ecto.DateTime.to_erl
+    |> Timex.to_erl
     |> Timex.to_datetime
     |> Timex.shift(opts)
   end

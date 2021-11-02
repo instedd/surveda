@@ -36,8 +36,8 @@ defmodule Ask.Respondent do
     # - completed: through flag step from started or partial / survey finished with the respondent on started or partial disposition
     field :disposition, :string, default: "registered"
 
-    field :completed_at, Timex.Ecto.DateTime # only when state=="pending"
-    field :timeout_at, Timex.Ecto.DateTime
+    field :completed_at, :utc_datetime # only when state=="pending"
+    field :timeout_at, :utc_datetime
     field :session, JSON
     # In Respondent model, "mode" field name should change in the future.
     # This word is used a lot in Surveda, describing related (but different) things.

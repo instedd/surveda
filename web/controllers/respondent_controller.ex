@@ -852,7 +852,7 @@ defmodule Ask.RespondentController do
 
     csv_rows = history
     |> Stream.map(fn history ->
-      date = Ask.TimeUtil.format(Ecto.DateTime.cast!(history.inserted_at), offset_seconds, tz_offset)
+      date = Ask.TimeUtil.format(history.inserted_at, offset_seconds, tz_offset)
       [history.respondent_hashed_number, history.disposition, mode_label([history.mode]), date]
     end)
 
@@ -1006,10 +1006,15 @@ defmodule Ask.RespondentController do
 
   defp csv_datetime(nil, _), do: ""
 
+  defp csv_datetime(dt, survey) when is_binary(dt) do
+    {:ok, datetime, _offset} = DateTime.from_iso8601(dt)
+    csv_datetime(datetime, survey)
+  end
+
   defp csv_datetime(dt, %Survey{} = survey) do
     tz_offset = Survey.timezone_offset(survey)
     offset_seconds = Survey.timezone_offset_in_seconds(survey)
 
-    Ask.TimeUtil.format(Ecto.DateTime.cast!(dt), offset_seconds, tz_offset)
+    Ask.TimeUtil.format(dt, offset_seconds, tz_offset)
   end
 end

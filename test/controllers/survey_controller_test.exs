@@ -1908,7 +1908,7 @@ defmodule Ask.SurveyControllerTest do
     post conn, project_survey_survey_path(conn, :launch, survey.project, survey)
 
     last_window_ends_at = Repo.get(Survey, survey.id).last_window_ends_at
-    assert last_window_ends_at == Date.add(end_date, 1) |> Timex.to_datetime()
+    assert DateTime.compare(last_window_ends_at, Date.add(end_date, 1) |> Timex.to_datetime()) == :eq
   end
 
   test "updates project updated_at when a survey is launched", %{conn: conn, user: user}  do

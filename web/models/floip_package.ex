@@ -20,7 +20,7 @@ defmodule Ask.FloipPackage do
   # survey actually starts. Before that point, a survey is just
   # a draft which can't get responses. So, created_at(package) == survey(started_at).
   def created_at(survey) do
-    DateTime.to_iso8601(survey.started_at, :extended)
+    DateTime.to_iso8601(survey.started_at |> DateTime.truncate(:second), :extended)
   end
 
   # "A version control indicator for the package.
@@ -30,7 +30,7 @@ defmodule Ask.FloipPackage do
   # so FLOIP package structure for a given survey is immutable,
   # so modified_at(package) == survey(started_at).
   def modified_at(survey) do
-    DateTime.to_iso8601(survey.started_at, :extended)
+    DateTime.to_iso8601(survey.started_at |> DateTime.truncate(:second), :extended)
   end
 
   def query_params(options) do

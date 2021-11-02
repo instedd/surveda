@@ -85,7 +85,7 @@ defmodule Ask.FloipControllerTest do
 
     test "injects a self referential link to the view", %{conn: conn, user: user} do
       project = create_project_for_user(user)
-      survey = insert(:survey, project: project, state: "running", floip_package_id: "foo", started_at: Timex.Ecto.DateTime.autogenerate)
+      survey = insert(:survey, project: project, state: "running", floip_package_id: "foo", started_at: DateTime.utc_now)
 
       conn = get conn, "#{project_survey_package_descriptor_path(conn, :show, project.id, survey.id, survey.floip_package_id)}?foo=bar"
 
@@ -97,7 +97,7 @@ defmodule Ask.FloipControllerTest do
 
     test "shows a package descriptor", %{conn: conn, user: user} do
       project = create_project_for_user(user)
-      survey = insert(:survey, project: project, state: "running", floip_package_id: "foo", started_at: Timex.Ecto.DateTime.autogenerate)
+      survey = insert(:survey, project: project, state: "running", floip_package_id: "foo", started_at: DateTime.utc_now)
 
       conn = get conn, project_survey_package_descriptor_path(conn, :show, project.id, survey.id, survey.floip_package_id)
 
@@ -111,7 +111,7 @@ defmodule Ask.FloipControllerTest do
   describe "responses" do
     test "injects a self referential link to the view", %{conn: conn, user: user} do
       project = create_project_for_user(user)
-      survey = insert(:survey, project: project, state: "running", floip_package_id: "foo", started_at: Timex.Ecto.DateTime.autogenerate)
+      survey = insert(:survey, project: project, state: "running", floip_package_id: "foo", started_at: DateTime.utc_now)
 
       requested_path = "#{project_survey_package_responses_path(conn, :responses, project.id, survey.id, "foo")}?foo=bar"
       conn = get(conn, requested_path)
@@ -132,7 +132,7 @@ defmodule Ask.FloipControllerTest do
 
     test "injects links for next page and previous page", %{conn: conn, user: user} do
       project = create_project_for_user(user)
-      survey = insert(:survey, project: project, state: "running", floip_package_id: "foo", started_at: Timex.Ecto.DateTime.autogenerate)
+      survey = insert(:survey, project: project, state: "running", floip_package_id: "foo", started_at: DateTime.utc_now)
 
       respondent = insert(:respondent, survey: survey, hashed_number: "1234")
 
@@ -142,7 +142,7 @@ defmodule Ask.FloipControllerTest do
           respondent: respondent,
           field_name: "Exercises #{i}",
           value: "Yes",
-          inserted_at: Ecto.DateTime.cast!("2000-01-01 00:#{response_minute}:00"),
+          inserted_at: DateTime.from_iso8601("2000-01-01T00:#{response_minute}:00Z") |> elem(1),
           id: i)
       end
 
@@ -177,7 +177,7 @@ defmodule Ask.FloipControllerTest do
 
     test "happy path", %{conn: conn, user: user} do
       project = create_project_for_user(user)
-      survey = insert(:survey, project: project, state: "running", floip_package_id: "foo", started_at: Timex.Ecto.DateTime.autogenerate)
+      survey = insert(:survey, project: project, state: "running", floip_package_id: "foo", started_at: DateTime.utc_now)
 
       requested_path = project_survey_package_responses_path(conn, :responses, project.id, survey.id, "foo")
       conn = get(conn, requested_path)

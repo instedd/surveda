@@ -29,14 +29,21 @@ defmodule Ask.RespondentControllerTest do
     "call_durations" => %{}
   }
 
+  defp cast!(str) do
+    case DateTime.from_iso8601(str) do
+      {:ok, datetime, _offset} -> datetime
+      {:error, x} -> {:error, x}
+    end
+  end
+
   describe "fetches respondents in the requested order" do
     setup %{conn: conn} do
       %{project: project, questionnaire: questionnaire, survey: survey, conn: conn} =
         init_respondents_fetch_setup(conn)
 
       ordered_dates = [
-        Ecto.DateTime.cast!("2020-06-01T10:00:00Z"),
-        Ecto.DateTime.cast!("2020-07-01T10:00:00Z")
+        cast!("2020-06-01T10:00:00Z"),
+        cast!("2020-07-01T10:00:00Z")
       ]
 
       ordered_dispositions = ["completed", "partial"]
@@ -326,9 +333,9 @@ defmodule Ask.RespondentControllerTest do
       questionnaire = insert(:questionnaire, name: "test", project: project, steps: @dummy_steps)
       survey = insert(:survey, project: project, cutoff: 10, started_at: t, questionnaires: [questionnaire])
       insert_list(10, :respondent, survey: survey, questionnaire: questionnaire, disposition: "partial")
-      insert(:respondent, survey: survey, disposition: "completed", questionnaire: questionnaire, updated_at: Ecto.DateTime.cast!("2016-01-01T10:00:00Z"))
-      insert(:respondent, survey: survey, disposition: "completed", questionnaire: questionnaire, updated_at: Ecto.DateTime.cast!("2016-01-01T11:00:00Z"))
-      insert_list(3, :respondent, survey: survey, disposition: "completed", questionnaire: questionnaire, updated_at: Ecto.DateTime.cast!("2016-01-02T10:00:00Z"))
+      insert(:respondent, survey: survey, disposition: "completed", questionnaire: questionnaire, updated_at: cast!("2016-01-01T10:00:00Z"))
+      insert(:respondent, survey: survey, disposition: "completed", questionnaire: questionnaire, updated_at: cast!("2016-01-01T11:00:00Z"))
+      insert_list(3, :respondent, survey: survey, disposition: "completed", questionnaire: questionnaire, updated_at: cast!("2016-01-02T10:00:00Z"))
 
       conn = get conn, project_survey_respondents_stats_path(conn, :stats, project.id, survey.id)
       data = json_response(conn, 200)["data"]
@@ -416,10 +423,10 @@ defmodule Ask.RespondentControllerTest do
           ]
         )
 
-      insert(:respondent, survey: survey, disposition: "completed", questionnaire: q1, mode: ["sms"], updated_at: Ecto.DateTime.cast!("2016-01-01T10:00:00Z"))
-      insert(:respondent, survey: survey, disposition: "completed", questionnaire: q2, mode: ["sms"], updated_at: Ecto.DateTime.cast!("2016-01-01T11:00:00Z"))
-      insert_list(6,:respondent, survey: survey, disposition: "completed", questionnaire: q2, mode: ["ivr"], updated_at: Ecto.DateTime.cast!("2016-01-01T10:00:00Z"))
-      insert_list(3, :respondent, survey: survey, disposition: "completed", questionnaire: q2, mode: ["ivr"], updated_at: Ecto.DateTime.cast!("2016-01-02T10:00:00Z"))
+      insert(:respondent, survey: survey, disposition: "completed", questionnaire: q1, mode: ["sms"], updated_at: cast!("2016-01-01T10:00:00Z"))
+      insert(:respondent, survey: survey, disposition: "completed", questionnaire: q2, mode: ["sms"], updated_at: cast!("2016-01-01T11:00:00Z"))
+      insert_list(6,:respondent, survey: survey, disposition: "completed", questionnaire: q2, mode: ["ivr"], updated_at: cast!("2016-01-01T10:00:00Z"))
+      insert_list(3, :respondent, survey: survey, disposition: "completed", questionnaire: q2, mode: ["ivr"], updated_at: cast!("2016-01-02T10:00:00Z"))
 
       conn = get conn, project_survey_respondents_stats_path(conn, :stats, project.id, survey.id)
 
@@ -471,10 +478,10 @@ defmodule Ask.RespondentControllerTest do
           ]
         )
 
-      insert(:respondent, survey: survey, disposition: "completed", questionnaire: q1, mode: ["sms"], updated_at: Ecto.DateTime.cast!("2016-01-01T10:00:00Z"))
-      insert(:respondent, survey: survey, disposition: "completed", questionnaire: q2, mode: ["sms"], updated_at: Ecto.DateTime.cast!("2016-01-01T11:00:00Z"))
-      insert_list(6,:respondent, survey: survey, disposition: "completed", questionnaire: q2, mode: ["ivr"], updated_at: Ecto.DateTime.cast!("2016-01-01T10:00:00Z"))
-      insert_list(3, :respondent, survey: survey, disposition: "completed", questionnaire: q2, mode: ["ivr"], updated_at: Ecto.DateTime.cast!("2016-01-02T10:00:00Z"))
+      insert(:respondent, survey: survey, disposition: "completed", questionnaire: q1, mode: ["sms"], updated_at: cast!("2016-01-01T10:00:00Z"))
+      insert(:respondent, survey: survey, disposition: "completed", questionnaire: q2, mode: ["sms"], updated_at: cast!("2016-01-01T11:00:00Z"))
+      insert_list(6,:respondent, survey: survey, disposition: "completed", questionnaire: q2, mode: ["ivr"], updated_at: cast!("2016-01-01T10:00:00Z"))
+      insert_list(3, :respondent, survey: survey, disposition: "completed", questionnaire: q2, mode: ["ivr"], updated_at: cast!("2016-01-02T10:00:00Z"))
 
       conn = get conn, project_survey_respondents_stats_path(conn, :stats, project.id, survey.id)
 
@@ -505,10 +512,10 @@ defmodule Ask.RespondentControllerTest do
         )
 
       insert_list(10, :respondent, survey: survey, questionnaire: q1, disposition: "partial")
-      insert(:respondent, survey: survey, disposition: "completed", questionnaire: q1, mode: ["sms"], updated_at: Ecto.DateTime.cast!("2016-01-01T10:00:00Z"))
-      insert(:respondent, survey: survey, disposition: "completed", questionnaire: q1, mode: ["sms"], updated_at: Ecto.DateTime.cast!("2016-01-02T11:00:00Z"))
-      insert_list(30, :respondent, survey: survey, disposition: "completed", questionnaire: q1, mode: ["ivr"], updated_at: Ecto.DateTime.cast!("2016-01-01T10:00:00Z"))
-      insert_list(30, :respondent, survey: survey, disposition: "completed", questionnaire: q1, mode: ["ivr"], updated_at: Ecto.DateTime.cast!("2016-01-02T10:00:00Z"))
+      insert(:respondent, survey: survey, disposition: "completed", questionnaire: q1, mode: ["sms"], updated_at: cast!("2016-01-01T10:00:00Z"))
+      insert(:respondent, survey: survey, disposition: "completed", questionnaire: q1, mode: ["sms"], updated_at: cast!("2016-01-02T11:00:00Z"))
+      insert_list(30, :respondent, survey: survey, disposition: "completed", questionnaire: q1, mode: ["ivr"], updated_at: cast!("2016-01-01T10:00:00Z"))
+      insert_list(30, :respondent, survey: survey, disposition: "completed", questionnaire: q1, mode: ["ivr"], updated_at: cast!("2016-01-02T10:00:00Z"))
 
       conn = get conn, project_survey_respondents_stats_path(conn, :stats, project.id, survey.id)
 
@@ -527,7 +534,7 @@ defmodule Ask.RespondentControllerTest do
       project = create_project_for_user(user)
       questionnaire = insert(:questionnaire, name: "test", project: project, steps: @dummy_steps)
       survey = insert(:survey, project: project, cutoff: 1, started_at: t, questionnaires: [questionnaire])
-      insert(:respondent, survey: survey, disposition: "completed", questionnaire: questionnaire, updated_at: t |> Timex.to_erl |> Ecto.DateTime.from_erl)
+      insert(:respondent, survey: survey, disposition: "completed", questionnaire: questionnaire, updated_at: t)
 
       conn = get conn, project_survey_respondents_stats_path(conn, :stats, project.id, survey.id)
 
@@ -544,10 +551,10 @@ defmodule Ask.RespondentControllerTest do
       bucket_1 = insert(:quota_bucket, survey: survey, condition: %{gender: "male"}, quota: 4, count: 2)
       bucket_2 = insert(:quota_bucket, survey: survey, condition: %{gender: "female"}, quota: 12, count: 4)
       insert_list(10, :respondent, survey: survey, questionnaire: questionnaire, disposition: "partial")
-      insert(:respondent, survey: survey, questionnaire: questionnaire, disposition: "completed", updated_at: Ecto.DateTime.cast!("2016-01-01T10:00:00Z"), quota_bucket: bucket_1)
-      insert(:respondent, survey: survey, questionnaire: questionnaire, disposition: "completed", updated_at: Ecto.DateTime.cast!("2016-01-01T11:00:00Z"), quota_bucket: bucket_1)
-      insert(:respondent, survey: survey, questionnaire: questionnaire, disposition: "rejected", updated_at: Ecto.DateTime.cast!("2016-01-02T10:00:00Z"), quota_bucket: bucket_2)
-      insert_list(3, :respondent, survey: survey, questionnaire: questionnaire, disposition: "completed", updated_at: Ecto.DateTime.cast!("2016-01-02T10:00:00Z"), quota_bucket: bucket_2)
+      insert(:respondent, survey: survey, questionnaire: questionnaire, disposition: "completed", updated_at: cast!("2016-01-01T10:00:00Z"), quota_bucket: bucket_1)
+      insert(:respondent, survey: survey, questionnaire: questionnaire, disposition: "completed", updated_at: cast!("2016-01-01T11:00:00Z"), quota_bucket: bucket_1)
+      insert(:respondent, survey: survey, questionnaire: questionnaire, disposition: "rejected", updated_at: cast!("2016-01-02T10:00:00Z"), quota_bucket: bucket_2)
+      insert_list(3, :respondent, survey: survey, questionnaire: questionnaire, disposition: "completed", updated_at: cast!("2016-01-02T10:00:00Z"), quota_bucket: bucket_2)
 
       conn = get conn, project_survey_respondents_stats_path(conn, :stats, project.id, survey.id)
       data = json_response(conn, 200)["data"]
@@ -620,9 +627,9 @@ defmodule Ask.RespondentControllerTest do
       questionnaire = insert(:questionnaire, name: "test", project: project, steps: @dummy_steps)
       survey = insert(:survey, project: project, cutoff: 10, started_at: t, questionnaires: [questionnaire], count_partial_results: true)
       insert_list(10, :respondent, survey: survey, state: "pending", disposition: "registered")
-      insert(:respondent, survey: survey, state: "completed", questionnaire: questionnaire, disposition: "partial", updated_at: Ecto.DateTime.cast!("2016-01-01T10:00:00Z"))
-      insert(:respondent, survey: survey, state: "completed", questionnaire: questionnaire, disposition: "completed", updated_at: Ecto.DateTime.cast!("2016-01-01T11:00:00Z"))
-      insert_list(3, :respondent, survey: survey, state: "completed", questionnaire: questionnaire, disposition: "ineligible", updated_at: Ecto.DateTime.cast!("2016-01-02T10:00:00Z"))
+      insert(:respondent, survey: survey, state: "completed", questionnaire: questionnaire, disposition: "partial", updated_at: cast!("2016-01-01T10:00:00Z"))
+      insert(:respondent, survey: survey, state: "completed", questionnaire: questionnaire, disposition: "completed", updated_at: cast!("2016-01-01T11:00:00Z"))
+      insert_list(3, :respondent, survey: survey, state: "completed", questionnaire: questionnaire, disposition: "ineligible", updated_at: cast!("2016-01-02T10:00:00Z"))
 
       conn = get conn, project_survey_respondents_stats_path(conn, :stats, project.id, survey.id)
       data = json_response(conn, 200)["data"]
@@ -688,7 +695,7 @@ defmodule Ask.RespondentControllerTest do
         questionnaire: questionnaire,
         state: "completed",
         disposition: "completed",
-        updated_at: Ecto.DateTime.cast!("2016-01-05T10:00:00Z")
+        updated_at: cast!("2016-01-05T10:00:00Z")
       )
 
       conn = get(conn, project_survey_respondents_stats_path(conn, :stats, project.id, survey.id))
@@ -734,10 +741,10 @@ defmodule Ask.RespondentControllerTest do
       bucket_2 = insert(:quota_bucket, survey: survey, condition: %{gender: "female"}, quota: 12, count: 4)
       bucket_3 = insert(:quota_bucket, survey: survey, condition: %{gender: "female"}, quota: 12, count: 4)
       insert_list(10, :respondent, survey: survey, questionnaire: questionnaire, disposition: "partial")
-      insert(:respondent, survey: survey, questionnaire: questionnaire, disposition: "completed", updated_at: Ecto.DateTime.cast!("2016-01-01T10:00:00Z"), quota_bucket: bucket_1)
-      insert(:respondent, survey: survey, questionnaire: questionnaire, disposition: "completed", updated_at: Ecto.DateTime.cast!("2016-01-01T11:00:00Z"), quota_bucket: bucket_1)
-      insert(:respondent, survey: survey, questionnaire: questionnaire, disposition: "rejected", updated_at: Ecto.DateTime.cast!("2016-01-02T10:00:00Z"), quota_bucket: bucket_2)
-      insert_list(3, :respondent, survey: survey, questionnaire: questionnaire, disposition: "completed", updated_at: Ecto.DateTime.cast!("2016-01-02T10:00:00Z"), quota_bucket: bucket_3)
+      insert(:respondent, survey: survey, questionnaire: questionnaire, disposition: "completed", updated_at: cast!("2016-01-01T10:00:00Z"), quota_bucket: bucket_1)
+      insert(:respondent, survey: survey, questionnaire: questionnaire, disposition: "completed", updated_at: cast!("2016-01-01T11:00:00Z"), quota_bucket: bucket_1)
+      insert(:respondent, survey: survey, questionnaire: questionnaire, disposition: "rejected", updated_at: cast!("2016-01-02T10:00:00Z"), quota_bucket: bucket_2)
+      insert_list(3, :respondent, survey: survey, questionnaire: questionnaire, disposition: "completed", updated_at: cast!("2016-01-02T10:00:00Z"), quota_bucket: bucket_3)
 
       Repo.delete(bucket_3)
 
@@ -2137,11 +2144,11 @@ defmodule Ask.RespondentControllerTest do
       respondent_1 = insert(:respondent, survey: survey, hashed_number: "1asd12451eds", disposition: "partial")
       respondent_2 = insert(:respondent, survey: survey, hashed_number: "34y5345tjyet")
 
-      insert(:respondent_disposition_history, survey: survey, respondent: respondent_1, respondent_hashed_number: respondent_1.hashed_number, disposition: "partial", mode: "sms", inserted_at: Ecto.DateTime.cast!("2000-01-01 01:02:03"))
-      insert(:respondent_disposition_history, survey: survey, respondent: respondent_1, respondent_hashed_number: respondent_1.hashed_number, disposition: "completed",  mode: "sms",inserted_at: Ecto.DateTime.cast!("2000-01-01 02:03:04"))
+      insert(:respondent_disposition_history, survey: survey, respondent: respondent_1, respondent_hashed_number: respondent_1.hashed_number, disposition: "partial", mode: "sms", inserted_at: cast!("2000-01-01T01:02:03Z"))
+      insert(:respondent_disposition_history, survey: survey, respondent: respondent_1, respondent_hashed_number: respondent_1.hashed_number, disposition: "completed",  mode: "sms",inserted_at: cast!("2000-01-01T02:03:04Z"))
 
-      insert(:respondent_disposition_history, survey: survey, respondent: respondent_2, respondent_hashed_number: respondent_2.hashed_number, disposition: "partial", mode: "ivr", inserted_at: Ecto.DateTime.cast!("2000-01-01 03:04:05"))
-      insert(:respondent_disposition_history, survey: survey, respondent: respondent_2, respondent_hashed_number: respondent_2.hashed_number, disposition: "completed", mode: "ivr", inserted_at: Ecto.DateTime.cast!("2000-01-01 04:05:06"))
+      insert(:respondent_disposition_history, survey: survey, respondent: respondent_2, respondent_hashed_number: respondent_2.hashed_number, disposition: "partial", mode: "ivr", inserted_at: cast!("2000-01-01 03:04:05Z"))
+      insert(:respondent_disposition_history, survey: survey, respondent: respondent_2, respondent_hashed_number: respondent_2.hashed_number, disposition: "completed", mode: "ivr", inserted_at: cast!("2000-01-01 04:05:06Z"))
 
       conn = get conn, project_survey_respondents_disposition_history_path(conn, :disposition_history, survey.project.id, survey.id, %{"_format" => "csv"})
       csv = response(conn, 200)
@@ -2158,7 +2165,7 @@ defmodule Ask.RespondentControllerTest do
       project = create_project_for_user(user)
       questionnaire = insert(:questionnaire, name: "test", project: project)
       survey = insert(:survey, project: project, cutoff: 4, questionnaires: [questionnaire], state: "ready", schedule: completed_schedule())
-      completed_at = Ecto.DateTime.cast!("2019-11-10 09:00:00")
+      completed_at = cast!("2019-11-10T09:00:00Z")
       insert(:respondent, survey: survey, phone_number: "1234", disposition: "partial", questionnaire_id: questionnaire.id, mode: ["sms"])
       insert(:respondent, survey: survey, phone_number: "5678", disposition: "completed", questionnaire_id: questionnaire.id, mode: ["sms", "ivr"], completed_at: completed_at)
       insert(:respondent, survey: survey, phone_number: "9012", disposition: "completed", mode: ["sms", "ivr"])
@@ -2183,9 +2190,9 @@ defmodule Ask.RespondentControllerTest do
       respondent_2 = insert(:respondent, survey: survey, hashed_number: "5678")
       channel = insert(:channel, name: "test_channel")
       for _ <- 1..200 do
-        insert(:survey_log_entry, survey: survey, mode: "sms",respondent: respondent_2, respondent_hashed_number: "5678", channel: channel, disposition: "completed", action_type: "prompt", action_data: "explanation", timestamp: Ecto.DateTime.cast!("2000-01-01 01:02:03"))
-        insert(:survey_log_entry, survey: survey, mode: "ivr",respondent: respondent_1, respondent_hashed_number: "1234", channel: nil, disposition: "partial", action_type: "contact", action_data: "explanation", timestamp: Ecto.DateTime.cast!("2000-01-01 02:03:04"))
-        insert(:survey_log_entry, survey: survey, mode: "mobileweb",respondent: respondent_2, respondent_hashed_number: "5678", channel: nil, disposition: "partial", action_type: "contact", action_data: "explanation", timestamp: Ecto.DateTime.cast!("2000-01-01 03:04:05"))
+        insert(:survey_log_entry, survey: survey, mode: "sms",respondent: respondent_2, respondent_hashed_number: "5678", channel: channel, disposition: "completed", action_type: "prompt", action_data: "explanation", timestamp: cast!("2000-01-01T01:02:03Z"))
+        insert(:survey_log_entry, survey: survey, mode: "ivr",respondent: respondent_1, respondent_hashed_number: "1234", channel: nil, disposition: "partial", action_type: "contact", action_data: "explanation", timestamp: cast!("2000-01-01T02:03:04Z"))
+        insert(:survey_log_entry, survey: survey, mode: "mobileweb",respondent: respondent_2, respondent_hashed_number: "5678", channel: nil, disposition: "partial", action_type: "contact", action_data: "explanation", timestamp: cast!("2000-01-01T03:04:05Z"))
       end
 
       conn = get conn, project_survey_respondents_interactions_path(conn, :interactions, survey.project.id, survey.id, %{"_format" => "csv"})
@@ -2295,11 +2302,11 @@ defmodule Ask.RespondentControllerTest do
       respondent_1 = insert(:respondent, survey: survey, hashed_number: "1asd12451eds", disposition: "partial")
       respondent_2 = insert(:respondent, survey: survey, hashed_number: "34y5345tjyet")
 
-      insert(:respondent_disposition_history, survey: survey, respondent: respondent_1, respondent_hashed_number: respondent_1.hashed_number, disposition: "partial", mode: "sms", inserted_at: Ecto.DateTime.cast!("2000-01-01 01:02:03"))
-      insert(:respondent_disposition_history, survey: survey, respondent: respondent_1, respondent_hashed_number: respondent_1.hashed_number, disposition: "completed",  mode: "sms",inserted_at: Ecto.DateTime.cast!("2000-01-01 02:03:04"))
+      insert(:respondent_disposition_history, survey: survey, respondent: respondent_1, respondent_hashed_number: respondent_1.hashed_number, disposition: "partial", mode: "sms", inserted_at: cast!("2000-01-01T01:02:03Z"))
+      insert(:respondent_disposition_history, survey: survey, respondent: respondent_1, respondent_hashed_number: respondent_1.hashed_number, disposition: "completed",  mode: "sms",inserted_at: cast!("2000-01-01T02:03:04Z"))
 
-      insert(:respondent_disposition_history, survey: survey, respondent: respondent_2, respondent_hashed_number: respondent_2.hashed_number, disposition: "partial", mode: "ivr", inserted_at: Ecto.DateTime.cast!("2000-01-01 03:04:05"))
-      insert(:respondent_disposition_history, survey: survey, respondent: respondent_2, respondent_hashed_number: respondent_2.hashed_number, disposition: "completed", mode: "ivr", inserted_at: Ecto.DateTime.cast!("2000-01-01 04:05:06"))
+      insert(:respondent_disposition_history, survey: survey, respondent: respondent_2, respondent_hashed_number: respondent_2.hashed_number, disposition: "partial", mode: "ivr", inserted_at: cast!("2000-01-01T03:04:05Z"))
+      insert(:respondent_disposition_history, survey: survey, respondent: respondent_2, respondent_hashed_number: respondent_2.hashed_number, disposition: "completed", mode: "ivr", inserted_at: cast!("2000-01-01T04:05:06Z"))
 
       {:ok, link} = ShortLink.generate_link(Survey.link_name(survey, :results), project_survey_respondents_disposition_history_path(conn, :disposition_history, project, survey, %{"_format" => "csv"}))
 
@@ -2340,7 +2347,7 @@ defmodule Ask.RespondentControllerTest do
       project = create_project_for_user(user)
       questionnaire = insert(:questionnaire, name: "test", project: project)
       survey = insert(:survey, project: project, cutoff: 4, questionnaires: [questionnaire], state: "ready", schedule: completed_schedule())
-      completed_at = Ecto.DateTime.cast!("2019-11-15 19:00:00")
+      completed_at = cast!("2019-11-15T19:00:00Z")
       insert(:respondent, survey: survey, phone_number: "1234", disposition: "partial", questionnaire_id: questionnaire.id, mode: ["sms"])
       insert(:respondent, survey: survey, phone_number: "5678", disposition: "completed", questionnaire_id: questionnaire.id, mode: ["sms", "ivr"], completed_at: completed_at)
       insert(:respondent, survey: survey, phone_number: "9012", disposition: "completed", mode: ["sms", "ivr"])
@@ -2387,9 +2394,9 @@ defmodule Ask.RespondentControllerTest do
       respondent_2 = insert(:respondent, survey: survey, hashed_number: "5678")
       channel = insert(:channel, name: "test_channel")
       for _ <- 1..200 do
-        insert(:survey_log_entry, survey: survey, mode: "sms",respondent: respondent_2, respondent_hashed_number: "5678", channel: channel, disposition: "completed", action_type: "prompt", action_data: "explanation", timestamp: Ecto.DateTime.cast!("2000-01-01 01:02:03"))
-        insert(:survey_log_entry, survey: survey, mode: "ivr",respondent: respondent_1, respondent_hashed_number: "1234", channel: nil, disposition: "partial", action_type: "contact", action_data: "explanation", timestamp: Ecto.DateTime.cast!("2000-01-01 02:03:04"))
-        insert(:survey_log_entry, survey: survey, mode: "mobileweb",respondent: respondent_2, respondent_hashed_number: "5678", channel: nil, disposition: "partial", action_type: "contact", action_data: "explanation", timestamp: Ecto.DateTime.cast!("2000-01-01 03:04:05"))
+        insert(:survey_log_entry, survey: survey, mode: "sms",respondent: respondent_2, respondent_hashed_number: "5678", channel: channel, disposition: "completed", action_type: "prompt", action_data: "explanation", timestamp: cast!("2000-01-01T01:02:03Z"))
+        insert(:survey_log_entry, survey: survey, mode: "ivr",respondent: respondent_1, respondent_hashed_number: "1234", channel: nil, disposition: "partial", action_type: "contact", action_data: "explanation", timestamp: cast!("2000-01-01T02:03:04Z"))
+        insert(:survey_log_entry, survey: survey, mode: "mobileweb",respondent: respondent_2, respondent_hashed_number: "5678", channel: nil, disposition: "partial", action_type: "contact", action_data: "explanation", timestamp: cast!("2000-01-01T03:04:05Z"))
       end
 
       {:ok, link} = ShortLink.generate_link(Survey.link_name(survey, :results), project_survey_respondents_interactions_path(conn, :interactions, project, survey, %{"_format" => "csv"}))
@@ -2491,18 +2498,15 @@ defmodule Ask.RespondentControllerTest do
   end
 
   defp assert_respondent_order_by_date(%{
-         respondents: respondents,
-         respondent_index: respondent_index,
-         ordered_dates: ordered_dates,
-         ordered_index: ordered_index
-       }),
-       do:
-         assert(
-           Enum.at(respondents, respondent_index)["updated_at"] |> String.slice(0..9) ==
-             Enum.at(ordered_dates, ordered_index)
-             |> Ecto.DateTime.to_string()
-             |> String.slice(0..9)
-         )
+    respondents: respondents,
+    respondent_index: respondent_index,
+    ordered_dates: ordered_dates,
+    ordered_index: ordered_index
+  }) do
+    expected = Enum.at(ordered_dates, ordered_index) |> DateTime.to_date
+    actual = cast!(Enum.at(respondents, respondent_index)["updated_at"]) |> DateTime.to_date
+    assert Date.compare(actual, expected) == :eq
+  end
 
   defp assert_respondent_order_by_disposition(%{
          respondents: respondents,

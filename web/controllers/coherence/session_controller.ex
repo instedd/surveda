@@ -206,7 +206,7 @@ defmodule Ask.Coherence.SessionController do
     {conn, flash, params} =
       if attempts >= Config.max_failed_login_attempts do
         new_conn = assign(conn, :locked, true)
-        {new_conn, @flash_locked, %{locked_at: Ecto.DateTime.utc}}
+        {new_conn, @flash_locked, %{locked_at: DateTime.utc_now}}
       else
         {conn, @flash_invalid, %{}}
       end

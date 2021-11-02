@@ -14,6 +14,13 @@ defmodule Ask.ProjectControllerTest do
     {:ok, conn: conn, user: user}
   end
 
+  defp cast!(str) do
+    case DateTime.from_iso8601(str) do
+      {:ok, datetime, _} -> datetime
+      {:error, error} -> {:error, error}
+    end
+  end
+
   describe "index" do
 
     test "returns code 200 and empty list if there are no entries", %{conn: conn} do
@@ -427,8 +434,8 @@ defmodule Ask.ProjectControllerTest do
       survey = insert(:survey, project: project)
       collaborator_email = "foo@foo.com"
 
-      %{id: create_invite_id} = insert(:activity_log, project: project, user: user, entity_type: "project", entity_id: project.id, action: "create_invite", inserted_at: Ecto.DateTime.cast!("2000-01-01 00:00:00"), metadata: %{project_name: project.name, collaborator_email: collaborator_email, role: "editor"})
-      %{id: enable_link_id} = insert(:activity_log, project: project, action: "enable_public_link", inserted_at: Ecto.DateTime.cast!("2000-01-02 00:00:00"), user: user, entity_type: "survey", entity_id: survey.id, metadata: %{survey_name: survey.name, report_type: "survey_results"})
+      %{id: create_invite_id} = insert(:activity_log, project: project, user: user, entity_type: "project", entity_id: project.id, action: "create_invite", inserted_at: cast!("2000-01-01T00:00:00Z"), metadata: %{project_name: project.name, collaborator_email: collaborator_email, role: "editor"})
+      %{id: enable_link_id} = insert(:activity_log, project: project, action: "enable_public_link", inserted_at: cast!("2000-01-02T00:00:00Z"), user: user, entity_type: "survey", entity_id: survey.id, metadata: %{survey_name: survey.name, report_type: "survey_results"})
       create_invite_log = ActivityLog |> Repo.get!(create_invite_id)
       enable_link_log = ActivityLog |> Repo.get!(enable_link_id)
 
@@ -466,10 +473,10 @@ defmodule Ask.ProjectControllerTest do
     test "paginates activities", %{conn: conn, user: user} do
       project = create_project_for_user(user)
 
-      insert(:activity_log, project: project, action: "create_invite", inserted_at: Ecto.DateTime.cast!("2000-01-01 00:00:00"))
-      insert(:activity_log, project: project, action: "edit_collaborator", inserted_at: Ecto.DateTime.cast!("2000-01-02 00:00:00"))
-      insert(:activity_log, project: project, action: "enable_public_link", inserted_at: Ecto.DateTime.cast!("2000-01-03 00:00:00"))
-      insert(:activity_log, project: project, action: "start", inserted_at: Ecto.DateTime.cast!("2000-01-04 00:00:00"))
+      insert(:activity_log, project: project, action: "create_invite", inserted_at: cast!("2000-01-01T00:00:00Z"))
+      insert(:activity_log, project: project, action: "edit_collaborator", inserted_at: cast!("2000-01-02T00:00:00Z"))
+      insert(:activity_log, project: project, action: "enable_public_link", inserted_at: cast!("2000-01-03T00:00:00Z"))
+      insert(:activity_log, project: project, action: "start", inserted_at: cast!("2000-01-04T00:00:00Z"))
 
       first_page = get conn, project_activities_path(conn, :activities, project.id, page: 1, limit: 2)
       second_page = get conn, project_activities_path(conn, :activities, project.id, page: 2, limit: 2)
@@ -483,10 +490,10 @@ defmodule Ask.ProjectControllerTest do
     test "sort activities by insertedAt in ascendent order", %{conn: conn, user: user} do
       project = create_project_for_user(user)
 
-      insert(:activity_log, project: project, action: "create_invite", inserted_at: Ecto.DateTime.cast!("2000-01-01 00:00:00"))
-      insert(:activity_log, project: project, action: "edit_collaborator", inserted_at: Ecto.DateTime.cast!("2000-01-02 00:00:00"))
-      insert(:activity_log, project: project, action: "enable_public_link", inserted_at: Ecto.DateTime.cast!("2000-01-03 00:00:00"))
-      insert(:activity_log, project: project, action: "start", inserted_at: Ecto.DateTime.cast!("2000-01-04 00:00:00"))
+      insert(:activity_log, project: project, action: "create_invite", inserted_at: cast!("2000-01-01T00:00:00Z"))
+      insert(:activity_log, project: project, action: "edit_collaborator", inserted_at: cast!("2000-01-02T00:00:00Z"))
+      insert(:activity_log, project: project, action: "enable_public_link", inserted_at: cast!("2000-01-03T00:00:00Z"))
+      insert(:activity_log, project: project, action: "start", inserted_at: cast!("2000-01-04T00:00:00Z"))
 
       first_page = get conn, project_activities_path(conn, :activities, project.id, page: 1, limit: 2, sort_by: "insertedAt", sort_asc: true)
       second_page = get conn, project_activities_path(conn, :activities, project.id, page: 2, limit: 2, sort: "insertedAt", sort_asc: true)
@@ -500,10 +507,10 @@ defmodule Ask.ProjectControllerTest do
     test "sort activities by insertedAt in descendent order", %{conn: conn, user: user} do
       project = create_project_for_user(user)
 
-      insert(:activity_log, project: project, action: "create_invite", inserted_at: Ecto.DateTime.cast!("2000-01-01 00:00:00"))
-      insert(:activity_log, project: project, action: "edit_collaborator", inserted_at: Ecto.DateTime.cast!("2000-01-02 00:00:00"))
-      insert(:activity_log, project: project, action: "enable_public_link", inserted_at: Ecto.DateTime.cast!("2000-01-03 00:00:00"))
-      insert(:activity_log, project: project, action: "start", inserted_at: Ecto.DateTime.cast!("2000-01-04 00:00:00"))
+      insert(:activity_log, project: project, action: "create_invite", inserted_at: cast!("2000-01-01T00:00:00Z"))
+      insert(:activity_log, project: project, action: "edit_collaborator", inserted_at: cast!("2000-01-02T00:00:00Z"))
+      insert(:activity_log, project: project, action: "enable_public_link", inserted_at: cast!("2000-01-03T00:00:00Z"))
+      insert(:activity_log, project: project, action: "start", inserted_at: cast!("2000-01-04T00:00:00Z"))
 
       first_page = get conn, project_activities_path(conn, :activities, project.id, page: 1, limit: 2, sort_by: "insertedAt", sort_asc: false)
       second_page = get conn, project_activities_path(conn, :activities, project.id, page: 2, limit: 2, sort_by: "insertedAt", sort_asc: false)
@@ -520,8 +527,8 @@ defmodule Ask.ProjectControllerTest do
       survey = insert(:survey, project: project)
       collaborator_email = "foo@foo.com"
 
-      %{id: create_invite_id} = insert(:activity_log, project: project, user: user, entity_type: "project", entity_id: project.id, action: "create_invite", inserted_at: Ecto.DateTime.cast!("2000-01-01 00:00:00"), metadata: %{project_name: project.name, collaborator_email: collaborator_email, role: "editor"})
-      insert(:activity_log, project: project2, action: "enable_public_link", inserted_at: Ecto.DateTime.cast!("2000-01-02 00:00:00"), user: user, entity_type: "survey", entity_id: survey.id, metadata: %{survey_name: survey.name, report_type: "survey_results"})
+      %{id: create_invite_id} = insert(:activity_log, project: project, user: user, entity_type: "project", entity_id: project.id, action: "create_invite", inserted_at: cast!("2000-01-01T00:00:00Z"), metadata: %{project_name: project.name, collaborator_email: collaborator_email, role: "editor"})
+      insert(:activity_log, project: project2, action: "enable_public_link", inserted_at: cast!("2000-01-02T00:00:00Z"), user: user, entity_type: "survey", entity_id: survey.id, metadata: %{survey_name: survey.name, report_type: "survey_results"})
       create_invite_log = ActivityLog |> Repo.get!(create_invite_id)
 
       conn = get conn, project_activities_path(conn, :activities, project.id)

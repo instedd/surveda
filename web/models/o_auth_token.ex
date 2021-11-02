@@ -5,7 +5,7 @@ defmodule Ask.OAuthToken do
     field :provider, :string
     field :base_url, :string
     field :access_token, :map
-    field :expires_at, Timex.Ecto.DateTime
+    field :expires_at, :utc_datetime
     belongs_to :user, Ask.User
 
     timestamps()
