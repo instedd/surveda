@@ -63,7 +63,7 @@ defmodule Ask.Mixfile do
       {:oauth2, "~> 0.7.0"},
       {:mutex, "~> 1.1.3"},
       {:mox, "~> 0.5", only: :test},
-      {:timex, "~> 3.0", override: true},
+      {:timex, "~> 3.0"},
       {:sentry, "~> 6.0"},
       {:hackney, "~> 1.0"},
       {:ex_json_schema, "~> 0.5.2"},
