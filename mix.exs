@@ -81,7 +81,12 @@ defmodule Ask.Mixfile do
       {:trailing_format_plug, "~> 0.0.7"},
       {:plug_cowboy, "~> 1.0"},
       {:gen_stage, "~> 0.14"},
-      {:zstream, "~> 0.2.0"}
+      {:zstream, "~> 0.2.0"},
+
+      # held back until we upgrade to Elixir 1.7+
+      {:plug, "~> 1.8.0"},
+      {:plug_crypto, "~> 1.1.1"},
+      {:telemetry, "~> 0.4.3"},
    ]
   end
 
