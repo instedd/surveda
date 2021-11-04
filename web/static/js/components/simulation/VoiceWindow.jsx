@@ -37,6 +37,7 @@ function audioURL(ivr: IVRPrompt): string {
 
 const VoiceWindow = translate()(class extends Component<VoiceWindowProps, VoiceWindowState> {
   audio: HTMLAudioElement
+  playPromise: Promise<any>
 
   message: string
   messageTimer: TimeoutID
@@ -61,13 +62,27 @@ const VoiceWindow = translate()(class extends Component<VoiceWindowProps, VoiceW
     const ivr = this.props.prompts.shift()
     if (ivr) {
       this.setState({ currentPrompt: ivr.text })
-      this.audio.pause()
-      this.audio.src = audioURL(ivr)
-      this.audio.onended = () => { this.play() }
 
-      const promise = this.audio.play()
-      promise && promise.catch(() => {}) // silence async play errors
+      if (this.playPromise) {
+        this.playPromise
+          .then(() => this.playIVR(ivr))
+          .catch(() => { /* audio prompt failed to load */ })
+      } else {
+        // first audio prompt and/or older browser didn't return a promise on play
+        this.playIVR(ivr)
+      }
     }
+  }
+
+  playIVR(ivr) {
+    // we may be interrupting an audio prompt here, so we stop any playing
+    // audio, before skipping to the next one:
+    this.audio.pause()
+
+    // play the IVR prompt, continuing to the next one when finished:
+    this.audio.src = audioURL(ivr)
+    this.audio.onended = () => { this.play() }
+    this.playPromise = this.audio.play()
   }
 
   entered(character: string): void {
