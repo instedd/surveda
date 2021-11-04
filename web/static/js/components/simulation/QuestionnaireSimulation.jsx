@@ -52,26 +52,43 @@ type Props = {
 }
 
 type State = {
-  simulation: ?Simulation
+  simulation: ?Simulation,
+  isSimulationTerminated: boolean
 }
 
 class QuestionnaireSimulation extends Component<Props, State> {
+  _onMessage: Function // MessageEvent<{ simulationChanged: boolean }> => void
+
   state = {
-    simulation: null
+    simulation: null,
+    isSimulationTerminated: false
   }
 
-  componentDidMount = () => {
+  componentDidMount() {
+    const { projectId, questionnaireId, mode } = this.props
+
     browserHistory.listen(this.onRouteChange)
-    window.addEventListener('message', event => {
-      const { mode } = this.props
-      const { simulation } = this.state
-      if (event.data.simulationChanged && simulation) {
-        const { projectId, questionnaireId } = this.props
-        return fetchSimulation(projectId, questionnaireId, simulation.respondentId, mode).then(result => {
-          this.onSimulationChanged(result)
+
+    if (mode == 'mobileweb') {
+      this._onMessage = event => { this.onMessage(event) }
+      window.addEventListener('message', this._onMessage)
+    }
+
+    if (projectId && questionnaireId) {
+      this.fetchQuestionnaireForTitle()
+
+      if (['sms', 'ivr', 'mobileweb'].includes(mode)) {
+        startSimulation(projectId, questionnaireId, mode).then(result => {
+          this.setState({simulation: result})
         })
       }
-    })
+    }
+  }
+
+  componentWillUnmount() {
+    if (this._onMessage) {
+      window.removeEventListener('message', this._onMessage)
+    }
   }
 
   onRouteChange = () => {
@@ -87,48 +104,63 @@ class QuestionnaireSimulation extends Component<Props, State> {
     this.props.questionnaireActions.fetchQuestionnaireIfNeeded(projectId, questionnaireId)
   }
 
-  componentWillMount() {
-    const { projectId, questionnaireId, mode } = this.props
-    if (projectId && questionnaireId) {
-      this.fetchQuestionnaireForTitle()
-      if (['sms', 'ivr', 'mobileweb'].includes(mode)) {
-        startSimulation(projectId, questionnaireId, mode).then(result => {
-          this.setState({simulation: result})
-        })
-      }
+  // Callback for the mobileweb simulator running in an iframe.
+  onMessage(event) {
+    const { mode } = this.props
+    const { simulation } = this.state
+
+    if (event.data.simulationChanged && simulation) {
+      const { projectId, questionnaireId } = this.props
+      return fetchSimulation(projectId, questionnaireId, simulation.respondentId, mode).then(result => {
+        this.onSimulationChanged(result)
+      })
     }
   }
 
   onSimulationChanged = result => {
+    if (this.state.isSimulationTerminated) return
+
     const { simulation } = this.state
     const { t } = this.props
-    if (result.simulationStatus == 'expired') {
+    const { simulationStatus } = result
+    const isSimulationTerminated = simulationStatus == 'expired' || simulationStatus == 'ended'
+    let newSimulation
+
+    if (isSimulationTerminated) {
+      switch (simulationStatus) {
+        case 'expired':
+          window.Materialize.toast(t('This simulation is expired. Please refresh to start a new one'))
+          break
+        case 'ended':
+          window.Materialize.toast(t('This simulation is ended. Please refresh to start a new one'))
+          break
+      }
+    }
+
+    if (simulationStatus == 'expired') {
       // When the simulation expires we avoid refreshing (and so, erasing) the current state
       // So we only update the simulation status and we send a message to the end user
       // This allow us to handle this particular situation properly
-      window.Materialize.toast(t('This simulation is expired. Please refresh to start a new one'))
-      this.setState({
-        simulation: {
-          ...simulation,
-          simulationStatus: result.simulationStatus
-        }
-      })
-    } else {
-      if (result.simulationStatus == 'ended') {
-        window.Materialize.toast(t('This simulation is ended. Please refresh to start a new one'))
+      newSimulation = {
+        ...simulation,
+        simulationStatus
       }
-      this.setState({
-        simulation: {
-          ...simulation,
-          messagesHistory: result.messagesHistory, // mode=sms
-          prompts: result.prompts,                 // mode=ivr
-          submissions: result.submissions,
-          simulationStatus: result.simulationStatus,
-          disposition: result.disposition,
-          currentStep: result.currentStep
-        }
-      })
+    } else {
+      newSimulation = {
+        ...simulation,
+        messagesHistory: result.messagesHistory, // mode=sms
+        prompts: result.prompts,                 // mode=ivr
+        submissions: result.submissions,
+        simulationStatus,
+        disposition: result.disposition,
+        currentStep: result.currentStep
+      }
     }
+
+    this.setState({
+      simulation: newSimulation,
+      isSimulationTerminated
+    })
   }
 
   handleATMessage = message => {
