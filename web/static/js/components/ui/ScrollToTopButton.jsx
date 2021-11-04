@@ -34,4 +34,3 @@ const scrollToTop = () => {
     }, 0)
   }
 }
-

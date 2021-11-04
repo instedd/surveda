@@ -14,4 +14,3 @@ const mapStateToProps = (state, ownProps) => ({
 })
 
 export default (ComponentClass) => connect(mapStateToProps)(withQuestionnaire(ComponentClass))
-

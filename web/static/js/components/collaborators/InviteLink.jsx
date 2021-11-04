@@ -10,6 +10,7 @@ export class InviteLink extends Component {
     super(props)
     this.copyLink = this.copyLink.bind(this)
   }
+
   copyLink() {
     const { projectId, guest, dispatch, t } = this.props
 

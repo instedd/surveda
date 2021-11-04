@@ -137,4 +137,3 @@ export const selectChannels = (projectId, surveyId, groupId, channels) => (dispa
     channels
   })
 }
-

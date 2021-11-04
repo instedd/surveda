@@ -15,7 +15,6 @@ type Props = {
 }
 
 class RespondentRow extends Component<Props> {
-
   isFieldSelected(fieldType: string, fieldKey: string) {
     const { selectedFields } = this.props
     return isFieldSelected(selectedFields, fieldUniqueKey(fieldType, fieldKey))

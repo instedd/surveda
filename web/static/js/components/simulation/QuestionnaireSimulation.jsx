@@ -149,7 +149,7 @@ class QuestionnaireSimulation extends Component<Props, State> {
       newSimulation = {
         ...simulation,
         messagesHistory: result.messagesHistory, // mode=sms
-        prompts: result.prompts,                 // mode=ivr
+        prompts: result.prompts, // mode=ivr
         submissions: result.submissions,
         simulationStatus,
         disposition: result.disposition,

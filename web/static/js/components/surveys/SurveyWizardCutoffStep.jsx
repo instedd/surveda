@@ -135,12 +135,6 @@ class SurveyWizardCutoffStep extends Component {
   handleConfigChange(config) {
     const { dispatch } = this.props
     switch (config) {
-      default:
-      case 'default': {
-        dispatch(actions.changeCutoff(null))
-        this.turnOffQuotas()
-        break
-      }
       case 'cutoff' : {
         dispatch(actions.changeCutoff(0))
         this.turnOffQuotas()
@@ -148,6 +142,12 @@ class SurveyWizardCutoffStep extends Component {
       }
       case 'quota' : {
         this.turnOnQuotas()
+        break
+      }
+      case 'default':
+      default: {
+        dispatch(actions.changeCutoff(null))
+        this.turnOffQuotas()
         break
       }
     }

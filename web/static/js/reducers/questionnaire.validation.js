@@ -188,12 +188,7 @@ const skipLogicError = (skipLogic, stepIndex, steps, context) => {
       return null
     }
   }
-  let currentValueIsValid = false
-  steps.slice(stepIndex + 1).map(s => {
-    if (skipLogic === s.id) {
-      currentValueIsValid = true
-    }
-  })
+  const currentValueIsValid = steps.slice(stepIndex + 1).some(s => skipLogic === s.id)
   if (!currentValueIsValid) {
     return k('Cannot jump to a previous step or step outside section')
   } else {

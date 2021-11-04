@@ -19,7 +19,6 @@ class ChannelStatus extends Component {
       case 'error':
         info = ` (code ${statusInfo.code}) `
         break
-
     }
     return (
       <div className='channel-status'>

@@ -7,7 +7,6 @@ import { Card } from '../ui'
 import { translate } from 'react-i18next'
 
 class StepLanguageSelection extends Component {
-
   translateLangCode(code) {
     const language = iso6393.find((lang) => lang.iso6391 == code || lang.iso6393 == code)
     return language.name
