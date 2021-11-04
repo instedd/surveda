@@ -129,10 +129,10 @@ class QuestionnaireSimulation extends Component<Props, State> {
     if (isSimulationTerminated) {
       switch (simulationStatus) {
         case 'expired':
-          window.Materialize.toast(t(`This simulation is expired. Please refresh to start a new one`))
+          window.Materialize.toast(t('This simulation is expired. Please refresh to start a new one'))
           break
         case 'ended':
-          window.Materialize.toast(t(`This simulation is ended. Please refresh to start a new one`))
+          window.Materialize.toast(t('This simulation is ended. Please refresh to start a new one'))
           break
       }
     }
