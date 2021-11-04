@@ -118,44 +118,49 @@ class QuestionnaireSimulation extends Component<Props, State> {
   }
 
   onSimulationChanged = result => {
+    if (this.state.isSimulationTerminated) return
+
     const { simulation } = this.state
     const { t } = this.props
+    const { simulationStatus } = result
+    const isSimulationTerminated = simulationStatus == 'expired' || simulationStatus == 'ended'
+    let newSimulation
 
-    if (this.state.isSimulationTerminated) {
-      return
+    if (isSimulationTerminated) {
+      switch (simulationStatus) {
+        case 'expired':
+          window.Materialize.toast(t(`This simulation is expired. Please refresh to start a new one`))
+          break
+        case 'ended':
+          window.Materialize.toast(t(`This simulation is ended. Please refresh to start a new one`))
+          break
+      }
     }
 
-    if (result.simulationStatus == 'expired') {
+    if (simulationStatus == 'expired') {
       // When the simulation expires we avoid refreshing (and so, erasing) the current state
       // So we only update the simulation status and we send a message to the end user
       // This allow us to handle this particular situation properly
-      window.Materialize.toast(t('This simulation is expired. Please refresh to start a new one'))
-      this.setState({
-        simulation: {
-          ...simulation,
-          simulationStatus: result.simulationStatus
-        },
-        isSimulationTerminated: true
-      })
-    } else {
-      if (result.simulationStatus == 'ended') {
-        window.Materialize.toast(t('This simulation is ended. Please refresh to start a new one'))
-        this.setState({
-          isSimulationTerminated: true
-        })
+      newSimulation = {
+        ...simulation,
+        simulationStatus
       }
-      this.setState({
-        simulation: {
-          ...simulation,
-          messagesHistory: result.messagesHistory, // mode=sms
-          prompts: result.prompts,                 // mode=ivr
-          submissions: result.submissions,
-          simulationStatus: result.simulationStatus,
-          disposition: result.disposition,
-          currentStep: result.currentStep
-        }
-      })
+    } else {
+      newSimulation = {
+        ...simulation,
+        messagesHistory: result.messagesHistory, // mode=sms
+        prompts: result.prompts,                 // mode=ivr
+        submissions: result.submissions,
+        simulationStatus,
+        disposition: result.disposition,
+        currentStep: result.currentStep
+      }
     }
+
+    this.setState({
+      simulation: newSimulation,
+      isSimulationTerminated
+    })
   }
 
   handleATMessage = message => {
