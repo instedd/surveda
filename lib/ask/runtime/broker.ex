@@ -113,7 +113,7 @@ defmodule Ask.Runtime.Broker do
 
   defp poll_survey(survey, _now, false = _channel_is_down) do
     try do
-      by_state = Survey.respondents_by_state(survey)
+      by_state = Ask.RespondentStats.respondents_by_state(survey)
       %{
         "active" => active,
         "pending" => pending,
@@ -314,7 +314,7 @@ defmodule Ask.Runtime.Broker do
   end
 
   defp estimated_success_rate(survey, respondents_target) do
-    respondents_by_disposition = survey |> Survey.respondents_by_disposition
+    respondents_by_disposition = survey |> Ask.RespondentStats.respondents_by_disposition
     completion_rate = Survey.get_completion_rate(survey, respondents_by_disposition, respondents_target)
     current_success_rate = Survey.get_success_rate(survey, respondents_by_disposition )
     initial_success_rate = Survey.initial_success_rate()

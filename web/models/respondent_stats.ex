@@ -98,4 +98,22 @@ defmodule Ask.RespondentStats do
 
     query(t, quoted, group)
   end
+
+  def respondents_by_state(survey) do
+    by_state_defaults = %{
+      "active" => 0,
+      "pending" => 0,
+      "completed" => 0,
+      "rejected" => 0,
+      "failed" => 0,
+    }
+
+    respondent_count(survey_id: ^survey.id, by: :state)
+    |> Enum.into(by_state_defaults)
+  end
+
+  def respondents_by_disposition(survey) do
+    respondent_count(survey_id: ^survey.id, by: :disposition)
+    |> Enum.into(%{})
+  end
 end

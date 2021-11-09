@@ -2,7 +2,6 @@ defmodule Ask.Survey do
   use Ask.Web, :model
 
   alias __MODULE__
-  require Ask.RespondentStats
   alias Ask.{
     Schedule,
     ShortLink,
@@ -462,7 +461,7 @@ defmodule Ask.Survey do
   end
 
   def stats(survey) do
-    respondents_by_disposition = survey |> respondents_by_disposition
+    respondents_by_disposition = survey |> RespondentStats.respondents_by_disposition
     respondents_total = Enum.map(respondents_by_disposition, fn {_, v} -> v end) |> Enum.reduce(0, fn q, acc -> q + acc end)
     respondents_target = survey
       |> completed_respondents_needed_by
@@ -552,24 +551,6 @@ defmodule Ask.Survey do
             |> Decimal.to_integer()
       res
     end
-  end
-
-  def respondents_by_state(survey) do
-    by_state_defaults = %{
-      "active" => 0,
-      "pending" => 0,
-      "completed" => 0,
-      "rejected" => 0,
-      "failed" => 0,
-    }
-
-    RespondentStats.respondent_count(survey_id: ^survey.id, by: :state)
-      |> Enum.into(by_state_defaults)
-  end
-
-  def respondents_by_disposition(survey) do
-    RespondentStats.respondent_count(survey_id: ^survey.id, by: :disposition)
-    |> Enum.into(%{})
   end
 
   def successful_respondents(%Survey{} = survey, respondents_by_disposition, disposition_filter) do
