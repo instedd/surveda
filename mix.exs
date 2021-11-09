@@ -63,7 +63,7 @@ defmodule Ask.Mixfile do
       {:oauth2, "~> 0.7.0"},
       {:mutex, "~> 1.1.3"},
       {:mox, "~> 0.5", only: :test},
-      {:timex, "~> 3.1.0"},
+      {:timex, "~> 3.3.0"},
       {:sentry, "~> 6.0"},
       {:hackney, "~> 1.0"},
       {:ex_json_schema, "~> 0.5.2"},
@@ -88,8 +88,11 @@ defmodule Ask.Mixfile do
       {:plug_crypto, "~> 1.1.1"},
       {:telemetry, "~> 0.4.3"},
 
-      # let's try ecto 2.2
-      {:ecto, "~> 2.2.0"},
+      # held back because of warnings & errors with newer versions
+      {:swoosh, "~> 0.17.0"},
+
+      # held back until we update to OTP 21+
+      {:prometheus, "~> 3.3.0"},
    ]
   end
 
