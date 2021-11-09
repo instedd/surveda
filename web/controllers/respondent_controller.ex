@@ -877,8 +877,8 @@ defmodule Ask.RespondentController do
     csv_rows = (from r in Respondent,
       where: r.survey_id == ^survey.id and r.disposition == "completed" and not is_nil(r.questionnaire_id),
       order_by: r.id)
-    |> preload(:questionnaire)
     |> Repo.stream
+    |> Repo.stream_preload(:questionnaire)
     |> Stream.map(fn r ->
       [r.phone_number, experiment_name(r.questionnaire, r.mode), csv_datetime(r.completed_at, survey)]
     end)
