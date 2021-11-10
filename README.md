@@ -23,7 +23,7 @@ If needed, you can change the authentication mechanism to Guisso.  This will tak
 ### Approaches #2 and #3: with Verboice and Nuntium
 There are 2 approaches for connecting your local Surveda with Verboice and Nuntium:
 
-2. You can install and setup Verboice and Nuntium locally.  To Do: add link to local setup guide that was added in [this PR](https://github.com/instedd/surveda/pull/1958).
+2. You can install and setup Verboice and Nuntium locally.  Local setup guide [here](https://github.com/instedd/surveda/blob/master/docs/dev-setup-local.md).
 3. You can use Verboice and Nuntium from the cloud in the Staging environment.  You can use this [guide](./docs/dev-setup-cloud.md) which will walk you through the setup of a development environment that will use cloud instances of these tools.
 
 The 2 guides above, will also include setting up Guisso, so you can ignore the GUISSO section in this document.
