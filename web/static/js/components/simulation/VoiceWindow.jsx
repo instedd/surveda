@@ -171,7 +171,7 @@ class VoiceSpectrum {
   setCanvas(canvas) {
     if (canvas) {
       this.canvas = canvas
-      this.context = canvas.getContext("2d")
+      this.context = canvas.getContext('2d')
 
       // fix canvas' size for HiDPI from its CSS size (DPI=1)
       const ratio = window.devicePixelRatio || 1
@@ -246,10 +246,10 @@ class VoiceSpectrum {
 
   _roundRect(x, y, width, height, radii) {
     const ctx = this.context
-    if (width < 2 * radii) radii = width / 2;
-    if (height < 2 * radii) radii = height / 2;
-    ctx.beginPath();
-    ctx.moveTo(x + radii, y);
+    if (width < 2 * radii) radii = width / 2
+    if (height < 2 * radii) radii = height / 2
+    ctx.beginPath()
+    ctx.moveTo(x + radii, y)
     ctx.arcTo(x + width, y, x + width, y + height, radii)
     ctx.arcTo(x + width, y + height, x, y + height, radii)
     ctx.arcTo(x, y + height, x, y, radii)
