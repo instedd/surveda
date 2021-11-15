@@ -60,7 +60,9 @@ const VoiceWindow = translate()(class extends Component<VoiceWindowProps, VoiceW
   }
 
   componentWillUnmount() {
-    this.spectrum?.stop()
+    if (this.spectrum) {
+      this.spectrum.stop()
+    }
   }
 
   play() {
@@ -163,6 +165,7 @@ class VoiceSpectrum {
 
   constructor() {
     this.audioContext = new AudioContext()
+    // $FlowFixMe: shut up, AnalyserNode's constructor does take arguments: https://developer.mozilla.org/en-US/docs/Web/API/AnalyserNode/AnalyserNode
     this.audioData = new AnalyserNode(this.audioContext, { fftSize: 256 })
     this.amplitudeData = new Uint8Array(0)
     this.playing = false
