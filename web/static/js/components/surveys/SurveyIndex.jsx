@@ -49,11 +49,7 @@ class SurveyIndex extends Component<any, State> {
     }
   }
 
-  componentWillMount() {
-    this.initialFetch()
-  }
-
-  initialFetch() {
+  componentDidMount() {
     const { dispatch, projectId } = this.props
     dispatch(actions.fetchSurveys(projectId))
     dispatch(foldersActions.fetchFolders(projectId))

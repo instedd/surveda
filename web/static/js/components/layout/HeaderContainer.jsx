@@ -66,20 +66,22 @@ const mapStateToProps = (state, ownProps) => {
   const panelSurveyId = params['panelSurveyId']
   let panelSurvey, folder
 
-  // Here the order of the factors does alter the product.
-  // Depending on the case, we need to take the folder from the panel survey taken from params,
-  // from the survey taken from params, or from the panel survey taken from its occurrence.
-  // For example evaluating (surveyFromParams || panelSurveyFromOccurrence) would work well but
-  // just for some cases. It would work for getting the folder of a regular survey, but it
-  // wouldn't work for getting the folder of an occurrence of a panel survey.
+  // We build the breadcrumb in reverse order, and never display the current
+  // level (the currently opened folder, panel survey or survey), only the
+  // parents:
   if (surveyId) {
-    const survey = state.survey.data && state.survey.data.id == parseInt(surveyId) && state.survey.data
-    panelSurvey = survey ? survey.panelSurvey : null
-    folder = panelSurvey ? panelSurvey.folder : (survey ? survey.folder : null)
+    // 1. survey (no parent)
+    // 2. survey -> folder
+    // 3. survey -> panel survey
+    // 4. survey -> panel survey -> folder
+    const currentSurvey = state.survey.data && state.survey.data.id == parseInt(surveyId) && state.survey.data
+    panelSurvey = currentSurvey ? currentSurvey.panelSurvey : null
+    folder = panelSurvey ? panelSurvey.folder : (currentSurvey ? currentSurvey.folder : null)
   } else if (panelSurveyId) {
-    panelSurvey = state.panelSurvey.data && state.panelSurvey.data.id == parseInt(panelSurveyId) && state.panelSurvey.data
-    folder = panelSurvey ? panelSurvey.folder : null
-    panelSurvey = null
+    // 5. panel survey (no parent)
+    // 6. panel survey -> folder
+    const currentPanelSurvey = state.panelSurvey.data && state.panelSurvey.data.id == parseInt(panelSurveyId) && state.panelSurvey.data
+    folder = currentPanelSurvey ? currentPanelSurvey.folder : null
   }
 
   return {

@@ -78,8 +78,6 @@ defmodule Ask.SurveyController do
         survey = survey
         |> Repo.preload([:quota_buckets])
         |> Repo.preload(:questionnaires)
-        # |> Repo.preload(:folder)
-        # |> Repo.preload(panel_survey: [:folder])
         |> Survey.with_links(user_level(project_id, current_user(conn).id))
 
         conn
