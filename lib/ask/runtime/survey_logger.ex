@@ -37,7 +37,7 @@ defmodule Ask.Runtime.SurveyLogger do
       disposition: disposition,
       action_type: action_type,
       action_data: action_data,
-      timestamp: timestamp
+      timestamp: DateTime.truncate(timestamp, :second)
     } |> Repo.insert!
 
     {:noreply, state}

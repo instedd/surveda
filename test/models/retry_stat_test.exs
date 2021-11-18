@@ -167,7 +167,7 @@ defmodule Ask.RetryStatTest do
 
   test "errors adding when the survey doesn't exists" do
     {:error, changeset} = RetryStat.add(Map.delete(@valid_attrs, :count))
-    assert changeset.errors == [survey_id: {"does not exist", []}]
+    assert changeset.errors == [survey_id: {"does not exist", [constraint: :foreign, constraint_name: "retry_stats_survey_id_fkey"]}]
   end
 
   test "errors adding when a required field is missing" do

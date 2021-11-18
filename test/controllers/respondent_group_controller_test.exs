@@ -344,7 +344,7 @@ defmodule Ask.RespondentGroupControllerTest do
     test "deletes a group", %{conn: conn, user: user} do
       project = create_project_for_user(user)
       survey = insert(:survey, project: project)
-      local_time = DateTime.utc_now
+      local_time = DateTime.utc_now |> DateTime.truncate(:second)
       group = insert(:respondent_group, survey: survey)
 
       entries = File.stream!("test/fixtures/respondent_phone_numbers.csv") |>
@@ -371,7 +371,7 @@ defmodule Ask.RespondentGroupControllerTest do
     test "it doesn't deletes a group when the survey is running", %{conn: conn, user: user} do
       project = create_project_for_user(user)
       survey = insert(:survey, project: project, state: "running")
-      local_time = DateTime.utc_now
+      local_time = DateTime.utc_now |> DateTime.truncate(:second)
       group = insert(:respondent_group, survey: survey)
 
       entries = File.stream!("test/fixtures/respondent_phone_numbers.csv") |>

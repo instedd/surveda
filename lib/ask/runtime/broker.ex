@@ -59,7 +59,7 @@ defmodule Ask.Runtime.Broker do
         Ask.Runtime.Survey.handle_session_step(Session.timeout(session), SystemTime.time.now)
       rescue
         e ->
-          Logger.error(e, "Error retrying respondent. Rolling back transaction")
+          Logger.error(e, __STACKTRACE__, "Error retrying respondent. Rolling back transaction")
           Repo.rollback(e)
       end
     end)
@@ -141,7 +141,7 @@ defmodule Ask.Runtime.Broker do
       end
     rescue
       e ->
-        handle_exception(survey, e, "Error occurred while polling survey (id: #{survey.id})")
+        handle_exception(survey, e, __STACKTRACE__, "Error occurred while polling survey (id: #{survey.id})")
     end
   end
 
@@ -155,22 +155,19 @@ defmodule Ask.Runtime.Broker do
       SurveyAction.stop(survey)
     rescue
       e ->
-        handle_exception(survey, e, "Error occurred while stopping survey (id: #{survey.id})")
-        Sentry.capture_exception(e, [
-          stacktrace: System.stacktrace(),
-          extra: %{survey_id: survey.id}])
+        handle_exception(survey, e, __STACKTRACE__, "Error occurred while stopping survey (id: #{survey.id})")
     end
   end
 
-  defp handle_exception(survey, e, message) do
+  defp handle_exception(survey, e, stacktrace, message) do
     if Mix.env == :test do
       IO.inspect e
-      IO.inspect System.stacktrace()
+      IO.inspect e.stacktrace
       raise e
     end
-    Logger.error(e, message)
+    Logger.error(e, stacktrace, message)
     Sentry.capture_exception(e, [
-      stacktrace: System.stacktrace(),
+      stacktrace: stacktrace,
       extra: %{survey_id: survey.id}])
   end
 

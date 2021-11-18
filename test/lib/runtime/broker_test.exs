@@ -696,8 +696,8 @@ defmodule Ask.Runtime.BrokerTest do
       ten_oclock = Timex.shift(now |> Timex.beginning_of_day, hours: 10)
       eleven_oclock = Timex.shift(ten_oclock, hours: 1)
       twelve_oclock = Timex.shift(eleven_oclock, hours: 2)
-      {:ok, start_time} = Ecto.Time.cast(eleven_oclock)
-      {:ok, end_time} = Ecto.Time.cast(twelve_oclock)
+      {:ok, start_time} = Ecto.Type.cast(:time, eleven_oclock)
+      {:ok, end_time} = Ecto.Type.cast(:time, twelve_oclock)
       survey = insert(:survey, %{schedule: Map.merge(Schedule.always(), %{start_time: start_time, end_time: end_time}), state: "running"})
 
       Broker.handle_info(:poll, nil, ten_oclock)
@@ -711,8 +711,8 @@ defmodule Ask.Runtime.BrokerTest do
       ten_oclock = Timex.shift(now |> Timex.beginning_of_day, hours: 10)
       eleven_oclock = Timex.shift(ten_oclock, hours: 1)
       twelve_oclock = Timex.shift(eleven_oclock, hours: 2)
-      {:ok, start_time} = Ecto.Time.cast(ten_oclock)
-      {:ok, end_time} = Ecto.Time.cast(eleven_oclock)
+      {:ok, start_time} = Ecto.Type.cast(:time, ten_oclock)
+      {:ok, end_time} = Ecto.Type.cast(:time, eleven_oclock)
       survey = insert(:survey, %{schedule: Map.merge(Schedule.always(), %{start_time: start_time, end_time: end_time}), state: "running"})
 
       Broker.handle_info(:poll, nil, twelve_oclock)

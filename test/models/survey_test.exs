@@ -87,7 +87,7 @@ defmodule Ask.SurveyTest do
 
   @tag :time_mock
   test "changeset with terminated state has ended_at field set" do
-    test_now = Timex.now
+    test_now = DateTime.utc_now |> DateTime.truncate(:second)
     TimeMock
     |> expect(:now, fn () -> test_now end)
 

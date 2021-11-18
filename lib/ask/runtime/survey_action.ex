@@ -64,7 +64,7 @@ defmodule Ask.Runtime.SurveyAction do
         # UI open with the cancel button, and meanwhile the survey finished
         {:ok, %{survey: survey}}
       ["running", false] ->
-        changeset = Survey.changeset(survey, %{"state": "cancelling", "exit_code": 1, "exit_message": "Cancelled by user"})
+        changeset = Survey.changeset(survey, %{state: "cancelling", exit_code: 1, exit_message: "Cancelled by user"})
 
         multi = Multi.new
         |> Multi.update(:survey, changeset)

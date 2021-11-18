@@ -38,7 +38,7 @@ defmodule Ask.Coherence.Helper do
   @spec expired?(nil | struct, Keyword.t) :: boolean
   def expired?(nil, _), do: true
   def expired?(datetime, opts) do
-    not Timex.before?(Timex.now, shift(datetime, opts))
+    not Timex.before?(DateTime.utc_now, shift(datetime, opts))
   end
 
   @doc """

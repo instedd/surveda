@@ -15,7 +15,7 @@ defmodule Ask.Factory do
       email: sequence(:email, &"email-#{&1}@example.com"),
       settings: %{},
       password_hash: "$2b$12$m0Ftkllx0UK4/bgtbNlV0eVRbxMzbUVtGtOnihUveAZnqNwSG7y6i", # 1234
-      confirmed_at: Ecto.DateTime.utc # FIXME: upgrade coherence to use DateTime.utc_now
+      confirmed_at: DateTime.utc_now |> DateTime.truncate(:second)
     }
   end
 
@@ -61,7 +61,7 @@ defmodule Ask.Factory do
       disposition: "completed",
       action_type: "prompt",
       action_data: "explanation",
-      timestamp: DateTime.utc_now,
+      timestamp: DateTime.utc_now |> DateTime.truncate(:second),
     }
   end
 
@@ -207,7 +207,7 @@ defmodule Ask.Factory do
       access_token: %{
         "access_token" => :crypto.strong_rand_bytes(27) |> Base.encode64,
       },
-      expires_at: Timex.now |> Timex.add(Timex.Duration.from_hours(1))
+      expires_at: DateTime.utc_now |> Timex.add(Timex.Duration.from_hours(1))
     }
   end
 

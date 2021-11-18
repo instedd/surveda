@@ -66,7 +66,7 @@ defmodule Ask.SurveyController do
 
     multi = Multi.new
     |> Multi.insert(:survey, changeset)
-    |> Multi.run(:log, fn %{survey: survey} ->
+    |> Multi.run(:log, fn _, %{survey: survey} ->
       ActivityLog.create_survey(project, conn, survey) |> Repo.insert
     end)
     |> Repo.transaction
@@ -144,13 +144,13 @@ defmodule Ask.SurveyController do
       edit_log = if Enum.any?(changed_properties, &(&1 != :name)), do: ActivityLog.edit_survey(project, conn, survey), else: nil
 
       multi = Multi.new
-      |> Multi.run(:survey, fn _ ->
+      |> Multi.run(:survey, fn _, _ ->
         Repo.update(changeset, force: Map.has_key?(changeset.changes, :questionnaires))
       end)
-      |> Multi.run(:rename_log, fn _ ->
+      |> Multi.run(:rename_log, fn _, _ ->
         if rename_log, do: rename_log |> Repo.insert, else: {:ok, nil}
       end)
-      |> Multi.run(:edit_log, fn _ ->
+      |> Multi.run(:edit_log, fn _, _ ->
         if edit_log, do: edit_log |> Repo.insert, else: {:ok, nil}
       end)
       |> Repo.transaction
@@ -512,7 +512,7 @@ defmodule Ask.SurveyController do
     end
 
     multi = Multi.new
-    |> Multi.run(:generate_link, fn _ -> ShortLink.generate_link(name, target) end)
+    |> Multi.run(:generate_link, fn _, _ -> ShortLink.generate_link(name, target) end)
     |> Multi.insert(:log, ActivityLog.enable_public_link(project, conn, survey, target_name))
     |> Repo.transaction
 
@@ -544,7 +544,7 @@ defmodule Ask.SurveyController do
 
     if link do
       multi = Multi.new
-      |> Multi.run(:regenerate, fn _ -> ShortLink.regenerate(link) end)
+      |> Multi.run(:regenerate, fn _, _ -> ShortLink.regenerate(link) end)
       |> Multi.insert(:log, ActivityLog.regenerate_public_link(project, conn, survey, target_name))
       |> Repo.transaction
 

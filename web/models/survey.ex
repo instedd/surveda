@@ -133,7 +133,7 @@ defmodule Ask.Survey do
 
   defp set_ended_at_in_terminated_survey(changeset) do
     if get_field(changeset, :state) == "terminated" do
-      change(changeset, ended_at: SystemTime.time.now)
+      change(changeset, ended_at: SystemTime.time.now |> DateTime.truncate(:second))
     else
       changeset
     end

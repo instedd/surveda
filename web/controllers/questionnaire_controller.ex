@@ -62,7 +62,7 @@ defmodule Ask.QuestionnaireController do
 
     multi = Multi.new
     |> Multi.insert(:questionnaire, changeset)
-    |> Multi.run(:log, fn %{questionnaire: questionnaire} ->
+    |> Multi.run(:log, fn _, %{questionnaire: questionnaire} ->
       ActivityLog.create_questionnaire(project, conn, questionnaire) |> Repo.insert
     end)
     |> Repo.transaction
@@ -197,7 +197,7 @@ defmodule Ask.QuestionnaireController do
     multi =
       Multi.new()
       |> Multi.update(:questionnaire, changeset)
-      |> Multi.run(:log, fn %{questionnaire: questionnaire} ->
+      |> Multi.run(:log, fn _, %{questionnaire: questionnaire} ->
         ActivityLog.update_archived_status(project, conn, questionnaire, archived)
         |> Repo.insert()
       end)
@@ -225,7 +225,7 @@ defmodule Ask.QuestionnaireController do
 
     multi = Multi.new
     |> Multi.update(:questionnaire, changeset)
-    |> Multi.run(:log, fn %{questionnaire: questionnaire} ->
+    |> Multi.run(:log, fn _, %{questionnaire: questionnaire} ->
       ActivityLog.delete_questionnaire(project, conn, questionnaire) |> Repo.insert
     end)
     |> Repo.transaction

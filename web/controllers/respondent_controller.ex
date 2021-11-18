@@ -145,7 +145,7 @@ defmodule Ask.RespondentController do
     stats(conn, survey, survey.quota_vars)
   rescue
     e ->
-      Logger.error(e, "Error occurred while processing respondent stats (survey_id: #{survey_id})")
+      Logger.error(e, __STACKTRACE__, "Error occurred while processing respondent stats (survey_id: #{survey_id})")
       Sentry.capture_exception(e, [
         stacktrace: System.stacktrace(),
         extra: %{survey_id: survey_id}])
@@ -1001,7 +1001,7 @@ defmodule Ask.RespondentController do
     name = survey.name || "survey_id_#{survey.id}"
     name = Regex.replace(~r/[^a-zA-Z0-9_]/, name, "_")
     prefix = "#{name}-#{prefix}"
-    Timex.format!(Timex.now, "#{prefix}_%Y-%m-%d-%H-%M-%S.csv", :strftime)
+    Timex.format!(DateTime.utc_now, "#{prefix}_%Y-%m-%d-%H-%M-%S.csv", :strftime)
   end
 
   defp csv_datetime(nil, _), do: ""
