@@ -19,7 +19,7 @@ export class Action extends Component<ActionProps> {
       <li>
         <Button
           onClick={() => onClick()}
-          className='btn-floating btn-small waves-effect waves-light right mbottom white black-text'
+          className='btn-floating waves-effect waves-light right mbottom white black-text'
         >
           <Tooltip text={text} position='left'>
             <i className='material-icons black-text'>{icon}</i>
