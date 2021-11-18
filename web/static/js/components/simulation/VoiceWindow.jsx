@@ -156,7 +156,7 @@ const VoiceWindow = translate()(class extends Component<VoiceWindowProps, VoiceW
 
 class VoiceSpectrum {
   audioContext: AudioContext
-  audioData: AnalyserNode
+  audioAnalyser: AnalyserNode
   amplitudeData: Uint8Array
   canvas: HTMLCanvasElement
   context: CanvasRenderingContext2D
@@ -165,8 +165,8 @@ class VoiceSpectrum {
 
   constructor() {
     this.audioContext = new AudioContext()
-    // $FlowFixMe: shut up, AnalyserNode's constructor does take arguments: https://developer.mozilla.org/en-US/docs/Web/API/AnalyserNode/AnalyserNode
-    this.audioData = new AnalyserNode(this.audioContext, { fftSize: 256 })
+    this.audioAnalyser = this.audioContext.createAnalyser()
+    this.audioAnalyser.fftSize = 256
     this.amplitudeData = new Uint8Array(0)
     this.playing = false
   }
@@ -183,29 +183,23 @@ class VoiceSpectrum {
       canvas.width = canvas.offsetWidth * ratio
       canvas.height = canvas.offsetHeight * ratio
       this.context.scale(ratio, ratio)
-
-      this.sizes = {
-        width,
-        height,
-        halfHeight: height / 2
-      }
+      this.sizes = { width, height, halfHeight: height / 2 }
     }
   }
 
   start(audio) {
-    const audioSource = this.audioContext.createMediaElementSource(audio)
-    audioSource.connect(this.audioContext.destination)
-    audioSource.connect(this.audioData)
+    // <audio> element -> AudioSource -> AudioAnalyser -> destination
+    this.audioContext.createMediaElementSource(audio).connect(this.audioAnalyser)
+    this.audioAnalyser.connect(this.audioContext.destination)
 
-    this.amplitudeData = new Uint8Array(this.audioData.frequencyBinCount)
+    this.amplitudeData = new Uint8Array(this.audioAnalyser.frequencyBinCount)
     this.playing = true
-
     requestAnimationFrame(() => this.run())
   }
 
   run() {
     if (this.playing) {
-      this.audioData.getByteFrequencyData(this.amplitudeData)
+      this.audioAnalyser.getByteFrequencyData(this.amplitudeData)
       this.updateCanvas()
       requestAnimationFrame(() => this.run())
     }
@@ -225,7 +219,6 @@ class VoiceSpectrum {
     const ctx = this.context
     const bufferLength = this.amplitudeData.length
     const { width, height, halfHeight } = this.sizes
-
     const barGap = 3
     const barWidth = 4
     const radii = 2
