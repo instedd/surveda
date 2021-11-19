@@ -15,7 +15,7 @@ defmodule Ask.Factory do
       email: sequence(:email, &"email-#{&1}@example.com"),
       settings: %{},
       password_hash: "$2b$12$m0Ftkllx0UK4/bgtbNlV0eVRbxMzbUVtGtOnihUveAZnqNwSG7y6i", # 1234
-      confirmed_at: DateTime.utc_now |> DateTime.truncate(:second)
+      confirmed_at: DateTime.utc_now
     }
   end
 
@@ -61,7 +61,7 @@ defmodule Ask.Factory do
       disposition: "completed",
       action_type: "prompt",
       action_data: "explanation",
-      timestamp: DateTime.utc_now |> DateTime.truncate(:second),
+      timestamp: DateTime.utc_now
     }
   end
 

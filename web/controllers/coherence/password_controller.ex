@@ -56,7 +56,7 @@ defmodule Ask.Coherence.PasswordController do
         token = random_string 48
         url = router_helpers().password_url(conn, :edit, token)
         Logger.debug "reset email url: #{inspect url}"
-        dt = DateTime.utc_now |> DateTime.truncate(:second)
+        dt = DateTime.utc_now
         cs = Helpers.changeset(:password, user_schema, user,
           %{reset_password_token: token, reset_password_sent_at: dt})
         Config.repo.update! cs
