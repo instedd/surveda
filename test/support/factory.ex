@@ -174,7 +174,7 @@ defmodule Ask.Factory do
 
   def respondent_factory do
     phone_number = "#{Integer.to_string(:rand.uniform(100))} #{Integer.to_string(:rand.uniform(100))} #{Integer.to_string(:rand.uniform(100))}"
-    respondent_group = build(:respondent_group)
+    respondent_group = insert(:respondent_group)
     canonical_phone_number = Ask.Respondent.canonicalize_phone_number(phone_number)
     %Ask.Respondent{
       respondent_group: respondent_group,

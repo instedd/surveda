@@ -3,10 +3,6 @@ defmodule Ask.Repo do
     otp_app: :ask,
     adapter: Ecto.Adapters.MyXQL
 
-  def reload(%module{id: id}) do
-    get(module, id)
-  end
-
   # In Ecto 2.2 we can't stream a query that preloads associations. In order to
   # overcome the issue, we create a chunk back from the stream, and only preload
   # for the given batch of structs, that is eventually flattened.

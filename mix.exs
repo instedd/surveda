@@ -53,7 +53,7 @@ defmodule Ask.Mixfile do
       {:phoenix, "~> 1.3.0"},
       {:phoenix_pubsub, "~> 1.0"},
       {:phoenix_ecto, "~> 4.0"},
-      {:ecto_sql, "~> 3.1.0"},
+      {:ecto_sql, "~> 3.7.0"},
       {:myxql, ">= 0.0.0"},
       {:phoenix_html, "~> 2.10"},
       {:phoenix_live_reload, "~> 1.0", only: :dev},

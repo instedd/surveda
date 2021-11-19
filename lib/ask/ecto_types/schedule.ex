@@ -6,7 +6,7 @@ defmodule Ask.Schedule do
   a list of blocked days such as holidays
   """
 
-  @behaviour Ecto.Type
+  use Ecto.Type
 
   alias __MODULE__
   alias Ask.{DayOfWeek, ScheduleError, SystemTime}
