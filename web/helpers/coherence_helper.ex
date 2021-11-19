@@ -25,14 +25,12 @@ defmodule Ask.Coherence.Helper do
       expired?(user.expire_at, minutes: 10)
 
       iex> DateTime.utc_now
-      ...> |> Coherence.ControllerHelpers.expired?(days: 1)
+      ...> |> Ask.Coherence.Helper.expired?(days: 1)
       false
 
       iex> DateTime.utc_now
-      ...> |> Coherence.ControllerHelpers.shift(days: -2)
-      ...> |> DateTime.from_iso8601
-      ...> |> elem(1)
-      ...> |> Coherence.ControllerHelpers.expired?(days: 1)
+      ...> |> Ask.Coherence.Helper.shift(days: -2)
+      ...> |> Ask.Coherence.Helper.expired?(days: 1)
       true
   """
   @spec expired?(nil | struct, Keyword.t) :: boolean
@@ -48,9 +46,7 @@ defmodule Ask.Coherence.Helper do
 
       iex> DateTime.from_iso8601("2016-10-10T10:10:10Z")
       ...> |> elem(1)
-      ...> |> Coherence.ControllerHelpers.shift(days: -2)
-      ...> |> DateTime.from_iso8601
-      ...> |> elem(1)
+      ...> |> Ask.Coherence.Helper.shift(days: -2)
       ...> |> to_string
       "2016-10-08 10:10:10Z"
   """
