@@ -179,8 +179,8 @@ defmodule Ask.Repo.Migrations.MigrateSurveySchedule do
 
     schema "surveys" do
       field :schedule_day_of_week, DayOfWeek, default: DayOfWeek.never()
-      field :schedule_start_time, Ecto.Time
-      field :schedule_end_time, Ecto.Time
+      field :schedule_start_time, :time
+      field :schedule_end_time, :time
       field :timezone, :string
       field :schedule, Schedule, default: Schedule.default()
     end
