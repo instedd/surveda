@@ -1,7 +1,7 @@
 defmodule Ask.Repo do
   use Ecto.Repo,
     otp_app: :ask,
-    adapter: Ecto.Adapters.MySQL
+    adapter: Ecto.Adapters.MyXQL
 
   def reload(%module{id: id}) do
     get(module, id)
