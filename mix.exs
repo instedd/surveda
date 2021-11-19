@@ -6,7 +6,7 @@ defmodule Ask.Mixfile do
      build_path: "/_build",
      deps_path: "/deps",
      version: "0.31.0",
-     elixir: "~> 1.6",
+     elixir: "~> 1.8",
      elixirc_paths: elixirc_paths(Mix.env),
      compilers: [:phoenix, :gettext] ++ Mix.compilers,
      consolidate_protocols: Mix.env != :test,
@@ -91,6 +91,9 @@ defmodule Ask.Mixfile do
 
       # held back because of warnings & errors with newer versions
       {:swoosh, "~> 0.17.0"},
+
+      # held until release of https://github.com/elixir-ecto/myxql/commit/893234cc97df9be3b764eba6e1706dd6dd6c3e9b
+      {:db_connection, "< 2.4.1"}
    ]
   end
 
