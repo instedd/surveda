@@ -79,7 +79,7 @@ defmodule Ask.MobileSurveyController do
           questionnaire = Enum.random(questionnaires)
           msg = questionnaire.settings["mobile_web_survey_is_over_message"] || "The survey is over"
           {end_step(msg), end_progress(), nil}
-        respondent.state in ["pending", "active", "rejected"] ->
+        respondent.state in [:pending, :active, :rejected] ->
           case Survey.sync_step(respondent, value, "mobileweb") do
             {:reply, reply, _} ->
               {Reply.first_step(reply), Reply.progress(reply), reply.error_message}

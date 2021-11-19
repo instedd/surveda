@@ -696,7 +696,7 @@ defmodule Ask.SessionTest do
 
     # The session won't update the respondent, the broker will
     respondent = Respondent |> Repo.get(respondent.id)
-    assert respondent.state == "pending"
+    assert respondent.state == :pending
     assert respondent.disposition == "registered"
     assert 1 == respondent.stats |> Stats.attempts(:sms)
   end

@@ -1958,7 +1958,7 @@ defmodule Ask.SurveyControllerTest do
       assert json_response(conn, 200)
       survey = Repo.get(Survey, survey.id)
       assert Survey.cancelled?(survey)
-      assert length(Repo.all(from(r in Ask.Respondent, where: (r.state == "cancelled" and is_nil(r.session) and is_nil(r.timeout_at))))) == 4
+      assert length(Repo.all(from(r in Ask.Respondent, where: (r.state == :cancelled and is_nil(r.session) and is_nil(r.timeout_at))))) == 4
       assert_receive [:cancel_message, ^test_channel, ^channel_state]
 
     end
@@ -1991,7 +1991,7 @@ defmodule Ask.SurveyControllerTest do
 
       assert json_response(conn, 200)
       assert Repo.get(Survey, survey2.id).state == "running"
-      assert length(Repo.all(from(r in Ask.Respondent, where: r.state == "active"))) == 6
+      assert length(Repo.all(from(r in Ask.Respondent, where: r.state == :active))) == 6
       assert_receive [:cancel_message, ^test_channel, ^channel_state]
     end
 

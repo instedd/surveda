@@ -172,7 +172,7 @@ defmodule Ask.Runtime.Broker do
   end
 
   defp retry_respondents(now) do
-    Repo.all(from r in Respondent, select: r.id, where: r.state == "active" and r.timeout_at <= ^now, limit: ^batch_limit_per_minute())
+    Repo.all(from r in Respondent, select: r.id, where: r.state == :active and r.timeout_at <= ^now, limit: ^batch_limit_per_minute())
     |> Enum.each(fn respondent_id -> Respondent.with_lock(respondent_id, &retry_respondent(&1)) end)
   end
 
@@ -247,7 +247,7 @@ defmodule Ask.Runtime.Broker do
 
     (from r in assoc(survey, :respondents),
       select: r.id,
-      where: r.state == "pending",
+      where: r.state == :pending,
       limit: ^count)
     |> Repo.all
     |> Enum.each(fn respondent_id -> Respondent.with_lock(respondent_id, &start(survey, &1), &Repo.preload(&1, respondent_group: [respondent_group_channels: :channel])) end)

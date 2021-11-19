@@ -10,15 +10,14 @@ defmodule Ask.Respondent do
     field :hashed_number, :string
     field :section_order, JSON
 
-    # Valid states are:
-    # * pending: the initial state of a respondent, before communication starts
-    # * active: a communication is being held with the respondent
-    # * completed: the communication finished succesfully (it reached the end)
-    # * failed: communication couldn't be established or was cut
-    # * rejected: communication ended because the respondent fell in a full quota bucket
-    # * cancelled: when the survey is stopped and has "terminated" state, all the active
-    #     respondents will be updated with this state.
-    field :state, :string, default: "pending"
+    field :state, Ecto.Enum, values: [
+      :pending,   # the initial state of a respondent, before communication starts
+      :active,    # a communication is being held with the respondent
+      :completed, # the communication finished succesfully (it reached the end)
+      :failed,    # communication couldn't be established or was cut
+      :rejected,  # communication ended because the respondent fell in a full quota bucket
+      :cancelled, # when the survey is stopped and has :terminated state, all the active respondents will be updated with this state.
+    ], default: :pending
 
     # Valid dispositions are:
     # https://cloud.githubusercontent.com/assets/22697/25618659/3126839e-2f1e-11e7-8a3a-7908f8cd1749.png
@@ -36,7 +35,7 @@ defmodule Ask.Respondent do
     # - completed: through flag step from started or partial / survey finished with the respondent on started or partial disposition
     field :disposition, :string, default: "registered"
 
-    field :completed_at, :utc_datetime # only when state=="pending"
+    field :completed_at, :utc_datetime # only when state==:pending
     field :timeout_at, :utc_datetime
     field :session, JSON
     # In Respondent model, "mode" field name should change in the future.
@@ -76,7 +75,7 @@ defmodule Ask.Respondent do
     |> cast(params, [:phone_number, :sanitized_phone_number, :canonical_phone_number, :state, :session, :quota_bucket_id, :completed_at, :timeout_at, :questionnaire_id, :mode, :disposition, :mobile_web_cookie_code, :language, :effective_modes, :stats, :section_order, :retry_stat_id, :user_stopped])
     |> validate_required([:phone_number, :state, :user_stopped])
     |> validate_inclusion(:disposition, ["registered", "queued", "contacted", "failed", "unresponsive", "started", "ineligible", "rejected", "breakoff", "refused", "partial", "interim partial", "completed"])
-    |> validate_inclusion(:state, ["pending", "active", "completed", "failed", "rejected", "cancelled"])
+    |> validate_inclusion(:state, Ecto.Enum.values(Ask.Respondent, :state))
     |> Ecto.Changeset.optimistic_lock(:lock_version)
   end
 

@@ -69,7 +69,7 @@ defmodule Ask.MobileSurveyControllerTest do
     assert survey.state == "running"
 
     respondent = Repo.get(Respondent, respondent.id)
-    assert respondent.state == "active"
+    assert respondent.state == :active
     # mobile_survey_send_reply_path
 
     # Check that get_step without token gives error
@@ -211,7 +211,7 @@ defmodule Ask.MobileSurveyControllerTest do
     interval = Interval.new(from: Timex.shift(now, seconds: -5), until: Timex.shift(now, seconds: 5), step: [seconds: 1])
 
     respondent = Repo.get(Respondent, respondent.id)
-    assert respondent.state == "completed"
+    assert respondent.state == :completed
     assert respondent.session == nil
     assert respondent.completed_at in interval
 
@@ -325,7 +325,7 @@ defmodule Ask.MobileSurveyControllerTest do
     assert survey.state == "running"
 
     respondent = Repo.get(Respondent, respondent.id)
-    assert respondent.state == "active"
+    assert respondent.state == :active
     # mobile_survey_send_reply_path
 
     conn = get conn, mobile_survey_path(conn, :get_step, respondent.id, %{token: token})

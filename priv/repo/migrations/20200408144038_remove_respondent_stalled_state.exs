@@ -44,7 +44,7 @@ defmodule Ask.Repo.Migrations.RemoveRespondentStalledState do
   end
 
   def up do
-    Repo.all(from r in Respondent, where: r.state == "stalled")
+    Repo.all(from r in Respondent, where: r.state == :stalled)
     |> Enum.each(fn respondent -> Respondent.update_stalled_to_failed(respondent) end)
   end
 

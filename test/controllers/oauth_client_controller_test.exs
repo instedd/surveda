@@ -112,7 +112,7 @@ defmodule Ask.OAuthClientControllerTest do
     assert survey.exit_message == "Channel '#{channel.name}' no longer exists"
 
     respondent = Repo.get!(Ask.Respondent, respondent.id)
-    assert respondent.state == "cancelled"
+    assert respondent.state == :cancelled
 
     refute Ask.Channel |> Repo.get(channel.id)
   end
