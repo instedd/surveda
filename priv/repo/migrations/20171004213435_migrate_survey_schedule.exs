@@ -4,7 +4,7 @@ defmodule Ask.Repo.Migrations.MigrateSurveySchedule do
 
   defmodule DayOfWeek do
     import Bitwise
-    @behaviour Ecto.Type
+    use Ecto.Type
 
     alias __MODULE__
 
@@ -121,7 +121,7 @@ defmodule Ask.Repo.Migrations.MigrateSurveySchedule do
   end
 
   defmodule Schedule do
-    @behaviour Ecto.Type
+    use Ecto.Type
 
     alias __MODULE__
 
