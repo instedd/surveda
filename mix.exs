@@ -104,10 +104,12 @@ defmodule Ask.Mixfile do
   #
   # See the documentation for `Mix` for more info on aliases.
   defp aliases do
-    ["ecto.setup": ["ecto.create", "ecto.load", "run priv/repo/seeds.exs"],
-     "ecto.reset": ["ecto.drop", "ecto.setup"],
-     "ecto.migrate": ["ecto.migrate", "ecto.dump"],
-     "ecto.rollback": ["ecto.rollback", "ecto.dump"],
-     test: ["ecto.create", "ecto.load", "test"]]
+    [
+      "ecto.setup": ["ecto.create", "ecto.load", "run priv/repo/seeds.exs"],
+      "ecto.reset": ["ecto.drop", "ecto.setup"],
+      "ecto.migrate": ["ecto.migrate", "ask.ecto_dump"],
+      "ecto.rollback": ["ecto.rollback", "ask.ecto_dump"],
+      test: ["ecto.create --quiet", "ecto.migrate --quiet", "test"],
+    ]
   end
 end
