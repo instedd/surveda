@@ -311,7 +311,7 @@ defmodule Ask.Runtime.Survey do
           respondent = if persist, do: Repo.get(Respondent, session.respondent.id), else: session.respondent
           Logger.error(e, __STACKTRACE__, "Error occurred while processing sync step (survey_id: #{respondent.survey_id}, respondent_id: #{respondent.id})")
           Sentry.capture_exception(e, [
-            stacktrace: System.stacktrace(),
+            stacktrace: __STACKTRACE__,
             extra: %{survey_id: respondent.survey_id, respondent_id: respondent.id}])
 
           try do
