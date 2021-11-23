@@ -34,7 +34,7 @@ defmodule Ask.Runtime.SurveyLogger do
       respondent_id: respondent_id,
       respondent_hashed_number: respondent_hash,
       channel_id: channel_id,
-      disposition: disposition,
+      disposition: to_string(disposition),
       action_type: action_type,
       action_data: action_data,
       timestamp: DateTime.truncate(timestamp, :second)

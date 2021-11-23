@@ -838,7 +838,7 @@ defmodule Ask.Runtime.BrokerTest do
       assert survey.state == "running"
       respondent = Repo.get(Respondent, respondent.id)
       assert respondent.state == :active
-      assert respondent.disposition == "queued"
+      assert respondent.disposition == :queued
 
       now = Timex.now
 
@@ -849,7 +849,7 @@ defmodule Ask.Runtime.BrokerTest do
 
       respondent = Repo.get(Respondent, respondent.id)
       assert respondent.state == :failed
-      assert respondent.disposition == "failed"
+      assert respondent.disposition == :failed
 
       last_entry = ((respondent |> Repo.preload(:survey_log_entries)).survey_log_entries |> Enum.at(-1))
       assert last_entry.survey_id == survey.id
@@ -872,12 +872,12 @@ defmodule Ask.Runtime.BrokerTest do
       assert survey.state == "running"
       respondent = Repo.get(Respondent, respondent.id)
       assert respondent.state == :active
-      assert respondent.disposition == "queued"
+      assert respondent.disposition == :queued
 
       Ask.Runtime.Survey.delivery_confirm(respondent, "Do you smoke?")
 
       respondent = Repo.get(Respondent, respondent.id)
-      assert respondent.disposition == "contacted"
+      assert respondent.disposition == :contacted
 
       now = Timex.now
 
@@ -887,7 +887,7 @@ defmodule Ask.Runtime.BrokerTest do
 
       respondent = Repo.get(Respondent, respondent.id)
       assert respondent.state == :failed
-      assert respondent.disposition == "unresponsive"
+      assert respondent.disposition == :unresponsive
 
       last_entry = ((respondent |> Repo.preload(:survey_log_entries)).survey_log_entries |> Enum.at(-1))
       assert last_entry.survey_id == survey.id
@@ -910,20 +910,20 @@ defmodule Ask.Runtime.BrokerTest do
       assert survey.state == "running"
       respondent = Repo.get(Respondent, respondent.id)
       assert respondent.state == :active
-      assert respondent.disposition == "queued"
+      assert respondent.disposition == :queued
 
       Ask.Runtime.Survey.delivery_confirm(respondent, "Do you smoke?")
 
       respondent = Repo.get(Respondent, respondent.id)
       assert respondent.state == :active
-      assert respondent.disposition == "contacted"
+      assert respondent.disposition == :contacted
 
       respondent = Repo.get(Respondent, respondent.id)
       Ask.Runtime.Survey.sync_step(respondent, Flow.Message.reply("yes"))
 
       respondent = Repo.get(Respondent, respondent.id)
       assert respondent.state == :active
-      assert respondent.disposition == "started"
+      assert respondent.disposition == :started
 
       Ask.Runtime.Survey.delivery_confirm(respondent, "Do you exercise?")
 
@@ -935,7 +935,7 @@ defmodule Ask.Runtime.BrokerTest do
 
       respondent = Repo.get(Respondent, respondent.id)
       assert respondent.state == :failed
-      assert respondent.disposition == "breakoff"
+      assert respondent.disposition == :breakoff
 
       last_entry = ((respondent |> Repo.preload(:survey_log_entries)).survey_log_entries) |> Enum.at(-1)
       assert last_entry.survey_id == survey.id
@@ -953,20 +953,20 @@ defmodule Ask.Runtime.BrokerTest do
 
       respondent = Repo.get(Respondent, respondent.id)
       assert respondent.state == :active
-      assert respondent.disposition == "queued"
+      assert respondent.disposition == :queued
 
       Ask.Runtime.Survey.delivery_confirm(respondent, "Do you smoke?")
 
       respondent = Repo.get(Respondent, respondent.id)
       assert respondent.state == :active
-      assert respondent.disposition == "contacted"
+      assert respondent.disposition == :contacted
 
       respondent = Repo.get(Respondent, respondent.id)
       Ask.Runtime.Survey.sync_step(respondent, Flow.Message.reply("Yes"))
 
       respondent = Repo.get(Respondent, respondent.id)
       assert respondent.state == :active
-      assert respondent.disposition == "interim partial"
+      assert respondent.disposition == :"interim partial"
 
       Ask.Runtime.Survey.delivery_confirm(respondent, "Do you exercise?")
 
@@ -978,7 +978,7 @@ defmodule Ask.Runtime.BrokerTest do
 
       respondent = Repo.get(Respondent, respondent.id)
       assert respondent.state == :failed
-      assert respondent.disposition == "partial"
+      assert respondent.disposition == :partial
 
       last_entry = ((respondent |> Repo.preload(:survey_log_entries)).survey_log_entries |> Enum.at(-1))
       assert last_entry.survey_id == survey.id
@@ -996,7 +996,7 @@ defmodule Ask.Runtime.BrokerTest do
       Broker.handle_info(:poll, nil)
 
       respondent = Repo.get(Respondent, respondent.id)
-      assert respondent.disposition == "completed"
+      assert respondent.disposition == :completed
     end
 
     test "set the respondent as complete (disposition) if disposition is interim partial" do
@@ -1005,7 +1005,7 @@ defmodule Ask.Runtime.BrokerTest do
       Broker.handle_info(:poll, nil)
 
       respondent = Repo.get(Respondent, respondent.id)
-      assert respondent.disposition == "completed"
+      assert respondent.disposition == :completed
     end
 
     test "set the respondent from registered to queued" do
@@ -1016,7 +1016,7 @@ defmodule Ask.Runtime.BrokerTest do
       survey = Repo.get(Ask.Survey, survey.id)
       assert survey.state == "running"
       updated_respondent = Repo.get(Respondent, respondent.id)
-      assert updated_respondent.disposition == "queued"
+      assert updated_respondent.disposition == :queued
     end
 
     test "don't set the respondent as completed (disposition) if disposition is ineligible" do
@@ -1025,7 +1025,7 @@ defmodule Ask.Runtime.BrokerTest do
       Broker.handle_info(:poll, nil)
 
       respondent = Repo.get(Respondent, respondent.id)
-      assert respondent.disposition == "ineligible"
+      assert respondent.disposition == :ineligible
     end
 
     test "don't set the respondent as completed (disposition) if disposition is refused" do
@@ -1034,7 +1034,7 @@ defmodule Ask.Runtime.BrokerTest do
       Broker.handle_info(:poll, nil)
 
       respondent = Repo.get(Respondent, respondent.id)
-      assert respondent.disposition == "refused"
+      assert respondent.disposition == :refused
     end
 
     test "don't set the respondent as partial (disposition) if disposition is ineligible" do
@@ -1043,7 +1043,7 @@ defmodule Ask.Runtime.BrokerTest do
       Broker.handle_info(:poll, nil)
 
       respondent = Repo.get(Respondent, respondent.id)
-      assert respondent.disposition == "ineligible"
+      assert respondent.disposition == :ineligible
     end
 
     test "don't set the respondent as partial (disposition) if disposition is refused" do
@@ -1052,7 +1052,7 @@ defmodule Ask.Runtime.BrokerTest do
       Broker.handle_info(:poll, nil)
 
       respondent = Repo.get(Respondent, respondent.id)
-      assert respondent.disposition == "refused"
+      assert respondent.disposition == :refused
     end
 
     test "don't set the respondent as ineligible (disposition) if disposition is completed" do
@@ -1061,7 +1061,7 @@ defmodule Ask.Runtime.BrokerTest do
       Broker.handle_info(:poll, nil)
 
       respondent = Repo.get(Respondent, respondent.id)
-      assert respondent.disposition == "completed"
+      assert respondent.disposition == :completed
     end
   end
 
@@ -1223,7 +1223,7 @@ defmodule Ask.Runtime.BrokerTest do
     Broker.handle_info(:poll, nil)
     assert_respondents_by_state(survey, 1, 10)
 
-    mark_n_active_respondents_as("completed", 1)
+    mark_n_active_respondents_as(:completed, 1)
 
     Broker.handle_info(:poll, nil)
     assert_respondents_by_state(survey, 1, 9)
@@ -1238,14 +1238,14 @@ defmodule Ask.Runtime.BrokerTest do
     Broker.handle_info(:poll, nil)
     assert_respondents_by_state(survey, 50, 151)
 
-    mark_n_active_respondents_as("failed", 20)
-    mark_n_active_respondents_as("completed", 30)
+    mark_n_active_respondents_as(:failed, 20)
+    mark_n_active_respondents_as(:completed, 30)
     Broker.handle_info(:poll, nil)
     assert_respondents_by_state(survey, 20, 131)
 
     # since all the previous ones failed the success rate decreases
     # and the batch size increases
-    mark_n_active_respondents_as("failed", 26)
+    mark_n_active_respondents_as(:failed, 26)
     Broker.handle_info(:poll, nil)
     assert_respondents_by_state(survey, 20, 111)
   end
@@ -1256,7 +1256,7 @@ defmodule Ask.Runtime.BrokerTest do
     Broker.poll
 
     respondent = Repo.get(Respondent, respondent.id)
-    assert respondent.disposition == "queued"
+    assert respondent.disposition == :queued
 
     # Set for immediate timeout
     Respondent.changeset(respondent, %{timeout_at: Timex.now |> Timex.shift(minutes: -1)}) |> Repo.update
@@ -1264,7 +1264,7 @@ defmodule Ask.Runtime.BrokerTest do
 
     respondent = Repo.get(Respondent, respondent.id)
     assert respondent.state == :failed
-    assert respondent.disposition == "failed"
+    assert respondent.disposition == :failed
 
     :ok = broker |> GenServer.stop
   end

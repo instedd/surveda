@@ -597,7 +597,7 @@ defmodule Ask.SurveyControllerTest do
 
     test "additional respondents equals needed to complete - respondents in non final dispositions", %{conn: conn, user: user} do
       non_final_dispositions = Respondent.metrics_non_final_dispositions()
-      respondents = [%{disposition: "completed"}] ++ Enum.map(non_final_dispositions, fn disposition -> %{disposition: disposition} end)
+      respondents = [%{disposition: :completed}] ++ Enum.map(non_final_dispositions, fn disposition -> %{disposition: disposition} end)
       %{"needed_to_complete" => 100, "additional_respondents" => additional_respondents} = testing_survey(%{user: user, respondents: respondents, attrs: %{cutoff: 101}})
         |> get_stats(conn)
       assert additional_respondents == 100 - Enum.count(non_final_dispositions)

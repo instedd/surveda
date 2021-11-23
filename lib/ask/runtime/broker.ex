@@ -69,7 +69,7 @@ defmodule Ask.Runtime.Broker do
   def configure_new_respondent(respondent, questionnaire_id, sequence_mode) do
     {primary_mode, _} = get_modes(sequence_mode)
     respondent
-    |> Respondent.changeset(%{questionnaire_id: questionnaire_id, mode: sequence_mode, disposition: "queued"})
+    |> Respondent.changeset(%{questionnaire_id: questionnaire_id, mode: sequence_mode, disposition: :queued})
     |> Repo.update!
     |> RespondentDispositionHistory.create(respondent.disposition, primary_mode)
   end

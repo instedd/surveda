@@ -19,21 +19,53 @@ defmodule Ask.Respondent do
       :cancelled, # when the survey is stopped and has :terminated state, all the active respondents will be updated with this state.
     ], default: :pending
 
-    # Valid dispositions are:
-    # https://cloud.githubusercontent.com/assets/22697/25618659/3126839e-2f1e-11e7-8a3a-7908f8cd1749.png
-    # - registered: just created
-    # - queued: call queued / SMS queued to be sent
-    # - contacted: call answered (or no_answer reply from Verboice) / SMS delivery confirmed
-    # - failed: call was never answered / SMS was never sent => the channel was broken or the number doesn't exist
-    # - unresponsive: after contacted, when no more retries are available
-    # - started: after the first answered question
-    # - ineligible: through flag step, only from started, not partial nor completed
-    # - rejected: quota completed
-    # - breakoff: stopped responding with no more retries, only from started
-    # - refused: respondent refused to take the survey, only from started
-    # - partial: through flag step, from started
-    # - completed: through flag step from started or partial / survey finished with the respondent on started or partial disposition
-    field :disposition, :string, default: "registered"
+    # Disposition flow:
+    #
+    #     ┌───────────────┐       ┌───────────────┐     ┌──────────────┐
+    #     │   Registered  ├───────►    Queued     ├─────►    Failed    │
+    #     └───────────────┘       └───────┬───────┘     └──────────────┘
+    #                                     │
+    #                             ┌───────▼───────┐     ┌──────────────┐
+    #                           ┌─│   Contacted   ├─────► Unresponsive │
+    #                           │ └───────┬───────┘     └──────────────┘
+    #     ┌─────────────────┐   │         │
+    #     │     Refused     ◄───┤         │
+    #     └─────────────────┘   │         │
+    #                           │ ┌───────▼───────┐     ┌──────────────┐
+    #                           └─┤    Started    │─────►   Breakoff   │
+    #                             └───────┬─────┬─┘     └──────────────┘
+    #                                     │     │
+    #     ┌─────────────────┐             │     │       ┌──────────────┐
+    #     │ Interim partial ◄─────────────┤     │     ┌─►   Rejected   │
+    #     └────────┬────────┘             │     │     │ └──────────────┘
+    #              │                      │     └─────┤
+    #              ├──────────────────┐   │           │ ┌──────────────┐
+    #              │                  │   │           └─►  Ineligible  │
+    #              │                  │   │             └──────────────┘
+    #     ┌────────▼────────┐     ┌───▼───▼───────┐
+    #     │     Partial     │     │   Completed   │
+    #     └─────────────────┘     └───────────────┘
+    #
+    field :disposition, Ecto.Enum, values: [
+      # Uncontacted:
+      :registered,        # initial state
+      :queued,            # call/SMS queued for call/delivery
+      :failed,            # call was never answered / SMS was never sent => the channel was broken or the number doesn't exist
+
+      # Contacted:
+      :contacted,         # call answered (or no_answer reply from Verboice) / SMS delivery confirmed
+      :unresponsive,      # exhausted retries after initial contact
+
+      # Responsive:
+      :refused,           # respondent refused to take the survey (e.g. sent STOP MO)
+      :started,           # answered at least one question
+      :ineligible,        # reached 'ineligible' flag step
+      :rejected,          # reached full quota
+      :breakoff,          # stopped responding (exhausted retries) or sent STOP MO
+      :"interim partial", # reached 'partial' flag step
+      :partial,           # stopped responding after reaching 'partial' flag step
+      :completed,         # reached 'completed' flag step => DONE
+    ], default: :registered
 
     field :completed_at, :utc_datetime # only when state==:pending
     field :timeout_at, :utc_datetime
@@ -74,7 +106,7 @@ defmodule Ask.Respondent do
     struct
     |> cast(params, [:phone_number, :sanitized_phone_number, :canonical_phone_number, :state, :session, :quota_bucket_id, :completed_at, :timeout_at, :questionnaire_id, :mode, :disposition, :mobile_web_cookie_code, :language, :effective_modes, :stats, :section_order, :retry_stat_id, :user_stopped])
     |> validate_required([:phone_number, :state, :user_stopped])
-    |> validate_inclusion(:disposition, ["registered", "queued", "contacted", "failed", "unresponsive", "started", "ineligible", "rejected", "breakoff", "refused", "partial", "interim partial", "completed"])
+    |> validate_inclusion(:disposition, Ecto.Enum.values(Ask.Respondent, :disposition))
     |> validate_inclusion(:state, Ecto.Enum.values(Ask.Respondent, :state))
     |> Ecto.Changeset.optimistic_lock(:lock_version)
   end
@@ -107,7 +139,7 @@ defmodule Ask.Respondent do
   end
 
   def show_disposition(disposition) do
-    (disposition || "") |> String.capitalize
+    (disposition || "") |> to_string() |> String.capitalize
   end
 
   def show_section_order(%{section_order: nil}, _), do: ""
@@ -139,10 +171,10 @@ defmodule Ask.Respondent do
 
   def completed_dispositions(count_partial_results \\ false)
 
-  def completed_dispositions(false), do: ["completed"]
+  def completed_dispositions(false), do: [:completed]
 
   def completed_dispositions(true), do:
-    completed_dispositions() ++ ["partial", "interim partial"]
+    completed_dispositions() ++ [:partial, :"interim partial"]
 
   def completed_disposition?(disposition, count_partial_results \\ false),
     do:
@@ -167,21 +199,22 @@ defmodule Ask.Respondent do
         completed_disposition?(disposition, count_partial_results)
 
   def final_dispositions(), do: [
-    "failed",
-    "unresponsive",
-    "ineligible",
-    "rejected","breakoff",
-    "refused",
-    "partial",
-    "completed"
+    :failed,
+    :unresponsive,
+    :ineligible,
+    :rejected,
+    :breakoff,
+    :refused,
+    :partial,
+    :completed,
   ]
 
   def non_final_dispositions(), do: [
-    "registered",
-    "queued",
-    "contacted",
-    "started",
-    "interim partial"
+    :registered,
+    :queued,
+    :contacted,
+    :started,
+    :"interim partial"
   ]
 
   # Interim partial was created to distinguish between the respondents that reached partial but
@@ -198,7 +231,7 @@ defmodule Ask.Respondent do
   @doc """
   Interim partial isn't a final disposition but it's considered final for metrics
   """
-  def metrics_final_dispositions(true), do: final_dispositions() ++ ["interim partial"]
+  def metrics_final_dispositions(true), do: final_dispositions() ++ [:"interim partial"]
 
   @doc """
   The dispositions listed here are considered non final for metrics.
@@ -211,7 +244,7 @@ defmodule Ask.Respondent do
   Interim partial is a non final disposition but it's considered final for metrics
   """
   def metrics_non_final_dispositions(true), do:
-    List.delete(non_final_dispositions(), "interim partial")
+    List.delete(non_final_dispositions(), :"interim partial")
 
   def add_mode_attempt!(respondent, mode), do: respondent |> changeset(%{stats: Stats.add_attempt(respondent.stats, mode)}) |> Repo.update!
 

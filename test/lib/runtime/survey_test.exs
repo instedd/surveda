@@ -1105,7 +1105,7 @@ defmodule Ask.Runtime.SurveyTest do
              |> Enum.filter( fn (b) -> b.id != selected_bucket.id end)
              |> Enum.all?( fn (b) -> b.count == 0 end)
       respondent = Repo.get(Respondent, respondent.id)
-      assert respondent.disposition == "completed"
+      assert respondent.disposition == :completed
 
       :ok = broker |> GenServer.stop
     end
@@ -1142,7 +1142,7 @@ defmodule Ask.Runtime.SurveyTest do
       assert {:end, {:reply, ReplyHelper.simple("Thank you", "Thanks for completing this survey")}, _} = reply
 
       respondent = Repo.get(Respondent, respondent.id)
-      assert respondent.disposition == "completed"
+      assert respondent.disposition == :completed
       selected_bucket = QuotaBucket |> Repo.get(selected_bucket.id)
       assert selected_bucket.count == 1
       assert QuotaBucket
@@ -1173,7 +1173,7 @@ defmodule Ask.Runtime.SurveyTest do
       assert {:reply, ReplyHelper.simple("Do you exercise", "Do you exercise? Reply 1 for YES, 2 for NO"), _} = reply
 
       respondent = Repo.get(Respondent, respondent.id)
-      assert respondent.disposition == "interim partial"
+      assert respondent.disposition == :"interim partial"
 
       respondent = Repo.get(Respondent, respondent.id)
       reply = Survey.sync_step(respondent, Flow.Message.reply("Yes"))
@@ -1186,7 +1186,7 @@ defmodule Ask.Runtime.SurveyTest do
              |> Enum.filter( fn (b) -> b.id != selected_bucket.id end)
              |> Enum.all?( fn (b) -> b.count == 0 end)
       respondent = Repo.get(Respondent, respondent.id)
-      assert respondent.disposition == "completed"
+      assert respondent.disposition == :completed
 
       respondent = Repo.get(Respondent, respondent.id)
       reply = Survey.sync_step(respondent, Flow.Message.reply("99"))
@@ -1199,7 +1199,7 @@ defmodule Ask.Runtime.SurveyTest do
              |> Enum.filter( fn (b) -> b.id != selected_bucket.id end)
              |> Enum.all?( fn (b) -> b.count == 0 end)
       respondent = Repo.get(Respondent, respondent.id)
-      assert respondent.disposition == "completed"
+      assert respondent.disposition == :completed
 
       respondent = Repo.get(Respondent, respondent.id)
       reply = Survey.sync_step(respondent, Flow.Message.reply("11"))
@@ -1212,7 +1212,7 @@ defmodule Ask.Runtime.SurveyTest do
              |> Enum.filter( fn (b) -> b.id != selected_bucket.id end)
              |> Enum.all?( fn (b) -> b.count == 0 end)
       respondent = Repo.get(Respondent, respondent.id)
-      assert respondent.disposition == "completed"
+      assert respondent.disposition == :completed
 
       :ok = broker |> GenServer.stop
     end
@@ -1249,7 +1249,7 @@ defmodule Ask.Runtime.SurveyTest do
       assert {:end, {:reply, ReplyHelper.simple("Thank you", "Thanks for completing this survey")}, _} = reply
 
       respondent = Repo.get(Respondent, respondent.id)
-      assert respondent.disposition == "completed"
+      assert respondent.disposition == :completed
       selected_bucket = QuotaBucket |> Repo.get(selected_bucket.id)
       assert selected_bucket.count == 1
       assert QuotaBucket
@@ -1290,7 +1290,7 @@ defmodule Ask.Runtime.SurveyTest do
       assert {:reply, ReplyHelper.simple("Do you exercise", "Do you exercise? Reply 1 for YES, 2 for NO"), _} = reply
 
       respondent = Repo.get(Respondent, respondent.id)
-      assert respondent.disposition == "interim partial"
+      assert respondent.disposition == :"interim partial"
 
       selected_bucket = QuotaBucket |> Repo.get(selected_bucket.id)
       assert selected_bucket.count == 1
@@ -1304,7 +1304,7 @@ defmodule Ask.Runtime.SurveyTest do
       assert {:reply, ReplyHelper.simple("Which is the second perfect number?", "Which is the second perfect number??"), _} = reply
 
       respondent = Repo.get(Respondent, respondent.id)
-      assert respondent.disposition == "completed"
+      assert respondent.disposition == :completed
 
       respondent = Repo.get(Respondent, respondent.id)
       reply = Survey.sync_step(respondent, Flow.Message.reply("99"))
@@ -1317,7 +1317,7 @@ defmodule Ask.Runtime.SurveyTest do
              |> Enum.filter( fn (b) -> b.id != selected_bucket.id end)
              |> Enum.all?( fn (b) -> b.count == 0 end)
       respondent = Repo.get(Respondent, respondent.id)
-      assert respondent.disposition == "completed"
+      assert respondent.disposition == :completed
 
       respondent = Repo.get(Respondent, respondent.id)
       reply = Survey.sync_step(respondent, Flow.Message.reply("11"))
@@ -1330,7 +1330,7 @@ defmodule Ask.Runtime.SurveyTest do
              |> Enum.filter( fn (b) -> b.id != selected_bucket.id end)
              |> Enum.all?( fn (b) -> b.count == 0 end)
       respondent = Repo.get(Respondent, respondent.id)
-      assert respondent.disposition == "completed"
+      assert respondent.disposition == :completed
 
       :ok = broker |> GenServer.stop
     end
@@ -1363,7 +1363,7 @@ defmodule Ask.Runtime.SurveyTest do
 
       assert {:reply, ReplyHelper.simple("Do you exercise", "Do you exercise? Reply 1 for YES, 2 for NO"), _} = reply
 
-      assert respondent.disposition == "interim partial"
+      assert respondent.disposition == :"interim partial"
 
       reply = Survey.sync_step(respondent, Flow.Message.reply("Yes"))
 
@@ -1376,7 +1376,7 @@ defmodule Ask.Runtime.SurveyTest do
              |> Repo.all
              |> Enum.filter( fn (b) -> b.id != selected_bucket.id end)
              |> Enum.all?( fn (b) -> b.count == 0 end)
-      assert respondent.disposition == "completed"
+      assert respondent.disposition == :completed
 
       respondent = Repo.get(Respondent, respondent.id)
       reply = Survey.sync_step(respondent, Flow.Message.reply("99"))
@@ -1389,7 +1389,7 @@ defmodule Ask.Runtime.SurveyTest do
              |> Enum.filter( fn (b) -> b.id != selected_bucket.id end)
              |> Enum.all?( fn (b) -> b.count == 0 end)
       respondent = Repo.get(Respondent, respondent.id)
-      assert respondent.disposition == "completed"
+      assert respondent.disposition == :completed
 
       respondent = Repo.get(Respondent, respondent.id)
       reply = Survey.sync_step(respondent, Flow.Message.reply("11"))
@@ -1402,7 +1402,7 @@ defmodule Ask.Runtime.SurveyTest do
              |> Enum.filter( fn (b) -> b.id != selected_bucket.id end)
              |> Enum.all?( fn (b) -> b.count == 0 end)
       respondent = Repo.get(Respondent, respondent.id)
-      assert respondent.disposition == "completed"
+      assert respondent.disposition == :completed
 
       :ok = broker |> GenServer.stop
     end
@@ -1465,13 +1465,13 @@ defmodule Ask.Runtime.SurveyTest do
     Broker.handle_info(:poll, nil)
 
     respondent = Repo.get(Respondent, respondent.id)
-    assert respondent.disposition == "interim partial"
+    assert respondent.disposition == :"interim partial"
 
     reply = Survey.sync_step(respondent, Flow.Message.reply("Yes"))
     assert {:reply, ReplyHelper.simple("Is this the last question?"), _} = reply
 
     respondent = Repo.get(Respondent, respondent.id)
-    assert respondent.disposition == "interim partial"
+    assert respondent.disposition == :"interim partial"
     assert respondent.effective_modes == ["sms"]
   end
 
@@ -1484,13 +1484,13 @@ defmodule Ask.Runtime.SurveyTest do
     assert_received [:ask, ^test_channel, %Respondent{sanitized_phone_number: ^phone_number}, _, ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO")]
 
     respondent = Repo.get(Respondent, respondent.id)
-    assert respondent.disposition == "queued"
+    assert respondent.disposition == :queued
 
     Survey.delivery_confirm(respondent, "Do you smoke?")
 
     updated_respondent = Repo.get(Respondent, respondent.id)
     assert updated_respondent.state == :active
-    assert updated_respondent.disposition == "contacted"
+    assert updated_respondent.disposition == :contacted
 
     :ok = broker |> GenServer.stop
   end
@@ -1502,14 +1502,14 @@ defmodule Ask.Runtime.SurveyTest do
     Broker.poll
 
     respondent = Repo.get(Respondent, respondent.id)
-    assert respondent.disposition == "queued"
+    assert respondent.disposition == :queued
 
     reply = Survey.sync_step(respondent, Flow.Message.answer())
     assert {:reply, ReplyHelper.ivr("Do you smoke?", "Do you smoke? Press 8 for YES, 9 for NO"), _} = reply
 
     updated_respondent = Repo.get(Respondent, respondent.id)
     assert updated_respondent.state == :active
-    assert updated_respondent.disposition == "contacted"
+    assert updated_respondent.disposition == :contacted
 
     :ok = broker |> GenServer.stop
   end
@@ -1523,19 +1523,19 @@ defmodule Ask.Runtime.SurveyTest do
     assert_received [:ask, ^test_channel, %Respondent{sanitized_phone_number: ^phone_number}, _, ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO")]
 
     respondent = Repo.get(Respondent, respondent.id)
-    assert respondent.disposition == "queued"
+    assert respondent.disposition == :queued
 
     Survey.delivery_confirm(respondent, "Do you smoke?")
 
     respondent = Repo.get(Respondent, respondent.id)
     assert respondent.state == :active
-    assert respondent.disposition == "contacted"
+    assert respondent.disposition == :contacted
 
     Survey.sync_step(respondent, Flow.Message.reply("Yes"))
 
     updated_respondent = Repo.get(Respondent, respondent.id)
     assert updated_respondent.state == :active
-    assert updated_respondent.disposition == "started"
+    assert updated_respondent.disposition == :started
 
     :ok = broker |> GenServer.stop
   end
@@ -1602,7 +1602,7 @@ defmodule Ask.Runtime.SurveyTest do
 
     respondent = Repo.get(Respondent, respondent.id)
     assert respondent.state == :active
-    assert respondent.disposition == "interim partial"
+    assert respondent.disposition == :"interim partial"
     survey = Repo.get(Ask.Survey, survey.id)
     assert survey.state == "running"
 
@@ -1647,7 +1647,7 @@ defmodule Ask.Runtime.SurveyTest do
 
     respondent = Repo.get!(Respondent, respondent.id)
     assert respondent.state == :completed
-    assert respondent.disposition == "ineligible"
+    assert respondent.disposition == :ineligible
 
     histories = RespondentDispositionHistory |> Repo.all
     assert length(histories) == 4
@@ -1673,7 +1673,7 @@ defmodule Ask.Runtime.SurveyTest do
 
     respondent = Repo.get!(Respondent, respondent.id)
     assert respondent.state == :completed
-    assert respondent.disposition == "refused"
+    assert respondent.disposition == :refused
 
     histories = RespondentDispositionHistory |> Repo.all
     assert length(histories) == 3
@@ -1724,14 +1724,14 @@ defmodule Ask.Runtime.SurveyTest do
 
     test "base scenario (previous to the STOP MO message)" do
       confirm_delivery("Do you exercise?")
-      assert_respondent(%{current_state: :active, previous_disposition: "queued", current_disposition: "contacted", user_stopped: false})
+      assert_respondent(%{current_state: :active, previous_disposition: :queued, current_disposition: :contacted, user_stopped: false})
     end
 
     test "contacted -> refused" do
       confirm_delivery("Do you exercise?")
       respondent_sends_stop()
 
-      assert_respondent(%{current_state: :failed, previous_disposition: "contacted", current_disposition: "refused", user_stopped: true})
+      assert_respondent(%{current_state: :failed, previous_disposition: :contacted, current_disposition: :refused, user_stopped: true})
     end
 
     test "started -> breakoff" do
@@ -1739,7 +1739,7 @@ defmodule Ask.Runtime.SurveyTest do
       respondent_answers("Any thing")
       respondent_sends_stop()
 
-      assert_respondent(%{current_state: :failed, previous_disposition: "started", current_disposition: "breakoff", user_stopped: true})
+      assert_respondent(%{current_state: :failed, previous_disposition: :started, current_disposition: :breakoff, user_stopped: true})
     end
 
     test "queued -> refused" do
@@ -1747,7 +1747,7 @@ defmodule Ask.Runtime.SurveyTest do
       #     It's expected that a "queued" respondent isn't yet contacted.
       respondent_sends_stop()
 
-      assert_respondent(%{current_state: :failed, previous_disposition: "queued", current_disposition: "refused", user_stopped: true})
+      assert_respondent(%{current_state: :failed, previous_disposition: :queued, current_disposition: :refused, user_stopped: true})
     end
   end
 
@@ -1767,7 +1767,7 @@ defmodule Ask.Runtime.SurveyTest do
 
     respondent = Repo.get!(Respondent, respondent.id)
     assert respondent.state == :completed
-    assert respondent.disposition == "completed"
+    assert respondent.disposition == :completed
 
     histories = RespondentDispositionHistory |> Repo.all
     assert length(histories) == 3
@@ -1789,7 +1789,7 @@ defmodule Ask.Runtime.SurveyTest do
 
     respondent = Repo.get(Respondent, respondent.id)
     assert respondent.state == :active
-    assert respondent.disposition == "interim partial"
+    assert respondent.disposition == :"interim partial"
     survey = Repo.get(Ask.Survey, survey.id)
     assert survey.state == "running"
 
@@ -1800,7 +1800,7 @@ defmodule Ask.Runtime.SurveyTest do
     respondent = Repo.get(Respondent, respondent.id) |> Repo.preload(:responses)
     assert survey.state == "running"
     assert respondent.state == :active
-    assert respondent.disposition == "interim partial"
+    assert respondent.disposition == :"interim partial"
     assert hd(respondent.responses).value == "Yes"
   end
 
@@ -1831,14 +1831,14 @@ defmodule Ask.Runtime.SurveyTest do
     respondent = Repo.get(Respondent, respondent.id)
 
     assert respondent.state       == :active
-    assert respondent.disposition == "started"
+    assert respondent.disposition == :started
 
     Survey.sync_step(respondent, Flow.Message.no_reply)
 
     respondent = Repo.get(Respondent, respondent.id)
 
     assert respondent.state       == :active
-    assert respondent.disposition == "started"
+    assert respondent.disposition == :started
 
     now = Timex.now
     interval = Interval.new(from: Timex.shift(now, minutes: 9), until: Timex.shift(now, minutes: 11), step: [seconds: 1])
@@ -1879,7 +1879,7 @@ defmodule Ask.Runtime.SurveyTest do
     respondent = Repo.get(Respondent, respondent.id)
 
     assert respondent.state       == :active
-    assert respondent.disposition == "started"
+    assert respondent.disposition == :started
 
     now = Timex.now
     interval = Interval.new(from: Timex.shift(now, minutes: 9), until: Timex.shift(now, minutes: 11), step: [seconds: 1])
@@ -1897,7 +1897,7 @@ defmodule Ask.Runtime.SurveyTest do
 
     respondent = Repo.get(Respondent, respondent.id)
     assert respondent.state == :active
-    assert respondent.disposition == "queued"
+    assert respondent.disposition == :queued
 
     reply = Survey.sync_step(respondent, Flow.Message.answer())
     assert {:reply, ReplyHelper.ivr("Do you smoke?", "Do you smoke? Press 8 for YES, 9 for NO"), _} = reply
@@ -1908,14 +1908,14 @@ defmodule Ask.Runtime.SurveyTest do
 
     respondent = Repo.get(Respondent, respondent.id)
     assert respondent.state == :active
-    assert respondent.disposition == "started"
+    assert respondent.disposition == :started
 
     Respondent.changeset(respondent, %{timeout_at: Timex.now |> Timex.shift(minutes: -1)}) |> Repo.update
     Broker.handle_info(:poll, nil)
 
     respondent = Repo.get(Respondent, respondent.id)
     assert respondent.state == :failed
-    assert respondent.disposition == "breakoff"
+    assert respondent.disposition == :breakoff
 
     :ok = logger |> GenServer.stop
 
@@ -1938,7 +1938,7 @@ defmodule Ask.Runtime.SurveyTest do
 
     respondent = Repo.get(Respondent, respondent.id)
     assert respondent.state == :active
-    assert respondent.disposition == "queued"
+    assert respondent.disposition == :queued
 
     reply = Survey.sync_step(respondent, Flow.Message.answer())
     assert {:reply, ReplyHelper.ivr("Do you smoke?", "Do you smoke? Press 8 for YES, 9 for NO"), _} = reply
@@ -1949,14 +1949,14 @@ defmodule Ask.Runtime.SurveyTest do
 
     respondent = Repo.get(Respondent, respondent.id)
     assert respondent.state == :active
-    assert respondent.disposition == "interim partial"
+    assert respondent.disposition == :"interim partial"
 
     Respondent.changeset(respondent, %{timeout_at: Timex.now |> Timex.shift(minutes: -1)}) |> Repo.update
     Broker.handle_info(:poll, nil)
 
     respondent = Repo.get(Respondent, respondent.id)
     assert respondent.state == :failed
-    assert respondent.disposition == "partial"
+    assert respondent.disposition == :partial
 
     :ok = logger |> GenServer.stop
     last_entry = ((respondent |> Repo.preload(:survey_log_entries)).survey_log_entries |> Enum.at(-1))
@@ -1977,7 +1977,7 @@ defmodule Ask.Runtime.SurveyTest do
 
     respondent = Repo.get(Respondent, respondent.id)
     assert respondent.state == :active
-    assert respondent.disposition == "queued"
+    assert respondent.disposition == :queued
 
     reply = Survey.sync_step(respondent, Flow.Message.answer())
     assert {:reply, ReplyHelper.ivr("Do you smoke?", "Do you smoke? Press 8 for YES, 9 for NO"), _} = reply
@@ -1988,20 +1988,20 @@ defmodule Ask.Runtime.SurveyTest do
 
     respondent = Repo.get(Respondent, respondent.id)
     assert respondent.state == :active
-    assert respondent.disposition == "interim partial"
+    assert respondent.disposition == :"interim partial"
 
     _reply = Survey.sync_step(respondent, Flow.Message.reply("1"))
 
     respondent = Repo.get(Respondent, respondent.id)
     assert respondent.state == :active
-    assert respondent.disposition == "completed"
+    assert respondent.disposition == :completed
 
     Respondent.changeset(respondent, %{timeout_at: Timex.now |> Timex.shift(minutes: -1)}) |> Repo.update
     Broker.handle_info(:poll, nil)
 
     respondent = Repo.get(Respondent, respondent.id)
     assert respondent.state == :failed
-    assert respondent.disposition == "completed"
+    assert respondent.disposition == :completed
 
     :ok = broker |> GenServer.stop
   end
@@ -2015,21 +2015,21 @@ defmodule Ask.Runtime.SurveyTest do
 
     respondent = Repo.get(Respondent, respondent.id)
     assert respondent.state == :active
-    assert respondent.disposition == "queued"
+    assert respondent.disposition == :queued
 
     reply = Survey.sync_step(respondent, Flow.Message.answer())
     assert {:reply, ReplyHelper.ivr("Do you smoke?", "Do you smoke? Press 8 for YES, 9 for NO"), _} = reply
 
     respondent = Repo.get(Respondent, respondent.id)
     assert respondent.state == :active
-    assert respondent.disposition == "contacted"
+    assert respondent.disposition == :contacted
 
     Respondent.changeset(respondent, %{timeout_at: Timex.now |> Timex.shift(minutes: -1)}) |> Repo.update
     Broker.handle_info(:poll, nil)
 
     respondent = Repo.get(Respondent, respondent.id)
     assert respondent.state == :failed
-    assert respondent.disposition == "unresponsive"
+    assert respondent.disposition == :unresponsive
 
     :ok = logger |> GenServer.stop
     last_entry = ((respondent |> Repo.preload(:survey_log_entries)).survey_log_entries |> Enum.at(-1))
@@ -2081,11 +2081,11 @@ defmodule Ask.Runtime.SurveyTest do
 
     respondent = Repo.get(Respondent, respondent.id)
     assert respondent.state == :active
-    assert respondent.disposition == "contacted"
+    assert respondent.disposition == :contacted
 
     respondent
     |> Respondent.changeset(%{
-      disposition: "interim partial",
+      disposition: :"interim partial",
       timeout_at: Timex.now |> Timex.shift(minutes: -1)
     })
     |> Repo.update!
@@ -2094,7 +2094,7 @@ defmodule Ask.Runtime.SurveyTest do
 
     respondent = Repo.get(Respondent, respondent.id)
     assert respondent.state == :failed
-    assert respondent.disposition == "partial"
+    assert respondent.disposition == :partial
 
     :ok = broker |> GenServer.stop
   end
@@ -2110,7 +2110,7 @@ defmodule Ask.Runtime.SurveyTest do
     Survey.sync_step(respondent, Flow.Message.no_reply)
 
     respondent = Repo.get(Respondent, respondent.id)
-    assert respondent.disposition == "queued"
+    assert respondent.disposition == :queued
   end
 
   test "marks the respondent as rejected when the bucket is completed" do
@@ -2135,7 +2135,7 @@ defmodule Ask.Runtime.SurveyTest do
     assert {:end, _} = reply
     updated_respondent = Repo.get(Respondent, respondent.id)
     assert updated_respondent.state == :rejected
-    assert updated_respondent.disposition == "rejected"
+    assert updated_respondent.disposition == :rejected
 
     selected_bucket = QuotaBucket |> Repo.get(selected_bucket.id)
     assert selected_bucket.count == 1
@@ -2232,7 +2232,7 @@ defmodule Ask.Runtime.SurveyTest do
 
     respondent = Repo.get(Respondent, respondent.id)
     assert respondent.state == :failed
-    assert respondent.disposition == "breakoff"
+    assert respondent.disposition == :breakoff
 
     :ok = broker |> GenServer.stop
   end
@@ -2267,7 +2267,7 @@ defmodule Ask.Runtime.SurveyTest do
 
     respondent = Repo.get(Respondent, respondent.id)
     assert respondent.state == :active
-    assert respondent.disposition == "started"
+    assert respondent.disposition == :started
 
     :ok = broker |> GenServer.stop
   end
@@ -2354,7 +2354,7 @@ defmodule Ask.Runtime.SurveyTest do
     Survey.delivery_confirm(respondent, "Contact", "sms")
 
     respondent = Repo.get(Respondent, respondent.id)
-    assert respondent.disposition == "contacted"
+    assert respondent.disposition == :contacted
   end
 
   test "it doesn't crash on channel_failed when there's no session" do
@@ -2553,19 +2553,20 @@ defmodule Ask.Runtime.SurveyTest do
     last_entry = SurveyLogEntry |> Repo.all |> take_last
 
     assert last_entry.action_type == "disposition changed"
-    assert last_entry.disposition == old_disposition
+    assert last_entry.disposition == to_string(old_disposition)
     assert last_entry.action_data == upcaseFirst(new_disposition)
   end
 
   defp assert_last_history_disposition_is(disposition) do
     last_history = RespondentDispositionHistory |> Repo.all |> take_last
 
-    assert last_history.disposition == disposition
+    assert last_history.disposition == to_string(disposition)
   end
 
   defp take_last(records), do:
     records |> Enum.take(-1) |> hd
 
+  defp upcaseFirst(value) when is_atom(value), do: to_string(value) |> upcaseFirst
   defp upcaseFirst(<<first::utf8, rest::binary>>), do: String.upcase(<<first::utf8>>) <> rest
 
 end

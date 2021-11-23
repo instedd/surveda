@@ -68,7 +68,7 @@ defmodule Ask.RespondentGroupControllerTest do
 
       assert length(respondents) == 14
 
-      assert hd(respondents).disposition == "registered"
+      assert hd(respondents).disposition == :registered
 
       assert group
       assert group.name == "phone_numbers.csv"
@@ -350,7 +350,7 @@ defmodule Ask.RespondentGroupControllerTest do
       entries = File.stream!("test/fixtures/respondent_phone_numbers.csv") |>
       CSV.decode(separator: ?\t) |>
       Enum.map(fn row ->
-        %{phone_number: Enum.at(row, 0), survey_id: survey.id, respondent_group_id: group.id, inserted_at: local_time, updated_at: local_time, disposition: "registered", stats: %Stats{}, user_stopped: false}
+        %{phone_number: Enum.at(row, 0), survey_id: survey.id, respondent_group_id: group.id, inserted_at: local_time, updated_at: local_time, disposition: :registered, stats: %Stats{}, user_stopped: false}
       end)
 
       {respondents_count, _ } = Repo.insert_all(Respondent, entries)
@@ -377,7 +377,7 @@ defmodule Ask.RespondentGroupControllerTest do
       entries = File.stream!("test/fixtures/respondent_phone_numbers.csv") |>
       CSV.decode(separator: ?\t) |>
       Enum.map(fn row ->
-        %{phone_number: Enum.at(row, 0), survey_id: survey.id, respondent_group_id: group.id, inserted_at: local_time, updated_at: local_time, disposition: "registered", stats: %Stats{}, user_stopped: false}
+        %{phone_number: Enum.at(row, 0), survey_id: survey.id, respondent_group_id: group.id, inserted_at: local_time, updated_at: local_time, disposition: :registered, stats: %Stats{}, user_stopped: false}
       end)
 
       {respondents_count, _ } = Repo.insert_all(Respondent, entries)

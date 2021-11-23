@@ -114,6 +114,6 @@ defmodule Ask.RespondentStats do
 
   def respondents_by_disposition(survey) do
     respondent_count(survey_id: ^survey.id, by: :disposition)
-    |> Enum.into(%{})
+    |> Enum.into(%{}, fn ({k, v}) -> {String.to_existing_atom(k), v} end)
   end
 end
