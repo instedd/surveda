@@ -30,13 +30,15 @@ defmodule Ask.Mixfile do
         :gettext,
         :alto_guisso,
         :phoenix_ecto,
-        #:mariaex,
         :oauth2,
         :timex,
         :sentry,
         :coherence,
         :prometheus_phoenix,
         :prometheus_plugs
+      ],
+      extra_applications: [
+        :myxql,
       ]
     ]
   end
