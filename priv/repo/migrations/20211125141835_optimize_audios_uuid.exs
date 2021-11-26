@@ -10,7 +10,7 @@ defmodule Ask.Repo.Migrations.OptimizeAudiosUuid do
   end
 
   def down do
-    execute "ALTER TABLE audios MODIFY uuid VARCHAR(255) CHARACTER SET utf8"
     drop index(:audios, :uuid)
+    execute "ALTER TABLE audios MODIFY uuid VARCHAR(255) CHARACTER SET utf8"
   end
 end
