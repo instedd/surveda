@@ -101,15 +101,15 @@ defmodule Ask.RespondentStats do
 
   def respondents_by_state(survey) do
     by_state_defaults = %{
-      "active" => 0,
-      "pending" => 0,
-      "completed" => 0,
-      "rejected" => 0,
-      "failed" => 0,
+      active: 0,
+      pending: 0,
+      completed: 0,
+      rejected: 0,
+      failed: 0,
     }
 
     respondent_count(survey_id: ^survey.id, by: :state)
-    |> Enum.into(by_state_defaults)
+    |> Enum.into(by_state_defaults, fn ({k, v}) -> {String.to_existing_atom(k), v} end)
   end
 
   def respondents_by_disposition(survey) do

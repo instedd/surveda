@@ -115,9 +115,9 @@ defmodule Ask.Runtime.Broker do
     try do
       by_state = Ask.RespondentStats.respondents_by_state(survey)
       %{
-        "active" => active,
-        "pending" => pending,
-        "completed" => completed,
+        active: active,
+        pending: pending,
+        completed: completed,
       } = by_state
 
       reached_quotas = reached_quotas?(survey)

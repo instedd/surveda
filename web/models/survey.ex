@@ -592,7 +592,7 @@ defmodule Ask.Survey do
     )
 
     case quota_completed do
-      nil -> respondents_by_state["completed"]
+      nil -> respondents_by_state[:completed]
       value -> value |> Decimal.to_integer
     end
   end
