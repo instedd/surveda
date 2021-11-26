@@ -20,6 +20,14 @@
   height: 48px;
 }
 
+.btn-small {
+  @extend .btn-large;
+  line-height: 32px;
+  padding-left: 1.2rem;
+  padding-right: 1.2rem;
+  height: 32px;
+}
+
 .btn-block {
   width: 100%;
 }

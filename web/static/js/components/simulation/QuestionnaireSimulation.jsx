@@ -65,7 +65,7 @@ class QuestionnaireSimulation extends Component<Props, State> {
   }
 
   componentDidMount() {
-    const { projectId, questionnaireId, mode } = this.props
+    const { projectId, questionnaireId, mode, router } = this.props
 
     browserHistory.listen(this.onRouteChange)
 
@@ -83,12 +83,30 @@ class QuestionnaireSimulation extends Component<Props, State> {
         })
       }
     }
+
+    // HACK: creates an external function to manually trigger a react route
+    // change from outside react's scope/context where we can't use the Link
+    // component or a callback method
+    window.__refreshSimulation = () => {
+      window.event.preventDefault()
+
+      // HACK: react-router won't navigate to the same URL and doesn't have a
+      // solution to force a refresh... we thus force a refresh by pushing a
+      // fake route, that will unload the current context, and immediately
+      // replace it for the simulator page, that will trigger a refresh.
+      //
+      // See https://dev.to/zbmarius/react-route-refresh-without-page-reload-1907
+      const pathname = window.location.pathname
+      router.push('/')
+      setImmediate(() => router.replace(pathname))
+    }
   }
 
   componentWillUnmount() {
     if (this._onMessage) {
       window.removeEventListener('message', this._onMessage)
     }
+    delete window.__refreshSimulation
   }
 
   onRouteChange = () => {
@@ -127,14 +145,22 @@ class QuestionnaireSimulation extends Component<Props, State> {
     let newSimulation
 
     if (isSimulationTerminated) {
+      let message = ''
+
       switch (simulationStatus) {
         case 'expired':
-          window.Materialize.toast(t('This simulation is expired. Please refresh to start a new one'))
+          message = t('This simulation is expired')
           break
         case 'ended':
-          window.Materialize.toast(t('This simulation is ended. Please refresh to start a new one'))
+          message = t('This simulation is ended')
           break
       }
+
+      window.Materialize.toast(
+        `${message} <a class="waves-effect waves-light btn btn-small" href="" onclick="__refreshSimulation()">
+          <i class="material-icons left">replay</i>
+          ${t('Restart simulation')}
+        </a>`)
     }
 
     if (simulationStatus == 'expired') {
