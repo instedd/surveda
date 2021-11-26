@@ -1,5 +1,6 @@
 defmodule Ask.Endpoint do
   use Phoenix.Endpoint, otp_app: :ask
+  use Sentry.Phoenix.Endpoint
 
   socket "/socket", Ask.UserSocket
 
