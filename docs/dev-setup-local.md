@@ -6,18 +6,15 @@ Surveda requires some external services to work properly:
 - [Verboice](https://github.com/instedd/verboice) for making phone calls (IVR);
 - [Nuntium](https://github.com/instedd/nuntium) for sending and receiving text messages (SMS).
 
-They can be used from a [cloud](dev-setup-cloud.md) installation or locally as we will see in this document.
-
+They can be used from a [cloud installation](dev-setup-cloud.md) or locally as we will see in this document.
 
 ## Setup
-
 
 ### Install [dockerdev](https://github.com/waj/dockerdev)
 
 This isn't necessary, but installing [dockerdev](https://github.com/waj/dockerdev)
-will greatly improve your experience, by using the `*.lvh.me` domain to access
+will greatly improve your experience, by using the [`*.lvh.me`](https://nickjanetakis.com/blog/ngrok-lvhme-nipio-a-trilogy-for-local-development-and-testing#lvh-me) domain to access
 services and for services to talk between themselves.
-
 
 ### Install [Guisso](https://github.com/instedd/guisso)
 
@@ -31,9 +28,12 @@ services and for services to talk between themselves.
   $ docker-compose up web
   ```
 
-2. Navigate to <http://web.guisso.lvh.me> and create an account;
+2. Navigate to <http://web.guisso.lvh.me> and create an account.
 
-3. We now need to create three applications:
+  **Note:** If the browser returns a DNS error when navigating to any `lvh.me` domain then we could [try this solution](#lvh-dns-error).
+
+
+3. Now we need to create three applications:
 
   ```
   app=Nuntium  host=web.nuntium.lvh.me
@@ -41,14 +41,14 @@ services and for services to talk between themselves.
   app=Surveda  host=app.surveda.lvh.me
   ```
 
-  Make sure to configure each application with the same two redirect URIs (one
-  per line). They must be on each application, because Surveda will create
-  access tokens for Verboice and Nuntium on their behalf:
+  Make sure to configure each application with the same two redirect URIs (**one per line**).
 
   ```
   http://app.surveda.lvh.me/session/oauth_callback
   http://app.surveda.lvh.me/oauth_client/callback
   ```
+
+  **Important:** They must be set on each application, because Surveda will create access tokens for Verboice and Nuntium on their behalf.
 
 ### Install [Verboice](https://github.com/instedd/verboice)
 
@@ -413,3 +413,18 @@ You should also be able to send messages with `4`. If there are multiple clients
 connected, just kill and restart the simulator, then wait for the Nuntium SMPP
 service to reconnect (a few seconds) so there is only one (we can easily end up
 with multiple clients connected after editing a channel for example).
+
+
+## Troubleshooting
+
+### lvh DNS error
+If you are facing a DNS error when navigating to any `lvh.me` domain maybe the problem is your ISP's DNS.
+Try adding public DNS servers to your network configuration. For example:
+- Google:
+  - 8.8.8.8
+  - 8.8.4.4
+- Cloudflare:
+  - 1.1.1.1
+  - 1.0.0.1
+
+More public [DNS servers](https://www.lifewire.com/free-and-public-dns-servers-2626062).
