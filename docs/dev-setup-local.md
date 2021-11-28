@@ -6,8 +6,7 @@ Surveda requires some external services to work properly:
 - [Verboice](https://github.com/instedd/verboice) for making phone calls (IVR);
 - [Nuntium](https://github.com/instedd/nuntium) for sending and receiving text messages (SMS).
 
-They can be used from the cloud (see [dev-setup-cloud.md](dev-setup-cloud.md)).
-Or if you want to install and configure them locally, follow the Setup below.
+They can be used from a [cloud](dev-setup-cloud.md) installation or locally as we will see in this document.
 
 
 ## Setup
@@ -50,7 +49,6 @@ services and for services to talk between themselves.
   http://app.surveda.lvh.me/session/oauth_callback
   http://app.surveda.lvh.me/oauth_client/callback
   ```
-
 
 ### Install [Verboice](https://github.com/instedd/verboice)
 
