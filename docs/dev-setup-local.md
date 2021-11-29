@@ -135,61 +135,95 @@ services and for services to talk between themselves.
   $ ./dev-setup.sh
   ```
 
-2. Configure Surveda by editing or creating `config/locals.exs`, using the
-   client id and secret from <http://web.guisso.lvh.me> for the Surveda app:
+2. Configure Surveda's `config/local.exs`. If not present then create the file and:
+   1. Configure Guisso using the client id and secret from <http://web.guisso.lvh.me> for the Surveda app:
 
-   ```elixir
-   use Mix.Config
+    ```elixir
+    use Mix.Config
 
-   config :alto_guisso,
-     enabled: true,
-     base_url: "http://web.guisso.lvh.me",
-     client_id: "",
-     client_secret: ""
+      config :alto_guisso,
+        enabled: true,
+        base_url: "http://web.guisso.lvh.me",
+        client_id: "",
+        client_secret: ""
 
-   config :ask, Ask.Endpoint,
-     url: [host: "app.surveda.lvh.me"]
-   ```
+      config :ask, Ask.Endpoint,
+        url: [host: "app.surveda.lvh.me"]
+    ```
 
-4. Configure Verboice by editing `config/locals.exs`, using the client id and
-   secret from <http://web.guisso.lvh.me> for the Verboice app:
+   2. Add Verboice using the client id and secret from <http://web.guisso.lvh.me> for the Verboice app:
 
-   ```elixir
-   config :ask, Verboice,
-     base_url: "http://web.verboice.lvh.me",
-     base_callback_url: "http://app.surveda.lvh.me",
-     channel_ui: true,
-     guisso: [
-       base_url: "http://web.guisso.lvh.me",
-       client_id: "",
-       client_secret: "",
-       app_id: "web.verboice.lvh.me"
-     ]
-   ```
+    ```elixir
+    config :ask, Verboice,
+      base_url: "http://web.verboice.lvh.me",
+      base_callback_url: "http://app.surveda.lvh.me",
+      channel_ui: true,
+      guisso: [
+        base_url: "http://web.guisso.lvh.me",
+        client_id: "",
+        client_secret: "",
+        app_id: "web.verboice.lvh.me"
+      ]
+    ```
 
-5. Configure Nuntium by editing `config/locals.exs`, using the client id and
-   secret from <http://web.guisso.lvh.me> for the Nuntium app:
+   3. Add Nuntium using the client id and secret from <http://web.guisso.lvh.me> for the Nuntium app:
 
-   ```elixir
-   config :ask, Nuntium,
-     base_url: "http://web.nuntium.lvh.me",
-     base_callback_url: "http://app.surveda.lvh.me",
-     channel_ui: true,
-     guisso: [
-       base_url: "http://web.guisso.lvh.me",
-       client_id: "",
-       client_secret: "",
-       app_id: "web.nuntium.lvh.me"
-     ]
-   ```
+    ```elixir
+    config :ask, Nuntium,
+      base_url: "http://web.nuntium.lvh.me",
+      base_callback_url: "http://app.surveda.lvh.me",
+      channel_ui: true,
+      guisso: [
+        base_url: "http://web.guisso.lvh.me",
+        client_id: "",
+        client_secret: "",
+        app_id: "web.nuntium.lvh.me"
+      ]
+    ```
 
-6. Startup Surveda:
+   4. The final `config/local.exs` should look like this:
+    ```elixir
+    use Mix.Config
+
+      config :alto_guisso,
+        enabled: true,
+        base_url: "http://web.guisso.lvh.me",
+        client_id: "",
+        client_secret: ""
+
+      config :ask, Ask.Endpoint,
+        url: [host: "app.surveda.lvh.me"]
+
+      config :ask, Verboice,
+        base_url: "http://web.verboice.lvh.me",
+        base_callback_url: "http://app.surveda.lvh.me",
+        channel_ui: true,
+        guisso: [
+          base_url: "http://web.guisso.lvh.me",
+          client_id: "",
+          client_secret: "",
+          app_id: "web.verboice.lvh.me"
+        ]
+
+      config :ask, Nuntium,
+        base_url: "http://web.nuntium.lvh.me",
+        base_callback_url: "http://app.surveda.lvh.me",
+        channel_ui: true,
+        guisso: [
+          base_url: "http://web.guisso.lvh.me",
+          client_id: "",
+          client_secret: "",
+          app_id: "web.nuntium.lvh.me"
+        ]
+    ```
+
+3. Startup Surveda:
 
    ```console
    $ docker-compose up app webpack
    ```
 
-7. Navigate to <http://app.surveda.lvh.me> and we should be authenticated automatically because we are using Guisso.
+4. Navigate to <http://app.surveda.lvh.me> and we should be authenticated automatically because we are using Guisso.
 
   **Note:** If the browser returns a `502 Bad Gateway` error [try this solution](#bad-gateway-error).
 
