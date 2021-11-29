@@ -271,7 +271,7 @@ Last but not least, we can setup a SMPP channel to send & receive SMS messages:
    to a SMPP server that will relay SMS messages from and to your mobile phone,
    you can configure it now.
 
-   Or you can use a SMSC simulator (see below) that will be running on your
+   Or you can use a [SMSC simulator](#smsc-simulator-smpp) that will be running on your
    machine. For example:
 
    - `host` should be an IP of your host machine (for example `192.168.1.2`)
@@ -423,7 +423,9 @@ $ export JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64
 $ mvn package
 ```
 
-When all JARs have been built, create an `etc/users.txt` file, that will act as
+**Note:** if `mvn package` fails to build then we should [try another jdk version](#jdk-compile-error)
+
+When all JARs have been built, create an `users.txt` file, that will act as
 a user/password database to allow connections (or not). For example:
 
 ```text
@@ -441,7 +443,7 @@ CHARSET="charset/target/opensmpp-charset-${VERSION}.jar"
 CORE="core/target/opensmpp-core-${VERSION}.jar"
 SIM="sim/target/opensmpp-sim-${VERSION}.jar"
 
-exec java -DsourceAddr=17xxxxxxxxx101 -DdestAddr=17xxxxxxxxx100 \
+exec java -DusersFileName=users.txt -DsourceAddr=17xxxxxxxxx101 -DdestAddr=17xxxxxxxxx100 \
   -cp $CHARSET:$CORE:$SIM org.smpp.smscsim.Simulator
 ```
 
@@ -453,7 +455,6 @@ You should also be able to send messages with `4`. If there are multiple clients
 connected, just kill and restart the simulator, then wait for the Nuntium SMPP
 service to reconnect (a few seconds) so there is only one (we can easily end up
 with multiple clients connected after editing a channel for example).
-
 
 ## Troubleshooting
 
@@ -498,4 +499,11 @@ Running the `inspect` command should return:
   "shared",
   "verboice_default"
 ]
+```
+
+### JDK Compile error
+If `mvn package` fails building `OpenSMPP` then try another JDK version. For example, if we are using `jenv` we could run the build using Java 1.8:
+
+```console
+$ JAVA_HOME=/Users/foobar/.jenv/versions/1.8 mvn clean package
 ```
