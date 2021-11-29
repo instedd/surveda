@@ -6,19 +6,15 @@ Surveda requires some external services to work properly:
 - [Verboice](https://github.com/instedd/verboice) for making phone calls (IVR);
 - [Nuntium](https://github.com/instedd/nuntium) for sending and receiving text messages (SMS).
 
-They can be used from the cloud (see [dev-setup-cloud.md](dev-setup-cloud.md)).
-Or if you want to install and configure them locally, follow the Setup below.
-
+They can be used from a [cloud installation](dev-setup-cloud.md) or locally as we will see in this document.
 
 ## Setup
-
 
 ### Install [dockerdev](https://github.com/waj/dockerdev)
 
 This isn't necessary, but installing [dockerdev](https://github.com/waj/dockerdev)
-will greatly improve your experience, by using the `*.lvh.me` domain to access
+will greatly improve your experience, by using the [`*.lvh.me`](https://nickjanetakis.com/blog/ngrok-lvhme-nipio-a-trilogy-for-local-development-and-testing#lvh-me) domain to access
 services and for services to talk between themselves.
-
 
 ### Install [Guisso](https://github.com/instedd/guisso)
 
@@ -32,9 +28,12 @@ services and for services to talk between themselves.
   $ docker-compose up web
   ```
 
-2. Navigate to <http://web.guisso.lvh.me> and create an account;
+2. Navigate to <http://web.guisso.lvh.me> and create an account.
 
-3. We now need to create three applications:
+  **Note:** If the browser returns a DNS error when navigating to `http://web.guisso.lvh.me` (or any `lvh.me` domain) then we could [try this solution](#lvh-dns-error).
+
+
+3. Now we need to create three applications:
 
   ```
   app=Nuntium  host=web.nuntium.lvh.me
@@ -42,15 +41,14 @@ services and for services to talk between themselves.
   app=Surveda  host=app.surveda.lvh.me
   ```
 
-  Make sure to configure each application with the same two redirect URIs (one
-  per line). They must be on each application, because Surveda will create
-  access tokens for Verboice and Nuntium on their behalf:
+  Make sure to configure each application with the same two redirect URIs (**one per line**):
 
   ```
   http://app.surveda.lvh.me/session/oauth_callback
   http://app.surveda.lvh.me/oauth_client/callback
   ```
 
+  **Important:** They must be set on each application, because Surveda will create access tokens for Verboice and Nuntium on their behalf.
 
 ### Install [Verboice](https://github.com/instedd/verboice)
 
@@ -79,7 +77,9 @@ services and for services to talk between themselves.
   $ docker-compose up web broker asterisk
   ```
 
-4. Navigate to <http://web.verboice.lvh.me> and authenticate using Guisso.
+4. Navigate to <http://web.verboice.lvh.me> and we should be authenticated automatically because we are using Guisso.
+
+  **Note:** If the browser returns a `502 Bad Gateway` error [try this solution](#bad-gateway-error).
 
 5. You may create a Project, but I don't know whether this is required. Maybe
    Surveda creates one automatically, or doesn't need any?
@@ -117,12 +117,13 @@ services and for services to talk between themselves.
    $ docker-compose up web workerfast workerslow cron sched smpp
    ```
 
-4. Navigate to <http://web.nuntium.lvh.me> and authenticate using Guisso.
+4. Navigate to <http://web.nuntium.lvh.me> and we should be authenticated automatically because we are using Guisso.
 
    No need to create anything for the time being. We'll create a channel
    directly from Surveda, and the application will also be created by Surveda
    the first time you create a Survey.
 
+  **Note:** If the browser returns a `502 Bad Gateway` error [try this solution](#bad-gateway-error).
 
 ### Install [Surveda](https://github.com/instedd/surveda)
 
@@ -134,62 +135,97 @@ services and for services to talk between themselves.
   $ ./dev-setup.sh
   ```
 
-2. Configure Surveda by editing or creating `config/locals.exs`, using the
-   client id and secret from <http://web.guisso.lvh.me> for the Surveda app:
+2. Configure Surveda's `config/local.exs`. If not present then create the file and:
+   1. Configure Guisso using the client id and secret from <http://web.guisso.lvh.me> for the Surveda app:
 
-   ```elixir
-   use Mix.Config
+    ```elixir
+    use Mix.Config
 
-   config :alto_guisso,
-     enabled: true,
-     base_url: "http://web.guisso.lvh.me",
-     client_id: "",
-     client_secret: ""
+      config :alto_guisso,
+        enabled: true,
+        base_url: "http://web.guisso.lvh.me",
+        client_id: "",
+        client_secret: ""
 
-   config :ask, Ask.Endpoint,
-     url: [host: "app.surveda.lvh.me"]
-   ```
+      config :ask, Ask.Endpoint,
+        url: [host: "app.surveda.lvh.me"]
+    ```
 
-4. Configure Verboice by editing `config/locals.exs`, using the client id and
-   secret from <http://web.guisso.lvh.me> for the Verboice app:
+   2. Add Verboice using the client id and secret from <http://web.guisso.lvh.me> for the Verboice app:
 
-   ```elixir
-   config :ask, Verboice,
-     base_url: "http://web.verboice.lvh.me",
-     base_callback_url: "http://app.surveda.lvh.me",
-     channel_ui: true,
-     guisso: [
-       base_url: "http://web.guisso.lvh.me",
-       client_id: "",
-       client_secret: "",
-       app_id: "web.verboice.lvh.me"
-     ]
-   ```
+    ```elixir
+    config :ask, Verboice,
+      base_url: "http://web.verboice.lvh.me",
+      base_callback_url: "http://app.surveda.lvh.me",
+      channel_ui: true,
+      guisso: [
+        base_url: "http://web.guisso.lvh.me",
+        client_id: "",
+        client_secret: "",
+        app_id: "web.verboice.lvh.me"
+      ]
+    ```
 
-5. Configure Nuntium by editing `config/locals.exs`, using the client id and
-   secret from <http://web.guisso.lvh.me> for the Nuntium app:
+   3. Add Nuntium using the client id and secret from <http://web.guisso.lvh.me> for the Nuntium app:
 
-   ```elixir
-   config :ask, Nuntium,
-     base_url: "http://web.nuntium.lvh.me",
-     base_callback_url: "http://app.surveda.lvh.me",
-     channel_ui: true,
-     guisso: [
-       base_url: "http://web.guisso.lvh.me",
-       client_id: "",
-       client_secret: "",
-       app_id: "web.nuntium.lvh.me"
-     ]
-   ```
+    ```elixir
+    config :ask, Nuntium,
+      base_url: "http://web.nuntium.lvh.me",
+      base_callback_url: "http://app.surveda.lvh.me",
+      channel_ui: true,
+      guisso: [
+        base_url: "http://web.guisso.lvh.me",
+        client_id: "",
+        client_secret: "",
+        app_id: "web.nuntium.lvh.me"
+      ]
+    ```
 
-6. Startup Surveda:
+   4. The final `config/local.exs` should look like this:
+    ```elixir
+    use Mix.Config
+
+      config :alto_guisso,
+        enabled: true,
+        base_url: "http://web.guisso.lvh.me",
+        client_id: "",
+        client_secret: ""
+
+      config :ask, Ask.Endpoint,
+        url: [host: "app.surveda.lvh.me"]
+
+      config :ask, Verboice,
+        base_url: "http://web.verboice.lvh.me",
+        base_callback_url: "http://app.surveda.lvh.me",
+        channel_ui: true,
+        guisso: [
+          base_url: "http://web.guisso.lvh.me",
+          client_id: "",
+          client_secret: "",
+          app_id: "web.verboice.lvh.me"
+        ]
+
+      config :ask, Nuntium,
+        base_url: "http://web.nuntium.lvh.me",
+        base_callback_url: "http://app.surveda.lvh.me",
+        channel_ui: true,
+        guisso: [
+          base_url: "http://web.guisso.lvh.me",
+          client_id: "",
+          client_secret: "",
+          app_id: "web.nuntium.lvh.me"
+        ]
+    ```
+
+3. Startup Surveda:
 
    ```console
    $ docker-compose up app webpack
    ```
 
-7. Navigate to <http://app.surveda.lvh.me> and authenticate using Guisso.
+4. Navigate to <http://app.surveda.lvh.me> and we should be authenticated automatically because we are using Guisso.
 
+  **Note:** If the browser returns a `502 Bad Gateway` error [try this solution](#bad-gateway-error).
 
 ## Register channels
 
@@ -235,13 +271,15 @@ Last but not least, we can setup a SMPP channel to send & receive SMS messages:
    to a SMPP server that will relay SMS messages from and to your mobile phone,
    you can configure it now.
 
-   Or you can use a SMSC simulator (see below) that will be running on your
+   Or you can use a [SMSC simulator](#smsc-simulator-smpp) that will be running on your
    machine. For example:
 
-   - `host` should be an IP of your host machine (for example `192.168.1.2`);
-   - `port` can be 2775;
-   - `user` can be `surveda`;
-   - `password` can be `secret`.
+   - `host` should be an IP of your host machine (for example `192.168.1.2`)
+   - `port` can be 2775
+   - `user` can be `surveda`
+   - `password` can be `surveda`.
+
+  **Note:** use the same `user` and `password` in `users.txt` when configuring [`OpenSMPP`](#smsc-simulator-smpp)
 
 4. Navigate to <http://web.nuntium.lvh.me/channels>
 
@@ -385,7 +423,9 @@ $ export JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64
 $ mvn package
 ```
 
-When all JARs have been built, create an `etc/users.txt` file, that will act as
+**Note:** if `mvn package` fails to build then we should [try another jdk version](#jdk-compile-error)
+
+When all JARs have been built, create an `users.txt` file, that will act as
 a user/password database to allow connections (or not). For example:
 
 ```text
@@ -403,7 +443,7 @@ CHARSET="charset/target/opensmpp-charset-${VERSION}.jar"
 CORE="core/target/opensmpp-core-${VERSION}.jar"
 SIM="sim/target/opensmpp-sim-${VERSION}.jar"
 
-exec java -DsourceAddr=17xxxxxxxxx101 -DdestAddr=17xxxxxxxxx100 \
+exec java -DusersFileName=users.txt -DsourceAddr=17xxxxxxxxx101 -DdestAddr=17xxxxxxxxx100 \
   -cp $CHARSET:$CORE:$SIM org.smpp.smscsim.Simulator
 ```
 
@@ -415,3 +455,55 @@ You should also be able to send messages with `4`. If there are multiple clients
 connected, just kill and restart the simulator, then wait for the Nuntium SMPP
 service to reconnect (a few seconds) so there is only one (we can easily end up
 with multiple clients connected after editing a channel for example).
+
+## Troubleshooting
+
+### lvh DNS error
+If you are facing a DNS error when navigating to any `lvh.me` domain maybe the problem is your ISP's DNS.
+Try adding public DNS servers to your network configuration. For example:
+- Google:
+  - 8.8.8.8
+  - 8.8.4.4
+- Cloudflare:
+  - 1.1.1.1
+  - 1.0.0.1
+
+More public [DNS servers](https://www.lifewire.com/free-and-public-dns-servers-2626062).
+
+### Bad Gateway error
+If the browser returns a `502 Bad Gateway` error when trying to navigate to `http://web.verboice.lvh.me`, `http://web.nuntium.lvh.me`, `http://app.surveda.lvh.me` (or any other app using a `*.lvh.me` domain) then the error could be related to the app's container not being added to the `shared` network created by `dockerdev`.
+
+First, let's see if this is actually the error.
+For example, if we can't browse `Verboice`, in a terminal run:
+```console
+$ docker inspect verboice_web_1 | jq '.[].NetworkSettings.Networks | keys'
+```
+If this command returns something like this:
+```console
+[
+  "verboice_default"
+]
+```
+without `shared` then we need to add the container to this network. For this, we must destroy and recreate the container until it's properly added to the `shared` network:
+
+```console
+$ docker kill verboice_web_1
+$ docker container rm verboice_web_1
+$ docker-compose up web
+```
+
+Running the `inspect` command should return:
+
+```
+[
+  "shared",
+  "verboice_default"
+]
+```
+
+### JDK Compile error
+If `mvn package` fails building `OpenSMPP` then try another JDK version. For example, if we are using `jenv` we could run the build using Java 1.8:
+
+```console
+$ JAVA_HOME=/Users/foobar/.jenv/versions/1.8 mvn clean package
+```

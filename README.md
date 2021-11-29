@@ -1,9 +1,9 @@
 # Surveda
 
 ## Dockerized development
-You can setup your local environment following different approaches.  
+You can setup your local environment following different approaches.
 
-### Approach #1: Without Verboice nor Nuntium
+### Approach #1: without Verboice nor Nuntium
 If you don't need to connect to Verboice nor Nuntium, you can move forward with this setup.
 
 1. You need to use [dockerdev](https://github.com/waj/dockerdev) to access the web app at `app.surveda.lvh.me` and ngrok at `ngrok.surveda.lvh.me`.  Just follow the project's readme.  **WARNING:** You should install `dockerdev` _before_ creating your stack's network in Docker. If you have already run `./dev-setup.sh`, you may want to run `docker-compose down -v` to **delete every container, data and other artifacts** from the project and start from scratch _after_ running `dockerdev`.
@@ -20,15 +20,14 @@ If needed, you can change the authentication mechanism to Guisso.  This will tak
 - To start an Elixir console in your running Phoenix app container: `docker-compose exec app iex -S mix`.
 
 
-### Approaches #2 and #3: with Verboice and Nuntium
-There are 2 approaches for connecting your local Surveda with Verboice and Nuntium:
+### Approach #2: with Verboice and Nuntium
+Here we have 2 options regarding the connection of your local Surveda with Verboice and Nuntium:
 
-2. You can install and setup Verboice and Nuntium locally.  Local setup guide [here](https://github.com/instedd/surveda/blob/master/docs/dev-setup-local.md).
-3. You can use Verboice and Nuntium from the cloud in the Staging environment.  You can use this [guide](./docs/dev-setup-cloud.md) which will walk you through the setup of a development environment that will use cloud instances of these tools.
+1. You can install and setup Verboice and Nuntium [locally on your computer](https://github.com/instedd/surveda/blob/master/docs/dev-setup-local.md).
 
-The 2 guides above, will also include setting up Guisso, so you can ignore the GUISSO section in this document.
+2. You can use Verboice and Nuntium from [the cloud in the Staging environment](./docs/dev-setup-cloud.md).
 
-
+Both guides include setting up Guisso, so you can skip the following GUISSO section.
 
 ## GUISSO
 
@@ -57,7 +56,6 @@ config :alto_guisso,
 config :ask, Ask.Endpoint,
   url: [host: "app.surveda.lvh.me"] # or "abcd123.ngrok.io" for a cloud GUISSO
 ```
-
 
 ## IVR channels with Verboice
 
