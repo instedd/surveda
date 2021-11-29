@@ -274,10 +274,12 @@ Last but not least, we can setup a SMPP channel to send & receive SMS messages:
    Or you can use a SMSC simulator (see below) that will be running on your
    machine. For example:
 
-   - `host` should be an IP of your host machine (for example `192.168.1.2`);
-   - `port` can be 2775;
-   - `user` can be `surveda`;
-   - `password` can be `secret`.
+   - `host` should be an IP of your host machine (for example `192.168.1.2`)
+   - `port` can be 2775
+   - `user` can be `surveda`
+   - `password` can be `surveda`.
+
+  **Note:** use the same `user` and `password` in `users.txt` when configuring [`OpenSMPP`](#smsc-simulator-smpp)
 
 4. Navigate to <http://web.nuntium.lvh.me/channels>
 
