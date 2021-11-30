@@ -117,7 +117,7 @@ defmodule Ask.Runtime.PanelSurveyTest do
         clean_dates(schedule)
     end
 
-    test "errors when the latest ocurrence isn't terminated" do
+    test "errors when the latest wave isn't terminated" do
       panel_survey = panel_survey_with_occurrence()
 
       {result, data} = PanelSurvey.new_occurrence(panel_survey)

@@ -3,7 +3,7 @@ defmodule Ask.Runtime.PanelSurvey do
   alias Ask.{Survey, Repo, Respondent, RespondentGroupChannel, Schedule, PanelSurvey}
   alias Ask.Runtime.RespondentGroupAction
 
-  defp new_ocurrence_changeset(survey) do
+  defp new_wave_changeset(survey) do
     survey =
       survey
       |> Repo.preload([:project])
@@ -13,7 +13,7 @@ defmodule Ask.Runtime.PanelSurvey do
       |> Schedule.remove_start_date()
       |> Schedule.remove_end_date()
 
-    new_ocurrence = %{
+    new_wave = %{
       # basic settings
       project_id: survey.project_id,
       folder_id: survey.folder_id,
@@ -38,7 +38,7 @@ defmodule Ask.Runtime.PanelSurvey do
 
     survey.project
     |> Ecto.build_assoc(:surveys)
-    |> Survey.changeset(new_ocurrence)
+    |> Survey.changeset(new_wave)
   end
 
   def copy_respondents(current_occurrence, new_occurrence) do
@@ -106,7 +106,7 @@ defmodule Ask.Runtime.PanelSurvey do
   # the survey from its folder. The panel survey waves aren't inside any folder. They are
   # inside folders indirectly, when its panel survey is.
   # 2. Panel survey occurrences have neither cutoff rules nor comparisons. After creating its
-  # panel survey the first occurrence will remain always a panel survey ocurrence. So the related
+  # panel survey the first occurrence will remain always a panel survey wave. So the related
   # fields (comparisons, quota_vars, cutoff and count_partial_results) are here set back to their
   # default values, and they won't change again, ever.
   def create_panel_survey_from_survey(survey) do
@@ -166,7 +166,7 @@ defmodule Ask.Runtime.PanelSurvey do
   end
 
   defp new_occurrence_from_latest(latest) do
-    new_occurrence = new_ocurrence_changeset(latest)
+    new_occurrence = new_wave_changeset(latest)
     |> Repo.insert!()
 
     new_occurrence = copy_respondents(latest, new_occurrence)
