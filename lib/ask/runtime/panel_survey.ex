@@ -96,14 +96,14 @@ defmodule Ask.Runtime.PanelSurvey do
     }) when panel_survey_id != nil,
     do: {
       :error,
-      "Survey can't be a panel survey occurence to generate a panel survey"
+      "Survey can't be a panel survey wave to generate a panel survey"
     }
 
   # A panel survey only can be created based on a survey
   # This function is responsible for the panel survey creation and its first occurrence
   # implicated changes:
-  # 1. If the panel survey occurence is inside a folder, put the panel survey inside it. Remove
-  # the survey from its folder. The panel survey occurences aren't inside any folder. They are
+  # 1. If the panel survey wave is inside a folder, put the panel survey inside it. Remove
+  # the survey from its folder. The panel survey waves aren't inside any folder. They are
   # inside folders indirectly, when its panel survey is.
   # 2. Panel survey occurrences have neither cutoff rules nor comparisons. After creating its
   # panel survey the first occurrence will remain always a panel survey ocurrence. So the related

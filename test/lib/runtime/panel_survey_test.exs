@@ -138,7 +138,7 @@ defmodule Ask.Runtime.PanelSurveyTest do
       assert panel_survey.project_id == survey.project_id
     end
 
-    test "takes the name from its first occurence" do
+    test "takes the name from its first wave" do
       survey = panel_survey_generator_survey()
       expected_name = survey.name
 
@@ -161,7 +161,7 @@ defmodule Ask.Runtime.PanelSurveyTest do
     end
 
     @tag :time_mock
-    test "renames its first occurence to YYYY-MM-DD" do
+    test "renames its first wave to YYYY-MM-DD" do
       now = Timex.parse!("2021-06-17T09:00:00Z", "{ISO:Extended}")
       mock_time(now)
       survey = panel_survey_generator_survey()
@@ -174,7 +174,7 @@ defmodule Ask.Runtime.PanelSurveyTest do
       assert survey.name == expected_occurrence_name
     end
 
-    test "takes the folder from its first occurence" do
+    test "takes the folder from its first wave" do
       survey = panel_survey_generator_survey_in_folder()
 
       {:ok, panel_survey} =
@@ -231,7 +231,7 @@ defmodule Ask.Runtime.PanelSurveyTest do
         PanelSurvey.create_panel_survey_from_survey(survey)
 
       assert result == :error
-      assert error == "Survey can't be a panel survey occurence to generate a panel survey"
+      assert error == "Survey can't be a panel survey wave to generate a panel survey"
     end
 
     @tag :time_mock
