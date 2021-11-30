@@ -172,38 +172,38 @@ defmodule Ask.PanelSurveyControllerTest do
     end
   end
 
-  describe "new_occurrence" do
-    test "creates a new occurrence", %{conn: conn, user: user} do
-      panel_survey = panel_survey_with_last_occurrence_terminated(user)
-      previous_occurrence = PanelSurvey.latest_occurrence(panel_survey)
+  describe "new_wave" do
+    test "creates a new wave", %{conn: conn, user: user} do
+      panel_survey = panel_survey_with_last_wave_terminated(user)
+      previous_wave = PanelSurvey.latest_wave(panel_survey)
 
       conn = post(
         conn,
-        project_panel_survey_panel_survey_path(conn, :new_occurrence, panel_survey.project_id, panel_survey.id)
+        project_panel_survey_panel_survey_path(conn, :new_wave, panel_survey.project_id, panel_survey.id)
       )
 
       response_panel_survey = json_response(conn, 200)["data"]
       panel_survey = Repo.get!(PanelSurvey, panel_survey.id)
-      assert_new_occurrence(response_panel_survey, previous_occurrence, panel_survey)
+      assert_new_wave(response_panel_survey, previous_wave, panel_survey)
     end
   end
 
-  defp assert_new_occurrence(response_panel_survey, previous_occurrence, panel_survey) do
-    new_occurrence = PanelSurvey.latest_occurrence(panel_survey)
-    assert new_occurrence.id > previous_occurrence.id
-    assert new_occurrence.state == "ready"
+  defp assert_new_wave(response_panel_survey, previous_wave, panel_survey) do
+    new_wave = PanelSurvey.latest_wave(panel_survey)
+    assert new_wave.id > previous_wave.id
+    assert new_wave.state == "ready"
     assert assert_panel_survey(response_panel_survey, panel_survey)
   end
 
-  defp panel_survey_with_last_occurrence_terminated(user) do
+  defp panel_survey_with_last_wave_terminated(user) do
     panel_survey_with_surveys(user)
-    |> complete_last_occurrence_of_panel_survey()
+    |> complete_last_wave_of_panel_survey()
   end
 
   defp panel_survey_with_surveys(user) do
     panel_survey = panel_survey(user) |> Repo.preload(:project)
     insert(:survey, project: panel_survey.project, panel_survey: panel_survey)
-    Repo.get!(PanelSurvey, panel_survey.id) |> Repo.preload(:occurrences)
+    Repo.get!(PanelSurvey, panel_survey.id) |> Repo.preload(:waves)
   end
 
   defp panel_survey_in_folder(user) do
@@ -287,8 +287,8 @@ defmodule Ask.PanelSurveyControllerTest do
   defp assert_panel_survey(panel_survey, base_panel_survey) do
     # It's easier to compare with the base panel without surveys.
     panel_survey_without_surveys = panel_survey
-    |> Map.delete("occurrences")
-    |> Map.delete("latest_occurrence")
+    |> Map.delete("waves")
+    |> Map.delete("latest_wave")
     |> Map.delete("folder")
 
     assert panel_survey_without_surveys == %{
@@ -301,11 +301,11 @@ defmodule Ask.PanelSurveyControllerTest do
            }
 
     # And then, it's also easier to compare only the surveys ids.
-    assert panel_survey["latest_occurrence"]["id"] == PanelSurvey.latest_occurrence(base_panel_survey).id
+    assert panel_survey["latest_wave"]["id"] == PanelSurvey.latest_wave(base_panel_survey).id
 
-    if Map.has_key?(panel_survey, "occurrences") do
-      base_panel_survey = Repo.preload(base_panel_survey, :occurrences)
-      assert survey_ids(panel_survey["occurrences"]) == survey_ids(base_panel_survey.occurrences)
+    if Map.has_key?(panel_survey, "waves") do
+      base_panel_survey = Repo.preload(base_panel_survey, :waves)
+      assert survey_ids(panel_survey["waves"]) == survey_ids(base_panel_survey.waves)
     else
       true
     end

@@ -5,125 +5,125 @@ defmodule Ask.Runtime.PanelSurveyTest do
   alias Ask.Runtime.PanelSurvey
   alias Ask.{Survey, Repo, Respondent}
 
-  describe "new_occurrence/1" do
-    test "creates a new ready occurrence" do
-      panel_survey = panel_survey_with_last_occurrence_terminated()
+  describe "new_wave/1" do
+    test "creates a new ready wave" do
+      panel_survey = panel_survey_with_last_wave_terminated()
 
-      {result, data} = PanelSurvey.new_occurrence(panel_survey)
+      {result, data} = PanelSurvey.new_wave(panel_survey)
 
       assert result == :ok
-      new_occurrence = Map.get(data, :new_occurrence)
-      assert new_occurrence
-      assert new_occurrence.state == "ready"
-      assert new_occurrence.panel_survey_id == panel_survey.id
+      new_wave = Map.get(data, :new_wave)
+      assert new_wave
+      assert new_wave.state == "ready"
+      assert new_wave.panel_survey_id == panel_survey.id
     end
 
     # TODO: test different survey configurations
     test "preserves the basic settings" do
       panel_survey = completed_panel_survey_with_respondents()
-      latest_occurrence = Ask.PanelSurvey.latest_occurrence(panel_survey)
+      latest_wave = Ask.PanelSurvey.latest_wave(panel_survey)
 
-      {:ok, %{new_occurrence: new_occurrence}} = PanelSurvey.new_occurrence(panel_survey)
+      {:ok, %{new_wave: new_wave}} = PanelSurvey.new_wave(panel_survey)
 
-      assert new_occurrence.project_id == panel_survey.project_id
-      assert new_occurrence.project_id == latest_occurrence.project_id
-      assert new_occurrence.folder_id == latest_occurrence.folder_id
-      assert new_occurrence.description == latest_occurrence.description
-      assert new_occurrence.mode == latest_occurrence.mode
-      refute new_occurrence.started_at == latest_occurrence.started_at
-      refute latest_occurrence.started_at
-      assert new_occurrence.panel_survey_id == latest_occurrence.panel_survey_id
+      assert new_wave.project_id == panel_survey.project_id
+      assert new_wave.project_id == latest_wave.project_id
+      assert new_wave.folder_id == latest_wave.folder_id
+      assert new_wave.description == latest_wave.description
+      assert new_wave.mode == latest_wave.mode
+      refute new_wave.started_at == latest_wave.started_at
+      refute latest_wave.started_at
+      assert new_wave.panel_survey_id == latest_wave.panel_survey_id
     end
 
     @tag :time_mock
-    test "renew the new occurrence name" do
+    test "renew the new wave name" do
       now = Timex.parse!("2021-06-14T09:00:00Z", "{ISO:Extended}")
       mock_time(now)
-      expected_occurrence_name = "2021-06-14"
+      expected_wave_name = "2021-06-14"
       panel_survey = completed_panel_survey_with_respondents()
 
-      {:ok, %{new_occurrence: new_occurrence}} = PanelSurvey.new_occurrence(panel_survey)
+      {:ok, %{new_wave: new_wave}} = PanelSurvey.new_wave(panel_survey)
 
-      assert new_occurrence.name == expected_occurrence_name
+      assert new_wave.name == expected_wave_name
     end
 
     # TODO: test different survey configurations
     test "preserves the advanced settings" do
       panel_survey = completed_panel_survey_with_respondents()
-      latest_occurrence = Ask.PanelSurvey.latest_occurrence(panel_survey)
+      latest_wave = Ask.PanelSurvey.latest_wave(panel_survey)
 
-      {:ok, %{new_occurrence: new_occurrence}} = PanelSurvey.new_occurrence(panel_survey)
+      {:ok, %{new_wave: new_wave}} = PanelSurvey.new_wave(panel_survey)
 
-      assert new_occurrence.cutoff == latest_occurrence.cutoff
-      assert new_occurrence.count_partial_results == latest_occurrence.count_partial_results
-      assert new_occurrence.sms_retry_configuration == latest_occurrence.sms_retry_configuration
-      assert new_occurrence.ivr_retry_configuration == latest_occurrence.ivr_retry_configuration
-      assert new_occurrence.mobileweb_retry_configuration == latest_occurrence.mobileweb_retry_configuration
-      assert new_occurrence.fallback_delay == latest_occurrence.fallback_delay
-      assert new_occurrence.quota_vars == latest_occurrence.quota_vars
-      assert new_occurrence.quotas == latest_occurrence.quotas
+      assert new_wave.cutoff == latest_wave.cutoff
+      assert new_wave.count_partial_results == latest_wave.count_partial_results
+      assert new_wave.sms_retry_configuration == latest_wave.sms_retry_configuration
+      assert new_wave.ivr_retry_configuration == latest_wave.ivr_retry_configuration
+      assert new_wave.mobileweb_retry_configuration == latest_wave.mobileweb_retry_configuration
+      assert new_wave.fallback_delay == latest_wave.fallback_delay
+      assert new_wave.quota_vars == latest_wave.quota_vars
+      assert new_wave.quotas == latest_wave.quotas
     end
 
     test "preserves every respondent with their hashed phone number and mode/channel associations" do
       panel_survey = completed_panel_survey_with_respondents()
-      latest_occurrence = Ask.PanelSurvey.latest_occurrence(panel_survey)
+      latest_wave = Ask.PanelSurvey.latest_wave(panel_survey)
 
-      {:ok, %{new_occurrence: new_occurrence}} = PanelSurvey.new_occurrence(panel_survey)
+      {:ok, %{new_wave: new_wave}} = PanelSurvey.new_wave(panel_survey)
 
-      assert respondent_channels(latest_occurrence) == respondent_channels(new_occurrence)
+      assert respondent_channels(latest_wave) == respondent_channels(new_wave)
     end
 
     test "doesn't promote the refused respondents" do
       panel_survey = completed_panel_survey_with_respondents()
-      latest_occurrence = Ask.PanelSurvey.latest_occurrence(panel_survey)
-      refused_respondent = set_one_respondent_disposition(latest_occurrence, "refused")
+      latest_wave = Ask.PanelSurvey.latest_wave(panel_survey)
+      refused_respondent = set_one_respondent_disposition(latest_wave, "refused")
 
-      {:ok, %{new_occurrence: new_occurrence}} = PanelSurvey.new_occurrence(panel_survey)
+      {:ok, %{new_wave: new_wave}} = PanelSurvey.new_wave(panel_survey)
 
-      assert_repeated_without_respondent(latest_occurrence, new_occurrence, refused_respondent)
+      assert_repeated_without_respondent(latest_wave, new_wave, refused_respondent)
     end
 
     test "doesn't promote the ineligible respondents" do
       panel_survey = completed_panel_survey_with_respondents()
-      latest_occurrence = Ask.PanelSurvey.latest_occurrence(panel_survey)
-      ineligible_respondent = set_one_respondent_disposition(latest_occurrence, "ineligible")
+      latest_wave = Ask.PanelSurvey.latest_wave(panel_survey)
+      ineligible_respondent = set_one_respondent_disposition(latest_wave, "ineligible")
 
-      {:ok, %{new_occurrence: new_occurrence}} = PanelSurvey.new_occurrence(panel_survey)
+      {:ok, %{new_wave: new_wave}} = PanelSurvey.new_wave(panel_survey)
 
-      assert_repeated_without_respondent(latest_occurrence, new_occurrence, ineligible_respondent)
+      assert_repeated_without_respondent(latest_wave, new_wave, ineligible_respondent)
     end
 
     test "preserves the incentives enabled flag" do
       panel_survey = incentives_enabled_panel_survey()
 
-      {:ok, %{new_occurrence: new_occurrence}} = PanelSurvey.new_occurrence(panel_survey)
+      {:ok, %{new_wave: new_wave}} = PanelSurvey.new_wave(panel_survey)
 
-      assert_incentives_enabled(new_occurrence)
+      assert_incentives_enabled(new_wave)
 
       panel_survey = incentives_disabled_panel_survey()
 
-      {:ok, %{new_occurrence: new_occurrence}} = PanelSurvey.new_occurrence(panel_survey)
+      {:ok, %{new_wave: new_wave}} = PanelSurvey.new_wave(panel_survey)
 
-      assert_incentives_disabled(new_occurrence)
+      assert_incentives_disabled(new_wave)
     end
 
     test "removes start_date and end_date of the schedule" do
       panel_survey = scheduled_panel_survey()
-      schedule = Ask.PanelSurvey.latest_occurrence(panel_survey).schedule
+      schedule = Ask.PanelSurvey.latest_wave(panel_survey).schedule
 
-      {:ok, %{new_occurrence: new_occurrence}} = PanelSurvey.new_occurrence(panel_survey)
+      {:ok, %{new_wave: new_wave}} = PanelSurvey.new_wave(panel_survey)
 
-      assert new_occurrence.schedule ==
+      assert new_wave.schedule ==
         clean_dates(schedule)
     end
 
     test "errors when the latest wave isn't terminated" do
-      panel_survey = panel_survey_with_occurrence()
+      panel_survey = panel_survey_with_wave()
 
-      {result, data} = PanelSurvey.new_occurrence(panel_survey)
+      {result, data} = PanelSurvey.new_wave(panel_survey)
 
       assert result == :error
-      assert Map.get(data, :error) == "Last panel survey occurrence isn't terminated"
+      assert Map.get(data, :error) == "Last panel survey wave isn't terminated"
     end
   end
 
@@ -148,16 +148,16 @@ defmodule Ask.Runtime.PanelSurveyTest do
       assert panel_survey.name == expected_name
     end
 
-    test "it's created from its first occurrence" do
+    test "it's created from its first wave" do
       survey = panel_survey_generator_survey()
 
       {:ok, panel_survey} =
         PanelSurvey.create_panel_survey_from_survey(survey)
 
-      occurrences = Repo.preload(panel_survey, :occurrences).occurrences
-      assert length(occurrences) == 1
-      [first_occurrence] = occurrences
-      assert first_occurrence.id == survey.id
+      waves = Repo.preload(panel_survey, :waves).waves
+      assert length(waves) == 1
+      [first_wave] = waves
+      assert first_wave.id == survey.id
     end
 
     @tag :time_mock
@@ -165,13 +165,13 @@ defmodule Ask.Runtime.PanelSurveyTest do
       now = Timex.parse!("2021-06-17T09:00:00Z", "{ISO:Extended}")
       mock_time(now)
       survey = panel_survey_generator_survey()
-      expected_occurrence_name = "2021-06-17"
+      expected_wave_name = "2021-06-17"
 
       {:ok, _panel_survey} =
         PanelSurvey.create_panel_survey_from_survey(survey)
 
       survey = Repo.get!(Survey, survey.id)
-      assert survey.name == expected_occurrence_name
+      assert survey.name == expected_wave_name
     end
 
     test "takes the folder from its first wave" do
@@ -182,7 +182,7 @@ defmodule Ask.Runtime.PanelSurveyTest do
 
       # Assert the panel survey takes its folder from the survey
       assert panel_survey.folder_id == survey.folder_id
-      # The survey occurrence doesn't belong to the folder. Its panel survey does.
+      # The survey wave doesn't belong to the folder. Its panel survey does.
       # Assert the survey was removed from its folder
       survey = Repo.get!(Survey, survey.id)
       refute survey.folder_id
@@ -221,7 +221,7 @@ defmodule Ask.Runtime.PanelSurveyTest do
       assert error == "Survey must be ready to launch to generate a panel survey"
     end
 
-    test "rejects creating a panel survey when the survey is a panel survey occurrence" do
+    test "rejects creating a panel survey when the survey is a panel survey wave" do
       panel_survey = dummy_panel_survey()
       survey = panel_survey_generator_survey()
       |> Survey.changeset(%{panel_survey_id: panel_survey.id})
@@ -281,14 +281,14 @@ defmodule Ask.Runtime.PanelSurveyTest do
   end
 
   defp incentives_enabled_panel_survey() do
-    panel_survey_with_last_occurrence_terminated()
+    panel_survey_with_last_wave_terminated()
   end
 
   defp incentives_disabled_panel_survey() do
     panel_survey =
-      panel_survey_with_last_occurrence_terminated()
+      panel_survey_with_last_wave_terminated()
 
-    Ask.PanelSurvey.latest_occurrence(panel_survey)
+    Ask.PanelSurvey.latest_wave(panel_survey)
     |> disable_incentives()
 
     # Reload the panel survey. One of its surveys has changed, so it's outdated
@@ -296,13 +296,13 @@ defmodule Ask.Runtime.PanelSurveyTest do
   end
 
   defp scheduled_panel_survey() do
-    panel_survey = panel_survey_with_last_occurrence_terminated()
-    latest_occurrence = Ask.PanelSurvey.latest_occurrence(panel_survey)
+    panel_survey = panel_survey_with_last_wave_terminated()
+    latest_wave = Ask.PanelSurvey.latest_wave(panel_survey)
     start_date = ~D[2016-01-01]
     end_date = ~D[2016-02-01]
-    schedule = set_start_date(latest_occurrence.schedule, start_date)
+    schedule = set_start_date(latest_wave.schedule, start_date)
     |> set_end_date(end_date)
-    set_schedule(latest_occurrence, schedule)
+    set_schedule(latest_wave, schedule)
 
     # Reload the panel survey. One of its surveys has changed, so it's outdated
     Repo.get!(Ask.PanelSurvey, panel_survey.id)
@@ -343,13 +343,13 @@ defmodule Ask.Runtime.PanelSurveyTest do
     !!respondent
   end
 
-  defp assert_repeated_without_respondent(latest_occurrence, new_occurrence, unpromoted_respondent) do
-    assert respondent_in_survey?(latest_occurrence, unpromoted_respondent.hashed_number)
-    refute respondent_in_survey?(new_occurrence, unpromoted_respondent.hashed_number)
+  defp assert_repeated_without_respondent(latest_wave, new_wave, unpromoted_respondent) do
+    assert respondent_in_survey?(latest_wave, unpromoted_respondent.hashed_number)
+    refute respondent_in_survey?(new_wave, unpromoted_respondent.hashed_number)
   end
 
   defp assert_panel_survey_without_cutoff_and_comparisons(panel_survey) do
-    latest = Ask.PanelSurvey.latest_occurrence(panel_survey)
+    latest = Ask.PanelSurvey.latest_wave(panel_survey)
     assert latest.comparisons == []
     assert latest.quota_vars == []
     assert latest.cutoff == nil

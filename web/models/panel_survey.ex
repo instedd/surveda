@@ -16,9 +16,7 @@ defmodule Ask.PanelSurvey do
     belongs_to(:project, Project)
     belongs_to(:folder, Folder)
 
-    # TODO: rename "occurrences" to "waves"
-    # See https://github.com/instedd/surveda/issues/1930
-    has_many(:occurrences, Survey)
+    has_many(:waves, Survey)
 
     timestamps()
   end
@@ -106,29 +104,29 @@ defmodule Ask.PanelSurvey do
 
   """
   def delete_panel_survey(%PanelSurvey{} = panel_survey) do
-    Repo.preload(panel_survey, :occurrences).occurrences
+    Repo.preload(panel_survey, :waves).waves
     |> Enum.each(fn survey -> SurveyAction.delete(survey, nil) end)
     Repo.delete(panel_survey)
   end
 
-  def latest_occurrence(panel_survey) do
-    Repo.preload(panel_survey, :occurrences).occurrences
+  def latest_wave(panel_survey) do
+    Repo.preload(panel_survey, :waves).waves
     |> List.last()
   end
 
   def updated_at(panel_survey) do
-    Repo.preload(panel_survey, :occurrences).occurrences
+    Repo.preload(panel_survey, :waves).waves
     |> Enum.map(fn %{updated_at: updated_at} -> updated_at end)
     |> Enum.concat([panel_survey.updated_at])
     |> Enum.max()
   end
 
   def repeatable?(panel_survey) do
-    latest_occurrence(panel_survey)
+    latest_wave(panel_survey)
     |> Survey.terminated?()
   end
 
-  def new_occurrence_name() do
+  def new_wave_name() do
     now_yyyy_mm_dd()
   end
 

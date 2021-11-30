@@ -101,7 +101,7 @@ class SurveyShow extends Component<any, State> {
     stopSurvey(projectId, surveyId)
       .then(() => {
         if (survey.panelSurveyId) {
-          // An occurrence of the panel survey was stopped -> the panel survey has changed.
+          // A wave of the panel survey was stopped -> the panel survey has changed.
           // The Redux store must be updated with the panel survey new state.
           panelSurveysActions.updateStore(dispatch, projectId, survey.panelSurveyId)
         }

@@ -156,7 +156,7 @@ defmodule Ask.TestHelpers do
         panel_survey
       end
 
-      defp panel_survey_with_occurrence() do
+      defp panel_survey_with_wave() do
         panel_survey = insert(:panel_survey)
         insert(:survey, panel_survey:  panel_survey, project: panel_survey.project)
         # Reload the panel survey. One of its surveys has changed, so it's outdated
@@ -168,32 +168,32 @@ defmodule Ask.TestHelpers do
         |> Repo.update!()
       end
 
-      defp complete_last_occurrence_of_panel_survey(panel_survey) do
-        Ask.PanelSurvey.latest_occurrence(panel_survey)
+      defp complete_last_wave_of_panel_survey(panel_survey) do
+        Ask.PanelSurvey.latest_wave(panel_survey)
         |> terminate_survey()
 
         # Reload the panel survey. One of its surveys has changed, so it's outdated
         Repo.get!(Ask.PanelSurvey, panel_survey.id)
       end
 
-      defp panel_survey_with_last_occurrence_terminated() do
-        panel_survey_with_occurrence()
-        |> complete_last_occurrence_of_panel_survey()
+      defp panel_survey_with_last_wave_terminated() do
+        panel_survey_with_wave()
+        |> complete_last_wave_of_panel_survey()
       end
 
       defp completed_panel_survey_with_respondents() do
-        panel_survey = panel_survey_with_occurrence()
-        latest_occurrence = Ask.PanelSurvey.latest_occurrence(panel_survey)
+        panel_survey = panel_survey_with_wave()
+        latest_wave = Ask.PanelSurvey.latest_wave(panel_survey)
 
         insert_respondents = fn mode, phone_numbers ->
           channel = TestChannel.new()
           channel = insert(:channel, settings: channel |> TestChannel.settings(), type: mode)
-          insert_respondents(latest_occurrence, channel, mode, phone_numbers)
+          insert_respondents(latest_wave, channel, mode, phone_numbers)
         end
 
         insert_respondents.("sms", ["1", "2", "3"])
         insert_respondents.("ivr", ["3", "4"])
-        terminate_survey(latest_occurrence)
+        terminate_survey(latest_wave)
 
         # Reload the panel survey. One of its surveys has changed, so it's outdated
         Repo.get!(Ask.PanelSurvey, panel_survey.id)

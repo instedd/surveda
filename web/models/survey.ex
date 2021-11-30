@@ -665,18 +665,18 @@ defmodule Ask.Survey do
 
   # Running surveys aren't deletable
   def deletable?(%{state: "running"} = _survey), do: false
-  # Only occurrence of a panel survey isn't deletable (because a panel survey cannot be empty)
-  def deletable?(survey), do: not only_occurrence_of_panel_survey?(survey)
+  # Only wave of a panel survey isn't deletable (because a panel survey cannot be empty)
+  def deletable?(survey), do: not only_wave_of_panel_survey?(survey)
 
   # Regular survey can always change its folder
   def movable?(%{panel_survey_id: nil} = _survey), do: true
-  # Panel survey occurrences can't change its folder (because they don't belong to folders)
+  # Panel survey waves can't change its folder (because they don't belong to folders)
   def movable?(_survey), do: false
 
-  defp only_occurrence_of_panel_survey?(%{panel_survey_id: nil} = _survey), do: false
+  defp only_wave_of_panel_survey?(%{panel_survey_id: nil} = _survey), do: false
 
-  defp only_occurrence_of_panel_survey?(survey) do
-    survey = Repo.preload(survey, [panel_survey: :occurrences])
-    Enum.count(survey.panel_survey.occurrences) == 1
+  defp only_wave_of_panel_survey?(survey) do
+    survey = Repo.preload(survey, [panel_survey: :waves])
+    Enum.count(survey.panel_survey.waves) == 1
   end
 end

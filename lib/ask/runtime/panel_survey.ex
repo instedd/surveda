@@ -17,7 +17,7 @@ defmodule Ask.Runtime.PanelSurvey do
       # basic settings
       project_id: survey.project_id,
       folder_id: survey.folder_id,
-      name: PanelSurvey.new_occurrence_name(),
+      name: PanelSurvey.new_wave_name(),
       description: survey.description,
       mode: survey.mode,
       state: "ready",
@@ -41,16 +41,16 @@ defmodule Ask.Runtime.PanelSurvey do
     |> Survey.changeset(new_wave)
   end
 
-  def copy_respondents(current_occurrence, new_occurrence) do
-    current_occurrence =
-      current_occurrence
+  def copy_respondents(current_wave, new_wave) do
+    current_wave =
+      current_wave
       |> Repo.preload([:respondent_groups])
 
     # TODO: Improve the following respondent group creation logic.
     # For each existing group a new respondent group with the same name is created. Each
     # respondent group has a copy of every respondent (except refused) and channel association
     respondent_group_ids =
-      Enum.map(current_occurrence.respondent_groups, fn respondent_group ->
+      Enum.map(current_wave.respondent_groups, fn respondent_group ->
         phone_numbers =
           from(r in Respondent,
             where:
@@ -62,13 +62,13 @@ defmodule Ask.Runtime.PanelSurvey do
           |> RespondentGroupAction.loaded_phone_numbers()
 
         new_respondent_group =
-          RespondentGroupAction.create(respondent_group.name, phone_numbers, new_occurrence)
+          RespondentGroupAction.create(respondent_group.name, phone_numbers, new_wave)
 
         copy_respondent_group_channels(respondent_group, new_respondent_group)
         new_respondent_group.id
       end)
 
-    new_occurrence
+    new_wave
     |> Repo.preload(:respondent_groups)
     |> Survey.changeset()
     |> Survey.update_respondent_groups(respondent_group_ids)
@@ -100,13 +100,13 @@ defmodule Ask.Runtime.PanelSurvey do
     }
 
   # A panel survey only can be created based on a survey
-  # This function is responsible for the panel survey creation and its first occurrence
+  # This function is responsible for the panel survey creation and its first wave
   # implicated changes:
   # 1. If the panel survey wave is inside a folder, put the panel survey inside it. Remove
   # the survey from its folder. The panel survey waves aren't inside any folder. They are
   # inside folders indirectly, when its panel survey is.
-  # 2. Panel survey occurrences have neither cutoff rules nor comparisons. After creating its
-  # panel survey the first occurrence will remain always a panel survey wave. So the related
+  # 2. Panel survey waves have neither cutoff rules nor comparisons. After creating its
+  # panel survey the first wave will remain always a panel survey wave. So the related
   # fields (comparisons, quota_vars, cutoff and count_partial_results) are here set back to their
   # default values, and they won't change again, ever.
   def create_panel_survey_from_survey(survey) do
@@ -117,7 +117,7 @@ defmodule Ask.Runtime.PanelSurvey do
     })
     Survey.changeset(survey, %{
       panel_survey_id: panel_survey.id,
-      name: PanelSurvey.new_occurrence_name(),
+      name: PanelSurvey.new_wave_name(),
       folder_id: nil,
       comparisons: [],
       quota_vars: [],
@@ -151,25 +151,25 @@ defmodule Ask.Runtime.PanelSurvey do
     end)
   end
 
-  def new_occurrence(panel_survey) do
-    latest_occurrence = PanelSurvey.latest_occurrence(panel_survey)
+  def new_wave(panel_survey) do
+    latest_wave = PanelSurvey.latest_wave(panel_survey)
       |> Repo.preload([:project])
       |> Repo.preload([:questionnaires])
       |> Repo.preload([:respondent_groups])
 
-    if Survey.terminated?(latest_occurrence) do
-      new_occurrence = new_occurrence_from_latest(latest_occurrence)
-      {:ok, %{new_occurrence: new_occurrence}}
+    if Survey.terminated?(latest_wave) do
+      new_wave = new_wave_from_latest(latest_wave)
+      {:ok, %{new_wave: new_wave}}
     else
-      {:error, %{error: "Last panel survey occurrence isn't terminated"}}
+      {:error, %{error: "Last panel survey wave isn't terminated"}}
     end
   end
 
-  defp new_occurrence_from_latest(latest) do
-    new_occurrence = new_wave_changeset(latest)
+  defp new_wave_from_latest(latest) do
+    new_wave = new_wave_changeset(latest)
     |> Repo.insert!()
 
-    new_occurrence = copy_respondents(latest, new_occurrence)
-    new_occurrence
+    new_wave = copy_respondents(latest, new_wave)
+    new_wave
   end
 end
