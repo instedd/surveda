@@ -1167,6 +1167,9 @@ defmodule Ask.QuestionnaireControllerTest do
       assert %{
         "respondent_id" => _respondent_id,
         "submissions" => [],
+        "messages_history" => [
+          %{"type" => "ao", "body" => "Do you smoke? Press 8 for YES, 9 for NO"}
+        ],
         "prompts" => [
           %{"audio_source" => "tts", "text" => "Do you smoke? Press 8 for YES, 9 for NO"},
         ],
@@ -1247,7 +1250,7 @@ defmodule Ask.QuestionnaireControllerTest do
   describe "sync_simulation:" do
     setup [:start_simulator_store]
 
-    test "renders json for started simulation", %{conn: conn, user: user} do
+    test "renders json for started SMS simulation", %{conn: conn, user: user} do
       project = create_project_for_user(user)
       steps = @dummy_steps
       questionnaire = insert(:questionnaire, project: project)
@@ -1286,6 +1289,44 @@ defmodule Ask.QuestionnaireControllerTest do
       assert not (response |> Map.has_key?("questionnaire"))
     end
 
+    test "renders json for started IVR simulation", %{conn: conn, user: user} do
+      project = create_project_for_user(user)
+      steps = @dummy_steps
+      questionnaire = insert(:questionnaire, project: project)
+                      |> Questionnaire.changeset(%{steps: steps})
+                      |> Repo.update!
+                      |> Repo.preload(:project)
+
+      conn_ = post conn, project_questionnaire_questionnaires_start_simulation_path(conn, :start_simulation, questionnaire.project, questionnaire), mode: "ivr"
+      respondent_id = json_response(conn_, 200)["respondent_id"]
+
+      conn = post conn, project_questionnaire_questionnaires_sync_simulation_path(conn, :sync_simulation, questionnaire.project, questionnaire), respondent_id: respondent_id, response: "8", mode: "ivr"
+      first_step_id = hd(steps)["id"]
+      second_step_id = (steps |> Enum.at(1))["id"]
+
+      response = json_response(conn, 200)
+
+      assert %{
+        "respondent_id" => ^respondent_id,
+        "submissions" => [
+          %{ "step_id" => ^first_step_id, "response" => "Yes" },
+        ],
+        "messages_history" => [
+          %{ "type" => "ao", "body" => "Do you smoke? Press 8 for YES, 9 for NO" },
+          %{ "type" => "at", "body" => "8" },
+          %{ "type" => "ao", "body" => "Do you exercise? Press 1 for YES, 2 for NO" },
+        ],
+        "prompts" => [
+          %{"audio_source" => "tts", "text" => "Do you exercise? Press 1 for YES, 2 for NO"},
+        ],
+        "current_step" => ^second_step_id,
+        "disposition" => "started",
+        "simulation_status" => "active"
+      } = response
+
+      assert not (response |> Map.has_key?("questionnaire"))
+    end
+
     test "renders json for expired simulation", %{conn: conn, user: user} do
       project = create_project_for_user(user)
       questionnaire = insert(:questionnaire, project: project) |> Repo.preload(:project)
@@ -1298,7 +1339,7 @@ defmodule Ask.QuestionnaireControllerTest do
       } = json_response(conn, 200)
     end
 
-    test "renders ended simulation if last response", %{conn: conn, user: user} do
+    test "renders ended SMS simulation if last response", %{conn: conn, user: user} do
       project = create_project_for_user(user)
       step = hd(@dummy_steps)
       questionnaire = insert(:questionnaire, project: project)
@@ -1332,6 +1373,38 @@ defmodule Ask.QuestionnaireControllerTest do
        "disposition" => "completed",
        "simulation_status" => "ended"
      } = json_response(conn, 200)
+    end
+
+    test "renders ended IVR simulation if last response", %{conn: conn, user: user} do
+      project = create_project_for_user(user)
+      step = hd(@dummy_steps)
+      questionnaire = insert(:questionnaire, project: project)
+                      |> Questionnaire.changeset(%{steps: [step]})
+                      |> Repo.update!
+                      |> Repo.preload(:project)
+
+      conn_ = post conn, project_questionnaire_questionnaires_start_simulation_path(conn, :start_simulation, questionnaire.project, questionnaire), mode: "ivr"
+      respondent_id = json_response(conn_, 200)["respondent_id"]
+
+      conn = post conn, project_questionnaire_questionnaires_sync_simulation_path(conn, :sync_simulation, questionnaire.project, questionnaire), respondent_id: respondent_id, response: "9", mode: "ivr"
+      first_step_id = step["id"]
+
+      assert %{
+        "respondent_id" => ^respondent_id,
+        "submissions" => [
+          %{ "step_id" => ^first_step_id, "response" => "No" },
+        ],
+        "messages_history" => [
+          %{ "type" => "ao", "body" => "Do you smoke? Press 8 for YES, 9 for NO" },
+          %{ "type" => "at", "body" => "9" },
+          %{ "type" => "ao", "body" => "Thanks for completing this survey (ivr)" },
+        ],
+        "prompts" => [
+          %{ "audio_source" => "tts", "text" => "Thanks for completing this survey (ivr)" },
+        ],
+        "disposition" => "completed",
+        "simulation_status" => "ended"
+      } = json_response(conn, 200)
     end
   end
 
