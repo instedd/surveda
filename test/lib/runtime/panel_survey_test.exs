@@ -260,11 +260,12 @@ defmodule Ask.Runtime.PanelSurveyTest do
           %{channel_id: channel.id, mode: mode}
         end)
 
-      %{hashed_number: hashed_number, respondent_group_channels: respondent_group_channels}
+      { hashed_number, respondent_group_channels }
     end)
 
-    # order response by hashed_number so it can be used to compare lists in tests using ==
-    respondent_channels
+    # We sort the response by hashed_number so that the function
+    # is deterministic enough to be used to compare lists using ==
+    List.keysort(respondent_channels, 0)
   end
 
   defp assert_incentives_enabled(survey) do
