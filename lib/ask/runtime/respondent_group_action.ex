@@ -137,8 +137,9 @@ defmodule Ask.Runtime.RespondentGroupAction do
     Enum.map(loaded_entries, fn %{phone_number: phone_number} -> phone_number end)
   end
 
-  def loaded_phone_numbers(phone_numbers),
-    do: Enum.map(phone_numbers, fn phone_number -> %{phone_number: phone_number} end)
+  def loaded_phone_numbers(phone_numbers) do
+    Enum.map(phone_numbers, fn phone_number -> %{phone_number: phone_number} end)
+  end
 
   def merge_sample(old_sample, loaded_entries) do
     new_sample = old_sample ++ entries_for_sample(loaded_entries)

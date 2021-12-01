@@ -13,8 +13,7 @@ defmodule Ask.Runtime.PanelSurvey do
       |> Schedule.remove_start_date()
       |> Schedule.remove_end_date()
 
-    new_wave = %{
-      # basic settings
+    basic_settings = %{
       project_id: survey.project_id,
       folder_id: survey.folder_id,
       name: PanelSurvey.new_wave_name(),
@@ -23,7 +22,9 @@ defmodule Ask.Runtime.PanelSurvey do
       state: "ready",
       started_at: Timex.now(),
       panel_survey_id: survey.panel_survey_id,
-      # advanced settings
+    }
+
+    advanced_settings = %{
       cutoff: survey.cutoff,
       count_partial_results: survey.count_partial_results,
       schedule: schedule,
@@ -36,6 +37,8 @@ defmodule Ask.Runtime.PanelSurvey do
       incentives_enabled: survey.incentives_enabled
     }
 
+    new_wave = Map.merge(basic_settings, advanced_settings)
+
     survey.project
     |> Ecto.build_assoc(:surveys)
     |> Survey.changeset(new_wave)
@@ -46,32 +49,68 @@ defmodule Ask.Runtime.PanelSurvey do
       current_wave
       |> Repo.preload([:respondent_groups])
 
+    current_respondent_groups_ids =
+      current_wave.respondent_groups
+      |> Enum.map(fn rg -> rg.id end)
+
+    phone_numbers_by_group_id = (from r in Respondent,
+      where:
+        r.respondent_group_id in ^current_respondent_groups_ids and
+        r.disposition != :refused and
+        r.disposition != :ineligible,
+      # group_by: :respondent_group_id,
+      select: {r.respondent_group_id, r.phone_number})
+      |> Repo.all()
+      |> Enum.reduce(%{}, fn tp, acc ->
+        group_id = elem(tp, 0)
+        phone_number = elem(tp, 1)
+        case Map.has_key?(acc, group_id) do
+          # true -> Map.put(acc, group_id, [ phone_number | Map.get(acc, group_id)])
+          true -> Map.put(acc, group_id, Map.get(acc, group_id) ++ [ phone_number ])
+          false -> Map.put(acc, group_id, [ phone_number ])
+        end
+      end)
+
     # TODO: Improve the following respondent group creation logic.
     # For each existing group a new respondent group with the same name is created. Each
     # respondent group has a copy of every respondent (except refused) and channel association
-    respondent_group_ids =
+    new_respondent_group_ids =
       Enum.map(current_wave.respondent_groups, fn respondent_group ->
         phone_numbers =
-          from(r in Respondent,
-            where:
-              r.respondent_group_id == ^respondent_group.id and r.disposition != :refused and
-                r.disposition != :ineligible,
-            select: r.phone_number
-          )
-          |> Repo.all()
+          Map.get(phone_numbers_by_group_id, respondent_group.id)
           |> RespondentGroupAction.loaded_phone_numbers()
 
-        new_respondent_group =
-          RespondentGroupAction.create(respondent_group.name, phone_numbers, new_wave)
-
+        new_respondent_group = RespondentGroupAction.create(respondent_group.name, phone_numbers, new_wave)
         copy_respondent_group_channels(respondent_group, new_respondent_group)
+
         new_respondent_group.id
       end)
+
+      # Enum.map(current_respondent_groups, fn respondent_group ->
+
+      #   phone_numbers =
+      #     from(r in Respondent,
+      #       where:
+      #         r.respondent_group_id == ^respondent_group.id and
+      #         r.disposition != :refused and
+      #         r.disposition != :ineligible,
+      #       select: r.phone_number
+      #     )
+      #     |> Repo.all()
+      #     |> RespondentGroupAction.loaded_phone_numbers()
+
+      #   # create respondent group
+      #   new_respondent_group = RespondentGroupAction.create(respondent_group.name, phone_numbers, new_wave)
+
+      #   # copy respondent group channels
+      #   copy_respondent_group_channels(respondent_group, new_respondent_group)
+      #   new_respondent_group.id
+      # end)
 
     new_wave
     |> Repo.preload(:respondent_groups)
     |> Survey.changeset()
-    |> Survey.update_respondent_groups(respondent_group_ids)
+    |> Survey.update_respondent_groups(new_respondent_group_ids)
     |> Repo.update!()
   end
 
