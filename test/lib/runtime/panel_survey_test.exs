@@ -254,10 +254,7 @@ defmodule Ask.Runtime.PanelSurveyTest do
       survey
       |> Repo.preload(respondents: [respondent_group: [respondent_group_channels: :channel]])
 
-    Enum.map(survey.respondents, fn %{
-                                      hashed_number: hashed_number,
-                                      respondent_group: respondent_group
-                                    } ->
+    respondent_channels = Enum.map(survey.respondents, fn %{ hashed_number: hashed_number, respondent_group: respondent_group } ->
       respondent_group_channels =
         Enum.map(respondent_group.respondent_group_channels, fn %{channel: channel, mode: mode} ->
           %{channel_id: channel.id, mode: mode}
@@ -265,6 +262,9 @@ defmodule Ask.Runtime.PanelSurveyTest do
 
       %{hashed_number: hashed_number, respondent_group_channels: respondent_group_channels}
     end)
+
+    # order response by hashed_number so it can be used to compare lists in tests using ==
+    respondent_channels
   end
 
   defp assert_incentives_enabled(survey) do
