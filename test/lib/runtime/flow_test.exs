@@ -1287,7 +1287,7 @@ defmodule Ask.FlowTest do
       |> test_step(mode)
 
   defp test_step(flow, mode), do:
-    Flow.step(flow, test_visitor(mode), :answer, "contacted")
+    Flow.step(flow, test_visitor(mode), :answer, :contacted)
 
   defp test_reply(flow, mode, nil), do:
     Flow.step(flow, test_visitor(mode), Flow.Message.no_reply, :contacted)
