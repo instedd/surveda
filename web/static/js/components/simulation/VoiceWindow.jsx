@@ -1,6 +1,7 @@
 // @flow
 import React, { Component } from 'react'
 import { translate } from 'react-i18next'
+import { MessagesList, ChatMessage } from './MessagesList'
 
 type Message = {
   body: string,
@@ -14,14 +15,11 @@ export type IVRPrompt = {
 }
 
 type VoiceWindowProps = {
+  messages: Array<ChatMessage>,
   prompts: Array<IVRPrompt>,
   voiceTitle: string,
   onSendMessage: Message => void,
   readOnly: boolean
-}
-
-type VoiceWindowState = {
-  currentPrompt: string
 }
 
 function audioURL(ivr: IVRPrompt): string {
@@ -34,7 +32,7 @@ function audioURL(ivr: IVRPrompt): string {
   return `/api/v1/audios/${ivr.audioId}`
 }
 
-const VoiceWindow = translate()(class extends Component<VoiceWindowProps, VoiceWindowState> {
+const VoiceWindow = translate()(class extends Component<VoiceWindowProps> {
   audio: HTMLAudioElement
   playPromise: Promise<any>
   spectrum: VoiceSpectrum
@@ -44,7 +42,6 @@ const VoiceWindow = translate()(class extends Component<VoiceWindowProps, VoiceW
 
   constructor(props) {
     super(props)
-    this.state = { currentPrompt: '' }
     this.spectrum = new VoiceSpectrum()
   }
 
@@ -68,8 +65,6 @@ const VoiceWindow = translate()(class extends Component<VoiceWindowProps, VoiceW
   play() {
     const ivr = this.props.prompts.shift()
     if (ivr) {
-      this.setState({ currentPrompt: ivr.text })
-
       if (this.playPromise) {
         this.playPromise
           .then(() => this.playIVR(ivr))
@@ -115,18 +110,16 @@ const VoiceWindow = translate()(class extends Component<VoiceWindowProps, VoiceW
   }
 
   render() {
-    const { voiceTitle } = this.props
+    const { voiceTitle, messages } = this.props
 
     return <div className='voice-window quex-simulation-voice'>
       <div className='voice-header'>{voiceTitle}</div>
-
       <div className='voice-spectrum'>
         <canvas ref={canvas => this.spectrum.setCanvas(canvas)} className='voice-spectrum-bands' />
       </div>
+      <MessagesList messages={messages} scrollToBottom />
 
-      <div className='voice-question'>{this.state.currentPrompt}</div>
-
-      <div className='voice-buttons'>
+      <div className='voice-keypad'>
         <div onClick={() => this.entered('1')} className='waves-effect waves-circle voice-button'>1</div>
         <div onClick={() => this.entered('2')} className='waves-effect waves-circle voice-button'>2</div>
         <div onClick={() => this.entered('3')} className='waves-effect waves-circle voice-button'>3</div>
