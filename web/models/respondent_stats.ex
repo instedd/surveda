@@ -100,20 +100,17 @@ defmodule Ask.RespondentStats do
   end
 
   def respondents_by_state(survey) do
-    by_state_defaults = %{
-      active: 0,
-      pending: 0,
-      completed: 0,
-      rejected: 0,
-      failed: 0,
-    }
+    by_state_defaults = Ecto.Enum.values(Ask.Respondent, :state)
+    |> Map.new(fn (state) -> {state, 0} end)
 
-    respondent_count(survey_id: ^survey.id, by: :state)
-    |> Enum.into(by_state_defaults, fn ({k, v}) -> {String.to_existing_atom(k), v} end)
+    by_state = respondent_count(survey_id: ^survey.id, by: :state)
+    |> Map.new(fn ({k, v}) -> {String.to_existing_atom(k), v} end)
+
+    Map.merge(by_state_defaults, by_state)
   end
 
   def respondents_by_disposition(survey) do
     respondent_count(survey_id: ^survey.id, by: :disposition)
-    |> Enum.into(%{}, fn ({k, v}) -> {String.to_existing_atom(k), v} end)
+    |> Map.new(fn ({k, v}) -> {String.to_existing_atom(k), v} end)
   end
 end
