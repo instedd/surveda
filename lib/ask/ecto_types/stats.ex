@@ -1,5 +1,5 @@
 defmodule Ask.Stats do
-  @behaviour Ecto.Type
+  use Ecto.Type
   alias __MODULE__
 
   defstruct total_received_sms: 0,

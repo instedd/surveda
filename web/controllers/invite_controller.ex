@@ -17,7 +17,7 @@ defmodule Ask.InviteController do
         ProjectMembership.changeset(%ProjectMembership{}, changeset) |> Repo.insert
         invite |> Repo.delete!
       end
-      render(conn, "accept_invitation.json", %{"level": invite.level, "project_id": invite.project_id})
+      render(conn, "accept_invitation.json", %{level: invite.level, project_id: invite.project_id})
     end
   end
 

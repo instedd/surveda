@@ -39,13 +39,13 @@ defmodule Ask.SurvedaMetrics do
 
         Counter.declare(
           name: :surveda_nuntium_incoming,
-          help: "Surveda nuntium incoming",
+          help: "Surveda nuntium incoming"
         )
 
         Gauge.declare(
           name: :surveda_version_info,
           labels: [:elixir, :surveda],
-          help: "Surveda version info",
+          help: "Surveda version info"
         )
 
         elixir_version = System.version

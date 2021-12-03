@@ -252,7 +252,7 @@ defmodule Ask.RespondentGroupControllerTest do
     end
 
     test "forbids upload for project reader", %{conn: conn, user: user}  do
-      datetime = Ecto.DateTime.cast!("2000-01-01 00:00:00")
+      {:ok, datetime, _} = DateTime.from_iso8601("2000-01-01T00:00:00Z")
       project = insert(:project, updated_at: datetime)
       insert(:project_membership, user: user, project: project, level: "reader")
       survey = insert(:survey, project: project)
@@ -344,7 +344,7 @@ defmodule Ask.RespondentGroupControllerTest do
     test "deletes a group", %{conn: conn, user: user} do
       project = create_project_for_user(user)
       survey = insert(:survey, project: project)
-      {:ok, local_time } = Ecto.DateTime.cast :calendar.local_time()
+      local_time = DateTime.utc_now |> DateTime.truncate(:second)
       group = insert(:respondent_group, survey: survey)
 
       entries = File.stream!("test/fixtures/respondent_phone_numbers.csv") |>
@@ -371,7 +371,7 @@ defmodule Ask.RespondentGroupControllerTest do
     test "it doesn't deletes a group when the survey is running", %{conn: conn, user: user} do
       project = create_project_for_user(user)
       survey = insert(:survey, project: project, state: "running")
-      {:ok, local_time } = Ecto.DateTime.cast :calendar.local_time()
+      local_time = DateTime.utc_now |> DateTime.truncate(:second)
       group = insert(:respondent_group, survey: survey)
 
       entries = File.stream!("test/fixtures/respondent_phone_numbers.csv") |>

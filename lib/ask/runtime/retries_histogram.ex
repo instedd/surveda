@@ -77,7 +77,7 @@ defmodule Ask.Runtime.RetriesHistogram do
     try do
       callback.()
     rescue
-      e -> Logger.error(e, error_message)
+      e -> Logger.error(e, __STACKTRACE__, error_message)
       rescue_result
     end
   end

@@ -6,7 +6,7 @@ defmodule Ask.Invite do
     field :level, :string # reader, editor
     field :email, :string
     field :inviter_email, :string
-    belongs_to :project, Ask.Survey
+    belongs_to :project, Ask.Project
 
     timestamps()
   end

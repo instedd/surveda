@@ -10,7 +10,7 @@ defmodule Ask.Repo.Migrations.RemoveRespondentStalledState do
     schema "respondents" do
       field :session, Ask.Ecto.Type.JSON
       field :state, :string, default: "pending"
-      field :timeout_at, Timex.Ecto.DateTime
+      field :timeout_at, :utc_datetime
       field :disposition, :string, default: "registered"
     end
 

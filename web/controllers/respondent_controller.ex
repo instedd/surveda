@@ -145,7 +145,7 @@ defmodule Ask.RespondentController do
     stats(conn, survey, survey.quota_vars)
   rescue
     e ->
-      Logger.error(e, "Error occurred while processing respondent stats (survey_id: #{survey_id})")
+      Logger.error(e, __STACKTRACE__, "Error occurred while processing respondent stats (survey_id: #{survey_id})")
       Sentry.capture_exception(e, [
         stacktrace: System.stacktrace(),
         extra: %{survey_id: survey_id}])
@@ -852,7 +852,7 @@ defmodule Ask.RespondentController do
 
     csv_rows = history
     |> Stream.map(fn history ->
-      date = Ask.TimeUtil.format(Ecto.DateTime.cast!(history.inserted_at), offset_seconds, tz_offset)
+      date = Ask.TimeUtil.format(history.inserted_at, offset_seconds, tz_offset)
       [history.respondent_hashed_number, history.disposition, mode_label([history.mode]), date]
     end)
 
@@ -877,8 +877,8 @@ defmodule Ask.RespondentController do
     csv_rows = (from r in Respondent,
       where: r.survey_id == ^survey.id and r.disposition == "completed" and not is_nil(r.questionnaire_id),
       order_by: r.id)
-    |> preload(:questionnaire)
     |> Repo.stream
+    |> Repo.stream_preload(:questionnaire)
     |> Stream.map(fn r ->
       [r.phone_number, experiment_name(r.questionnaire, r.mode), csv_datetime(r.completed_at, survey)]
     end)
@@ -1001,15 +1001,20 @@ defmodule Ask.RespondentController do
     name = survey.name || "survey_id_#{survey.id}"
     name = Regex.replace(~r/[^a-zA-Z0-9_]/, name, "_")
     prefix = "#{name}-#{prefix}"
-    Timex.format!(Timex.now, "#{prefix}_%Y-%m-%d-%H-%M-%S.csv", :strftime)
+    Timex.format!(DateTime.utc_now, "#{prefix}_%Y-%m-%d-%H-%M-%S.csv", :strftime)
   end
 
   defp csv_datetime(nil, _), do: ""
+
+  defp csv_datetime(dt, survey) when is_binary(dt) do
+    {:ok, datetime, _offset} = DateTime.from_iso8601(dt)
+    csv_datetime(datetime, survey)
+  end
 
   defp csv_datetime(dt, %Survey{} = survey) do
     tz_offset = Survey.timezone_offset(survey)
     offset_seconds = Survey.timezone_offset_in_seconds(survey)
 
-    Ask.TimeUtil.format(Ecto.DateTime.cast!(dt), offset_seconds, tz_offset)
+    Ask.TimeUtil.format(dt, offset_seconds, tz_offset)
   end
 end

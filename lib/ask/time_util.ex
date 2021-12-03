@@ -2,7 +2,7 @@ defmodule Ask.TimeUtil do
   def format(ecto_timestamp, offset_seconds, offset_label) do
     timestamp_in_seconds =
       ecto_timestamp
-      |> Ecto.DateTime.to_erl
+      |> Timex.to_erl
       |> :calendar.datetime_to_gregorian_seconds
 
     {{year, month, day}, {hour, min, sec}} =

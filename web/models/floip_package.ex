@@ -213,11 +213,11 @@ defmodule Ask.FloipPackage do
 
   def responses_for_aggregator(survey, responses) do
     %{
-      "data": %{
-        "type": "responses",
-        "id": id(survey),
-        "attributes": %{
-          "responses": responses
+      data: %{
+        type: "responses",
+        id: id(survey),
+        attributes: %{
+          responses: responses
         }
       }
     }

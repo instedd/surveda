@@ -134,7 +134,7 @@ defmodule Ask.PanelSurveyTest do
       assert result == :error
 
       assert changeset.action == :update
-      assert changeset.changes == %{name: nil}
+      assert changeset.changes == %{}
       assert changeset.valid? == false
       assert changeset.errors == [name: {"can't be blank", [validation: :required]}]
       assert_panel_survey_didn_changed(panel_survey)

@@ -321,7 +321,7 @@ defmodule Ask.DummySteps do
           prompt: prompt(
             sms: sms_prompt("What's the number of this question??"),
             ivr: tts_prompt("What's the number of this question"),
-            mobileweb: "What's the number of this question",
+            mobileweb: "What's the number of this question"
             ),
           store: "Question",
           skip_logic: default_numeric_skip_logic(),

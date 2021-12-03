@@ -15,8 +15,8 @@ defmodule Mix.Tasks.Ask.ValidateJsonInDb do
 
   defp validate_questionnaire(quiz) do
     quiz_json = %{
-      "steps": quiz.steps,
-      "settings": quiz.settings
+      steps: quiz.steps,
+      settings: quiz.settings
     }
 
     quiz_json

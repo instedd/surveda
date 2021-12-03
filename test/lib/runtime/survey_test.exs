@@ -1578,7 +1578,7 @@ defmodule Ask.Runtime.SurveyTest do
 
     {erl_date, _} = Timex.now |> Timex.shift(days: 2) |> Timex.to_erl
     time = Timex.Timezone.resolve("Etc/UTC", {erl_date, {0, 0, 0}})
-    assert updated_respondent.timeout_at == time
+    assert DateTime.truncate(updated_respondent.timeout_at, :second) == time
   end
 
   test "mark disposition as partial" do

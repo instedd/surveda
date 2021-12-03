@@ -66,7 +66,7 @@ defmodule Ask.Runtime.BrokerTest do
       {:ok, expected_timeout_at, _} = DateTime.from_iso8601("2019-12-09T09:00:00Z")
 
       respondent = Repo.get!(Respondent, respondent.id)
-      assert respondent.timeout_at == expected_timeout_at
+      assert DateTime.compare(respondent.timeout_at, expected_timeout_at) == :eq
       assert respondent.stats.attempts["sms"] == 1
 
       # Set for immediate timeout
@@ -82,7 +82,7 @@ defmodule Ask.Runtime.BrokerTest do
       {:ok, expected_timeout_at, _} = DateTime.from_iso8601("2019-12-09T11:00:00Z")
 
       respondent = Repo.get!(Respondent, respondent.id)
-      assert respondent.timeout_at == expected_timeout_at
+      assert DateTime.compare(respondent.timeout_at, expected_timeout_at) == :eq
       assert respondent.stats.attempts["sms"] == 2
 
       # Set for immediate timeout
@@ -579,7 +579,7 @@ defmodule Ask.Runtime.BrokerTest do
       Broker.handle_info(:poll, nil)
 
       survey = Repo.get(Ask.Survey, survey.id)
-      assert survey.first_window_started_at == now
+      assert DateTime.compare(survey.first_window_started_at, now)
     end
 
     @tag :time_mock
@@ -592,7 +592,7 @@ defmodule Ask.Runtime.BrokerTest do
       survey = Repo.get(Ask.Survey, survey.id)
       # Time passed, so "now" isn't now here.
       # "now" is the time of the first survey poll.
-      assert survey.first_window_started_at == now
+      assert DateTime.compare(survey.first_window_started_at, now) == :eq
     end
 
     @tag :time_mock
@@ -644,7 +644,7 @@ defmodule Ask.Runtime.BrokerTest do
       assert survey2.state == "running"
 
       # Only polled surveys have first_window_started_at
-      assert survey1.first_window_started_at == now
+      assert DateTime.compare(survey1.first_window_started_at, now) == :eq
       refute survey2.first_window_started_at
     end
 
@@ -696,8 +696,8 @@ defmodule Ask.Runtime.BrokerTest do
       ten_oclock = Timex.shift(now |> Timex.beginning_of_day, hours: 10)
       eleven_oclock = Timex.shift(ten_oclock, hours: 1)
       twelve_oclock = Timex.shift(eleven_oclock, hours: 2)
-      {:ok, start_time} = Ecto.Time.cast(eleven_oclock)
-      {:ok, end_time} = Ecto.Time.cast(twelve_oclock)
+      {:ok, start_time} = Ecto.Type.cast(:time, eleven_oclock)
+      {:ok, end_time} = Ecto.Type.cast(:time, twelve_oclock)
       survey = insert(:survey, %{schedule: Map.merge(Schedule.always(), %{start_time: start_time, end_time: end_time}), state: "running"})
 
       Broker.handle_info(:poll, nil, ten_oclock)
@@ -711,8 +711,8 @@ defmodule Ask.Runtime.BrokerTest do
       ten_oclock = Timex.shift(now |> Timex.beginning_of_day, hours: 10)
       eleven_oclock = Timex.shift(ten_oclock, hours: 1)
       twelve_oclock = Timex.shift(eleven_oclock, hours: 2)
-      {:ok, start_time} = Ecto.Time.cast(ten_oclock)
-      {:ok, end_time} = Ecto.Time.cast(eleven_oclock)
+      {:ok, start_time} = Ecto.Type.cast(:time, ten_oclock)
+      {:ok, end_time} = Ecto.Type.cast(:time, eleven_oclock)
       survey = insert(:survey, %{schedule: Map.merge(Schedule.always(), %{start_time: start_time, end_time: end_time}), state: "running"})
 
       Broker.handle_info(:poll, nil, twelve_oclock)

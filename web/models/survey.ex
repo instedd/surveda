@@ -2,7 +2,6 @@ defmodule Ask.Survey do
   use Ask.Web, :model
 
   alias __MODULE__
-  require Ask.RespondentStats
   alias Ask.{
     Schedule,
     ShortLink,
@@ -60,11 +59,11 @@ defmodule Ask.Survey do
     # The moment when the survey changes to %{state: "running"} and the moment when the survey
     # becomes actually active may differ because of its schedule configuration.
     # started_at: the moment when the survey change to %{state: "running"}.
-    field :started_at, Timex.Ecto.DateTime
+    field :started_at, :utc_datetime
     # first_window_started_at: the moment when the survey becomes actually active for the first time.
-    field :first_window_started_at, Timex.Ecto.DateTime
-    field :ended_at, Timex.Ecto.DateTime
-    field :last_window_ends_at, Timex.Ecto.DateTime
+    field :first_window_started_at, :utc_datetime
+    field :ended_at, :utc_datetime
+    field :last_window_ends_at, :utc_datetime
     field :sms_retry_configuration, :string
     field :ivr_retry_configuration, :string
     field :mobileweb_retry_configuration, :string
@@ -134,7 +133,7 @@ defmodule Ask.Survey do
 
   defp set_ended_at_in_terminated_survey(changeset) do
     if get_field(changeset, :state) == "terminated" do
-      change(changeset, ended_at: SystemTime.time.now)
+      change(changeset, ended_at: SystemTime.time.now |> DateTime.truncate(:second))
     else
       changeset
     end
@@ -462,7 +461,7 @@ defmodule Ask.Survey do
   end
 
   def stats(survey) do
-    respondents_by_disposition = survey |> respondents_by_disposition
+    respondents_by_disposition = survey |> RespondentStats.respondents_by_disposition
     respondents_total = Enum.map(respondents_by_disposition, fn {_, v} -> v end) |> Enum.reduce(0, fn q, acc -> q + acc end)
     respondents_target = survey
       |> completed_respondents_needed_by
@@ -552,24 +551,6 @@ defmodule Ask.Survey do
             |> Decimal.to_integer()
       res
     end
-  end
-
-  def respondents_by_state(survey) do
-    by_state_defaults = %{
-      "active" => 0,
-      "pending" => 0,
-      "completed" => 0,
-      "rejected" => 0,
-      "failed" => 0,
-    }
-
-    RespondentStats.respondent_count(survey_id: ^survey.id, by: :state)
-      |> Enum.into(by_state_defaults)
-  end
-
-  def respondents_by_disposition(survey) do
-    RespondentStats.respondent_count(survey_id: ^survey.id, by: :disposition)
-    |> Enum.into(%{})
   end
 
   def successful_respondents(%Survey{} = survey, respondents_by_disposition, disposition_filter) do

@@ -298,7 +298,7 @@ defmodule Ask.Runtime.Survey do
         handle_session_step(session_step, now, persist)
       rescue
         e in Ecto.StaleEntryError ->
-          Logger.error(e, "Error on sync step internal. Rolling back transaction")
+          Logger.error(e, __STACKTRACE__, "Error on sync step internal. Rolling back transaction")
           Repo.rollback(e)
         e ->
           # If we uncomment this a test will fail (the one that cheks that nothing breaks),
@@ -309,9 +309,9 @@ defmodule Ask.Runtime.Survey do
           #   raise e
           # end
           respondent = if persist, do: Repo.get(Respondent, session.respondent.id), else: session.respondent
-          Logger.error(e, "Error occurred while processing sync step (survey_id: #{respondent.survey_id}, respondent_id: #{respondent.id})")
+          Logger.error(e, __STACKTRACE__, "Error occurred while processing sync step (survey_id: #{respondent.survey_id}, respondent_id: #{respondent.id})")
           Sentry.capture_exception(e, [
-            stacktrace: System.stacktrace(),
+            stacktrace: __STACKTRACE__,
             extra: %{survey_id: respondent.survey_id, respondent_id: respondent.id}])
 
           try do

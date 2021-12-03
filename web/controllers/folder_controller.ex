@@ -11,7 +11,7 @@ defmodule Ask.FolderController do
 
     Multi.new()
     |> Multi.insert(:folder, Folder.changeset(%Folder{}, %{name: name, project_id: project_id}))
-    |> Multi.run(:log, fn %{folder: folder} ->
+    |> Multi.run(:log, fn _, %{folder: folder} ->
       ActivityLog.create_folder(project, conn, folder) |> Repo.insert()
     end)
     |> Repo.transaction()

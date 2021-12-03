@@ -161,7 +161,7 @@ defmodule Ask.FlowTest do
         store: "Perfect Number",
         skip_logic: numeric_skip_logic(min_value: 0, max_value: 12345, ranges_delimiters: "25,75", ranges: []),
         alphabetical_answers: false,
-        refusal: nil,
+        refusal: nil
       )]
     quiz = build(:questionnaire, steps: steps)
     step = start_ivr(quiz)
@@ -181,7 +181,7 @@ defmodule Ask.FlowTest do
         store: "Perfect Number",
         skip_logic: numeric_skip_logic(min_value: 12345, max_value: 56789, ranges_delimiters: "25,75", ranges: []),
         alphabetical_answers: false,
-        refusal: nil,
+        refusal: nil
       )]
     quiz = build(:questionnaire, steps: steps)
     step = start_ivr(quiz)
@@ -205,7 +205,7 @@ defmodule Ask.FlowTest do
           "responses" => %{
             "ivr" => ["#", "12"]
           }
-        },
+        }
       )]
     quiz = build(:questionnaire, steps: steps)
     step = start_ivr(quiz)
@@ -843,7 +843,7 @@ defmodule Ask.FlowTest do
         id: Ecto.UUID.generate,
         title: "Do you smoke?",
         prompt: prompt(
-          sms: sms_prompt("Do you smoke?\u{1E}Reply 1 for YES, 2 for NO"),
+          sms: sms_prompt("Do you smoke?\u{1E}Reply 1 for YES, 2 for NO")
         ),
         store: "Smokes",
         choices: [
