@@ -217,11 +217,11 @@ defmodule Ask.RespondentController do
     target = target(survey, buckets, total_respondents)
 
     total_respondents_by_disposition =
-      Ask.RespondentStats.respondent_count(survey_id: ^survey.id, by: :disposition)
+      Ask.RespondentStats.respondents_by_disposition(survey)
 
     # Completion percentage
     attempted_respondents = total_respondents_by_disposition
-      |> Enum.filter(fn {d, _} -> d not in ["queued", "registered"] end)
+      |> Enum.filter(fn {d, _} -> d not in [:queued, :registered] end)
       |> Enum.map(fn {_, c} -> c end)
       |> Enum.sum
 
@@ -875,7 +875,7 @@ defmodule Ask.RespondentController do
     |> Repo.get!(survey_id)
 
     csv_rows = (from r in Respondent,
-      where: r.survey_id == ^survey.id and r.disposition == "completed" and not is_nil(r.questionnaire_id),
+      where: r.survey_id == ^survey.id and r.disposition == :completed and not is_nil(r.questionnaire_id),
       order_by: r.id)
     |> Repo.stream
     |> Repo.stream_preload(:questionnaire)

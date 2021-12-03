@@ -92,7 +92,7 @@ defmodule Ask.Runtime.Survey do
 
     new_disposition = old_disposition
                       |> Flow.resulting_disposition(reply_disposition)
-                      |> Flow.resulting_disposition("completed")
+                      |> Flow.resulting_disposition(:completed)
 
     updated_respondent = respondent_updates(:end, respondent, new_disposition, persist)
                          |> disposition_changed(session, old_disposition, persist)

@@ -247,7 +247,7 @@ defmodule Ask.FlowTest do
     disposition = Reply.disposition(reply)
 
     assert prompts == []
-    assert disposition == "refused"
+    assert disposition == :refused
   end
 
   test "retry step (sms mode)" do
@@ -1192,7 +1192,7 @@ defmodule Ask.FlowTest do
 
   describe "flag steps" do
     test "flag steps and send prompts" do
-      quiz = build(:questionnaire, steps: @flag_steps)
+      quiz = build(:questionnaire, steps: Ask.Ecto.Type.Steps.cast!(@flag_steps))
       flow = Flow.start(quiz, "sms")
       flow_state = flow |> test_step("sms")
 
@@ -1201,16 +1201,16 @@ defmodule Ask.FlowTest do
       disposition = Reply.disposition(reply)
 
       assert prompts == ["Do you exercise? Reply 1 for YES, 2 for NO"]
-      assert disposition == "interim partial"
+      assert disposition == :"interim partial"
       assert flow.current_step == 1
     end
 
     test "ending keeps the last flag" do
-      quiz = build(:questionnaire, steps: @partial_step)
+      quiz = build(:questionnaire, steps: Ask.Ecto.Type.Steps.cast!(@partial_step))
       flow = Flow.start(quiz, "sms")
       flow_state = flow |> test_step("sms")
       assert {:end, _, reply} = flow_state
-      assert Reply.disposition(reply) == "interim partial"
+      assert Reply.disposition(reply) == :"interim partial"
     end
 
     test "two consecutive flag steps: ineligible, completed" do
@@ -1230,12 +1230,12 @@ defmodule Ask.FlowTest do
         flag_step(
           id: "bbb",
           title: "b",
-          disposition: "ineligible"
+          disposition: :ineligible
         ),
         flag_step(
           id: "ccc",
           title: "c",
-          disposition: "completed"
+          disposition: :completed
         ),
       ]
 
@@ -1244,7 +1244,7 @@ defmodule Ask.FlowTest do
         |> Flow.start("sms")
         |> test_step("sms")
       assert {:end, _, reply} = flow |> reply_sms("1")
-      assert Reply.disposition(reply) == "ineligible"
+      assert Reply.disposition(reply) == :ineligible
     end
 
     test "two consecutive flag steps: refused, completed" do
@@ -1264,12 +1264,12 @@ defmodule Ask.FlowTest do
         flag_step(
           id: "bbb",
           title: "b",
-          disposition: "refused"
+          disposition: :refused
         ),
         flag_step(
           id: "ccc",
           title: "c",
-          disposition: "completed"
+          disposition: :completed
         ),
       ]
 
@@ -1278,7 +1278,7 @@ defmodule Ask.FlowTest do
         |> Flow.start("sms")
         |> test_step("sms")
       assert {:end, _, reply} = flow |> reply_sms("1")
-      assert Reply.disposition(reply) == "refused"
+      assert Reply.disposition(reply) == :refused
     end
   end
 
@@ -1287,10 +1287,10 @@ defmodule Ask.FlowTest do
       |> test_step(mode)
 
   defp test_step(flow, mode), do:
-    Flow.step(flow, test_visitor(mode), :answer, "any_disposition")
+    Flow.step(flow, test_visitor(mode), :answer, :contacted)
 
   defp test_reply(flow, mode, nil), do:
-    Flow.step(flow, test_visitor(mode), Flow.Message.no_reply, "any_disposition")
+    Flow.step(flow, test_visitor(mode), Flow.Message.no_reply, :contacted)
 
   defp reply_sms(flow, reply), do: test_reply(flow, "sms", reply)
 
@@ -1304,7 +1304,7 @@ defmodule Ask.FlowTest do
 
   defp reply_ivr(flow, reply), do: test_reply(flow, "ivr", reply)
 
-  defp test_reply(flow, mode, reply, old_disposition \\ "any_disposition"), do:
+  defp test_reply(flow, mode, reply, old_disposition \\ :contacted), do:
     Flow.step(flow, test_visitor(mode), Flow.Message.reply(reply), old_disposition)
 
   defp test_visitor(mode) do

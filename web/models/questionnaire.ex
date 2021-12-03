@@ -9,8 +9,8 @@ defmodule Ask.Questionnaire do
     field :name, :string
     field :description, :string
     field :modes, Ask.Ecto.Type.StringList
-    field :steps, JSON
-    field :quota_completed_steps, JSON
+    field :steps, Ask.Ecto.Type.Steps
+    field :quota_completed_steps, Ask.Ecto.Type.Steps
     field :settings, JSON
     field :languages, JSON
     field :default_language, :string

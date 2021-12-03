@@ -292,57 +292,97 @@ defmodule Ask.Runtime.Flow do
     {%{flow | retries: 0}, %Reply{stores: stores}, visitor}
   end
 
+  if Mix.env() == :prod do
+    def should_update_disposition(old_disposition, new_disposition) when is_binary(old_disposition) do
+      should_update_disposition(String.to_existing_atom(old_disposition), new_disposition)
+    end
+    def should_update_disposition(old_disposition, new_disposition) when is_binary(new_disposition) do
+      should_update_disposition(old_disposition, String.to_existing_atom(new_disposition))
+    end
+  else
+    def should_update_disposition(old_disposition, _) when is_binary(old_disposition) do
+      raise "Flow.should_update_disposition/2 expected old_disposition to be an Atom but got a String (#{old_disposition})"
+    end
+    def should_update_disposition(_, new_disposition) when is_binary(new_disposition) do
+      raise "Flow.should_update_disposition/2 expected new_disposition to be an Atom but got a String (#{new_disposition})"
+    end
+  end
+
+  @spec should_update_disposition(atom, atom) :: bool
   def should_update_disposition(old_disposition, new_disposition)
   # This transitions are forced through flag steps and should always be allowed
-  def should_update_disposition("queued", "interim partial"), do: true
-  def should_update_disposition("queued", "completed"), do: true
-  def should_update_disposition("queued", "refused"), do: true
-  def should_update_disposition("queued", "ineligible"), do: true
-  def should_update_disposition("queued", "rejected"), do: true
-  def should_update_disposition("contacted", "interim partial"), do: true
-  def should_update_disposition("contacted", "completed"), do: true
-  def should_update_disposition("contacted", "ineligible"), do: true
-  def should_update_disposition("contacted", "refused"), do: true
-  def should_update_disposition("contacted", "rejected"), do: true
-  def should_update_disposition("started", "interim partial"), do: true
-  def should_update_disposition("started", "refused"), do: true
-  def should_update_disposition("started", "ineligible"), do: true
+  def should_update_disposition(:queued, :"interim partial"), do: true
+  def should_update_disposition(:queued, :completed), do: true
+  def should_update_disposition(:queued, :refused), do: true
+  def should_update_disposition(:queued, :ineligible), do: true
+  def should_update_disposition(:queued, :rejected), do: true
+  def should_update_disposition(:contacted, :"interim partial"), do: true
+  def should_update_disposition(:contacted, :completed), do: true
+  def should_update_disposition(:contacted, :ineligible), do: true
+  def should_update_disposition(:contacted, :refused), do: true
+  def should_update_disposition(:contacted, :rejected), do: true
+  def should_update_disposition(:started, :"interim partial"), do: true
+  def should_update_disposition(:started, :refused), do: true
+  def should_update_disposition(:started, :ineligible), do: true
 
-  def should_update_disposition("registered", "queued"), do: true
-  def should_update_disposition("queued", "failed"), do: true
-  def should_update_disposition("queued", "contacted"), do: true
-  def should_update_disposition("queued", "started"), do: true
-  def should_update_disposition("contacted", "unresponsive"), do: true
-  def should_update_disposition("contacted", "started"), do: true
-  def should_update_disposition("started", "rejected"), do: true
-  def should_update_disposition("started", "breakoff"), do: true
-  def should_update_disposition("started", "completed"), do: true
-  def should_update_disposition("interim partial", "completed"), do: true
+  def should_update_disposition(:registered, :queued), do: true
+  def should_update_disposition(:queued, :failed), do: true
+  def should_update_disposition(:queued, :contacted), do: true
+  def should_update_disposition(:queued, :started), do: true
+  def should_update_disposition(:contacted, :unresponsive), do: true
+  def should_update_disposition(:contacted, :started), do: true
+  def should_update_disposition(:started, :rejected), do: true
+  def should_update_disposition(:started, :breakoff), do: true
+  def should_update_disposition(:started, :completed), do: true
+  def should_update_disposition(:"interim partial", :completed), do: true
   def should_update_disposition(nil, _), do: true
   def should_update_disposition(_, _), do: false
 
+  if Mix.env() == :prod do
+    defp stopped_disposition_from(old_disposition) when is_binary(old_disposition) do
+      stopped_disposition_from(String.to_existing_atom(old_disposition))
+    end
+  else
+    defp stopped_disposition_from(old_disposition) when is_binary(old_disposition) do
+      raise "Flow.stopped_disposition_from/1 expected old_disposition to be an Atom but got a String (#{old_disposition})"
+    end
+  end
+
+  @spec stopped_disposition_from(atom) :: atom
   defp stopped_disposition_from(old_disposition) do
     case old_disposition do
-      "started" -> "breakoff"
-      "interim partial" -> "partial"
-      _ -> "refused"
+      :started -> :breakoff
+      :"interim partial" -> :partial
+      _ -> :refused
     end
   end
 
+  if Mix.env() == :prod do
+    def failed_disposition_from(old_disposition) when is_binary(old_disposition) do
+      failed_disposition_from(String.to_existing_atom(old_disposition))
+    end
+  else
+    def failed_disposition_from(old_disposition) when is_binary(old_disposition) do
+      raise "Flow.failed_disposition_from/1 expected old_disposition to be an Atom but got a String (#{old_disposition})"
+    end
+  end
+
+  @spec failed_disposition_from(atom) :: atom
   def failed_disposition_from(old_disposition) do
     case old_disposition do
-      "queued" -> "failed"
-      "contacted" -> "unresponsive"
-      "started" -> "breakoff"
-      "interim partial" -> "partial"
-      "completed" -> old_disposition
-      "ineligible" -> old_disposition
-      "rejected" -> old_disposition
-      "refused" -> old_disposition
-      _ -> "failed"
+      :queued -> :failed
+      :contacted -> :unresponsive
+      :started -> :breakoff
+      :"interim partial" -> :partial
+      :completed -> old_disposition
+      :ineligible -> old_disposition
+      :rejected -> old_disposition
+      :refused -> old_disposition
+      _ -> :failed
     end
   end
 
+  @spec resulting_disposition(atom, atom) :: atom
   def resulting_disposition(old, new) do
     if Flow.should_update_disposition(old, new) do
       new

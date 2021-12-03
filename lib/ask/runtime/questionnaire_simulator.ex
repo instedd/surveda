@@ -163,7 +163,7 @@ defmodule Ask.Runtime.QuestionnaireSimulator do
       survey: survey,
       questionnaire_id: questionnaire.id,
       mode: [mode],
-      disposition: "queued",
+      disposition: :queued,
       phone_number: "",
       canonical_phone_number: "",
       sanitized_phone_number: "",

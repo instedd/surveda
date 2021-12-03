@@ -105,7 +105,7 @@ defmodule Ask.TestHelpers do
                      from r in assoc(survey, :respondents),
                      group_by: :state,
                      select: {r.state, count("*")}) |> Enum.into(%{})
-        [by_state["active"] || 0, by_state["pending"] || 0]
+        [by_state[:active] || 0, by_state[:pending] || 0]
       end
 
       # Format a timestamp without microseconds the same way the controller does.
