@@ -1,8 +1,8 @@
 // @flow
 import * as api from '../api'
 
-export const FETCH = 'PANEL_SURVEY_FETCH'
-export const RECEIVE = 'PANEL_SURVEY_RECEIVE'
+export const FETCH = 'FETCH_PANEL_SURVEY'
+export const RECEIVE = 'RECEIVE_PANEL_SURVEY'
 
 export const createPanelSurvey = (projectId: number, folderId?: number) => (dispatch: Function, getState: () => Store) =>
   api.createSurvey(projectId, folderId, true).then(response => {

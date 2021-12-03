@@ -6,9 +6,8 @@ defmodule Ask.PanelSurveyController do
     project = conn
     |> load_project(project_id)
 
-    panel_surveys = project
-      |> assoc(:panel_surveys)
-      |> Repo.all()
+    panel_surveys = Repo.all(from p in PanelSurvey,
+      where: p.project_id == ^project.id and is_nil(p.folder_id))
 
     render(conn, "index.json", panel_surveys: panel_surveys)
   end
@@ -34,8 +33,10 @@ defmodule Ask.PanelSurveyController do
     |> load_project(project_id)
 
     panel_survey = project
-      |> assoc(:panel_surveys)
-      |> Repo.get!(id)
+    |> assoc(:panel_surveys)
+    |> Repo.get!(id)
+    |> Repo.preload(:occurrences)
+    |> Repo.preload(:folder)
 
     render(conn, "show.json", panel_survey: panel_survey)
   end

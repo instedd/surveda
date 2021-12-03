@@ -1,5 +1,4 @@
 import React, { Component, PropTypes } from 'react'
-import { bindActionCreators } from 'redux'
 import { connect } from 'react-redux'
 import { withRouter } from 'react-router'
 import Header from './Header'
@@ -7,22 +6,31 @@ import * as projectActions from '../../actions/project'
 import { translate } from 'react-i18next'
 
 class HeaderContainer extends Component {
+  static propTypes = {
+    dispatch: PropTypes.func,
+    params: PropTypes.object,
+    project: PropTypes.object,
+    tabs: PropTypes.node,
+    logout: PropTypes.func.isRequired,
+    user: PropTypes.string.isRequired,
+    folder: PropTypes.object,
+    panelSurveyId: PropTypes.number,
+    panelSurvey: PropTypes.object
+  }
+
   componentDidMount() {
     const { projectId, surveyId, questionnaireId } = this.props.params
+    const { dispatch, project } = this.props
 
-    if (projectId && (surveyId || questionnaireId)) {
-      this.props.projectActions.fetchProject(projectId)
+    if (!project && projectId && (surveyId || questionnaireId)) {
+      dispatch(projectActions.fetchProject(projectId))
     }
   }
 
   render() {
-    const { tabs, logout, user, project, folder, panelSurveyFromOccurrence } = this.props
+    const { tabs, logout, user, project, folder, panelSurvey } = this.props
     const { projectId, surveyId, questionnaireId, folderId, panelSurveyId } = this.props.params
-
-    let showProjectLink = true
-    if (!project || (!surveyId && !questionnaireId && !folderId && !panelSurveyId)) {
-      showProjectLink = false
-    }
+    const showProjectLink = project && (surveyId || questionnaireId || folderId || panelSurveyId)
 
     if (projectId && !project) {
       // If there's a projectId and there's no project loaded
@@ -35,43 +43,9 @@ class HeaderContainer extends Component {
     }
 
     return (
-      <Header tabs={tabs} logout={logout} user={user} showProjectLink={showProjectLink} showQuestionnairesLink={!!questionnaireId} project={project || null} folder={folder} panelSurvey={panelSurveyFromOccurrence} />
+      <Header tabs={tabs} logout={logout} user={user} showProjectLink={!!showProjectLink} showQuestionnairesLink={!!questionnaireId} project={project || null} folder={folder} panelSurvey={panelSurvey} />
     )
   }
-}
-
-HeaderContainer.propTypes = {
-  projectActions: PropTypes.object.isRequired,
-  params: PropTypes.object,
-  project: PropTypes.object,
-  tabs: PropTypes.node,
-  logout: PropTypes.func.isRequired,
-  user: PropTypes.string.isRequired,
-  folder: PropTypes.object,
-  panelSurveyId: PropTypes.number,
-  panelSurveyFromOccurrence: PropTypes.object
-}
-
-const getPanelSurveyFromOccurrence = (survey, state) => {
-  if (!survey) return null
-  const panelSurvey = state.panelSurveys.items && state.panelSurveys.items[survey.panelSurveyId]
-  return panelSurvey || null
-}
-
-const getSurveyFromParams = (params, state) => getEntityFromParams(params, state, 'survey')
-const getPanelSurveyFromParams = (params, state) => getEntityFromParams(params, state, 'panelSurvey')
-
-const getEntityFromParams = (params, state, entityName) => {
-  const entityId = params[`${entityName}Id`] && parseInt(params[`${entityName}Id`])
-  const entity = state[entityName] && state[entityName].data
-  if (!entity || !entityId || entity.id != entityId) return null
-  return entity
-}
-
-const getFolderFromSurveyOrPanelSurvey = (surveyOrPanelSurvey, state) => {
-  const folderId = surveyOrPanelSurvey ? surveyOrPanelSurvey.folderId : null
-  const folder = state.folder && state.folder.folders && state.folder.folders[folderId]
-  return folder || null
 }
 
 const mapStateToProps = (state, ownProps) => {
@@ -87,28 +61,34 @@ const mapStateToProps = (state, ownProps) => {
     8. Project -> Folder -> Panel Survey -> Occurrence : <Project | Folder | PanelSurvey>
   */
   const { params } = ownProps
-  const surveyFromParams = getSurveyFromParams(params, state)
-  const panelSurveyFromParams = getPanelSurveyFromParams(params, state)
-  const panelSurveyFromOccurrence = getPanelSurveyFromOccurrence(surveyFromParams, state)
 
-  // Here the order of the factors does alter the product.
-  // Depending on the case, we need to take the folder from the panel survey taken from params,
-  // from the survey taken from params, or from the panel survey taken from its occurrence.
-  // For example evaluating (surveyFromParams || panelSurveyFromOccurrence) would work well but
-  // just for some cases. It would work for getting the folder of a regular survey, but it
-  // wouldn't work for getting the folder of an occurrence of a panel survey.
-  const surveyOrPanelSurvey = panelSurveyFromOccurrence || panelSurveyFromParams || surveyFromParams
+  const surveyId = params['surveyId']
+  const panelSurveyId = params['panelSurveyId']
+  let panelSurvey, folder
 
-  const folder = getFolderFromSurveyOrPanelSurvey(surveyOrPanelSurvey, state)
+  // We build the breadcrumb in reverse order, and never display the current
+  // level (the currently opened folder, panel survey or survey), only the
+  // parents:
+  if (surveyId) {
+    // 1. survey (no parent)
+    // 2. survey -> folder
+    // 3. survey -> panel survey
+    // 4. survey -> panel survey -> folder
+    const currentSurvey = state.survey.data && state.survey.data.id == parseInt(surveyId) && state.survey.data
+    panelSurvey = currentSurvey ? currentSurvey.panelSurvey : null
+    folder = panelSurvey ? panelSurvey.folder : (currentSurvey ? currentSurvey.folder : null)
+  } else if (panelSurveyId) {
+    // 5. panel survey (no parent)
+    // 6. panel survey -> folder
+    const currentPanelSurvey = state.panelSurvey.data && state.panelSurvey.data.id == parseInt(panelSurveyId) && state.panelSurvey.data
+    folder = currentPanelSurvey ? currentPanelSurvey.folder : null
+  }
+
   return {
     project: state.project.data,
-    panelSurveyFromOccurrence: panelSurveyFromOccurrence,
-    folder
+    folder,
+    panelSurvey
   }
 }
 
-const mapDispatchToProps = (dispatch) => ({
-  projectActions: bindActionCreators(projectActions, dispatch)
-})
-
-export default translate()(withRouter(connect(mapStateToProps, mapDispatchToProps)(HeaderContainer)))
+export default translate()(withRouter(connect(mapStateToProps)(HeaderContainer)))

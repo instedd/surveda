@@ -63,9 +63,9 @@ MoveSurveyForm.defaultProps = {
 const mapStateToProps = (state, ownProps) => {
   return {
     ...ownProps,
-    loading: state.folder.loading,
-    errors: state.folder.errors || {},
-    folders: Object.values(state.folder.folders)
+    loading: state.folders.loading,
+    errors: state.folders.errors || {},
+    folders: Object.values(state.folders.items)
   }
 }
 
