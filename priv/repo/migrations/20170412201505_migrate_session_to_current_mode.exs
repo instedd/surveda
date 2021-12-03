@@ -137,7 +137,7 @@ defmodule Ask.Repo.Migrations.MigrateSessionToCurrentMode do
   end
 
   defp change_respondents(change_function) do
-    Repo.all(from r in Respondent, where: r.state == "active") |> Enum.each(fn respondent ->
+    Repo.all(from r in Respondent, where: r.state == :active) |> Enum.each(fn respondent ->
       respondent
       |> Respondent.changeset(%{
           session: change_function.(respondent.session)

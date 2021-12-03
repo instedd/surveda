@@ -168,7 +168,7 @@ defmodule Ask.Runtime.RespondentGroupAction do
         respondent_group_id: respondent_group.id,
         hashed_number:
           Respondent.hash_phone_number(phone_number, respondent_group.survey.project.salt),
-        disposition: "registered",
+        disposition: :registered,
         stats: %Stats{},
         user_stopped: false,
         inserted_at: DateTime.utc_now() |> DateTime.truncate(:second),

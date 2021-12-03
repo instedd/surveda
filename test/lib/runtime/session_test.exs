@@ -696,8 +696,8 @@ defmodule Ask.SessionTest do
 
     # The session won't update the respondent, the broker will
     respondent = Respondent |> Repo.get(respondent.id)
-    assert respondent.state == "pending"
-    assert respondent.disposition == "registered"
+    assert respondent.state == :pending
+    assert respondent.disposition == :registered
     assert 1 == respondent.stats |> Stats.attempts(:sms)
   end
 
@@ -1031,14 +1031,14 @@ defmodule Ask.SessionTest do
     quiz = insert(:questionnaire, steps: @flag_steps)
     {:ok, _, %{disposition: disposition}, _} = Session.start(quiz, respondent, channel, "sms", Schedule.always())
 
-    assert disposition == "interim partial"
+    assert disposition == :"interim partial"
   end
 
   test "flag and end", %{respondent: respondent, channel: channel} do
-    quiz = build(:questionnaire, steps: @partial_step)
+    quiz = insert(:questionnaire, steps: @partial_step)
     {:end, %{disposition: disposition}, respondent} = Session.start(quiz, respondent, channel, "sms", Schedule.always())
 
-    assert disposition == "interim partial"
+    assert disposition == :"interim partial"
     assert 1 == respondent.stats |> Stats.attempts(:sms)
   end
 
@@ -1047,8 +1047,8 @@ defmodule Ask.SessionTest do
       {:ok, survey_logger} = SurveyLogger.start_link
       quiz = insert(:questionnaire, steps: @flag_step_after_multiple_choice)
       ivr_channel = insert(:channel, settings: TestChannel.new |> TestChannel.settings, type: "ivr")
-      # respondent is updated to "queued" in order to ensure a valid disposition transition "queued" -> "interim partial"
-      respondent = respondent |> Respondent.changeset(%{disposition: "started"}) |> Repo.update!
+      # respondent is updated to "queued" in order to ensure a valid disposition transition :"queued" -> :"interim partial"
+      respondent = respondent |> Respondent.changeset(%{disposition: :started}) |> Repo.update!
       {:ok, session, _, _} = Session.start(quiz, respondent, ivr_channel, "ivr", Schedule.always())
       Session.sync_step(session, Flow.Message.reply("1"))
 
@@ -1076,9 +1076,9 @@ defmodule Ask.SessionTest do
       {:ok, survey_logger} = SurveyLogger.start_link
       quiz = insert(:questionnaire, steps: @flag_step_after_multiple_choice)
       ivr_channel = insert(:channel, settings: TestChannel.new |> TestChannel.settings, type: "ivr")
-      # respondent disposition is updated to "queued",
+      # respondent disposition is updated to :queued,
       # representing a respondent that has already been started.
-      respondent = respondent |> Respondent.changeset(%{disposition: "queued"}) |> Repo.update!
+      respondent = respondent |> Respondent.changeset(%{disposition: :queued}) |> Repo.update!
       {:ok, session, _, _} = Session.start(quiz, respondent, ivr_channel, "ivr", Schedule.always())
 
       Session.sync_step(session, Flow.Message.answer())
@@ -1110,7 +1110,7 @@ defmodule Ask.SessionTest do
       assert nil == reply.disposition
 
       {:ok, _session, reply, _timeout} = Session.sync_step(updated_session(respondent.id, session), Flow.Message.reply("Yes"))
-      assert "interim partial" == reply.disposition
+      assert :"interim partial" == reply.disposition
     end
 
     test "indicates 'interim partial' disposition if respondent answers the min_relevant_steps and the quiz has sections", %{quiz: quiz, respondent: respondent, channel: channel} do
@@ -1122,7 +1122,7 @@ defmodule Ask.SessionTest do
       assert nil == reply.disposition
 
       {:ok, _session, reply, _timeout} = Session.sync_step(updated_session(respondent.id, session), Flow.Message.reply("Yes"))
-      assert "interim partial" == reply.disposition
+      assert :"interim partial" == reply.disposition
     end
 
     test "indicates 'interim partial' disposition if respondent answers the min_relevant_steps even if are not followed",
@@ -1139,7 +1139,7 @@ defmodule Ask.SessionTest do
       assert nil == reply.disposition # second response but this is not a relevant question
 
       {:ok, _session, reply, _timeout} = Session.sync_step(updated_session(respondent.id, session), Flow.Message.reply("3"))
-      assert "interim partial" == reply.disposition # third response, but second relevant response
+      assert :"interim partial" == reply.disposition # third response, but second relevant response
     end
 
     test "indicates 'interim partial' disposition if respondent answers the min_relevant_steps even if are in different sections",
@@ -1156,7 +1156,7 @@ defmodule Ask.SessionTest do
       assert nil == reply.disposition # second response but this is not a relevant question
 
       {:ok, _session, reply, _timeout} = Session.sync_step(updated_session(respondent.id, session), Flow.Message.reply("Yes"))
-      assert "interim partial" == reply.disposition # third response, but second relevant response
+      assert :"interim partial" == reply.disposition # third response, but second relevant response
     end
 
     test "does not indicates 'interim partial' disposition if respondent answers the min_relevant_steps but one is ignored answer (numeric refusal)",
@@ -1195,10 +1195,10 @@ defmodule Ask.SessionTest do
       steps = QuestionnaireRelevantSteps.odd_relevant_steps()
       quiz = quiz |> Questionnaire.changeset(%{partial_relevant_config: %{"enabled" => true, "min_relevant_steps" => 1}, steps: steps}) |> Repo.update!
       session = start_session(respondent, quiz, channel)
-      assert "contacted" == session.respondent.disposition
+      assert :contacted == session.respondent.disposition
 
       {:ok, _session, reply, _timeout} = Session.sync_step(session, Flow.Message.reply("Yes"))
-      assert "interim partial" == reply.disposition
+      assert :"interim partial" == reply.disposition
       histories = Ask.RespondentDispositionHistory |> Repo.all |> Enum.map(fn hist -> hist.disposition end)
       assert ["queued", "contacted", "started"] == histories, "Although is never \"seen\", respondent passed through started disposition and must be logged"
     end
@@ -1215,7 +1215,7 @@ defmodule Ask.SessionTest do
       assert nil == reply.disposition # second response but this is not a relevant question
 
       {:ok, _session, reply, _timeout} = Session.sync_step(updated_session(respondent.id, session), Flow.Message.reply("#")) # refuse response
-      assert "interim partial" == reply.disposition # third response, second relevant response, but ignored value since is refusal response
+      assert :"interim partial" == reply.disposition # third response, second relevant response, but ignored value since is refusal response
     end
 
     test "if questionnaire hasn't got partial_relevant_config, no response should trigger an 'interim partial' disposition even if all steps are relevant",
@@ -1291,7 +1291,7 @@ defmodule Ask.SessionTest do
       assert nil == reply.disposition
 
       {:ok, session, reply, _timeout} = Session.sync_step(updated_session(respondent.id, session), Flow.Message.reply("Yes"))
-      assert "interim partial" == reply.disposition
+      assert :"interim partial" == reply.disposition
 
       # update respondent with new disposition
       Respondent |> Repo.get(respondent.id) |> Respondent.changeset(%{disposition: reply.disposition}) |> Repo.update!
@@ -1312,7 +1312,7 @@ defmodule Ask.SessionTest do
       assert nil == reply.disposition
 
       {:stopped, reply, _respondent} = Session.sync_step(updated_session(respondent.id, session), Flow.Message.reply("stop"))
-      assert "breakoff" == reply.disposition
+      assert :breakoff == reply.disposition
     end
 
     defp start_session(respondent, quiz, channel) do

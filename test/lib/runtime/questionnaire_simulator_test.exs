@@ -95,20 +95,20 @@ defmodule QuestionnaireSimulatorTest do
         simulation = start_contacted(start_simulation, quiz, mode)
 
         %{respondent_id: respondent_id, disposition: disposition, simulation_status: status} = simulation
-        assert "contacted" == disposition
+        assert :contacted == disposition
         on_sms_assert_last_message(simulation, "Do you smoke? Reply 1 for YES, 2 for NO", mode)
         assert Simulation.Status.active == status
 
         %{disposition: disposition} = simulation = process_respondent_response(respondent_id, "No", mode)
-        assert "started" == disposition
+        assert :started == disposition
         on_sms_assert_last_message(simulation, "Do you exercise? Reply 1 for YES, 2 for NO", mode)
 
         %{disposition: disposition} = simulation = process_respondent_response(respondent_id, "Yes", mode)
-        assert "interim partial" == disposition
+        assert :"interim partial" == disposition
         on_sms_assert_last_message(simulation, "Is this the last question?", mode)
 
         %{disposition: disposition, simulation_status: status} = simulation = process_respondent_response(respondent_id, "Yes", mode)
-        assert "completed" == disposition
+        assert :completed == disposition
         on_sms_assert_last_message(simulation, "Thanks for completing this survey", mode)
         assert Simulation.Status.ended == status
       end)
@@ -323,12 +323,12 @@ defmodule QuestionnaireSimulatorTest do
     test "if stop message on contacted disposition, then final disposition is 'refused'", %{start_simulation: start_simulation} do
       quiz = questionnaire_with_steps(@dummy_steps)
       %{respondent_id: respondent_id, disposition: starting_disposition} = start_simulation.(quiz, "sms")
-      assert "contacted" == starting_disposition
+      assert :contacted == starting_disposition
 
       %{simulation_status: status, disposition: disposition} = process_respondent_response(respondent_id, "Stop", "sms")
 
       assert Simulation.Status.ended == status
-      assert "refused" == disposition
+      assert :refused == disposition
     end
 
     test "if stop message on started disposition, then final disposition is 'breakoff'", %{start_simulation: start_simulation} do
@@ -336,12 +336,12 @@ defmodule QuestionnaireSimulatorTest do
       %{respondent_id: respondent_id} = start_simulation.(quiz, "sms")
       %{disposition: previous_disposition} = process_respondent_response(respondent_id, "No", "sms")
 
-      assert "started" == previous_disposition
+      assert :started == previous_disposition
 
       %{simulation_status: status, disposition: disposition} = process_respondent_response(respondent_id, "Stop", "sms")
 
       assert Simulation.Status.ended == status
-      assert "breakoff" == disposition
+      assert :breakoff == disposition
     end
 
     test "if stop message on interim-partial disposition, then final disposition is 'breakoff'", %{start_simulation: start_simulation} do
@@ -350,12 +350,12 @@ defmodule QuestionnaireSimulatorTest do
       process_respondent_response(respondent_id, "No", "sms")
       %{disposition: previous_disposition} = process_respondent_response(respondent_id, "Yes", "sms")
 
-      assert "interim partial" == previous_disposition
+      assert :"interim partial" == previous_disposition
 
       %{simulation_status: status, disposition: disposition} = process_respondent_response(respondent_id, "Stop", "sms")
 
       assert Simulation.Status.ended == status
-      assert "partial" == disposition
+      assert :partial == disposition
     end
   end
 
@@ -368,13 +368,13 @@ defmodule QuestionnaireSimulatorTest do
         simulation = start_contacted(start_simulation, quiz, mode)
 
         %{respondent_id: respondent_id, disposition: disposition} = simulation
-        assert "contacted" == disposition
+        assert :contacted == disposition
 
         %{disposition: disposition} = process_respondent_response(respondent_id, "No", mode)
-        assert "started" == disposition
+        assert :started == disposition
 
         %{disposition: disposition} = process_respondent_response(respondent_id, "Yes", mode)
-        assert "interim partial" == disposition
+        assert :"interim partial" == disposition
       end)
     end
 
@@ -386,19 +386,19 @@ defmodule QuestionnaireSimulatorTest do
         simulation = start_contacted(start_simulation, quiz, mode)
 
         %{respondent_id: respondent_id, disposition: disposition} = simulation
-        assert "contacted" == disposition
+        assert :contacted == disposition
 
         %{disposition: disposition} = process_respondent_response(respondent_id, "No", mode)
-        assert "started" == disposition
+        assert :started == disposition
 
         %{disposition: disposition} = process_respondent_response(respondent_id, "Yes", mode)
-        assert "interim partial" == disposition
+        assert :"interim partial" == disposition
 
         %{disposition: disposition} = process_respondent_response(respondent_id, "7", mode)
-        assert "interim partial" == disposition
+        assert :"interim partial" == disposition
 
         %{disposition: disposition, simulation_status: status} = process_respondent_response(respondent_id, "4", mode)
-        assert "completed" == disposition
+        assert :completed == disposition
         assert Simulation.Status.ended == status
       end)
     end
@@ -411,16 +411,16 @@ defmodule QuestionnaireSimulatorTest do
         simulation = start_contacted(start_simulation, quiz, mode)
 
         %{respondent_id: respondent_id, disposition: disposition} = simulation
-        assert "contacted" == disposition
+        assert :contacted == disposition
 
         %{disposition: disposition} = process_respondent_response(respondent_id, "No", mode) # First relevant
-        assert "started" == disposition
+        assert :started == disposition
 
         %{disposition: disposition} = process_respondent_response(respondent_id, "5", mode)
-        assert "started" == disposition
+        assert :started == disposition
 
         %{disposition: disposition} = process_respondent_response(respondent_id, "No", mode) # Second relevant, in different section
-        assert "interim partial" == disposition
+        assert :"interim partial" == disposition
       end)
     end
   end
@@ -489,28 +489,28 @@ defmodule QuestionnaireSimulatorTest do
 
     %{respondent_id: respondent_id, disposition: disposition, simulation_status: status, current_step: current_step} = simulation
     [first, second, third, fourth] = quiz |> Questionnaire.all_steps|> Enum.map(fn step -> step["id"] end)
-    assert "contacted" == disposition
+    assert :contacted == disposition
     on_sms_assert_last_message(simulation, "Do you smoke? Reply 1 for YES, 2 for NO", mode)
     assert current_step == first
     assert Ask.Simulation.Status.active == status
 
     %{disposition: disposition, current_step: current_step} = simulation = process_respondent_response(respondent_id, "No", mode)
-    assert "started" == disposition
+    assert :started == disposition
     on_sms_assert_last_message(simulation, "Do you exercise? Reply 1 for YES, 2 for NO", mode)
     assert current_step == second
 
     %{disposition: disposition, current_step: current_step} = simulation = process_respondent_response(respondent_id, "Yes", mode)
-    assert "started" == disposition
+    assert :started == disposition
     on_sms_assert_last_message(simulation, "Which is the second perfect number??", mode)
     assert current_step == third
 
     %{disposition: disposition, current_step: current_step} = simulation = process_respondent_response(respondent_id, "7", mode)
-    assert "started" == disposition
+    assert :started == disposition
     on_sms_assert_last_message(simulation, "What's the number of this question??", mode)
     assert current_step == fourth
 
     %{disposition: disposition, simulation_status: status, current_step: current_step} = simulation = process_respondent_response(respondent_id, "4", mode)
-    assert "completed" == disposition
+    assert :completed == disposition
     on_sms_assert_last_message(simulation, "Thanks for completing this survey", mode)
     assert current_step == nil
     assert Ask.Simulation.Status.ended == status

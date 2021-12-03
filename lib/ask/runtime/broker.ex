@@ -69,7 +69,7 @@ defmodule Ask.Runtime.Broker do
   def configure_new_respondent(respondent, questionnaire_id, sequence_mode) do
     {primary_mode, _} = get_modes(sequence_mode)
     respondent
-    |> Respondent.changeset(%{questionnaire_id: questionnaire_id, mode: sequence_mode, disposition: "queued"})
+    |> Respondent.changeset(%{questionnaire_id: questionnaire_id, mode: sequence_mode, disposition: :queued})
     |> Repo.update!
     |> RespondentDispositionHistory.create(respondent.disposition, primary_mode)
   end
@@ -115,9 +115,9 @@ defmodule Ask.Runtime.Broker do
     try do
       by_state = Ask.RespondentStats.respondents_by_state(survey)
       %{
-        "active" => active,
-        "pending" => pending,
-        "completed" => completed,
+        active: active,
+        pending: pending,
+        completed: completed,
       } = by_state
 
       reached_quotas = reached_quotas?(survey)
@@ -172,7 +172,7 @@ defmodule Ask.Runtime.Broker do
   end
 
   defp retry_respondents(now) do
-    Repo.all(from r in Respondent, select: r.id, where: r.state == "active" and r.timeout_at <= ^now, limit: ^batch_limit_per_minute())
+    Repo.all(from r in Respondent, select: r.id, where: r.state == :active and r.timeout_at <= ^now, limit: ^batch_limit_per_minute())
     |> Enum.each(fn respondent_id -> Respondent.with_lock(respondent_id, &retry_respondent(&1)) end)
   end
 
@@ -247,7 +247,7 @@ defmodule Ask.Runtime.Broker do
 
     (from r in assoc(survey, :respondents),
       select: r.id,
-      where: r.state == "pending",
+      where: r.state == :pending,
       limit: ^count)
     |> Repo.all
     |> Enum.each(fn respondent_id -> Respondent.with_lock(respondent_id, &start(survey, &1), &Repo.preload(&1, respondent_group: [respondent_group_channels: :channel])) end)

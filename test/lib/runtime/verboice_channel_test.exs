@@ -200,7 +200,7 @@ defmodule Ask.Runtime.VerboiceChannelTest do
       assert survey.state == "running"
 
       respondent = Repo.get(Respondent, respondent.id)
-      assert respondent.state == "active"
+      assert respondent.state == :active
 
       VerboiceChannel.callback(conn, %{"path" => ["status", respondent.id, "token"], "CallStatus" => "failed", "CallDuration" => "10", "CallSid" => "6B8F5B7B-E412-46D3-96E1-688215F43CC3", "CallStatusReason" => "some random reason", "CallStatusCode" => "42"})
 
@@ -251,7 +251,7 @@ defmodule Ask.Runtime.VerboiceChannelTest do
       assert survey.state == "running"
 
       respondent = Repo.get(Respondent, respondent.id)
-      assert respondent.state == "active"
+      assert respondent.state == :active
 
       VerboiceChannel.callback(conn, %{"path" => ["status", respondent.id, "token"], "CallStatus" => "failed", "CallDuration" => "11", "CallSid" => "some-id", "CallStatusCode" => "42"})
 
@@ -282,7 +282,7 @@ defmodule Ask.Runtime.VerboiceChannelTest do
       assert survey.state == "running"
 
       respondent = Repo.get(Respondent, respondent.id)
-      assert respondent.state == "active"
+      assert respondent.state == :active
 
       VerboiceChannel.callback(conn, %{"path" => ["status", respondent.id, "token"], "CallStatus" => "failed", "CallDuration" => "12", "CallSid" => "id with spaces", "CallStatusReason" => "some random reason"})
 
@@ -313,7 +313,7 @@ defmodule Ask.Runtime.VerboiceChannelTest do
       assert survey.state == "running"
 
       respondent = Repo.get(Respondent, respondent.id)
-      assert respondent.state == "active"
+      assert respondent.state == :active
 
       VerboiceChannel.callback(conn, %{"path" => ["status", respondent.id, "token"], "CallStatus" => "failed", "CallDuration" => "13", "CallSid" => "12345"})
 
@@ -344,7 +344,7 @@ defmodule Ask.Runtime.VerboiceChannelTest do
       assert survey.state == "running"
 
       respondent = Repo.get(Respondent, respondent.id)
-      assert respondent.state == "active"
+      assert respondent.state == :active
 
       VerboiceChannel.callback(conn, %{"path" => ["status", respondent.id, "token"], "CallStatus" => "no-answer", "CallDuration" => "14", "CallSid" => "1515", "CallStatusReason" => "another reason", "CallStatusCode" => "foo"})
 
@@ -375,7 +375,7 @@ defmodule Ask.Runtime.VerboiceChannelTest do
       assert survey.state == "running"
 
       respondent = Repo.get(Respondent, respondent.id)
-      assert respondent.state == "active"
+      assert respondent.state == :active
 
       VerboiceChannel.callback(conn, %{"path" => ["status", respondent.id, "token"], "CallStatus" => "busy", "CallDuration" => "15", "CallSid" => "1", "CallStatusReason" => "yet another reason", "CallStatusCode" => "bar"})
 
@@ -405,7 +405,7 @@ defmodule Ask.Runtime.VerboiceChannelTest do
       assert survey.state == "running"
 
       %Respondent{mode: mode} = respondent = Repo.get(Respondent, respondent.id)
-      assert respondent.state == "active"
+      assert respondent.state == :active
 
       assert 1 == %{survey_id: survey.id} |> RetryStat.stats() |> RetryStat.count(%{attempt: 1, ivr_active: true, mode: mode})
 
@@ -474,7 +474,7 @@ defmodule Ask.Runtime.VerboiceChannelTest do
       Broker.poll
 
       respondent = Repo.get(Respondent, respondent.id)
-      assert respondent.state == "active"
+      assert respondent.state == :active
 
       {:ok, %{conn: conn, respondent: respondent, logger: logger, broker: broker}}
     end
@@ -500,7 +500,7 @@ defmodule Ask.Runtime.VerboiceChannelTest do
       logger |> GenServer.stop
       broker |> GenServer.stop
     end
-    
+
     test "counts attempt upon respondent interaction callback", %{conn: conn, respondent: respondent, logger: logger, broker: broker} do
       assert Stats.attempts(respondent.stats, :ivr) == 0
 

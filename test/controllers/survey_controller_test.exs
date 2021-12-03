@@ -597,7 +597,7 @@ defmodule Ask.SurveyControllerTest do
 
     test "additional respondents equals needed to complete - respondents in non final dispositions", %{conn: conn, user: user} do
       non_final_dispositions = Respondent.metrics_non_final_dispositions()
-      respondents = [%{disposition: "completed"}] ++ Enum.map(non_final_dispositions, fn disposition -> %{disposition: disposition} end)
+      respondents = [%{disposition: :completed}] ++ Enum.map(non_final_dispositions, fn disposition -> %{disposition: disposition} end)
       %{"needed_to_complete" => 100, "additional_respondents" => additional_respondents} = testing_survey(%{user: user, respondents: respondents, attrs: %{cutoff: 101}})
         |> get_stats(conn)
       assert additional_respondents == 100 - Enum.count(non_final_dispositions)
@@ -1958,7 +1958,7 @@ defmodule Ask.SurveyControllerTest do
       assert json_response(conn, 200)
       survey = Repo.get(Survey, survey.id)
       assert Survey.cancelled?(survey)
-      assert length(Repo.all(from(r in Ask.Respondent, where: (r.state == "cancelled" and is_nil(r.session) and is_nil(r.timeout_at))))) == 4
+      assert length(Repo.all(from(r in Ask.Respondent, where: (r.state == :cancelled and is_nil(r.session) and is_nil(r.timeout_at))))) == 4
       assert_receive [:cancel_message, ^test_channel, ^channel_state]
 
     end
@@ -1991,7 +1991,7 @@ defmodule Ask.SurveyControllerTest do
 
       assert json_response(conn, 200)
       assert Repo.get(Survey, survey2.id).state == "running"
-      assert length(Repo.all(from(r in Ask.Respondent, where: r.state == "active"))) == 6
+      assert length(Repo.all(from(r in Ask.Respondent, where: r.state == :active))) == 6
       assert_receive [:cancel_message, ^test_channel, ^channel_state]
     end
 

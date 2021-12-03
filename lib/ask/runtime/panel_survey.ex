@@ -54,8 +54,8 @@ defmodule Ask.Runtime.PanelSurvey do
         phone_numbers =
           from(r in Respondent,
             where:
-              r.respondent_group_id == ^respondent_group.id and r.disposition != "refused" and
-                r.disposition != "ineligible",
+              r.respondent_group_id == ^respondent_group.id and r.disposition != :refused and
+                r.disposition != :ineligible,
             select: r.phone_number
           )
           |> Repo.all()

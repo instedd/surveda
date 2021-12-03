@@ -69,7 +69,7 @@ defmodule Ask.MobileSurveyControllerTest do
     assert survey.state == "running"
 
     respondent = Repo.get(Respondent, respondent.id)
-    assert respondent.state == "active"
+    assert respondent.state == :active
     # mobile_survey_send_reply_path
 
     # Check that get_step without token gives error
@@ -151,7 +151,7 @@ defmodule Ask.MobileSurveyControllerTest do
 
     # Check before flag step
     respondent = Repo.get(Respondent, respondent.id)
-    assert respondent.disposition == "started"
+    assert respondent.disposition == :started
 
     conn = post conn, mobile_survey_path(conn, :send_reply, respondent.id, %{token: token, value: "Yes", step_id: "s2"})
     json = json_response(conn, 200)
@@ -165,7 +165,7 @@ defmodule Ask.MobileSurveyControllerTest do
 
     # Check after flag step
     respondent = Repo.get(Respondent, respondent.id)
-    assert respondent.disposition == "interim partial"
+    assert respondent.disposition == :"interim partial"
 
     conn = post conn, mobile_survey_path(conn, :send_reply, respondent.id, %{token: token, value: "Yes", step_id: "s4"})
     json = json_response(conn, 200)
@@ -211,7 +211,7 @@ defmodule Ask.MobileSurveyControllerTest do
     interval = Interval.new(from: Timex.shift(now, seconds: -5), until: Timex.shift(now, seconds: 5), step: [seconds: 1])
 
     respondent = Repo.get(Respondent, respondent.id)
-    assert respondent.state == "completed"
+    assert respondent.state == :completed
     assert respondent.session == nil
     assert respondent.completed_at in interval
 
@@ -325,7 +325,7 @@ defmodule Ask.MobileSurveyControllerTest do
     assert survey.state == "running"
 
     respondent = Repo.get(Respondent, respondent.id)
-    assert respondent.state == "active"
+    assert respondent.state == :active
     # mobile_survey_send_reply_path
 
     conn = get conn, mobile_survey_path(conn, :get_step, respondent.id, %{token: token})
@@ -342,7 +342,7 @@ defmodule Ask.MobileSurveyControllerTest do
     post conn, mobile_survey_path(conn, :send_reply, respondent.id, %{token: token, value: "", step_id: "s1"})
 
     respondent = Repo.get(Respondent, respondent.id)
-    assert respondent.disposition == "refused"
+    assert respondent.disposition == :refused
 
     :ok = broker |> GenServer.stop
   end

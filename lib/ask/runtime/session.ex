@@ -136,9 +136,9 @@ defmodule Ask.Runtime.Session do
         # the user asked for stopping receiving messages
         session
       response == Flow.Message.answer ->
-        update_respondent_disposition(session, "contacted", current_mode, persist)
+        update_respondent_disposition(session, :contacted, current_mode, persist)
       true ->
-        update_respondent_disposition(session, "started", current_mode, persist)
+        update_respondent_disposition(session, :started, current_mode, persist)
     end
     respondent = session.respondent
     step_answer = Flow.step(session.flow,
@@ -181,7 +181,7 @@ defmodule Ask.Runtime.Session do
 
   def log_disposition_changed(respondent, channel, mode, previous_disposition, new_disposition, persist \\ true) do
     if persist do
-      SurveyLogger.log(respondent.survey_id, mode, respondent.id, respondent.hashed_number, channel.id, previous_disposition, "disposition changed", String.capitalize(new_disposition))
+      SurveyLogger.log(respondent.survey_id, mode, respondent.id, respondent.hashed_number, channel.id, previous_disposition, "disposition changed", new_disposition |> to_string() |> String.capitalize())
     end
   end
 
@@ -245,7 +245,7 @@ defmodule Ask.Runtime.Session do
 
   def delivery_confirm(session, title, current_mode, persist) do
     if persist, do: log_confirmation(title, session.respondent.disposition, current_mode.channel, session.flow.mode, session.respondent)
-    update_respondent_disposition(session, "contacted", current_mode, persist)
+    update_respondent_disposition(session, :contacted, current_mode, persist)
   end
 
   def cancel(session) do
@@ -396,11 +396,11 @@ defmodule Ask.Runtime.Session do
   # If the respondent has answered at least `min_relevant_steps` relevant steps
   # and the reply doesn't defines already a disposition
   # then, 'interim partial' disposition is returned in reply
-  defp relevant_interim_partial_step({:ok, flow, %{disposition: nil} = reply} = step_answer, %{disposition: "started"} = respondent, persist) do
+  defp relevant_interim_partial_step({:ok, flow, %{disposition: nil} = reply} = step_answer, %{disposition: :started} = respondent, persist) do
     new_step_answer = if Flow.interim_partial_by_relevant_steps?(flow) do # Filtered here to avoid fetching the responses unnecessarily
       valid_relevant_responses = all_responses(respondent, reply, persist) |> Enum.count(&Flow.relevant_response?(flow, &1))
       if valid_relevant_responses >= Flow.min_relevant_steps(flow) do
-        {:ok, flow, %{reply | disposition: "interim partial"}}
+        {:ok, flow, %{reply | disposition: :"interim partial"}}
       end
     end
 
@@ -587,7 +587,7 @@ defmodule Ask.Runtime.Session do
            session.count_partial_results
          ) do
       true ->
-        session = update_respondent_disposition(session, "rejected", current_mode)
+        session = update_respondent_disposition(session, :rejected, current_mode)
 
         if flow.questionnaire.quota_completed_steps && length(flow.questionnaire.quota_completed_steps) > 0 do
           flow = %{flow | current_step: nil, in_quota_completed_steps: true}

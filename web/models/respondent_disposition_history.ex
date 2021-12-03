@@ -25,7 +25,7 @@ defmodule Ask.RespondentDispositionHistory do
     if respondent.disposition && respondent.disposition != old_disposition do
       %RespondentDispositionHistory{
         respondent: respondent,
-        disposition: respondent.disposition,
+        disposition: respondent.disposition |> to_string(),
         mode: mode,
         survey_id: respondent.survey_id,
         respondent_hashed_number: respondent.hashed_number

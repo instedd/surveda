@@ -23,7 +23,7 @@ defmodule Ask.SurveyCancellerTest do
                Repo.all(
                  from(
                    r in Ask.Respondent,
-                   where: (r.state == "cancelled" and is_nil(r.session) and is_nil(r.timeout_at))
+                   where: (r.state == :cancelled and is_nil(r.session) and is_nil(r.timeout_at))
                  )
                )
              ) == 0
@@ -69,7 +69,7 @@ defmodule Ask.SurveyCancellerTest do
                Repo.all(
                  from(
                    r in Ask.Respondent,
-                   where: (r.state == "cancelled" and is_nil(r.session) and is_nil(r.timeout_at))
+                   where: (r.state == :cancelled and is_nil(r.session) and is_nil(r.timeout_at))
                  )
                )
              ) == 4
@@ -120,7 +120,7 @@ defmodule Ask.SurveyCancellerTest do
                Repo.all(
                  from(
                    r in Ask.Respondent,
-                   where: (r.state == "cancelled" and is_nil(r.session) and is_nil(r.timeout_at))
+                   where: (r.state == :cancelled and is_nil(r.session) and is_nil(r.timeout_at))
                  )
                )
              ) == 7
@@ -178,7 +178,7 @@ defmodule Ask.SurveyCancellerTest do
                Repo.all(
                  from(
                    r in Ask.Respondent,
-                   where: (r.state == "cancelled" and is_nil(r.session) and is_nil(r.timeout_at))
+                   where: (r.state == :cancelled and is_nil(r.session) and is_nil(r.timeout_at))
                  )
                )
              ) == 11
