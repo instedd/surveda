@@ -23,12 +23,12 @@ defmodule Ask.PanelSurveyControllerTest do
       assert_listed_panel_survey(conn, panel_survey)
     end
 
-    test "lists a panel_survey inside a folder", %{conn: conn, user: user} do
+    test "won't list a panel_survey inside a folder", %{conn: conn, user: user} do
       panel_survey = panel_survey_in_folder(user)
 
       conn = get(conn, project_panel_survey_path(conn, :index, panel_survey.project_id))
 
-      assert_listed_panel_survey(conn, panel_survey)
+      assert json_response(conn, 200)["data"] == []
     end
   end
 
@@ -62,15 +62,23 @@ defmodule Ask.PanelSurveyControllerTest do
     end
 
     test "shows a panel survey inside a folder", %{conn: conn, user: user} do
-      panel_survey = panel_survey_in_folder(user)
+      project = create_project_for_user(user)
+      folder = insert(:folder, project: project)
+      panel_survey = insert(:panel_survey, project: project, folder: folder)
+      insert(:survey, project: project, panel_survey: panel_survey)
 
       conn =
         get(
           conn,
-          project_panel_survey_path(conn, :show, panel_survey.project_id, panel_survey.id)
+          project_panel_survey_path(conn, :show, project.id, panel_survey.id)
         )
 
       assert_showed_panel_survey(conn, panel_survey)
+      assert json_response(conn, 200)["data"]["folder"] == %{
+        "id" => folder.id,
+        "project_id" => project.id,
+        "name" => folder.name
+      }
     end
 
     test "shows a panel survey with surveys", %{conn: conn, user: user} do
@@ -277,10 +285,11 @@ defmodule Ask.PanelSurveyControllerTest do
   end
 
   defp assert_panel_survey(panel_survey, base_panel_survey) do
-    base_panel_survey = Repo.preload(base_panel_survey, :occurrences)
-
     # It's easier to compare with the base panel without surveys.
-    panel_survey_without_surveys = Map.delete(panel_survey, "occurrences")
+    panel_survey_without_surveys = panel_survey
+    |> Map.delete("occurrences")
+    |> Map.delete("latest_occurrence")
+    |> Map.delete("folder")
 
     assert panel_survey_without_surveys == %{
              "folder_id" => base_panel_survey.folder_id,
@@ -292,7 +301,14 @@ defmodule Ask.PanelSurveyControllerTest do
            }
 
     # And then, it's also easier to compare only the surveys ids.
-    assert survey_ids(panel_survey["occurrences"]) == survey_ids(base_panel_survey.occurrences)
+    assert panel_survey["latest_occurrence"]["id"] == PanelSurvey.latest_occurrence(base_panel_survey).id
+
+    if Map.has_key?(panel_survey, "occurrences") do
+      base_panel_survey = Repo.preload(base_panel_survey, :occurrences)
+      assert survey_ids(panel_survey["occurrences"]) == survey_ids(base_panel_survey.occurrences)
+    else
+      true
+    end
   end
 
   defp survey_ids(surveys) do

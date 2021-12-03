@@ -1,8 +1,8 @@
 // @flow
 import * as api from '../api'
 
-export const RECEIVE = 'CHANNELS_RECEIVE'
-export const FETCH = 'CHANNELS_FETCH'
+export const RECEIVE = 'RECEIVE_CHANNELS'
+export const FETCH = 'FETCH_CHANNELS'
 export const NEXT_PAGE = 'CHANNELS_NEXT_PAGE'
 export const PREVIOUS_PAGE = 'CHANNELS_PREVIOUS_PAGE'
 export const SORT = 'CHANNELS_SORT'

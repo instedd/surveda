@@ -368,7 +368,8 @@ const bareSurvey: Survey = {
   incentivesEnabled: true,
   generatesPanelSurvey: false,
   isDeletable: true,
-  isMovable: true
+  isMovable: true,
+  updatedAt: new Date()
 }
 
 const bareFolder: Folder = {

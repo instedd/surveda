@@ -42,6 +42,19 @@ defmodule Ask.FolderController do
     |> render("index.json", folders: folders)
   end
 
+  def show(conn, %{"project_id" => project_id, "id" => folder_id}) do
+    project = conn
+    |> load_project(project_id)
+
+    folder = project
+    |> assoc(:folders)
+    |> Repo.get!(folder_id)
+    |> Repo.preload(:panel_surveys)
+    |> Repo.preload(:surveys)
+
+    render(conn, "show.json", folder: folder)
+  end
+
   def delete(conn, %{"project_id" => project_id, "id" => folder_id}) do
     project =
       conn

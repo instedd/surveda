@@ -2,13 +2,10 @@ import React, { PropTypes, Component } from 'react'
 import { connect } from 'react-redux'
 import { withRouter } from 'react-router'
 import * as actions from '../../actions/survey'
-import * as surveysActions from '../../actions/surveys'
 import * as projectActions from '../../actions/project'
 import * as channelsActions from '../../actions/channels'
 import * as questionnairesActions from '../../actions/questionnaires'
 import * as respondentGroupsActions from '../../actions/respondentGroups'
-import * as folderActions from '../../actions/folder'
-import * as panelSurveysActions from '../../actions/panelSurveys'
 import SurveyForm from './SurveyForm'
 import * as routes from '../../routes'
 import { translate } from 'react-i18next'
@@ -34,19 +31,11 @@ class SurveyEdit extends Component {
   componentWillMount() {
     const { dispatch, projectId, surveyId } = this.props
     if (projectId && surveyId) {
-      projectActions.fetchProject(projectId)
       dispatch(actions.fetchSurveyIfNeeded(projectId, surveyId))
       dispatch(projectActions.fetchProject(projectId))
       dispatch(channelsActions.fetchProjectChannels(projectId))
       dispatch(questionnairesActions.fetchQuestionnaires(projectId, {archived: false}))
       dispatch(respondentGroupsActions.fetchRespondentGroups(projectId, surveyId))
-
-      // Fetch folders for breadcrumb
-      dispatch(folderActions.fetchFolders(projectId))
-      // Fetch surveys for breadcrumb
-      dispatch(surveysActions.fetchSurveys(projectId))
-      // Fetch panel surveys for breadcrumb
-      dispatch(panelSurveysActions.fetchPanelSurveys(projectId))
     }
   }
 

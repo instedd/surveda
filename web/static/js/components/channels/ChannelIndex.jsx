@@ -233,6 +233,7 @@ class ChannelIndex extends Component<any> {
             <tbody>
               { range(0, pageSize).map(index => {
                 const channel = channels[index]
+                const status = channel && channel.statusInfo && channel.statusInfo.status
 
                 if (!channel) return <tr key={-index} className='empty-row'><td colSpan='3' /></tr>
 
@@ -242,7 +243,7 @@ class ChannelIndex extends Component<any> {
                   </td>
                   <td>{`${channel.provider}${channelFriendlyName(channel)}`}</td>
                   <td className='tdError'>
-                    {channel.statusInfo.status == 'down' || channel.statusInfo.status == 'error'
+                    {status == 'down' || status == 'error'
                     ? <span className='questionnaire-error' />
                     : null}
                   </td>

@@ -55,18 +55,25 @@ defmodule Ask.SurveyControllerTest do
       ]
     end
 
-    test "lists surveys with folder_id", %{conn: conn, user: user} do
+    test "won't list surveys inside a folder", %{conn: conn, user: user} do
       project = create_project_for_user(user)
       folder = insert(:folder, project: project)
       started_at = Timex.parse!("2016-01-01T10:00:00Z", "{ISO:Extended}")
-      survey = insert(:survey, project: project, folder_id: folder.id, started_at: started_at, description: "initial description")
-      survey = Survey |> Repo.get(survey.id)
+      insert(:survey, project: project, folder: folder, started_at: started_at, description: "initial description")
 
       conn = get conn, project_survey_path(conn, :index, project.id)
 
-      assert json_response(conn, 200)["data"] == [
-        %{"cutoff" => survey.cutoff, "id" => survey.id, "mode" => survey.mode, "name" => survey.name, "description" => survey.description, "project_id" => project.id, "state" => "not_ready", "locked" => false, "exit_code" => nil, "exit_message" => nil, "schedule" => %{"blocked_days" => [], "day_of_week" => %{"fri" => true, "mon" => true, "sat" => true, "sun" => true, "thu" => true, "tue" => true, "wed" => true}, "end_time" => "23:59:59", "start_time" => "00:00:00", "start_date" => nil, "end_date" => nil, "timezone" => "Etc/UTC"}, "next_schedule_time" => nil, "started_at" => started_at |> Timex.format!("%FT%T%:z", :strftime), "ended_at" => nil, "updated_at" => to_iso8601(survey.updated_at), "down_channels" => [], "folder_id" => folder.id, "first_window_started_at" => nil, "panel_survey_id" => nil, "last_window_ends_at" => nil, "is_deletable" => true, "is_movable" => true, "generates_panel_survey" => false}
-      ]
+      assert json_response(conn, 200)["data"] == []
+    end
+
+    test "won't list surveys that belong to a panel survey", %{conn: conn, user: user} do
+      project = create_project_for_user(user)
+      panel_survey = insert(:panel_survey, project: project)
+      insert(:survey, project: project, panel_survey: panel_survey)
+
+      conn = get(conn, project_survey_path(conn, :index, project.id))
+
+      assert json_response(conn, 200)["data"] == []
     end
 
     test "list only completed surveys", %{conn: conn, user: user} do

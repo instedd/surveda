@@ -1,8 +1,8 @@
 // @flow
 import * as api from '../api'
 
-export const RECEIVE = 'SURVEYS_RECEIVE'
-export const FETCH = 'SURVEYS_FETCH'
+export const RECEIVE = 'RECEIVE_SURVEYS'
+export const FETCH = 'FETCH_SURVEYS'
 export const NEXT_PAGE = 'SURVEYS_NEXT_PAGE'
 export const PREVIOUS_PAGE = 'SURVEYS_PREVIOUS_PAGE'
 export const SORT = 'SURVEYS_SORT'
