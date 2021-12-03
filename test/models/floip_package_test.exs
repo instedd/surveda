@@ -174,7 +174,7 @@ defmodule Ask.FloipPackageTest do
       other_steps = non_floip_mappable_steps()
       quiz1 = insert(:questionnaire, steps: floip_mappable_steps)
       quiz2 = insert(:questionnaire, steps: other_steps)
-      insert(:survey, questionnaires: [quiz1, quiz2], started_at: Timex.Ecto.DateTime.autogenerate)
+      insert(:survey, questionnaires: [quiz1, quiz2], started_at: DateTime.utc_now)
     end
 
     def insert_respondent(survey, number) do
@@ -190,7 +190,7 @@ defmodule Ask.FloipPackageTest do
         id: id)
     end
     def insert_response(respondent, field_name, response, id \\ nil) do
-      insert_response(respondent, field_name, response, id, Timex.Ecto.DateTime.autogenerate)
+      insert_response(respondent, field_name, response, id, DateTime.utc_now)
     end
 
     def assert_same(floip_response, db_response) do
@@ -221,7 +221,8 @@ defmodule Ask.FloipPackageTest do
       {:ok, response_timestamp, _} = DateTime.from_iso8601(Enum.at(response, 0))
 
       # 0 -- both arguments represent the same date when coalesced to the same timezone.
-      assert Timex.compare(response_timestamp, db_response.inserted_at) == 0
+      inserted_at = DateTime.truncate(db_response.inserted_at, :second)
+      assert DateTime.compare(response_timestamp, inserted_at) == :eq
 
       assert Enum.at(response, 1) == db_response.id
       assert Enum.at(response, 2) == db_response.respondent.hashed_number
@@ -298,9 +299,9 @@ defmodule Ask.FloipPackageTest do
       # Setup
       survey = insert_survey()
       respondent_1 = insert_respondent(survey, "1234")
-      _db_response_1 = insert_response(respondent_1, "Exercises", "Yes", 1, Ecto.DateTime.cast!("2000-01-01 01:02:03"))
+      _db_response_1 = insert_response(respondent_1, "Exercises", "Yes", 1, DateTime.from_iso8601("2000-01-01T01:02:03Z") |> elem(1))
       respondent_2 = insert_respondent(survey, "5678")
-      db_response_2 = insert_response(respondent_2, "Exercises", "No", 2, Ecto.DateTime.cast!("2001-01-01 01:02:03"))
+      db_response_2 = insert_response(respondent_2, "Exercises", "No", 2, DateTime.from_iso8601("2001-01-01T01:02:03Z") |> elem(1))
 
       june_2000_iso8601 = %DateTime{
         year: 2000, month: 6, day: 1,
@@ -320,9 +321,9 @@ defmodule Ask.FloipPackageTest do
       # Setup
       survey = insert_survey()
       respondent_1 = insert_respondent(survey, "1234")
-      db_response_1 = insert_response(respondent_1, "Exercises", "Yes", 1, Ecto.DateTime.cast!("2000-01-01 01:02:03"))
+      db_response_1 = insert_response(respondent_1, "Exercises", "Yes", 1, DateTime.from_iso8601("2000-01-01T01:02:03Z") |> elem(1))
       respondent_2 = insert_respondent(survey, "5678")
-      _db_response_2 = insert_response(respondent_2, "Exercises", "No", 2, Ecto.DateTime.cast!("2001-01-01 01:02:03"))
+      _db_response_2 = insert_response(respondent_2, "Exercises", "No", 2, DateTime.from_iso8601("2001-01-01T01:02:03Z") |> elem(1))
 
       june_2000_iso8601 = %DateTime{
         year: 2000, month: 6, day: 1,
@@ -344,7 +345,7 @@ defmodule Ask.FloipPackageTest do
       respondent_1 = insert_respondent(survey, "1234")
       db_responses = for i <- 1..20 do
         response_minute = String.pad_leading(i |> Integer.to_string, 2, "0")
-        insert_response(respondent_1, "Exercises #{i}", "Yes", i, Ecto.DateTime.cast!("2000-01-01 01:#{response_minute}:03"))
+        insert_response(respondent_1, "Exercises #{i}", "Yes", i, DateTime.from_iso8601("2000-01-01T01:#{response_minute}:03Z") |> elem(1))
       end
 
       # Test
@@ -399,7 +400,7 @@ defmodule Ask.FloipPackageTest do
       respondent_1 = insert_respondent(survey, "1234")
       db_responses = for i <- 1..50 do
         response_minute = String.pad_leading(i |> Integer.to_string, 2, "0")
-        insert_response(respondent_1, "Exercises #{i}", "Yes", i, Ecto.DateTime.cast!("2000-01-01 01:#{response_minute}:03"))
+        insert_response(respondent_1, "Exercises #{i}", "Yes", i, DateTime.from_iso8601("2000-01-01T01:#{response_minute}:03Z") |> elem(1))
       end
 
       # Test
@@ -427,7 +428,7 @@ defmodule Ask.FloipPackageTest do
       respondent_1 = insert_respondent(survey, "1234")
       db_responses = for i <- 1..50 do
         response_minute = String.pad_leading(i |> Integer.to_string, 2, "0")
-        insert_response(respondent_1, "Exercises #{i}", "Yes", i, Ecto.DateTime.cast!("2000-01-01 01:#{response_minute}:03"))
+        insert_response(respondent_1, "Exercises #{i}", "Yes", i, DateTime.from_iso8601("2000-01-01T01:#{response_minute}:03Z") |> elem(1))
       end
 
       # Test

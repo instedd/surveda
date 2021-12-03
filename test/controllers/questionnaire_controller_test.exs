@@ -669,9 +669,9 @@ defmodule Ask.QuestionnaireControllerTest do
           id: "aaa",
           title: "Title",
           prompt: %{
-            "en" => %{"sms" => "EN 1", "mobileweb" => "EN 3", "ivr" => %{"text" => "EN 2", "audio_source": "tts"}},
+            "en" => %{"sms" => "EN 1", "mobileweb" => "EN 3", "ivr" => %{"text" => "EN 2", "audio_source" => "tts"}},
             "es" => %{"sms" => "ES 1", "mobileweb" => "ES 3"},
-            "fr" => %{"sms" => "", "ivr" => %{"text" => "FR 2", "audio_source": "tts"}},
+            "fr" => %{"sms" => "", "ivr" => %{"text" => "FR 2", "audio_source" => "tts"}},
           },
           store: "X",
           choices: [
@@ -690,9 +690,9 @@ defmodule Ask.QuestionnaireControllerTest do
         "type" => "explanation",
         "title" => "Completed",
         "prompt" => %{
-          "en" => %{"sms" => "EN 5", "mobileweb" => "EN 7", "ivr" => %{"text" => "EN 6", "audio_source": "tts"}},
+          "en" => %{"sms" => "EN 5", "mobileweb" => "EN 7", "ivr" => %{"text" => "EN 6", "audio_source" => "tts"}},
           "es" => %{"sms" => "ES 5", "mobileweb" => "ES 7"},
-          "fr" => %{"sms" => "", "ivr" => %{"text" => "FR 6", "audio_source": "tts"}},
+          "fr" => %{"sms" => "", "ivr" => %{"text" => "FR 6", "audio_source" => "tts"}},
         },
         "skip_logic" => nil
       }]
@@ -727,9 +727,9 @@ defmodule Ask.QuestionnaireControllerTest do
           id: "aaa",
           title: "Title",
           prompt: %{
-            "en" => %{"sms" => "EN 1", "mobileweb" => "EN 11", "ivr" => %{"text" => "EN 2", "audio_source": "tts"}},
+            "en" => %{"sms" => "EN 1", "mobileweb" => "EN 11", "ivr" => %{"text" => "EN 2", "audio_source" => "tts"}},
             "es" => %{"sms" => "", "mobileweb" => "ES 11"},
-            "fr" => %{"sms" => "", "ivr" => %{"text" => "FR 2 (NEW)", "audio_source": "tts"}, "mobileweb" => "FR 11"},
+            "fr" => %{"sms" => "", "ivr" => %{"text" => "FR 2 (NEW)", "audio_source" => "tts"}, "mobileweb" => "FR 11"},
           },
           store: "X",
           choices: [
@@ -782,9 +782,9 @@ defmodule Ask.QuestionnaireControllerTest do
           id: "aaa",
           title: "Title",
           prompt: %{
-            "en" => %{"sms" => "EN 1", "ivr" => %{"text" => "EN 2", "audio_source": "tts"}},
+            "en" => %{"sms" => "EN 1", "ivr" => %{"text" => "EN 2", "audio_source" => "tts"}},
             "es" => %{"sms" => ""},
-            "fr" => %{"sms" => "", "ivr" => %{"text" => "FR 2 (NEW)", "audio_source": "tts"}},
+            "fr" => %{"sms" => "", "ivr" => %{"text" => "FR 2 (NEW)", "audio_source" => "tts"}},
           },
           store: "X",
           choices: [

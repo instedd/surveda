@@ -5,7 +5,7 @@ defmodule Ask.Ecto.Type.StringList do
 
   This type maps from an array of strings to strings, joined by comma.
   """
-  @behaviour Ecto.Type
+  use Ecto.Type
   def type, do: :string
 
   def cast(list) when is_list(list), do: {:ok, list}

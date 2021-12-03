@@ -57,6 +57,6 @@ defmodule Ask.AudioController do
   end
 
   defp tmpfile do
-    to_string(:lib.nonl(:os.cmd('/bin/mktemp')))
+    to_string(:string.chomp(:os.cmd('/bin/mktemp')))
   end
 end

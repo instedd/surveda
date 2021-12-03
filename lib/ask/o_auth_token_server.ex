@@ -4,6 +4,10 @@ defmodule Ask.OAuthTokenServer do
 
   @server_ref {:global, __MODULE__}
 
+  def init(args) do
+    {:ok, args}
+  end
+
   def start_link do
     GenServer.start_link(__MODULE__, [], name: @server_ref)
   end

@@ -15,7 +15,7 @@ defmodule Ask.Factory do
       email: sequence(:email, &"email-#{&1}@example.com"),
       settings: %{},
       password_hash: "$2b$12$m0Ftkllx0UK4/bgtbNlV0eVRbxMzbUVtGtOnihUveAZnqNwSG7y6i", # 1234
-      confirmed_at: Ecto.DateTime.utc
+      confirmed_at: DateTime.utc_now
     }
   end
 
@@ -61,7 +61,7 @@ defmodule Ask.Factory do
       disposition: "completed",
       action_type: "prompt",
       action_data: "explanation",
-      timestamp: Ecto.DateTime.utc,
+      timestamp: DateTime.utc_now
     }
   end
 
@@ -174,7 +174,7 @@ defmodule Ask.Factory do
 
   def respondent_factory do
     phone_number = "#{Integer.to_string(:rand.uniform(100))} #{Integer.to_string(:rand.uniform(100))} #{Integer.to_string(:rand.uniform(100))}"
-    respondent_group = build(:respondent_group)
+    respondent_group = insert(:respondent_group)
     canonical_phone_number = Ask.Respondent.canonicalize_phone_number(phone_number)
     %Ask.Respondent{
       respondent_group: respondent_group,
@@ -207,7 +207,7 @@ defmodule Ask.Factory do
       access_token: %{
         "access_token" => :crypto.strong_rand_bytes(27) |> Base.encode64,
       },
-      expires_at: Timex.now |> Timex.add(Timex.Duration.from_hours(1))
+      expires_at: DateTime.utc_now |> Timex.add(Timex.Duration.from_hours(1))
     }
   end
 

@@ -6,7 +6,7 @@ defmodule Ask.Schedule do
   a list of blocked days such as holidays
   """
 
-  @behaviour Ecto.Type
+  use Ecto.Type
 
   alias __MODULE__
   alias Ask.{DayOfWeek, ScheduleError, SystemTime}
@@ -256,7 +256,8 @@ defmodule Ask.Schedule do
     raise_if_date_exceeds_limit(erl_date, backward, limit)
 
     shift_days = if backward, do: -1, else: 1
-    next_date = Timex.shift(erl_date, days: shift_days)
+    next_date = Date.from_erl!(erl_date) |> Date.add(shift_days) |> Timex.to_erl
+
     if day_of_week_available?(schedule, next_date) do
       next_date
     else

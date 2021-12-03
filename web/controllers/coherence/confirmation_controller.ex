@@ -76,7 +76,7 @@ defmodule Ask.Coherence.ConfirmationController do
     |> Config.repo.one
     case user do
       nil ->
-        changeset = Helpers.changeset :confirmation, user_schema, user_schema.__struct__
+        _changeset = Helpers.changeset :confirmation, user_schema, user_schema.__struct__
         conn
         |> put_flash(:error, "Invalid confirmation token.")
         |> redirect_to(:confirmation_edit_invalid, params)
@@ -88,7 +88,7 @@ defmodule Ask.Coherence.ConfirmationController do
         else
           changeset = Helpers.changeset(:confirmation, user_schema, user, %{
             confirmation_token: nil,
-            confirmed_at: Ecto.DateTime.utc,
+            confirmed_at: DateTime.utc_now,
             })
           case Config.repo.update(changeset) do
             {:ok, _user} ->

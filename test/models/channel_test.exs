@@ -14,7 +14,7 @@ defmodule Ask.ChannelTest do
   test "user must exist" do
     changeset = Channel.changeset(%Channel{}, @valid_attrs)
     assert {:error, changeset} = Repo.insert(changeset)
-    assert {:user, {"does not exist", []}} in changeset.errors
+    assert {:user, {"does not exist", [constraint: :assoc, constraint_name: "channels_user_id_fkey"]}} in changeset.errors
 
     user = insert(:user)
     changeset = Channel.changeset(%Channel{}, %{@valid_attrs | user_id: user.id})

@@ -10,7 +10,7 @@ defmodule CSV.Helper do
 
     rows
     |> CSV.encode
-    |> Stream.chunk(@chunk_lines, @chunk_lines, [])
+    |> Stream.chunk_every(@chunk_lines)
     |> Enum.reduce(conn, fn (lines, conn) ->
       {:ok, conn} = chunk(conn, lines)
       conn

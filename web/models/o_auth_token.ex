@@ -5,7 +5,7 @@ defmodule Ask.OAuthToken do
     field :provider, :string
     field :base_url, :string
     field :access_token, :map
-    field :expires_at, Timex.Ecto.DateTime
+    field :expires_at, :utc_datetime
     belongs_to :user, Ask.User
 
     timestamps()
@@ -21,7 +21,7 @@ defmodule Ask.OAuthToken do
   end
 
   def from_access_token(struct, access_token) do
-    expires_at = Timex.from_unix(access_token.expires_at)
+    expires_at = DateTime.from_unix!(access_token.expires_at)
     encoded_token = access_token
     |> Map.from_struct
     # Stringify keys

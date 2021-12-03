@@ -16,7 +16,7 @@ jobs:
 
       - name: Run specs
         run: |
-          docker-compose run --rm -e MIX_ENV=test app mix do compile --warnings-as-errors, test
+          docker-compose run --rm -e MIX_ENV=test app mix do compile --warnings-as-errors, ecto.create, ecto.load, test
           docker-compose run --rm webpack yarn test
           docker-compose run --rm webpack yarn webpack
           docker-compose run --rm webpack yarn flow check

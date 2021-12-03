@@ -7,9 +7,9 @@ defmodule Ask.Logger do
     end
   end
 
-  def error(ex, msg) do
+  def error(ex, stacktrace, msg) do
     if should_log() do
-      Logger.error "#{msg}: #{inspect ex} #{inspect System.stacktrace}"
+      Logger.error "#{msg}: #{inspect ex} #{inspect stacktrace}"
     end
   end
 

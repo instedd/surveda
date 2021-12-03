@@ -59,7 +59,7 @@ defmodule Ask.Runtime.Broker do
         Ask.Runtime.Survey.handle_session_step(Session.timeout(session), SystemTime.time.now)
       rescue
         e ->
-          Logger.error(e, "Error retrying respondent. Rolling back transaction")
+          Logger.error(e, __STACKTRACE__, "Error retrying respondent. Rolling back transaction")
           Repo.rollback(e)
       end
     end)
@@ -113,7 +113,7 @@ defmodule Ask.Runtime.Broker do
 
   defp poll_survey(survey, _now, false = _channel_is_down) do
     try do
-      by_state = Survey.respondents_by_state(survey)
+      by_state = Ask.RespondentStats.respondents_by_state(survey)
       %{
         "active" => active,
         "pending" => pending,
@@ -141,7 +141,7 @@ defmodule Ask.Runtime.Broker do
       end
     rescue
       e ->
-        handle_exception(survey, e, "Error occurred while polling survey (id: #{survey.id})")
+        handle_exception(survey, e, __STACKTRACE__, "Error occurred while polling survey (id: #{survey.id})")
     end
   end
 
@@ -155,22 +155,19 @@ defmodule Ask.Runtime.Broker do
       SurveyAction.stop(survey)
     rescue
       e ->
-        handle_exception(survey, e, "Error occurred while stopping survey (id: #{survey.id})")
-        Sentry.capture_exception(e, [
-          stacktrace: System.stacktrace(),
-          extra: %{survey_id: survey.id}])
+        handle_exception(survey, e, __STACKTRACE__, "Error occurred while stopping survey (id: #{survey.id})")
     end
   end
 
-  defp handle_exception(survey, e, message) do
+  defp handle_exception(survey, e, stacktrace, message) do
     if Mix.env == :test do
       IO.inspect e
-      IO.inspect System.stacktrace()
+      IO.inspect stacktrace
       raise e
     end
-    Logger.error(e, message)
+    Logger.error(e, stacktrace, message)
     Sentry.capture_exception(e, [
-      stacktrace: System.stacktrace(),
+      stacktrace: stacktrace,
       extra: %{survey_id: survey.id}])
   end
 
@@ -314,7 +311,7 @@ defmodule Ask.Runtime.Broker do
   end
 
   defp estimated_success_rate(survey, respondents_target) do
-    respondents_by_disposition = survey |> Survey.respondents_by_disposition
+    respondents_by_disposition = survey |> Ask.RespondentStats.respondents_by_disposition
     completion_rate = Survey.get_completion_rate(survey, respondents_by_disposition, respondents_target)
     current_success_rate = Survey.get_success_rate(survey, respondents_by_disposition )
     initial_success_rate = Survey.initial_success_rate()

@@ -171,8 +171,8 @@ defmodule Ask.Runtime.RespondentGroupAction do
         disposition: "registered",
         stats: %Stats{},
         user_stopped: false,
-        inserted_at: Timex.now(),
-        updated_at: Timex.now()
+        inserted_at: DateTime.utc_now() |> DateTime.truncate(:second),
+        updated_at: DateTime.utc_now() |> DateTime.truncate(:second)
       }
     end
 
