@@ -75,7 +75,7 @@ defmodule Ask.Router do
           resources "/surveys", SurveyController, only: [:create]
         end
         resources "/panel_surveys", PanelSurveyController, except: [:new, :edit] do
-          post "/new_occurrence/", PanelSurveyController, :new_occurrence
+          post "/new_wave/", PanelSurveyController, :new_wave
         end
         delete "/memberships/remove", MembershipController, :remove, as: :membership_remove
         put "/memberships/update", MembershipController, :update, as: :membership_update

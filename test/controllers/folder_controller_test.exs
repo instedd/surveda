@@ -124,7 +124,7 @@ defmodule Ask.FolderControllerTest do
       survey = insert(:survey, project: project, folder: folder)
 
       panel_survey = insert(:panel_survey, project: project, folder: folder)
-      occurrence = insert(:survey, project: project, panel_survey: panel_survey, generates_panel_survey: true)
+      wave = insert(:survey, project: project, panel_survey: panel_survey, generates_panel_survey: true)
 
       conn = get conn, project_folder_path(conn, :show, project.id, folder.id)
       data = json_response(conn, 200)["data"]
@@ -146,7 +146,7 @@ defmodule Ask.FolderControllerTest do
           "project_id" => panel_survey.project_id,
           "updated_at" => to_iso8601(panel_survey.updated_at),
           "is_repeatable" => PanelSurvey.repeatable?(panel_survey),
-          "latest_occurrence" => %{"cutoff" => occurrence.cutoff, "id" => occurrence.id, "mode" => occurrence.mode, "name" => occurrence.name, "description" => nil, "project_id" => project.id, "state" => "not_ready", "locked" => false, "exit_code" => nil, "exit_message" => nil, "schedule" => %{"blocked_days" => [], "day_of_week" => %{"fri" => true, "mon" => true, "sat" => true, "sun" => true, "thu" => true, "tue" => true, "wed" => true}, "end_time" => "23:59:59", "start_time" => "00:00:00", "start_date" => nil, "end_date" => nil, "timezone" => "Etc/UTC"}, "next_schedule_time" => nil, "started_at" => nil, "ended_at" => nil, "updated_at" => to_iso8601(occurrence.updated_at), "down_channels" => [], "folder_id" => nil, "first_window_started_at" => nil, "panel_survey_id" => panel_survey.id, "last_window_ends_at" => nil, "is_deletable" => false, "is_movable" => false, "generates_panel_survey" => true}
+          "latest_wave" => %{"cutoff" => wave.cutoff, "id" => wave.id, "mode" => wave.mode, "name" => wave.name, "description" => nil, "project_id" => project.id, "state" => "not_ready", "locked" => false, "exit_code" => nil, "exit_message" => nil, "schedule" => %{"blocked_days" => [], "day_of_week" => %{"fri" => true, "mon" => true, "sat" => true, "sun" => true, "thu" => true, "tue" => true, "wed" => true}, "end_time" => "23:59:59", "start_time" => "00:00:00", "start_date" => nil, "end_date" => nil, "timezone" => "Etc/UTC"}, "next_schedule_time" => nil, "started_at" => nil, "ended_at" => nil, "updated_at" => to_iso8601(wave.updated_at), "down_channels" => [], "folder_id" => nil, "first_window_started_at" => nil, "panel_survey_id" => panel_survey.id, "last_window_ends_at" => nil, "is_deletable" => false, "is_movable" => false, "generates_panel_survey" => true}
         }
       ]
       assert data["surveys"] == [

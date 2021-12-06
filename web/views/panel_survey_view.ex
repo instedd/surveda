@@ -16,7 +16,7 @@ defmodule Ask.PanelSurveyView do
       id: id,
       project_id: project_id,
       name: name,
-      occurrences: occurrences
+      waves: waves
     } = panel_survey
   }) do
     data = %{
@@ -25,7 +25,7 @@ defmodule Ask.PanelSurveyView do
       name: name,
       project_id: project_id,
       updated_at: PanelSurvey.updated_at(panel_survey),
-      latest_occurrence: render_one(PanelSurvey.latest_occurrence(panel_survey), Ask.SurveyView, "survey.json"),
+      latest_wave: render_one(PanelSurvey.latest_wave(panel_survey), Ask.SurveyView, "survey.json"),
       is_repeatable: PanelSurvey.repeatable?(panel_survey)
     }
 
@@ -40,8 +40,8 @@ defmodule Ask.PanelSurveyView do
         data
       end
 
-    if Ecto.assoc_loaded?(occurrences) do
-      Map.put(data, :occurrences, render_many(occurrences, Ask.SurveyView, "survey.json"))
+    if Ecto.assoc_loaded?(waves) do
+      Map.put(data, :waves, render_many(waves, Ask.SurveyView, "survey.json"))
     else
       data
     end
