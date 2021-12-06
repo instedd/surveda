@@ -174,7 +174,7 @@ const mergePanelSurveysIntoSurveys = (surveys, panelSurveys) => {
     .concat(surveys)
 }
 
-// Merges the latest panel survey occurrence into surveys, sorts the resulting
+// Merges the latest panel survey wave into surveys, sorts the resulting
 // collection, and eventually paginates the result, generating props to display
 // a list of surveys and panel surveys.
 //

@@ -56,7 +56,7 @@ class SurveyForm extends Component {
     launchSurvey(projectId, survey.id)
       .then(() => {
         if (survey.panelSurveyId) {
-          // An occurrence of the panel survey was launched -> the panel survey has changed.
+          // A wave of the panel survey was launched -> the panel survey has changed.
           // The Redux store must be updated with the panel survey new state.
           panelSurveysActions.updateStore(dispatch, projectId, survey.panelSurveyId)
         }

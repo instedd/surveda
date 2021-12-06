@@ -56,7 +56,7 @@ class PanelSurveyShow extends Component<any, any> {
       .then(response => {
         const panelSurvey = response.entities.surveys[response.result]
         const survey = panelSurvey.latestOccurrence
-        // An occurrence of the panel survey was created -> the panel survey has changed.
+        // A wave of the panel survey was created -> the panel survey has changed.
         // The Redux store must be updated with the panel survey new state.
         panelSurveysActions.updateStore(dispatch, projectId, panelSurveyId)
         router.push(routes.surveyEdit(projectId, survey.id))
@@ -142,7 +142,7 @@ const mapStateToProps = (state, ownProps) => {
   }
 
   return {
-    ...surveyIndexProps(state, panelSurvey && panelSurvey.occurrences, null),
+    ...surveyIndexProps(state, panelSurvey && panelSurvey.waves, null),
     projectId: projectId,
     panelSurveyId,
     project: state.project.data,

@@ -291,7 +291,7 @@ export const deleteSurvey = (survey: Survey) => (dispatch: Function) => {
   api.deleteSurvey(survey.projectId, survey)
     .then(response => {
       if (survey.panelSurveyId) {
-        // An occurrence of the panel survey was deleted -> the panel survey has changed.
+        // A wave of the panel survey was deleted -> the panel survey has changed.
         // The Redux store must be updated with the panel survey new state.
         dispatch(panelSurveyActions.fetchPanelSurvey(survey.projectId, survey.panelSurveyId))
         dispatch(panelSurveysActions.fetchPanelSurveys(survey.projectId))

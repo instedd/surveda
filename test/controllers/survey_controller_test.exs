@@ -1447,7 +1447,7 @@ defmodule Ask.SurveyControllerTest do
       refute Repo.get(Survey, survey.id)
     end
 
-    test "deletes the survey when it's an occurrence of a panel survey", %{conn: conn, user: user} do
+    test "deletes the survey when it's an wave of a panel survey", %{conn: conn, user: user} do
       project = create_project_for_user(user)
       panel_survey = insert(:panel_survey, project: project)
       insert(:survey, project: project, panel_survey: panel_survey)
@@ -1459,7 +1459,7 @@ defmodule Ask.SurveyControllerTest do
       refute Repo.get(Survey, survey.id)
     end
 
-    test "forbids delete if the survey is the only occurrence of a panel survey", %{conn: conn, user: user} do
+    test "forbids delete if the survey is the only wave of a panel survey", %{conn: conn, user: user} do
       project = create_project_for_user(user)
       panel_survey = insert(:panel_survey, project: project)
       survey = insert(:survey, project: project, panel_survey: panel_survey)

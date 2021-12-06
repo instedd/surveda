@@ -26,7 +26,7 @@ defmodule Ask.Runtime.SurveyActionTest do
     end
 
     @tag :time_mock
-    test "rename the first occurrence of the generated panel survey to YYYY-MM-dd" do
+    test "rename the first wave of the generated panel survey to YYYY-MM-dd" do
       now = Timex.parse!("2021-06-14T09:00:00Z", "{ISO:Extended}")
       mock_time(now)
       survey = panel_survey_generator_survey()
@@ -37,7 +37,7 @@ defmodule Ask.Runtime.SurveyActionTest do
       assert survey.name == expected_survey_name
     end
 
-    test "pass the first occurrence folder to the generated panel survey" do
+    test "pass the first wave folder to the generated panel survey" do
       survey = panel_survey_generator_survey_in_folder()
       expected_folder_id = survey.folder_id
 

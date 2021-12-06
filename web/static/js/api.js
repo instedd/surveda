@@ -342,7 +342,7 @@ export const stopSurvey = (projectId, surveyId) => {
 }
 
 export const newOccurrence = (projectId, panelSurveyId) => {
-  return apiPostJSON(`projects/${projectId}/panel_surveys/${panelSurveyId}/new_occurrence`, surveySchema)
+  return apiPostJSON(`projects/${projectId}/panel_surveys/${panelSurveyId}/new_wave`, surveySchema)
 }
 
 export const fetchTimezones = () => {

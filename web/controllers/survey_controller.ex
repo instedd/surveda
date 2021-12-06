@@ -190,7 +190,7 @@ defmodule Ask.SurveyController do
       |> assoc(:surveys)
       |> Repo.get!(survey_id)
 
-    # Panel surveys can belong to a folder, but their occurences don't.
+    # Panel surveys can belong to a folder, but their waves don't.
     if Survey.belongs_to_panel_survey?(survey), do: raise ConflictError
 
     old_folder_name = if survey.folder_id, do: Repo.get(Folder, survey.folder_id).name, else: "No Folder"
