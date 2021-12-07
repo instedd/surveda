@@ -324,10 +324,9 @@ defmodule Ask.Runtime.RespondentGroupAction do
   end
 
   # For each existing group a new respondent group with the same name is created.
-  # Each respondent group has a copy of every respondent (except refused)
-  # and channel association.
+  # Each respondent group has a copy of every respondent (except refused and
+  # ineligible) and channel association.
   def clone_respondents_groups_into(respondent_groups, survey) do
-
     groups_phone_numbers = phone_numbers_by_group_id(respondent_groups)
 
     Enum.map(respondent_groups, fn group ->
