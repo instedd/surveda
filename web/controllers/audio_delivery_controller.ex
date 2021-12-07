@@ -9,6 +9,7 @@ defmodule Ask.AudioDeliveryController do
     conn
     |> put_resp_header("content-type", Audio.mime_type(audio))
     |> put_resp_header("content-disposition", "attachment; filename=#{audio.filename}")
+    |> put_cache_headers()
     |> send_resp(200, audio.data)
   end
 end

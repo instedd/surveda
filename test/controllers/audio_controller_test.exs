@@ -90,27 +90,20 @@ defmodule Ask.AudioControllerTest do
   end
 
   describe "show" do
-
-    test "when the UUID exists it returns 200", %{conn: conn} do
+    test "returns the file with long cache expiry", %{conn: conn} do
       audio = insert(:audio)
       conn = get conn, audio_path(conn, :show, audio.uuid)
 
       assert conn.status == 200
-    end
-
-    test "when the UUID exists it returns the file", %{conn: conn} do
-      audio = insert(:audio)
-      conn = get conn, audio_path(conn, :show, audio.uuid)
-
       assert conn.resp_body == File.read!("test/fixtures/audio.mp3")
+      assert get_resp_header(conn, "cache-control") == ["public, max-age=31556926, immutable"]
     end
 
-    test "when the doesn't exist UUID it returns a 404", %{conn: conn} do
+    test "returns 404 when the file doesn't exist", %{conn: conn} do
       assert_error_sent 404, fn ->
         get conn, audio_path(conn, :show, 1234)
       end
     end
-
   end
 
   describe "tts" do
@@ -118,7 +111,8 @@ defmodule Ask.AudioControllerTest do
       conn = get conn, audio_path(conn, :tts, text: "lorem ipsum")
 
       assert conn.status == 200
-      assert ["audio/x-wav"] = get_resp_header(conn, "content-type")
+      assert get_resp_header(conn, "content-type") == ["audio/x-wav"]
+      assert get_resp_header(conn, "cache-control") == ["public, max-age=31556926, immutable"]
       assert byte_size(conn.resp_body) > 0
     end
   end

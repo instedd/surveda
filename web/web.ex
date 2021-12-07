@@ -46,6 +46,13 @@ defmodule Ask.Web do
       import CSV.Helper
       import Pagination.Helper
       import Changeset.Helper
+
+      # Sets HTTP headers to cache the response for 1 year, as recommended by
+      # [RFC 2616](http://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html#sec14.21).
+      def put_cache_headers(conn) do
+        conn
+        |> put_resp_header("cache-control", "public, max-age=31556926, immutable")
+      end
     end
   end
 
