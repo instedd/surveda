@@ -149,10 +149,10 @@ class QuestionnaireSimulation extends Component<Props, State> {
 
       switch (simulationStatus) {
         case 'expired':
-          message = t('This simulation is expired')
+          message = t('This simulation has expired')
           break
         case 'ended':
-          message = t('This simulation is ended')
+          message = t('This simulation has ended')
           break
       }
 
