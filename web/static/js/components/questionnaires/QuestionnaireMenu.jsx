@@ -29,14 +29,9 @@ class QuestionnaireMenu extends Component {
   }
 
   buildCsvLink() {
-    const { questionnaire } = this.props
-
-    const data = csvForTranslation(questionnaire)
-    let csvContent = 'data:text/csv;charset=utf-8,'
-    csvContent += csvString.stringify(data)
-    const encodedUri = encodeURI(csvContent)
-
-    return encodedUri
+    const data = csvForTranslation(this.props.questionnaire)
+    const csvData = csvString.stringify(data)
+    return 'data:text/csv;charset=utf-8,' + encodeURIComponent(csvData)
   }
 
   openUploadCsvDialog(e) {
