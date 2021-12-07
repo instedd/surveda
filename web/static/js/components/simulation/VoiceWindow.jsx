@@ -98,6 +98,12 @@ const VoiceWindow = translate()(class extends Component<VoiceWindowProps, VoiceW
     }, 2000)
   }
 
+  hangUp(): void {
+    if (this.props.readOnly) return
+    if (this.messageTimer) clearTimeout(this.messageTimer)
+    this.props.onSendMessage({ body: 'stop', type: 'at' })
+  }
+
   render() {
     const { voiceTitle, onCloseSimulation } = this.props
 
@@ -117,7 +123,7 @@ const VoiceWindow = translate()(class extends Component<VoiceWindowProps, VoiceW
         <div onClick={() => this.entered('*')} className='waves-effect waves-circle voice-button'>*</div>
         <div onClick={() => this.entered('0')} className='waves-effect waves-circle voice-button'>0</div>
         <div onClick={() => this.entered('#')} className='waves-effect waves-circle voice-button'>#</div>
-        <div onClick={() => onCloseSimulation()} className='waves-effect waves-circle voice-button voice-button-end-call'>
+        <div onClick={() => this.hangUp()} className='waves-effect waves-circle voice-button voice-button-end-call red'>
           <i className='material-icons'>call_end</i>
         </div>
       </div>
