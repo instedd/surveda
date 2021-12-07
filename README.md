@@ -54,11 +54,33 @@ And if we want to start an `Interactive Elixir` in the context of our running Ph
 $ docker-compose exec app iex -S mix
 ```
 
-Finally, we can [run a one-time command](https://docs.docker.com/compose/reference/run/) to execute all the tests:
+#### Tests
+We can [run a one-time command](https://docs.docker.com/compose/reference/run/) to execute all the `backend` tests:
 
 ```console
 $ docker-compose run --rm app mix test
 ```
+
+For the `client side`, we can open a terminal:
+```console
+$ docker-compose run --rm webpack bash
+```
+
+and then we can run all JavaScript tests:
+```console
+$ yarn test
+```
+
+we can also check JavaScript `types` with [Flow](https://flow.org/):
+```console
+$ yarn flow
+```
+
+and finally run a static analysis/style guide with [ESLint](https://eslint.org/):
+```console
+$ yarn eslint
+```
+
 
 ## GUISSO
 
