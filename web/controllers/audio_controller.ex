@@ -34,8 +34,7 @@ defmodule Ask.AudioController do
     # can be downloaded, be careful to use a valid filename
     # (one that doesn't have commas or strange characters)
     conn
-    # Expires in one year ( recommended by RFC 2616: http://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html#sec14.21 )
-    |> put_resp_header("cache-control", "max-age=31556926")
+    |> put_cache_headers()
     |> send_resp(200, audio.data)
   end
 end
