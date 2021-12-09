@@ -139,7 +139,7 @@ defmodule Ask.Runtime.Step do
     end
   end
 
-  def fetch(:num_digits, step, "ivr", _language) do
+  def fetch(:num_digits, step, "ivr", language) do
     case step["type"] do
       "language-selection" ->
         # If we have 9 choices (1..9) then we can set numDigits to 1,
@@ -165,18 +165,12 @@ defmodule Ask.Runtime.Step do
       "numeric" ->
         # Only send numDigits if the min and max values have the same string length,
         # also taking into account the values of refusal responses
-        refusal = step["refusal"]
-
-        values = if refusal do
-          refusal["responses"]["ivr"]
-        else
-          []
-        end
-
         min_value = step["min_value"]
         max_value = step["max_value"]
+        refusal_values = fetch(:refusal, step, "ivr", language) || []
+
         if min_value && max_value do
-          values = [min_value, max_value | values]
+          values = [min_value, max_value | refusal_values]
           |> Enum.map(fn v -> v |> to_string |> String.length end)
           |> Enum.uniq
 

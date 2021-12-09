@@ -202,6 +202,7 @@ defmodule Ask.FlowTest do
         skip_logic: numeric_skip_logic(min_value: 12345, max_value: 56789, ranges_delimiters: "25,75", ranges: []),
         alphabetical_answers: false,
         refusal: %{
+          "enabled" => true,
           "responses" => %{
             "ivr" => ["#", "12"]
           }
@@ -211,6 +212,31 @@ defmodule Ask.FlowTest do
     step = start_ivr(quiz)
     assert {:ok, %Flow{}, reply} = step
     assert Reply.num_digits(reply) == nil
+  end
+
+  test "first step (ivr mode) for num digits, with disabled refusal" do
+    steps = [
+      numeric_step(
+        id: Ecto.UUID.generate,
+        title: "Which is the second perfect number?",
+        prompt: prompt(
+          sms: sms_prompt("Which is the second perfect number??"),
+          ivr: tts_prompt("Which is the second perfect number")
+          ),
+        store: "Perfect Number",
+        skip_logic: numeric_skip_logic(min_value: 12345, max_value: 56789, ranges_delimiters: "25,75", ranges: []),
+        alphabetical_answers: false,
+        refusal: %{
+          "enabled" => false,
+          "responses" => %{
+            "ivr" => ["#", "12"]
+          }
+        }
+      )]
+    quiz = build(:questionnaire, steps: steps)
+    step = start_ivr(quiz)
+    assert {:ok, %Flow{}, reply} = step
+    assert Reply.num_digits(reply) == 5
   end
 
   test "retry step" do
