@@ -17,7 +17,6 @@ type VoiceWindowProps = {
   prompts: Array<IVRPrompt>,
   voiceTitle: string,
   onSendMessage: Message => void,
-  onCloseSimulation: () => void,
   readOnly: boolean
 }
 
@@ -105,7 +104,7 @@ const VoiceWindow = translate()(class extends Component<VoiceWindowProps, VoiceW
   }
 
   render() {
-    const { voiceTitle, onCloseSimulation } = this.props
+    const { voiceTitle } = this.props
 
     return <div className='voice-window quex-simulation-voice'>
       <div className='voice-header'>{voiceTitle}</div>
