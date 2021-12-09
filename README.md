@@ -15,11 +15,6 @@ If you don't need to connect to Verboice nor Nuntium, you can move forward with 
 
 If needed, you can change the authentication mechanism to Guisso.  This will take your local app 1 step closer to similarity with the production environment.  The section "Guisso" in this document, explains how to achieve this.
 
-**Tips**
-- To open a shell in a container: `docker-compose exec db bash`, where `db` is the service name. You can list the services `docker-compose ps --services`.
-- To start an Elixir console in your running Phoenix app container: `docker-compose exec app iex -S mix`.
-
-
 ### Approach #2: with Verboice and Nuntium
 Here we have 2 options regarding the connection of your local Surveda with Verboice and Nuntium:
 
@@ -28,6 +23,64 @@ Here we have 2 options regarding the connection of your local Surveda with Verbo
 2. You can use Verboice and Nuntium from [the cloud in the Staging environment](./docs/dev-setup-cloud.md).
 
 Both guides include setting up Guisso, so you can skip the following GUISSO section.
+
+### Useful commands
+We can open a shell in a service. For example the **app** service:
+
+```console
+$ docker-compose exec app bash
+```
+or the **db** service:
+
+```console
+$ docker-compose exec db bash
+```
+
+For a list of all available services, we can run:
+
+```console
+$ docker-compose ps --services
+```
+
+Also we can run [Interactive Elixir](https://elixir-lang.org/getting-started/introduction.html#interactive-mode) like this:
+
+```console
+$ docker-compose exec app iex
+```
+
+And if we want to start an `Interactive Elixir` in the context of our running Phoenix app:
+
+```console
+$ docker-compose exec app iex -S mix
+```
+
+#### Tests
+We can [run a one-time command](https://docs.docker.com/compose/reference/run/) to execute all the `backend` tests:
+
+```console
+$ docker-compose run --rm app mix test
+```
+
+For the `client side`, we can open a terminal:
+```console
+$ docker-compose run --rm webpack bash
+```
+
+and then we can run all JavaScript tests:
+```console
+$ yarn test
+```
+
+we can also check JavaScript `types` with [Flow](https://flow.org/):
+```console
+$ yarn flow
+```
+
+and finally run a static analysis/style guide with [ESLint](https://eslint.org/):
+```console
+$ yarn eslint
+```
+
 
 ## GUISSO
 
