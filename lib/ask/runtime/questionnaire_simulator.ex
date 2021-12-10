@@ -7,7 +7,7 @@ defmodule Ask.QuestionnaireSmsSimulation do
 end
 
 defmodule Ask.QuestionnaireIvrSimulation do
-  defstruct [:respondent, :questionnaire, :section_order, submissions: []]
+  defstruct [:respondent, :questionnaire, :section_order, messages: [], submissions: []]
 end
 
 defmodule Ask.QuestionnaireSimulationStep do
@@ -66,16 +66,16 @@ defmodule Ask.QuestionnaireSmsSimulationStep do
 end
 
 defmodule Ask.QuestionnaireIvrSimulationStep do
-  defstruct [:respondent_id, :simulation_status, :disposition, :current_step, :questionnaire, prompts: [], submissions: []]
+  defstruct [:respondent_id, :simulation_status, :disposition, :current_step, :questionnaire, messages_history: [], prompts: [], submissions: []]
 
-  def start_build(simulation, current_step, status, prompts) do
+  def start_build(simulation, current_step, status, messages_history, prompts) do
     simulation_step = Ask.QuestionnaireSimulationStep.build(simulation, current_step, status, true)
-    Map.merge(%Ask.QuestionnaireIvrSimulationStep{prompts: prompts}, simulation_step)
+    Map.merge(%Ask.QuestionnaireIvrSimulationStep{messages_history: messages_history, prompts: prompts}, simulation_step)
   end
 
-  def sync_build(simulation, current_step, status, prompts) do
+  def sync_build(simulation, current_step, status, messages_history, prompts) do
     simulation_step = Ask.QuestionnaireSimulationStep.build(simulation, current_step, status, false)
-    Map.merge(%Ask.QuestionnaireIvrSimulationStep{prompts: prompts}, simulation_step)
+    Map.merge(%Ask.QuestionnaireIvrSimulationStep{messages_history: messages_history, prompts: prompts}, simulation_step)
   end
 end
 
@@ -354,22 +354,24 @@ end
 defmodule Ask.Runtime.QuestionnaireIvrSimulator do
   alias Ask.Runtime.{Survey, QuestionnaireSimulator, Flow}
   alias Ask.{QuestionnaireIvrSimulation, QuestionnaireIvrSimulationStep}
-  alias Ask.Simulation.{IvrPrompt, Status, Response, SubmittedStep}
+  alias Ask.Simulation.{AOMessage, ATMessage, IvrPrompt, Status, Response, SubmittedStep}
 
   def start(project, questionnaire) do
     start_build = fn respondent, reply ->
       base_simulation = QuestionnaireSimulator.base_simulation(questionnaire, respondent)
+      messages = AOMessage.create_all(reply)
       prompts = IvrPrompt.create_all(reply)
 
       simulation = Map.merge(base_simulation, %{
         submissions: SubmittedStep.new_explanations(reply),
+        messages: messages
       })
       simulation = Map.merge(%QuestionnaireIvrSimulation{}, simulation)
       current_step = QuestionnaireSimulator.current_step(reply)
 
       response =
         simulation
-        |> QuestionnaireIvrSimulationStep.start_build(current_step, Status.active, prompts)
+        |> QuestionnaireIvrSimulationStep.start_build(current_step, Status.active, messages, prompts)
         |> Response.success
 
       %{simulation: simulation, response: response}
@@ -390,15 +392,21 @@ defmodule Ask.Runtime.QuestionnaireIvrSimulator do
     end
 
     handle_app_reply = fn simulation, respondent, reply, status ->
+      messages = simulation.messages ++ AOMessage.create_all(reply)
+      simulation = Map.put(simulation, :messages, messages)
+
       sync_build = fn simulation, current_step, status, reply ->
         prompts = IvrPrompt.create_all(reply)
-        QuestionnaireIvrSimulationStep.sync_build(simulation, current_step, status, prompts)
+        QuestionnaireIvrSimulationStep.sync_build(simulation, current_step, status, messages, prompts)
       end
 
       QuestionnaireSimulator.handle_app_reply(simulation, respondent, reply, status, sync_build)
     end
 
     sync_simulation = fn simulation, response ->
+      messages = simulation.messages ++ [ATMessage.new(response)]
+      simulation = %{simulation | messages: messages}
+
       reply = Flow.Message.reply(response)
       QuestionnaireSimulator.sync_simulation(simulation, reply, "ivr", handle_app_reply)
     end
@@ -439,8 +447,11 @@ defmodule Ask.Simulation.AOMessage do
   def create_all(nil), do: []
   def create_all(reply) do
     Enum.map Ask.Runtime.Reply.prompts(reply), fn prompt ->
-        %{body: prompt, type: "ao"}
+      case prompt do
+        %{"text" => body} -> %{body: body, type: "ao"}
+        _ -> %{body: prompt, type: "ao"}
       end
+    end
   end
 end
 

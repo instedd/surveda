@@ -174,7 +174,7 @@ class QuestionnaireSimulation extends Component<Props, State> {
     } else {
       newSimulation = {
         ...simulation,
-        messagesHistory: result.messagesHistory, // mode=sms
+        messagesHistory: result.messagesHistory, // mode=sms|ivr
         prompts: result.prompts, // mode=ivr
         submissions: result.submissions,
         simulationStatus,
@@ -238,14 +238,15 @@ class QuestionnaireSimulation extends Component<Props, State> {
       switch (mode) {
         case 'sms':
           return <ChatWindow
+                    chatTitle={'SMS mode'}
                     messages={simulation.messagesHistory}
                     onSendMessage={this.handleATMessage}
-                    chatTitle={'SMS mode'}
                     readOnly={!simulationIsActive}
                     scrollToBottom />
         case 'ivr':
           return <VoiceWindow
                     voiceTitle={'Voice mode'}
+                    messages={simulation.messagesHistory}
                     prompts={simulation.prompts}
                     onSendMessage={this.handleATMessage}
                     readOnly={!simulationIsActive} />

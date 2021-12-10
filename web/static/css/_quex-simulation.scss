@@ -71,20 +71,19 @@ $smallChatWindowBodyHeight: $smallSimulationHeight -
   padding: 0;
   overflow: auto;
 
+  display: flex;
+  flex-direction: column;
+
   @media #{$medium-and-down} {
     height: $smallSimulationHeight;
   }
 }
 .chat-window-body {
+  flex: 1;
   overflow: auto;
   padding: 15px 15px;
   position: relative;
   background: $chatWindowBodyBackground;
-  height: $chatWindowBodyHeight;
-
-  @media #{$medium-and-down} {
-    height: $smallChatWindowBodyHeight;
-  }
 
   ul {
     list-style-type: none;
@@ -246,6 +245,9 @@ $smallChatWindowBodyHeight: $smallSimulationHeight -
   @media #{$medium-and-down} {
     height: $smallSimulationHeight;
   }
+
+  display: flex;
+  flex-direction: column;
 }
 .voice-header {
   text-align: center;
@@ -255,35 +257,29 @@ $smallChatWindowBodyHeight: $smallSimulationHeight -
   border-top-right-radius: 5px;
   padding-top: 24px;
 }
-.voice-question {
-  text-align: center;
-  font-size: 16px;
-  font-style: normal;
-  color: #888888;
-  padding: 0 10px 48px 10px;
-}
-.voice-buttons {
+.voice-keypad {
   width: 200px;
   margin: 0 auto;
+  padding: 20px;
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   grid-gap: 10px;
   justify-items: center;
 }
 .voice-button {
-  width: 60px;
-  height: 60px;
+  width: 50px;
+  height: 50px;
   border: 2px solid rgba(#000, 0.1);
   border-radius: 99px;
-  font-size: 30px;
-  line-height: 55px;
+  font-size: 24px;
+  line-height: 40px;
   text-align: center;
   cursor: pointer;
 }
 .voice-button-end-call {
   grid-column: 2;
-  grid-row: 6;
-  line-height: 60px;
+  grid-row: 5;
+  line-height: 45px;
 }
 
 .mobile-web-iframe-container {
@@ -300,7 +296,7 @@ $smallChatWindowBodyHeight: $smallSimulationHeight -
 
 .voice-spectrum {
   display: flex;
-  padding-bottom: 20px;
+  padding-bottom: 5px;
 }
 .voice-spectrum-bands {
   width: 45px;

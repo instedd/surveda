@@ -48,9 +48,11 @@ defmodule Ask.QuestionnaireView do
   end
 
   defp render_simulation(%QuestionnaireIvrSimulationStep{
+    messages_history: messages_history,
     prompts: prompts,
   } = simulation) do
     simulation = prepare_simulation(simulation)
+    simulation = Map.put(simulation, :messages_history, messages_history)
     simulation = Map.put(simulation, :prompts, prompts)
     render_prepared_simulation(simulation)
   end
