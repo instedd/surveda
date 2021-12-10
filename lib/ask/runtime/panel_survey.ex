@@ -1,6 +1,5 @@
 defmodule Ask.Runtime.PanelSurvey do
-  import Ecto.Query
-  alias Ask.{Survey, Repo, Respondent, RespondentGroupChannel, Schedule, PanelSurvey}
+  alias Ask.{Survey, Repo, Schedule, PanelSurvey}
   alias Ask.Runtime.RespondentGroupAction
 
   defp new_wave_changeset(survey) do
@@ -13,8 +12,7 @@ defmodule Ask.Runtime.PanelSurvey do
       |> Schedule.remove_start_date()
       |> Schedule.remove_end_date()
 
-    new_wave = %{
-      # basic settings
+    basic_settings = %{
       project_id: survey.project_id,
       folder_id: survey.folder_id,
       name: PanelSurvey.new_wave_name(),
@@ -23,7 +21,9 @@ defmodule Ask.Runtime.PanelSurvey do
       state: "ready",
       started_at: Timex.now(),
       panel_survey_id: survey.panel_survey_id,
-      # advanced settings
+    }
+
+    advanced_settings = %{
       cutoff: survey.cutoff,
       count_partial_results: survey.count_partial_results,
       schedule: schedule,
@@ -36,42 +36,24 @@ defmodule Ask.Runtime.PanelSurvey do
       incentives_enabled: survey.incentives_enabled
     }
 
+    new_wave = Map.merge(basic_settings, advanced_settings)
+
     survey.project
     |> Ecto.build_assoc(:surveys)
     |> Survey.changeset(new_wave)
   end
 
-  def copy_respondents(current_wave, new_wave) do
-    current_wave =
-      current_wave
-      |> Repo.preload([:respondent_groups])
+  defp copy_respondents(current_wave, new_wave) do
+    current_wave = current_wave |> Repo.preload([:respondent_groups])
 
-    # TODO: Improve the following respondent group creation logic.
-    # For each existing group a new respondent group with the same name is created. Each
-    # respondent group has a copy of every respondent (except refused) and channel association
-    respondent_group_ids =
-      Enum.map(current_wave.respondent_groups, fn respondent_group ->
-        phone_numbers =
-          from(r in Respondent,
-            where:
-              r.respondent_group_id == ^respondent_group.id and r.disposition != :refused and
-                r.disposition != :ineligible,
-            select: r.phone_number
-          )
-          |> Repo.all()
-          |> RespondentGroupAction.loaded_phone_numbers()
-
-        new_respondent_group =
-          RespondentGroupAction.create(respondent_group.name, phone_numbers, new_wave)
-
-        copy_respondent_group_channels(respondent_group, new_respondent_group)
-        new_respondent_group.id
-      end)
+    new_respondent_groups_ids =
+      RespondentGroupAction.clone_respondents_groups_into(current_wave.respondent_groups, new_wave)
+      |> Enum.map(& &1.id)
 
     new_wave
     |> Repo.preload(:respondent_groups)
     |> Survey.changeset()
-    |> Survey.update_respondent_groups(respondent_group_ids)
+    |> Survey.update_respondent_groups(new_respondent_groups_ids)
     |> Repo.update!()
   end
 
@@ -126,29 +108,6 @@ defmodule Ask.Runtime.PanelSurvey do
     })
     |> Repo.update!()
     {:ok, Repo.get!(PanelSurvey, panel_survey.id)}
-  end
-
-  defp copy_respondent_group_channels(respondent_group, new_respondent_group) do
-    respondent_group =
-      respondent_group
-      |> Repo.preload(:respondent_group_channels)
-
-    Repo.transaction(fn ->
-      Enum.each(
-        respondent_group.respondent_group_channels,
-        fn respondent_group_channel ->
-          RespondentGroupChannel.changeset(
-            %RespondentGroupChannel{},
-            %{
-              respondent_group_id: new_respondent_group.id,
-              channel_id: respondent_group_channel.channel_id,
-              mode: respondent_group_channel.mode
-            }
-          )
-          |> Repo.insert!()
-        end
-      )
-    end)
   end
 
   def new_wave(panel_survey) do

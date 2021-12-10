@@ -139,8 +139,9 @@ defmodule Ask.Runtime.RespondentGroupAction do
     Enum.map(loaded_entries, fn %{phone_number: phone_number} -> phone_number end)
   end
 
-  def loaded_phone_numbers(phone_numbers),
-    do: Enum.map(phone_numbers, fn phone_number -> %{phone_number: phone_number} end)
+  def loaded_phone_numbers(phone_numbers) do
+    Enum.map(phone_numbers, fn phone_number -> %{phone_number: phone_number} end)
+  end
 
   def merge_sample(old_sample, loaded_entries) do
     new_sample = old_sample ++ entries_for_sample(loaded_entries)
@@ -321,6 +322,60 @@ defmodule Ask.Runtime.RespondentGroupAction do
         phone_number: phone_number,
         hashed_number: hashed_number
       }
+    end)
+  end
+
+  # For each existing group a new respondent group with the same name is created.
+  # Each respondent group has a copy of every respondent (except refused and
+  # ineligible) and channel association.
+  def clone_respondents_groups_into(respondent_groups, survey) do
+    groups_phone_numbers = phone_numbers_by_group_id(respondent_groups)
+
+    Enum.map(respondent_groups, fn group ->
+      loaded_phone_numbers = groups_phone_numbers
+        |> Map.get(group.id)
+        |> loaded_phone_numbers()
+
+      new_group = create(group.name, loaded_phone_numbers, survey)
+      copy_respondent_group_channels(group, new_group)
+
+      new_group
+    end)
+  end
+
+  defp phone_numbers_by_group_id(respondent_groups) do
+    groups_ids = respondent_groups |> Enum.map(& &1.id)
+
+    (from r in Respondent,
+      where:
+        r.respondent_group_id in ^groups_ids and
+        r.disposition != :refused and
+        r.disposition != :ineligible,
+      select: [r.respondent_group_id, r.phone_number])
+      |> Repo.all()
+      |> Enum.group_by(&List.first/1, &List.last/1) # group phone_numbers by respondent_group_id
+  end
+
+  defp copy_respondent_group_channels(respondent_group, new_respondent_group) do
+    respondent_group =
+      respondent_group
+      |> Repo.preload(:respondent_group_channels)
+
+    Repo.transaction(fn ->
+      Enum.each(
+        respondent_group.respondent_group_channels,
+        fn respondent_group_channel ->
+          RespondentGroupChannel.changeset(
+            %RespondentGroupChannel{},
+            %{
+              respondent_group_id: new_respondent_group.id,
+              channel_id: respondent_group_channel.channel_id,
+              mode: respondent_group_channel.mode
+            }
+          )
+          |> Repo.insert!()
+        end
+      )
     end)
   end
 end
