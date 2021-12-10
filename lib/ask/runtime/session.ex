@@ -141,7 +141,11 @@ defmodule Ask.Runtime.Session do
         update_respondent_disposition(session, "started", current_mode, persist)
     end
     respondent = session.respondent
-    step_answer = Flow.step(session.flow, current_mode |> SessionMode.visitor, response, SessionMode.mode(current_mode), respondent.disposition)
+    step_answer = Flow.step(session.flow,
+                            current_mode |> SessionMode.visitor,
+                            response,
+                            SessionMode.mode(current_mode),
+                            respondent.disposition)
                   |> relevant_interim_partial_step(respondent, persist)
     reply = case step_answer do
       {:end, _, reply} -> reply

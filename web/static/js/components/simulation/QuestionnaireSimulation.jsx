@@ -237,9 +237,18 @@ class QuestionnaireSimulation extends Component<Props, State> {
     const phoneWindow = () => {
       switch (mode) {
         case 'sms':
-          return <ChatWindow messages={simulation.messagesHistory} onSendMessage={this.handleATMessage} chatTitle={'SMS mode'} readOnly={!simulationIsActive} scrollToBottom />
+          return <ChatWindow
+                    messages={simulation.messagesHistory}
+                    onSendMessage={this.handleATMessage}
+                    chatTitle={'SMS mode'}
+                    readOnly={!simulationIsActive}
+                    scrollToBottom />
         case 'ivr':
-          return <VoiceWindow voiceTitle={'Voice mode'} prompts={simulation.prompts} onSendMessage={this.handleATMessage} onCloseSimulation={this.closeSimulation} readOnly={!simulationIsActive} />
+          return <VoiceWindow
+                    voiceTitle={'Voice mode'}
+                    prompts={simulation.prompts}
+                    onSendMessage={this.handleATMessage}
+                    readOnly={!simulationIsActive} />
         case 'mobileweb':
           return <MobileWebWindow indexUrl={simulation.indexUrl} />
       }
