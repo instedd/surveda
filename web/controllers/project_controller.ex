@@ -77,7 +77,8 @@ defmodule Ask.ProjectController do
         Logger.warn "Error when creating a new project: #{inspect changeset}"
         conn
         |> put_status(:unprocessable_entity)
-        |> render(Ask.ChangesetView, "error.json", changeset: changeset)
+        |> put_view(Ask.ChangesetView)
+        |> render("error.json", changeset: changeset)
     end
   end
 
@@ -128,7 +129,8 @@ defmodule Ask.ProjectController do
         Logger.warn "Error when updating project #{project.id}: #{inspect changeset}"
         conn
         |> put_status(:unprocessable_entity)
-        |> render(Ask.ChangesetView, "error.json", changeset: changeset)
+        |> put_view(Ask.ChangesetView)
+        |> render("error.json", changeset: changeset)
     end
   end
 
@@ -157,7 +159,8 @@ defmodule Ask.ProjectController do
         Logger.warn "Error when updating project #{project.id}: #{inspect changeset}"
         conn
         |> put_status(:unprocessable_entity)
-        |> render(Ask.ChangesetView, "error.json", changeset: changeset)
+        |> put_view(Ask.ChangesetView)
+        |> render("error.json", changeset: changeset)
     end
   end
 

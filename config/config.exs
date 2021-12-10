@@ -9,6 +9,9 @@ config :plug, :types, %{
   "application/vnd.api+json" => ["json-api"]
 }
 
+# Use Jason for JSON parsing in Phoenix
+config :phoenix, :json_library, Poison
+
 # General application configuration
 config :ask,
   ecto_repos: [Ask.Repo]
