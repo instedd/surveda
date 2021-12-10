@@ -40,9 +40,13 @@ const VoiceWindow = translate()(class extends Component<VoiceWindowProps> {
   message: string
   messageTimer: TimeoutID
 
+  repeatMessageTimer: TimeoutID
+  timesRepeated: number
+
   constructor(props) {
     super(props)
     this.spectrum = new VoiceSpectrum()
+    this.timesRepeated = 0
   }
 
   componentDidMount() {
@@ -75,6 +79,19 @@ const VoiceWindow = translate()(class extends Component<VoiceWindowProps> {
       }
     } else {
       this.spectrum.stop()
+      // no more prompts to play so we start countdown to repeat
+      if (this.audio) {
+        if (this.repeatMessageTimer) clearTimeout(this.repeatMessageTimer)
+        this.repeatMessageTimer = setTimeout(() => {
+          this.timesRepeated += 1
+          if (this.timesRepeated > 3) {
+            this.hangUp()
+            return
+          }
+
+          this.audio.play()
+        }, 5000)
+      }
     }
   }
 
@@ -93,6 +110,8 @@ const VoiceWindow = translate()(class extends Component<VoiceWindowProps> {
   entered(character: string): void {
     if (this.props.readOnly) return
     if (this.messageTimer) clearTimeout(this.messageTimer)
+    if (this.repeatMessageTimer) clearTimeout(this.repeatMessageTimer)
+
     this.message += character
 
     this.messageTimer = setTimeout(() => {
@@ -106,6 +125,8 @@ const VoiceWindow = translate()(class extends Component<VoiceWindowProps> {
   hangUp(): void {
     if (this.props.readOnly) return
     if (this.messageTimer) clearTimeout(this.messageTimer)
+    if (this.repeatMessageTimer) clearTimeout(this.repeatMessageTimer)
+
     this.props.onSendMessage({ body: 'stop', type: 'at' })
   }
 
