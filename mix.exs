@@ -52,15 +52,18 @@ defmodule Ask.Mixfile do
   # Type `mix help deps` for examples and options.
   defp deps do
     [
-      {:phoenix, "~> 1.3.0"},
-      {:phoenix_pubsub, "~> 1.0"},
+      {:phoenix, "~> 1.4.0"},
+      {:plug, "~> 1.8.1"},        # held until ... ?
+      {:plug_crypto, "~> 1.1.1"}, # held until Phoenix 1.5
+      {:plug_cowboy, "~> 2.0"},
       {:phoenix_ecto, "~> 4.0"},
-      {:ecto_sql, "~> 3.7.0"},
+      {:ecto_sql, "~> 3.7"},
       {:myxql, ">= 0.0.0"},
+      {:phoenix_pubsub, "~> 1.0"},
       {:phoenix_html, "~> 2.10"},
-      {:phoenix_live_reload, "~> 1.0", only: :dev},
+      {:phoenix_live_reload, "~> 1.2.0", only: :dev},
+
       {:gettext, "~> 0.13.1"},
-      {:cowboy, "~> 1.1.2"},
       {:ex_machina, "~> 2.0", only: :test},
       {:csv, "~> 1.4.2"},
       {:oauth2, "~> 0.7.0"},
@@ -73,23 +76,22 @@ defmodule Ask.Mixfile do
       {:deep_merge, "~> 0.1.0"},
       {:coherence, git: "https://github.com/manastech/coherence.git", branch: "v0.3", override: true},
       {:gen_smtp, "~> 0.11"},
-      {:xml_builder, "~> 0.0.9"},
+      {:xml_builder, "~> 0.0.9"}, # TODO: update to ~> 2.0
       {:language_names, "~> 0.1.0"},
       {:prometheus_phoenix, "~> 1.0"},
       {:simetric, "~> 0.1.0"},
       {:prometheus_plugs, "~> 1.1"},
       {:alto_guisso, git: "https://github.com/instedd/alto_guisso_ex.git"},
       {:pp, "~> 0.1.0", only: [:dev, :test]},
-      {:bypass, "~> 0.8", only: :test},
+      {:bypass, "~> 2.0", only: :test},
       {:trailing_format_plug, "~> 0.0.7"},
-      {:plug_cowboy, "~> 1.0"},
       {:gen_stage, "~> 0.14"},
       {:zstream, "~> 0.2.0"},
 
-      # held back until we upgrade to Elixir 1.7+
-      {:plug, "~> 1.8.0"},
-      {:plug_crypto, "~> 1.1.1"},
-      {:telemetry, "~> 0.4.3"},
+      {:jason, "~> 1.0"}, # required by Phoenix
+      {:poison, "~> 3.1"}, # until we migrate Surveda to Jason
+
+      #{:telemetry, "~> 0.4.3"},
 
       # held back because of warnings & errors with newer versions
       {:swoosh, "~> 0.17.0"},

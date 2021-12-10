@@ -23,9 +23,11 @@ defmodule Ask.MembershipController do
 
     case multi do
       {:ok, _} -> send_resp(conn, :no_content, "")
-      {:error, _, error_changeset, _} -> conn
-                                |> put_status(:unprocessable_entity)
-                                |> render(Ask.ChangesetView, "error.json", changeset: error_changeset)
+      {:error, _, error_changeset, _} ->
+        conn
+        |> put_status(:unprocessable_entity)
+        |> put_view(Ask.ChangesetView)
+        |> render("error.json", changeset: error_changeset)
     end
   end
 
@@ -63,7 +65,8 @@ defmodule Ask.MembershipController do
       {:error, _, error_changeset, _} ->
         conn
           |> put_status(:unprocessable_entity)
-          |> render(Ask.ChangesetView, "error.json", changeset: error_changeset)
+          |> put_view(Ask.ChangesetView)
+          |> render("error.json", changeset: error_changeset)
     end
 
   end

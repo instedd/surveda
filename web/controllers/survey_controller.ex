@@ -88,7 +88,8 @@ defmodule Ask.SurveyController do
         Logger.warn "Error when creating a survey: #{inspect changeset}"
         conn
         |> put_status(:unprocessable_entity)
-        |> render(Ask.ChangesetView, "error.json", changeset: changeset)
+        |> put_view(Ask.ChangesetView)
+        |> render("error.json", changeset: changeset)
     end
   end
 
@@ -171,12 +172,14 @@ defmodule Ask.SurveyController do
           Logger.warn "Error when updating survey: #{inspect changeset}"
           conn
             |> put_status(:unprocessable_entity)
-            |> render(Ask.ChangesetView, "error.json", changeset: changeset)
+            |> put_view(Ask.ChangesetView)
+            |> render("error.json", changeset: changeset)
       end
     else
       conn
         |> put_status(:unprocessable_entity)
-        |> render(Ask.ChangesetView, "error.json", changeset: change(%Survey{}, %{}))
+        |> put_view(Ask.ChangesetView)
+        |> render("error.json", changeset: change(%Survey{}, %{}))
     end
   end
 
@@ -210,7 +213,8 @@ defmodule Ask.SurveyController do
       {:error, _, changeset, _} ->
         conn
         |> put_status(:unprocessable_entity)
-        |> render(Ask.ChangesetView, "error.json", changeset: changeset)
+        |> put_view(Ask.ChangesetView)
+        |> render("error.json", changeset: changeset)
     end
   end
 
@@ -238,7 +242,8 @@ defmodule Ask.SurveyController do
       {:error, _, changeset, _} ->
         conn
         |> put_status(:unprocessable_entity)
-        |> render(Ask.ChangesetView, "error.json", changeset: changeset)
+        |> put_view(Ask.ChangesetView)
+        |> render("error.json", changeset: changeset)
     end
   end
 
@@ -265,7 +270,8 @@ defmodule Ask.SurveyController do
       {:error, _, changeset, _} ->
         conn
         |> put_status(:unprocessable_entity)
-        |> render(Ask.ChangesetView, "error.json", changeset: changeset)
+        |> put_view(Ask.ChangesetView)
+        |> render("error.json", changeset: changeset)
     end
   end
 
@@ -294,7 +300,8 @@ defmodule Ask.SurveyController do
       {:error, _, changeset, _} ->
         conn
         |> put_status(:unprocessable_entity)
-        |> render(Ask.ChangesetView, "error.json", changeset: changeset)
+        |> put_view(Ask.ChangesetView)
+        |> render("error.json", changeset: changeset)
     end
   end
 
@@ -332,7 +339,8 @@ defmodule Ask.SurveyController do
       {:error, %{changeset: changeset}} ->
         conn
         |> put_status(:unprocessable_entity)
-        |> render(Ask.ChangesetView, "error.json", changeset: changeset)
+        |> put_view(Ask.ChangesetView)
+        |> render("error.json", changeset: changeset)
     end
   end
 
@@ -531,7 +539,8 @@ defmodule Ask.SurveyController do
         Logger.warn "Error when creating link #{name}"
         conn
         |> put_status(:unprocessable_entity)
-        |> render(Ask.ChangesetView, "error.json", changeset: changeset)
+        |> put_view(Ask.ChangesetView)
+        |> render("error.json", changeset: changeset)
     end
   end
 
@@ -563,7 +572,8 @@ defmodule Ask.SurveyController do
           Logger.warn "Error when regenerating results link #{inspect link}"
           conn
           |> put_status(:unprocessable_entity)
-          |> render(Ask.ChangesetView, "error.json", changeset: changeset)
+          |> put_view(Ask.ChangesetView)
+          |> render("error.json", changeset: changeset)
       end
     else
       Logger.warn "Error when regenerating results link #{target_name}"
@@ -600,7 +610,8 @@ defmodule Ask.SurveyController do
           Logger.warn "Error when deleting link #{inspect link}"
           conn
           |> put_status(:unprocessable_entity)
-          |> render(Ask.ChangesetView, "error.json", changeset: changeset)
+          |> put_view(Ask.ChangesetView)
+          |> render("error.json", changeset: changeset)
       end
     else
       conn
@@ -631,7 +642,8 @@ defmodule Ask.SurveyController do
       {:error, %{changeset: changeset}} ->
         conn
         |> put_status(:unprocessable_entity)
-        |> render(Ask.ChangesetView, "error.json", changeset: changeset)
+        |> put_view(Ask.ChangesetView)
+        |> render("error.json", changeset: changeset)
 
       {:error, %{survey: survey}} ->
         conn
@@ -687,12 +699,14 @@ defmodule Ask.SurveyController do
             Logger.warn "Error when updating locked status: #{inspect changeset}"
             conn
               |> put_status(:unprocessable_entity)
-              |> render(Ask.ChangesetView, "error.json", changeset: changeset)
+              |> put_view(Ask.ChangesetView)
+              |> render("error.json", changeset: changeset)
         end
       _ ->
         conn
           |> put_status(:unprocessable_entity)
-          |> render(Ask.ChangesetView, "error.json", changeset: change(%Survey{}, %{}))
+          |> put_view(Ask.ChangesetView)
+          |> render("error.json", changeset: change(%Survey{}, %{}))
     end
   end
 

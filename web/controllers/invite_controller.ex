@@ -90,7 +90,8 @@ defmodule Ask.InviteController do
                 Logger.warn "Error when inviting collaborator #{inspect changeset}"
                 conn
                   |> put_status(:unprocessable_entity)
-                  |> render(Ask.ChangesetView, "error.json", changeset: changeset)
+                  |> put_view(Ask.ChangesetView)
+                  |> render("error.json", changeset: changeset)
             end
           end
         else
@@ -168,7 +169,8 @@ defmodule Ask.InviteController do
       {:error, _, error_changeset, _} ->
         conn
           |> put_status(:unprocessable_entity)
-          |> render(Ask.ChangesetView, "error.json", changeset: error_changeset)
+          |> put_view(Ask.ChangesetView)
+          |> render("error.json", changeset: error_changeset)
     end
   end
 
@@ -189,7 +191,8 @@ defmodule Ask.InviteController do
       {:error, _, error_changeset, _} ->
         conn
           |> put_status(:unprocessable_entity)
-          |> render(Ask.ChangesetView, "error.json", changeset: error_changeset)
+          |> put_view(Ask.ChangesetView)
+          |> render("error.json", changeset: error_changeset)
     end
   end
 
