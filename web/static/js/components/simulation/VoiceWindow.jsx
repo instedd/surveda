@@ -40,7 +40,7 @@ const VoiceWindow = translate()(class extends Component<VoiceWindowProps> {
   message: string
   messageTimer: TimeoutID
 
-  repeatMessageTimer: TimeoutID
+  repeatMessageTimer: IntervalID
   timesRepeated: number
 
   constructor(props) {
@@ -67,8 +67,12 @@ const VoiceWindow = translate()(class extends Component<VoiceWindowProps> {
   }
 
   play() {
+    console.log("play")
+
     const ivr = this.props.prompts.shift()
     if (ivr) {
+      console.log("ivr")
+
       if (this.playPromise) {
         this.playPromise
           .then(() => this.playIVR(ivr))
@@ -78,18 +82,24 @@ const VoiceWindow = translate()(class extends Component<VoiceWindowProps> {
         this.playIVR(ivr)
       }
     } else {
+      console.log("no ivr")
+
       this.spectrum.stop()
-      // no more prompts to play so we start countdown to repeat
+
+      // no more prompts to play so we start countdown to repeat the last one
       if (this.audio) {
-        if (this.repeatMessageTimer) clearTimeout(this.repeatMessageTimer)
-        this.repeatMessageTimer = setTimeout(() => {
+        if (this.repeatMessageTimer) return // if already repeating then return
+
+        this.repeatMessageTimer = setInterval(() => {
+          console.log("Repeat")
+
+          this.audio.play()
           this.timesRepeated += 1
-          if (this.timesRepeated > 3) {
+
+          if (this.timesRepeated >= 3) {
             this.hangUp()
             return
           }
-
-          this.audio.play()
         }, 5000)
       }
     }
@@ -110,7 +120,7 @@ const VoiceWindow = translate()(class extends Component<VoiceWindowProps> {
   entered(character: string): void {
     if (this.props.readOnly) return
     if (this.messageTimer) clearTimeout(this.messageTimer)
-    if (this.repeatMessageTimer) clearTimeout(this.repeatMessageTimer)
+    this.clearRepeatLastMessage()
 
     this.message += character
 
@@ -123,11 +133,19 @@ const VoiceWindow = translate()(class extends Component<VoiceWindowProps> {
   }
 
   hangUp(): void {
+    console.log("hangup")
+
     if (this.props.readOnly) return
     if (this.messageTimer) clearTimeout(this.messageTimer)
-    if (this.repeatMessageTimer) clearTimeout(this.repeatMessageTimer)
+    if (this.repeatMessageTimer) clearInterval(this.repeatMessageTimer)
+    this.spectrum.stop()
 
     this.props.onSendMessage({ body: 'stop', type: 'at' })
+  }
+
+  clearRepeatLastMessage(): void {
+    if (this.repeatMessageTimer) clearInterval(this.repeatMessageTimer)
+    this.timesRepeated = 0
   }
 
   render() {
