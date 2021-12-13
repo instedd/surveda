@@ -51,7 +51,7 @@ DROP TABLE IF EXISTS `audios`;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `audios` (
   `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
-  `uuid` varchar(255) DEFAULT NULL,
+  `uuid` char(36) CHARACTER SET ascii DEFAULT NULL,
   `data` mediumblob,
   `filename` varchar(255) DEFAULT NULL,
   `source` varchar(255) DEFAULT NULL,
@@ -526,6 +526,7 @@ CREATE TABLE `respondents` (
   KEY `respondents_updated_at_index` (`updated_at`),
   KEY `respondents_sanitized_phone_number_index` (`sanitized_phone_number`),
   KEY `respondents_retry_stat_id_fkey` (`retry_stat_id`),
+  KEY `respondents_canonical_phone_number_index` (`canonical_phone_number`),
   CONSTRAINT `respondents_questionnaire_id_fkey` FOREIGN KEY (`questionnaire_id`) REFERENCES `questionnaires` (`id`),
   CONSTRAINT `respondents_respondent_group_id_fkey` FOREIGN KEY (`respondent_group_id`) REFERENCES `respondent_groups` (`id`) ON DELETE CASCADE,
   CONSTRAINT `respondents_retry_stat_id_fkey` FOREIGN KEY (`retry_stat_id`) REFERENCES `retry_stats` (`id`) ON DELETE CASCADE,
@@ -980,7 +981,7 @@ CREATE TABLE `users` (
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2021-11-22  9:36:13
+-- Dump completed on 2021-12-13  9:50:59
 INSERT INTO `schema_migrations` (version) VALUES (20160812145257);
 INSERT INTO `schema_migrations` (version) VALUES (20160816183915);
 INSERT INTO `schema_migrations` (version) VALUES (20160830200454);
@@ -1190,3 +1191,5 @@ INSERT INTO `schema_migrations` (version) VALUES (20210512142133);
 INSERT INTO `schema_migrations` (version) VALUES (20210512151329);
 INSERT INTO `schema_migrations` (version) VALUES (20210614154820);
 INSERT INTO `schema_migrations` (version) VALUES (20210629170410);
+INSERT INTO `schema_migrations` (version) VALUES (20211125141835);
+INSERT INTO `schema_migrations` (version) VALUES (20211213094856);
