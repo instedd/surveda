@@ -111,14 +111,16 @@ defmodule Ask.Runtime.RespondentGroupAction do
     # Select numbers that already exist in the DB
     canonical_numbers = Enum.map(phone_numbers, &Respondent.canonicalize_phone_number/1)
 
-    existing_numbers =
-      Repo.all(
-        from(r in Respondent,
-          where: r.respondent_group_id == ^group.id,
-          where: r.canonical_phone_number in ^canonical_numbers,
-          select: r.canonical_phone_number
-        )
-      )
+    # Request in batches to avoid 'Prepared statement contains too many placeholders' errors
+    process_batch = fn (numbers) ->
+      Repo.all(from(r in Respondent,
+        where: r.respondent_group_id == ^group.id and r.canonical_phone_number in ^numbers,
+        select: r.canonical_phone_number))
+    end
+
+    existing_numbers = canonical_numbers
+    |> Enum.chunk_every(64_000)
+    |> Enum.flat_map(process_batch)
 
     # And then remove them from phone_numbers (because they are duplicates)
     # (no easier way to do this, plus we expect `existing_numbers` to
