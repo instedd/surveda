@@ -85,15 +85,11 @@ const VoiceWindow = translate()(class extends Component<VoiceWindowProps> {
       }
     } else {
       console.log("no ivr")
-
-      // this.spectrum.stop()
+      if (this.props.readOnly) return // simulation is not active so no need for repeating the audio
 
       // no more prompts to play so we start countdown to repeat the last one
       if (this.audio) {
         if (this.repeatMessageTimer) return // if already repeating then return
-
-        // this shouldn't be necessary but a last `play()` is sent after hangup
-        if (this.timesRepeated >= 3) return
 
         // we break the play chain because is the last message and we start repeating it
         this.audio.onended = null
@@ -125,6 +121,7 @@ const VoiceWindow = translate()(class extends Component<VoiceWindowProps> {
     this.audio.src = audioURL(ivr)
     this.audio.onended = () => { this.play() }
     this.playPromise = this.audio.play()
+
     this.spectrum.start(this.audio)
   }
 
@@ -132,7 +129,6 @@ const VoiceWindow = translate()(class extends Component<VoiceWindowProps> {
     if (this.props.readOnly) return
     if (this.messageTimer) clearTimeout(this.messageTimer)
     this.resetRepeatLastMessage()
-    this.spectrum.stop()
 
     this.message += character
 
