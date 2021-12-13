@@ -64,6 +64,8 @@ const VoiceWindow = translate()(class extends Component<VoiceWindowProps> {
     if (this.spectrum) {
       this.spectrum.stop()
     }
+
+    this.resetRepeatLastMessage()
   }
 
   play() {
@@ -84,22 +86,29 @@ const VoiceWindow = translate()(class extends Component<VoiceWindowProps> {
     } else {
       console.log("no ivr")
 
-      this.spectrum.stop()
+      // this.spectrum.stop()
 
       // no more prompts to play so we start countdown to repeat the last one
       if (this.audio) {
         if (this.repeatMessageTimer) return // if already repeating then return
 
+        // this shouldn't be necessary but a last `play()` is sent after hangup
+        if (this.timesRepeated >= 3) return
+
+        // we break the play chain because is the last message and we start repeating it
+        this.audio.onended = null
+
         this.repeatMessageTimer = setInterval(() => {
           console.log("Repeat")
-
-          this.audio.play()
-          this.timesRepeated += 1
+          console.log(this.timesRepeated + 1)
 
           if (this.timesRepeated >= 3) {
             this.hangUp()
             return
           }
+
+          this.audio.play()
+          this.timesRepeated += 1
         }, 5000)
       }
     }
@@ -109,6 +118,8 @@ const VoiceWindow = translate()(class extends Component<VoiceWindowProps> {
     // we may be interrupting an audio prompt here, so we stop any playing
     // audio, before skipping to the next one:
     this.audio.pause()
+    // we also stop any repeating question:
+    this.resetRepeatLastMessage()
 
     // play the IVR prompt, continuing to the next one when finished:
     this.audio.src = audioURL(ivr)
@@ -120,7 +131,8 @@ const VoiceWindow = translate()(class extends Component<VoiceWindowProps> {
   entered(character: string): void {
     if (this.props.readOnly) return
     if (this.messageTimer) clearTimeout(this.messageTimer)
-    this.clearRepeatLastMessage()
+    this.resetRepeatLastMessage()
+    this.spectrum.stop()
 
     this.message += character
 
@@ -134,18 +146,24 @@ const VoiceWindow = translate()(class extends Component<VoiceWindowProps> {
 
   hangUp(): void {
     console.log("hangup")
-
-    if (this.props.readOnly) return
     if (this.messageTimer) clearTimeout(this.messageTimer)
-    if (this.repeatMessageTimer) clearInterval(this.repeatMessageTimer)
-    this.spectrum.stop()
+    this.clearRepeatLastMessage()
 
-    this.props.onSendMessage({ body: 'stop', type: 'at' })
+    if (!this.props.readOnly) {
+      this.props.onSendMessage({ body: 'stop', type: 'at' })
+    }
+  }
+
+  resetRepeatLastMessage(): void {
+    console.log("resetRepeatLastMessage")
+    this.clearRepeatLastMessage()
+    this.timesRepeated = 0
   }
 
   clearRepeatLastMessage(): void {
+    console.log("clearRepeatLastMessage")
     if (this.repeatMessageTimer) clearInterval(this.repeatMessageTimer)
-    this.timesRepeated = 0
+    this.repeatMessageTimer = null
   }
 
   render() {
