@@ -69,12 +69,8 @@ const VoiceWindow = translate()(class extends Component<VoiceWindowProps> {
   }
 
   play() {
-    console.log("play")
-
     const ivr = this.props.prompts.shift()
     if (ivr) {
-      console.log("ivr")
-
       if (this.playPromise) {
         this.playPromise
           .then(() => this.playIVR(ivr))
@@ -84,20 +80,16 @@ const VoiceWindow = translate()(class extends Component<VoiceWindowProps> {
         this.playIVR(ivr)
       }
     } else {
-      console.log("no ivr")
       if (this.props.readOnly) return // simulation is not active so no need for repeating the audio
 
       // no more prompts to play so we start countdown to repeat the last one
       if (this.audio) {
         if (this.repeatMessageTimer) return // if already repeating then return
 
-        // we break the play chain because is the last message and we start repeating it
+        // we break the audio play chain because is the last message and we start repeating it
         this.audio.onended = null
 
         this.repeatMessageTimer = setInterval(() => {
-          console.log("Repeat")
-          console.log(this.timesRepeated + 1)
-
           if (this.timesRepeated >= 3) {
             this.hangUp()
             return
@@ -141,9 +133,8 @@ const VoiceWindow = translate()(class extends Component<VoiceWindowProps> {
   }
 
   hangUp(): void {
-    console.log("hangup")
     if (this.messageTimer) clearTimeout(this.messageTimer)
-    this.clearRepeatLastMessage()
+    this.resetRepeatLastMessage()
 
     if (!this.props.readOnly) {
       this.props.onSendMessage({ body: 'stop', type: 'at' })
@@ -151,15 +142,9 @@ const VoiceWindow = translate()(class extends Component<VoiceWindowProps> {
   }
 
   resetRepeatLastMessage(): void {
-    console.log("resetRepeatLastMessage")
-    this.clearRepeatLastMessage()
-    this.timesRepeated = 0
-  }
-
-  clearRepeatLastMessage(): void {
-    console.log("clearRepeatLastMessage")
     if (this.repeatMessageTimer) clearInterval(this.repeatMessageTimer)
     this.repeatMessageTimer = null
+    this.timesRepeated = 0
   }
 
   render() {
