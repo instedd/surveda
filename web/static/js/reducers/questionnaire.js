@@ -1574,8 +1574,8 @@ const addMessageToCsvForTranslation = (m, defaultLang, context) => {
 }
 
 export const csvTranslationFilename = (questionnaire: Questionnaire): string => {
-  const filename = (questionnaire.name || '').replace(/\W/g, '')
-  return filename + '_translations.csv'
+  const filename = (questionnaire.name || '').replace(/\s+/g, '_')
+  return `${questionnaire.id}-${filename}_translations.csv`
 }
 
 const addToCsvForTranslation = (text, context, func) => {
