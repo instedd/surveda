@@ -40,7 +40,7 @@ const VoiceWindow = translate()(class extends Component<VoiceWindowProps> {
   message: string
   messageTimer: TimeoutID
 
-  repeatMessageTimer: TimeoutID
+  repeatMessageTimer: ?TimeoutID
   timesRepeated: number
 
   constructor(props) {
@@ -65,7 +65,7 @@ const VoiceWindow = translate()(class extends Component<VoiceWindowProps> {
       this.spectrum.stop()
     }
 
-    this.resetRepeatLastMessage()
+    this.stopRepeatingLastAudio()
   }
 
   play() {
@@ -82,26 +82,9 @@ const VoiceWindow = translate()(class extends Component<VoiceWindowProps> {
     } else {
       this.spectrum.stop()
 
-      if (this.props.readOnly) return // simulation is not active so no need for repeating the audio
-
-      // no more prompts to play so we start countdown to repeat the last one
-      if (this.audio) {
-        if (this.repeatMessageTimer) return // if waiting for repeating audio then return
-
-        this.repeatMessageTimer = setTimeout(() => {
-          if (this.timesRepeated >= 3) {
-            this.hangUp()
-            return
-          }
-
-          clearTimeout(this.repeatMessageTimer)
-          this.repeatMessageTimer = null
-
-          this.timesRepeated += 1
-
-          this.spectrum.restart()
-          this.audio.play()
-        }, 5000)
+      // if simulation still active then start repeating the last audio
+      if (!this.props.readOnly) {
+        this.startRepeatingLastAudio()
       }
     }
   }
@@ -111,7 +94,7 @@ const VoiceWindow = translate()(class extends Component<VoiceWindowProps> {
     // audio, before skipping to the next one:
     this.audio.pause()
     // we also stop any repeating question:
-    this.resetRepeatLastMessage()
+    this.stopRepeatingLastAudio()
 
     // play the IVR prompt, continuing to the next one when finished:
     this.audio.src = audioURL(ivr)
@@ -124,7 +107,7 @@ const VoiceWindow = translate()(class extends Component<VoiceWindowProps> {
   entered(character: string): void {
     if (this.props.readOnly) return
     if (this.messageTimer) clearTimeout(this.messageTimer)
-    this.resetRepeatLastMessage()
+    this.stopRepeatingLastAudio()
 
     this.message += character
 
@@ -138,17 +121,47 @@ const VoiceWindow = translate()(class extends Component<VoiceWindowProps> {
 
   hangUp(): void {
     if (this.messageTimer) clearTimeout(this.messageTimer)
-    this.resetRepeatLastMessage()
+    this.stopRepeatingLastAudio()
 
     if (!this.props.readOnly) {
       this.props.onSendMessage({ body: 'stop', type: 'at' })
     }
   }
 
-  resetRepeatLastMessage(): void {
+  startRepeatingLastAudio(): void {
+    if (!this.audio) return // no last audio available to repeat
+    if (this.repeatMessageTimer) return // already repeating audio
+
+    this.initRepeatTimer(() => {
+      if (this.timesRepeated < 3) {
+        this.clearRepeatTimer()
+        this.repeatLastAudio()
+      } else {
+        this.hangUp()
+      }
+    })
+  }
+
+  stopRepeatingLastAudio(): void {
+    this.clearRepeatTimer()
+    this.timesRepeated = 0
+  }
+
+  repeatLastAudio(): void {
+    if (!this.audio) return
+
+    this.timesRepeated += 1
+    this.spectrum.restart()
+    this.audio.play()
+  }
+
+  initRepeatTimer(func): void {
+    this.repeatMessageTimer = setTimeout(func, 5000)
+  }
+
+  clearRepeatTimer(): void {
     if (this.repeatMessageTimer) clearTimeout(this.repeatMessageTimer)
     this.repeatMessageTimer = null
-    this.timesRepeated = 0
   }
 
   render() {
