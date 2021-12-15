@@ -40,7 +40,7 @@ const VoiceWindow = translate()(class extends Component<VoiceWindowProps> {
   message: string
   messageTimer: TimeoutID
 
-  repeatMessageTimer: IntervalID
+  repeatMessageTimer: TimeoutID
   timesRepeated: number
 
   constructor(props) {
@@ -69,8 +69,10 @@ const VoiceWindow = translate()(class extends Component<VoiceWindowProps> {
   }
 
   play() {
+    console.log("play")
     const ivr = this.props.prompts.shift()
     if (ivr) {
+      console.log("ivr")
       if (this.playPromise) {
         this.playPromise
           .then(() => this.playIVR(ivr))
@@ -80,23 +82,38 @@ const VoiceWindow = translate()(class extends Component<VoiceWindowProps> {
         this.playIVR(ivr)
       }
     } else {
+      console.log("no ivr")
+
+      console.log("stop spectrum")
+      this.spectrum.stop()
+
       if (this.props.readOnly) return // simulation is not active so no need for repeating the audio
 
       // no more prompts to play so we start countdown to repeat the last one
       if (this.audio) {
-        if (this.repeatMessageTimer) return // if already repeating then return
+        if (this.repeatMessageTimer) return // if waiting for repeating audio then return
 
         // we break the audio play chain because is the last message and we start repeating it
-        this.audio.onended = null
+        // this.audio.onended = null
 
-        this.repeatMessageTimer = setInterval(() => {
+        console.log("setting repeater")
+        this.repeatMessageTimer = setTimeout(() => {
           if (this.timesRepeated >= 3) {
             this.hangUp()
             return
           }
+          console.log("repeat")
+          console.log(this.timesRepeated + 1)
 
-          this.audio.play()
+          console.log("clearTimeout")
+          clearTimeout(this.repeatMessageTimer)
+          this.repeatMessageTimer = null
+
           this.timesRepeated += 1
+
+          console.log("start spectrum")
+          this.spectrum.restart()
+          this.audio.play()
         }, 5000)
       }
     }
@@ -142,7 +159,7 @@ const VoiceWindow = translate()(class extends Component<VoiceWindowProps> {
   }
 
   resetRepeatLastMessage(): void {
-    if (this.repeatMessageTimer) clearInterval(this.repeatMessageTimer)
+    if (this.repeatMessageTimer) clearTimeout(this.repeatMessageTimer)
     this.repeatMessageTimer = null
     this.timesRepeated = 0
   }
@@ -223,9 +240,10 @@ class VoiceSpectrum {
     this.audioContext.createMediaElementSource(audio).connect(this.audioAnalyser)
     this.audioAnalyser.connect(this.audioContext.destination)
 
-    this.amplitudeData = new Uint8Array(this.audioAnalyser.frequencyBinCount)
-    this.playing = true
-    requestAnimationFrame(() => this.run())
+    this.restart()
+    // this.amplitudeData = new Uint8Array(this.audioAnalyser.frequencyBinCount)
+    // this.playing = true
+    // requestAnimationFrame(() => this.run())
   }
 
   run() {
@@ -242,6 +260,19 @@ class VoiceSpectrum {
       this.updateCanvas()
       this.playing = false
     })
+  }
+
+  // We need a restart method, because using `start(audio)` on the same audio raises:
+  // Uncaught InvalidStateError: Failed to execute 'createMediaElementSource' on 'AudioContext':
+  // HTMLMediaElement already connected previously to a different MediaElementSourceNode."
+  // https://bugs.chromium.org/p/chromium/issues/detail?id=429204
+  // https://bugs.chromium.org/p/chromium/issues/detail?id=851310
+  // https://stackoverflow.com/questions/38460984/problems-disconnecting-nodes-with-audiocontext-web-audio-api
+  //
+  restart() {
+    this.amplitudeData = new Uint8Array(this.audioAnalyser.frequencyBinCount)
+    this.playing = true
+    requestAnimationFrame(() => this.run())
   }
 
   updateCanvas() {
