@@ -2938,9 +2938,18 @@ describe('questionnaire reducer', () => {
       const state = playActions([
         actions.fetch(1, 1),
         actions.receive(questionnaire),
-        actions.changeName('Foo!@#%!     123  []]!!!??')
+        actions.changeName('Foo!@#%!  () *& * & ^&* ^ % $$ $#% @ @@@ <> ,< >> ~~ | ||  123  []]!!!??')
       ])
-      expect(csvTranslationFilename((state.data: Questionnaire))).toEqual('Foo123_translations.csv')
+      expect(csvTranslationFilename((state.data: Questionnaire))).toEqual(`${questionnaire.id}-Foo_123-translations.csv`)
+    })
+
+    it('should compute a valid alphanumeric filename without trailing underscore', () => {
+      const state = playActions([
+        actions.fetch(1, 1),
+        actions.receive(questionnaire),
+        actions.changeName('Foo!@#%!  () *& * & ^&* ^ % $$ $#% @ @@@ <> ,< >> ~~ | ||  123__  []]!!!??')
+      ])
+      expect(csvTranslationFilename((state.data: Questionnaire))).toEqual(`${questionnaire.id}-Foo_123-translations.csv`)
     })
 
     it('changes numeric limits without min and max', () => {
