@@ -269,13 +269,15 @@ defmodule Ask.QuestionnaireController do
     questionnaire = load_questionnaire_not_snapshot(project.id, id)
 
     zip_file = QuestionnaireAction.export_and_zip(questionnaire)
-    underscored_name = questionnaire.name
-      |> String.split # remove continuos spaces
-      |> Enum.join("_") # replace space with _
+
+    filename = "#{questionnaire.id}-#{questionnaire.name}"
+      |> String.split
+      |> Enum.join("_") # replace spaces with underscore (also check for continuos spaces)
+      |> String.slice(0, 42) # max length following file naming conventions (we are not including filename extension)
 
     conn = conn
            |> put_resp_content_type("application/octet-stream")
-           |> put_resp_header("content-disposition", "attachment; filename=#{questionnaire.id}-#{underscored_name}.zip")
+           |> put_resp_header("content-disposition", "attachment; filename=#{filename}.zip")
            |> send_chunked(200)
 
     zip_file
