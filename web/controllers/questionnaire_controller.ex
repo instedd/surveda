@@ -270,8 +270,9 @@ defmodule Ask.QuestionnaireController do
 
     zip_file = QuestionnaireAction.export_and_zip(questionnaire)
     underscored_name = questionnaire.name
-      |> String.split # remove continuos spaces
-      |> Enum.join("_") # replace space with _
+      |> String.replace(~r/[\'";:,.~`@#$%^@&*|!?()\{\}<>\[\]\\\/]/, " ") # remove special chars (replace with space)
+      |> String.replace(~r/\s+/, "_") # replace spaces with underscore (also check for continuos spaces)
+      |> String.replace(~r/_+$/, "") # remove trailing underscores
 
     conn = conn
            |> put_resp_content_type("application/octet-stream")
