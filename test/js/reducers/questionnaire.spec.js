@@ -2943,6 +2943,15 @@ describe('questionnaire reducer', () => {
       expect(csvTranslationFilename((state.data: Questionnaire))).toEqual(`${questionnaire.id}-Foo_123-translations.csv`)
     })
 
+    it('should remove only special characters while leaving non ASCII chars', () => {
+      const state = playActions([
+        actions.fetch(1, 1),
+        actions.receive(questionnaire),
+        actions.changeName('Foo:;\' " "!~ññéáà@#% !() *& * & ^&* ^ % $$ $# % @ @@@ <> ,< >> ~~ | || =123__  []]!!!?? _ 456 { }')
+      ])
+      expect(csvTranslationFilename((state.data: Questionnaire))).toEqual(`${questionnaire.id}-Foo_ññéáà_=123_____456-translations.csv`)
+    })
+
     it('should compute a valid alphanumeric filename without trailing underscore', () => {
       const state = playActions([
         actions.fetch(1, 1),
