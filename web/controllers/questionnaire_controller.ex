@@ -276,7 +276,7 @@ defmodule Ask.QuestionnaireController do
 
     conn = conn
            |> put_resp_content_type("application/octet-stream")
-           |> put_resp_header("content-disposition", "attachment; filename=#{questionnaire.id}-#{underscored_name}.zip")
+           |> put_resp_header("content-disposition", "attachment; filename*=UTF-8''#{questionnaire.id}-#{URI.encode(underscored_name)}.zip")
            |> send_chunked(200)
 
     zip_file
