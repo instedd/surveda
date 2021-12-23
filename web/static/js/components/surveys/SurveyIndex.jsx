@@ -136,13 +136,9 @@ class SurveyIndex extends Component<any, State> {
       )
     }
 
-    const footer = <PagingFooter
-      {...{startIndex, endIndex, totalCount}}
-      onPreviousPage={() => this.previousPage()}
-      onNextPage={() => this.nextPage()} />
-
     const readOnly = !project || project.readOnly
 
+    // Main Button
     const mainAction = (
       <MainAction text={t('Add')} icon='add' className='survey-index-main-action'>
         <Action text={t('Survey')} icon='assignment_turned_in' onClick={() => this.newSurvey()} />
@@ -151,25 +147,48 @@ class SurveyIndex extends Component<any, State> {
       </MainAction>
     )
 
+    // Empty view
+    const noDataToShow = surveys && surveys.length === 0 &&
+                         folders && folders.length === 0 &&
+                         panelSurveys && panelSurveys.length === 0
+
+    const emptyView = <EmptyPage icon='assignment_turned_in'
+                                 title={t('You have no surveys on this project')}
+                                 onClick={(e) => this.newSurvey()}
+                                 readOnly={readOnly}
+                                 createText={t('Create one', { context: 'survey' })} />
+
+    const foldersGrid = (
+      <div className='survey-index-grid'>
+        {folders && folders.map(folder => <FolderCard key={folder.id} {...folder} t={t} onDelete={this.deleteFolder} onRename={this.renameFolder} readOnly={readOnly} />)}
+      </div>
+    )
+
+    const surveysGrid = (
+      <div className='survey-index-grid'>
+        {surveys && surveys.map(survey => (
+          <SurveyCard survey={survey} key={survey.id} readOnly={readOnly} />
+        ))}
+      </div>
+    )
+
+    const footer = <PagingFooter
+      {...{ startIndex, endIndex, totalCount }}
+      onPreviousPage={() => this.previousPage()}
+      onNextPage={() => this.nextPage()} />
+
     return (
       <div>
-        { readOnly ? null : mainAction}
-        { (surveys && surveys.length == 0 && folders && folders.length === 0)
-        ? <EmptyPage icon='assignment_turned_in' title={t('You have no surveys on this project')} onClick={(e) => this.newSurvey()} readOnly={readOnly} createText={t('Create one', {context: 'survey'})} />
+        { readOnly ? null : mainAction }
+        { noDataToShow
+        ? emptyView
         : (
           <div>
-            <div className='survey-index-grid'>
-              { folders && folders.map(folder => <FolderCard key={folder.id} {...folder} t={t} onDelete={this.deleteFolder} onRename={this.renameFolder} readOnly={readOnly} />)}
-            </div>
-            <div className='survey-index-grid'>
-              {surveys && surveys.map(survey => (
-                <SurveyCard survey={survey} key={survey.id} readOnly={readOnly} />
-              ))}
-            </div>
+            { foldersGrid }
+            { surveysGrid }
             { footer }
           </div>
-        )
-        }
+        )}
         <ConfirmationModal modalId='survey_index_folder_create' ref='createFolderConfirmationModal' confirmationText={t('Create')} header={t('Create Folder')} showCancel />
         <ConfirmationModal modalId='survey_index_folder_rename' ref='renameFolderConfirmationModal' confirmationText={t('Rename')} header={t('Rename Folder')} showCancel />
       </div>
