@@ -133,21 +133,26 @@ class _PanelSurveyCard extends Component<any> {
     return [...panelSurvey.occurrences].pop() // TODO
   }
 
-
-  // changeFolder = (folderId) => this.setState({ folderId })
+  changeFolder(folderId) {
+    this.setState({ folderId })
+  }
 
   moveSurvey = () => {
-    // const moveSurveyConfirmationModal: ConfirmationModal = this.refs.moveSurveyConfirmationModal
-    // const { survey } = this.props
-    // const modalText = <MoveSurveyForm defaultFolderId={survey.folderId} onChangeFolderId={folderId => this.changeFolder(folderId)} />
-    // moveSurveyConfirmationModal.open({
-    //   modalText: modalText,
-    //   onConfirm: () => {
-    //     const { dispatch } = this.props
-    //     const { folderId } = this.state
-    //     dispatch(surveyActions.changeFolder(survey, folderId))
-    //   }
-    // })
+    const { panelSurvey } = this.props
+
+    const moveSurveyConfirmationModal: ConfirmationModal = this.refs.moveSurveyConfirmationModal
+    moveSurveyConfirmationModal.open({
+      modalText: <MoveSurveyForm defaultFolderId={panelSurvey.folderId} onChangeFolderId={folderId => this.changeFolder(folderId)} />,
+      onConfirm: () => {
+        const { dispatch } = this.props
+        const { folderId } = this.state
+
+        console.log("HEEEEEY MOVE THE PANEL!!")
+        console.log(folderId)
+
+        // dispatch(surveyActions.changeFolder(survey, folderId))
+      }
+    })
   }
 
   deleteSurvey = () => {
@@ -172,13 +177,20 @@ class _PanelSurveyCard extends Component<any> {
     })
   }
 
+  // The option Delete on the PanelSurveyCard means:
+  // delete the last wave in the PanelSurvey
+  // TODO: we cannot delete all the waves!
+  // (ie leave the PanelSurvey without any waves)
   deletable() {
     const { readOnly } = this.props
-    return !readOnly
+    const survey = this.lastWave()
+
+    return !readOnly && survey.isDeletable
   }
 
   movable() {
-    return false
+    const { readOnly } = this.props
+    return !readOnly
   }
 
   actionable() {
