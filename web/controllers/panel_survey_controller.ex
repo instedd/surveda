@@ -80,4 +80,8 @@ defmodule Ask.PanelSurveyController do
       render(conn, "show.json", panel_survey: panel_survey)
     end
   end
+
+  def set_folder_id(conn, %{"project_id" => project_id, "panel_survey_id" => id, "folder_id" => folder_id}) do
+    send_resp(conn, :no_content, "")
+  end
 end

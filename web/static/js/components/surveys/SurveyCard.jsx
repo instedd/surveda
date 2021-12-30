@@ -4,6 +4,7 @@ import { translate, Trans } from 'react-i18next'
 import { Link } from 'react-router'
 import * as routes from '../../routes'
 import * as surveyActions from '../../actions/survey'
+import * as panelSurveyActions from '../../actions/panelSurvey'
 import { fetchRespondentsStats } from '../../actions/respondents'
 import { untitledSurveyTitle } from './SurveyTitle'
 import { Card, UntitledIfEmpty, Dropdown, DropdownItem, ConfirmationModal } from '../ui'
@@ -146,11 +147,7 @@ class _PanelSurveyCard extends Component<any> {
       onConfirm: () => {
         const { dispatch } = this.props
         const { folderId } = this.state
-
-        console.log("HEEEEEY MOVE THE PANEL!!")
-        console.log(folderId)
-
-        // dispatch(surveyActions.changeFolder(survey, folderId))
+        dispatch(panelSurveyActions.changeFolder(panelSurvey, folderId))
       }
     })
   }
@@ -179,8 +176,6 @@ class _PanelSurveyCard extends Component<any> {
 
   // The option Delete on the PanelSurveyCard means:
   // delete the last wave in the PanelSurvey
-  // TODO: we cannot delete all the waves!
-  // (ie leave the PanelSurvey without any waves)
   deletable() {
     const { readOnly } = this.props
     const survey = this.lastWave()
