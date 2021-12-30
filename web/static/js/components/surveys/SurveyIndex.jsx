@@ -17,7 +17,7 @@ import {
   Action
 } from '../ui'
 import FolderCard from '../folders/FolderCard'
-import SurveyCard from './SurveyCard'
+import { SurveyCard, PanelSurveyCard } from './SurveyCard'
 import * as channelsActions from '../../actions/channels'
 import FolderForm from './FolderForm'
 import * as routes from '../../routes'
@@ -235,23 +235,21 @@ const FoldersGrid = (props) => {
 
 const SurveysGrid = (props) => {
   const { surveysAndPanelSurveys, isReadOnly } = props
+
+  const isPanelSurvey = function(survey) {
+    return survey.hasOwnProperty('occurrences')
+  }
+
   return (
     <div className='survey-index-grid'>
-      {surveysAndPanelSurveys.map(survey => (
-        <SurveyCard survey={survey} key={survey.id} readOnly={isReadOnly} />
-      ))}
+      { surveysAndPanelSurveys.map(survey =>  {
+          return isPanelSurvey(survey)
+            ? <PanelSurveyCard panelSurvey={survey} key={`panelsurvey-${survey.id}`} readOnly={isReadOnly} />
+            : <SurveyCard survey={survey} key={`survey-${survey.id}`} readOnly={isReadOnly} />
+        })}
     </div>
   )
 }
-
-// const surveysFromState = (state, folderId, includePanelSurveys = false) => {
-//   const { items } = state.surveys
-//   if (!items) return null
-//   return values(items).filter(survey =>
-//     survey.folderId == folderId &&
-//     (includePanelSurveys || !survey.panelSurveyId)
-//   )
-// }
 
 // const panelSurveysFromState = (state, folderId) => {
 //   const surveys = surveysFromState(state, folderId, true)
@@ -264,47 +262,6 @@ const SurveysGrid = (props) => {
 //   }))
 // }
 
-// const mergePanelSurveysIntoSurveys = (surveys, panelSurveys) => {
-//   if (panelSurveys == null) return surveys
-//   return panelSurveys.map(panelSurvey => ({
-//     ...panelSurvey.latestSurvey,
-//     folderId: panelSurvey.folderId,
-//     panelSurvey: panelSurvey
-//   })).concat(surveys)
-// }
-
-// const surveyIndexProps = (state) => {
-//   // If panelSurveyId, list the surveys for the panel survey view.
-//   // The panel survey view is the only one that shows every panel survey occurrence.
-//   // Other views show each panel survey grouped in a single card.
-//   let surveys = surveysFromState(state, folderId, !!panelSurveyId)
-//   if (!panelSurveyId) {
-//     surveys = mergePanelSurveysIntoSurveys(surveys, panelSurveysFromState(state, folderId))
-//   }
-//   const totalCount = surveys ? surveys.length : 0
-//   const pageIndex = state.surveys.page.index
-//   const pageSize = state.surveys.page.size
-
-//   if (surveys) {
-//     if (folderId) {
-//       surveys = surveys.filter(s => s.folderId == folderId)
-//     }
-
-//     // Sort by updated at, descending
-//     surveys = surveys.sort((x, y) => y.updatedAt.localeCompare(x.updatedAt))
-//     // Show only the current page
-//     surveys = surveys.slice(pageIndex, pageIndex + pageSize)
-//   }
-//   const startIndex = Math.min(totalCount, pageIndex + 1)
-//   const endIndex = Math.min(pageIndex + pageSize, totalCount)
-
-//   return {
-//     surveys,
-//     startIndex,
-//     endIndex,
-//     totalCount
-//   }
-// }
 // export const surveyIndexProps = (state: any, { panelSurveyId, folderId }: { panelSurveyId: ?number, folderId: ?number} = {
 //   panelSurveyId: null,
 //   folderId: null
@@ -358,8 +315,9 @@ const mapStateToProps = (state, ownProps) => {
   // merge all together to sort by date
   // At the same time remove surveys inside PanelSurvey (ie waves)
   // PanelSurvey is shown as a group and its waves are not shown in this view
+  // And also remove surveys inside Folders
   let surveysAndPanelSurveys = [
-    ...surveys.filter((survey) => (!survey.panelSurveyId)),
+    ...surveys.filter(survey => (!survey.panelSurveyId && !survey.folderId)),
     ...panelSurveys
   ]
 
