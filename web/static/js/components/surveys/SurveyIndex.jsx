@@ -316,9 +316,10 @@ const mapStateToProps = (state, ownProps) => {
   // At the same time remove surveys inside PanelSurvey (ie waves)
   // PanelSurvey is shown as a group and its waves are not shown in this view
   // And also remove surveys inside Folders
+  // And also remove panel surveys inside Folders
   let surveysAndPanelSurveys = [
     ...surveys.filter(survey => (!survey.panelSurveyId && !survey.folderId)),
-    ...panelSurveys
+    ...panelSurveys.filter(panelSurvey => (!panelSurvey.folderId))
   ]
 
   // Sort by updated_at (descending)
