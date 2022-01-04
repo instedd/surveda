@@ -239,11 +239,7 @@ class VoiceSpectrum {
     // <audio> element -> AudioSource -> AudioAnalyser -> destination
     this.audioContext.createMediaElementSource(audio).connect(this.audioAnalyser)
     this.audioAnalyser.connect(this.audioContext.destination)
-
     this.restart()
-    // this.amplitudeData = new Uint8Array(this.audioAnalyser.frequencyBinCount)
-    // this.playing = true
-    // requestAnimationFrame(() => this.run())
   }
 
   run() {
@@ -268,7 +264,6 @@ class VoiceSpectrum {
   // https://bugs.chromium.org/p/chromium/issues/detail?id=429204
   // https://bugs.chromium.org/p/chromium/issues/detail?id=851310
   // https://stackoverflow.com/questions/38460984/problems-disconnecting-nodes-with-audiocontext-web-audio-api
-  //
   restart() {
     this.amplitudeData = new Uint8Array(this.audioAnalyser.frequencyBinCount)
     this.playing = true
