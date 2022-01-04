@@ -43,7 +43,6 @@ class SurveyIndex extends Component<any, State> {
     totalCount: PropTypes.number.isRequired,
     panelSurveys: PropTypes.array,
     loadingPanelSurveys: PropTypes.bool,
-
     surveysAndPanelSurveys: PropTypes.array,
   }
 
@@ -154,24 +153,23 @@ class SurveyIndex extends Component<any, State> {
       return (<div>{ t('Loading surveys...') }</div>)
     }
 
+    // TODO: Move to mapStateToProps
     const readOnly = !project || project.readOnly
-
-    // Empty view
     const isEmptyView = surveys && surveys.length === 0 &&
-                         folders && folders.length === 0 &&
-                         panelSurveys && panelSurveys.length === 0
+                        folders && folders.length === 0 &&
+                        panelSurveys && panelSurveys.length === 0
 
     return (
       <div>
-        <MainActions isReadOnly={readOnly}
-                     newFolder={() => this.newFolder()}
-                     newSurvey={() => this.newSurvey()}
-                     newPanelSurvey={() => this.newPanelSurvey()}
-                     t={t}/>
+        <MainActions isReadOnly={readOnly} t={t}>
+          <Action text={t('Survey')} icon={'assignment_turned_in'} onClick={() => this.newSurvey()} />
+          <Action text={t('Panel Survey')} icon={'repeat'} onClick={() => this.newPanelSurvey()} />
+          <Action text={t('Folder')} icon={'folder'} onClick={() => this.newFolder()} />
+        </MainActions>
 
         <MainView isReadOnly={readOnly}
                   isEmpty={isEmptyView}
-                  onNewSurvey={() => this.newSurvey()}
+                  onNew={() => this.newSurvey()}
                   t={t}>
           <FoldersGrid folders={folders}
                        isReadOnly={readOnly}
@@ -195,22 +193,20 @@ class SurveyIndex extends Component<any, State> {
 }
 
 const MainActions = (props) => {
-  const { isReadOnly, newFolder, newSurvey, newPanelSurvey, t } = props
+  const { isReadOnly, children, t } = props
   return (isReadOnly)
     ? null
     : (
       <MainAction text={t('Add')} icon='add' className='survey-index-main-action'>
-        <Action text={t('Survey')} icon='assignment_turned_in' onClick={newSurvey} />
-        <Action text={t('Panel Survey')} icon='repeat' onClick={newPanelSurvey} />
-        <Action text='Folder' icon='folder' onClick={newFolder} />
+        { children }
       </MainAction>
     )
 }
 
 const MainView = (props) => {
-  const { isEmpty, onNewSurvey, foldersGrid, surveysGrid, footer, t, children } = props
+  const { isReadOnly, isEmpty, onNew, t, children } = props
   return (isEmpty)
-    ? <EmptyView onClick={onNewSurvey} t={t}/>
+    ? <EmptyView isReadOnly={isReadOnly} onClick={onNew} t={t}/>
     : (<div>{children}</div>)
 }
 
@@ -312,18 +308,23 @@ const mapStateToProps = (state, ownProps) => {
   let surveys = mapStateToSurveys(state)
   let panelSurveys = mapStateToPanelSurveys(state)
 
-  // merge all together to sort by date
+  // Merge all together to sort by date
   // At the same time remove surveys inside PanelSurvey (ie waves)
   // PanelSurvey is shown as a group and its waves are not shown in this view
-  // And also remove surveys inside Folders
-  // And also remove panel surveys inside Folders
   let surveysAndPanelSurveys = [
-    ...surveys.filter(survey => (!survey.panelSurveyId && !survey.folderId)),
-    ...panelSurveys.filter(panelSurvey => (!panelSurvey.folderId))
+    ...surveys.filter(survey => !survey.panelSurveyId),
+    ...panelSurveys
   ]
 
+  // Keep Surveys and PanelSurveys that do not belongs to folders
+  surveysAndPanelSurveys = surveysAndPanelSurveys.filter(surveyOrPanelSurvey =>
+    !surveyOrPanelSurvey.folderId
+  )
+
   // Sort by updated_at (descending)
-  surveysAndPanelSurveys = surveysAndPanelSurveys.sort((x, y) => y.updatedAt.localeCompare(x.updatedAt))
+  surveysAndPanelSurveys = surveysAndPanelSurveys.sort((x, y) =>
+    y.updatedAt.localeCompare(x.updatedAt)
+  )
 
   // pagination
   const totalCount = surveysAndPanelSurveys ? surveysAndPanelSurveys.length : 0
@@ -340,17 +341,21 @@ const mapStateToProps = (state, ownProps) => {
   return {
     projectId: ownProps.params.projectId,
     project: state.project.data,
+
+    folders: state.folder.folders && Object.values(state.folder.folders),
     surveys,
-    channels: state.channels.items,
+    panelSurveys,
+    surveysAndPanelSurveys,
+
     startIndex,
     endIndex,
     totalCount,
-    loadingSurveys: state.surveys.fetching,
+
     loadingFolders: state.folder.loadingFetch,
-    folders: state.folder.folders && Object.values(state.folder.folders),
-    panelSurveys,
+    loadingSurveys: state.surveys.fetching,
     loadingPanelSurveys: state.panelSurveys.fetching,
-    surveysAndPanelSurveys
+
+    channels: state.channels.items
   }
 }
 
