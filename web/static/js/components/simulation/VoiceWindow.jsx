@@ -40,9 +40,13 @@ const VoiceWindow = translate()(class extends Component<VoiceWindowProps> {
   message: string
   messageTimer: TimeoutID
 
+  repeatMessageTimer: ?TimeoutID
+  timesRepeated: number
+
   constructor(props) {
     super(props)
     this.spectrum = new VoiceSpectrum()
+    this.timesRepeated = 0
   }
 
   componentDidMount() {
@@ -60,6 +64,8 @@ const VoiceWindow = translate()(class extends Component<VoiceWindowProps> {
     if (this.spectrum) {
       this.spectrum.stop()
     }
+
+    this.stopRepeatingLastAudio()
   }
 
   play() {
@@ -75,6 +81,11 @@ const VoiceWindow = translate()(class extends Component<VoiceWindowProps> {
       }
     } else {
       this.spectrum.stop()
+
+      // if simulation still active then start repeating the last audio
+      if (!this.props.readOnly) {
+        this.startRepeatingLastAudio()
+      }
     }
   }
 
@@ -82,17 +93,22 @@ const VoiceWindow = translate()(class extends Component<VoiceWindowProps> {
     // we may be interrupting an audio prompt here, so we stop any playing
     // audio, before skipping to the next one:
     this.audio.pause()
+    // we also stop any repeating question:
+    this.stopRepeatingLastAudio()
 
     // play the IVR prompt, continuing to the next one when finished:
     this.audio.src = audioURL(ivr)
     this.audio.onended = () => { this.play() }
     this.playPromise = this.audio.play()
+
     this.spectrum.start(this.audio)
   }
 
   entered(character: string): void {
     if (this.props.readOnly) return
     if (this.messageTimer) clearTimeout(this.messageTimer)
+    this.stopRepeatingLastAudio()
+
     this.message += character
 
     this.messageTimer = setTimeout(() => {
@@ -104,9 +120,48 @@ const VoiceWindow = translate()(class extends Component<VoiceWindowProps> {
   }
 
   hangUp(): void {
-    if (this.props.readOnly) return
     if (this.messageTimer) clearTimeout(this.messageTimer)
-    this.props.onSendMessage({ body: 'stop', type: 'at' })
+    this.stopRepeatingLastAudio()
+
+    if (!this.props.readOnly) {
+      this.props.onSendMessage({ body: 'stop', type: 'at' })
+    }
+  }
+
+  startRepeatingLastAudio(): void {
+    if (!this.audio) return // no last audio available to repeat
+    if (this.repeatMessageTimer) return // already repeating audio
+
+    this.initRepeatTimer(() => {
+      if (this.timesRepeated < 3) {
+        this.clearRepeatTimer()
+        this.repeatLastAudio()
+      } else {
+        this.hangUp()
+      }
+    })
+  }
+
+  stopRepeatingLastAudio(): void {
+    this.clearRepeatTimer()
+    this.timesRepeated = 0
+  }
+
+  repeatLastAudio(): void {
+    if (!this.audio) return
+
+    this.timesRepeated += 1
+    this.spectrum.restart()
+    this.audio.play()
+  }
+
+  initRepeatTimer(func): void {
+    this.repeatMessageTimer = setTimeout(func, 5000)
+  }
+
+  clearRepeatTimer(): void {
+    if (this.repeatMessageTimer) clearTimeout(this.repeatMessageTimer)
+    this.repeatMessageTimer = null
   }
 
   render() {
@@ -184,10 +239,7 @@ class VoiceSpectrum {
     // <audio> element -> AudioSource -> AudioAnalyser -> destination
     this.audioContext.createMediaElementSource(audio).connect(this.audioAnalyser)
     this.audioAnalyser.connect(this.audioContext.destination)
-
-    this.amplitudeData = new Uint8Array(this.audioAnalyser.frequencyBinCount)
-    this.playing = true
-    requestAnimationFrame(() => this.run())
+    this.restart()
   }
 
   run() {
@@ -204,6 +256,18 @@ class VoiceSpectrum {
       this.updateCanvas()
       this.playing = false
     })
+  }
+
+  // We need a restart method, because using `start(audio)` on the same audio raises:
+  // Uncaught InvalidStateError: Failed to execute 'createMediaElementSource' on 'AudioContext':
+  // HTMLMediaElement already connected previously to a different MediaElementSourceNode."
+  // https://bugs.chromium.org/p/chromium/issues/detail?id=429204
+  // https://bugs.chromium.org/p/chromium/issues/detail?id=851310
+  // https://stackoverflow.com/questions/38460984/problems-disconnecting-nodes-with-audiocontext-web-audio-api
+  restart() {
+    this.amplitudeData = new Uint8Array(this.audioAnalyser.frequencyBinCount)
+    this.playing = true
+    requestAnimationFrame(() => this.run())
   }
 
   updateCanvas() {
