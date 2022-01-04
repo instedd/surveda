@@ -689,7 +689,9 @@ defmodule Ask.Survey do
 
   # Regular survey can always change its folder
   def movable?(%{panel_survey_id: nil} = _survey), do: true
-  # Panel survey occurrences can't change its folder (because they don't belong to folders)
+  # Panel survey occurrences can't change its folder by its own
+  # Changing a Panel Survey's folder, triggers
+  # the folder change for each of its occurrences
   def movable?(_survey), do: false
 
   defp only_occurrence_of_panel_survey?(%{panel_survey_id: nil} = _survey), do: false

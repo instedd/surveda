@@ -182,7 +182,9 @@ defmodule Ask.SurveyController do
       |> assoc(:surveys)
       |> Repo.get!(survey_id)
 
-    # Panel surveys can belong to a folder, but their occurences don't.
+    # Occurrences cannot change its folder.
+    # Although it's allowed when changing the Panel Survey's folder
+    # they belong to.
     if Survey.belongs_to_panel_survey?(survey), do: raise ConflictError
 
     old_folder_name = if survey.folder_id, do: Repo.get(Folder, survey.folder_id).name, else: "No Folder"
@@ -205,7 +207,6 @@ defmodule Ask.SurveyController do
         |> render(Ask.ChangesetView, "error.json", changeset: changeset)
     end
   end
-
 
   def set_name(conn, %{"project_id" => project_id, "survey_id" => survey_id, "name" => name}) do
     project =
