@@ -178,7 +178,8 @@ class SurveyIndex extends Component<any, State> {
                        t={t}/>
 
           <SurveysGrid surveysAndPanelSurveys={surveysAndPanelSurveys}
-                       isReadOnly={readOnly}/>
+                       isReadOnly={readOnly}
+                       t={t}/>
 
           <PagingFooter {...{ startIndex, endIndex, totalCount }}
                         onPreviousPage={() => this.previousPage()}
@@ -230,7 +231,7 @@ const FoldersGrid = (props) => {
 }
 
 const SurveysGrid = (props) => {
-  const { surveysAndPanelSurveys, isReadOnly } = props
+  const { surveysAndPanelSurveys, isReadOnly, t } = props
 
   const isPanelSurvey = function(survey) {
     return survey.hasOwnProperty('occurrences')
@@ -240,8 +241,8 @@ const SurveysGrid = (props) => {
     <div className='survey-index-grid'>
       { surveysAndPanelSurveys.map(survey =>  {
           return isPanelSurvey(survey)
-            ? <PanelSurveyCard panelSurvey={survey} key={`panelsurvey-${survey.id}`} readOnly={isReadOnly} />
-            : <SurveyCard survey={survey} key={`survey-${survey.id}`} readOnly={isReadOnly} />
+            ? <PanelSurveyCard panelSurvey={survey} key={`panelsurvey-${survey.id}`} readOnly={isReadOnly} t={t} />
+            : <SurveyCard survey={survey} key={`survey-${survey.id}`} readOnly={isReadOnly} t={t} />
         })}
     </div>
   )

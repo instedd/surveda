@@ -112,7 +112,7 @@ class FolderShow extends Component<any, any> {
           <Action text={t('Panel Survey')} icon='repeat' onClick={() => this.newPanelSurvey()} />
         </MainActions>
 
-        <Title project={project} projectId={projectId} folder={folder}/>
+        <Title projectId={projectId} folder={folder}/>
 
         <MainView isReadOnly={readOnly}
                   isEmpty={isEmptyView}
@@ -120,7 +120,8 @@ class FolderShow extends Component<any, any> {
                   t={t}>
 
           <SurveysGrid surveysAndPanelSurveys={surveysAndPanelSurveys}
-                       isReadOnly={readOnly} />
+                       isReadOnly={readOnly}
+                       t={t} />
 
           <PagingFooter {...{ startIndex, endIndex, totalCount }}
                         onPreviousPage={() => this.previousPage()}
@@ -134,7 +135,7 @@ class FolderShow extends Component<any, any> {
 }
 
 const Title = (props) => {
-  const { project, projectId, folder } = props
+  const { projectId, folder } = props
 
   return folder.name
     ? (
@@ -173,54 +174,22 @@ const EmptyView = (props) => {
 }
 
 const SurveysGrid = (props) => {
-  const { surveysAndPanelSurveys, isReadOnly } = props
+  const { surveysAndPanelSurveys, isReadOnly, t } = props
 
   const isPanelSurvey = function (survey) {
     return survey.hasOwnProperty('occurrences')
   }
 
-  console.log("SurveysGrid")
-  console.log(surveysAndPanelSurveys)
-
   return (
     <div className='survey-index-grid'>
       {surveysAndPanelSurveys.map(survey => {
         return isPanelSurvey(survey)
-          ? <PanelSurveyCard panelSurvey={survey} key={`panelsurvey-${survey.id}`} readOnly={isReadOnly} />
-          : <SurveyCard survey={survey} key={`survey-${survey.id}`} readOnly={isReadOnly} />
+          ? <PanelSurveyCard panelSurvey={survey} key={`panelsurvey-${survey.id}`} readOnly={isReadOnly} t={t} />
+          : <SurveyCard survey={survey} key={`survey-${survey.id}`} readOnly={isReadOnly} t={t} />
       })}
     </div>
   )
 }
-
-// const mapStateToProps = (state, ownProps) => {
-//   const { params, t } = ownProps
-
-//   const folderId = params.folderId && parseInt(params.folderId)
-//   if (!folderId) throw new Error(t('Missing param: folderId'))
-//   const { surveys, startIndex, endIndex, totalCount } = surveyIndexProps(state, {
-//     folderId: folderId,
-//     panelSurveyId: null
-//   })
-//   const folders = state.folder && state.folder.folders
-//   const folder = folders && folders[folderId]
-//   // const name = folder && folder.name
-
-//   return {
-//     projectId: ownProps.params.projectId,
-//     folder,
-//     project: state.project.data,
-//     surveys,
-//     startIndex,
-//     endIndex,
-//     totalCount,
-//     loadingSurveys: state.surveys.fetching,
-//     loadingFolder: state.panelSurvey.loading || state.folder.loading,
-//     // name,
-//     panelSurveys: state.panelSurveys.items && Object.values(state.panelSurveys.items),
-//     loadingPanelSurveys: state.panelSurveys.fetching
-//   }
-// }
 
 const mapStateToSurveys = (state) => {
   let { items } = state.surveys
@@ -234,7 +203,7 @@ const mapStateToPanelSurveys = (state) => {
 
 const mapStateToProps = (state, ownProps) => {
   const { params, t } = ownProps
-  const { folderId } = params
+  const { projectId, folderId } = params
 
   let surveys = mapStateToSurveys(state)
   let panelSurveys = mapStateToPanelSurveys(state)
@@ -274,7 +243,7 @@ const mapStateToProps = (state, ownProps) => {
                  state.folder.folders[folderId]
 
   return {
-    projectId: ownProps.params.projectId,
+    projectId,
     project: state.project.data,
 
     folder,
