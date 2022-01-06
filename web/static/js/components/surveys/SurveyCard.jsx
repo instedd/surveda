@@ -32,10 +32,6 @@ class _SurveyCard extends Component<any> {
 
   componentDidMount() {
     const { survey, dispatch } = this.props
-
-    console.log("SurveyCard")
-    console.log(dispatch)
-
     if (survey.state != 'not_ready') {
       fetchRespondentsStats(survey.projectId, survey.id)(dispatch)
     }

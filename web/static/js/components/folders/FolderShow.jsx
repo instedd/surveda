@@ -13,7 +13,6 @@ import { MainAction, Action, EmptyPage, ConfirmationModal, PagingFooter } from '
 import { SurveyCard, PanelSurveyCard } from '../surveys/SurveyCard'
 import * as routes from '../../routes'
 import { translate } from 'react-i18next'
-// import { surveyIndexProps } from '../surveys/SurveyIndex'
 
 class FolderShow extends Component<any, any> {
   state = {}
@@ -21,20 +20,24 @@ class FolderShow extends Component<any, any> {
     t: PropTypes.func,
     dispatch: PropTypes.func,
     router: PropTypes.object,
+    params: PropTypes.object,
+
     projectId: PropTypes.any.isRequired,
     project: PropTypes.object,
+
+    folderId: PropTypes.number,
+    folder: PropTypes.object,
     surveys: PropTypes.array,
+    panelSurveys: PropTypes.array,
+    surveysAndPanelSurveys: PropTypes.array,
+
     startIndex: PropTypes.number.isRequired,
     endIndex: PropTypes.number.isRequired,
     totalCount: PropTypes.number.isRequired,
-    params: PropTypes.object,
-    folderId: PropTypes.number,
-    // name: PropTypes.string,
+
     loadingFolder: PropTypes.bool,
     loadingSurveys: PropTypes.bool,
-    panelSurveys: PropTypes.array,
     loadingPanelSurveys: PropTypes.bool,
-    surveysAndPanelSurveys: PropTypes.array,
   }
 
   componentWillMount() {
@@ -246,6 +249,7 @@ const mapStateToProps = (state, ownProps) => {
     projectId,
     project: state.project.data,
 
+    folderId,
     folder,
     surveys,
     panelSurveys,

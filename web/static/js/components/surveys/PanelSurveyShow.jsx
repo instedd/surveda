@@ -20,20 +20,22 @@ class PanelSurveyShow extends Component<any, any> {
     t: PropTypes.func,
     dispatch: PropTypes.func,
     router: PropTypes.object,
+    params: PropTypes.object,
+
     projectId: PropTypes.any.isRequired,
     project: PropTypes.object,
+
+    panelSurveyId: PropTypes.number.isRequired,
+    panelSurvey: PropTypes.object,
+
     surveys: PropTypes.array,
+
     startIndex: PropTypes.number.isRequired,
     endIndex: PropTypes.number.isRequired,
     totalCount: PropTypes.number.isRequired,
-    params: PropTypes.object,
-    panelSurveyId: PropTypes.number.isRequired,
-    name: PropTypes.string,
+
     loadingPanelSurvey: PropTypes.bool,
-    loadingSurveys: PropTypes.bool,
-    panelSurvey: PropTypes.object,
-    panelSurveys: PropTypes.array,
-    loadingPanelSurveys: PropTypes.bool
+    loadingSurveys: PropTypes.bool
   }
 
   componentWillMount() {
@@ -43,7 +45,7 @@ class PanelSurveyShow extends Component<any, any> {
 
     dispatch(actions.fetchSurveys(projectId))
     dispatch(folderActions.fetchFolders(projectId))
-    dispatch(panelSurveysActions.fetchPanelSurveys(projectId))
+    dispatch(panelSurveysActions.fetchPanelSurveys(projectId)) // TODO: check if necessary
     if (!panelSurvey) {
       dispatch(panelSurveyActions.fetchPanelSurvey(projectId, panelSurveyId))
     }
@@ -73,17 +75,6 @@ class PanelSurveyShow extends Component<any, any> {
     dispatch(actions.previousSurveysPage())
   }
 
-  // loadingMessage() {
-  //   const { loadingSurveys, t, panelSurvey } = this.props
-
-  //   if (!panelSurvey) {
-  //     return t('Loading panel survey...')
-  //   } else if (loadingSurveys) {
-  //     return t('Loading surveys...')
-  //   }
-  //   return null
-  // }
-
   render() {
     const {
       projectId,
@@ -98,10 +89,6 @@ class PanelSurveyShow extends Component<any, any> {
       totalCount,
       t
     } = this.props
-
-
-    console.log(panelSurvey)
-    console.log(loadingPanelSurvey)
 
     const isLoading = (!panelSurvey && loadingPanelSurvey) ||
                       (!surveys && loadingSurveys)
@@ -216,8 +203,8 @@ const mapStateToProps = (state, ownProps) => {
     projectId: projectId,
     project: state.project.data,
 
-    panelSurvey,
     panelSurveyId,
+    panelSurvey,
 
     surveys,
 
@@ -229,49 +216,5 @@ const mapStateToProps = (state, ownProps) => {
     loadingSurveys: state.surveys.fetching
   }
 }
-
-// const mapStateToProps = (state, ownProps) => {
-//   const { params, t } = ownProps
-//   const { projectId, panelSurveyId } = params
-
-//   const panelSurveyId = params.panelSurveyId && parseInt(params.panelSurveyId)
-//   if (!panelSurveyId) throw new Error(t('Missing param: panelSurveyId'))
-
-//   let panelSurvey = null
-//   if (state.panelSurvey.data && state.panelSurvey.data.id == panelSurveyId) {
-//     panelSurvey = state.panelSurvey.data
-//   }
-//   const name = panelSurvey && panelSurvey.name || t('Untitled panel survey')
-
-//   const occurrences = panelSurvey ? panelSurvey.occurrences : null
-
-//   // NOTE: we fake pagination (backend doesn't paginate, yet)
-//   let totalCount = occurrences ? occurrences.length : 0
-//   const pageIndex = 0
-//   const pageSize = totalCount
-//   const startIndex = Math.min(totalCount, pageIndex + 1)
-//   const endIndex = Math.min(pageIndex + pageSize, totalCount)
-
-//   return {
-//     projectId: projectId,
-//     project: state.project.data,
-
-//     panelSurvey,
-//     panelSurveyId,
-
-//     surveys: occurrences,
-
-//     startIndex,
-//     endIndex,
-//     totalCount,
-
-//     loadingPanelSurvey: state.panelSurvey.loading || state.folder.loading,
-//     loadingSurveys: state.surveys.fetching,
-
-//     // name,
-//     // panelSurveys: state.panelSurveys.items && Object.values(state.panelSurveys.items),
-//     // loadingPanelSurveys: state.panelSurveys.fetching
-//   }
-// }
 
 export default translate()(withRouter(connect(mapStateToProps)(PanelSurveyShow)))

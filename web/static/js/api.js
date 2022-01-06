@@ -294,8 +294,6 @@ export const setFolderId = (projectId, surveyId, folderId) => {
 }
 
 export const panelSurveySetFolderId = (projectId, panelSurveyId, folderId) => {
-  console.log("panelSurveySetFolderId")
-  console.log({projectId, panelSurveyId, folderId})
   return apiPostJSON(`projects/${projectId}/panel_surveys/${panelSurveyId}/set_folder_id`, null, { folderId: folderId || null })
 }
 
