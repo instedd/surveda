@@ -168,7 +168,7 @@ class SurveyIndex extends Component<any, State> {
 const mergePanelSurveysIntoSurveys = (surveys, panelSurveys) => {
   return panelSurveys
     .map(panelSurvey => ({
-      ...panelSurvey.latestOccurrence,
+      ...panelSurvey.latestWave,
       panelSurvey: panelSurvey
     }))
     .concat(surveys)
