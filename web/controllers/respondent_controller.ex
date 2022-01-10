@@ -140,7 +140,7 @@ defmodule Ask.RespondentController do
   end
 
   def stats(conn, _params, %{survey: survey}) do
-    stats(conn, survey, survey.quota_vars)
+    stats_for(conn, survey, survey.quota_vars)
   rescue
     e ->
       Logger.error(e, __STACKTRACE__, "Error occurred while processing respondent stats (survey_id: #{survey.id})")
@@ -151,13 +151,13 @@ defmodule Ask.RespondentController do
       render(conn, "stats.json", stats: nil)
   end
 
-  defp stats(conn, survey, []) do
+  defp stats_for(conn, survey, []) do
     questionnaires = (survey |> Repo.preload(:questionnaires)).questionnaires
     respondent_count = Ask.RespondentStats.respondent_count(survey_id: ^survey.id)
 
     cond do
       length(questionnaires) > 1 && length(survey.mode) > 1 ->
-        stats(
+        stats_for(
           conn,
           survey,
           respondent_count,
@@ -169,7 +169,7 @@ defmodule Ask.RespondentController do
         )
 
       length(survey.mode) > 1 ->
-        stats(
+        stats_for(
           conn,
           survey,
           respondent_count,
@@ -181,7 +181,7 @@ defmodule Ask.RespondentController do
         )
 
       true ->
-        stats(
+        stats_for(
           conn,
           survey,
           respondent_count,
@@ -194,12 +194,12 @@ defmodule Ask.RespondentController do
     end
   end
 
-  defp stats(conn, survey, _) do
+  defp stats_for(conn, survey, _) do
     buckets = (survey |> Repo.preload(:quota_buckets)).quota_buckets
     empty_bucket_ids = buckets |> Enum.filter(fn(bucket) -> bucket.quota in [0, nil] end) |> Enum.map(&(&1.id))
     buckets = buckets |> Enum.reject(fn(bucket) -> bucket.quota in [0, nil] end)
     respondent_count = Ask.RespondentStats.respondent_count(survey_id: ^survey.id)
-    stats(
+    stats_for(
       conn,
       survey,
       respondent_count,
@@ -211,7 +211,7 @@ defmodule Ask.RespondentController do
     )
   end
 
-  defp stats(conn, survey, total_respondents, respondents_by_disposition, respondents_by_completed_at, references, buckets, layout) do
+  defp stats_for(conn, survey, total_respondents, respondents_by_disposition, respondents_by_completed_at, references, buckets, layout) do
     target = target(survey, buckets, total_respondents)
 
     total_respondents_by_disposition =
