@@ -1,5 +1,6 @@
 defmodule Ask.QuestionnaireController do
   use Ask.Web, :api_controller
+  use Ask.Web, :append_assigns_to_action
 
   alias Ask.{
     Questionnaire,
@@ -21,14 +22,26 @@ defmodule Ask.QuestionnaireController do
     QuestionnaireAction
   }
 
+  plug :assign_project when action in [
+    :index,
+    :show,
+    :export_zip,
+    :start_simulation,
+    :sync_simulation,
+    :get_last_simulation_response,
+  ]
+  plug :assign_project_for_change when action in [
+    :create,
+    :update,
+    :update_archived_status,
+    :delete,
+    :import_zip,
+  ]
   plug :validate_params when action in [:create, :update]
+
   action_fallback Ask.FallbackController
 
-  def index(conn, %{"project_id" => project_id} = params) do
-    project =
-      conn
-      |> load_project(project_id)
-
+  def index(conn, params, %{project: project}) do
     archived = ControllerHelper.archived_param(params, "url")
 
     query =
@@ -46,11 +59,7 @@ defmodule Ask.QuestionnaireController do
     render(conn, "index.json", questionnaires: questionnaires)
   end
 
-  def create(conn, %{"project_id" => project_id}) do
-    project = conn
-    |> load_project_for_change(project_id)
-    |> validate_project_not_archived(conn)
-
+  def create(conn, _, %{project: project}) do
     params = conn.assigns[:questionnaire]
     |> Map.put_new("languages", ["en"])
     |> Map.put_new("default_language", "en")
@@ -73,7 +82,7 @@ defmodule Ask.QuestionnaireController do
         questionnaire |> Questionnaire.recreate_variables!
         conn
         |> put_status(:created)
-        |> put_resp_header("location", project_questionnaire_path(conn, :index, project_id))
+        |> put_resp_header("location", project_questionnaire_path(conn, :index, project.id))
         |> render("show.json", questionnaire: questionnaire)
       {:error, _, changeset, _} ->
         Logger.warn "Error when creating questionnaire: #{inspect changeset}"
@@ -84,18 +93,12 @@ defmodule Ask.QuestionnaireController do
     end
   end
 
-  def show(conn, %{"project_id" => project_id, "id" => id}) do
-    project = conn
-    |> load_project(project_id)
-
+  def show(conn, %{"id" => id}, %{project: project}) do
     with {:ok, questionnaire} <- load_questionnaire(project, id), do:
       render(conn, "show.json", questionnaire: questionnaire)
   end
 
-  def update(conn, %{"project_id" => project_id, "id" => id}) do
-    project = conn
-    |> load_project_for_change(project_id)
-
+  def update(conn, %{"id" => id}, %{project: project}) do
     params = conn.assigns[:questionnaire]
 
     questionnaire = load_questionnaire_not_snapshot_nor_archived(project.id, id)
@@ -152,15 +155,7 @@ defmodule Ask.QuestionnaireController do
     end)
   end
 
-  def update_archived_status(conn, %{
-        "project_id" => project_id,
-        "questionnaire_id" => id,
-        "questionnaire" => params
-      }) do
-    project =
-      conn
-      |> load_project_for_change(project_id)
-
+  def update_archived_status(conn, %{"questionnaire_id" => id, "questionnaire" => params}, %{project: project}) do
     questionnaire = load_questionnaire_not_snapshot(project.id, id)
     archived = ControllerHelper.archived_param(params, "body_json", true)
 
@@ -220,10 +215,7 @@ defmodule Ask.QuestionnaireController do
     end
   end
 
-  def delete(conn, %{"project_id" => project_id, "id" => id}) do
-    project = conn
-    |> load_project_for_change(project_id)
-
+  def delete(conn, %{"id" => id}, %{project: project}) do
     changeset = load_questionnaire_not_snapshot(project.id, id)
     |> Questionnaire.changeset(%{deleted: true})
 
@@ -267,10 +259,7 @@ defmodule Ask.QuestionnaireController do
     end
   end
 
-  def export_zip(conn, %{"project_id" => project_id, "questionnaire_id" => id}) do
-    project = conn
-    |> load_project(project_id)
-
+  def export_zip(conn, %{"questionnaire_id" => id}, %{project: project}) do
     questionnaire = load_questionnaire_not_snapshot(project.id, id)
 
     zip_file = QuestionnaireAction.export_and_zip(questionnaire)
@@ -294,10 +283,7 @@ defmodule Ask.QuestionnaireController do
        )
   end
 
-  def import_zip(conn, %{"project_id" => project_id, "questionnaire_id" => id, "file" => file}) do
-    project = conn
-    |> load_project_for_change(project_id)
-
+  def import_zip(conn, %{"questionnaire_id" => id, "file" => file}, %{project: project}) do
     questionnaire = load_questionnaire_not_snapshot(project.id, id)
 
     {:ok, files} = :zip.unzip(to_charlist(file.path), [:memory])
@@ -334,8 +320,7 @@ defmodule Ask.QuestionnaireController do
     render(conn, "show.json", questionnaire: questionnaire)
   end
 
-  def start_simulation(conn, %{"project_id" => project_id, "questionnaire_id" => id}) do
-    project = conn |> load_project(project_id)
+  def start_simulation(conn, %{"questionnaire_id" => id}, %{project: project}) do
     mode = conn.params["mode"]
     with {:ok, questionnaire} <- load_questionnaire(project, id),
          {:ok, simulation_response} <- QuestionnaireSimulator.start_simulation(project, questionnaire, mode)
@@ -344,16 +329,12 @@ defmodule Ask.QuestionnaireController do
     end
   end
 
-  def sync_simulation(conn, %{"project_id" => project_id, "respondent_id" => respondent_id, "response" => response, "mode" => mode}) do
-    # Load project to authorize connection
-    conn |> load_project(project_id)
+  def sync_simulation(conn, %{"respondent_id" => respondent_id, "response" => response, "mode" => mode}, _) do
     with {:ok, simulation_response} <- QuestionnaireSimulator.process_respondent_response(respondent_id, response, mode), do:
       render(conn, "simulation.json", simulation: simulation_response)
   end
 
-  def get_last_simulation_response(conn, %{"project_id" => project_id, "respondent_id" => respondent_id}) do
-    # Load project to authorize connection
-    conn |> load_project(project_id)
+  def get_last_simulation_response(conn, %{"respondent_id" => respondent_id}, _) do
     with {:ok, simulation_response} <- QuestionnaireMobileWebSimulator.get_last_simulation_response(respondent_id), do:
       render(conn, "simulation.json", simulation: simulation_response)
   end

@@ -2077,6 +2077,22 @@ defmodule Ask.SurveyControllerTest do
     end
   end
 
+  describe "config" do
+    setup context do
+      project = create_project_for_user(context[:user])
+      survey = insert(:survey, project: project)
+      [project: project, survey: survey]
+    end
+
+    test "post", %{conn: conn, project: project, survey: survey} do
+      post conn, project_survey_survey_path(conn, :config, project, survey)
+    end
+
+    test "get", %{conn: conn, project: project, survey: survey} do
+      get conn, project_survey_survey_path(conn, :config, project, survey)
+    end
+  end
+
   describe "download links" do
     test "results link generation", %{conn: conn, user: user} do
       project = create_project_for_user(user)

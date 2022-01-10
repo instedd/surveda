@@ -1,14 +1,39 @@
 defmodule Ask.SurveyController do
   use Ask.Web, :api_controller
+  use Ask.Web, :append_assigns_to_action
+
+  import Survey.Helper
 
   alias Ask.{Project, Folder, Survey, Questionnaire, Logger, RespondentGroup, Respondent, Channel, ShortLink, ActivityLog, RetriesHistogram, ScheduleError, ConflictError}
   alias Ask.Runtime.{Session, SurveyAction}
   alias Ecto.Multi
 
-  def index(conn, %{"project_id" => project_id} = params) do
-    project = conn
-    |> load_project(project_id)
+  plug :assign_project when action in [
+    :index,
+    :show,
+    :stats,
+    :retries_histograms,
+    :simulation_initial_state,
+    :simulation_status,
+    :stop_simulation,
+  ]
+  plug :assign_project_for_change when action in [
+    :create,
+    :update,
+    :set_folder_id,
+    :set_name,
+    :set_description,
+    :delete,
+    :launch,
+    :simulate_questionanire,
+    :create_link,
+    :delete_link,
+    :refresh_link,
+    :stop,
+  ]
+  plug :assign_project_for_owner when action in [:update_locked_status]
 
+  def index(conn, params, %{project: project}) do
     dynamic = dynamic([s], s.project_id == ^project.id and is_nil(s.folder_id) and is_nil(s.panel_survey_id))
 
     # Hide simulations from the index
@@ -41,19 +66,15 @@ defmodule Ask.SurveyController do
     render(conn, "index.json", surveys: surveys)
   end
 
-  def create(conn, params = %{"project_id" => project_id}) do
+  def create(conn, params, %{project: project}) do
     folder_id = Map.get(params, "folder_id")
-
-    project = conn
-    |> load_project_for_change(project_id)
-    |> validate_project_not_archived(conn)
 
     survey_params = Map.get(params, "survey", %{})
     timezone = Map.get(survey_params, "timezone", Ask.Schedule.default_timezone())
     schedule = Map.merge(Ask.Schedule.default(), %{timezone: timezone})
     generates_panel_survey = Map.get(survey_params, "generates_panel_survey", false)
     props = %{
-      "project_id" => project_id,
+      "project_id" => project.id,
       "folder_id" => folder_id,
       "name" => "",
       "schedule" => schedule,
@@ -78,11 +99,11 @@ defmodule Ask.SurveyController do
         survey = survey
         |> Repo.preload([:quota_buckets])
         |> Repo.preload(:questionnaires)
-        |> Survey.with_links(user_level(project_id, current_user(conn).id))
+        |> Survey.with_links(user_level(project.id, current_user(conn).id))
 
         conn
         |> put_status(:created)
-        |> put_resp_header("location", project_survey_path(conn, :show, project_id, survey))
+        |> put_resp_header("location", project_survey_path(conn, :show, project.id, survey))
         |> render("show.json", survey: survey)
       {:error, _, changeset, _} ->
         Logger.warn "Error when creating a survey: #{inspect changeset}"
@@ -93,51 +114,34 @@ defmodule Ask.SurveyController do
     end
   end
 
-  def show(conn, %{"project_id" => project_id, "id" => id}) do
-    survey = conn
-    |> load_project(project_id)
-    |> assoc(:surveys)
-    |> Repo.get!(id)
+  def show(conn, %{"id" => id}, %{project: project}) do
+    survey = load_survey(project, id)
     |> Repo.preload([:quota_buckets])
     |> Repo.preload(:questionnaires)
     |> Repo.preload(:folder)
     |> Repo.preload(panel_survey: [:folder])
     |> Repo.preload(respondent_groups: [respondent_group_channels: :channel])
-    |> Survey.with_links(user_level(project_id, current_user(conn).id))
+    |> Survey.with_links(user_level(project.id, current_user(conn).id))
     |> Survey.with_down_channels
 
     render(conn, "show.json", survey: survey)
   end
 
-  def stats(conn, %{"project_id" => project_id, "survey_id" => survey_id}) do
-    survey = conn
-    |> load_project(project_id)
-    |> assoc(:surveys)
-    |> Repo.get!(survey_id)
+  def stats(conn, %{"survey_id" => survey_id}, %{project: project}) do
+    survey = load_survey(project, survey_id)
 
-    stats = survey |> Survey.stats
-
-    render(conn, "stats.json", stats)
+    render(conn, "stats.json", Survey.stats(survey))
   end
 
-  def retries_histograms(conn, %{"project_id" => project_id, "survey_id" => survey_id}) do
-    survey = conn
-    |> load_project(project_id)
-    |> assoc(:surveys)
-    |> Repo.get!(survey_id)
-
-    retries_histograms = survey |> RetriesHistogram.survey_histograms()
+  def retries_histograms(conn, %{"survey_id" => id}, %{project: project}) do
+    retries_histograms = load_survey(project, id)
+    |> RetriesHistogram.survey_histograms()
 
     render(conn, "retries_histograms.json", %{histograms: retries_histograms})
   end
 
-  def update(conn, %{"project_id" => project_id, "id" => id, "survey" => survey_params}) do
-    project = conn
-      |> load_project_for_change(project_id)
-
-    survey = project
-      |> assoc(:surveys)
-      |> Repo.get!(id)
+  def update(conn, %{"id" => id, "survey" => survey_params}, %{project: project}) do
+    survey = load_survey(project, id)
 
     if survey |> Survey.editable? do
       changeset = survey
@@ -167,7 +171,7 @@ defmodule Ask.SurveyController do
       case multi do
         {:ok, %{survey: survey}} ->
           project |> Project.touch!
-          render(conn, "show.json", survey: survey |> Repo.preload(:questionnaires) |> Survey.with_links(user_level(project_id, current_user(conn).id)))
+          render(conn, "show.json", survey: survey |> Repo.preload(:questionnaires) |> Survey.with_links(user_level(project.id, current_user(conn).id)))
         {:error, _, changeset, _} ->
           Logger.warn "Error when updating survey: #{inspect changeset}"
           conn
@@ -183,15 +187,8 @@ defmodule Ask.SurveyController do
     end
   end
 
-  def set_folder_id(conn, %{"project_id" => project_id, "survey_id" => survey_id, "folder_id" => folder_id}) do
-    project =
-      conn
-      |> load_project_for_change(project_id)
-
-    survey =
-      project
-      |> assoc(:surveys)
-      |> Repo.get!(survey_id)
+  def set_folder_id(conn, %{"survey_id" => survey_id, "folder_id" => folder_id}, %{project: project}) do
+    survey = load_survey(project, survey_id)
 
     # Panel surveys can belong to a folder, but their waves don't.
     if Survey.belongs_to_panel_survey?(survey), do: raise ConflictError
@@ -219,15 +216,8 @@ defmodule Ask.SurveyController do
   end
 
 
-  def set_name(conn, %{"project_id" => project_id, "survey_id" => survey_id, "name" => name}) do
-    project =
-      conn
-      |> load_project_for_change(project_id)
-
-    survey =
-      project
-      |> assoc(:surveys)
-      |> Repo.get!(survey_id)
+  def set_name(conn, %{"survey_id" => survey_id, "name" => name}, %{project: project}) do
+    survey = load_survey(project, survey_id)
 
     result =
       Multi.new()
@@ -247,15 +237,8 @@ defmodule Ask.SurveyController do
     end
   end
 
-  def set_description(conn, %{"project_id" => project_id, "survey_id" => survey_id, "description" => description}) do
-    project =
-      conn
-      |> load_project_for_change(project_id)
-
-    survey =
-      project
-      |> assoc(:surveys)
-      |> Repo.get!(survey_id)
+  def set_description(conn, %{"survey_id" => survey_id, "description" => description}, %{project: project}) do
+    survey = load_survey(project, survey_id)
 
     result =
       Multi.new()
@@ -283,13 +266,8 @@ defmodule Ask.SurveyController do
     changeset
   end
 
-  def delete(conn, %{"project_id" => project_id, "id" => id}) do
-    project = conn
-    |> load_project_for_change(project_id)
-
-    survey = project
-    |> assoc(:surveys)
-    |> Repo.get!(id)
+  def delete(conn, %{"id" => id}, %{project: project}) do
+    survey = load_survey(project, id)
 
     unless Survey.deletable?(survey), do: raise ConflictError
 
@@ -305,7 +283,7 @@ defmodule Ask.SurveyController do
     end
   end
 
-  def launch(conn, %{"project_id" => project_id, "survey_id" => survey_id}) do
+  def launch(conn, %{"survey_id" => survey_id}, %{project: project}) do
     perform_action = fn survey ->
       try do
         SurveyAction.start(survey)
@@ -314,16 +292,11 @@ defmodule Ask.SurveyController do
       end
     end
 
-    activity_log = fn survey -> ActivityLog.start(survey.project, conn, survey) end
+    activity_log = fn survey ->
+      ActivityLog.start(survey.project, conn, survey)
+    end
 
-    project =
-      conn
-      |> load_project_for_change(project_id)
-
-    survey =
-      project
-      |> assoc(:surveys)
-      |> Repo.get!(survey_id)
+    survey = load_survey(project, survey_id)
 
     case perform_action.(survey) do
       {:ok, %{survey: survey}} ->
@@ -352,10 +325,12 @@ defmodule Ask.SurveyController do
           |> Survey.with_links(user_level(survey.project_id, current_user(conn).id))
       )
 
-  def simulate_questionanire(conn, %{"project_id" => project_id, "questionnaire_id" => questionnaire_id, "phone_number" => phone_number, "mode" => mode, "channel_id" => channel_id}) do
-    project = conn
-    |> load_project_for_change(project_id)
-
+  def simulate_questionanire(conn, %{
+    "questionnaire_id" => questionnaire_id,
+    "phone_number" => phone_number,
+    "mode" => mode,
+    "channel_id" => channel_id
+  }, %{project: project}) do
     questionnaire = Repo.one!(from q in Questionnaire,
       where: q.project_id == ^project.id,
       where: q.id == ^questionnaire_id)
@@ -405,15 +380,11 @@ defmodule Ask.SurveyController do
     |> Repo.insert!
 
     conn
-    |> launch(%{"project_id" => survey.project_id, "survey_id" => survey.id})
+    |> launch(%{"survey_id" => survey.id}, %{project: project})
   end
 
-  def simulation_status(conn, %{"project_id" => project_id, "survey_id" => survey_id}) do
-    survey = conn
-    |> load_project(project_id)
-    |> assoc(:surveys)
-    |> where([s], s.simulation)
-    |> Repo.get!(survey_id)
+  def simulation_status(conn, %{"survey_id" => survey_id}, %{project: project}) do
+    survey = load_survey_simulation(project, survey_id)
 
     # The simulation has only one respondent
     respondent = Repo.one!(from r in Respondent,
@@ -460,14 +431,8 @@ defmodule Ask.SurveyController do
     })
   end
 
-  def stop_simulation(conn, %{"project_id" => project_id, "survey_id" => survey_id}) do
-    project = conn
-    |> load_project(project_id)
-
-    survey = project
-    |> assoc(:surveys)
-    |> where([s], s.simulation)
-    |> Repo.get!(survey_id)
+  def stop_simulation(conn, %{"survey_id" => survey_id}, %{project: project}) do
+    survey = load_survey_simulation(project, survey_id)
 
     questionnaire = survey
     |> assoc(:questionnaires)
@@ -484,18 +449,12 @@ defmodule Ask.SurveyController do
     })
   end
 
-  def config(conn, _params) do
+  def config(conn, _params, _project) do
     render(conn, "config.json", config: Survey.config_rates())
   end
 
-  def create_link(conn, %{"project_id" => project_id, "survey_id" => survey_id, "name" => target_name}) do
-
-    project = conn
-    |> load_project_for_change(project_id)
-
-    survey = project
-    |> assoc(:surveys)
-    |> Repo.get!(survey_id)
+  def create_link(conn, %{"survey_id" => survey_id, "name" => target_name}, %{project: project}) do
+    survey = load_survey(project, survey_id)
 
     {name, target} = case target_name do
       "results" ->
@@ -544,17 +503,12 @@ defmodule Ask.SurveyController do
     end
   end
 
-  def refresh_link(conn, %{"project_id" => project_id, "survey_id" => survey_id, "name" => target_name}) do
-    project = conn
-    |> load_project_for_change(project_id)
-
+  def refresh_link(conn, %{"survey_id" => survey_id, "name" => target_name}, %{project: project}) do
     if target_name == "interactions" || target_name == "incentives" do
       authorize_admin(project, conn)
     end
 
-    survey = project
-    |> assoc(:surveys)
-    |> Repo.get!(survey_id)
+    survey = load_survey(project, survey_id)
 
     link = ShortLink
     |> Repo.get_by(name: Survey.link_name(survey, String.to_atom(target_name)))
@@ -583,17 +537,12 @@ defmodule Ask.SurveyController do
     end
   end
 
-  def delete_link(conn, %{"project_id" => project_id, "survey_id" => survey_id, "name" => target_name}) do
-    project = conn
-    |> load_project_for_change(project_id)
-
+  def delete_link(conn, %{"survey_id" => survey_id, "name" => target_name}, %{project: project}) do
     if target_name == "interactions" || target_name == "incentives" do
       authorize_admin(project, conn)
     end
 
-    survey = project
-    |> assoc(:surveys)
-    |> Repo.get!(survey_id)
+    survey = load_survey(project, survey_id)
 
     link = ShortLink
     |> Repo.get_by(name: Survey.link_name(survey, String.to_atom(target_name)))
@@ -619,15 +568,8 @@ defmodule Ask.SurveyController do
     end
   end
 
-  def stop(conn, %{"project_id" => project_id, "survey_id" => id}) do
-    project =
-      conn
-      |> load_project_for_change(project_id)
-
-    survey =
-      project
-      |> assoc(:surveys)
-      |> Repo.get!(id)
+  def stop(conn, %{"survey_id" => id}, %{project: project}) do
+    survey = load_survey(project, id)
 
     case SurveyAction.stop(survey, conn) do
       {:ok, %{survey: survey, cancellers_pids: cancellers_pids}} ->
@@ -659,20 +601,11 @@ defmodule Ask.SurveyController do
     render(conn, "show.json", survey: survey_with_links)
   end
 
-  def update_locked_status(conn, %{"project_id" => project_id, "survey_id" => survey_id, "locked" => locked}) do
-    project =
-      conn
-      |> load_project_for_owner(project_id)
-
-    survey =
-      project
-      |> assoc(:surveys)
-      |> Repo.get!(survey_id)
-
-    survey = survey
+  def update_locked_status(conn, %{"survey_id" => survey_id, "locked" => locked}, %{project: project}) do
+    survey = load_survey(project, survey_id)
     |> Repo.preload([:quota_buckets])
     |> Repo.preload(:questionnaires)
-    |> Survey.with_links(user_level(survey.project_id, current_user(conn).id))
+    |> Survey.with_links(user_level(project.id, current_user(conn).id))
 
     case survey.state do
       "running" ->
@@ -710,11 +643,8 @@ defmodule Ask.SurveyController do
     end
   end
 
-  def simulation_initial_state(conn, %{"project_id" => project_id, "survey_id" => survey_id, "mode" => mode}) do
-    survey = load_project(conn, project_id)
-    |> assoc(:surveys)
-    |> where([s], s.simulation)
-    |> Repo.get!(survey_id)
+  def simulation_initial_state(conn, %{"survey_id" => survey_id, "mode" => mode}, %{project: project}) do
+    survey = load_survey_simulation(project, survey_id)
 
     render_initial_state(conn, survey.id, mode)
   end

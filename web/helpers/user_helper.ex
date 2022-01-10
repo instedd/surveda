@@ -71,8 +71,16 @@ defmodule User.Helper do
     |> authorize(conn)
   end
 
-  # Loads a project, and checks that the current user belongs to
-  # it as either and owner or editor, but not as a reader.
+  # Loads the project using `load_project` for the current request (requires the
+  # `project_id` param) then assigns it to `conn`.
+  def assign_project(conn, _) do
+    project = load_project(conn, conn.params["project_id"])
+    conn |> Plug.Conn.assign(:project, project)
+  end
+
+  # Loads a project, and checks that the current user belongs to it as either
+  # and owner or editor, but not as a reader. Also verifies that the project
+  # hasn't been archived.
   def load_project_for_change(conn, project_id) do
     Project
     |> Repo.get!(project_id)
@@ -80,11 +88,25 @@ defmodule User.Helper do
     |> validate_project_not_archived(conn)
   end
 
+  # Loads the project using `load_project_for_change` for the current request
+  # (requires the `project_id` param) then assigns it to `conn`.
+  def assign_project_for_change(conn, _) do
+    project = load_project_for_change(conn, conn.params["project_id"])
+    conn |> Plug.Conn.assign(:project, project)
+  end
+
   # Loads a project, and checks that the current user its owner.
   def load_project_for_owner(conn, project_id) do
     Project
     |> Repo.get!(project_id)
     |> authorize_admin(conn)
+  end
+
+  # Loads the project using `load_project_for_owner` for the current request
+  # (requires the `project_id` param) then assigns it to `conn`.
+  def assign_project_for_owner(conn, _) do
+    project = load_project_for_owner(conn, conn.params["project_id"])
+    conn |> Plug.Conn.assign(:project, project)
   end
 
   def validate_project_not_archived(project, conn) do

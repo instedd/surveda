@@ -1,16 +1,16 @@
 defmodule Ask.FolderController do
   use Ask.Web, :api_controller
+  use Ask.Web, :append_assigns_to_action
 
   alias Ask.{Folder, Logger, ActivityLog, Project}
   alias Ecto.Multi
 
-  def create(conn, %{"project_id" => project_id, "folder" => %{"name" => name}}) do
-    project =
-      conn
-      |> load_project_for_change(project_id)
+  plug :assign_project when action in [:index, :show]
+  plug :assign_project_for_change when action in [:create, :set_name, :delete]
 
+  def create(conn, %{"folder" => %{"name" => name}}, %{project: project}) do
     Multi.new()
-    |> Multi.insert(:folder, Folder.changeset(%Folder{}, %{name: name, project_id: project_id}))
+    |> Multi.insert(:folder, Folder.changeset(%Folder{}, %{name: name, project_id: project.id}))
     |> Multi.run(:log, fn _, %{folder: folder} ->
       ActivityLog.create_folder(project, conn, folder) |> Repo.insert()
     end)
@@ -31,10 +31,7 @@ defmodule Ask.FolderController do
     end
   end
 
-  def index(conn, %{"project_id" => project_id}) do
-    project = conn
-    |> load_project(project_id)
-
+  def index(conn, _params, %{project: project}) do
     folders = (from f in Folder,
           where: f.project_id == ^project.id)
     |> Repo.all
@@ -43,28 +40,16 @@ defmodule Ask.FolderController do
     |> render("index.json", folders: folders)
   end
 
-  def show(conn, %{"project_id" => project_id, "id" => folder_id}) do
-    project = conn
-    |> load_project(project_id)
-
-    folder = project
-    |> assoc(:folders)
-    |> Repo.get!(folder_id)
+  def show(conn, %{"id" => folder_id}, %{project: project}) do
+    folder = load_folder(project, folder_id)
     |> Repo.preload(:panel_surveys)
     |> Repo.preload(:surveys)
 
     render(conn, "show.json", folder: folder)
   end
 
-  def delete(conn, %{"project_id" => project_id, "id" => folder_id}) do
-    project =
-      conn
-      |> load_project_for_change(project_id)
-
-    folder =
-      project
-      |> assoc(:folders)
-      |> Repo.get!(folder_id)
+  def delete(conn, %{"id" => folder_id}, %{project: project}) do
+    folder = load_folder(project, folder_id)
 
     Multi.new()
     |> Multi.delete(:delete, Folder.delete_changeset(folder))
@@ -84,15 +69,8 @@ defmodule Ask.FolderController do
     end
   end
 
-  def set_name(conn, %{"project_id" => project_id, "folder_id" => folder_id, "name" => name}) do
-    project =
-      conn
-      |> load_project_for_change(project_id)
-
-    folder =
-      project
-      |> assoc(:folders)
-      |> Repo.get!(folder_id)
+  def set_name(conn, %{"folder_id" => folder_id, "name" => name}, %{project: project}) do
+    folder = load_folder(project, folder_id)
 
     result =
       Multi.new()
@@ -112,4 +90,9 @@ defmodule Ask.FolderController do
     end
   end
 
+  defp load_folder(project, folder_id) do
+    project
+    |> assoc(:folders)
+    |> Repo.get!(folder_id)
+  end
 end

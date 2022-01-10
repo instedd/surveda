@@ -2,18 +2,17 @@ defmodule Ask.IntegrationController do
   use Ask.Web, :api_controller
   require Logger
 
+  import Survey.Helper
   alias Ask.{FloipEndpoint, FloipPusher}
 
-  def index(conn, %{"project_id" => project_id, "survey_id" => survey_id}) do
-    render(conn, "index.json", integrations: conn |> load_integrations(project_id, survey_id))
+  plug :assign_project
+
+  def index(conn, %{"survey_id" => survey_id}) do
+    render(conn, "index.json", integrations: conn |> load_integrations(survey_id))
   end
 
-  def create(conn, %{"integration" => integration_params, "survey_id" => survey_id, "project_id" => project_id}) do
-    survey =
-      conn
-      |> load_project(project_id)
-      |> assoc(:surveys)
-      |> Repo.get!(survey_id)
+  def create(conn, %{"integration" => integration_params, "survey_id" => survey_id}) do
+    survey = conn.assigns[:project] |> load_survey(survey_id)
 
     case create_integration(conn, integration_params, survey) do
       {:ok, integration} ->
@@ -49,11 +48,9 @@ defmodule Ask.IntegrationController do
     end
   end
 
-  defp load_integrations(conn, project_id, survey_id) do
-    conn
-    |> load_project(project_id)
-    |> assoc(:surveys)
-    |> Repo.get!(survey_id)
+  defp load_integrations(conn, survey_id) do
+    conn.assigns[:project]
+    |> load_survey(survey_id)
     |> assoc(:floip_endpoints)
     |> Repo.all
   end

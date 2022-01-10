@@ -3,6 +3,14 @@ defmodule Ask.ProjectController do
 
   alias Ask.{Project, Survey, ProjectMembership, Invite, Logger, ControllerHelper}
 
+  plug :assign_project when action in [
+    :autocomplete_vars,
+    :autocomplete_primary_language,
+    :autocomplete_other_language,
+    :collaborators,
+    :activities,
+  ]
+
   def index(conn, params) do
     current_user = conn |> current_user
     archived = ControllerHelper.archived_param(params, "url")
@@ -191,9 +199,6 @@ defmodule Ask.ProjectController do
   end
 
   def autocomplete_vars(conn, %{"project_id" => id, "text" => text}) do
-    conn
-    |> load_project(id)
-
     text = text |> String.downcase
     like_text = "#{text}%"
 
@@ -209,9 +214,6 @@ defmodule Ask.ProjectController do
   end
 
   def autocomplete_primary_language(conn, %{"project_id" => id, "mode" => mode, "scope" => scope, "language" => language, "text" => text}) do
-    conn
-    |> load_project(id)
-
     text = text |> String.downcase
     like_text = "%#{text}%"
 
@@ -240,9 +242,6 @@ defmodule Ask.ProjectController do
   end
 
   def autocomplete_other_language(conn, %{"project_id" => id, "mode" => mode, "scope" => scope, "primary_language" => primary_language, "other_language" => other_language, "source_text" => source_text, "target_text" => target_text}) do
-    conn
-    |> load_project(id)
-
     target_text = target_text |> String.downcase
     like_text = "#{target_text}%"
 
@@ -262,8 +261,7 @@ defmodule Ask.ProjectController do
   end
 
   def collaborators(conn, %{"project_id" => id}) do
-    memberships = conn
-    |> load_project(id)
+    memberships = conn.assigns[:project]
     |> assoc(:project_memberships)
     |> Repo.all
     |> Repo.preload(:user)
@@ -275,14 +273,13 @@ defmodule Ask.ProjectController do
     render(conn, "collaborators.json", collaborators: memberships ++ invites)
   end
 
-  def activities(conn, %{"project_id" => id} = params) do
+  def activities(conn, params) do
     limit = Map.get(params, "limit", "")
     page = Map.get(params, "page", "")
     sort_by = Map.get(params, "sort_by", "")
     sort_asc = Map.get(params, "sort_asc", "")
 
-    all_activities_query = conn
-    |> load_project(id)
+    all_activities_query = conn.assigns[:project]
     |> assoc(:activity_logs)
 
     all_activities_count = all_activities_query |> select(count("*")) |> Repo.one

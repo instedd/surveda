@@ -100,6 +100,34 @@ defmodule Ask.Web do
   end
 
   @doc """
+  Overwrites the default action to append `conn.assigns` to the call arguments.
+
+  This transforms action/2 methods for the controller into action/3, where
+  arguments are `[conn, conn.params, conn.assigns]`, allowing all actions to
+  now match against `conn.assigns` just as nicely as we can match `conn.params`.
+
+  For example:
+
+  ```
+  defmodule Ask.MyController do
+    use Ask.Web, :append_assigns_to_action
+
+    plug :assign_project
+
+    def index(conn, params, %{project: project}) do
+    end
+  end
+  ```
+  """
+  def append_assigns_to_action do
+    quote do
+      def action(conn, _) do
+        apply(__MODULE__, action_name(conn), [conn, conn.params, conn.assigns])
+      end
+    end
+  end
+
+  @doc """
   When used, dispatch to the appropriate controller/view/etc.
   """
   defmacro __using__(which) when is_atom(which) do

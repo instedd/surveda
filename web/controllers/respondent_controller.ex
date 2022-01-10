@@ -1,6 +1,9 @@
 defmodule Ask.RespondentController do
   use Ask.Web, :api_controller
+  use Ask.Web, :append_assigns_to_action
+
   require Ask.RespondentStats
+  import Survey.Helper
 
   alias Ask.{
     ActivityLog,
@@ -15,7 +18,11 @@ defmodule Ask.RespondentController do
     RespondentsFilter
   }
 
-  def index(conn, %{"project_id" => project_id, "survey_id" => survey_id} = params) do
+  plug :assign_project when action not in [:incentives, :interactions]
+  plug :assign_project_for_owner when action in [:incentives, :interactions]
+  plug :assign_survey when action not in [:incentives]
+
+  def index(conn, params, %{survey: survey}) do
     limit = Map.get(params, "limit", "")
     page = Map.get(params, "page", "")
     sort_by = Map.get(params, "sort_by", "")
@@ -25,10 +32,7 @@ defmodule Ask.RespondentController do
     filter = RespondentsFilter.parse(q)
     filter_where = RespondentsFilter.filter_where(filter)
 
-    filtered_query = conn
-      |> load_project(project_id)
-      |> assoc(:surveys)
-      |> Repo.get!(survey_id)
+    filtered_query = survey
       |> assoc(:respondents)
       |> preload(:responses)
       |> preload(:questionnaire)
@@ -47,7 +51,7 @@ defmodule Ask.RespondentController do
       |> effective_stats
     end)
 
-    survey = Repo.get!(Survey, survey_id) |> Repo.preload(:questionnaires)
+    survey = Repo.get!(Survey, survey.id) |> Repo.preload(:questionnaires)
 
     partial_relevant_enabled = Survey.partial_relevant_enabled?(survey, true)
 
@@ -135,20 +139,14 @@ defmodule Ask.RespondentController do
     end
   end
 
-  def stats(conn, %{"project_id" => project_id, "survey_id" => survey_id}) do
-    survey =
-      conn
-      |> load_project(project_id)
-      |> assoc(:surveys)
-      |> Repo.get!(survey_id)
-
+  def stats(conn, _params, %{survey: survey}) do
     stats(conn, survey, survey.quota_vars)
   rescue
     e ->
-      Logger.error(e, __STACKTRACE__, "Error occurred while processing respondent stats (survey_id: #{survey_id})")
+      Logger.error(e, __STACKTRACE__, "Error occurred while processing respondent stats (survey_id: #{survey.id})")
       Sentry.capture_exception(e, [
         stacktrace: System.stacktrace(),
-        extra: %{survey_id: survey_id}])
+        extra: %{survey_id: survey.id}])
 
       render(conn, "stats.json", stats: nil)
   end
@@ -575,17 +573,9 @@ defmodule Ask.RespondentController do
     |> Enum.into(%{})
   end
 
-  def sanitize_variable_name(s), do: s |> String.trim() |> String.replace(" ", "_")
+  defp sanitize_variable_name(s), do: s |> String.trim() |> String.replace(" ", "_")
 
-  def results(conn, %{"project_id" => project_id, "survey_id" => survey_id} = params) do
-    project = conn
-    |> load_project(project_id)
-
-    # Check that the survey is in the project
-    survey = project
-    |> assoc(:surveys)
-    |> Repo.get!(survey_id)
-
+  def results(conn, params, %{project: project, survey: survey}) do
     tz_offset = Survey.timezone_offset(survey)
 
     questionnaires = (survey |> Repo.preload(:questionnaires)).questionnaires
@@ -820,15 +810,7 @@ defmodule Ask.RespondentController do
   defp respondent_stat(respondent, :mobileweb_attempts), do: respondent.stats |> Stats.attempts(:mobileweb)
   defp respondent_stat(respondent, key), do: apply(Stats, key, [respondent.stats])
 
-  def disposition_history(conn, %{"project_id" => project_id, "survey_id" => survey_id}) do
-    project = conn
-    |> load_project(project_id)
-
-    # Check that the survey is in the project
-    survey = project
-    |> assoc(:surveys)
-    |> Repo.get!(survey_id)
-
+  def disposition_history(conn, _, %{project: project, survey: survey}) do
     history = Stream.resource(
       fn -> 0 end,
       fn last_id ->
@@ -864,11 +846,7 @@ defmodule Ask.RespondentController do
     conn |> csv_stream(rows, filename)
   end
 
-  def incentives(conn, %{"project_id" => project_id, "survey_id" => survey_id}) do
-    project = conn
-    |> load_project_for_owner(project_id)
-
-    # Check that the survey is in the project
+  def incentives(conn, %{"survey_id" => survey_id}, %{project: project}) do
     survey = project
     |> assoc(:surveys)
     |> where([s], s.incentives_enabled)
@@ -892,15 +870,7 @@ defmodule Ask.RespondentController do
     conn
   end
 
-  def interactions(conn, %{"project_id" => project_id, "survey_id" => survey_id}) do
-    project = conn
-    |> load_project_for_owner(project_id)
-
-    # Check that the survey is in the project
-    survey = project
-    |> assoc(:surveys)
-    |> Repo.get!(survey_id)
-
+  def interactions(conn, _, %{project: project, survey: survey}) do
     log_entries = Stream.resource(
       fn -> {"", 0} end,
       fn {last_hash, last_id} ->
@@ -1016,5 +986,13 @@ defmodule Ask.RespondentController do
     offset_seconds = Survey.timezone_offset_in_seconds(survey)
 
     Ask.TimeUtil.format(dt, offset_seconds, tz_offset)
+  end
+
+  defp assign_survey(%{
+    assigns: %{project: project},
+    params: %{"survey_id" => survey_id}
+  } = conn, _) do
+    survey = load_survey(project, survey_id)
+    conn |> Plug.Conn.assign(:survey, survey)
   end
 end

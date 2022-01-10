@@ -1,17 +1,17 @@
 defmodule Ask.RespondentGroupController do
   use Ask.Web, :api_controller
+  use Ask.Web, :append_assigns_to_action
+  import Survey.Helper
+
   alias Ask.{Project, Survey, Respondent, RespondentGroup, Logger}
   alias Ask.Runtime.RespondentGroupAction
 
+  plug :assign_project when action in [:index]
+  plug :assign_project_for_change when action in [:add, :create, :update, :delete, :replace]
   plug :find_and_check_survey_state when action in [:create, :update, :delete, :replace]
 
-  def index(conn, %{"project_id" => project_id, "survey_id" => survey_id}) do
-    project = conn
-    |> load_project(project_id)
-
-    respondent_groups = project
-    |> assoc(:surveys)
-    |> Repo.get!(survey_id)
+  def index(conn, %{"survey_id" => survey_id}, %{project: project}) do
+    respondent_groups = load_survey(project, survey_id)
     |> assoc(:respondent_groups)
     |> preload(respondent_group_channels: :channel)
     |> Repo.all
@@ -19,10 +19,7 @@ defmodule Ask.RespondentGroupController do
     render(conn, "index.json", respondent_groups: respondent_groups)
   end
 
-  def create(conn, %{"file" => file}) do
-    project = conn.assigns.loaded_project
-    survey = conn.assigns.loaded_survey
-
+  def create(conn, %{"file" => file}, %{project: project, survey: survey}) do
     entries = entries_from_csv(file)
     if entries do
       case RespondentGroupAction.load_entries(entries, survey) do
@@ -42,12 +39,8 @@ defmodule Ask.RespondentGroupController do
     end
   end
 
-  def update(conn, %{"id" => id, "respondent_group" => respondent_group_params}) do
-    survey = conn.assigns.loaded_survey
-
-    respondent_group = survey
-    |> assoc(:respondent_groups)
-    |> Repo.get!(id)
+  def update(conn, %{"id" => id, "respondent_group" => respondent_group_params}, %{survey: survey}) do
+    respondent_group = load_respondent_group(survey, id)
     |> RespondentGroup.changeset(respondent_group_params)
     |> Repo.update!
 
@@ -68,17 +61,10 @@ defmodule Ask.RespondentGroupController do
     |> render("show.json", respondent_group: respondent_group)
   end
 
-  def add(conn, %{"project_id" => project_id, "survey_id" => survey_id, "respondent_group_id" => id, "file" => file}) do
-    project = conn
-    |> load_project_for_change(project_id)
+  def add(conn, %{"survey_id" => survey_id, "respondent_group_id" => id, "file" => file}, %{project: project}) do
+    survey = load_survey(project, survey_id)
 
-    survey = project
-    |> assoc(:surveys)
-    |> Repo.get!(survey_id)
-
-    respondent_group = survey
-    |> assoc(:respondent_groups)
-    |> Repo.get!(id)
+    respondent_group = load_respondent_group(survey, id)
     |> Repo.preload(:respondent_group_channels)
 
     project |> Project.touch!
@@ -106,13 +92,8 @@ defmodule Ask.RespondentGroupController do
       end
   end
 
-  def replace(conn, %{"respondent_group_id" => id, "file" => file}) do
-    project = conn.assigns.loaded_project
-    survey = conn.assigns.loaded_survey
-
-    respondent_group = survey
-    |> assoc(:respondent_groups)
-    |> Repo.get!(id)
+  def replace(conn, %{"respondent_group_id" => id, "file" => file}, %{project: project, survey: survey}) do
+    respondent_group = load_respondent_group(survey, id)
 
     entries = entries_from_csv(file)
     if entries do
@@ -167,14 +148,8 @@ defmodule Ask.RespondentGroupController do
     |> render("invalid_entries.json", %{invalid_entries: invalid_entries, filename: filename})
   end
 
-  def delete(conn, %{"id" => id}) do
-    project = conn.assigns.loaded_project
-    survey = conn.assigns.loaded_survey
-
-    # Check that the respondent_group is in the survey
-    group = survey
-    |> assoc(:respondent_groups)
-    |> Repo.get!(id)
+  def delete(conn, %{"id" => id}, %{project: project, survey: survey}) do
+    group = load_respondent_group(survey, id)
 
     from(r in Respondent, where: r.respondent_group_id == ^id)
     |> Repo.delete_all
@@ -191,28 +166,31 @@ defmodule Ask.RespondentGroupController do
     |> Repo.update!
 
     project |> Project.touch!
+
     conn
       |> put_status(:ok)
       |> render("empty.json", %{})
   end
 
   defp find_and_check_survey_state(conn, _options) do
-    %{"project_id" => project_id, "survey_id" => survey_id} = conn.params
+    %{"survey_id" => survey_id} = conn.params
+    %{project: project} = conn.assigns
 
-    project = conn
-    |> load_project_for_change(project_id)
+    survey = load_survey(project, survey_id)
 
-    survey = project
-    |> assoc(:surveys)
-    |> Repo.get!(survey_id)
-
-    if survey |> Survey.editable? do
-        assign(conn, :loaded_survey, survey)
-          |> assign(:loaded_project, project)
+    if Survey.editable?(survey) do
+      conn
+      |> assign(:survey, survey)
     else
       conn
-        |> render_unprocessable_entity
-        |> halt()
+      |> render_unprocessable_entity()
+      |> halt()
     end
+  end
+
+  defp load_respondent_group(survey, respondent_group_id) do
+    survey
+    |> assoc(:respondent_groups)
+    |> Repo.get!(respondent_group_id)
   end
 end

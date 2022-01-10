@@ -3,7 +3,6 @@ defmodule Ask.InviteController do
 
   alias Ask.{Project, ProjectMembership, Invite, Logger, UnauthorizedError, ActivityLog}
   alias Ecto.Multi
-  import Ecto.Query
 
   def accept_invitation(conn, %{"code" => code}) do
     invite = Repo.one(from i in Invite, where: i.code == ^code)
