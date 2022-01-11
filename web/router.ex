@@ -112,9 +112,9 @@ defmodule Ask.Router do
           get "/simulation/initial_state/:mode", SurveySimulationController, :initial_state
           get "/simulation_status", SurveySimulationController, :status
           post "/stop_simulation", SurveySimulationController, :stop
-          get "/links/:name", SurveyController, :create_link, as: :links
-          put "/links/:name", SurveyController, :refresh_link, as: :links
-          delete "/links/:name", SurveyController, :delete_link, as: :links
+          get "/links/:name", SurveyLinkController, :create, as: :links
+          put "/links/:name", SurveyLinkController, :refresh, as: :links
+          delete "/links/:name", SurveyLinkController, :delete, as: :links
           scope "/flow-results" do
             get "/packages", FloipController, :index, as: :packages
             get "/packages/:floip_package_id", FloipController, :show, as: :package_descriptor
