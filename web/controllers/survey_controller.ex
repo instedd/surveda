@@ -4,19 +4,11 @@ defmodule Ask.SurveyController do
 
   import Survey.Helper
 
-  alias Ask.{Project, Folder, Survey, Questionnaire, Logger, RespondentGroup, Respondent, Channel, ShortLink, ActivityLog, RetriesHistogram, ScheduleError, ConflictError}
-  alias Ask.Runtime.{Session, SurveyAction}
+  alias Ask.{Project, Folder, Survey, Logger, ShortLink, ActivityLog, RetriesHistogram, ScheduleError, ConflictError}
+  alias Ask.Runtime.SurveyAction
   alias Ecto.Multi
 
-  plug :assign_project when action in [
-    :index,
-    :show,
-    :stats,
-    :retries_histograms,
-    :simulation_initial_state,
-    :simulation_status,
-    :stop_simulation,
-  ]
+  plug :assign_project when action in [:index, :show, :stats, :retries_histograms]
   plug :assign_project_for_change when action in [
     :create,
     :update,
@@ -25,7 +17,6 @@ defmodule Ask.SurveyController do
     :set_description,
     :delete,
     :launch,
-    :simulate_questionanire,
     :create_link,
     :delete_link,
     :refresh_link,
@@ -325,130 +316,6 @@ defmodule Ask.SurveyController do
           |> Survey.with_links(user_level(survey.project_id, current_user(conn).id))
       )
 
-  def simulate_questionanire(conn, %{
-    "questionnaire_id" => questionnaire_id,
-    "phone_number" => phone_number,
-    "mode" => mode,
-    "channel_id" => channel_id
-  }, %{project: project}) do
-    questionnaire = Repo.one!(from q in Questionnaire,
-      where: q.project_id == ^project.id,
-      where: q.id == ^questionnaire_id)
-
-    channel = Repo.get!(Channel, channel_id)
-
-    survey = %Survey{
-      simulation: true,
-      project_id: project.id,
-      name: questionnaire.name,
-      mode: [[mode]],
-      state: "ready",
-      cutoff: 1,
-      schedule: Ask.Schedule.always()}
-    |> Ecto.Changeset.change
-    |> Repo.insert!
-
-    respondent_group = %RespondentGroup{
-      survey_id: survey.id,
-      name: "default",
-      sample: [phone_number],
-      respondents_count: 1}
-    |> Ecto.Changeset.change
-    |> Repo.insert!
-
-    %Ask.SurveyQuestionnaire{
-      survey_id: survey.id,
-      questionnaire_id: String.to_integer(questionnaire_id)}
-    |> Ecto.Changeset.change
-    |> Repo.insert!
-
-    %Ask.RespondentGroupChannel{
-      respondent_group_id: respondent_group.id,
-      channel_id: channel.id,
-      mode: mode}
-    |> Ecto.Changeset.change
-    |> Repo.insert!
-
-    %Respondent{
-      survey_id: survey.id,
-      respondent_group_id: respondent_group.id,
-      phone_number: phone_number,
-      sanitized_phone_number: phone_number,
-      canonical_phone_number: phone_number,
-      hashed_number: phone_number}
-    |> Ecto.Changeset.change
-    |> Repo.insert!
-
-    conn
-    |> launch(%{"survey_id" => survey.id}, %{project: project})
-  end
-
-  def simulation_status(conn, %{"survey_id" => survey_id}, %{project: project}) do
-    survey = load_survey_simulation(project, survey_id)
-
-    # The simulation has only one respondent
-    respondent = Repo.one!(from r in Respondent,
-      where: r.survey_id == ^survey.id)
-
-    responses = respondent
-    |> assoc(:responses)
-    |> Repo.all
-    |> Enum.map(fn response ->
-      {response.field_name, response.value}
-    end)
-    |> Enum.into(%{})
-
-    session = respondent.session
-    session =
-      if session do
-        Session.load(session)
-      else
-        nil
-      end
-
-    {step_id, step_index} =
-      if session do
-        {
-          Session.current_step_id(session),
-          case Session.current_step_index(session) do
-            {section_index, step_index} -> [section_index, step_index]
-            index -> index
-          end
-        }
-      else
-        {nil, nil}
-      end
-
-    conn
-    |> json(%{
-      "data" => %{
-        "state" => respondent.state,
-        "disposition" => respondent.disposition,
-        "step_id" => step_id,
-        "step_index" => step_index,
-        "responses" => responses,
-      }
-    })
-  end
-
-  def stop_simulation(conn, %{"survey_id" => survey_id}, %{project: project}) do
-    survey = load_survey_simulation(project, survey_id)
-
-    questionnaire = survey
-    |> assoc(:questionnaires)
-    |> Repo.one!
-
-    Repo.delete!(survey)
-    Project.touch!(project)
-
-    conn
-    |> json(%{
-      "data" => %{
-        "questionnaire_id" => questionnaire.snapshot_of
-      }
-    })
-  end
-
   def config(conn, _params, _project) do
     render(conn, "config.json", config: Survey.config_rates())
   end
@@ -641,36 +508,5 @@ defmodule Ask.SurveyController do
           |> put_view(Ask.ChangesetView)
           |> render("error.json", changeset: change(%Survey{}, %{}))
     end
-  end
-
-  def simulation_initial_state(conn, %{"survey_id" => survey_id, "mode" => mode}, %{project: project}) do
-    survey = load_survey_simulation(project, survey_id)
-
-    render_initial_state(conn, survey.id, mode)
-  end
-
-  defp render_initial_state(conn, survey_id, "mobileweb" = _mode) do
-    # The simulation has only one respondent
-    respondent = Repo.one!(from r in Respondent,
-    where: r.survey_id == ^survey_id)
-
-    response = if (respondent.session) do
-      session = Session.load_respondent_session(respondent, true)
-
-      json(conn, %{
-        "data" => %{
-          "mobile_contact_messages" => Session.mobile_contact_message(session)
-        }
-      })
-    else
-      conn
-      |> send_resp(:not_found, "")
-    end
-
-    response
-  end
-
-  defp render_initial_state(conn, _survey_id, _mode) do
-    json(conn, %{"data" => %{}})
   end
 end

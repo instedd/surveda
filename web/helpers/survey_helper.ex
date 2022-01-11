@@ -1,6 +1,4 @@
 defmodule Survey.Helper do
-  import Ecto
-  import Ecto.Query
   alias Ask.Repo
 
   def load_survey(%{ assigns: %{project: project} }, survey_id) do
@@ -10,14 +8,7 @@ defmodule Survey.Helper do
 
   def load_survey(project, survey_id) do
     project
-    |> assoc(:surveys)
-    |> Repo.get!(survey_id)
-  end
-
-  def load_survey_simulation(project, survey_id) do
-    project
-    |> assoc(:surveys)
-    |> where([s], s.simulation)
+    |> Ecto.assoc(:surveys)
     |> Repo.get!(survey_id)
   end
 end

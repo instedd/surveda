@@ -98,9 +98,9 @@ defmodule Ask.Router do
             post "/replace", RespondentGroupController, :replace, as: :replace
           end
           get "/respondents/stats", RespondentController, :stats, as: :respondents_stats
-          get "/simulation/initial_state/:mode", SurveyController, :simulation_initial_state
-          get "/simulation_status", SurveyController, :simulation_status
-          post "/stop_simulation", SurveyController, :stop_simulation
+          get "/simulation/initial_state/:mode", SurveySimulationController, :initial_state
+          get "/simulation_status", SurveySimulationController, :status
+          post "/stop_simulation", SurveySimulationController, :stop
           get "/links/:name", SurveyController, :create_link, as: :links
           put "/links/:name", SurveyController, :refresh_link, as: :links
           delete "/links/:name", SurveyController, :delete_link, as: :links
@@ -110,7 +110,7 @@ defmodule Ask.Router do
             get "/packages/:floip_package_id/responses", FloipController, :responses, as: :package_responses
           end
         end
-        post "/surveys/simulate_questionanire", SurveyController, :simulate_questionanire
+        post "/surveys/simulate_questionanire", SurveySimulationController, :simulate
         resources "/questionnaires", QuestionnaireController, except: [:new, :edit] do
           get "/export_zip", QuestionnaireController, :export_zip, as: :questionnaires_export_zip
           post "/import_zip", QuestionnaireController, :import_zip, as: :questionnaires_import_zip
