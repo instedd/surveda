@@ -73,8 +73,8 @@ defmodule User.Helper do
 
   # Loads the project using `load_project` for the current request (requires the
   # `project_id` param) then assigns it to `conn`.
-  def assign_project(conn, _) do
-    project = load_project(conn, conn.params["project_id"])
+  def assign_project(%{params: %{"project_id" => project_id}} = conn, _) do
+    project = load_project(conn, project_id)
     conn |> Plug.Conn.assign(:project, project)
   end
 
@@ -90,8 +90,8 @@ defmodule User.Helper do
 
   # Loads the project using `load_project_for_change` for the current request
   # (requires the `project_id` param) then assigns it to `conn`.
-  def assign_project_for_change(conn, _) do
-    project = load_project_for_change(conn, conn.params["project_id"])
+  def assign_project_for_change(%{params: %{"project_id" => project_id}} = conn, _) do
+    project = load_project_for_change(conn, project_id)
     conn |> Plug.Conn.assign(:project, project)
   end
 
@@ -104,8 +104,8 @@ defmodule User.Helper do
 
   # Loads the project using `load_project_for_owner` for the current request
   # (requires the `project_id` param) then assigns it to `conn`.
-  def assign_project_for_owner(conn, _) do
-    project = load_project_for_owner(conn, conn.params["project_id"])
+  def assign_project_for_owner(%{params: %{"project_id" => project_id}} = conn, _) do
+    project = load_project_for_owner(conn, project_id)
     conn |> Plug.Conn.assign(:project, project)
   end
 
