@@ -16,27 +16,10 @@ defmodule Ask.QuestionnaireController do
     Gettext
   }
   alias Ecto.Multi
-  alias Ask.Runtime.{
-    QuestionnaireSimulator,
-    QuestionnaireMobileWebSimulator,
-    QuestionnaireAction
-  }
+  alias Ask.Runtime.QuestionnaireAction
 
-  plug :assign_project when action in [
-    :index,
-    :show,
-    :export_zip,
-    :start_simulation,
-    :sync_simulation,
-    :get_last_simulation_response,
-  ]
-  plug :assign_project_for_change when action in [
-    :create,
-    :update,
-    :update_archived_status,
-    :delete,
-    :import_zip,
-  ]
+  plug :assign_project when action in [:index, :show, :export_zip]
+  plug :assign_project_for_change when action in [:create, :update, :update_archived_status, :delete, :import_zip]
   plug :validate_params when action in [:create, :update]
 
   action_fallback Ask.FallbackController
@@ -318,25 +301,6 @@ defmodule Ask.QuestionnaireController do
     |> Repo.update!
 
     render(conn, "show.json", questionnaire: questionnaire)
-  end
-
-  def start_simulation(conn, %{"questionnaire_id" => id}, %{project: project}) do
-    mode = conn.params["mode"]
-    with {:ok, questionnaire} <- load_questionnaire(project, id),
-         {:ok, simulation_response} <- QuestionnaireSimulator.start_simulation(project, questionnaire, mode)
-    do
-      render(conn, "simulation.json", simulation: simulation_response, mode: mode)
-    end
-  end
-
-  def sync_simulation(conn, %{"respondent_id" => respondent_id, "response" => response, "mode" => mode}, _) do
-    with {:ok, simulation_response} <- QuestionnaireSimulator.process_respondent_response(respondent_id, response, mode), do:
-      render(conn, "simulation.json", simulation: simulation_response)
-  end
-
-  def get_last_simulation_response(conn, %{"respondent_id" => respondent_id}, _) do
-    with {:ok, simulation_response} <- QuestionnaireMobileWebSimulator.get_last_simulation_response(respondent_id), do:
-      render(conn, "simulation.json", simulation: simulation_response)
   end
 
   defp validate_params(conn, _params) do
