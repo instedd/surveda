@@ -164,12 +164,12 @@ class SurveyCard extends Component<any> {
         {
           showAsPanelSurveyCard
           ? <div className='panel-survey-card-0'>
-            <div className='panel-survey-card-1'>
-              <div className='panel-survey-card-2'>
-                { surveyCard }
+              <div className='panel-survey-card-1'>
+                <div className='panel-survey-card-2'>
+                  { surveyCard }
+                </div>
               </div>
             </div>
-          </div>
           : surveyCard
         }
         <ConfirmationModal modalId='survey_index_move_survey' ref='moveSurveyConfirmationModal' confirmationText={t('Move')} header={t('Move survey')} showCancel />
