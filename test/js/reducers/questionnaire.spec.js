@@ -2949,7 +2949,7 @@ describe('questionnaire reducer', () => {
         actions.receive(questionnaire),
         actions.changeName('Foo:;\' " "!~ññéáà@#% !() *& * & ^&* ^ % $$ $# % @ @@@ <> ,< >> ~~ | || =123__  []]!!!?? _ 456 { }')
       ])
-      expect(csvTranslationFilename((state.data: Questionnaire))).toEqual(`${questionnaire.id}-Foo_ññéáà_=123_____456-translations.csv`)
+      expect(csvTranslationFilename((state.data: Questionnaire))).toEqual(`${questionnaire.id}-Foo_ññéáà_123_456-translations.csv`)
     })
 
     it('should compute a valid alphanumeric filename without trailing underscore', () => {

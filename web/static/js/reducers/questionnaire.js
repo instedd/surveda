@@ -1575,7 +1575,7 @@ const addMessageToCsvForTranslation = (m, defaultLang, context) => {
 
 export const csvTranslationFilename = (questionnaire: Questionnaire): string => {
   let filename = `${questionnaire.name || ''}`
-    .replace(/['";:,.~`@#$%^@&*|!?(){}<>[\]\\/]/g, ' ') // remove special chars (replace with space)
+    .replace(/[^\p{L}\p{N}]+/gu, ' ') // remove special chars (replace with space)
     .replace(/\s+/g, '_') // replace spaces with underscore (also check for continuos spaces)
     .replace(/_+$/, '') // remove trailing underscores
 
