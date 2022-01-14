@@ -1,6 +1,12 @@
 defmodule Ask.PanelSurveyController do
   use Ask.Web, :api_controller
-  alias Ask.{PanelSurvey, Repo}
+  alias Ask.{
+    ActivityLog,
+    Folder,
+    PanelSurvey,
+    Repo
+  }
+  alias Ecto.Multi
 
   def index(conn, %{"project_id" => project_id}) do
     project = conn
@@ -79,6 +85,38 @@ defmodule Ask.PanelSurveyController do
       # Reload the panel survey. One of its surveys has changed, so it's outdated
       panel_survey = Repo.get!(PanelSurvey, id)
       render(conn, "show.json", panel_survey: panel_survey)
+    end
+  end
+
+  def set_folder_id(conn, %{"project_id" => project_id, "panel_survey_id" => id, "folder_id" => folder_id}) do
+    project = conn
+      |> load_project_for_change(project_id)
+
+    panel_survey = project
+      |> assoc(:panel_surveys)
+      |> Repo.get!(id)
+
+    old_folder_name = if panel_survey.folder_id,
+                        do: Repo.get(Folder, panel_survey.folder_id).name,
+                        else: "No Folder"
+
+    new_folder_name = if folder_id,
+                        do: (project |> assoc(:folders) |> Repo.get!(folder_id)).name,
+                        else: "No Folder"
+
+    result = Multi.new()
+      |> Multi.update(:set_folder_id, PanelSurvey.changeset(panel_survey, %{folder_id: folder_id}))
+      |> Multi.insert(:change_folder_log, ActivityLog.panel_survey_change_folder(project, conn, panel_survey, old_folder_name, new_folder_name))
+      |> Repo.transaction()
+
+    case result do
+      {:ok, _} ->
+        send_resp(conn, :no_content, "")
+
+      {:error, _, changeset, _} ->
+        conn
+        |> put_status(:unprocessable_entity)
+        |> render(Ask.ChangesetView, "error.json", changeset: changeset)
     end
   end
 end

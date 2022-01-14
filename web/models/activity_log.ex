@@ -1,7 +1,14 @@
 defmodule Ask.ActivityLog do
   use Ask.Web, :model
   import User.Helper
-  alias Ask.{ActivityLog, Project, Survey, Questionnaire, Folder}
+  alias Ask.{
+    ActivityLog,
+    Folder,
+    PanelSurvey,
+    Project,
+    Questionnaire,
+    Survey
+  }
 
   schema "activity_log" do
     belongs_to :project, Ask.Project
@@ -21,6 +28,9 @@ defmodule Ask.ActivityLog do
   def valid_actions("survey"), do:
     ["create", "edit", "rename", "change_description", "lock", "unlock", "delete", "start", "repeat", "request_cancel", "completed_cancel", "download", "enable_public_link", "regenerate_public_link", "disable_public_link", "change_folder", "add_respondents"]
 
+  def valid_actions("panel_survey"), do:
+    ["panel_survey_change_folder"]
+
   def valid_actions("questionnaire"), do:
     ["create", "edit", "rename", "delete", "add_mode", "remove_mode", "add_language", "remove_language", "create_step", "delete_step", "rename_step", "edit_step", "edit_settings", "create_section", "rename_section", "delete_section", "edit_section", "archive", "unarchive"]
 
@@ -38,6 +48,7 @@ defmodule Ask.ActivityLog do
 
   defp typeof(%Project{}), do: "project"
   defp typeof(%Survey{}), do: "survey"
+  defp typeof(%PanelSurvey{}), do: "panel_survey"
   defp typeof(%Questionnaire{}), do: "questionnaire"
   defp typeof(%Folder{}), do: "folder"
 
@@ -301,5 +312,13 @@ defmodule Ask.ActivityLog do
   def update_archived_status(project, conn, questionnaire, archived) do
     action = if archived, do: "archive", else: "unarchive"
     create(action, project, conn, questionnaire, %{questionnaire_name: questionnaire.name})
+  end
+
+  def panel_survey_change_folder(project, conn, panel_survey, old_folder_name, new_folder_name) do
+    create("panel_survey_change_folder", project, conn, panel_survey, %{
+      panel_survey_name: panel_survey.name,
+      old_folder_name: old_folder_name,
+      new_folder_name: new_folder_name
+    })
   end
 end
