@@ -140,9 +140,7 @@ class SurveyIndex extends Component<any, State> {
     } = this.props
 
     // TODO: move to mapStateToProps
-    const isLoading = (!surveys && loadingSurveys) ||
-                      (!folders && loadingFolders) ||
-                      (!panelSurveys && loadingPanelSurveys)
+    const isLoading = loadingSurveys || loadingFolders || loadingPanelSurveys
     const readOnly = !project || project.readOnly
     const isEmptyView = surveys && surveys.length === 0 &&
                         folders && folders.length === 0 &&
