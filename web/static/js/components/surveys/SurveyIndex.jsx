@@ -38,13 +38,13 @@ class SurveyIndex extends Component<any, State> {
     panelSurveys: PropTypes.array,
     surveysAndPanelSurveys: PropTypes.array,
 
+    isLoading: PropTypes.bool,
+    isReadOnly: PropTypes.bool,
+    isEmptyView: PropTypes.bool,
+
     startIndex: PropTypes.number.isRequired,
     endIndex: PropTypes.number.isRequired,
-    totalCount: PropTypes.number.isRequired,
-
-    loadingFolders: PropTypes.bool,
-    loadingSurveys: PropTypes.bool,
-    loadingPanelSurveys: PropTypes.bool
+    totalCount: PropTypes.number.isRequired
   }
 
   constructor(props) {
@@ -129,9 +129,9 @@ class SurveyIndex extends Component<any, State> {
       panelSurveys,
       surveysAndPanelSurveys,
 
-      loadingFolders,
-      loadingSurveys,
-      loadingPanelSurveys,
+      isLoading,
+      isReadOnly,
+      isEmptyView,
 
       startIndex,
       endIndex,
@@ -139,35 +139,28 @@ class SurveyIndex extends Component<any, State> {
       t
     } = this.props
 
-    // TODO: move to mapStateToProps
-    const isLoading = loadingSurveys || loadingFolders || loadingPanelSurveys
-    const readOnly = !project || project.readOnly
-    const isEmptyView = surveys && surveys.length === 0 &&
-                        folders && folders.length === 0 &&
-                        panelSurveys && panelSurveys.length === 0
-
     if (isLoading) return (<div>{t('Loading surveys...')}</div>)
 
     return (
       <div>
-        <MainActions isReadOnly={readOnly} t={t}>
+        <MainActions isReadOnly={isReadOnly} t={t}>
           <Action text={t('Survey')} icon={'assignment_turned_in'} onClick={() => this.newSurvey()} />
           <Action text={t('Panel Survey')} icon={'repeat'} onClick={() => this.newPanelSurvey()} />
           <Action text={t('Folder')} icon={'folder'} onClick={() => this.newFolder()} />
         </MainActions>
 
-        <MainView isReadOnly={readOnly}
+        <MainView isReadOnly={isReadOnly}
                   isEmpty={isEmptyView}
                   onNew={() => this.newSurvey()}
                   t={t}>
           <FoldersGrid folders={folders}
-                       isReadOnly={readOnly}
+                       isReadOnly={isReadOnly}
                        onRename={() => this.renameFolder()}
                        onDelete={() => this.deleteFolder()}
                        t={t} />
 
           <SurveysGrid surveysAndPanelSurveys={surveysAndPanelSurveys}
-                       isReadOnly={readOnly}
+                       isReadOnly={isReadOnly}
                        t={t} />
 
           <PagingFooter {...{ startIndex, endIndex, totalCount }}
@@ -270,6 +263,8 @@ const paginate = (surveysAndPanelSurveys: Array<Survey|PanelSurvey>, page) => {
 }
 
 const mapStateToProps = (state, ownProps) => {
+  const project = state.project.data
+
   let folders = mapStateToFolders(state)
   let surveys = mapStateToSurveys(state)
   let panelSurveys = mapStateToPanelSurveys(state)
@@ -289,22 +284,30 @@ const mapStateToProps = (state, ownProps) => {
     endIndex,
   } = paginate(surveysAndPanelSurveys, page)
 
+  const isLoadingFolders = state.folders && state.folders.loadingFetch
+  const isLoadingSurveys = state.surveys && state.surveys.fetching
+  const isLoadingPanelSurveys = state.panelSurveys && state.panelSurveys.fetching
+
+  const isLoading = isLoadingFolders || isLoadingSurveys || isLoadingPanelSurveys
+  const isReadOnly = !project || project.readOnly
+  const isEmptyView = folders.length === 0 && surveys.length === 0 && panelSurveys.length === 0
+
   return {
     projectId: ownProps.params.projectId,
-    project: state.project.data,
+    project,
 
     surveys,
     folders,
     panelSurveys,
     surveysAndPanelSurveys: paginatedElements,
 
+    isLoading,
+    isReadOnly,
+    isEmptyView,
+
     startIndex,
     endIndex,
-    totalCount,
-
-    loadingFolders: state.folders && state.folders.loadingFetch,
-    loadingSurveys: state.surveys && state.surveys.fetching,
-    loadingPanelSurveys: state.panelSurveys && state.panelSurveys.fetching
+    totalCount
   }
 }
 
