@@ -269,10 +269,14 @@ defmodule Ask.QuestionnaireController do
     questionnaire = load_questionnaire_not_snapshot(project.id, id)
 
     zip_file = QuestionnaireAction.export_and_zip(questionnaire)
+    underscored_name = questionnaire.name
+      |> String.replace(~r/[^\p{L}\p{N}]/u, " ") # remove special chars (replace with space)
+      |> String.replace(~r/\s+/, "_") # replace spaces with underscore (also check for continuos spaces)
+      |> String.replace(~r/_+$/, "") # remove trailing underscores
 
     conn = conn
            |> put_resp_content_type("application/octet-stream")
-           |> put_resp_header("content-disposition", "attachment; filename=#{questionnaire.id}.zip")
+           |> put_resp_header("content-disposition", "attachment; filename*=UTF-8''#{questionnaire.id}-#{URI.encode(underscored_name)}.zip")
            |> send_chunked(200)
 
     zip_file
