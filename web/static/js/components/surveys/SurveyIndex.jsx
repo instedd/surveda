@@ -226,7 +226,7 @@ const SurveysGrid = (props) => {
   const { surveysAndPanelSurveys, isReadOnly, t } = props
 
   const isPanelSurvey = function (survey) {
-    return survey.hasOwnProperty('waves')
+    return survey.hasOwnProperty('latestWave')
   }
 
   return (
@@ -239,46 +239,6 @@ const SurveysGrid = (props) => {
     </div>
   )
 }
-
-// const mergePanelSurveysIntoSurveys = (surveys, panelSurveys) => {
-//   return panelSurveys
-//     .map(panelSurvey => ({
-//       ...panelSurvey.latestWave,
-//       panelSurvey: panelSurvey
-//     }))
-//     .concat(surveys)
-// }
-
-// Merges the latest panel survey wave into surveys, sorts the resulting
-// collection, and eventually paginates the result, generating props to display
-// a list of surveys and panel surveys.
-//
-// At least used by the FolderShow and PanelSurveyShow components.
-// export const surveyIndexProps = (state: any, surveys: ?Array<Survey>, panelSurveys: ?Array<PanelSurvey>) => {
-//   if (surveys && panelSurveys) {
-//     surveys = mergePanelSurveysIntoSurveys(surveys, panelSurveys)
-//   }
-
-//   const totalCount = surveys ? surveys.length : 0
-//   const pageIndex = state.surveys.page.index
-//   const pageSize = state.surveys.page.size
-//   const startIndex = Math.min(totalCount, pageIndex + 1)
-//   const endIndex = Math.min(pageIndex + pageSize, totalCount)
-
-//   if (surveys) {
-//     // Sort by updated at, descending
-//     surveys = surveys.sort((x, y) => y.updatedAt.localeCompare(x.updatedAt))
-//     // Show only the current page
-//     surveys = (surveys.slice(pageIndex, pageIndex + pageSize): Array<Survey>)
-//   }
-
-//   return {
-//     surveys,
-//     startIndex,
-//     endIndex,
-//     totalCount
-//   }
-// }
 
 const mapStateToFolders = (state) => {
   let { items } = state.folders

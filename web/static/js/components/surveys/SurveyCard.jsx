@@ -124,10 +124,9 @@ class _PanelSurveyCard extends Component<any> {
     }
   }
 
-  lastWave() {
+  latestWave() {
     const { panelSurvey } = this.props
-
-    return [...panelSurvey.occurrences].pop() // TODO
+    return panelSurvey.latestWave
   }
 
   changeFolder(folderId) {
@@ -152,7 +151,7 @@ class _PanelSurveyCard extends Component<any> {
     const deleteConfirmationModal: ConfirmationModal = this.refs.deleteConfirmationModal
     const { t, panelSurvey } = this.props
 
-    const survey = this.lastWave()
+    const survey = this.latestWave()
 
     deleteConfirmationModal.open({
       modalText: <span>
@@ -174,7 +173,7 @@ class _PanelSurveyCard extends Component<any> {
   // delete the last wave in the PanelSurvey
   deletable() {
     const { readOnly } = this.props
-    const survey = this.lastWave()
+    const survey = this.latestWave()
 
     return !readOnly && survey.isDeletable
   }
@@ -190,7 +189,7 @@ class _PanelSurveyCard extends Component<any> {
 
   render() {
     const { panelSurvey, t, dispatch } = this.props
-    const survey = this.lastWave()
+    const survey = this.latestWave()
 
     let actions = []
     if (this.movable()) actions.push({ name: t('Move to'), func: this.moveSurvey })
