@@ -1,3 +1,3 @@
 defmodule Coherence.CoherenceView do
-  use Ask.Coherence.Web, :view
+  use Ask.Coherence, :view
 end

@@ -8,4 +8,5 @@ end
 
 defimpl Plug.Exception, for: Ask.ConflictError do
   def status(_), do: 409
+  def actions(_), do: [%{label: "ConflictError", handler: {IO, :puts, "ConflictError"}}]
 end

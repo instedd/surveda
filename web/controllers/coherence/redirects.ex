@@ -10,6 +10,12 @@ defmodule Coherence.Redirects do
   * session_delete/2
   * password_create/2
   * password_update/2,
+  * unlock_create_not_locked/2
+  * unlock_create_invalid/2
+  * unlock_create/2
+  * unlock_edit_not_locked/2
+  * unlock_edit/2
+  * unlock_edit_invalid/2
   * registration_create/2
   * invitation_create/2
   * confirmation_create/2
@@ -23,16 +29,16 @@ defmodule Coherence.Redirects do
 
   ## Examples
 
-      import MyProject.Router.Helpers
+      import Ask.Router.Helpers
 
       # override the log out action back to the log in page
-      def session_delete(conn, _), do: redirect(conn, session_path(conn, :new))
+      def session_delete(conn, _), do: redirect(conn, to: session_path(conn, :new))
 
       # redirect the user to the login page after registering
-      def registration_create(conn, _), do: redirect(conn, session_path(conn, :new))
+      def registration_create(conn, _), do: redirect(conn, to: session_path(conn, :new))
 
       # disable the user_return_to feature on login
-      def session_create(conn, _), do: redirect(conn, landing_path(conn, :index))
+      def session_create(conn, _), do: redirect(conn, to: landing_path(conn, :index))
 
   """
   use Redirects

@@ -33,12 +33,12 @@ defmodule Ask.Mixfile do
         :oauth2,
         :timex,
         :sentry,
-        :coherence,
         :prometheus_phoenix,
         :prometheus_plugs
       ],
       extra_applications: [
         :myxql,
+        :coherence
       ]
     ]
   end
@@ -53,8 +53,8 @@ defmodule Ask.Mixfile do
   defp deps do
     [
       {:phoenix, "~> 1.4.0"},
-      {:plug, "~> 1.8.1"},        # held until ... ?
-      {:plug_crypto, "~> 1.1.1"}, # held until Phoenix 1.5
+      #{:plug, "~> 1.8"},        # held until ... ?
+      #{:plug_crypto, "~> 1.1.1"}, # held until Phoenix 1.5
       {:plug_cowboy, "~> 2.0"},
       {:phoenix_ecto, "~> 4.0"},
       {:ecto_sql, "~> 3.7"},
@@ -63,7 +63,7 @@ defmodule Ask.Mixfile do
       {:phoenix_html, "~> 2.10"},
       {:phoenix_live_reload, "~> 1.2.0", only: :dev},
 
-      {:gettext, "~> 0.13.1"},
+      {:gettext, "~> 0.14"},
       {:ex_machina, "~> 2.0", only: :test},
       {:csv, "~> 1.4.2"},
       {:oauth2, "~> 0.7.0"},
@@ -74,7 +74,7 @@ defmodule Ask.Mixfile do
       {:hackney, "~> 1.0"},
       {:ex_json_schema, "~> 0.5.2"},
       {:deep_merge, "~> 0.1.0"},
-      {:coherence, git: "https://github.com/manastech/coherence.git", branch: "v0.3", override: true},
+      {:coherence, github: "smpallen99/coherence", branch: "master", override: true}, #{:coherence, github: "manastech/coherence", branch: "v0.3", override: true},
       {:gen_smtp, "~> 0.11"},
       {:xml_builder, "~> 0.0.9"}, # TODO: update to ~> 2.0
       {:language_names, "~> 0.1.0"},

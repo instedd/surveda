@@ -1,5 +1,6 @@
 defmodule Ask.ProjectMembership do
   use Ask.Web, :model
+  alias Ask.Repo
 
   schema "project_memberships" do
     field :level, :string # owner, admin, editor, reader
@@ -69,4 +70,20 @@ defmodule Ask.ProjectMembership do
     false
   end
 
+  # Transforms pending invitations for a user into actual project memberships.
+  def accept_pending_invitations(user) do
+    invites = Repo.all(from i in Ask.Invite, where: i.email == ^user.email)
+
+    Enum.each invites, fn(invite) ->
+      membership = changeset(%Ask.ProjectMembership{}, %{
+        "user_id" => user.id,
+        "project_id" => invite.project_id,
+        "level" => invite.level
+      })
+      Repo.transaction fn ->
+        Repo.insert(membership)
+        Repo.delete!(invite)
+      end
+    end
+  end
 end

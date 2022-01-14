@@ -10,128 +10,35 @@ defmodule Ask.Coherence.RegistrationController do
   * update - update the user account
   * delete - delete the user account
   """
-  use Coherence.Web, :controller
-  alias Coherence.ControllerHelpers, as: Helpers
+  use Ask.Coherence, :controller
+  use Coherence.RegistrationControllerBase, schemas: Ask.Coherence.Schemas
 
   plug Coherence.RequireLogin when action in ~w(show edit update delete)a
   plug Coherence.ValidateOption, :registerable
   plug :scrub_params, "registration" when action in [:create, :update]
 
-  plug :layout_view
+  plug :layout_view,
+    layout: {Ask.Coherence.LayoutView, :app},
+    view: Coherence.RegistrationView,
+    caller: __MODULE__
   plug :redirect_logged_in when action in [:new, :create]
+  plug :guisso_signup when action in [:new]
 
-  @doc false
-  def layout_view(conn, _) do
-    conn
-    |> put_layout({Coherence.LayoutView, "app.html"})
-    |> put_view(Coherence.RegistrationView)
-  end
-
-  @doc """
-  Render the new user form.
-  """
-  def new(conn, _params) do
+  defp guisso_signup(conn, _) do
     if Guisso.enabled? do
-      Guisso.sign_up(conn, "/")
-    else
-      user_schema = Config.user_schema
-      cs = Helpers.changeset(:registration, user_schema, user_schema.__struct__)
       conn
-      |> render(:new, email: "", changeset: cs)
+      |> Guisso.sign_up("/")
+      |> halt()
+    else
+      conn
     end
-  end
-
-  @doc """
-  Create the new user account.
-
-  Creates the new user account. Create and send a confirmation if
-  this option is enabled.
-  """
-  def create(conn, %{"registration" => registration_params} = params) do
-    user_schema = Config.user_schema
-    cs = Helpers.changeset(:registration, user_schema, user_schema.__struct__, registration_params)
-    case Config.repo.insert(cs) do
-      {:ok, user} ->
-        accept_all_pending_invitations_for_a_new_user user
-        conn
-        |> send_confirmation(user, user_schema)
-        |> redirect_or_login(user, params, Config.allow_unconfirmed_access_for)
-      {:error, changeset} ->
-        conn
-        |> render("new.html", changeset: changeset)
-    end
-  end
-
-  defp redirect_or_login(conn, _user, params, 0) do
-    redirect_to(conn, :registration_create, params)
-  end
-  defp redirect_or_login(conn, user, params, _) do
-    Helpers.login_user(conn, user, params)
-  end
-
-  @doc """
-  Show the registration page.
-  """
-  def show(conn, _) do
-    user = Coherence.current_user(conn)
-    render(conn, "show.html", user: user)
-  end
-
-  @doc """
-  Edit the registration.
-  """
-  def edit(conn, _) do
-    user = Coherence.current_user(conn)
-    changeset = Helpers.changeset(:registration, user.__struct__, user)
-    render(conn, "edit.html", user: user, changeset: changeset)
-  end
-
-  @doc """
-  Update the registration.
-  """
-  def update(conn, %{"registration" => user_params} = params) do
-    user_schema = Config.user_schema
-    user = Coherence.current_user(conn)
-    changeset = Helpers.changeset(:registration, user_schema, user, user_params)
-    case Config.repo.update(changeset) do
-      {:ok, user} ->
-        apply(Config.auth_module, Config.update_login, [conn, user, [id_key: Config.schema_key]])
-        |> put_flash(:info, "Account updated successfully.")
-        |> redirect_to(:registration_update, params, user)
-      {:error, changeset} ->
-        render(conn, "edit.html", user: user, changeset: changeset)
-    end
-  end
-
-  @doc """
-  Delete a registration.
-  """
-  def delete(conn, params) do
-    user = Coherence.current_user(conn)
-    conn = Coherence.SessionController.delete(conn)
-    Config.repo.delete! user
-    redirect_to(conn, :registration_delete, params)
   end
 
   def confirmation_sent(conn, _) do
-    render(conn, "confirmation_sent.html")
+    conn |> render("confirmation_sent.html")
   end
 
   def confirmation_expired(conn, _) do
-    render(conn, "confirmation_expired.html")
+    conn |> render("confirmation_expired.html")
   end
-
-  def accept_all_pending_invitations_for_a_new_user(user) do
-    invites = Ask.Repo.all(from i in Ask.Invite, where: i.email == ^user.email)
-
-    Enum.each invites, fn(invite) ->
-      changeset = %{"user_id" => user.id, "project_id" => invite.project_id, "level" => invite.level}
-
-      Ask.Repo.transaction fn ->
-        Ask.ProjectMembership.changeset(%Ask.ProjectMembership{}, changeset) |> Ask.Repo.insert
-        invite |> Ask.Repo.delete!
-      end
-    end
-  end
-
 end
