@@ -179,8 +179,7 @@ export const changeName = (newName: string) => (dispatch: Function, getState: ()
 
 export const changeFolder = (survey: Survey, folderId: number) => (dispatch: Function, getState: () => Store) => {
   return api.setFolderId(survey.projectId, survey.id, folderId)
-    .then(() => dispatch(surveysActions.folderChanged(survey.id, folderId))
-  )
+    .then(() => dispatch(surveysActions.folderChanged(survey.id, folderId)))
 }
 
 export const changeDescription = (newDescription: string) => (dispatch: Function, getState: () => Store) => {

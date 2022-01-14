@@ -1,5 +1,6 @@
 // @flow
 import * as api from '../api'
+import * as panelSurveysActions from '../actions/panelSurveys'
 
 export const FETCH = 'FETCH_PANEL_SURVEY'
 export const RECEIVE = 'RECEIVE_PANEL_SURVEY'
@@ -33,3 +34,8 @@ export const receive = (panelSurvey: PanelSurvey) => ({
   type: RECEIVE,
   data: panelSurvey
 })
+
+export const changeFolder = (panelSurvey: PanelSurvey, folderId: number) => (dispatch: Function, getState: () => Store) => {
+  return api.panelSurveySetFolderId(panelSurvey.projectId, panelSurvey.id, folderId)
+    .then(() => dispatch(panelSurveysActions.folderChanged(panelSurvey.id, folderId)))
+}

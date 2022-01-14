@@ -670,7 +670,8 @@ defmodule Ask.Survey do
 
   # Regular survey can always change its folder
   def movable?(%{panel_survey_id: nil} = _survey), do: true
-  # Panel survey waves can't change its folder (because they don't belong to folders)
+  # Panel survey waves can't change its folder by its own, although the PanelSurvey
+  # they belong to, can be moved to a folder
   def movable?(_survey), do: false
 
   defp only_wave_of_panel_survey?(%{panel_survey_id: nil} = _survey), do: false
