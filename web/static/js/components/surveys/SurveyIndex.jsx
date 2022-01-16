@@ -246,22 +246,6 @@ const mapStateToPanelSurveys = (state) => {
   return values(items) || []
 }
 
-const paginate = (surveysAndPanelSurveys: Array<Survey|PanelSurvey>, page) => {
-  const totalCount = surveysAndPanelSurveys ? surveysAndPanelSurveys.length : 0
-  const pageIndex = page.index
-  const pageSize = page.size
-  const startIndex = Math.min(totalCount, pageIndex + 1)
-  const endIndex = Math.min(pageIndex + pageSize, totalCount)
-
-  return {
-    paginatedElements:
-      (surveysAndPanelSurveys.slice(pageIndex, pageIndex + pageSize): Array<Survey| PanelSurvey >),
-    totalCount,
-    startIndex,
-    endIndex,
-  }
-}
-
 const mapStateToProps = (state, ownProps) => {
   const project = state.project.data
 
@@ -284,6 +268,7 @@ const mapStateToProps = (state, ownProps) => {
     endIndex,
   } = paginate(surveysAndPanelSurveys, page)
 
+  // loading, readonly and emptyview
   const isLoadingFolders = state.folders && state.folders.loadingFetch
   const isLoadingSurveys = state.surveys && state.surveys.fetching
   const isLoadingPanelSurveys = state.panelSurveys && state.panelSurveys.fetching
@@ -308,6 +293,22 @@ const mapStateToProps = (state, ownProps) => {
     startIndex,
     endIndex,
     totalCount
+  }
+}
+
+const paginate = (surveysAndPanelSurveys: Array<Survey | PanelSurvey>, page) => {
+  const totalCount = surveysAndPanelSurveys ? surveysAndPanelSurveys.length : 0
+  const pageIndex = page.index
+  const pageSize = page.size
+  const startIndex = Math.min(totalCount, pageIndex + 1)
+  const endIndex = Math.min(pageIndex + pageSize, totalCount)
+
+  return {
+    paginatedElements:
+      (surveysAndPanelSurveys.slice(pageIndex, pageIndex + pageSize): Array<Survey| PanelSurvey >),
+    totalCount,
+    startIndex,
+    endIndex,
   }
 }
 
