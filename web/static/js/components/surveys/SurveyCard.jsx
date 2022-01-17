@@ -1,4 +1,4 @@
-import React, { Component } from 'react'
+import React, { Component, PropTypes } from 'react'
 import { translate, Trans } from 'react-i18next'
 
 import { Link } from 'react-router'
@@ -88,7 +88,6 @@ class _SurveyCard extends Component<any> {
 
   render() {
     const { survey, t, dispatch } = this.props
-    const { panelSurvey } = survey
 
     let actions = []
     if (this.movable()) actions.push({ name: t('Move to'), func: this.moveSurvey })
@@ -149,7 +148,7 @@ class _PanelSurveyCard extends Component<any> {
 
   deleteSurvey = () => {
     const deleteConfirmationModal: ConfirmationModal = this.refs.deleteConfirmationModal
-    const { t, panelSurvey } = this.props
+    const { t } = this.props
 
     const survey = this.latestWave()
 
@@ -226,10 +225,6 @@ class InnerSurveyCard extends Component<any> {
     dispatch: Function
   };
 
-  constructor(props) {
-    super(props)
-  }
-
   componentDidMount() {
     const { survey, dispatch } = this.props
 
@@ -296,6 +291,10 @@ const ActionMenu = (props) => {
       ))}
     </Dropdown>
   )
+}
+
+ActionMenu.propTypes = {
+  actions: PropTypes.array
 }
 
 export const SurveyCard = translate()(connect()(_SurveyCard))

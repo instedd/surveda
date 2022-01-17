@@ -6,7 +6,7 @@ import * as surveysActions from '../../actions/surveys'
 import * as actions from '../../actions/panelSurvey'
 import * as panelSurveysActions from '../../actions/panelSurveys'
 import { PagingFooter } from '../ui'
-import { SurveyCard, PanelSurveyCard } from '../surveys/SurveyCard'
+import { SurveyCard } from '../surveys/SurveyCard'
 import * as routes from '../../routes'
 import { translate } from 'react-i18next'
 import { RepeatButton } from '../ui/RepeatButton'
@@ -37,18 +37,9 @@ class PanelSurveyShow extends Component<any, any> {
     totalCount: PropTypes.number.isRequired
   }
 
-  // componentWillMount() {
-  //   const { dispatch, projectId, panelSurvey, panelSurveyId } = this.props
-
-  //   if (!panelSurvey) {
-  //     dispatch(actions.fetchPanelSurvey(projectId, panelSurveyId))
-  //   }
-  // }
-
   componentDidMount() {
     const { dispatch, projectId, panelSurveyId } = this.props
     dispatch(actions.fetchPanelSurvey(projectId, panelSurveyId))
-    // dispatch(actions.fetchFolder(projectId, folderId))
   }
 
   nextPage() {
@@ -78,10 +69,7 @@ class PanelSurveyShow extends Component<any, any> {
   render() {
     const {
       projectId,
-      project,
-      panelSurveyId,
       panelSurvey,
-      surveys,
       surveysAndPanelSurveys,
 
       isLoading,
@@ -142,11 +130,22 @@ const Title = (props) => {
   )
 }
 
+Title.propTypes = {
+  projectId: PropTypes.any,
+  panelSurvey: PropTypes.object,
+  t: PropTypes.func
+}
+
 const MainActions = (props) => {
   const { isReadOnly, children } = props
   if (isReadOnly) return null
 
   return (<div>{children}</div>)
+}
+
+MainActions.propTypes = {
+  isReadOnly: PropTypes.bool,
+  children: PropTypes.node
 }
 
 const MainView = (props) => {
@@ -155,6 +154,12 @@ const MainView = (props) => {
   if (isEmpty) throw Error(t('Empty panel survey'))
 
   return (<div>{children}</div>)
+}
+
+MainView.propTypes = {
+  isEmpty: PropTypes.bool,
+  children: PropTypes.node,
+  t: PropTypes.func
 }
 
 const SurveysGrid = (props) => {
@@ -167,6 +172,12 @@ const SurveysGrid = (props) => {
       })}
     </div>
   )
+}
+
+SurveysGrid.propTypes = {
+  surveysAndPanelSurveys: PropTypes.array,
+  isReadOnly: PropTypes.bool,
+  t: PropTypes.func
 }
 
 const mapStateToPanelSurvey = (state, panelSurveyId) => {
@@ -211,7 +222,7 @@ const mapStateToProps = (state, ownProps) => {
     paginatedElements,
     totalCount,
     startIndex,
-    endIndex,
+    endIndex
   } = paginate(surveysAndPanelSurveys, page)
 
   // loading, readonly and emptyview
@@ -249,11 +260,11 @@ const paginate = (surveysAndPanelSurveys: Array<Survey | PanelSurvey>, page) => 
   const endIndex = Math.min(pageIndex + pageSize, totalCount)
 
   return {
-    paginatedElements:
-      (surveysAndPanelSurveys.slice(pageIndex, pageIndex + pageSize): Array<Survey| PanelSurvey >),
+    paginatedElements: (surveysAndPanelSurveys
+      .slice(pageIndex, pageIndex + pageSize): Array<Survey | PanelSurvey>),
     totalCount,
     startIndex,
-    endIndex,
+    endIndex
   }
 }
 

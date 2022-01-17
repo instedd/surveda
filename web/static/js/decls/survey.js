@@ -49,7 +49,8 @@ export type PanelSurvey = {
   folderId: number,
   projectId: number,
   latestOccurrence: ?Survey,
-  isRepeatable: boolean
+  isRepeatable: boolean,
+  updatedAt: Date
 }
 
 export type Link = {

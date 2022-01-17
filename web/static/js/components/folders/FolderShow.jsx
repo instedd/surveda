@@ -6,7 +6,7 @@ import * as surveysActions from '../../actions/surveys'
 import * as surveyActions from '../../actions/survey'
 import * as actions from '../../actions/folder'
 import * as panelSurveyActions from '../../actions/panelSurvey'
-import { MainAction, Action, EmptyPage, ConfirmationModal, PagingFooter } from '../ui'
+import { MainAction, Action, EmptyPage, PagingFooter } from '../ui'
 import { SurveyCard, PanelSurveyCard } from '../surveys/SurveyCard'
 import * as routes from '../../routes'
 import { translate } from 'react-i18next'
@@ -72,8 +72,6 @@ class FolderShow extends Component<any, any> {
       projectId,
       project,
       folder,
-      surveys,
-      panelSurveys,
       surveysAndPanelSurveys,
 
       isLoading,
@@ -137,6 +135,12 @@ const Title = (props) => {
   )
 }
 
+Title.propTypes = {
+  projectId: PropTypes.any,
+  folder: PropTypes.object,
+  t: PropTypes.func
+}
+
 const MainActions = (props) => {
   const { isReadOnly, children, t } = props
   if (isReadOnly) return null
@@ -148,11 +152,25 @@ const MainActions = (props) => {
   )
 }
 
+MainActions.propTypes = {
+  isReadOnly: PropTypes.bool,
+  children: PropTypes.node,
+  t: PropTypes.func
+}
+
 const MainView = (props) => {
-  const { isReadOnly, isEmpty, onNew, t, children } = props
+  const { isReadOnly, isEmpty, onNew, children, t } = props
   return (isEmpty)
     ? <EmptyView isReadOnly={isReadOnly} onClick={onNew} t={t} />
     : (<div>{children}</div>)
+}
+
+MainView.propTypes = {
+  isReadOnly: PropTypes.bool,
+  isEmpty: PropTypes.bool,
+  onNew: PropTypes.func,
+  children: PropTypes.node,
+  t: PropTypes.func
 }
 
 const EmptyView = (props) => {
@@ -164,11 +182,17 @@ const EmptyView = (props) => {
                      createText={t('Create one', { context: 'survey' })} />)
 }
 
+EmptyView.propTypes = {
+  isReadOnly: PropTypes.bool,
+  onClick: PropTypes.func,
+  t: PropTypes.func
+}
+
 const SurveysGrid = (props) => {
   const { surveysAndPanelSurveys, isReadOnly, t } = props
 
-  const isPanelSurvey = function (survey) {
-    return survey.hasOwnProperty('occurrences')
+  const isPanelSurvey = function(survey) {
+    return survey.hasOwnProperty('latestWave')
   }
 
   return (
@@ -180,6 +204,12 @@ const SurveysGrid = (props) => {
       })}
     </div>
   )
+}
+
+SurveysGrid.propTypes = {
+  surveysAndPanelSurveys: PropTypes.array,
+  isReadOnly: PropTypes.bool,
+  t: PropTypes.func
 }
 
 const mapStateToFolder = (state, folderId) => {
@@ -215,7 +245,7 @@ const mapStateToProps = (state, ownProps) => {
 
   // Merge all together and sort by updated_at (descending)
   const surveysAndPanelSurveys = [
-    ...surveys, //.filter(survey => !survey.panelSurveyId),
+    ...surveys,
     ...panelSurveys
   ].sort((x, y) => y.updatedAt.localeCompare(x.updatedAt))
 
@@ -225,7 +255,7 @@ const mapStateToProps = (state, ownProps) => {
     paginatedElements,
     totalCount,
     startIndex,
-    endIndex,
+    endIndex
   } = paginate(surveysAndPanelSurveys, page)
 
   // loading, readonly and emptyview
@@ -264,11 +294,11 @@ const paginate = (surveysAndPanelSurveys: Array<Survey | PanelSurvey>, page) => 
   const endIndex = Math.min(pageIndex + pageSize, totalCount)
 
   return {
-    paginatedElements:
-      (surveysAndPanelSurveys.slice(pageIndex, pageIndex + pageSize): Array<Survey| PanelSurvey >),
+    paginatedElements: (surveysAndPanelSurveys
+      .slice(pageIndex, pageIndex + pageSize): Array<Survey | PanelSurvey>),
     totalCount,
     startIndex,
-    endIndex,
+    endIndex
   }
 }
 

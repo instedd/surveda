@@ -123,10 +123,7 @@ class SurveyIndex extends Component<any, State> {
 
   render() {
     const {
-      project,
       folders,
-      surveys,
-      panelSurveys,
       surveysAndPanelSurveys,
 
       isLoading,
@@ -186,11 +183,25 @@ const MainActions = (props) => {
   )
 }
 
+MainActions.propTypes = {
+  isReadOnly: PropTypes.bool,
+  children: PropTypes.node,
+  t: PropTypes.func
+}
+
 const MainView = (props) => {
-  const { isReadOnly, isEmpty, onNew, t, children } = props
+  const { isReadOnly, isEmpty, onNew, children, t } = props
   return (isEmpty)
     ? <EmptyView isReadOnly={isReadOnly} onClick={onNew} t={t} />
     : (<div>{children}</div>)
+}
+
+MainView.propTypes = {
+  isReadOnly: PropTypes.bool,
+  isEmpty: PropTypes.bool,
+  onNew: PropTypes.func,
+  children: PropTypes.node,
+  t: PropTypes.func
 }
 
 const EmptyView = (props) => {
@@ -200,6 +211,12 @@ const EmptyView = (props) => {
                      onClick={onClick}
                      readOnly={isReadOnly}
                      createText={t('Create one', { context: 'survey' })} />)
+}
+
+EmptyView.propTypes = {
+  isReadOnly: PropTypes.bool,
+  onClick: PropTypes.func,
+  t: PropTypes.func
 }
 
 const FoldersGrid = (props) => {
@@ -212,11 +229,19 @@ const FoldersGrid = (props) => {
   )
 }
 
+FoldersGrid.propTypes = {
+  folders: PropTypes.array,
+  isReadOnly: PropTypes.bool,
+  isEmpty: PropTypes.bool,
+  onRename: PropTypes.func,
+  onDelete: PropTypes.func,
+  t: PropTypes.func
+}
 
 const SurveysGrid = (props) => {
   const { surveysAndPanelSurveys, isReadOnly, t } = props
 
-  const isPanelSurvey = function (survey) {
+  const isPanelSurvey = function(survey) {
     return survey.hasOwnProperty('latestWave')
   }
 
@@ -229,6 +254,12 @@ const SurveysGrid = (props) => {
       })}
     </div>
   )
+}
+
+SurveysGrid.propTypes = {
+  surveysAndPanelSurveys: PropTypes.array,
+  isReadOnly: PropTypes.bool,
+  t: PropTypes.func
 }
 
 const mapStateToFolders = (state) => {
@@ -255,7 +286,7 @@ const mapStateToProps = (state, ownProps) => {
 
   // Merge all together and sort by updated_at (descending)
   const surveysAndPanelSurveys = [
-    ...surveys, //.filter(survey => !survey.panelSurveyId),
+    ...surveys,
     ...panelSurveys
   ].sort((x, y) => y.updatedAt.localeCompare(x.updatedAt))
 
@@ -265,7 +296,7 @@ const mapStateToProps = (state, ownProps) => {
     paginatedElements,
     totalCount,
     startIndex,
-    endIndex,
+    endIndex
   } = paginate(surveysAndPanelSurveys, page)
 
   // loading, readonly and emptyview
@@ -304,11 +335,11 @@ const paginate = (surveysAndPanelSurveys: Array<Survey | PanelSurvey>, page) => 
   const endIndex = Math.min(pageIndex + pageSize, totalCount)
 
   return {
-    paginatedElements:
-      (surveysAndPanelSurveys.slice(pageIndex, pageIndex + pageSize): Array<Survey| PanelSurvey >),
+    paginatedElements: (surveysAndPanelSurveys
+      .slice(pageIndex, pageIndex + pageSize): Array<Survey | PanelSurvey>),
     totalCount,
     startIndex,
-    endIndex,
+    endIndex
   }
 }
 
