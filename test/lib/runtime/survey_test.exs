@@ -1576,8 +1576,12 @@ defmodule Ask.Runtime.SurveyTest do
     updated_respondent = Repo.get(Respondent, respondent.id)
     assert updated_respondent.state == :active
 
-    {erl_date, _} = Timex.now |> Timex.shift(days: 2) |> Timex.to_erl
-    time = Timex.Timezone.resolve("Etc/UTC", {erl_date, {0, 0, 0}})
+    {:ok, naive_datetime} = DateTime.utc_now
+    |> Timex.shift(days: 2)
+    |> DateTime.to_date
+    |> NaiveDateTime.new(~T[00:00:00])
+    time = naive_datetime |> DateTime.from_naive!("Etc/UTC")
+
     assert DateTime.truncate(updated_respondent.timeout_at, :second) == time
   end
 
