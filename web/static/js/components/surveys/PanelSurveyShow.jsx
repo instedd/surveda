@@ -58,7 +58,7 @@ class PanelSurveyShow extends Component<any, any> {
     newWave(projectId, panelSurvey.id)
       .then(response => {
         const panelSurvey = response.entities.surveys[response.result]
-        const survey = panelSurvey.latestOccurrence
+        const survey = panelSurvey.latestWave
         // A wave of the panel survey was created -> the panel survey has changed.
         // The Redux store must be updated with the panel survey new state.
         panelSurveysActions.updateStore(dispatch, projectId, panelSurveyId)
