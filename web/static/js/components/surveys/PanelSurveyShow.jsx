@@ -6,12 +6,11 @@ import * as surveysActions from '../../actions/surveys'
 import * as actions from '../../actions/panelSurvey'
 import * as panelSurveysActions from '../../actions/panelSurveys'
 import { PagingFooter } from '../ui'
-import SurveyCard from '../surveys/SurveyCard'
+import { SurveyCard, PanelSurveyCard } from '../surveys/SurveyCard'
 import * as routes from '../../routes'
 import { translate } from 'react-i18next'
 import { RepeatButton } from '../ui/RepeatButton'
-import { newOccurrence } from '../../api'
-import { surveyIndexProps } from './SurveyIndex'
+import { newWave } from '../../api'
 
 class PanelSurveyShow extends Component<any, any> {
   state = {}
@@ -19,24 +18,37 @@ class PanelSurveyShow extends Component<any, any> {
     t: PropTypes.func,
     dispatch: PropTypes.func,
     router: PropTypes.object,
+    params: PropTypes.object,
+
     projectId: PropTypes.any.isRequired,
     project: PropTypes.object,
+
+    panelSurveyId: PropTypes.number.isRequired,
+    panelSurvey: PropTypes.object,
     surveys: PropTypes.array,
+    surveysAndPanelSurveys: PropTypes.array,
+
+    isLoading: PropTypes.bool,
+    isReadOnly: PropTypes.bool,
+    isEmptyView: PropTypes.bool,
+
     startIndex: PropTypes.number.isRequired,
     endIndex: PropTypes.number.isRequired,
-    totalCount: PropTypes.number.isRequired,
-    params: PropTypes.object,
-    panelSurveyId: PropTypes.number.isRequired,
-    loadingPanelSurvey: PropTypes.bool,
-    panelSurvey: PropTypes.object
+    totalCount: PropTypes.number.isRequired
   }
 
-  componentWillMount() {
-    const { dispatch, projectId, panelSurvey, panelSurveyId } = this.props
+  // componentWillMount() {
+  //   const { dispatch, projectId, panelSurvey, panelSurveyId } = this.props
 
-    if (!panelSurvey) {
-      dispatch(actions.fetchPanelSurvey(projectId, panelSurveyId))
-    }
+  //   if (!panelSurvey) {
+  //     dispatch(actions.fetchPanelSurvey(projectId, panelSurveyId))
+  //   }
+  // }
+
+  componentDidMount() {
+    const { dispatch, projectId, panelSurveyId } = this.props
+    dispatch(actions.fetchPanelSurvey(projectId, panelSurveyId))
+    // dispatch(actions.fetchFolder(projectId, folderId))
   }
 
   nextPage() {
@@ -49,10 +61,10 @@ class PanelSurveyShow extends Component<any, any> {
     dispatch(surveysActions.previousSurveysPage())
   }
 
-  newOccurrence() {
+  newWave() {
     const { projectId, router, panelSurvey, dispatch, panelSurveyId } = this.props
 
-    newOccurrence(projectId, panelSurvey.id)
+    newWave(projectId, panelSurvey.id)
       .then(response => {
         const panelSurvey = response.entities.surveys[response.result]
         const survey = panelSurvey.latestOccurrence
@@ -64,90 +76,251 @@ class PanelSurveyShow extends Component<any, any> {
   }
 
   render() {
-    const loading = this.loadingMessage()
-    if (loading) {
-      return loading
+    const {
+      projectId,
+      project,
+      panelSurveyId,
+      panelSurvey,
+      surveys,
+      surveysAndPanelSurveys,
+
+      isLoading,
+      isReadOnly,
+      isEmptyView,
+
+      startIndex,
+      endIndex,
+      totalCount,
+      t
+    } = this.props
+
+    if (isLoading) {
+      return (
+        <div className='folder-show'>
+          <Title projectId={projectId} panelSurvey={panelSurvey} t={t} />
+          {t('Loading panel survey...')}
+        </div>
+      )
     }
 
-    const { surveys, project, t, panelSurveyId } = this.props
-    const readOnly = !project || project.readOnly
-
-    if (surveys && surveys.length == 0) {
-      throw Error(t('Empty panel survey'))
-    }
+    console.log(panelSurvey)
 
     return (
       <div className='folder-show'>
-        {readOnly || this.primaryButton()}
-        {this.titleLink()}
-        <div>
-          <div className='survey-index-grid'>
-            { surveys && surveys.map(survey => {
-              return (
-                <SurveyCard survey={survey} key={survey.id} readOnly={readOnly} t={t} panelSurveyId={panelSurveyId} />
-              )
-            }) }
-          </div>
-          {this.footer()}
-        </div>
+        <MainActions isReadOnly={isReadOnly}>
+          <RepeatButton text={t('Add wave')} disabled={!panelSurvey.isRepeatable} onClick={() => this.newWave()} />
+        </MainActions>
+
+        <Title projectId={projectId} panelSurvey={panelSurvey} t={t} />
+
+        <MainView isEmpty={isEmptyView} t={t}>
+          <SurveysGrid surveysAndPanelSurveys={surveysAndPanelSurveys}
+                       isReadOnly={isReadOnly}
+                       t={t} />
+
+          <PagingFooter {...{ startIndex, endIndex, totalCount }}
+            onPreviousPage={() => this.previousPage()}
+            onNextPage={() => this.nextPage()} />
+        </MainView>
       </div>
     )
   }
 
-  loadingMessage() {
-    const { t, loadingPanelSurvey } = this.props
-    if (loadingPanelSurvey) {
-      return <div className='folder-show'>{this.titleLink()}{t('Loading panel survey...')}</div>
-    }
+  // render() {
+  //   const loading = this.loadingMessage()
+  //   if (loading) {
+  //     return loading
+  //   }
+
+  //   const { surveys, project, t, panelSurveyId } = this.props
+  //   const readOnly = !project || project.readOnly
+
+  //   if (surveys && surveys.length == 0) {
+  //     throw Error(t('Empty panel survey'))
+  //   }
+
+  //   return (
+  //     <div className='folder-show'>
+  //       {readOnly || this.primaryButton()}
+  //       {this.titleLink()}
+  //       <div>
+  //         <div className='survey-index-grid'>
+  //           { surveys && surveys.map(survey => {
+  //             return (
+  //               <SurveyCard survey={survey} key={survey.id} readOnly={readOnly} t={t} panelSurveyId={panelSurveyId} />
+  //             )
+  //           }) }
+  //         </div>
+  //         {this.footer()}
+  //       </div>
+  //     </div>
+  //   )
+  // }
+
+  // loadingMessage() {
+  //   const { t, loadingPanelSurvey } = this.props
+  //   if (loadingPanelSurvey) {
+  //     return <div className='folder-show'>{this.titleLink()}{t('Loading panel survey...')}</div>
+  //   }
+  // }
+
+  // titleLink() {
+  //   const { t, projectId, panelSurvey } = this.props
+
+  //   if (panelSurvey) {
+  //     const to = panelSurvey.folderId
+  //       ? routes.folder(projectId, panelSurvey.folderId)
+  //       : routes.project(projectId)
+  //     const name = panelSurvey.name || t('Untitled panel survey')
+  //     return <Link to={to} className='folder-header'><i className='material-icons black-text'>arrow_back</i>{name}</Link>
+  //   }
+  // }
+
+  // primaryButton() {
+  //   const { t, panelSurvey } = this.props
+  //   const addWaveDisabled = panelSurvey ? !panelSurvey.isRepeatable : true
+  //   return <RepeatButton text={t('Add wave')} disabled={addWaveDisabled} onClick={() => this.newWave()} />
+  // }
+
+  // footer() {
+  //   const { startIndex, endIndex, totalCount } = this.props
+
+  //   return <PagingFooter
+  //     {...{startIndex, endIndex, totalCount}}
+  //     onPreviousPage={() => this.previousPage()}
+  //     onNextPage={() => this.nextPage()} />
+  // }
+}
+
+const Title = (props) => {
+  const { projectId, panelSurvey, t } = props
+  if (!panelSurvey) return null
+
+  const { folderId, name } = panelSurvey
+  const to = folderId
+    ? routes.folder(projectId, folderId)
+    : routes.project(projectId)
+
+  return (
+    <Link to={to} className='folder-header'>
+      <i className='material-icons black-text'>arrow_back</i>
+      {name || t('Untitled panel survey')}
+    </Link>
+  )
+}
+
+const MainActions = (props) => {
+  const { isReadOnly, children } = props
+  if (isReadOnly) return null
+
+  return (<div>{children}</div>)
+}
+
+const MainView = (props) => {
+  const { isEmpty, children, t } = props
+
+  if (isEmpty) throw Error(t('Empty panel survey'))
+
+  return (<div>{children}</div>)
+}
+
+const SurveysGrid = (props) => {
+  const { surveysAndPanelSurveys, isReadOnly, t } = props
+
+  return (
+    <div className='survey-index-grid'>
+      {surveysAndPanelSurveys.map(survey => {
+        return (<SurveyCard survey={survey} key={survey.id} readOnly={isReadOnly} t={t} />)
+      })}
+    </div>
+  )
+}
+
+const mapStateToPanelSurvey = (state, panelSurveyId) => {
+  let panelSurvey
+  let surveys = []
+  let panelSurveys = []
+
+  if (state.panelSurvey.data && state.panelSurvey.data.id === panelSurveyId) {
+    panelSurvey = state.panelSurvey.data
+    surveys = panelSurvey.waves
   }
 
-  titleLink() {
-    const { t, projectId, panelSurvey } = this.props
-
-    if (panelSurvey) {
-      const to = panelSurvey.folderId
-        ? routes.folder(projectId, panelSurvey.folderId)
-        : routes.project(projectId)
-      const name = panelSurvey.name || t('Untitled panel survey')
-      return <Link to={to} className='folder-header'><i className='material-icons black-text'>arrow_back</i>{name}</Link>
-    }
-  }
-
-  primaryButton() {
-    const { t, panelSurvey } = this.props
-    const addWaveDisabled = panelSurvey ? !panelSurvey.isRepeatable : true
-    return <RepeatButton text={t('Add wave')} disabled={addWaveDisabled} onClick={() => this.newOccurrence()} />
-  }
-
-  footer() {
-    const { startIndex, endIndex, totalCount } = this.props
-
-    return <PagingFooter
-      {...{startIndex, endIndex, totalCount}}
-      onPreviousPage={() => this.previousPage()}
-      onNextPage={() => this.nextPage()} />
+  return {
+    panelSurvey,
+    surveys,
+    panelSurveys
   }
 }
 
 const mapStateToProps = (state, ownProps) => {
+  const project = state.project.data
   const { params, t } = ownProps
   const { projectId } = params
-
   const panelSurveyId = params.panelSurveyId && parseInt(params.panelSurveyId)
   if (!panelSurveyId) throw new Error(t('Missing param: panelSurveyId'))
 
-  let panelSurvey = null
-  if (state.panelSurvey.data && state.panelSurvey.data.id == panelSurveyId) {
-    panelSurvey = state.panelSurvey.data
-  }
+  const {
+    panelSurvey,
+    surveys,
+    panelSurveys
+  } = mapStateToPanelSurvey(state, panelSurveyId)
+
+  // Merge all together and sort by updated_at (descending)
+  const surveysAndPanelSurveys = [
+    ...surveys,
+    ...panelSurveys
+  ].sort((x, y) => y.updatedAt.localeCompare(x.updatedAt))
+
+  // pagination
+  const { page } = state.surveys
+  const {
+    paginatedElements,
+    totalCount,
+    startIndex,
+    endIndex,
+  } = paginate(surveysAndPanelSurveys, page)
+
+  // loading, readonly and emptyview
+  const isLoadingPanelSurvey = state.panelSurvey.loading || state.panelSurvey.fetching
+  const isLoadingInitial = !panelSurvey
+
+  const isLoading = isLoadingInitial || isLoadingPanelSurvey
+  const isReadOnly = !project || project.readOnly
+  const isEmptyView = surveys.length === 0 && panelSurveys.length === 0
 
   return {
-    ...surveyIndexProps(state, panelSurvey && panelSurvey.waves, null),
     projectId: projectId,
+    project,
+
     panelSurveyId,
-    project: state.project.data,
-    loadingPanelSurvey: state.panelSurvey.loading || state.panelSurvey.fetching,
-    panelSurvey
+    panelSurvey,
+    surveys, // the surveys are the PanelSurvey's waves
+    surveysAndPanelSurveys: paginatedElements,
+
+    isLoading,
+    isReadOnly,
+    isEmptyView,
+
+    startIndex,
+    endIndex,
+    totalCount
+  }
+}
+
+const paginate = (surveysAndPanelSurveys: Array<Survey | PanelSurvey>, page) => {
+  const totalCount = surveysAndPanelSurveys ? surveysAndPanelSurveys.length : 0
+  const pageIndex = page.index
+  const pageSize = page.size
+  const startIndex = Math.min(totalCount, pageIndex + 1)
+  const endIndex = Math.min(pageIndex + pageSize, totalCount)
+
+  return {
+    paginatedElements:
+      (surveysAndPanelSurveys.slice(pageIndex, pageIndex + pageSize): Array<Survey| PanelSurvey >),
+    totalCount,
+    startIndex,
+    endIndex,
   }
 }
 

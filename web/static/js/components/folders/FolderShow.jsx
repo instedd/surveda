@@ -35,7 +35,7 @@ class FolderShow extends Component<any, any> {
 
     startIndex: PropTypes.number.isRequired,
     endIndex: PropTypes.number.isRequired,
-    totalCount: PropTypes.number.isRequired,
+    totalCount: PropTypes.number.isRequired
   }
 
   componentDidMount() {
@@ -89,7 +89,7 @@ class FolderShow extends Component<any, any> {
     if (isLoading) {
       return (
         <div className='folder-show'>
-          <Title project={project} projectId={projectId} folder={folder} />
+          <Title project={project} projectId={projectId} folder={folder} t={t} />
           {t('Loading surveys...')}
         </div>
       )
@@ -102,7 +102,7 @@ class FolderShow extends Component<any, any> {
           <Action text={t('Panel Survey')} icon='repeat' onClick={() => this.newPanelSurvey()} />
         </MainActions>
 
-        <Title projectId={projectId} folder={folder} />
+        <Title projectId={projectId} folder={folder} t={t} />
 
         <MainView isReadOnly={isReadOnly}
                   isEmpty={isEmptyView}
@@ -123,16 +123,16 @@ class FolderShow extends Component<any, any> {
 }
 
 const Title = (props) => {
-  const { projectId, folder } = props
+  const { projectId, folder, t } = props
   if (!folder) return null
 
   const { name } = folder
-  if (!name) return null
+  const to = routes.project(projectId)
 
   return (
-    <Link to={routes.project(projectId)} className='folder-header'>
+    <Link to={to} className='folder-header'>
       <i className='material-icons black-text'>arrow_back</i>
-      {name}
+      {name || t('Untitled folder')}
     </Link>
   )
 }
@@ -203,26 +203,21 @@ const mapStateToFolder = (state, folderId) => {
 const mapStateToProps = (state, ownProps) => {
   const project = state.project.data
   const { params, t } = ownProps
-  const { projectId, folderId } = params
+  const { projectId } = params
+  const folderId = parseInt(params.folderId)
+  if (!folderId) throw new Error(t('Missing param: folderId'))
 
   const {
     folder,
     surveys,
     panelSurveys
-  } = mapStateToFolder(state, parseInt(folderId))
+  } = mapStateToFolder(state, folderId)
 
-  // Merge all together to sort by date
-  // At the same time remove surveys inside PanelSurvey (ie waves)
-  // PanelSurvey is shown as a group and its waves are not shown in this view
-  let surveysAndPanelSurveys = [
+  // Merge all together and sort by updated_at (descending)
+  const surveysAndPanelSurveys = [
     ...surveys, //.filter(survey => !survey.panelSurveyId),
     ...panelSurveys
-  ]
-
-  // Sort by updated_at (descending)
-  surveysAndPanelSurveys = surveysAndPanelSurveys.sort((x, y) =>
-    y.updatedAt.localeCompare(x.updatedAt)
-  )
+  ].sort((x, y) => y.updatedAt.localeCompare(x.updatedAt))
 
   // pagination
   const { page } = state.surveys
@@ -243,13 +238,13 @@ const mapStateToProps = (state, ownProps) => {
 
   return {
     projectId: projectId,
-    project: state.project.data,
+    project,
 
     folderId,
     folder,
     surveys,
     panelSurveys,
-    surveysAndPanelSurveys,
+    surveysAndPanelSurveys: paginatedElements,
 
     isLoading,
     isReadOnly,

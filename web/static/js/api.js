@@ -346,7 +346,7 @@ export const stopSurvey = (projectId, surveyId) => {
   return apiPostJSON(`projects/${projectId}/surveys/${surveyId}/stop`, surveySchema)
 }
 
-export const newOccurrence = (projectId, panelSurveyId) => {
+export const newWave = (projectId, panelSurveyId) => {
   return apiPostJSON(`projects/${projectId}/panel_surveys/${panelSurveyId}/new_wave`, surveySchema)
 }
 
