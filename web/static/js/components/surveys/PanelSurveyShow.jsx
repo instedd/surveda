@@ -103,8 +103,6 @@ class PanelSurveyShow extends Component<any, any> {
       )
     }
 
-    console.log(panelSurvey)
-
     return (
       <div className='folder-show'>
         <MainActions isReadOnly={isReadOnly}>
@@ -125,71 +123,6 @@ class PanelSurveyShow extends Component<any, any> {
       </div>
     )
   }
-
-  // render() {
-  //   const loading = this.loadingMessage()
-  //   if (loading) {
-  //     return loading
-  //   }
-
-  //   const { surveys, project, t, panelSurveyId } = this.props
-  //   const readOnly = !project || project.readOnly
-
-  //   if (surveys && surveys.length == 0) {
-  //     throw Error(t('Empty panel survey'))
-  //   }
-
-  //   return (
-  //     <div className='folder-show'>
-  //       {readOnly || this.primaryButton()}
-  //       {this.titleLink()}
-  //       <div>
-  //         <div className='survey-index-grid'>
-  //           { surveys && surveys.map(survey => {
-  //             return (
-  //               <SurveyCard survey={survey} key={survey.id} readOnly={readOnly} t={t} panelSurveyId={panelSurveyId} />
-  //             )
-  //           }) }
-  //         </div>
-  //         {this.footer()}
-  //       </div>
-  //     </div>
-  //   )
-  // }
-
-  // loadingMessage() {
-  //   const { t, loadingPanelSurvey } = this.props
-  //   if (loadingPanelSurvey) {
-  //     return <div className='folder-show'>{this.titleLink()}{t('Loading panel survey...')}</div>
-  //   }
-  // }
-
-  // titleLink() {
-  //   const { t, projectId, panelSurvey } = this.props
-
-  //   if (panelSurvey) {
-  //     const to = panelSurvey.folderId
-  //       ? routes.folder(projectId, panelSurvey.folderId)
-  //       : routes.project(projectId)
-  //     const name = panelSurvey.name || t('Untitled panel survey')
-  //     return <Link to={to} className='folder-header'><i className='material-icons black-text'>arrow_back</i>{name}</Link>
-  //   }
-  // }
-
-  // primaryButton() {
-  //   const { t, panelSurvey } = this.props
-  //   const addWaveDisabled = panelSurvey ? !panelSurvey.isRepeatable : true
-  //   return <RepeatButton text={t('Add wave')} disabled={addWaveDisabled} onClick={() => this.newWave()} />
-  // }
-
-  // footer() {
-  //   const { startIndex, endIndex, totalCount } = this.props
-
-  //   return <PagingFooter
-  //     {...{startIndex, endIndex, totalCount}}
-  //     onPreviousPage={() => this.previousPage()}
-  //     onNextPage={() => this.nextPage()} />
-  // }
 }
 
 const Title = (props) => {
