@@ -177,6 +177,9 @@ header {
       margin: 0;
     }
     .title {
+      position: absolute;
+      display: flex;
+      align-items: center;
       max-width: 100%;
       + input {
         height: 30px;
