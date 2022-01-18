@@ -74,14 +74,14 @@ defmodule Ask.Mixfile do
       {:hackney, "~> 1.0"},
       {:ex_json_schema, "~> 0.5.2"},
       {:deep_merge, "~> 0.1.0"},
-      {:coherence, github: "smpallen99/coherence", branch: "master", override: true}, #{:coherence, github: "manastech/coherence", branch: "v0.3", override: true},
+      {:coherence, github: "smpallen99/coherence", branch: "master", override: true}, # "~> 0.6"
       {:gen_smtp, "~> 0.11"},
       {:xml_builder, "~> 0.0.9"}, # TODO: update to ~> 2.0
       {:language_names, "~> 0.1.0"},
       {:prometheus_phoenix, "~> 1.0"},
       {:simetric, "~> 0.1.0"},
       {:prometheus_plugs, "~> 1.1"},
-      {:alto_guisso, git: "https://github.com/instedd/alto_guisso_ex.git"},
+      {:alto_guisso, github: "instedd/alto_guisso_ex", branch: "chore/upgrade-coherence"},
       {:pp, "~> 0.1.0", only: [:dev, :test]},
       {:bypass, "~> 2.0", only: :test},
       {:trailing_format_plug, "~> 0.0.7"},
