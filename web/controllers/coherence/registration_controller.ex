@@ -13,6 +13,8 @@ defmodule Ask.Coherence.RegistrationController do
   use Ask.Coherence, :controller
   use Coherence.RegistrationControllerBase, schemas: Ask.Coherence.Schemas
 
+  @guisso Application.get_env(:ask, :guisso, Guisso)
+
   plug Coherence.RequireLogin when action in ~w(show edit update delete)a
   plug Coherence.ValidateOption, :registerable
   plug :scrub_params, "registration" when action in [:create, :update]
@@ -25,9 +27,9 @@ defmodule Ask.Coherence.RegistrationController do
   plug :guisso_signup when action in [:new]
 
   defp guisso_signup(conn, _) do
-    if Guisso.enabled? do
+    if @guisso.enabled? do
       conn
-      |> Guisso.sign_up("/")
+      |> @guisso.sign_up("/")
       |> halt()
     else
       conn

@@ -45,6 +45,8 @@ defmodule Coherence.Redirects do
   # Uncomment the import below if adding overrides
   import Ask.Router.Helpers
 
+  @guisso Application.get_env(:ask, :guisso, Guisso)
+
   def session_create(conn, %{"session" => %{"redirect" => ""}}), do: redirect(conn, to: "/")
   def session_create(conn, %{"session" => %{"redirect" => path}}) do
     redirect(conn, to: path)
@@ -52,9 +54,9 @@ defmodule Coherence.Redirects do
   def session_create(conn, _), do: redirect(conn, to: "/")
 
   def session_delete(conn, params) do
-    if Guisso.enabled? do
+    if @guisso.enabled? do
       redirect_url = "#{url(conn)}#{logged_out_url(conn)}"
-      conn |> Guisso.sign_out(redirect_url)
+      conn |> @guisso.sign_out(redirect_url)
     else
       super(conn, params)
     end

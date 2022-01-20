@@ -11,6 +11,8 @@ defmodule Ask.Coherence.SessionController do
 
   alias Ask.{Repo, User}
 
+  @guisso Application.get_env(:ask, :guisso, Guisso)
+
   plug :layout_view,
     layout: {Ask.Coherence.LayoutView, :app},
     view: Coherence.SessionView,
@@ -19,9 +21,9 @@ defmodule Ask.Coherence.SessionController do
   plug :guisso_authentication when action in [:new]
 
   defp guisso_authentication(conn, _) do
-    if Guisso.enabled? do
+    if @guisso.enabled? do
       conn
-      |> Guisso.request_auth_code(conn.params["redirect"])
+      |> @guisso.request_auth_code(conn.params["redirect"])
       |> halt()
     else
       conn
@@ -29,7 +31,7 @@ defmodule Ask.Coherence.SessionController do
   end
 
   def oauth_callback(conn, params) do
-    {:ok, email, name, redirect} = Guisso.request_auth_token(conn, params)
+    {:ok, email, name, redirect} = @guisso.request_auth_token(conn, params)
     user = find_or_create_user(email, name)
 
     conn

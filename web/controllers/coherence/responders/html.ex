@@ -8,6 +8,12 @@ defmodule Coherence.Responders.Html do
     conn |> redirect_to(:confirmation_create, {})
   end
 
+  def session_create_error(conn, %{new_bindings: new_bindings}) do
+    conn
+    |> put_status(401)
+    |> render(:new, new_bindings)
+  end
+
   # User registration was successful. We must transform all pending invitations
   # into proper memberships, so the user can immediately access all the
   # projects she has been invited to.
