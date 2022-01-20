@@ -302,6 +302,12 @@ export const deleteSurvey = (survey: Survey) => (dispatch: Function) => {
         dispatch(panelSurveyActions.fetchPanelSurvey(survey.projectId, survey.panelSurveyId))
         dispatch(panelSurveysActions.fetchPanelSurveys(survey.projectId))
       }
+
+      if (survey.folderId) {
+        // survey was in a folder so we refresh the current survey's folder
+        dispatch(folderActions.fetchFolder(survey.projectId, survey.folderId))
+      }
+
       return dispatch(surveysActions.deleted(survey))
     })
 }
