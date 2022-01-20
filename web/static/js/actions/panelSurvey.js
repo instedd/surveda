@@ -1,6 +1,7 @@
 // @flow
 import * as api from '../api'
 import * as panelSurveysActions from '../actions/panelSurveys'
+import * as folderActions from '../actions/folder'
 
 export const FETCH = 'FETCH_PANEL_SURVEY'
 export const RECEIVE = 'RECEIVE_PANEL_SURVEY'
@@ -37,5 +38,11 @@ export const receive = (panelSurvey: PanelSurvey) => ({
 
 export const changeFolder = (panelSurvey: PanelSurvey, folderId: number) => (dispatch: Function, getState: () => Store) => {
   return api.panelSurveySetFolderId(panelSurvey.projectId, panelSurvey.id, folderId)
-    .then(() => dispatch(panelSurveysActions.folderChanged(panelSurvey.id, folderId)))
+    .then(() => {
+      if (panelSurvey.folderId) {
+        // panelSurvey was in a folder so we refresh the current panelSurvey's folder
+        dispatch(folderActions.fetchFolder(panelSurvey.projectId, panelSurvey.folderId))
+      }
+      dispatch(panelSurveysActions.folderChanged(panelSurvey.id, folderId))
+    })
 }

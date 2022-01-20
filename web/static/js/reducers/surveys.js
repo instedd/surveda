@@ -18,7 +18,8 @@ const deleteItem = (state: IndexedList<Survey>, action: any) => {
 
 const changeFolder = (state: IndexedList<Survey>, action: any) => {
   const items = {...state}
-  items[action.surveyId].folderId = action.folderId
+  delete items[action.surveyId]
+
   return items
 }
 

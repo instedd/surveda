@@ -5,6 +5,7 @@ import { stepStoreValues } from '../reducers/questionnaire'
 import * as surveysActions from './surveys'
 import * as panelSurveyActions from '../actions/panelSurvey'
 import * as panelSurveysActions from '../actions/panelSurveys'
+import * as folderActions from '../actions/folder'
 
 export const CHANGE_CUTOFF = 'SURVEY_CHANGE_CUTOFF'
 export const CHANGE_QUOTA = 'SURVEY_CHANGE_QUOTA'
@@ -179,7 +180,13 @@ export const changeName = (newName: string) => (dispatch: Function, getState: ()
 
 export const changeFolder = (survey: Survey, folderId: number) => (dispatch: Function, getState: () => Store) => {
   return api.setFolderId(survey.projectId, survey.id, folderId)
-    .then(() => dispatch(surveysActions.folderChanged(survey.id, folderId)))
+    .then(() => {
+      if (survey.folderId) {
+        // survey was in a folder so we refresh the current survey's folder
+        dispatch(folderActions.fetchFolder(survey.projectId, survey.folderId))
+      }
+      dispatch(surveysActions.folderChanged(survey.id, folderId))
+    })
 }
 
 export const changeDescription = (newDescription: string) => (dispatch: Function, getState: () => Store) => {
