@@ -29,7 +29,7 @@ defmodule Ask.ActivityLog do
     ["create", "edit", "rename", "change_description", "lock", "unlock", "delete", "start", "repeat", "request_cancel", "completed_cancel", "download", "enable_public_link", "regenerate_public_link", "disable_public_link", "change_folder", "add_respondents"]
 
   def valid_actions("panel_survey"), do:
-    ["panel_survey_change_folder"]
+    ["change_folder"]
 
   def valid_actions("questionnaire"), do:
     ["create", "edit", "rename", "delete", "add_mode", "remove_mode", "add_language", "remove_language", "create_step", "delete_step", "rename_step", "edit_step", "edit_settings", "create_section", "rename_section", "delete_section", "edit_section", "archive", "unarchive"]
@@ -315,7 +315,7 @@ defmodule Ask.ActivityLog do
   end
 
   def panel_survey_change_folder(project, conn, panel_survey, old_folder_name, new_folder_name) do
-    create("panel_survey_change_folder", project, conn, panel_survey, %{
+    create("change_folder", project, conn, panel_survey, %{
       panel_survey_name: panel_survey.name,
       old_folder_name: old_folder_name,
       new_folder_name: new_folder_name
