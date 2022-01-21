@@ -168,6 +168,27 @@ class _PanelSurveyCard extends Component<any> {
     })
   }
 
+  deletePanelSurvey = () => {
+    const deleteConfirmationModal: ConfirmationModal = this.refs.deleteConfirmationModal
+    const { panelSurvey, t } = this.props
+
+    deleteConfirmationModal.open({
+      modalText: <span>
+        <p>
+          <Trans>
+            Are you sure you want to delete the panel survey <b><UntitledIfEmpty text={panelSurvey.name} emptyText={untitledSurveyTitle(panelSurvey, t)} /></b> and all its waves?
+          </Trans>
+        </p>
+        <p>{t('All the respondent information will be lost and cannot be undone.')}</p>
+      </span>,
+      onConfirm: () => {
+        const { dispatch } = this.props
+        console.log("hey")
+        // dispatch(surveyActions.deleteSurvey(survey))
+      }
+    })
+  }
+
   // The option Delete on the PanelSurveyCard means:
   // delete the last wave in the PanelSurvey
   deletable() {
@@ -193,6 +214,7 @@ class _PanelSurveyCard extends Component<any> {
     let actions = []
     if (this.movable()) actions.push({ name: t('Move to'), func: this.moveSurvey })
     if (this.deletable()) actions.push({ name: t('Delete wave'), func: this.deleteSurvey })
+    actions.push({ name: t('Delete Panel Survey'), func: this.deletePanelSurvey })
 
     return (
       <div className='col s12 m6 l4'>
