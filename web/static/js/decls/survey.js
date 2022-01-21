@@ -8,7 +8,7 @@ export type Folder = {
 export type Survey = {
   id: number,
   projectId: number,
-  folderId: number,
+  folderId: ?number,
   questionnaireIds: number[],
   questionnaires?: {[id: string]: Questionnaire},
   channels: number[],

@@ -332,6 +332,7 @@ export const questionnaireWithLangSelection: Questionnaire = deepFreeze(quizWith
 const bareSurvey: Survey = {
   id: 1,
   projectId: 1,
+  folderId: null,
   name: 'Foo',
   description: null,
   cutoff: 123,

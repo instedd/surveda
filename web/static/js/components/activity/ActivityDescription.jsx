@@ -168,7 +168,6 @@ class ActivityDescription extends Component {
         break
       case 'panelSurvey':
         const panelSurveyName = metadata['panelSurveyName'] || 'Untitled'
-        const reportType = this.reportTypeText(metadata['reportType'])
         switch (activity.action) {
           case 'change_folder':
             const { oldFolderName, newFolderName } = metadata
@@ -180,7 +179,6 @@ class ActivityDescription extends Component {
           default:
             return ''
         }
-        break
       default:
         return ''
     }
