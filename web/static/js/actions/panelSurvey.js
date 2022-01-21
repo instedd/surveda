@@ -46,3 +46,15 @@ export const changeFolder = (panelSurvey: PanelSurvey, folderId: number) => (dis
       dispatch(panelSurveysActions.folderChanged(panelSurvey.id, folderId))
     })
 }
+
+export const deletePanelSurvey = (panelSurvey: PanelSurvey) => (dispatch: Function) => {
+  api.deletePanelSurvey(panelSurvey.projectId, panelSurvey)
+    .then(response => {
+      if (panelSurvey.folderId) {
+        // panelSurvey was in a folder so we refresh the folder
+        dispatch(folderActions.fetchFolder(panelSurvey.projectId, panelSurvey.folderId))
+      }
+
+      return dispatch(panelSurveysActions.deleted(panelSurvey))
+    })
+}

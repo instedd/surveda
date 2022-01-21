@@ -183,8 +183,7 @@ class _PanelSurveyCard extends Component<any> {
       </span>,
       onConfirm: () => {
         const { dispatch } = this.props
-        console.log("hey")
-        // dispatch(surveyActions.deleteSurvey(survey))
+        dispatch(panelSurveyActions.deletePanelSurvey(panelSurvey))
       }
     })
   }

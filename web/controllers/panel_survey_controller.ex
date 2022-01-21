@@ -68,6 +68,8 @@ defmodule Ask.PanelSurveyController do
       |> assoc(:panel_surveys)
       |> Repo.get!(id)
 
+    # TODO: should we explicitly delete associated waves?
+
     with {:ok, %PanelSurvey{}} <- PanelSurvey.delete_panel_survey(panel_survey) do
       send_resp(conn, :no_content, "")
     end
