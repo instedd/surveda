@@ -224,7 +224,12 @@ const FoldersGrid = (props) => {
   return (
     <div className='survey-index-grid'>
       {folders && folders.map(folder =>
-        <FolderCard key={folder.id} {...folder} t={t} onRename={onRename} onDelete={onDelete} readOnly={isReadOnly} />)}
+        <FolderCard key={`folder-${folder.id}`}
+                    {...folder}
+                    onRename={onRename}
+                    onDelete={onDelete}
+                    readOnly={isReadOnly}
+                    t={t} />)}
     </div>
   )
 }
