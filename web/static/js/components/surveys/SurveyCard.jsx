@@ -118,11 +118,7 @@ class _PanelSurveyCard extends Component<any> {
 
   constructor(props) {
     super(props)
-
-    this.state = {
-      folderId: props.panelSurvey.folderId || '',
-      deletePanelSurveyUnderstood: false
-    }
+    this.state = { folderId: props.panelSurvey.folderId || '' }
   }
 
   latestWave() {
@@ -137,8 +133,7 @@ class _PanelSurveyCard extends Component<any> {
   askMovePanelSurvey = () => {
     const { panelSurvey } = this.props
 
-    const moveSurveyConfirmationModal: ConfirmationModal = this.refs.moveSurveyConfirmationModal
-    moveSurveyConfirmationModal.open({
+    this.refs.moveSurveyConfirmationModal.open({
       modalText: <MoveSurveyForm defaultFolderId={panelSurvey.folderId} onChangeFolderId={folderId => this.changeFolder(folderId)} />,
       onConfirm: () => (this.confirmMovePanelSurvey(panelSurvey))
     })
@@ -151,12 +146,11 @@ class _PanelSurveyCard extends Component<any> {
   }
 
   askDeleteSurvey = () => {
-    const deleteSurveyConfirmationModal: ConfirmationModal = this.refs.deleteSurveyConfirmationModal
     const { t } = this.props
 
     const survey = this.latestWave()
 
-    deleteSurveyConfirmationModal.open({
+    this.refs.deleteSurveyConfirmationModal.open({
       modalText: <span>
         <p>
           <Trans>
@@ -174,25 +168,18 @@ class _PanelSurveyCard extends Component<any> {
     dispatch(surveyActions.deleteSurvey(survey))
   }
 
-  toggleDeletePanelSurveyUnderstood() {
-    this.setState((state) => ({ deletePanelSurveyUnderstood: !state.deletePanelSurveyUnderstood }))
-  }
-
   askDeletePanelSurvey = () => {
-    const deletePanelSurveyConfirmationModal = this.refs.deletePanelSurveyConfirmationModal
-    this.setState({deletePanelSurveyUnderstood: false})
-    deletePanelSurveyConfirmationModal.open()
+    const { panelSurvey } = this.props
+
+    this.refs.deletePanelSurveyConfirmationModal.open({
+      onConfirm: () => this.confirmDeletePanelSurvey(panelSurvey)
+    })
   }
 
   confirmDeletePanelSurvey = (panelSurvey: PanelSurvey) => {
     const { dispatch } = this.props
-    dispatch(panelSurveyActions.deletePanelSurvey(panelSurvey))
-  }
-
-  cancelDeletePanelSurvey = () => {
-    const deletePanelSurveyConfirmationModal = this.refs.deletePanelSurveyConfirmationModal
-    this.setState({ deletePanelSurveyUnderstood: false })
-    deletePanelSurveyConfirmationModal.close()
+    // dispatch(panelSurveyActions.deletePanelSurvey(panelSurvey))
+    console.log("delete panel survey")
   }
 
   // The option Delete on the PanelSurveyCard means:
@@ -239,52 +226,7 @@ class _PanelSurveyCard extends Component<any> {
 
         <ConfirmationModal modalId='survey_index_move_survey' ref='moveSurveyConfirmationModal' confirmationText={t('Move')} header={t('Move survey')} showCancel />
         <ConfirmationModal modalId='survey_index_delete' ref='deleteSurveyConfirmationModal' confirmationText={t('Delete')} header={t('Delete survey')} showCancel />
-        <Modal card id='panel_survey_index_delete' ref='deletePanelSurveyConfirmationModal'>
-          <div className='modal-content'>
-            <div className='card-title header'>
-              <h5>{t('Delete Panel Survey')}</h5>
-            </div>
-            <div className='card-content'>
-              <div className='row'>
-                <div className='col s12'>
-                  <p className='red-text alert-left-icon'>
-                    <i className='material-icons'>warning</i>
-                    {t('Panel Survey deletion cannot be undone')}
-                  </p>
-                </div>
-              </div>
-              <div className='row'>
-                <div className='col s12'>
-                  <p>
-                    {t('You are about to delete all the waves of this panel survey.')}
-                  </p>
-                  <p>
-                    {t(`All the information of all the waves will be lost.`)}
-                  </p>
-                </div>
-              </div>
-              <div className='row'>
-                <div className='col s12'>
-                  <input
-                    id='delete_panel_survey_understood'
-                    type='checkbox'
-                    checked={deletePanelSurveyUnderstood}
-                    onChange={() => this.toggleDeletePanelSurveyUnderstood()}
-                    className='filled-in' />
-                  <label htmlFor='delete_panel_survey_understood'>{t('Understood')}</label>
-                </div>
-              </div>
-            </div>
-            <div className='card-action'>
-              <a
-                className={classNames('btn red', { disabled: !deletePanelSurveyUnderstood })}
-                onClick={() => this.confirmDeletePanelSurvey(panelSurvey)}>
-                {t('Delete Panel Survey')}
-              </a>
-              <a className='modal-action modal-close btn-flat grey-text' onClick={() => this.cancelDeletePanelSurvey()}>{t('Cancel')}</a>
-            </div>
-          </div>
-        </Modal>
+        <ConfirmationCheckModal modalId='panel_survey_index_delete' ref='deletePanelSurveyConfirmationModal' t={t} />
       </div>
     )
   }
@@ -370,6 +312,101 @@ const ActionMenu = (props) => {
 
 ActionMenu.propTypes = {
   actions: PropTypes.array
+}
+
+class ConfirmationCheckModal extends Component<Props, State> {
+  static propTypes = {
+    modalId: PropTypes.String,
+    t: PropTypes.func
+  }
+
+  constructor(props: Props) {
+    super(props)
+    this.state = {checked: false}
+  }
+
+  open(props) {
+    if (props) this.setState(props)
+    this.refs.modal.open()
+  }
+
+  close() {
+    this.refs.modal.close()
+  }
+
+  toggleChecked() {
+    this.setState((state) => ({ checked: !state.checked }))
+  }
+
+  onConfirmClick = async (e) => {
+    const { onConfirm } = this.state
+
+    e.preventDefault()
+
+    if (!onConfirm) {
+      this.refs.modal.close()
+      return
+    }
+
+    const res = await onConfirm()
+    res !== false && this.refs.modal.close()
+  }
+
+  render() {
+    const { checked, onConfirm } = this.state
+    const { modalId, t } = this.props
+
+    return (
+      <div style={{ 'text-align': 'center' }}>
+        <Modal card id={modalId} ref='modal'>
+          <div className='modal-content'>
+            <div className='card-title header' style={{'margin-bottom': '48px'}}>
+              <h5>{t('Delete Panel Survey')}</h5>
+            </div>
+            <div className='card-content'>
+              <div className='row'>
+                <div className='col s12'>
+                  <p className='red-text alert-left-icon'>
+                    <i className='material-icons'>warning</i>
+                    {t('Panel Survey deletion cannot be undone')}
+                  </p>
+                </div>
+              </div>
+              <div className='row'>
+                <div className='col s12'>
+                  <p>
+                    {t('You are about to delete all the waves of this panel survey.')}
+                  </p>
+                  <p>
+                    {t(`All the information of all the waves will be lost.`)}
+                  </p>
+                </div>
+              </div>
+              <div className='row'>
+                <div className='col s12'>
+                  <input
+                    id='delete_panel_survey_understood'
+                    type='checkbox'
+                    checked={checked}
+                    onChange={() => this.toggleChecked()}
+                    className='filled-in' />
+                  <label htmlFor='delete_panel_survey_understood'>{t('Understood')}</label>
+                </div>
+              </div>
+            </div>
+            <div className='card-action'>
+              <a
+                className={classNames('btn red', { disabled: !checked })}
+                onClick={(e) => this.onConfirmClick(e)}>
+                {t('Delete Panel Survey')}
+              </a>
+              <a className='modal-action modal-close btn-flat grey-text' onClick={() => this.close()}>{t('Cancel')}</a>
+            </div>
+          </div>
+        </Modal>
+      </div>
+    )
+  }
 }
 
 export const SurveyCard = translate()(connect()(_SurveyCard))
