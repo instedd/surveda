@@ -178,8 +178,7 @@ class _PanelSurveyCard extends Component<any> {
 
   confirmDeletePanelSurvey = (panelSurvey: PanelSurvey) => {
     const { dispatch } = this.props
-    // dispatch(panelSurveyActions.deletePanelSurvey(panelSurvey))
-    console.log("delete panel survey")
+    dispatch(panelSurveyActions.deletePanelSurvey(panelSurvey))
   }
 
   // The option Delete on the PanelSurveyCard means:
