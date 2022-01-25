@@ -200,7 +200,6 @@ class _PanelSurveyCard extends Component<any> {
   }
 
   render() {
-    const { deletePanelSurveyUnderstood } = this.state
     const { panelSurvey, t, dispatch } = this.props
     const survey = this.latestWave()
 
@@ -352,7 +351,7 @@ class ConfirmationCheckModal extends Component<Props, State> {
   }
 
   render() {
-    const { checked, onConfirm } = this.state
+    const { checked } = this.state
     const { modalId, t } = this.props
 
     return (
