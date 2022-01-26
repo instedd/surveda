@@ -7,10 +7,11 @@ import * as surveyActions from '../../actions/survey'
 import * as panelSurveyActions from '../../actions/panelSurvey'
 import { fetchRespondentsStats } from '../../actions/respondents'
 import { untitledSurveyTitle } from './SurveyTitle'
-import { Card, UntitledIfEmpty, Dropdown, DropdownItem, ConfirmationModal } from '../ui'
+import { Card, ConfirmationModal, Dropdown, DropdownItem, Modal, UntitledIfEmpty } from '../ui'
 import RespondentsChart from '../respondents/RespondentsChart'
 import SurveyStatus from '../surveys/SurveyStatus'
 import MoveSurveyForm from './MoveSurveyForm'
+import classNames from 'classnames/bind'
 
 import { connect } from 'react-redux'
 
@@ -39,21 +40,23 @@ class _SurveyCard extends Component<any> {
 
   changeFolder = (folderId) => this.setState({ folderId })
 
-  moveSurvey = () => {
+  askMoveSurvey = () => {
     const moveSurveyConfirmationModal: ConfirmationModal = this.refs.moveSurveyConfirmationModal
     const { survey } = this.props
     const modalText = <MoveSurveyForm defaultFolderId={survey.folderId} onChangeFolderId={folderId => this.changeFolder(folderId)} />
     moveSurveyConfirmationModal.open({
       modalText: modalText,
-      onConfirm: () => {
-        const { dispatch } = this.props
-        const { folderId } = this.state
-        dispatch(surveyActions.changeFolder(survey, folderId))
-      }
+      onConfirm: () => (this.confirmMoveSurvey(survey))
     })
   }
 
-  deleteSurvey = () => {
+  confirmMoveSurvey = (survey: Survey) => {
+    const { dispatch } = this.props
+    const { folderId } = this.state
+    dispatch(surveyActions.changeFolder(survey, folderId))
+  }
+
+  askDeleteSurvey = () => {
     const deleteConfirmationModal: ConfirmationModal = this.refs.deleteConfirmationModal
     const { t, survey } = this.props
     deleteConfirmationModal.open({
@@ -65,11 +68,13 @@ class _SurveyCard extends Component<any> {
         </p>
         <p>{t('All the respondent information will be lost and cannot be undone.')}</p>
       </span>,
-      onConfirm: () => {
-        const { dispatch } = this.props
-        dispatch(surveyActions.deleteSurvey(survey))
-      }
+      onConfirm: () => this.confirmDeleteSurvey(survey)
     })
+  }
+
+  confirmDeleteSurvey = (survey: Survey) => {
+    const { dispatch } = this.props
+    dispatch(surveyActions.deleteSurvey(survey))
   }
 
   deletable() {
@@ -90,8 +95,8 @@ class _SurveyCard extends Component<any> {
     const { survey, t, dispatch } = this.props
 
     let actions = []
-    if (this.movable()) actions.push({ name: t('Move to'), func: this.moveSurvey })
-    if (this.deletable()) actions.push({ name: t('Delete'), func: this.deleteSurvey })
+    if (this.movable()) actions.push({ name: t('Move to'), func: this.askMoveSurvey })
+    if (this.deletable()) actions.push({ name: t('Delete'), func: this.askDeleteSurvey })
 
     return (
       <div className='col s12 m6 l4'>
@@ -117,10 +122,7 @@ class _PanelSurveyCard extends Component<any> {
 
   constructor(props) {
     super(props)
-
-    this.state = {
-      folderId: props.panelSurvey.folderId || ''
-    }
+    this.state = { folderId: props.panelSurvey.folderId || '' }
   }
 
   latestWave() {
@@ -132,40 +134,55 @@ class _PanelSurveyCard extends Component<any> {
     this.setState({ folderId })
   }
 
-  moveSurvey = () => {
+  askMovePanelSurvey = () => {
     const { panelSurvey } = this.props
 
-    const moveSurveyConfirmationModal: ConfirmationModal = this.refs.moveSurveyConfirmationModal
-    moveSurveyConfirmationModal.open({
+    this.refs.moveSurveyConfirmationModal.open({
       modalText: <MoveSurveyForm defaultFolderId={panelSurvey.folderId} onChangeFolderId={folderId => this.changeFolder(folderId)} />,
-      onConfirm: () => {
-        const { dispatch } = this.props
-        const { folderId } = this.state
-        dispatch(panelSurveyActions.changeFolder(panelSurvey, folderId))
-      }
+      onConfirm: () => (this.confirmMovePanelSurvey(panelSurvey))
     })
   }
 
-  deleteSurvey = () => {
-    const deleteConfirmationModal: ConfirmationModal = this.refs.deleteConfirmationModal
+  confirmMovePanelSurvey = (panelSurvey: PanelSurvey) => {
+    const { dispatch } = this.props
+    const { folderId } = this.state
+    dispatch(panelSurveyActions.changeFolder(panelSurvey, folderId))
+  }
+
+  askDeletePanelSurveyWave = () => {
     const { t } = this.props
 
-    const survey = this.latestWave()
+    const wave = this.latestWave()
 
-    deleteConfirmationModal.open({
+    this.refs.deleteSurveyConfirmationModal.open({
       modalText: <span>
         <p>
           <Trans>
-            Are you sure you want to delete the last wave <b><UntitledIfEmpty text={survey.name} emptyText={untitledSurveyTitle(survey, t)} /></b>?
+            Are you sure you want to delete the last wave <b><UntitledIfEmpty text={wave.name} emptyText={untitledSurveyTitle(wave, t)} /></b>?
           </Trans>
         </p>
         <p>{t('All the respondent information will be lost and cannot be undone.')}</p>
       </span>,
-      onConfirm: () => {
-        const { dispatch } = this.props
-        dispatch(surveyActions.deleteSurvey(survey))
-      }
+      onConfirm: () => this.confirmDeletePanelSurveyWave(wave)
     })
+  }
+
+  confirmDeletePanelSurveyWave = (wave: Survey) => {
+    const { dispatch } = this.props
+    dispatch(surveyActions.deleteSurvey(wave))
+  }
+
+  askDeletePanelSurvey = () => {
+    const { panelSurvey } = this.props
+
+    this.refs.deletePanelSurveyConfirmationModal.open({
+      onConfirm: () => this.confirmDeletePanelSurvey(panelSurvey)
+    })
+  }
+
+  confirmDeletePanelSurvey = (panelSurvey: PanelSurvey) => {
+    const { dispatch } = this.props
+    dispatch(panelSurveyActions.deletePanelSurvey(panelSurvey))
   }
 
   // The option Delete on the PanelSurveyCard means:
@@ -191,8 +208,9 @@ class _PanelSurveyCard extends Component<any> {
     const survey = this.latestWave()
 
     let actions = []
-    if (this.movable()) actions.push({ name: t('Move to'), func: this.moveSurvey })
-    if (this.deletable()) actions.push({ name: t('Delete wave'), func: this.deleteSurvey })
+    if (this.movable()) actions.push({ name: t('Move to'), func: this.askMovePanelSurvey })
+    if (this.deletable()) actions.push({ name: t('Delete wave'), func: this.askDeletePanelSurveyWave })
+    actions.push({ name: t('Delete Panel Survey'), func: this.askDeletePanelSurvey })
 
     return (
       <div className='col s12 m6 l4'>
@@ -209,7 +227,8 @@ class _PanelSurveyCard extends Component<any> {
         </div>
 
         <ConfirmationModal modalId='survey_index_move_survey' ref='moveSurveyConfirmationModal' confirmationText={t('Move')} header={t('Move survey')} showCancel />
-        <ConfirmationModal modalId='survey_index_delete' ref='deleteConfirmationModal' confirmationText={t('Delete')} header={t('Delete survey')} showCancel />
+        <ConfirmationModal modalId='survey_index_delete' ref='deleteSurveyConfirmationModal' confirmationText={t('Delete')} header={t('Delete survey')} showCancel />
+        <TwoStepsConfirmationModal modalId='panel_survey_index_delete' ref='deletePanelSurveyConfirmationModal' t={t} />
       </div>
     )
   }
@@ -295,6 +314,101 @@ const ActionMenu = (props) => {
 
 ActionMenu.propTypes = {
   actions: PropTypes.array
+}
+
+class TwoStepsConfirmationModal extends Component<Props, State> {
+  static propTypes = {
+    modalId: PropTypes.string,
+    t: PropTypes.func
+  }
+
+  constructor(props: Props) {
+    super(props)
+    this.state = {checked: false}
+  }
+
+  open(props) {
+    if (props) this.setState(props)
+    this.refs.modal.open()
+  }
+
+  close() {
+    this.refs.modal.close()
+  }
+
+  toggleChecked() {
+    this.setState((state) => ({ checked: !state.checked }))
+  }
+
+  onConfirmClick = async (e) => {
+    const { onConfirm } = this.state
+
+    e.preventDefault()
+
+    if (!onConfirm) {
+      this.refs.modal.close()
+      return
+    }
+
+    const res = await onConfirm()
+    res !== false && this.refs.modal.close()
+  }
+
+  render() {
+    const { checked } = this.state
+    const { modalId, t } = this.props
+
+    return (
+      <div style={{ textAlign: 'center' }}>
+        <Modal card id={modalId} ref='modal'>
+          <div className='modal-content'>
+            <div className='card-title header' style={{ marginBottom: '48px' }}>
+              <h5>{t('Delete Panel Survey')}</h5>
+            </div>
+            <div className='card-content'>
+              <div className='row'>
+                <div className='col s12'>
+                  <p className='red-text alert-left-icon'>
+                    <i className='material-icons'>warning</i>
+                    {t('Panel Survey deletion cannot be undone')}
+                  </p>
+                </div>
+              </div>
+              <div className='row'>
+                <div className='col s12'>
+                  <p>
+                    {t('You are about to delete all the waves of this panel survey.')}
+                  </p>
+                  <p>
+                    {t(`All the information of all the waves will be lost.`)}
+                  </p>
+                </div>
+              </div>
+              <div className='row'>
+                <div className='col s12'>
+                  <input
+                    id='delete_panel_survey_understood'
+                    type='checkbox'
+                    checked={checked}
+                    onChange={() => this.toggleChecked()}
+                    className='filled-in' />
+                  <label htmlFor='delete_panel_survey_understood'>{t('Understood')}</label>
+                </div>
+              </div>
+            </div>
+            <div className='card-action'>
+              <a
+                className={classNames('btn red', { disabled: !checked })}
+                onClick={(e) => this.onConfirmClick(e)}>
+                {t('Delete Panel Survey')}
+              </a>
+              <a className='modal-action modal-close btn-flat grey-text' onClick={() => this.close()}>{t('Cancel')}</a>
+            </div>
+          </div>
+        </Modal>
+      </div>
+    )
+  }
 }
 
 export const SurveyCard = translate()(connect()(_SurveyCard))

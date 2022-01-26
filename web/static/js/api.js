@@ -215,6 +215,10 @@ export const deleteSurvey = (projectId, survey) => {
   return apiDelete(`projects/${projectId}/surveys/${survey.id}`)
 }
 
+export const deletePanelSurvey = (projectId, panelSurvey) => {
+  return apiDelete(`projects/${projectId}/panel_surveys/${panelSurvey.id}`)
+}
+
 const getTimezone = () => {
   try {
     return Intl.DateTimeFormat().resolvedOptions().timeZone

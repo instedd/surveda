@@ -19,7 +19,6 @@ const deleteItem = (state: IndexedList<Survey>, action: any) => {
 const changeFolder = (state: IndexedList<Survey>, action: any) => {
   const items = {...state}
   delete items[action.surveyId]
-
   return items
 }
 
