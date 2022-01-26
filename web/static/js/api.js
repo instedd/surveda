@@ -292,8 +292,13 @@ export const updateSurvey = (projectId, survey) => {
 export const setSurveyName = (projectId, surveyId, name) => {
   return apiPostJSON(`projects/${projectId}/surveys/${surveyId}/set_name`, null, { name })
 }
+
 export const setFolderId = (projectId, surveyId, folderId) => {
   return apiPostJSON(`projects/${projectId}/surveys/${surveyId}/set_folder_id`, null, { folderId: folderId || null })
+}
+
+export const panelSurveySetFolderId = (projectId, panelSurveyId, folderId) => {
+  return apiPostJSON(`projects/${projectId}/panel_surveys/${panelSurveyId}/set_folder_id`, null, { folderId: folderId || null })
 }
 
 export const setSurveyDescription = (projectId, surveyId, description) => {
@@ -341,7 +346,7 @@ export const stopSurvey = (projectId, surveyId) => {
   return apiPostJSON(`projects/${projectId}/surveys/${surveyId}/stop`, surveySchema)
 }
 
-export const newOccurrence = (projectId, panelSurveyId) => {
+export const newWave = (projectId, panelSurveyId) => {
   return apiPostJSON(`projects/${projectId}/panel_surveys/${panelSurveyId}/new_wave`, surveySchema)
 }
 

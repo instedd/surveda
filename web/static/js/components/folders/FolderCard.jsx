@@ -10,8 +10,8 @@ class FolderCard extends PureComponent {
     id: PropTypes.number,
     name: PropTypes.string,
     t: PropTypes.func,
-    onDelete: Function,
-    onRename: Function,
+    onDelete: PropTypes.func,
+    onRename: PropTypes.func,
     readOnly: PropTypes.bool
   }
 

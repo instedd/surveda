@@ -15,7 +15,7 @@ import {
   Action
 } from '../ui'
 import FolderCard from '../folders/FolderCard'
-import SurveyCard from './SurveyCard'
+import { SurveyCard, PanelSurveyCard } from './SurveyCard'
 import FolderForm from './FolderForm'
 import * as routes from '../../routes'
 import { translate } from 'react-i18next'
@@ -29,17 +29,22 @@ class SurveyIndex extends Component<any, State> {
     t: PropTypes.func,
     dispatch: PropTypes.func,
     router: PropTypes.object,
+
     projectId: PropTypes.any.isRequired,
     project: PropTypes.object,
-    surveys: PropTypes.array,
+
     folders: PropTypes.array,
-    loadingFolders: PropTypes.bool,
-    loadingSurveys: PropTypes.bool,
+    surveys: PropTypes.array,
+    panelSurveys: PropTypes.array,
+    surveysAndPanelSurveys: PropTypes.array,
+
+    isLoading: PropTypes.bool,
+    isReadOnly: PropTypes.bool,
+    isEmptyView: PropTypes.bool,
+
     startIndex: PropTypes.number.isRequired,
     endIndex: PropTypes.number.isRequired,
-    totalCount: PropTypes.number.isRequired,
-    panelSurveys: PropTypes.array,
-    loadingPanelSurveys: PropTypes.bool
+    totalCount: PropTypes.number.isRequired
   }
 
   constructor(props) {
@@ -117,47 +122,49 @@ class SurveyIndex extends Component<any, State> {
   }
 
   render() {
-    const { folders, loadingFolders, loadingSurveys, surveys, project, startIndex, endIndex, totalCount, t, panelSurveys, loadingPanelSurveys } = this.props
-    if ((!surveys && loadingSurveys) || (!folders && loadingFolders) || (!panelSurveys && loadingPanelSurveys)) {
-      return (
-        <div>{t('Loading surveys...')}</div>
-      )
-    }
+    const {
+      folders,
+      surveysAndPanelSurveys,
 
-    const footer = <PagingFooter
-      {...{startIndex, endIndex, totalCount}}
-      onPreviousPage={() => this.previousPage()}
-      onNextPage={() => this.nextPage()} />
+      isLoading,
+      isReadOnly,
+      isEmptyView,
 
-    const readOnly = !project || project.readOnly
+      startIndex,
+      endIndex,
+      totalCount,
+      t
+    } = this.props
 
-    const mainAction = (
-      <MainAction text={t('Add')} icon='add' className='survey-index-main-action'>
-        <Action text={t('Survey')} icon='assignment_turned_in' onClick={() => this.newSurvey()} />
-        <Action text={t('Panel Survey')} icon='repeat' onClick={() => this.newPanelSurvey()} />
-        <Action text='Folder' icon='folder' onClick={() => this.newFolder()} />
-      </MainAction>
-    )
+    if (isLoading) return (<div>{t('Loading surveys...')}</div>)
 
     return (
       <div>
-        { readOnly ? null : mainAction}
-        { (surveys && surveys.length == 0 && folders && folders.length === 0)
-        ? <EmptyPage icon='assignment_turned_in' title={t('You have no surveys on this project')} onClick={(e) => this.newSurvey()} readOnly={readOnly} createText={t('Create one', {context: 'survey'})} />
-        : (
-          <div>
-            <div className='survey-index-grid'>
-              { folders && folders.map(folder => <FolderCard key={folder.id} {...folder} t={t} onDelete={this.deleteFolder} onRename={this.renameFolder} readOnly={readOnly} />)}
-            </div>
-            <div className='survey-index-grid'>
-              {surveys && surveys.map(survey => (
-                <SurveyCard survey={survey} key={survey.id} readOnly={readOnly} />
-              ))}
-            </div>
-            { footer }
-          </div>
-        )
-        }
+        <MainActions isReadOnly={isReadOnly} t={t}>
+          <Action text={t('Survey')} icon={'assignment_turned_in'} onClick={() => this.newSurvey()} />
+          <Action text={t('Panel Survey')} icon={'repeat'} onClick={() => this.newPanelSurvey()} />
+          <Action text={t('Folder')} icon={'folder'} onClick={() => this.newFolder()} />
+        </MainActions>
+
+        <MainView isReadOnly={isReadOnly}
+                  isEmpty={isEmptyView}
+                  onNew={() => this.newSurvey()}
+                  t={t}>
+          <FoldersGrid folders={folders}
+                       isReadOnly={isReadOnly}
+                       onRename={() => this.renameFolder()}
+                       onDelete={() => this.deleteFolder()}
+                       t={t} />
+
+          <SurveysGrid surveysAndPanelSurveys={surveysAndPanelSurveys}
+                       isReadOnly={isReadOnly}
+                       t={t} />
+
+          <PagingFooter {...{ startIndex, endIndex, totalCount }}
+                        onPreviousPage={() => this.previousPage()}
+                        onNextPage={() => this.nextPage()} />
+        </MainView>
+
         <ConfirmationModal modalId='survey_index_folder_create' ref='createFolderConfirmationModal' confirmationText={t('Create')} header={t('Create Folder')} showCancel />
         <ConfirmationModal modalId='survey_index_folder_rename' ref='renameFolderConfirmationModal' confirmationText={t('Rename')} header={t('Rename Folder')} showCancel />
       </div>
@@ -165,65 +172,179 @@ class SurveyIndex extends Component<any, State> {
   }
 }
 
-const mergePanelSurveysIntoSurveys = (surveys, panelSurveys) => {
-  return panelSurveys
-    .map(panelSurvey => ({
-      ...panelSurvey.latestOccurrence,
-      panelSurvey: panelSurvey
-    }))
-    .concat(surveys)
+const MainActions = (props) => {
+  const { isReadOnly, children, t } = props
+  if (isReadOnly) return null
+
+  return (
+    <MainAction text={t('Add')} icon='add' className='survey-index-main-action'>
+      {children}
+    </MainAction>
+  )
 }
 
-// Merges the latest panel survey wave into surveys, sorts the resulting
-// collection, and eventually paginates the result, generating props to display
-// a list of surveys and panel surveys.
-//
-// At least used by the FolderShow and PanelSurveyShow components.
-export const surveyIndexProps = (state: any, surveys: ?Array<Survey>, panelSurveys: ?Array<PanelSurvey>) => {
-  if (surveys && panelSurveys) {
-    surveys = mergePanelSurveysIntoSurveys(surveys, panelSurveys)
+MainActions.propTypes = {
+  isReadOnly: PropTypes.bool,
+  children: PropTypes.node,
+  t: PropTypes.func
+}
+
+const MainView = (props) => {
+  const { isReadOnly, isEmpty, onNew, children, t } = props
+  return (isEmpty)
+    ? <EmptyView isReadOnly={isReadOnly} onClick={onNew} t={t} />
+    : (<div>{children}</div>)
+}
+
+MainView.propTypes = {
+  isReadOnly: PropTypes.bool,
+  isEmpty: PropTypes.bool,
+  onNew: PropTypes.func,
+  children: PropTypes.node,
+  t: PropTypes.func
+}
+
+const EmptyView = (props) => {
+  const { isReadOnly, onClick, t } = props
+  return (<EmptyPage icon='assignment_turned_in'
+                     title={t('You have no surveys on this project')}
+                     onClick={onClick}
+                     readOnly={isReadOnly}
+                     createText={t('Create one', { context: 'survey' })} />)
+}
+
+EmptyView.propTypes = {
+  isReadOnly: PropTypes.bool,
+  onClick: PropTypes.func,
+  t: PropTypes.func
+}
+
+const FoldersGrid = (props) => {
+  const { folders, isReadOnly, onRename, onDelete, t } = props
+  return (
+    <div className='survey-index-grid'>
+      {folders && folders.map(folder =>
+        <FolderCard key={folder.id} {...folder} t={t} onRename={onRename} onDelete={onDelete} readOnly={isReadOnly} />)}
+    </div>
+  )
+}
+
+FoldersGrid.propTypes = {
+  folders: PropTypes.array,
+  isReadOnly: PropTypes.bool,
+  isEmpty: PropTypes.bool,
+  onRename: PropTypes.func,
+  onDelete: PropTypes.func,
+  t: PropTypes.func
+}
+
+const SurveysGrid = (props) => {
+  const { surveysAndPanelSurveys, isReadOnly, t } = props
+
+  const isPanelSurvey = function(survey) {
+    return survey.hasOwnProperty('latestWave')
   }
 
-  const totalCount = surveys ? surveys.length : 0
-  const pageIndex = state.surveys.page.index
-  const pageSize = state.surveys.page.size
-  const startIndex = Math.min(totalCount, pageIndex + 1)
-  const endIndex = Math.min(pageIndex + pageSize, totalCount)
+  return (
+    <div className='survey-index-grid'>
+      {surveysAndPanelSurveys.map(survey => {
+        return isPanelSurvey(survey)
+          ? <PanelSurveyCard panelSurvey={survey} key={`panelsurvey-${survey.id}`} readOnly={isReadOnly} t={t} />
+          : <SurveyCard survey={survey} key={`survey-${survey.id}`} readOnly={isReadOnly} t={t} />
+      })}
+    </div>
+  )
+}
 
-  if (surveys) {
-    // Sort by updated at, descending
-    surveys = surveys.sort((x, y) => y.updatedAt.localeCompare(x.updatedAt))
-    // Show only the current page
-    surveys = (surveys.slice(pageIndex, pageIndex + pageSize): Array<Survey>)
-  }
+SurveysGrid.propTypes = {
+  surveysAndPanelSurveys: PropTypes.array,
+  isReadOnly: PropTypes.bool,
+  t: PropTypes.func
+}
+
+const mapStateToFolders = (state) => {
+  let { items } = state.folders
+  return values(items) || []
+}
+
+const mapStateToSurveys = (state) => {
+  let { items } = state.surveys
+  return values(items) || []
+}
+
+const mapStateToPanelSurveys = (state) => {
+  let { items } = state.panelSurveys
+  return values(items) || []
+}
+
+const mapStateToProps = (state, ownProps) => {
+  const project = state.project.data
+
+  let folders = mapStateToFolders(state)
+  let surveys = mapStateToSurveys(state)
+  let panelSurveys = mapStateToPanelSurveys(state)
+
+  // Merge all together and sort by updated_at (descending)
+  const surveysAndPanelSurveys = [
+    ...surveys,
+    ...panelSurveys
+  ].sort((x, y) => y.updatedAt.localeCompare(x.updatedAt))
+
+  // pagination
+  const { page } = state.surveys
+  const {
+    paginatedElements,
+    totalCount,
+    startIndex,
+    endIndex
+  } = paginate(surveysAndPanelSurveys, page)
+
+  // loading, readonly and emptyview
+  const isLoadingFolders = state.folders && state.folders.loadingFetch
+  const isLoadingSurveys = state.surveys && state.surveys.fetching
+  const isLoadingPanelSurveys = state.panelSurveys && state.panelSurveys.fetching
+
+  const isLoading = isLoadingFolders || isLoadingSurveys || isLoadingPanelSurveys
+  const isReadOnly = !project || project.readOnly
+  const isEmptyView = folders.length === 0 && surveys.length === 0 && panelSurveys.length === 0
 
   return {
+    projectId: ownProps.params.projectId,
+    project,
+
     surveys,
+    folders,
+    panelSurveys,
+    surveysAndPanelSurveys: paginatedElements,
+
+    isLoading,
+    isReadOnly,
+    isEmptyView,
+
     startIndex,
     endIndex,
     totalCount
   }
 }
 
-const mapStateToProps = (state, ownProps) => {
-  const { folders, surveys, panelSurveys } = state
-
-  function values<T>(obj: ?Map<number, T>): ?Array<T> {
-    if (obj) {
-      return (Object.values(obj): any)
-    }
-  }
+const paginate = (surveysAndPanelSurveys: Array<Survey | PanelSurvey>, page) => {
+  const totalCount = surveysAndPanelSurveys ? surveysAndPanelSurveys.length : 0
+  const pageIndex = page.index
+  const pageSize = page.size
+  const startIndex = Math.min(totalCount, pageIndex + 1)
+  const endIndex = Math.min(pageIndex + pageSize, totalCount)
 
   return {
-    ...surveyIndexProps(state, values(surveys.items), values(panelSurveys.items)),
-    projectId: ownProps.params.projectId,
-    project: state.project.data,
-    loadingSurveys: surveys && surveys.fetching,
-    loadingFolders: folders && folders.loadingFetch,
-    folders: values(folders.items),
-    panelSurveys: values(panelSurveys.items),
-    loadingPanelSurveys: state.panelSurveys.fetching
+    paginatedElements: (surveysAndPanelSurveys
+      .slice(pageIndex, pageIndex + pageSize): Array<Survey | PanelSurvey>),
+    totalCount,
+    startIndex,
+    endIndex
   }
+}
+
+const values = function <T>(obj: ?Map<number, T>): ?Array<T> {
+  if (obj) return (Object.values(obj): any)
 }
 
 export default translate()(withRouter(connect(mapStateToProps)(SurveyIndex)))

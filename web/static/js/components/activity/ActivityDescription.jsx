@@ -166,6 +166,19 @@ class ActivityDescription extends Component {
             return t('Renamed <i>{{oldFolderName}}</i> folder to <i>{{newFolderName}}</i>', {oldFolderName, newFolderName})
         }
         break
+      case 'panelSurvey':
+        const panelSurveyName = metadata['panelSurveyName'] || 'Untitled'
+        switch (activity.action) {
+          case 'change_folder':
+            const { oldFolderName, newFolderName } = metadata
+            if (oldFolderName) {
+              return t('Moved <i>{{panelSurveyName}}</i> from folder <i>{{oldFolderName}}</i> to <i>{{newFolderName}}</i>', { panelSurveyName: panelSurveyName, oldFolderName: oldFolderName, newFolderName: newFolderName })
+            } else {
+              return t('Moved <i>{{panelSurveyName}}</i> from folder <i>No folder</i> to <i>{{newFolderName}}</i>', { panelSurveyName: panelSurveyName, newFolderName: newFolderName })
+            }
+          default:
+            return ''
+        }
       default:
         return ''
     }

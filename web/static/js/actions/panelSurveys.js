@@ -3,6 +3,7 @@ import * as panelSurveyActions from './panelSurvey'
 
 export const FETCH = 'FETCH_PANEL_SURVEYS'
 export const RECEIVE = 'RECEIVE_PANEL_SURVEYS'
+export const FOLDER_CHANGED = 'PANEL_SURVEY_FOLDER_CHANGED'
 
 export const fetchPanelSurveys = (projectId: number) => (dispatch: Function, getState: () => Store): Promise<?SurveyList> => {
   const state = getState()
@@ -32,4 +33,10 @@ export const receivePanelSurveys = (projectId: number, items: IndexedList<PanelS
   type: RECEIVE,
   projectId,
   items
+})
+
+export const folderChanged = (panelSurveyId: number, folderId: number) => ({
+  type: FOLDER_CHANGED,
+  panelSurveyId,
+  folderId
 })
