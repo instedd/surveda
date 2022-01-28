@@ -138,7 +138,7 @@ class _PanelSurveyCard extends Component<any> {
     const { panelSurvey } = this.props
 
     this.refs.moveSurveyConfirmationModal.open({
-      modalText: <MoveSurveyForm defaultFolderId={panelSurvey.folderId} onChangeFolderId={folderId => this.changeFolder(folderId)} />,
+      modalText: <MoveSurveyForm projectId={panelSurvey.projectId} defaultFolderId={panelSurvey.folderId} onChangeFolderId={folderId => this.changeFolder(folderId)} />,
       onConfirm: () => (this.confirmMovePanelSurvey(panelSurvey))
     })
   }
