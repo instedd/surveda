@@ -4,6 +4,7 @@ import each from 'lodash/each'
 import { stepStoreValues } from '../reducers/questionnaire'
 import * as surveysActions from './surveys'
 import * as panelSurveysActions from '../actions/panelSurveys'
+import * as folderActions from '../actions/folder'
 
 export const CHANGE_CUTOFF = 'SURVEY_CHANGE_CUTOFF'
 export const CHANGE_QUOTA = 'SURVEY_CHANGE_QUOTA'
@@ -288,12 +289,19 @@ export const changeMobileWebRetryConfiguration = (mobilewebRetryConfiguration: s
 
 export const deleteSurvey = (survey: Survey) => (dispatch: Function) => {
   api.deleteSurvey(survey.projectId, survey)
-    .then(response => {
-      if (survey.panelSurveyId) {
-        // A wave of the panel survey was deleted -> the panel survey has changed.
-        // The Redux store must be updated with the panel survey new state.
-        //
-        // TODO: mark the collection as dirty so we'll reload when needed?
+    .then(() => dispatch(surveysActions.deleted(survey)))
+}
+
+export const deletePanelSurveyWave = (panelSurvey: PanelSurvey, survey: Survey) => (dispatch: Function) => {
+  api.deleteSurvey(survey.projectId, survey)
+    .then(() => {
+      // A wave of the panel survey was deleted -> the panel survey has changed.
+      // The Redux store must be updated with the panel survey new state.
+      if (panelSurvey.folderId) {
+        // refresh the current folder
+        dispatch(folderActions.fetchFolder(panelSurvey.projectId, panelSurvey.folderId))
+      } else {
+        // refresh the panel surveys (at root)
         dispatch(panelSurveysActions.fetchPanelSurveys(survey.projectId))
       }
       return dispatch(surveysActions.deleted(survey))

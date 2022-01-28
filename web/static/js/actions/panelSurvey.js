@@ -38,23 +38,10 @@ export const receive = (panelSurvey: PanelSurvey) => ({
 
 export const changeFolder = (panelSurvey: PanelSurvey, folderId: number) => (dispatch: Function, getState: () => Store) => {
   return api.panelSurveySetFolderId(panelSurvey.projectId, panelSurvey.id, folderId)
-    .then(() => {
-      if (panelSurvey.folderId) {
-        // panelSurvey was in a folder so we refresh the current panelSurvey's folder
-        dispatch(folderActions.fetchFolder(panelSurvey.projectId, panelSurvey.folderId))
-      }
-      dispatch(panelSurveysActions.folderChanged(panelSurvey.id, folderId))
-    })
+    .then(() => dispatch(panelSurveysActions.folderChanged(panelSurvey.id, folderId)))
 }
 
 export const deletePanelSurvey = (panelSurvey: PanelSurvey) => (dispatch: Function) => {
   api.deletePanelSurvey(panelSurvey.projectId, panelSurvey)
-    .then(response => {
-      if (panelSurvey.folderId) {
-        // panelSurvey was in a folder so we refresh the folder
-        dispatch(folderActions.fetchFolder(panelSurvey.projectId, panelSurvey.folderId))
-      }
-
-      return dispatch(panelSurveysActions.deleted(panelSurvey))
-    })
+    .then(() => dispatch(panelSurveysActions.deleted(panelSurvey)))
 }

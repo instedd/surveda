@@ -168,8 +168,8 @@ class _PanelSurveyCard extends Component<any> {
   }
 
   confirmDeletePanelSurveyWave = (wave: Survey) => {
-    const { dispatch } = this.props
-    dispatch(surveyActions.deleteSurvey(wave))
+    const { dispatch, panelSurvey } = this.props
+    dispatch(surveyActions.deletePanelSurveyWave(panelSurvey, wave))
   }
 
   askDeletePanelSurvey = () => {
