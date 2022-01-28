@@ -152,8 +152,8 @@ class SurveyIndex extends Component<any, State> {
                   t={t}>
           <FoldersGrid folders={folders}
                        isReadOnly={isReadOnly}
-                       onRename={() => this.renameFolder()}
-                       onDelete={() => this.deleteFolder()}
+                       onRename={(id) => this.renameFolder(id)}
+                       onDelete={(id) => this.deleteFolder(id)}
                        t={t} />
 
           <SurveysGrid surveysAndPanelSurveys={surveysAndPanelSurveys}
