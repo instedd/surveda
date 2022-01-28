@@ -51,6 +51,7 @@ export type PanelSurvey = {
   projectId: number,
   latestWave: ?Survey,
   isRepeatable: boolean,
+  waves: Survey[],
   updatedAt: Date
 }
 

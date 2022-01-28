@@ -1,7 +1,6 @@
 // @flow
 import * as api from '../api'
 import * as panelSurveysActions from '../actions/panelSurveys'
-import * as folderActions from '../actions/folder'
 
 export const FETCH = 'FETCH_PANEL_SURVEY'
 export const RECEIVE = 'RECEIVE_PANEL_SURVEY'
