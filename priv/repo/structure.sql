@@ -962,6 +962,7 @@ CREATE TABLE `users` (
   `confirmation_sent_at` datetime DEFAULT NULL,
   `name` varchar(255) DEFAULT '',
   `remember_created_at` datetime DEFAULT NULL,
+  `unconfirmed_email` varchar(255) DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `id` (`id`),
   UNIQUE KEY `users_email_index` (`email`)
@@ -981,7 +982,7 @@ CREATE TABLE `users` (
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2021-12-13  9:50:59
+-- Dump completed on 2022-01-31 10:39:36
 INSERT INTO `schema_migrations` (version) VALUES (20160812145257);
 INSERT INTO `schema_migrations` (version) VALUES (20160816183915);
 INSERT INTO `schema_migrations` (version) VALUES (20160830200454);
@@ -1193,3 +1194,4 @@ INSERT INTO `schema_migrations` (version) VALUES (20210614154820);
 INSERT INTO `schema_migrations` (version) VALUES (20210629170410);
 INSERT INTO `schema_migrations` (version) VALUES (20211125141835);
 INSERT INTO `schema_migrations` (version) VALUES (20211213094856);
+INSERT INTO `schema_migrations` (version) VALUES (20220131103226);
