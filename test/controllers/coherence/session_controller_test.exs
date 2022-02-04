@@ -24,10 +24,6 @@ defmodule Ask.Coherence.SessionControllerTest do
   end
 
   describe "oauth_callback" do
-    # setup do
-    #   enable_guisso()
-    # end
-
     test "login existing user", %{conn: conn} do
       user = insert(:user, email: "someone@ask.dev", name: "John")
 
@@ -58,32 +54,9 @@ defmodule Ask.Coherence.SessionControllerTest do
         where: u.email == "someone@ask.dev")
       assert user.name == "Someone"
     end
-
-    # FIXME: the endpoint doesn't actually creates the membership?!
-    # test "transforms pending invites into project memberships", %{conn: conn} do
-    #   project = insert(:project)
-    #   invite = insert(:invite, project: project, email: "someone@ask.dev", level: "admin")
-
-    #   GuissoMock |>
-    #   expect(:request_auth_token, fn (_, _) ->
-    #     {:ok, "someone@ask.dev", "Someone", nil}
-    #   end)
-
-    #   conn = get conn, session_path(conn, :oauth_callback), code: "CODE", state: "STATE"
-    #   assert redirected_to(conn, 302) == "/"
-
-    #   # it created the user and added her to the project (and deleted the invite)
-    #   assert user = Repo.one(from u in User, where: u.email == "someone@ask.dev")
-    #   assert Repo.one(from m in Ask.ProjectMembership, where: m.user_id == ^user.id and m.project_id == ^project.id)
-    #   refute Ask.Invite |> Repo.get(invite.id)
-    # end
   end
 
   describe "authenticated" do
-    # setup do
-    #   disable_guisso()
-    # end
-
     test "create redirects unconfirmed user to confirmation page", %{conn: conn} do
       user = insert(:user, confirmed_at: nil)
 

@@ -22,8 +22,6 @@ defmodule Ask.Coherence.RegistrationControllerTest do
   end
 
   test "create transforms pending invites into project memberships", %{conn: conn} do
-    # disable_guisso()
-
     project = insert(:project)
     invite = insert(:invite, project: project, email: "someone@ask.dev", level: "admin")
 
