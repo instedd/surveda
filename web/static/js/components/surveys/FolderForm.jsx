@@ -46,9 +46,17 @@ FolderForm.defaultProps = {
 }
 
 const mapStateToProps = (state, ownProps) => {
+  let error
+
+  if (ownProps.id) {
+    error = state.folders.items[ownProps.id] && state.folders.items[ownProps.id].error
+  } else {
+    error = state.folders.error
+  }
+
   return {
     ...ownProps,
-    error: ((ownProps.id && state.folders.items[ownProps.id] && state.folders.items[ownProps.id].error) || (!ownProps.id && state.folders.error))
+    error: error
   }
 }
 

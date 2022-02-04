@@ -54,11 +54,11 @@ const mapStateToProps = (state, ownProps) => {
     1. Project
     2. Project -> Survey : <Project>
     3. Project -> Panel Survey : <Project>
-    4. Project -> Panel Survey -> Occurrence : <Project | PanelSurvey>
+    4. Project -> Panel Survey -> Wave : <Project | PanelSurvey>
     5. Project -> Folder : <Project>
     6. Project -> Folder -> Survey : <Project | Folder>
     7. Project -> Folder -> Panel Survey : <Project | Folder>
-    8. Project -> Folder -> Panel Survey -> Occurrence : <Project | Folder | PanelSurvey>
+    8. Project -> Folder -> Panel Survey -> Wave : <Project | Folder | PanelSurvey>
   */
   const { params } = ownProps
 

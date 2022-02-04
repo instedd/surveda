@@ -2,23 +2,22 @@
 import * as actions from '../actions/surveys'
 import collectionReducer, { projectFilterProvider } from './collection'
 
-const itemsReducer = (state: IndexedList<Survey>, action): IndexedList<Survey> => {
+const itemsReducer = (items: IndexedList<Survey>, action): IndexedList<Survey> => {
   switch (action.type) {
-    case actions.DELETED: return deleteItem(state, action)
-    case actions.FOLDER_CHANGED: return changeFolder(state, action)
-    default: return state
+    case actions.DELETED:
+      return removeItem(items, action.id)
+    case actions.FOLDER_CHANGED:
+      return removeItem(items, action.surveyId)
+    default:
+      return items
   }
 }
 
-const deleteItem = (state: IndexedList<Survey>, action: any) => {
-  const items = {...state}
-  delete items[action.id]
-  return items
-}
-
-const changeFolder = (state: IndexedList<Survey>, action: any) => {
-  const items = {...state}
-  delete items[action.surveyId]
+function removeItem(items: IndexedList<Survey>, surveyId: number) {
+  if (items[surveyId]) {
+    items = {...items}
+    delete items[surveyId]
+  }
   return items
 }
 

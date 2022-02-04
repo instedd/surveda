@@ -2,17 +2,19 @@ import React, { Component, PropTypes } from 'react'
 import { translate, Trans } from 'react-i18next'
 import { connect } from 'react-redux'
 import { Input } from 'react-materialize'
+import { fetchFolders } from 'actions/folders'
 
 class MoveSurveyForm extends Component<any> {
   static propTypes = {
     t: PropTypes.func,
+    dispatch: PropTypes.func,
     onCreate: PropTypes.func,
     onChangeName: PropTypes.func,
     projectId: PropTypes.number,
     defaultFolderId: PropTypes.number,
     onChangeFolderId: PropTypes.func,
-    loading: PropTypes.boolean,
-    errors: PropTypes.array,
+    loading: PropTypes.bool,
+    errors: PropTypes.object,
     folders: PropTypes.array
   }
 
@@ -24,14 +26,25 @@ class MoveSurveyForm extends Component<any> {
     }
   }
 
+  componentDidMount() {
+    const { dispatch, folders, projectId } = this.props
+    if (!folders) {
+      dispatch(fetchFolders(projectId))
+    }
+  }
+
   onChangeFolderId(e) {
     this.props.onChangeFolderId(e.target.value)
     this.setState({ folderId: e.target.value })
   }
 
   render() {
-    const { t, folders } = this.props
+    const { t, folders, loading } = this.props
     const { folderId } = this.state
+
+    if (loading) {
+      return <div>{t('Loading...')}</div>
+    }
 
     return (
       <form>
@@ -61,11 +74,20 @@ MoveSurveyForm.defaultProps = {
 }
 
 const mapStateToProps = (state, ownProps) => {
+  let folders = state.folders.items
+  let loading = state.folders.loading
+
+  if (folders) {
+    folders = Object.values(folders)
+  } else {
+    loading = true
+  }
+
   return {
     ...ownProps,
-    loading: state.folders.loading,
+    loading: loading,
     errors: state.folders.errors || {},
-    folders: Object.values(state.folders.items)
+    folders: folders
   }
 }
 

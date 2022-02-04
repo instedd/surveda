@@ -1,17 +1,16 @@
 // @flow
 import * as api from '../api'
 import * as panelSurveysActions from '../actions/panelSurveys'
-import * as folderActions from '../actions/folder'
 
 export const FETCH = 'FETCH_PANEL_SURVEY'
 export const RECEIVE = 'RECEIVE_PANEL_SURVEY'
 
 export const createPanelSurvey = (projectId: number, folderId?: number) => (dispatch: Function, getState: () => Store) =>
   api.createSurvey(projectId, folderId, true).then(response => {
-    const firstOccurrence = response.result
-    dispatch(fetch(projectId, firstOccurrence.id))
-    dispatch(receive(firstOccurrence))
-    return firstOccurrence
+    const firstWave = response.result
+    dispatch(fetch(projectId, firstWave.id))
+    dispatch(receive(firstWave))
+    return firstWave
   })
 
 export const fetchPanelSurvey = (projectId: number, id: number) => (dispatch: Function, getState: () => Store): Survey => {
@@ -38,23 +37,10 @@ export const receive = (panelSurvey: PanelSurvey) => ({
 
 export const changeFolder = (panelSurvey: PanelSurvey, folderId: number) => (dispatch: Function, getState: () => Store) => {
   return api.panelSurveySetFolderId(panelSurvey.projectId, panelSurvey.id, folderId)
-    .then(() => {
-      if (panelSurvey.folderId) {
-        // panelSurvey was in a folder so we refresh the current panelSurvey's folder
-        dispatch(folderActions.fetchFolder(panelSurvey.projectId, panelSurvey.folderId))
-      }
-      dispatch(panelSurveysActions.folderChanged(panelSurvey.id, folderId))
-    })
+    .then(() => dispatch(panelSurveysActions.folderChanged(panelSurvey.id, folderId)))
 }
 
 export const deletePanelSurvey = (panelSurvey: PanelSurvey) => (dispatch: Function) => {
   api.deletePanelSurvey(panelSurvey.projectId, panelSurvey)
-    .then(response => {
-      if (panelSurvey.folderId) {
-        // panelSurvey was in a folder so we refresh the folder
-        dispatch(folderActions.fetchFolder(panelSurvey.projectId, panelSurvey.folderId))
-      }
-
-      return dispatch(panelSurveysActions.deleted(panelSurvey))
-    })
+    .then(() => dispatch(panelSurveysActions.deleted(panelSurvey)))
 }

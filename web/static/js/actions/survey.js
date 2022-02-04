@@ -3,7 +3,6 @@ import * as api from '../api'
 import each from 'lodash/each'
 import { stepStoreValues } from '../reducers/questionnaire'
 import * as surveysActions from './surveys'
-import * as panelSurveyActions from '../actions/panelSurvey'
 import * as panelSurveysActions from '../actions/panelSurveys'
 import * as folderActions from '../actions/folder'
 
@@ -180,13 +179,8 @@ export const changeName = (newName: string) => (dispatch: Function, getState: ()
 
 export const changeFolder = (survey: Survey, folderId: number) => (dispatch: Function, getState: () => Store) => {
   return api.setFolderId(survey.projectId, survey.id, folderId)
-    .then(() => {
-      if (survey.folderId) {
-        // survey was in a folder so we refresh the current survey's folder
-        dispatch(folderActions.fetchFolder(survey.projectId, survey.folderId))
-      }
-      dispatch(surveysActions.folderChanged(survey.id, folderId))
-    })
+    .then(() => dispatch(surveysActions.folderChanged(survey.id, folderId))
+  )
 }
 
 export const changeDescription = (newDescription: string) => (dispatch: Function, getState: () => Store) => {
@@ -295,19 +289,21 @@ export const changeMobileWebRetryConfiguration = (mobilewebRetryConfiguration: s
 
 export const deleteSurvey = (survey: Survey) => (dispatch: Function) => {
   api.deleteSurvey(survey.projectId, survey)
-    .then(response => {
-      if (survey.panelSurveyId) {
-        // A wave of the panel survey was deleted -> the panel survey has changed.
-        // The Redux store must be updated with the panel survey new state.
-        dispatch(panelSurveyActions.fetchPanelSurvey(survey.projectId, survey.panelSurveyId))
+    .then(() => dispatch(surveysActions.deleted(survey)))
+}
+
+export const deletePanelSurveyWave = (panelSurvey: PanelSurvey, survey: Survey) => (dispatch: Function) => {
+  api.deleteSurvey(survey.projectId, survey)
+    .then(() => {
+      // A wave of the panel survey was deleted -> the panel survey has changed.
+      // The Redux store must be updated with the panel survey new state.
+      if (panelSurvey.folderId) {
+        // refresh the current folder
+        dispatch(folderActions.fetchFolder(panelSurvey.projectId, panelSurvey.folderId))
+      } else {
+        // refresh the panel surveys (at root)
         dispatch(panelSurveysActions.fetchPanelSurveys(survey.projectId))
       }
-
-      if (survey.folderId) {
-        // survey was in a folder so we refresh the current survey's folder
-        dispatch(folderActions.fetchFolder(survey.projectId, survey.folderId))
-      }
-
       return dispatch(surveysActions.deleted(survey))
     })
 }

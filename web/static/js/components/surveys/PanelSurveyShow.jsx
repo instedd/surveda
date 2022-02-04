@@ -38,8 +38,11 @@ class PanelSurveyShow extends Component<any, any> {
   }
 
   componentDidMount() {
-    const { dispatch, projectId, panelSurveyId } = this.props
-    dispatch(actions.fetchPanelSurvey(projectId, panelSurveyId))
+    const { dispatch, projectId, panelSurvey, panelSurveyId } = this.props
+
+    if (!panelSurvey) {
+      dispatch(actions.fetchPanelSurvey(projectId, panelSurveyId))
+    }
   }
 
   nextPage() {
@@ -185,7 +188,7 @@ const mapStateToPanelSurvey = (state, panelSurveyId) => {
   let surveys = []
   let panelSurveys = []
 
-  if (state.panelSurvey.data && state.panelSurvey.data.id === panelSurveyId) {
+  if (state.panelSurvey.data && state.panelSurvey.data.id === panelSurveyId && !state.panelSurvey.dirty) {
     panelSurvey = state.panelSurvey.data
     surveys = panelSurvey.waves
   }

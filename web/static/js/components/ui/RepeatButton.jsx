@@ -17,5 +17,5 @@ export const RepeatButton = ({ text, onClick, disabled }) => {
 RepeatButton.propTypes = {
   text: PropTypes.string.isRequired,
   onClick: PropTypes.func,
-  disabled: PropTypes.boolean
+  disabled: PropTypes.bool
 }

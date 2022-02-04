@@ -43,7 +43,7 @@ class _SurveyCard extends Component<any> {
   askMoveSurvey = () => {
     const moveSurveyConfirmationModal: ConfirmationModal = this.refs.moveSurveyConfirmationModal
     const { survey } = this.props
-    const modalText = <MoveSurveyForm defaultFolderId={survey.folderId} onChangeFolderId={folderId => this.changeFolder(folderId)} />
+    const modalText = <MoveSurveyForm projectId={survey.projectId} defaultFolderId={survey.folderId} onChangeFolderId={folderId => this.changeFolder(folderId)} />
     moveSurveyConfirmationModal.open({
       modalText: modalText,
       onConfirm: () => (this.confirmMoveSurvey(survey))
@@ -138,7 +138,7 @@ class _PanelSurveyCard extends Component<any> {
     const { panelSurvey } = this.props
 
     this.refs.moveSurveyConfirmationModal.open({
-      modalText: <MoveSurveyForm defaultFolderId={panelSurvey.folderId} onChangeFolderId={folderId => this.changeFolder(folderId)} />,
+      modalText: <MoveSurveyForm projectId={panelSurvey.projectId} defaultFolderId={panelSurvey.folderId} onChangeFolderId={folderId => this.changeFolder(folderId)} />,
       onConfirm: () => (this.confirmMovePanelSurvey(panelSurvey))
     })
   }
@@ -168,8 +168,8 @@ class _PanelSurveyCard extends Component<any> {
   }
 
   confirmDeletePanelSurveyWave = (wave: Survey) => {
-    const { dispatch } = this.props
-    dispatch(surveyActions.deleteSurvey(wave))
+    const { dispatch, panelSurvey } = this.props
+    dispatch(surveyActions.deletePanelSurveyWave(panelSurvey, wave))
   }
 
   askDeletePanelSurvey = () => {

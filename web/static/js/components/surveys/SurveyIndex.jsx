@@ -70,8 +70,8 @@ class SurveyIndex extends Component<any, State> {
 
   newPanelSurvey() {
     const { dispatch, projectId, router } = this.props
-    dispatch(panelSurveyActions.createPanelSurvey(projectId)).then(firstOccurrence =>
-      router.push(routes.surveyEdit(projectId, firstOccurrence))
+    dispatch(panelSurveyActions.createPanelSurvey(projectId)).then(firstWave =>
+      router.push(routes.surveyEdit(projectId, firstWave))
     )
   }
 
@@ -152,8 +152,8 @@ class SurveyIndex extends Component<any, State> {
                   t={t}>
           <FoldersGrid folders={folders}
                        isReadOnly={isReadOnly}
-                       onRename={() => this.renameFolder()}
-                       onDelete={() => this.deleteFolder()}
+                       onRename={(id) => this.renameFolder(id)}
+                       onDelete={(id) => this.deleteFolder(id)}
                        t={t} />
 
           <SurveysGrid surveysAndPanelSurveys={surveysAndPanelSurveys}
