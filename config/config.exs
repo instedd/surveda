@@ -87,10 +87,18 @@ config :coherence,
   user_schema: Ask.User,
   repo: Ask.Repo,
   module: Ask,
+  web_module: Ask, # should eventually be: AskWeb
+  router: Ask.Router,
+  password_hashing_alg: Comeonin.Bcrypt,
+  messages_backend: Ask.Coherence.Messages,
+  #registration_permitted_attributes: ["email", "name", "password", "current_password", "password_confirmation"],
+  #invitation_permitted_attributes: ["name", "email"],
+  #password_reset_permitted_attributes: ["reset_password_token", "password", "password_confirmation"],
+  #session_permitted_attributes: ["remember", "email", "password"],
   logged_out_url: "/",
   email_from_name: "Your Name",
   email_from_email: "yourname@example.com",
-  opts: [:authenticatable, :recoverable, :confirmable, :registerable, :rememberable]
+  opts: [:authenticatable, :confirmable, :recoverable, :registerable, :rememberable]
 
 config :coherence, Ask.Coherence.Mailer,
   adapter: Swoosh.Adapters.Local
@@ -106,7 +114,8 @@ config :alto_guisso,
   enabled: System.get_env("GUISSO_ENABLED") == "true",
   base_url: System.get_env("GUISSO_BASE_URL"),
   client_id: System.get_env("GUISSO_CLIENT_ID"),
-  client_secret: System.get_env("GUISSO_CLIENT_SECRET")
+  client_secret: System.get_env("GUISSO_CLIENT_SECRET"),
+  session_controller: Ask.Coherence.SessionController
 
 # Import environment specific config. This must remain at the bottom
 # of this file so it overrides the configuration defined above.

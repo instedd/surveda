@@ -21,14 +21,13 @@ defmodule Ask.EctoDbSession do
   end
 
   def put_credentials(_repo, user, creds, _id_key) do
-    id_str = "#{Map.get user, "id"}"
     params = %{
       token: creds,
       user_type: Atom.to_string(user.__struct__),
       user_id: Integer.to_string(user.id)
     }
 
-    where(Session, [s], s.user_id == ^id_str)
+    where(Session, [s], s.user_id == ^id_str(user))
     |> Repo.delete_all
 
     Session.changeset(Session.__struct__, params)
@@ -49,5 +48,15 @@ defmodule Ask.EctoDbSession do
       user ->
         Repo.delete user
     end
+  end
+
+  def delete_user_logins(user) do
+    Session
+    |> where([s], s.user_id == ^id_str(user))
+    |> Repo.delete_all
+  end
+
+  defp id_str(user) do
+    Map.get(user, "id") |> to_string()
   end
 end

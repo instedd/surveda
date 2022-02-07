@@ -8,4 +8,5 @@ end
 
 defimpl Plug.Exception, for: Ask.UnauthorizedError do
   def status(_), do: 403
+  def actions(_), do: [%{label: "UnauthorizedError", handler: {IO, :puts, "UnauthorizedError"}}]
 end

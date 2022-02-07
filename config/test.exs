@@ -50,3 +50,11 @@ config :ask, Ask.Mailer,
 
 config :ask, Ask.Email,
   smtp_from_address: {:system, "SMTP_FROM_ADDRESS", "Test name <test@email>"}
+
+# Use mock to enable/disable Guisso for the duration of a test.
+config :ask, :guisso, GuissoMock
+
+config :alto_guisso,
+  base_url: "http://guisso.localhost",
+  client_id: "CLIENT",
+  client_secret: "SECRET"
