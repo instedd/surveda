@@ -78,13 +78,7 @@ defmodule Ask.Runtime.Session do
       Channel.message_expired?(runtime_channel, channel_state) ->
         # do not retry since the respondent was never contacted, thus the retries should not be consumed
         session = contact_respondent(session, runtime_channel)
-
-        next_available_date_time = session.schedule |> Schedule.next_available_date_time
-
-        base_timeout = Interval.new(from: DateTime.utc_now, until: next_available_date_time)
-                       |> Interval.duration(:minutes)
-
-        {:ok, session, %Reply{}, base_timeout + current_timeout(session)}
+        {:ok, session, %Reply{}, base_timeout(session) + current_timeout(session)}
       true ->
         timeout(session, runtime_channel)
     end
@@ -232,15 +226,8 @@ defmodule Ask.Runtime.Session do
 
   def contact_attempt_expired(session) do
     runtime_channel = Ask.Channel.runtime_channel(session.current_mode.channel)
-
     session = contact_respondent(session, runtime_channel)
-
-    next_available_date_time = session.schedule |> Schedule.next_available_date_time
-
-    base_timeout = Interval.new(from: DateTime.utc_now, until: next_available_date_time)
-                   |> Interval.duration(:minutes)
-
-    {:ok, session, base_timeout + current_timeout(session)}
+    {:ok, session, base_timeout(session) + current_timeout(session)}
   end
 
   def delivery_confirm(session, title, current_mode, persist) do
@@ -776,5 +763,14 @@ defmodule Ask.Runtime.Session do
     else
       session
     end
+  end
+
+  defp base_timeout(session) do
+    # we get now _before_ evaluating the next available datetime to
+    # avoid a race condition in tests where from is greater than until,
+    # which is raising an exception in timex 3.6:
+    from = DateTime.utc_now
+    until = Schedule.next_available_date_time(session.schedule)
+    Interval.new(from: from, until: until) |> Interval.duration(:minutes)
   end
 end
