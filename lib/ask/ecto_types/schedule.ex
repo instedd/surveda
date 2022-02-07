@@ -216,9 +216,9 @@ defmodule Ask.Schedule do
   defp pick_date_based_on_time_and_direction(:after = _time_is, false = _backward), do: :next_date
 
   def at_end_time(%Schedule{end_time: end_time, timezone: timezone}, %DateTime{} = date_time) do
-    {erlang_date, _} = date_time |> Timex.Timezone.convert(timezone) |> Timex.to_erl
-    erlang_time = end_time |> Time.to_erl
-    Timex.Timezone.resolve(timezone, {erlang_date, erlang_time})
+    {:ok, datetime} = DateTime.shift_zone(date_time, timezone)
+    {:ok, naive_datetime} = DateTime.to_date(datetime) |> NaiveDateTime.new(end_time)
+    DateTime.from_naive!(naive_datetime , timezone)
   end
 
   def remove_start_date(schedule) do
@@ -243,13 +243,13 @@ defmodule Ask.Schedule do
   end
 
   defp at_start_time(schedule, erl_date) do
-    erl_time = schedule.start_time |> Time.to_erl
-    Timex.Timezone.resolve(schedule.timezone, {erl_date, erl_time})
+    {:ok, naive_datetime} = erl_date |> Date.from_erl! |> NaiveDateTime.new(schedule.start_time)
+    DateTime.from_naive!(naive_datetime, schedule.timezone)
   end
 
   defp at_end_time_erl(schedule, erl_date) do
-    erl_time = schedule.end_time |> Time.to_erl
-    Timex.Timezone.resolve(schedule.timezone, {erl_date, erl_time})
+    {:ok, naive_datetime} = erl_date |> Date.from_erl! |> NaiveDateTime.new(schedule.end_time)
+    DateTime.from_naive!(naive_datetime, schedule.timezone)
   end
 
   defp next_available_date(schedule, erl_date, backward, limit) do

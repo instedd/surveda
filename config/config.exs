@@ -5,6 +5,9 @@
 # is restricted to this project.
 use Mix.Config
 
+config :elixir,
+  :time_zone_database, Tzdata.TimeZoneDatabase
+
 config :plug, :types, %{
   "application/vnd.api+json" => ["json-api"]
 }
