@@ -54,7 +54,8 @@ defmodule Ask.ChannelController do
 
         conn
         |> put_status(:unprocessable_entity)
-        |> render(Ask.ChangesetView, "error.json", changeset: changeset)
+        |> put_view(Ask.ChangesetView)
+        |> render("error.json", changeset: changeset)
     end
   end
 

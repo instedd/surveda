@@ -157,7 +157,8 @@ defmodule Ask.RespondentGroupController do
   defp render_unprocessable_entity(conn) do
     conn
     |> put_status(:unprocessable_entity)
-    |> render(Ask.ChangesetView, "error.json", changeset: change(%Respondent{}, %{}))
+    |> put_view(Ask.ChangesetView)
+    |> render("error.json", changeset: change(%Respondent{}, %{}))
   end
 
   defp render_invalid(conn, filename, invalid_entries) do

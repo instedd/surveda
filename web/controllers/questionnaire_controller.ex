@@ -79,7 +79,8 @@ defmodule Ask.QuestionnaireController do
         Logger.warn "Error when creating questionnaire: #{inspect changeset}"
         conn
         |> put_status(:unprocessable_entity)
-        |> render(Ask.ChangesetView, "error.json", changeset: changeset)
+        |> put_view(Ask.ChangesetView)
+        |> render("error.json", changeset: changeset)
     end
   end
 
@@ -127,7 +128,8 @@ defmodule Ask.QuestionnaireController do
         Logger.warn "Error when updating questionnaire: #{inspect changeset}"
         conn
         |> put_status(:unprocessable_entity)
-        |> render(Ask.ChangesetView, "error.json", changeset: changeset)
+        |> put_view(Ask.ChangesetView)
+        |> render("error.json", changeset: changeset)
     end
   end
 
@@ -177,7 +179,8 @@ defmodule Ask.QuestionnaireController do
     do:
       conn
       |> put_status(:unprocessable_entity)
-      |> render(ErrorView, "error.json",
+      |> put_view(ErrorView)
+      |> render("error.json",
         error_message:
           Gettext.gettext(
             "Cannot archive questionnaire because it's related to one or more surveys"
@@ -212,7 +215,8 @@ defmodule Ask.QuestionnaireController do
 
         conn
         |> put_status(:unprocessable_entity)
-        |> render(Ask.ChangesetView, "error.json", changeset: changeset)
+        |> put_view(Ask.ChangesetView)
+        |> render("error.json", changeset: changeset)
     end
   end
 
@@ -258,7 +262,8 @@ defmodule Ask.QuestionnaireController do
         Logger.warn "Error when deleting questionnaire: #{inspect changeset}"
         conn
         |> put_status(:unprocessable_entity)
-        |> render(Ask.ChangesetView, "error.json", changeset: changeset)
+        |> put_view(Ask.ChangesetView)
+        |> render("error.json", changeset: changeset)
     end
   end
 
