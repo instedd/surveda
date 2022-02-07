@@ -2507,6 +2507,49 @@ defmodule Ask.Runtime.SurveyTest do
     end)
   end
 
+  test "accepts respondent in bucket upper bound" do
+    [survey, _group, _test_channel, respondent, _phone_number] = create_running_survey_with_channel_and_respondent()
+
+    quotas = %{
+      "vars" => ["Perfect Number"],
+      "buckets" => [
+        %{
+          "condition" => [%{"store" => "Perfect Number", "value" => [18, 29]}],
+          "quota" => 1,
+          "count" => 0
+        },
+        %{
+          "condition" => [%{"store" => "Perfect Number", "value" => [30, 79]}],
+          "quota" => 1,
+          "count" => 0
+        },
+        %{
+          "condition" => [%{"store" => "Perfect Number", "value" => [80, 120]}],
+          "quota" => 1,
+          "count" => 0
+        },
+      ]
+    }
+
+    survey
+    |> Repo.preload([:quota_buckets])
+    |> Ask.Survey.changeset(%{quotas: quotas})
+    |> Repo.update!
+
+    {:ok, survey_logger} = SurveyLogger.start_link
+    {:ok, broker} = Broker.start_link
+    poll_survey()
+
+    _reply = Survey.sync_step(Repo.get(Respondent, respondent.id), Flow.Message.reply("2"))
+    _reply = Survey.sync_step(Repo.get(Respondent, respondent.id), Flow.Message.reply("2"))
+
+    assert {:reply, %{stores: %{"Perfect Number" => "120"}}, _respondent} = Survey.sync_step(Repo.get(Respondent, respondent.id), Flow.Message.reply("120"))
+    assert %{disposition: :started} = Repo.get(Respondent, respondent.id)
+
+    :ok = broker |> GenServer.stop
+    :ok = survey_logger |> GenServer.stop
+  end
+
   defp day_after_tomorrow_schedule_day_of_week() do
     {erl_date, _} = Timex.now |> Timex.to_erl
     case :calendar.day_of_the_week(erl_date) do

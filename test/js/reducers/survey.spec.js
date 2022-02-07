@@ -525,14 +525,52 @@ describe('survey reducer', () => {
             {'condition': [{store: 'Age', value: [20, 29]}, {store: 'Smokes', value: 'Yes'}], 'quota': 0},
             {'condition': [{store: 'Age', value: [30, 39]}, {store: 'Smokes', value: 'Yes'}], 'quota': 0},
             {'condition': [{store: 'Age', value: [40, 49]}, {store: 'Smokes', value: 'Yes'}], 'quota': 0},
-            {'condition': [{store: 'Age', value: [50, 119]}, {store: 'Smokes', value: 'Yes'}], 'quota': 0},
+            {'condition': [{store: 'Age', value: [50, 120]}, {store: 'Smokes', value: 'Yes'}], 'quota': 0},
             {'condition': [{store: 'Age', value: [20, 29]}, {store: 'Smokes', value: 'No'}], 'quota': 0},
             {'condition': [{store: 'Age', value: [30, 39]}, {store: 'Smokes', value: 'No'}], 'quota': 0},
             {'condition': [{store: 'Age', value: [40, 49]}, {store: 'Smokes', value: 'No'}], 'quota': 0},
-            {'condition': [{store: 'Age', value: [50, 119]}, {store: 'Smokes', value: 'No'}], 'quota': 0}
+            {'condition': [{store: 'Age', value: [50, 120]}, {store: 'Smokes', value: 'No'}], 'quota': 0}
           ]
         }
       }
+    })
+  })
+
+  describe('quota buckets intervals', () => {
+    const questionnaire = deepFreeze({
+      steps: [
+        {
+          type: 'numeric',
+          store: 'Age'
+        }
+      ],
+      id: 1
+    })
+
+    const baseState = deepFreeze(playActions([
+      actions.fetch(1, 1),
+      actions.receive(survey),
+      actions.setQuotaVars([{var: 'Age', steps: '20, 30, 40'}], questionnaire)
+    ]))
+
+    let intervalStrings = [
+      '20, 30, 40',
+      '20, 40, 30',
+      '30, 20, 40',
+      '30, 40, 20',
+      '40, 20, 30',
+      '40, 30, 20'
+    ]
+
+    intervalStrings.forEach((intervalString) => {
+      it('should build sort-insensitive quota buckets intervals', () => {
+        const actionsToPlay = [
+          actions.fetch(1, 1),
+          actions.receive(survey),
+          actions.setQuotaVars([{var: 'Age', steps: intervalString}], questionnaire)
+        ]
+        expect(playActions(actionsToPlay)).toEqual(baseState)
+      })
     })
   })
 
@@ -548,7 +586,7 @@ describe('survey reducer', () => {
           },
           {
             'condition': [
-              { store: 'age', value: [10, 49] }
+              { store: 'age', value: [10, 50] }
             ]
           }
         ]
