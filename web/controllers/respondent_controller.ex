@@ -879,9 +879,8 @@ defmodule Ask.RespondentController do
   end
 
   def interactions(conn, %{"project_id" => project_id, "survey_id" => survey_id}) do
-    survey = conn
-    |> load_project_for_owner(project_id)
-    |> load_survey(survey_id)
+    project = load_project_for_owner(conn, project_id)
+    survey = load_survey(project, survey_id)
 
     log_entries = Stream.resource(
       fn -> {"", 0} end,
