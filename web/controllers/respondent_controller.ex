@@ -27,8 +27,7 @@ defmodule Ask.RespondentController do
 
     filtered_query = conn
       |> load_project(project_id)
-      |> assoc(:surveys)
-      |> Repo.get!(survey_id)
+      |> load_survey(survey_id)
       |> assoc(:respondents)
       |> preload(:responses)
       |> preload(:questionnaire)
@@ -136,11 +135,9 @@ defmodule Ask.RespondentController do
   end
 
   def stats(conn, %{"project_id" => project_id, "survey_id" => survey_id}) do
-    survey =
-      conn
-      |> load_project(project_id)
-      |> assoc(:surveys)
-      |> Repo.get!(survey_id)
+    survey = conn
+    |> load_project(project_id)
+    |> load_survey(survey_id)
 
     stats(conn, survey, survey.quota_vars)
   rescue
@@ -578,13 +575,8 @@ defmodule Ask.RespondentController do
   def sanitize_variable_name(s), do: s |> String.trim() |> String.replace(" ", "_")
 
   def results(conn, %{"project_id" => project_id, "survey_id" => survey_id} = params) do
-    project = conn
-    |> load_project(project_id)
-
-    # Check that the survey is in the project
-    survey = project
-    |> assoc(:surveys)
-    |> Repo.get!(survey_id)
+    project = load_project(conn, project_id)
+    survey = load_survey(project, survey_id)
 
     tz_offset = Survey.timezone_offset(survey)
 
@@ -821,13 +813,8 @@ defmodule Ask.RespondentController do
   defp respondent_stat(respondent, key), do: apply(Stats, key, [respondent.stats])
 
   def disposition_history(conn, %{"project_id" => project_id, "survey_id" => survey_id}) do
-    project = conn
-    |> load_project(project_id)
-
-    # Check that the survey is in the project
-    survey = project
-    |> assoc(:surveys)
-    |> Repo.get!(survey_id)
+    project = load_project(conn, project_id)
+    survey = load_survey(project, survey_id)
 
     history = Stream.resource(
       fn -> 0 end,
@@ -868,7 +855,6 @@ defmodule Ask.RespondentController do
     project = conn
     |> load_project_for_owner(project_id)
 
-    # Check that the survey is in the project
     survey = project
     |> assoc(:surveys)
     |> where([s], s.incentives_enabled)
@@ -893,13 +879,9 @@ defmodule Ask.RespondentController do
   end
 
   def interactions(conn, %{"project_id" => project_id, "survey_id" => survey_id}) do
-    project = conn
+    survey = conn
     |> load_project_for_owner(project_id)
-
-    # Check that the survey is in the project
-    survey = project
-    |> assoc(:surveys)
-    |> Repo.get!(survey_id)
+    |> load_survey(survey_id)
 
     log_entries = Stream.resource(
       fn -> {"", 0} end,
@@ -1016,5 +998,11 @@ defmodule Ask.RespondentController do
     offset_seconds = Survey.timezone_offset_in_seconds(survey)
 
     Ask.TimeUtil.format(dt, offset_seconds, tz_offset)
+  end
+
+  defp load_survey(project, survey_id) do
+    project
+    |> assoc(:surveys)
+    |> Repo.get!(survey_id)
   end
 end
