@@ -109,26 +109,26 @@ defmodule Ask.Router do
             post "/replace", RespondentGroupController, :replace, as: :replace
           end
           get "/respondents/stats", RespondentController, :stats, as: :respondents_stats
-          get "/simulation/initial_state/:mode", SurveyController, :simulation_initial_state
-          get "/simulation_status", SurveyController, :simulation_status
-          post "/stop_simulation", SurveyController, :stop_simulation
-          get "/links/:name", SurveyController, :create_link, as: :links
-          put "/links/:name", SurveyController, :refresh_link, as: :links
-          delete "/links/:name", SurveyController, :delete_link, as: :links
+          get "/simulation/initial_state/:mode", SurveySimulationController, :initial_state
+          get "/simulation_status", SurveySimulationController, :status
+          post "/stop_simulation", SurveySimulationController, :stop
+          get "/links/:name", SurveyLinkController, :create, as: :links
+          put "/links/:name", SurveyLinkController, :refresh, as: :links
+          delete "/links/:name", SurveyLinkController, :delete, as: :links
           scope "/flow-results" do
             get "/packages", FloipController, :index, as: :packages
             get "/packages/:floip_package_id", FloipController, :show, as: :package_descriptor
             get "/packages/:floip_package_id/responses", FloipController, :responses, as: :package_responses
           end
         end
-        post "/surveys/simulate_questionanire", SurveyController, :simulate_questionanire
+        post "/surveys/simulate_questionanire", SurveySimulationController, :simulate
         resources "/questionnaires", QuestionnaireController, except: [:new, :edit] do
           get "/export_zip", QuestionnaireController, :export_zip, as: :questionnaires_export_zip
           post "/import_zip", QuestionnaireController, :import_zip, as: :questionnaires_import_zip
-          post "/simulation", QuestionnaireController, :start_simulation, as: :questionnaires_start_simulation
-          post "/simulation/message", QuestionnaireController, :sync_simulation, as: :questionnaires_sync_simulation
-          get "/simulation/:respondent_id", QuestionnaireController, :get_last_simulation_response, as: :get_last_simulation_response
           put "/update_archived_status", QuestionnaireController, :update_archived_status, as: :update_archived_status
+          post "/simulation", QuestionnaireSimulationController, :start, as: :questionnaires_start_simulation
+          post "/simulation/message", QuestionnaireSimulationController, :sync, as: :questionnaires_sync_simulation
+          get "/simulation/:respondent_id", QuestionnaireSimulationController, :get_last_response, as: :get_last_simulation_response
         end
         get "/autocomplete_vars", ProjectController, :autocomplete_vars, as: :autocomplete_vars
         get "/autocomplete_primary_language", ProjectController, :autocomplete_primary_language, as: :autocomplete_primary_language
