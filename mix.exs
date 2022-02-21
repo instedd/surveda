@@ -81,7 +81,7 @@ defmodule Ask.Mixfile do
       {:prometheus_phoenix, "~> 1.0"},
       {:simetric, "~> 0.1.0"},
       {:prometheus_plugs, "~> 1.1"},
-      {:alto_guisso, github: "instedd/alto_guisso_ex", branch: "chore/upgrade-coherence"},
+      {:alto_guisso, github: "instedd/alto_guisso_ex"},
       {:pp, "~> 0.1.0", only: [:dev, :test]},
       {:bypass, "~> 2.0", only: :test},
       {:trailing_format_plug, "~> 0.0.7"},
