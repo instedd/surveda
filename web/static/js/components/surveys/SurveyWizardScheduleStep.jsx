@@ -1,14 +1,14 @@
-import * as actions from '../../actions/survey'
-import * as uiActions from '../../actions/ui'
-import { connect } from 'react-redux'
-import React, { PropTypes, Component } from 'react'
-import { TimeDropdown, DatePicker, dayLabel } from '../ui'
-import SurveyWizardRetryAttempts from './SurveyWizardRetryAttempts'
-import { translate } from 'react-i18next'
-import TimezoneAutocomplete from '../timezones/TimezoneAutocomplete'
-import dateformat from 'dateformat'
-import { isEqual } from 'lodash'
-import SingleDatePicker from '../ui/SingleDatePicker'
+import * as actions from "../../actions/survey"
+import * as uiActions from "../../actions/ui"
+import { connect } from "react-redux"
+import React, { PropTypes, Component } from "react"
+import { TimeDropdown, DatePicker, dayLabel } from "../ui"
+import SurveyWizardRetryAttempts from "./SurveyWizardRetryAttempts"
+import { translate } from "react-i18next"
+import TimezoneAutocomplete from "../timezones/TimezoneAutocomplete"
+import dateformat from "dateformat"
+import { isEqual } from "lodash"
+import SingleDatePicker from "../ui/SingleDatePicker"
 
 class SurveyWizardScheduleStep extends Component {
   static propTypes = {
@@ -16,7 +16,7 @@ class SurveyWizardScheduleStep extends Component {
     survey: PropTypes.object.isRequired,
     dispatch: PropTypes.func.isRequired,
     readOnly: PropTypes.bool.isRequired,
-    ui: PropTypes.object.isRequired
+    ui: PropTypes.object.isRequired,
   }
 
   constructor(props) {
@@ -31,13 +31,18 @@ class SurveyWizardScheduleStep extends Component {
 
   updateFrom(event) {
     const { dispatch } = this.props
-    const next = event.target.options[event.target.selectedIndex + 1] ? event.target.options[event.target.selectedIndex + 1].value : '23:59:59'
+    const next = event.target.options[event.target.selectedIndex + 1]
+      ? event.target.options[event.target.selectedIndex + 1].value
+      : "23:59:59"
     dispatch(actions.setScheduleFrom(event.target.value, next))
   }
 
   updateTo(event) {
     const { dispatch } = this.props
-    const previous = event.target.selectedIndex != 0 ? event.target.options[event.target.selectedIndex - 1].value : '00:00:00'
+    const previous =
+      event.target.selectedIndex != 0
+        ? event.target.options[event.target.selectedIndex - 1].value
+        : "00:00:00"
     dispatch(actions.setScheduleTo(event.target.value, previous))
   }
 
@@ -68,110 +73,152 @@ class SurveyWizardScheduleStep extends Component {
   }
 
   dateFromString(date: string) {
-    const splitted = date.split('-')
+    const splitted = date.split("-")
     return new Date(parseInt(splitted[0]), parseInt(splitted[1]) - 1, parseInt(splitted[2]))
   }
 
   formatDate(date: string) {
-    return dateformat(this.dateFromString(date), 'mmm dd, yyyy')
+    return dateformat(this.dateFromString(date), "mmm dd, yyyy")
   }
 
   render() {
     const { survey, readOnly, ui, t, dispatch } = this.props
-    const days = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat']
+    const days = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"]
 
     // Survey might be loaded without details
-    let defaultFrom = (survey && survey.schedule && survey.schedule.startTime) ? survey.schedule.startTime : '09:00:00'
-    let defaultTo = (survey && survey.schedule && survey.schedule.endTime) ? survey.schedule.endTime : '18:00:00'
+    let defaultFrom =
+      survey && survey.schedule && survey.schedule.startTime
+        ? survey.schedule.startTime
+        : "09:00:00"
+    let defaultTo =
+      survey && survey.schedule && survey.schedule.endTime ? survey.schedule.endTime : "18:00:00"
 
     if (!survey || !survey.schedule || !survey.schedule.dayOfWeek) {
-      return <div>{t('Loading...')}</div>
+      return <div>{t("Loading...")}</div>
     }
 
     const { startDate, endDate } = survey.schedule
 
     return (
       <div>
-        <div className='row'>
-          <div className='col s12'>
-            <h4>{t('Setup a schedule')}</h4>
-            <p className='flow-text'>
-              {t('The schedule of your survey restricts the days and hours during which respondents will be contacted. You can also specify re-contact attempts intervals.')}
+        <div className="row">
+          <div className="col s12">
+            <h4>{t("Setup a schedule")}</h4>
+            <p className="flow-text">
+              {t(
+                "The schedule of your survey restricts the days and hours during which respondents will be contacted. You can also specify re-contact attempts intervals."
+              )}
             </p>
           </div>
         </div>
-        <div className='row'>
+        <div className="row">
           {days.map((day) => (
-            <div className='col' key={day}>
-              <button type='button'
-                className={`btn-floating btn-flat btn-large waves-effect waves-light ${survey.schedule.dayOfWeek[day] ? 'green white-text' : 'grey lighten-3 grey-text text-darken-1'}`}
-                onClick={() => readOnly ? null : this.toggleDay(day)}>
+            <div className="col" key={day}>
+              <button
+                type="button"
+                className={`btn-floating btn-flat btn-large waves-effect waves-light ${
+                  survey.schedule.dayOfWeek[day]
+                    ? "green white-text"
+                    : "grey lighten-3 grey-text text-darken-1"
+                }`}
+                onClick={() => (readOnly ? null : this.toggleDay(day))}
+              >
                 {dayLabel(day)}
               </button>
             </div>
           ))}
         </div>
-        <div className='row'>
-          <TimeDropdown label={t('From')} defaultValue={defaultFrom} onChange={this.updateFrom} readOnly={readOnly} min={null} extraOption={{ at: 0, item: { label: '12:00 AM', value: '00:00:00' } }} />
-          <TimeDropdown label={t('To')} defaultValue={defaultTo} onChange={this.updateTo} readOnly={readOnly} min={defaultFrom} extraOption={{ at: 23, item: { label: '12:00 AM', value: '23:59:59' } }} />
+        <div className="row">
+          <TimeDropdown
+            label={t("From")}
+            defaultValue={defaultFrom}
+            onChange={this.updateFrom}
+            readOnly={readOnly}
+            min={null}
+            extraOption={{
+              at: 0,
+              item: { label: "12:00 AM", value: "00:00:00" },
+            }}
+          />
+          <TimeDropdown
+            label={t("To")}
+            defaultValue={defaultTo}
+            onChange={this.updateTo}
+            readOnly={readOnly}
+            min={defaultFrom}
+            extraOption={{
+              at: 23,
+              item: { label: "12:00 AM", value: "23:59:59" },
+            }}
+          />
         </div>
-        <div className='row mb0'>
-          <div className='col s6'>
-            <label className='grey-text'>{this.props.t('Start date')}</label>
+        <div className="row mb0">
+          <div className="col s6">
+            <label className="grey-text">{this.props.t("Start date")}</label>
             <input
-              type='text'
-              value={(startDate && this.formatDate(startDate)) || ''}
+              type="text"
+              value={(startDate && this.formatDate(startDate)) || ""}
               disabled={readOnly}
             />
-            <SingleDatePicker readOnly={readOnly} selected={startDate} onSelect={date => {
-              const formattedDate = dateformat(date, 'yyyy-mm-dd')
-              const selectedDate = isEqual(formattedDate, startDate)
-              ? null
-              : formattedDate
-              dispatch(actions.selectScheduleStartDate(selectedDate))
-            }} />
+            <SingleDatePicker
+              readOnly={readOnly}
+              selected={startDate}
+              onSelect={(date) => {
+                const formattedDate = dateformat(date, "yyyy-mm-dd")
+                const selectedDate = isEqual(formattedDate, startDate) ? null : formattedDate
+                dispatch(actions.selectScheduleStartDate(selectedDate))
+              }}
+            />
           </div>
-          <div className='col s6'>
-            <label className='grey-text'>{this.props.t('End date')}</label>
+          <div className="col s6">
+            <label className="grey-text">{this.props.t("End date")}</label>
             <input
-              type='text'
-              value={(endDate && this.formatDate(endDate)) || ''}
+              type="text"
+              value={(endDate && this.formatDate(endDate)) || ""}
               disabled={readOnly}
             />
-            <SingleDatePicker readOnly={readOnly} selected={endDate} onSelect={date => {
-              const formattedDate = dateformat(date, 'yyyy-mm-dd')
-              const selectedDate = isEqual(formattedDate, endDate)
-              ? null
-              : formattedDate
-              dispatch(actions.selectScheduleEndDate(selectedDate))
-            }} />
+            <SingleDatePicker
+              readOnly={readOnly}
+              selected={endDate}
+              onSelect={(date) => {
+                const formattedDate = dateformat(date, "yyyy-mm-dd")
+                const selectedDate = isEqual(formattedDate, endDate) ? null : formattedDate
+                dispatch(actions.selectScheduleEndDate(selectedDate))
+              }}
+            />
           </div>
         </div>
-        <div className='row'>
-          <div className='col s12'>
-            <div className='input-field'>
+        <div className="row">
+          <div className="col s12">
+            <div className="input-field">
               <input
-                id='block-dates'
-                type='checkbox'
+                id="block-dates"
+                type="checkbox"
                 checked={ui.allowBlockedDays}
                 disabled={readOnly}
-                className='filled-in'
+                className="filled-in"
                 onChange={this.toggleBlockedDays}
               />
-              <label htmlFor='block-dates'>{t('Block dates')}</label>
+              <label htmlFor="block-dates">{t("Block dates")}</label>
             </div>
           </div>
         </div>
-        { ui.allowBlockedDays
-          ? <div className='row'>
-            <div className='col s12'>
-              <DatePicker removeDate={this.removeBlockedDay} addDate={this.addBlockedDay} dates={survey.schedule.blockedDays} readOnly={readOnly} />
+        {ui.allowBlockedDays ? (
+          <div className="row">
+            <div className="col s12">
+              <DatePicker
+                removeDate={this.removeBlockedDay}
+                addDate={this.addBlockedDay}
+                dates={survey.schedule.blockedDays}
+                readOnly={readOnly}
+              />
             </div>
           </div>
-          : ''
-        }
-        <div className='row'>
-          <div className='col s12 m6'>
+        ) : (
+          ""
+        )}
+        <div className="row">
+          <div className="col s12 m6">
             <TimezoneAutocomplete selectedTz={survey.schedule.timezone} readOnly={readOnly} />
           </div>
         </div>
@@ -183,7 +230,7 @@ class SurveyWizardScheduleStep extends Component {
 
 const mapStateToProps = (state, ownProps) => ({
   timezones: state.timezones,
-  ui: state.ui.data.surveyWizard
+  ui: state.ui.data.surveyWizard,
 })
 
 export default translate()(connect(mapStateToProps)(SurveyWizardScheduleStep))

@@ -1,23 +1,23 @@
-import React, {PropTypes} from 'react'
-import { Autocomplete } from '../ui'
-import CharacterCounter from '../CharacterCounter'
+import React, { PropTypes } from "react"
+import { Autocomplete } from "../ui"
+import CharacterCounter from "../CharacterCounter"
 
 import {
- Editor,
- ContentState,
- convertFromHTML,
- EditorState,
- RichUtils,
- getDefaultKeyBinding
-} from 'draft-js'
+  Editor,
+  ContentState,
+  convertFromHTML,
+  EditorState,
+  RichUtils,
+  getDefaultKeyBinding,
+} from "draft-js"
 
-import InlineStyleControls from './InlineStyleControls'
-import {stateToHTML} from 'draft-js-export-html'
+import InlineStyleControls from "./InlineStyleControls"
+import { stateToHTML } from "draft-js-export-html"
 
 class Draft extends React.Component {
   static defaultProps = {
     // plainText defaults to false for backward compatibility
-    plainText: false
+    plainText: false,
   }
 
   constructor(props) {
@@ -30,7 +30,7 @@ class Draft extends React.Component {
 
     this.keyBindingFn = (e) => {
       if (e.keyCode === 13 /* `Enter` key */ && e.nativeEvent.shiftKey) {
-        return 'split'
+        return "split"
       }
       return getDefaultKeyBinding(e)
     }
@@ -47,7 +47,7 @@ class Draft extends React.Component {
     }
 
     this.onChange = (editorState) => {
-      this.setState({editorState})
+      this.setState({ editorState })
       this.redraw()
 
       if (this.refs.hidden_input) {
@@ -61,7 +61,7 @@ class Draft extends React.Component {
         if (oldPlainText != plainText) {
           this.autocompleteTimer = setTimeout(() => {
             this.refs.hidden_input.value = plainText
-            $(this.refs.hidden_input).trigger('input')
+            $(this.refs.hidden_input).trigger("input")
           }, 300)
         }
       }
@@ -87,19 +87,21 @@ class Draft extends React.Component {
     this.getText = () => {
       const plainText = this.getPlainText()
       if (plainText.trim().length == 0) {
-        return ''
+        return ""
       } else {
         if (props.plainText) {
           return plainText
         } else {
-          return stateToHTML(this.state.editorState.getCurrentContent(), {inlineStyles: {UNDERLINE: {element: 'u'}}})
+          return stateToHTML(this.state.editorState.getCurrentContent(), {
+            inlineStyles: { UNDERLINE: { element: "u" } },
+          })
         }
       }
     }
 
     this.getPlainText = (editorState = this.state.editorState) => {
       const content = editorState.getCurrentContent()
-      return content.getPlainText('\n')
+      return content.getPlainText("\n")
     }
 
     this.handleKeyCommand = (command) => this._handleKeyCommand(command)
@@ -108,9 +110,9 @@ class Draft extends React.Component {
   }
 
   _handleKeyCommand(command) {
-    const {editorState} = this.state
+    const { editorState } = this.state
 
-    if (command == 'split') {
+    if (command == "split") {
       if (this.props.onSplit) {
         // The editor content is made of a list of content blocks,
         // and the selection info gives as the caret position at
@@ -152,12 +154,7 @@ class Draft extends React.Component {
   }
 
   _toggleInlineStyle(inlineStyle) {
-    this.onChange(
-      RichUtils.toggleInlineStyle(
-        this.state.editorState,
-        inlineStyle
-      )
-    )
+    this.onChange(RichUtils.toggleInlineStyle(this.state.editorState, inlineStyle))
   }
 
   componentDidMount() {
@@ -166,15 +163,15 @@ class Draft extends React.Component {
 
   redraw() {
     if (this.state.editorState.getCurrentContent().hasText()) {
-      $(this.refs.label).addClass('text')
+      $(this.refs.label).addClass("text")
     } else {
-      $(this.refs.label).removeClass('text')
+      $(this.refs.label).removeClass("text")
     }
 
     if (this.hasFocus) {
-      $(this.refs.label).addClass('focus')
+      $(this.refs.label).addClass("focus")
     } else {
-      $(this.refs.label).removeClass('focus')
+      $(this.refs.label).removeClass("focus")
     }
   }
 
@@ -193,7 +190,7 @@ class Draft extends React.Component {
     // Because we use `convertFromHTML`, in the case of a plain text
     // we need to replace `\n` with `<br/>` so that newlines are preserved
     if (props.plainText) {
-      value = value.replace(/\n/g, '<br/>')
+      value = value.replace(/\n/g, "<br/>")
     }
 
     const blocksFromHTML = convertFromHTML(value)
@@ -201,7 +198,7 @@ class Draft extends React.Component {
       blocksFromHTML.contentBlocks,
       blocksFromHTML.entityMap
     )
-    return {editorState: EditorState.createWithContent(state)}
+    return { editorState: EditorState.createWithContent(state) }
   }
 
   render() {
@@ -210,71 +207,76 @@ class Draft extends React.Component {
 
     // If the user changes block type before entering any text, we can
     // either style the placeholder or hide it. Let's just hide it now.
-    let className = 'RichEditor-editor'
+    let className = "RichEditor-editor"
     let contentState = editorState.getCurrentContent()
     if (!contentState.hasText()) {
-      if (contentState.getBlockMap().first().getType() !== 'unstyled') {
-        className += ' RichEditor-hidePlaceholder'
+      if (contentState.getBlockMap().first().getType() !== "unstyled") {
+        className += " RichEditor-hidePlaceholder"
       }
     }
 
     let errorComponent = null
     if (errors && errors.length > 0) {
-      const errorMessage = errors.join(', ')
-      errorComponent = <div className='error'>{errorMessage}</div>
+      const errorMessage = errors.join(", ")
+      errorComponent = <div className="error">{errorMessage}</div>
       className = `${className} invalid`
     }
 
     let textBelowComponent = null
     if (textBelow) {
-      textBelowComponent =
+      textBelowComponent = (
         <div>
-          <span className='draft-small-text-below'>
-            {textBelow}
-          </span>
+          <span className="draft-small-text-below">{textBelow}</span>
         </div>
+      )
     }
 
     let autocompleteComponents = null
     if (this.props.autocomplete) {
       autocompleteComponents = [
-        <input key='one' ref='hidden_input' type='hidden' />,
+        <input key="one" ref="hidden_input" type="hidden" />,
         <Autocomplete
-          key='two'
-          ref='autocomplete'
+          key="two"
+          ref="autocomplete"
           getInput={() => this.refs.hidden_input}
           getData={(value, callback) => this.props.autocompleteGetData(value, callback)}
           onSelect={(item) => this.props.autocompleteOnSelect(item)}
-          className='language-dropdown'
+          className="language-dropdown"
           plainText={plainText}
-        />
+        />,
       ]
     }
 
     let styleControls = null
     if (!this.props.plainText) {
       styleControls = (
-        <InlineStyleControls
-          editorState={editorState}
-          onToggle={this.toggleInlineStyle}
-        />
+        <InlineStyleControls editorState={editorState} onToggle={this.toggleInlineStyle} />
       )
     }
 
     let characterCounter = null
     if (this.props.characterCounter) {
-      characterCounter = <CharacterCounter ref='characterCounter' text={this.getPlainText(editorState)} fixedLength={this.props.characterCounterFixedLength} />
+      characterCounter = (
+        <CharacterCounter
+          ref="characterCounter"
+          text={this.getPlainText(editorState)}
+          fixedLength={this.props.characterCounterFixedLength}
+        />
+      )
     }
 
     return (
-      <div className='RichEditor-root'
+      <div
+        className="RichEditor-root"
         draggable
-        onDragStart={e => { e.stopPropagation(); e.preventDefault(); return false }}
-        >
+        onDragStart={(e) => {
+          e.stopPropagation()
+          e.preventDefault()
+          return false
+        }}
+      >
         <div className={className} onClick={this.focus}>
-          <label ref='label'>
-            {label}
-          </label>
+          <label ref="label">{label}</label>
           <Editor
             editorState={editorState}
             handleKeyCommand={this.handleKeyCommand}
@@ -284,7 +286,7 @@ class Draft extends React.Component {
             onBlur={this.onBlur}
             onTab={this.onTab}
             readOnly={readOnly}
-            ref='editor'
+            ref="editor"
             spellCheck={false}
           />
         </div>
@@ -311,7 +313,7 @@ Draft.propTypes = {
   readOnly: PropTypes.bool,
   plainText: PropTypes.bool,
   characterCounter: PropTypes.bool,
-  characterCounterFixedLength: PropTypes.number
+  characterCounterFixedLength: PropTypes.number,
 }
 
 export default Draft

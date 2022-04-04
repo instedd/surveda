@@ -1,17 +1,19 @@
 // @flow
-import * as actions from '../actions/step'
+import * as actions from "../actions/step"
 
 const initialState = {
   current: null,
   progress: 0.0,
   errorMessage: null,
-  title: ''
+  title: "",
 }
 
 export default (state: any = initialState, action: any) => {
   switch (action.type) {
-    case actions.RECEIVE: return receiveStep(state, action)
-    default: return state
+    case actions.RECEIVE:
+      return receiveStep(state, action)
+    default:
+      return state
   }
 }
 
@@ -27,6 +29,6 @@ const receiveStep = (state, action) => {
     current: action.step,
     progress: action.progress,
     errorMessage: action.errorMessage,
-    title: action.title
+    title: action.title,
   }
 }

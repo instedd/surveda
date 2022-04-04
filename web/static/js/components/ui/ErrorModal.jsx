@@ -1,8 +1,8 @@
-import React, { Component, PropTypes } from 'react'
-import { Modal } from '.'
-import { render } from 'react-dom'
-import { translate, I18nextProvider } from 'react-i18next'
-import i18n from '../../i18next'
+import React, { Component, PropTypes } from "react"
+import { Modal } from "."
+import { render } from "react-dom"
+import { translate, I18nextProvider } from "react-i18next"
+import i18n from "../../i18next"
 
 class ErrorModalComponent extends Component {
   componentDidMount() {
@@ -13,26 +13,26 @@ class ErrorModalComponent extends Component {
     const { error, errorId, t } = this.props
 
     return (
-      <Modal card ref='modal' id='error-modal'>
-        <div className='modal-content'>
-          <div className='card-title header'>
-            <h5>{t('Error details')}</h5>
-            <p>{t('Please contact support for further assistance')}</p>
+      <Modal card ref="modal" id="error-modal">
+        <div className="modal-content">
+          <div className="card-title header">
+            <h5>{t("Error details")}</h5>
+            <p>{t("Please contact support for further assistance")}</p>
           </div>
-          <div className='card-content'>
+          <div className="card-content">
             <b>{error.message}</b>
 
-            <h6>{t('Error ID:')}</h6>
+            <h6>{t("Error ID:")}</h6>
             {errorId}
 
-            <h6>{t('Call stack')}</h6>
-            <pre>
-              {error.stack}
-            </pre>
+            <h6>{t("Call stack")}</h6>
+            <pre>{error.stack}</pre>
           </div>
         </div>
-        <div className='card-action'>
-          <a href='#!' className=' modal-action modal-close btn-flat grey-text'>{t('Close')}</a>
+        <div className="card-action">
+          <a href="#!" className=" modal-action modal-close btn-flat grey-text">
+            {t("Close")}
+          </a>
         </div>
       </Modal>
     )
@@ -42,13 +42,13 @@ class ErrorModalComponent extends Component {
 ErrorModalComponent.propTypes = {
   t: PropTypes.func,
   error: PropTypes.object,
-  errorId: PropTypes.string
+  errorId: PropTypes.string,
 }
 
 export const ErrorModal = translate()(ErrorModalComponent)
 
 export const showError = (errorId, error) => {
-  const detailsContainer = document.createElement('div')
+  const detailsContainer = document.createElement("div")
   document.body.append(detailsContainer)
 
   const detailsModal = (

@@ -1,8 +1,8 @@
-import React, { Component, PropTypes } from 'react'
-import { translate, Trans } from 'react-i18next'
-import { connect } from 'react-redux'
-import { Input } from 'react-materialize'
-import { fetchFolders } from 'actions/folders'
+import React, { Component, PropTypes } from "react"
+import { translate, Trans } from "react-i18next"
+import { connect } from "react-redux"
+import { Input } from "react-materialize"
+import { fetchFolders } from "actions/folders"
 
 class MoveSurveyForm extends Component<any> {
   static propTypes = {
@@ -15,14 +15,14 @@ class MoveSurveyForm extends Component<any> {
     onChangeFolderId: PropTypes.func,
     loading: PropTypes.bool,
     errors: PropTypes.object,
-    folders: PropTypes.array
+    folders: PropTypes.array,
   }
 
   constructor(props) {
     super(props)
 
     this.state = {
-      folderId: props.defaultFolderId || ''
+      folderId: props.defaultFolderId || "",
     }
   }
 
@@ -43,19 +43,17 @@ class MoveSurveyForm extends Component<any> {
     const { folderId } = this.state
 
     if (loading) {
-      return <div>{t('Loading...')}</div>
+      return <div>{t("Loading...")}</div>
     }
 
     return (
       <form>
         <p>
-          <Trans>
-            Please select the name of the folder you want to move to
-          </Trans>
+          <Trans>Please select the name of the folder you want to move to</Trans>
         </p>
 
-        <Input type='select' value={folderId} onChange={e => this.onChangeFolderId(e)}>
-          {[{name: t('No folder'), id: ''}, ...folders].map(({name, id}) => {
+        <Input type="select" value={folderId} onChange={(e) => this.onChangeFolderId(e)}>
+          {[{ name: t("No folder"), id: "" }, ...folders].map(({ name, id }) => {
             return (
               <option key={`folder-${id}-${name}`} value={id}>
                 {name}
@@ -70,7 +68,7 @@ class MoveSurveyForm extends Component<any> {
 
 MoveSurveyForm.defaultProps = {
   onCreate: () => {},
-  onChangeFolderId: () => {}
+  onChangeFolderId: () => {},
 }
 
 const mapStateToProps = (state, ownProps) => {
@@ -87,7 +85,7 @@ const mapStateToProps = (state, ownProps) => {
     ...ownProps,
     loading: loading,
     errors: state.folders.errors || {},
-    folders: folders
+    folders: folders,
   }
 }
 

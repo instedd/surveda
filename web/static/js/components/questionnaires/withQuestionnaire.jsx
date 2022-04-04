@@ -1,5 +1,5 @@
-import React from 'react'
-import { connect } from 'react-redux'
+import React from "react"
+import { connect } from "react-redux"
 
 const withQuestionnaire = (ComponentClass) => (props: any) => {
   if (props.questionnaire) {
@@ -10,7 +10,7 @@ const withQuestionnaire = (ComponentClass) => (props: any) => {
 }
 
 const mapStateToProps = (state, ownProps) => ({
-  questionnaire: state.questionnaire.data
+  questionnaire: state.questionnaire.data,
 })
 
 export default (ComponentClass) => connect(mapStateToProps)(withQuestionnaire(ComponentClass))

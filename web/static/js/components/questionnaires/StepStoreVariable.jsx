@@ -1,13 +1,13 @@
 // @flow
-import React, { Component } from 'react'
-import { bindActionCreators } from 'redux'
-import { connect } from 'react-redux'
-import { Autocomplete } from '../ui'
-import * as questionnaireActions from '../../actions/questionnaire'
-import * as api from '../../api.js'
-import propsAreEqual from '../../propsAreEqual'
-import map from 'lodash/map'
-import { translate } from 'react-i18next'
+import React, { Component } from "react"
+import { bindActionCreators } from "redux"
+import { connect } from "react-redux"
+import { Autocomplete } from "../ui"
+import * as questionnaireActions from "../../actions/questionnaire"
+import * as api from "../../api.js"
+import propsAreEqual from "../../propsAreEqual"
+import map from "lodash/map"
+import { translate } from "react-i18next"
 
 type Props = {
   t: Function,
@@ -16,12 +16,12 @@ type Props = {
   errorPath: string,
   errorsByPath: ErrorsByPath,
   project: any,
-  readOnly: boolean
-};
+  readOnly: boolean,
+}
 
 type State = {
-  stepStore: string
-};
+  stepStore: string,
+}
 
 class StepStoreVariable extends Component<Props, State> {
   constructor(props) {
@@ -32,7 +32,7 @@ class StepStoreVariable extends Component<Props, State> {
   stepStoreChange(e, value) {
     if (this.refs.autocomplete.clickingAutocomplete) return
     if (e) e.preventDefault()
-    this.setState({stepStore: value})
+    this.setState({ stepStore: value })
   }
 
   stepStoreSubmit(e, value) {
@@ -54,16 +54,18 @@ class StepStoreVariable extends Component<Props, State> {
     const { step } = props
 
     return {
-      stepStore: step.store || ''
+      stepStore: step.store || "",
     }
   }
 
   autocompleteGetData(value, callback) {
     const { project } = this.props
 
-    api.autocompleteVars(project.id, value)
-    .then(response => {
-      callback(value, response.map(x => ({id: x, text: x})))
+    api.autocompleteVars(project.id, value).then((response) => {
+      callback(
+        value,
+        response.map((x) => ({ id: x, text: x }))
+      )
     })
   }
 
@@ -77,51 +79,56 @@ class StepStoreVariable extends Component<Props, State> {
     let errors = errorsByPath[`${errorPath}.store`]
 
     let dataError = null
-    let className = 'autocomplete'
+    let className = "autocomplete"
     if (errors && errors.length > 0) {
-      className += ' validate invalid'
-      dataError = map(errors, (error) => t(...error)).join(', ')
+      className += " validate invalid"
+      dataError = map(errors, (error) => t(...error)).join(", ")
     }
 
-    return (<li className='collection-item' key='variable_name'>
-      <div className='row'>
-        <div className='col s12'>
-          {t('Variable name:')}
-          <div className='input-field inline min-width'>
-            <input
-              type='text'
-              disabled={this.props.readOnly}
-              value={this.state.stepStore}
-              onChange={e => this.stepStoreChange(e, e.target.value)}
-              onBlur={e => this.stepStoreSubmit(e, e.target.value)}
-              autoComplete='off'
-              className={className}
-              draggable
-              onDragStart={e => { e.stopPropagation(); e.preventDefault(); return false }}
-              ref='varInput'
-            />
-            <label data-error={dataError} />
-            <Autocomplete
-              getInput={() => this.refs.varInput}
-              getData={(value, callback) => this.autocompleteGetData(value, callback)}
-              onSelect={(item) => this.autocmpleteOnSelect(item)}
-              ref='autocomplete'
-              className='var-dropdown'
+    return (
+      <li className="collection-item" key="variable_name">
+        <div className="row">
+          <div className="col s12">
+            {t("Variable name:")}
+            <div className="input-field inline min-width">
+              <input
+                type="text"
+                disabled={this.props.readOnly}
+                value={this.state.stepStore}
+                onChange={(e) => this.stepStoreChange(e, e.target.value)}
+                onBlur={(e) => this.stepStoreSubmit(e, e.target.value)}
+                autoComplete="off"
+                className={className}
+                draggable
+                onDragStart={(e) => {
+                  e.stopPropagation()
+                  e.preventDefault()
+                  return false
+                }}
+                ref="varInput"
               />
+              <label data-error={dataError} />
+              <Autocomplete
+                getInput={() => this.refs.varInput}
+                getData={(value, callback) => this.autocompleteGetData(value, callback)}
+                onSelect={(item) => this.autocmpleteOnSelect(item)}
+                ref="autocomplete"
+                className="var-dropdown"
+              />
+            </div>
           </div>
         </div>
-      </div>
-    </li>
+      </li>
     )
   }
 }
 
 const mapStateToProps = (state, ownProps) => ({
-  project: state.project.data
+  project: state.project.data,
 })
 
 const mapDispatchToProps = (dispatch) => ({
-  questionnaireActions: bindActionCreators(questionnaireActions, dispatch)
+  questionnaireActions: bindActionCreators(questionnaireActions, dispatch),
 })
 
 export default translate()(connect(mapStateToProps, mapDispatchToProps)(StepStoreVariable))

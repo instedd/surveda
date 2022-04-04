@@ -9,8 +9,8 @@ export type Store = {
   projects: ProjectList,
   integrations: IndexedList<Integration>,
   panelSurvey: PanelSurvey,
-  panelSurveys: PanelSurveyList
-};
+  panelSurveys: PanelSurveyList,
+}
 
 export type DataStore<T> = {
   filter?: ?Filter,
@@ -20,50 +20,54 @@ export type DataStore<T> = {
   data: ?T,
   errors: ValidationError[],
   errorsByPath: ErrorsByPath,
-  errorsByLang: ErrorsByLang
-};
+  errorsByLang: ErrorsByLang,
+}
 
-export type ErrorsByPath = {[path: string]: string[]};
-export type ErrorsByLang = {[lang: string]: boolean};
+export type ErrorsByPath = { [path: string]: string[] }
+export type ErrorsByLang = { [lang: string]: boolean }
 
-export type StoreReducer<T> = (state: ?DataStore<T>, action: any) => DataStore<T>;
-export type Reducer<T> = (state: T, action: any) => T;
+export type StoreReducer<T> = (state: ?DataStore<T>, action: any) => DataStore<T>
+export type Reducer<T> = (state: T, action: any) => T
 
 export type ValidationError = {
   path: string,
   mode: ?string,
   lang: ?string,
-  message: string
+  message: string,
 }
 
 export type Filter = {
   id?: ?number,
   projectId?: number,
-  archived?: ?boolean
-};
+  archived?: ?boolean,
+}
 
 export type Action = {
-  type: string
-};
+  type: string,
+}
 
-export type DirtyPredicate<T> = (action: Action, oldData: ?DataStore<T>, newData: ?DataStore<T>) => boolean;
+export type DirtyPredicate<T> = (
+  action: Action,
+  oldData: ?DataStore<T>,
+  newData: ?DataStore<T>
+) => boolean
 
-export type FilteredAction = Action & Filter;
+export type FilteredAction = Action & Filter
 
 export type ReceiveDataAction = Action & {
-  data: any
-};
+  data: any,
+}
 
 export type ReceiveItemsAction = Action & {
-  items: IndexedList<any>
+  items: IndexedList<any>,
 }
 
 export type ReceiveFilteredItemsAction = FilteredAction & {
-  items: IndexedList<any>
+  items: IndexedList<any>,
 }
 
 export type IndexedList<T> = {
-  [entityId: number | string]: T
+  [entityId: number | string]: T,
 }
 
 export type ListStore<T> = {
@@ -76,31 +80,31 @@ export type ListStore<T> = {
   page: {
     index: number,
     size: number,
-  }
-};
+  },
+}
 
 export type ListFilter = {
   projectId: ?number,
 }
 
 export type ArchiveFilter = {
-  archived: ?boolean
-};
+  archived: ?boolean,
+}
 
 export type SurveyList = ListStore<Survey> & {
   filter: ?ListFilter,
-};
+}
 
 export type PanelSurveyList = ListStore<PanelSurvey> & {
   filter: ?ListFilter,
-};
+}
 
 export type QuestionnaireList = ListStore<Questionnaire> & {
   filter: ?ListFilter,
-};
+}
 
-export type ChannelList = ListStore<Channel>;
+export type ChannelList = ListStore<Channel>
 
 export type ProjectList = ListStore<Project> & {
   filter: ?ArchiveFilter,
-};
+}

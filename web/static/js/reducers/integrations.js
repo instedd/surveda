@@ -1,19 +1,24 @@
-import * as actions from '../actions/integrations'
+import * as actions from "../actions/integrations"
 
 const initialState = {
   fetching: false,
   items: null,
   order: [],
-  surveyId: null
+  surveyId: null,
 }
 
 export default (state = initialState, action) => {
   switch (action.type) {
-    case actions.FETCH: return fetchIntegrations(state, action)
-    case actions.CREATE: return createOrUpdateIntegration(state, action)
-    case actions.UPDATE: return createOrUpdateIntegration(state, action)
-    case actions.RECEIVE: return receiveIntegrations(state, action)
-    default: return state
+    case actions.FETCH:
+      return fetchIntegrations(state, action)
+    case actions.CREATE:
+      return createOrUpdateIntegration(state, action)
+    case actions.UPDATE:
+      return createOrUpdateIntegration(state, action)
+    case actions.RECEIVE:
+      return receiveIntegrations(state, action)
+    default:
+      return state
   }
 }
 
@@ -25,15 +30,15 @@ const fetchIntegrations = (state, action) => {
     ...state,
     items,
     fetching: true,
-    surveyId: action.surveyId
+    surveyId: action.surveyId,
   }
 }
 
 const createOrUpdateIntegration = (state, action) => ({
   ...state,
   [action.id]: {
-    ...action.integration
-  }
+    ...action.integration,
+  },
 })
 
 const receiveIntegrations = (state, action) => {
@@ -44,6 +49,6 @@ const receiveIntegrations = (state, action) => {
   return {
     ...state,
     fetching: false,
-    items: action.items
+    items: action.items,
   }
 }

@@ -1,10 +1,10 @@
-import React, { Component, PropTypes } from 'react'
-import { bindActionCreators } from 'redux'
-import { connect } from 'react-redux'
-import * as questionnaireActions from '../../actions/questionnaire'
-import Draft from './Draft'
-import map from 'lodash/map'
-import { translate } from 'react-i18next'
+import React, { Component, PropTypes } from "react"
+import { bindActionCreators } from "redux"
+import { connect } from "react-redux"
+import * as questionnaireActions from "../../actions/questionnaire"
+import Draft from "./Draft"
+import map from "lodash/map"
+import { translate } from "react-i18next"
 
 class MobileWebPrompt extends Component {
   state: State
@@ -17,20 +17,20 @@ class MobileWebPrompt extends Component {
   render() {
     const { value, readOnly, onBlur, inputErrors, t } = this.props
     let { label } = this.props
-    if (!label) label = t('Mobile Web Message')
+    if (!label) label = t("Mobile Web Message")
 
     const shouldDisplayErrors = value == this.props.originalValue
 
     const autocompleteProps = {
       autocomplete: this.props.autocomplete,
       autocompleteGetData: this.props.autocompleteGetData,
-      autocompleteOnSelect: this.props.autocompleteOnSelect
+      autocompleteOnSelect: this.props.autocompleteOnSelect,
     }
 
     return (
       <div>
-        <div className='row'>
-          <div className='col s12 mobile-prompt'>
+        <div className="row">
+          <div className="col s12 mobile-prompt">
             <Draft
               label={label}
               onBlur={onBlur}
@@ -38,7 +38,7 @@ class MobileWebPrompt extends Component {
               value={value}
               readOnly={readOnly}
               {...autocompleteProps}
-              />
+            />
           </div>
         </div>
       </div>
@@ -57,11 +57,11 @@ MobileWebPrompt.propTypes = {
   stepId: PropTypes.string,
   autocomplete: PropTypes.bool,
   autocompleteGetData: PropTypes.func,
-  autocompleteOnSelect: PropTypes.func
+  autocompleteOnSelect: PropTypes.func,
 }
 
 const mapDispatchToProps = (dispatch) => ({
-  questionnaireActions: bindActionCreators(questionnaireActions, dispatch)
+  questionnaireActions: bindActionCreators(questionnaireActions, dispatch),
 })
 
 export default translate()(connect(null, mapDispatchToProps)(MobileWebPrompt))

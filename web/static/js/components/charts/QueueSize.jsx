@@ -1,7 +1,7 @@
-import React, { Component } from 'react'
-import { translate } from 'react-i18next'
+import React, { Component } from "react"
+import { translate } from "react-i18next"
 
-const margin = {left: 18, top: 18, right: 18, bottom: 18}
+const margin = { left: 18, top: 18, right: 18, bottom: 18 }
 
 type Props = {
   weight: number,
@@ -10,12 +10,12 @@ type Props = {
   needed: number,
   additionalCompletes: number,
   additionalRespondents: number,
-  t: Function
+  t: Function,
 }
 
 type State = {
   width: number,
-  height: number
+  height: number,
 }
 
 class QueueSize extends Component<Props, State> {
@@ -24,12 +24,12 @@ class QueueSize extends Component<Props, State> {
     this.recalculate = this.recalculate.bind(this)
     this.state = {
       width: 0,
-      height: 0
+      height: 0,
     }
   }
 
   componentDidMount() {
-    window.addEventListener('resize', this.recalculate)
+    window.addEventListener("resize", this.recalculate)
     this.recalculate()
     this.alignContent()
   }
@@ -39,7 +39,7 @@ class QueueSize extends Component<Props, State> {
   }
 
   componentWillUnmount() {
-    window.removeEventListener('resize', this.recalculate)
+    window.removeEventListener("resize", this.recalculate)
   }
 
   recalculate() {
@@ -49,14 +49,14 @@ class QueueSize extends Component<Props, State> {
     const width = Math.round(containerRect.width) - margin.left - margin.right
     const height = Math.round(width / 2)
 
-    this.setState({width, height})
+    this.setState({ width, height })
   }
 
   alignContent() {
     const height = this.state.height - margin.top - margin.bottom
     const boundingBox = this.refs.content.getBBox()
     const offset = (height - boundingBox.height + this.props.weight) / 2 - boundingBox.y
-    this.refs.content.setAttribute('transform', `translate(0,${offset})`)
+    this.refs.content.setAttribute("transform", `translate(0,${offset})`)
   }
 
   connector(x1, y1, x2, y2, turn, cornerHeight) {
@@ -72,47 +72,107 @@ class QueueSize extends Component<Props, State> {
   }
 
   render() {
-    const toKilo = num => num > 999 ? (num / 1000).toFixed(1) + 'K' : num
-    const {exhausted, available, needed, additionalCompletes, additionalRespondents, weight, t} = this.props
+    const toKilo = (num) => (num > 999 ? (num / 1000).toFixed(1) + "K" : num)
+    const { exhausted, available, needed, additionalCompletes, additionalRespondents, weight, t } =
+      this.props
     const width = Math.max(this.state.width - margin.left - margin.right, 0)
     const height = Math.max(this.state.height - margin.top - margin.bottom, 0)
     const scale = Math.min(1, width / needed, width / (exhausted + available) / 2)
     const offset = 12
     const corner = 6
     const left = {
-      x1: (exhausted - available) * scale / 2,
+      x1: ((exhausted - available) * scale) / 2,
       y1: weight,
-      x2: -needed * scale / 2,
-      y2: height - weight}
+      x2: (-needed * scale) / 2,
+      y2: height - weight,
+    }
     const right = {
-      x1: (exhausted + available) * scale / 2,
+      x1: ((exhausted + available) * scale) / 2,
       y1: weight,
-      x2: needed * scale / 2,
-      y2: height - weight
+      x2: (needed * scale) / 2,
+      y2: height - weight,
     }
 
     return (
-      <div ref='container'>
-        <svg className='queueSize' width={width + margin.left + margin.right} height={height + margin.top + margin.bottom}>
+      <div ref="container">
+        <svg
+          className="queueSize"
+          width={width + margin.left + margin.right}
+          height={height + margin.top + margin.bottom}
+        >
           <g transform={`translate(${margin.top}, ${margin.left})`}>
             <g transform={`translate(${width / 2},0)`}>
-              <g transform={`translate(${-(available + exhausted) * scale / 2},0)`}>
-                <rect width={exhausted * scale} height={weight} className='queueProgress' />
-                <rect width={available * scale} height={weight} x={exhausted * scale} className='background' />
-                <text x={-offset} y={weight / 2} className='queueProgress label end'>{t('{{exhausted}} exhausted', {exhausted: toKilo(exhausted)})}</text>
-                <text x={(available + exhausted) * scale + offset} y={weight / 2} className='background label start'>{t('{{available}} available', {available: toKilo(available)})}</text>
+              <g transform={`translate(${(-(available + exhausted) * scale) / 2},0)`}>
+                <rect width={exhausted * scale} height={weight} className="queueProgress" />
+                <rect
+                  width={available * scale}
+                  height={weight}
+                  x={exhausted * scale}
+                  className="background"
+                />
+                <text x={-offset} y={weight / 2} className="queueProgress label end">
+                  {t("{{exhausted}} exhausted", {
+                    exhausted: toKilo(exhausted),
+                  })}
+                </text>
+                <text
+                  x={(available + exhausted) * scale + offset}
+                  y={weight / 2}
+                  className="background label start"
+                >
+                  {t("{{available}} available", {
+                    available: toKilo(available),
+                  })}
+                </text>
               </g>
-              <path style={{display: needed ? 'auto' : 'none'}} className='dottedLine' d={this.connector(left.x1, left.y1, left.x2, left.y2, weight - (left.x1 > left.x2 && right.x1 > right.x2 ? corner : 0), corner)} />
-              <path style={{display: needed ? 'auto' : 'none'}} className='dottedLine' d={this.connector(right.x1, right.y1, right.x2, right.y2, weight, corner)} />
-              <g ref='content'>
-                <text className='needed'>{t('{{respondentsNeeded}} respondents needed', {respondentsNeeded: toKilo(needed)})}</text>
-                <text className='multiplier' y={18}>{t('to have {{additionalCompletes}} additional completes', {additionalCompletes: additionalCompletes ? toKilo(additionalCompletes) : 0})}</text>
-                {additionalRespondents ? <text className='missing' y={54} ><tspan className='icon'>warning</tspan>{t('Add {{additionalRespondents}} additional respondents', {additionalRespondents: toKilo(additionalRespondents)})}</text> : null}
+              <path
+                style={{ display: needed ? "auto" : "none" }}
+                className="dottedLine"
+                d={this.connector(
+                  left.x1,
+                  left.y1,
+                  left.x2,
+                  left.y2,
+                  weight - (left.x1 > left.x2 && right.x1 > right.x2 ? corner : 0),
+                  corner
+                )}
+              />
+              <path
+                style={{ display: needed ? "auto" : "none" }}
+                className="dottedLine"
+                d={this.connector(right.x1, right.y1, right.x2, right.y2, weight, corner)}
+              />
+              <g ref="content">
+                <text className="needed">
+                  {t("{{respondentsNeeded}} respondents needed", {
+                    respondentsNeeded: toKilo(needed),
+                  })}
+                </text>
+                <text className="multiplier" y={18}>
+                  {t("to have {{additionalCompletes}} additional completes", {
+                    additionalCompletes: additionalCompletes ? toKilo(additionalCompletes) : 0,
+                  })}
+                </text>
+                {additionalRespondents ? (
+                  <text className="missing" y={54}>
+                    <tspan className="icon">warning</tspan>
+                    {t("Add {{additionalRespondents}} additional respondents", {
+                      additionalRespondents: toKilo(additionalRespondents),
+                    })}
+                  </text>
+                ) : null}
               </g>
             </g>
             <g transform={`translate(0,${height - weight})`}>
               <rect width={needed * scale} height={weight} x={(width - needed * scale) / 2} />
-              {additionalRespondents ? <rect className='missing' width={additionalRespondents * scale} height={weight} x={(width - additionalRespondents * scale) - (width - needed * scale) / 2} /> : null}
+              {additionalRespondents ? (
+                <rect
+                  className="missing"
+                  width={additionalRespondents * scale}
+                  height={weight}
+                  x={width - additionalRespondents * scale - (width - needed * scale) / 2}
+                />
+              ) : null}
             </g>
           </g>
         </svg>

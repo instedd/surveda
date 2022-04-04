@@ -1,5 +1,5 @@
-import pickBy from 'lodash/pickBy'
-import isEqual from 'lodash/isEqual'
+import pickBy from "lodash/pickBy"
+import isEqual from "lodash/isEqual"
 
 /**
  * Compare two props objects to see if they are deeply equal,
@@ -17,5 +17,5 @@ export default function propsAreEqual(oldProps, newProps) {
 }
 
 function isNotAFunction(value, key) {
-  return typeof (value) != 'function'
+  return typeof value != "function"
 }

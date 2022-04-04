@@ -1,16 +1,18 @@
 // @flow
-import * as actions from '../actions/projects'
-import collectionReducer from './collection'
+import * as actions from "../actions/projects"
+import collectionReducer from "./collection"
 
 const itemsReducer = (state: IndexedList<Project>, action): IndexedList<Project> => {
   switch (action.type) {
-    case actions.REMOVE: return removeItem(state, action)
-    default: return state
+    case actions.REMOVE:
+      return removeItem(state, action)
+    default:
+      return state
   }
 }
 
 const removeItem = (state: IndexedList<Project>, action: any) => {
-  const items = {...state}
+  const items = { ...state }
   delete items[action.id]
   return items
 }
@@ -20,16 +22,16 @@ const initialState = {
   items: null,
   filter: null,
   order: null,
-  sortBy: 'updatedAt',
+  sortBy: "updatedAt",
   sortAsc: false,
   page: {
     index: 0,
-    size: 5
-  }
+    size: 5,
+  },
 }
 
 export const filterProvider = (action: FilteredAction): Filter => ({
-  archived: action.archived
+  archived: action.archived,
 })
 
 export default collectionReducer(actions, itemsReducer, filterProvider, initialState)

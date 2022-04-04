@@ -4,8 +4,8 @@ export const loadPigeonScript = (nuntiumBaseUrl) => {
   }
 
   return new Promise((resolve, reject) => {
-    const script = document.createElement('script')
-    script.src = nuntiumBaseUrl + '/assets/pigeonui.js'
+    const script = document.createElement("script")
+    script.src = nuntiumBaseUrl + "/assets/pigeonui.js"
     script.async = 1
     script.onload = () => {
       resolve()

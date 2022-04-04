@@ -1,16 +1,21 @@
 // @flow
-import React, { Component } from 'react'
-import { bindActionCreators } from 'redux'
-import { connect } from 'react-redux'
-import * as questionnaireActions from '../../actions/questionnaire'
-import SmsPrompt from './SmsPrompt'
-import IvrPrompt from './IvrPrompt'
-import MobileWebPrompt from './MobileWebPrompt'
-import { getStepPromptSms, getStepPromptIvr, getStepPromptIvrText, getStepPromptMobileWeb } from '../../step'
-import * as api from '../../api'
-import propsAreEqual from '../../propsAreEqual'
-import withQuestionnaire from './withQuestionnaire'
-import { translate } from 'react-i18next'
+import React, { Component } from "react"
+import { bindActionCreators } from "redux"
+import { connect } from "react-redux"
+import * as questionnaireActions from "../../actions/questionnaire"
+import SmsPrompt from "./SmsPrompt"
+import IvrPrompt from "./IvrPrompt"
+import MobileWebPrompt from "./MobileWebPrompt"
+import {
+  getStepPromptSms,
+  getStepPromptIvr,
+  getStepPromptIvrText,
+  getStepPromptMobileWeb,
+} from "../../step"
+import * as api from "../../api"
+import propsAreEqual from "../../propsAreEqual"
+import withQuestionnaire from "./withQuestionnaire"
+import { translate } from "react-i18next"
 
 type State = {
   stepPromptSms: string,
@@ -19,8 +24,8 @@ type State = {
   stepPromptIvrText: string,
   stepPromptIvr: AudioPrompt,
   stepPromptMobileWeb: string,
-  mobilewebOriginalValue: string
-};
+  mobilewebOriginalValue: string,
+}
 
 type Props = {
   step: Step,
@@ -33,14 +38,14 @@ type Props = {
   classes: string,
   title?: string,
   t: Function,
-  isNew: boolean
-};
+  isNew: boolean,
+}
 
 class StepPrompts extends Component<Props, State> {
   autocompleteItems: AutocompleteItem[]
 
   static defaultProps = {
-    classes: ''
+    classes: "",
   }
 
   constructor(props) {
@@ -60,13 +65,16 @@ class StepPrompts extends Component<Props, State> {
     const { step } = this.props
     this.props.questionnaireActions.changeStepPromptIvr(step.id, {
       text,
-      audioSource: this.state.stepPromptIvr.audioSource
+      audioSource: this.state.stepPromptIvr.audioSource,
     })
   }
 
   changeIvrMode(e, mode) {
     const { step } = this.props
-    this.props.questionnaireActions.changeStepPromptIvr(step.id, {text: this.state.stepPromptIvrText, audioSource: mode})
+    this.props.questionnaireActions.changeStepPromptIvr(step.id, {
+      text: this.state.stepPromptIvrText,
+      audioSource: mode,
+    })
   }
 
   componentWillReceiveProps(newProps) {
@@ -86,7 +94,7 @@ class StepPrompts extends Component<Props, State> {
       stepPromptIvr: getStepPromptIvr(step, lang),
       stepPromptIvrText: getStepPromptIvrText(step, lang),
       stepPromptMobileWeb: getStepPromptMobileWeb(step, lang),
-      mobilewebOriginalValue: getStepPromptMobileWeb(step, lang)
+      mobilewebOriginalValue: getStepPromptMobileWeb(step, lang),
     }
   }
 
@@ -97,27 +105,47 @@ class StepPrompts extends Component<Props, State> {
     const activeLanguage = questionnaire.activeLanguage
 
     if (activeLanguage == defaultLanguage) {
-      api.autocompletePrimaryLanguage(questionnaire.projectId, mode, 'prompt', defaultLanguage, value)
-      .then(response => {
-        const items = response.map(r => ({id: r.text, text: r.text, translations: r.translations}))
-        this.autocompleteItems = items
-        callback(value, items)
-      })
+      api
+        .autocompletePrimaryLanguage(
+          questionnaire.projectId,
+          mode,
+          "prompt",
+          defaultLanguage,
+          value
+        )
+        .then((response) => {
+          const items = response.map((r) => ({
+            id: r.text,
+            text: r.text,
+            translations: r.translations,
+          }))
+          this.autocompleteItems = items
+          callback(value, items)
+        })
     } else {
       let promptValue
-      if (mode == 'sms') {
+      if (mode == "sms") {
         promptValue = getStepPromptSms(step, defaultLanguage)
       } else {
         promptValue = getStepPromptIvrText(step, defaultLanguage)
       }
       if (promptValue.length == 0) return
 
-      api.autocompleteOtherLanguage(questionnaire.projectId, mode, 'prompt', defaultLanguage, activeLanguage, promptValue, value)
-      .then(response => {
-        const items = response.map(r => ({id: r, text: r}))
-        this.autocompleteItems = items
-        callback(value, items)
-      })
+      api
+        .autocompleteOtherLanguage(
+          questionnaire.projectId,
+          mode,
+          "prompt",
+          defaultLanguage,
+          activeLanguage,
+          promptValue,
+          value
+        )
+        .then((response) => {
+          const items = response.map((r) => ({ id: r, text: r }))
+          this.autocompleteItems = items
+          callback(value, items)
+        })
     }
   }
 
@@ -128,28 +156,31 @@ class StepPrompts extends Component<Props, State> {
     const activeLanguage = questionnaire.activeLanguage
 
     if (activeLanguage == defaultLanguage) {
-      let value = this.autocompleteItems.find(i => i.id == item.id)
+      let value = this.autocompleteItems.find((i) => i.id == item.id)
       switch (mode) {
-        case 'sms':
+        case "sms":
           this.props.questionnaireActions.autocompleteStepPromptSms(step.id, value)
           break
-        case 'ivr':
+        case "ivr":
           this.props.questionnaireActions.autocompleteStepPromptIvr(step.id, value)
           break
-        case 'mobileweb':
+        case "mobileweb":
           this.props.questionnaireActions.autocompleteStepPromptMobileWeb(step.id, value)
           break
       }
     } else {
       switch (mode) {
-        case 'sms':
+        case "sms":
           this.props.questionnaireActions.changeStepPromptSms(step.id, item.text)
           break
-        case 'ivr':
+        case "ivr":
           let prompt = getStepPromptIvr(step, activeLanguage)
-          this.props.questionnaireActions.changeStepPromptIvr(step.id, {...prompt, text: item.text})
+          this.props.questionnaireActions.changeStepPromptIvr(step.id, {
+            ...prompt,
+            text: item.text,
+          })
           break
-        case 'mobileweb':
+        case "mobileweb":
           this.props.questionnaireActions.changeStepPromptMobileWeb(step.id, item.text)
           break
       }
@@ -157,76 +188,92 @@ class StepPrompts extends Component<Props, State> {
   }
 
   render() {
-    const { step, questionnaire, readOnly, errorPath, errorsByPath, isNew, classes, title } = this.props
+    const { step, questionnaire, readOnly, errorPath, errorsByPath, isNew, classes, title } =
+      this.props
 
     const activeLanguage = questionnaire.activeLanguage
-    const sms = questionnaire.activeMode == 'sms'
-    const ivr = questionnaire.activeMode == 'ivr'
-    const mobileweb = questionnaire.activeMode == 'mobileweb'
-    const autocomplete = step.type != 'language-selection'
+    const sms = questionnaire.activeMode == "sms"
+    const ivr = questionnaire.activeMode == "ivr"
+    const mobileweb = questionnaire.activeMode == "mobileweb"
+    const autocomplete = step.type != "language-selection"
     let path = `${errorPath}.prompt`
 
-    if (step.type != 'language-selection') {
+    if (step.type != "language-selection") {
       path = `${path}['${activeLanguage}']`
     }
 
     let smsInput = null
     if (sms) {
       let smsInputErrors = isNew ? null : errorsByPath[`${path}.sms`]
-      smsInput = <SmsPrompt id='step_editor_sms_prompt'
-        originalValue={this.state.smsOriginalValue}
-        value={this.state.stepPromptSms}
-        inputErrors={smsInputErrors}
-        readOnly={readOnly}
-        onBlur={text => this.stepPromptSmsSubmit(text)}
-        autocomplete={autocomplete}
-        autocompleteGetData={(value, callback) => this.autocompletePromptGetData(value, callback, 'sms')}
-        autocompleteOnSelect={item => this.autocompletePromptOnSelect(item, 'sms')}
+      smsInput = (
+        <SmsPrompt
+          id="step_editor_sms_prompt"
+          originalValue={this.state.smsOriginalValue}
+          value={this.state.stepPromptSms}
+          inputErrors={smsInputErrors}
+          readOnly={readOnly}
+          onBlur={(text) => this.stepPromptSmsSubmit(text)}
+          autocomplete={autocomplete}
+          autocompleteGetData={(value, callback) =>
+            this.autocompletePromptGetData(value, callback, "sms")
+          }
+          autocompleteOnSelect={(item) => this.autocompletePromptOnSelect(item, "sms")}
         />
+      )
     }
 
     let ivrInput = null
     if (ivr) {
       let ivrInputErrors = isNew ? null : errorsByPath[`${path}.ivr.text`]
       let ivrAudioIdErrors = isNew ? null : errorsByPath[`${path}.ivr.audioId`]
-      ivrInput = <IvrPrompt
-        key={`${questionnaire.activeLanguage}-ivr-prompt`}
-        value={this.state.stepPromptIvrText}
-        originalValue={this.state.ivrOriginalValue}
-        inputErrors={ivrInputErrors}
-        audioIdErrors={ivrAudioIdErrors}
-        readOnly={readOnly}
-        onBlur={text => this.stepPromptIvrSubmit(text)}
-        autocomplete={autocomplete}
-        autocompleteGetData={(value, callback) => this.autocompletePromptGetData(value, callback, 'ivr')}
-        autocompleteOnSelect={item => this.autocompletePromptOnSelect(item, 'ivr')}
-        changeIvrMode={(e, mode) => this.changeIvrMode(e, mode)}
-        stepId={step.id} ivrPrompt={this.state.stepPromptIvr}
+      ivrInput = (
+        <IvrPrompt
+          key={`${questionnaire.activeLanguage}-ivr-prompt`}
+          value={this.state.stepPromptIvrText}
+          originalValue={this.state.ivrOriginalValue}
+          inputErrors={ivrInputErrors}
+          audioIdErrors={ivrAudioIdErrors}
+          readOnly={readOnly}
+          onBlur={(text) => this.stepPromptIvrSubmit(text)}
+          autocomplete={autocomplete}
+          autocompleteGetData={(value, callback) =>
+            this.autocompletePromptGetData(value, callback, "ivr")
+          }
+          autocompleteOnSelect={(item) => this.autocompletePromptOnSelect(item, "ivr")}
+          changeIvrMode={(e, mode) => this.changeIvrMode(e, mode)}
+          stepId={step.id}
+          ivrPrompt={this.state.stepPromptIvr}
         />
+      )
     }
 
     let mobilewebInput = null
     if (mobileweb) {
       let mobilewebInputErrors = isNew ? null : errorsByPath[`${path}.mobileweb`]
-      mobilewebInput = <MobileWebPrompt id='step_editor_mobileweb_prompt'
-        key={`${questionnaire.activeLanguage}-mobile-web-prompt`}
-        value={this.state.stepPromptMobileWeb}
-        originalValue={this.state.mobilewebOriginalValue}
-        inputErrors={mobilewebInputErrors}
-        readOnly={readOnly}
-        onBlur={text => this.stepPromptMobileWebSubmit(text)}
-        autocomplete={autocomplete}
-        autocompleteGetData={(value, callback) => this.autocompletePromptGetData(value, callback, 'mobileweb')}
-        autocompleteOnSelect={item => this.autocompletePromptOnSelect(item, 'mobileweb')}
-        stepId={step.id}
+      mobilewebInput = (
+        <MobileWebPrompt
+          id="step_editor_mobileweb_prompt"
+          key={`${questionnaire.activeLanguage}-mobile-web-prompt`}
+          value={this.state.stepPromptMobileWeb}
+          originalValue={this.state.mobilewebOriginalValue}
+          inputErrors={mobilewebInputErrors}
+          readOnly={readOnly}
+          onBlur={(text) => this.stepPromptMobileWebSubmit(text)}
+          autocomplete={autocomplete}
+          autocompleteGetData={(value, callback) =>
+            this.autocompletePromptGetData(value, callback, "mobileweb")
+          }
+          autocompleteOnSelect={(item) => this.autocompletePromptOnSelect(item, "mobileweb")}
+          stepId={step.id}
         />
+      )
     }
 
     return (
-      <li className={`collection-item ${classes}`} key='prompts'>
-        <div className='row'>
-          <div className='col s12'>
-            <h5>{title || this.props.t('Question Prompt')}</h5>
+      <li className={`collection-item ${classes}`} key="prompts">
+        <div className="row">
+          <div className="col s12">
+            <h5>{title || this.props.t("Question Prompt")}</h5>
           </div>
         </div>
         {smsInput}
@@ -238,7 +285,7 @@ class StepPrompts extends Component<Props, State> {
 }
 
 const mapDispatchToProps = (dispatch) => ({
-  questionnaireActions: bindActionCreators(questionnaireActions, dispatch)
+  questionnaireActions: bindActionCreators(questionnaireActions, dispatch),
 })
 
 export default translate()(connect(null, mapDispatchToProps)(withQuestionnaire(StepPrompts)))

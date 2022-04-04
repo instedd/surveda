@@ -1,4 +1,4 @@
-import React, { Component, PropTypes } from 'react'
+import React, { Component, PropTypes } from "react"
 
 class StyleButton extends Component {
   constructor(props) {
@@ -10,13 +10,20 @@ class StyleButton extends Component {
   }
 
   render() {
-    let className = 'material-icons'
+    let className = "material-icons"
     if (!this.props.active) {
-      className += ' grey-text'
+      className += " grey-text"
     }
 
     return (
-      <span style={{cursor: 'pointer'}} title={this.props.label} className={className} onMouseDown={this.onToggle}>{this.props.icon}</span>
+      <span
+        style={{ cursor: "pointer" }}
+        title={this.props.label}
+        className={className}
+        onMouseDown={this.onToggle}
+      >
+        {this.props.icon}
+      </span>
     )
   }
 }
@@ -26,7 +33,7 @@ StyleButton.propTypes = {
   active: PropTypes.bool,
   label: PropTypes.string,
   icon: PropTypes.string,
-  style: PropTypes.string
+  style: PropTypes.string,
 }
 
 export default StyleButton

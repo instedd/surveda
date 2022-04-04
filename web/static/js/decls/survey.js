@@ -2,7 +2,7 @@
 export type Folder = {
   id: number,
   name: string,
-  projectId: number
+  projectId: number,
 }
 
 export type Survey = {
@@ -10,7 +10,7 @@ export type Survey = {
   projectId: number,
   folderId: ?number,
   questionnaireIds: number[],
-  questionnaires?: {[id: string]: Questionnaire},
+  questionnaires?: { [id: string]: Questionnaire },
   channels: number[],
   name: string,
   description: ?string,
@@ -31,7 +31,7 @@ export type Survey = {
   respondentsCount: number,
   quotas: {
     vars: string[],
-    buckets: Bucket[]
+    buckets: Bucket[],
   },
   links: Link[],
   comparisons: Comparison[],
@@ -41,8 +41,8 @@ export type Survey = {
   incentivesEnabled: boolean,
   isDeletable: boolean,
   isMovable: boolean,
-  updatedAt: Date
-};
+  updatedAt: Date,
+}
 
 export type PanelSurvey = {
   id: number,
@@ -52,12 +52,12 @@ export type PanelSurvey = {
   latestWave: ?Survey,
   isRepeatable: boolean,
   waves: Survey[],
-  updatedAt: Date
+  updatedAt: Date,
 }
 
 export type Link = {
   name: string,
-  url: string
+  url: string,
 }
 
 export type Schedule = {
@@ -65,12 +65,12 @@ export type Schedule = {
   startTime: string,
   endTime: string,
   timezone: string,
-  blockedDays: string[]
+  blockedDays: string[],
 }
 
 export type DayOfWeek = {
-  [weekday: string]: boolean
-};
+  [weekday: string]: boolean,
+}
 
 export type SurveyPreview = {
   id: number,
@@ -81,31 +81,31 @@ export type SurveyPreview = {
   mode: string[][],
   state: string,
   cutoff: ?number,
-};
+}
 
 export type Comparison = {
   questionnaireId: number,
   mode: string[],
-  ratio: ?number
-};
+  ratio: ?number,
+}
 
 export type Bucket = {
   condition: Condition[],
-  quota: number
-};
+  quota: number,
+}
 
 export type Condition = {
   store: string,
-  value: string
-};
+  value: string,
+}
 
 export type QuotaVar = {
   var: string,
-  steps?: string
-};
+  steps?: string,
+}
 
 export type PartialRelevant = {
-  answeredCount: number
+  answeredCount: number,
 }
 
 export type Respondent = {
@@ -117,32 +117,32 @@ export type Respondent = {
   responses: Response[],
   questionnaireId: number,
   partialRelevant: PartialRelevant,
-  stats: Stats
-};
+  stats: Stats,
+}
 
 export type Attempts = {
   sms: number,
-  ivr: number
-};
+  ivr: number,
+}
 
 export type Stats = {
   attempts: Attempts,
   totalSentSms: number,
   totalReceivedSms: number,
-  totalCallTime: number
-};
+  totalCallTime: number,
+}
 
 export type Integration = {
   id: number,
   name: string,
   uri: string,
   authToken: string,
-  state: "enabled" | "terminated" | "disabled"
-};
+  state: "enabled" | "terminated" | "disabled",
+}
 
 export type Response = {
   name: string,
-  value: ?string
-};
+  value: ?string,
+}
 
-export type Disposition = null | "completed" | "partial" | "ineligible";
+export type Disposition = null | "completed" | "partial" | "ineligible"

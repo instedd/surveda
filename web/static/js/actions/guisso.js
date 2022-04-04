@@ -1,4 +1,4 @@
-export const GUISSO_TOKEN = 'GUISSO_TOKEN'
+export const GUISSO_TOKEN = "GUISSO_TOKEN"
 
 export const obtainToken = (guissoSession) => {
   return (dispatch, getState) => {
@@ -7,11 +7,11 @@ export const obtainToken = (guissoSession) => {
       return Promise.resolve(existingToken)
     }
 
-    return guissoSession.authorize('token').then(token => {
+    return guissoSession.authorize("token").then((token) => {
       dispatch({
         type: GUISSO_TOKEN,
         app: guissoSession.config.appId,
-        token
+        token,
       })
       return token
     })

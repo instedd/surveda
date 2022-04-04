@@ -1,16 +1,16 @@
 // @flow
-import React, { Component } from 'react'
-import { bindActionCreators } from 'redux'
-import { connect } from 'react-redux'
-import StepTypeSelector from './StepTypeSelector'
-import * as questionnaireActions from '../../actions/questionnaire'
-import StepMultipleChoiceEditor from './StepMultipleChoiceEditor'
-import StepPrompts from './StepPrompts'
-import StepCard from './StepCard'
-import StepDeleteButton from './StepDeleteButton'
-import StepStoreVariable from './StepStoreVariable'
-import propsAreEqual from '../../propsAreEqual'
-import withQuestionnaire from './withQuestionnaire'
+import React, { Component } from "react"
+import { bindActionCreators } from "redux"
+import { connect } from "react-redux"
+import StepTypeSelector from "./StepTypeSelector"
+import * as questionnaireActions from "../../actions/questionnaire"
+import StepMultipleChoiceEditor from "./StepMultipleChoiceEditor"
+import StepPrompts from "./StepPrompts"
+import StepCard from "./StepCard"
+import StepDeleteButton from "./StepDeleteButton"
+import StepStoreVariable from "./StepStoreVariable"
+import propsAreEqual from "../../propsAreEqual"
+import withQuestionnaire from "./withQuestionnaire"
 
 type Props = {
   step: MultipleChoiceStep,
@@ -25,12 +25,12 @@ type Props = {
   errorsByPath: ErrorsByPath,
   stepsAfter: Step[],
   stepsBefore: Step[],
-  isNew: boolean
-};
+  isNew: boolean,
+}
 
 type State = {
-  stepTitle: string
-};
+  stepTitle: string,
+}
 
 class MultipleChoiceStepEditor extends Component<Props, State> {
   constructor(props) {
@@ -48,18 +48,43 @@ class MultipleChoiceStepEditor extends Component<Props, State> {
     const { step } = props
 
     return {
-      stepTitle: step.title
+      stepTitle: step.title,
     }
   }
 
   render() {
-    const { step, stepIndex, onCollapse, questionnaire, readOnly, quotaCompletedSteps, errorPath, errorsByPath, stepsAfter, stepsBefore, onDelete, isNew } = this.props
+    const {
+      step,
+      stepIndex,
+      onCollapse,
+      questionnaire,
+      readOnly,
+      quotaCompletedSteps,
+      errorPath,
+      errorsByPath,
+      stepsAfter,
+      stepsBefore,
+      onDelete,
+      isNew,
+    } = this.props
 
     return (
-      <StepCard onCollapse={onCollapse} readOnly={readOnly} stepId={step.id} stepTitle={this.state.stepTitle} relevant={step.relevant} stepType={step.type}
+      <StepCard
+        onCollapse={onCollapse}
+        readOnly={readOnly}
+        stepId={step.id}
+        stepTitle={this.state.stepTitle}
+        relevant={step.relevant}
+        stepType={step.type}
         icon={
-          <StepTypeSelector stepType={step.type} stepId={step.id} readOnly={readOnly} quotaCompletedSteps={quotaCompletedSteps} />
-        } >
+          <StepTypeSelector
+            stepType={step.type}
+            stepId={step.id}
+            readOnly={readOnly}
+            quotaCompletedSteps={quotaCompletedSteps}
+          />
+        }
+      >
         <StepPrompts
           step={step}
           readOnly={readOnly}
@@ -67,10 +92,10 @@ class MultipleChoiceStepEditor extends Component<Props, State> {
           errorPath={errorPath}
           errorsByPath={errorsByPath}
           isNew={isNew}
-          />
-        <li className='collection-item' key='editor'>
-          <div className='row'>
-            <div className='col s12'>
+        />
+        <li className="collection-item" key="editor">
+          <div className="row">
+            <div className="col s12">
               <StepMultipleChoiceEditor
                 questionnaire={questionnaire}
                 step={step}
@@ -80,19 +105,25 @@ class MultipleChoiceStepEditor extends Component<Props, State> {
                 readOnly={readOnly}
                 errorPath={errorPath}
                 errorsByPath={errorsByPath}
-                isNew={isNew} />
+                isNew={isNew}
+              />
             </div>
           </div>
         </li>
-        <StepStoreVariable step={step} readOnly={readOnly} errorPath={errorPath} errorsByPath={errorsByPath} />
-        {readOnly ? null : <StepDeleteButton onDelete={onDelete} /> }
+        <StepStoreVariable
+          step={step}
+          readOnly={readOnly}
+          errorPath={errorPath}
+          errorsByPath={errorsByPath}
+        />
+        {readOnly ? null : <StepDeleteButton onDelete={onDelete} />}
       </StepCard>
     )
   }
 }
 
 const mapDispatchToProps = (dispatch) => ({
-  questionnaireActions: bindActionCreators(questionnaireActions, dispatch)
+  questionnaireActions: bindActionCreators(questionnaireActions, dispatch),
 })
 
 export default connect(null, mapDispatchToProps)(withQuestionnaire(MultipleChoiceStepEditor))

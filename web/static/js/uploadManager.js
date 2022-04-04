@@ -1,19 +1,26 @@
 // @flow
-import uuidv4 from 'uuid/v4'
+import uuidv4 from "uuid/v4"
 
 const k = (...args: any) => args
 const uploads = {}
-const DEFAULT_ERROR_DESCRIPTION = k('Questionnaire upload failed')
+const DEFAULT_ERROR_DESCRIPTION = k("Questionnaire upload failed")
 
-export const upload = (file: Object, url: string, onCompleted: ((response: Object) => mixed), onProgress: ((total: number, loaded: number) => mixed), onAbort: (() => mixed), onError: (description: ?string) => mixed) => {
+export const upload = (
+  file: Object,
+  url: string,
+  onCompleted: (response: Object) => mixed,
+  onProgress: (total: number, loaded: number) => mixed,
+  onAbort: () => mixed,
+  onError: (description: ?string) => mixed
+) => {
   const formData = new FormData()
-  formData.append('file', file)
+  formData.append("file", file)
   const xhr = new XMLHttpRequest()
   const uploadId = uuidv4()
 
-  xhr.open('POST', url, true)
+  xhr.open("POST", url, true)
 
-  xhr.onreadystatechange = function() {
+  xhr.onreadystatechange = function () {
     // readyState is compared with 4 instead of DONE because the latter is not supported by all the browsers, and it is not compatible with 'flow'.
     if (this.readyState === 4) {
       delete uploads[uploadId]
@@ -27,12 +34,12 @@ export const upload = (file: Object, url: string, onCompleted: ((response: Objec
   }
 
   // onError contemplates the case when connection is lost
-  xhr.onerror = function() {
+  xhr.onerror = function () {
     const defaultDescription = DEFAULT_ERROR_DESCRIPTION
     onError(this.statusText || defaultDescription)
   }
 
-  xhr.upload.onprogress = function(progressEvent: Object) {
+  xhr.upload.onprogress = function (progressEvent: Object) {
     if (progressEvent.lengthComputable) {
       onProgress(progressEvent.total, progressEvent.loaded)
     }
@@ -41,7 +48,7 @@ export const upload = (file: Object, url: string, onCompleted: ((response: Objec
   xhr.onabort = onAbort
 
   xhr.send(formData)
-  Object.assign(uploads, {[uploadId]: xhr})
+  Object.assign(uploads, { [uploadId]: xhr })
   return uploadId
 }
 

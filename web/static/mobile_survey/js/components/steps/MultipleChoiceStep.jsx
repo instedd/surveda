@@ -1,11 +1,11 @@
 // @flow
-import React, { Component, PropTypes } from 'react'
-import Prompt from '../Prompt'
+import React, { Component, PropTypes } from "react"
+import Prompt from "../Prompt"
 
 type Props = {
   step: Object,
-  onClick: Function
-};
+  onClick: Function,
+}
 
 class MultipleChoiceStep extends Component<Props> {
   getValue() {
@@ -20,12 +20,12 @@ class MultipleChoiceStep extends Component<Props> {
     const limit = 16
     if (choices.length <= 3) {
       if (choice[0].length > limit) {
-        return 'large multiline'
+        return "large multiline"
       } else {
-        return 'large'
+        return "large"
       }
     } else {
-      return 'small'
+      return "small"
     }
   }
 
@@ -33,13 +33,26 @@ class MultipleChoiceStep extends Component<Props> {
     const { step, onClick } = this.props
     return (
       <div>
-        {(step.prompts || []).map(prompt =>
+        {(step.prompts || []).map((prompt) => (
           <Prompt key={prompt} text={prompt} />
-        )}
-        {step.choices.map(choice => {
+        ))}
+        {step.choices.map((choice) => {
           return (
             <div key={choice}>
-              <button className={'btn block ' + this.classNameForButton(step.choices, choice)} value={choice} onClick={e => { e.preventDefault(); onClick(choice) }} style={{color: this.context.primaryColor, borderColor: this.context.primaryColor}}>{choice}</button>
+              <button
+                className={"btn block " + this.classNameForButton(step.choices, choice)}
+                value={choice}
+                onClick={(e) => {
+                  e.preventDefault()
+                  onClick(choice)
+                }}
+                style={{
+                  color: this.context.primaryColor,
+                  borderColor: this.context.primaryColor,
+                }}
+              >
+                {choice}
+              </button>
             </div>
           )
         })}
@@ -49,7 +62,7 @@ class MultipleChoiceStep extends Component<Props> {
 }
 
 MultipleChoiceStep.contextTypes = {
-  primaryColor: PropTypes.string
+  primaryColor: PropTypes.string,
 }
 
 export default MultipleChoiceStep

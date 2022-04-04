@@ -1,4 +1,4 @@
-import * as actions from '../actions/survey'
+import * as actions from "../actions/survey"
 
 export default (state = {}, action) => {
   switch (action.type) {
@@ -6,7 +6,7 @@ export default (state = {}, action) => {
       return {
         ...state,
         surveyId: action.surveyId,
-        histograms: action.response
+        histograms: action.response,
       }
     default:
       return state

@@ -1,9 +1,9 @@
-import React, { PropTypes, Component } from 'react'
-import { connect } from 'react-redux'
-import { translate } from 'react-i18next'
-import { bindActionCreators } from 'redux'
-import * as routes from '../../routes'
-import * as actions from '../../actions/channel'
+import React, { PropTypes, Component } from "react"
+import { connect } from "react-redux"
+import { translate } from "react-i18next"
+import { bindActionCreators } from "redux"
+import * as routes from "../../routes"
+import * as actions from "../../actions/channel"
 
 class Pattern extends Component {
   static propTypes = {
@@ -12,17 +12,17 @@ class Pattern extends Component {
     index: PropTypes.number.isRequired,
     actions: PropTypes.object.isRequired,
     errors: PropTypes.object,
-    t: PropTypes.func
+    t: PropTypes.func,
   }
 
   constructor(props) {
     super(props)
-    this.state = {input: props.input, output: props.output}
+    this.state = { input: props.input, output: props.output }
   }
 
   inputPatternChange(e, value) {
     if (e) e.preventDefault()
-    this.setState({input: value})
+    this.setState({ input: value })
   }
 
   inputPatternSubmit(e, value) {
@@ -33,7 +33,7 @@ class Pattern extends Component {
 
   outputPatternChange(e, value) {
     if (e) e.preventDefault()
-    this.setState({output: value})
+    this.setState({ output: value })
   }
 
   outputPatternSubmit(e, value) {
@@ -51,14 +51,14 @@ class Pattern extends Component {
     let digitIndex = 0
     const example = Array(pattern.length)
     for (let i = 0; i < pattern.length; i++) {
-      if (pattern[i] == 'X') {
+      if (pattern[i] == "X") {
         example[i] = digits[digitIndex]
         digitIndex++
       } else {
         example[i] = pattern[i]
       }
     }
-    return example.join('')
+    return example.join("")
   }
 
   computeDigitsForExample(input, output) {
@@ -69,7 +69,7 @@ class Pattern extends Component {
     const digits = Array(numberOfXs)
     for (let i = 0; i < numberOfXs; i++) {
       // (i+5)*7 % 10 computes a digit between 0-9 in an (arbitrary) deterministic way
-      digits[i] = (i + 5) * 7 % 10
+      digits[i] = ((i + 5) * 7) % 10
     }
     return digits
   }
@@ -87,67 +87,79 @@ class Pattern extends Component {
     const digits = this.computeDigitsForExample(input, output)
 
     let inputPattern
-    if (errors && errors['input']) {
-      inputPattern = (<div className='col s5'>
-        <label className='label-error'>{this.props.t('Input')}</label>
-        <input
-          type='text'
-          value={input}
-          onChange={e => this.inputPatternChange(e, e.target.value)}
-          onBlur={e => this.inputPatternSubmit(e, e.target.value)}
-          className='invalid'
-        />
-        <span className={'error'}>{errors['input'][0]}</span>
-      </div>)
+    if (errors && errors["input"]) {
+      inputPattern = (
+        <div className="col s5">
+          <label className="label-error">{this.props.t("Input")}</label>
+          <input
+            type="text"
+            value={input}
+            onChange={(e) => this.inputPatternChange(e, e.target.value)}
+            onBlur={(e) => this.inputPatternSubmit(e, e.target.value)}
+            className="invalid"
+          />
+          <span className={"error"}>{errors["input"][0]}</span>
+        </div>
+      )
     } else {
-      inputPattern = (<div className='col s5'>
-        <label className='grey-text'>{this.props.t('Input')}</label>
-        <input
-          type='text'
-          value={input}
-          onChange={e => this.inputPatternChange(e, e.target.value)}
-          onBlur={e => this.inputPatternSubmit(e, e.target.value)}
-        />
-        <span className='small-text-bellow'>{'Input sample: ' + this.exampleUsingDigits(input, digits)}</span>
-      </div>)
+      inputPattern = (
+        <div className="col s5">
+          <label className="grey-text">{this.props.t("Input")}</label>
+          <input
+            type="text"
+            value={input}
+            onChange={(e) => this.inputPatternChange(e, e.target.value)}
+            onBlur={(e) => this.inputPatternSubmit(e, e.target.value)}
+          />
+          <span className="small-text-bellow">
+            {"Input sample: " + this.exampleUsingDigits(input, digits)}
+          </span>
+        </div>
+      )
     }
 
     let outputPattern
-    if (errors && errors['output']) {
-      outputPattern = (<div className='col s5'>
-        <label className='label-error'>{this.props.t('Output')}</label>
-        <input
-          type='text'
-          value={output}
-          onChange={e => this.outputPatternChange(e, e.target.value)}
-          onBlur={e => this.outputPatternSubmit(e, e.target.value)}
-          className='invalid'
-        />
-        <span className='error'>{errors['output'][0]}</span>
-      </div>)
+    if (errors && errors["output"]) {
+      outputPattern = (
+        <div className="col s5">
+          <label className="label-error">{this.props.t("Output")}</label>
+          <input
+            type="text"
+            value={output}
+            onChange={(e) => this.outputPatternChange(e, e.target.value)}
+            onBlur={(e) => this.outputPatternSubmit(e, e.target.value)}
+            className="invalid"
+          />
+          <span className="error">{errors["output"][0]}</span>
+        </div>
+      )
     } else {
-      outputPattern = (<div className='col s5'>
-        <label className='grey-text'>{this.props.t('Output')}</label>
-        <input
-          type='text'
-          value={output}
-          onChange={e => this.outputPatternChange(e, e.target.value)}
-          onBlur={e => this.outputPatternSubmit(e, e.target.value)}
-        />
-        <span className='small-text-bellow'>{'Output sample: ' + this.exampleUsingDigits(output, digits)}</span>
-      </div>)
+      outputPattern = (
+        <div className="col s5">
+          <label className="grey-text">{this.props.t("Output")}</label>
+          <input
+            type="text"
+            value={output}
+            onChange={(e) => this.outputPatternChange(e, e.target.value)}
+            onBlur={(e) => this.outputPatternSubmit(e, e.target.value)}
+          />
+          <span className="small-text-bellow">
+            {"Output sample: " + this.exampleUsingDigits(output, digits)}
+          </span>
+        </div>
+      )
     }
 
     return (
-      <div className='row channel-pattern'>
-        <div className='col s1 bottom-align'>
-          <a onClick={() => this.removePattern()} className='grey-text text-lighten-1'>
-            <i className='material-icons v-middle'>clear</i>
+      <div className="row channel-pattern">
+        <div className="col s1 bottom-align">
+          <a onClick={() => this.removePattern()} className="grey-text text-lighten-1">
+            <i className="material-icons v-middle">clear</i>
           </a>
         </div>
         {inputPattern}
-        <div className='col s1 valign-wrapper'>
-          <i className='material-icons grey-text text-lighten-1'>arrow_forward</i>
+        <div className="col s1 valign-wrapper">
+          <i className="material-icons grey-text text-lighten-1">arrow_forward</i>
         </div>
         {outputPattern}
       </div>
@@ -162,7 +174,7 @@ class ChannelPatterns extends Component {
     actions: PropTypes.object.isRequired,
     router: PropTypes.object.isRequired,
     patterns: PropTypes.array,
-    errorsByPath: PropTypes.object.isRequired
+    errorsByPath: PropTypes.object.isRequired,
   }
 
   componentWillMount() {
@@ -193,36 +205,55 @@ class ChannelPatterns extends Component {
   render() {
     const { t, patterns, actions, errorsByPath } = this.props
     if (!patterns) {
-      return <div>{t('Loading...')}</div>
+      return <div>{t("Loading...")}</div>
     }
 
     const hasErrors = Object.keys(errorsByPath).length > 0
 
     return (
-      <div className='white'>
-        <div className='row'>
-          <div className='col s12 m8 push-m2'>
-            <h4>{t('Apply patterns for numbers cleanup')}</h4>
-            <p className='flow-text'>
-              {t('Use different expressions in order to standardize the source phone number.')}
+      <div className="white">
+        <div className="row">
+          <div className="col s12 m8 push-m2">
+            <h4>{t("Apply patterns for numbers cleanup")}</h4>
+            <p className="flow-text">
+              {t("Use different expressions in order to standardize the source phone number.")}
             </p>
-            {
-              patterns.map((p, index) => {
-                return <Pattern key={`${index}-${p.input}-${p.output}`} index={index} input={p.input} output={p.output} actions={actions} t={t} errors={errorsByPath[index]} />
-              })
-            }
-            <div className='col s12'>
-              <a href='#!' className='btn-flat blue-text no-padd n-case' onClick={e => this.addPattern(e)}>
-                <i className='material-icons v-middle blue-text left'>add</i>
-                {t('Add Pattern')}
+            {patterns.map((p, index) => {
+              return (
+                <Pattern
+                  key={`${index}-${p.input}-${p.output}`}
+                  index={index}
+                  input={p.input}
+                  output={p.output}
+                  actions={actions}
+                  t={t}
+                  errors={errorsByPath[index]}
+                />
+              )
+            })}
+            <div className="col s12">
+              <a
+                href="#!"
+                className="btn-flat blue-text no-padd n-case"
+                onClick={(e) => this.addPattern(e)}
+              >
+                <i className="material-icons v-middle blue-text left">add</i>
+                {t("Add Pattern")}
               </a>
             </div>
           </div>
         </div>
-        <div className='row'>
-          <div className='col s12 m6 push-m3'>
-            <a className={'btn blue right' + (hasErrors ? ' disabled' : '')} onClick={this.onConfirmClick()}>{t('Update')}</a>
-            <a onClick={this.onCancelClick()} className='btn-flat right'>{t('Cancel')}</a>
+        <div className="row">
+          <div className="col s12 m6 push-m3">
+            <a
+              className={"btn blue right" + (hasErrors ? " disabled" : "")}
+              onClick={this.onConfirmClick()}
+            >
+              {t("Update")}
+            </a>
+            <a onClick={this.onCancelClick()} className="btn-flat right">
+              {t("Cancel")}
+            </a>
           </div>
         </div>
       </div>
@@ -235,12 +266,12 @@ const mapStateToProps = (state, ownProps) => {
   return {
     channelId: ownProps.params.channelId,
     patterns: patterns,
-    errorsByPath: state.channel.errorsByPath
+    errorsByPath: state.channel.errorsByPath,
   }
 }
 
 const mapDispatchToProps = (dispatch) => ({
-  actions: bindActionCreators(actions, dispatch)
+  actions: bindActionCreators(actions, dispatch),
 })
 
 export default translate()(connect(mapStateToProps, mapDispatchToProps)(ChannelPatterns))

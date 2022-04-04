@@ -1,22 +1,22 @@
 // @flow
-import range from 'lodash/range'
+import range from "lodash/range"
 
 const total = 16
 
 export function referenceColorClasses(totalNeeded: number) {
-  return referenceColorClassesWithPrefix(totalNeeded, 'referenceColor')
+  return referenceColorClassesWithPrefix(totalNeeded, "referenceColor")
 }
 
 export function referenceBackgroundColorClasses(totalNeeded: number) {
-  return referenceColorClassesWithPrefix(totalNeeded, 'referenceBackgroundColor')
+  return referenceColorClassesWithPrefix(totalNeeded, "referenceBackgroundColor")
 }
 
 export function referenceStrokeColorClasses(totalNeeded: number) {
   if (totalNeeded == 1) {
-    return ['singleReferenceStrokeColor']
+    return ["singleReferenceStrokeColor"]
   }
 
-  return referenceColorClassesWithPrefix(totalNeeded, 'referenceStrokeColor')
+  return referenceColorClassesWithPrefix(totalNeeded, "referenceStrokeColor")
 }
 
 export function referenceColorClassesWithPrefix(totalNeeded: number, prefix: string) {
@@ -27,27 +27,27 @@ export function referenceColorClassesWithPrefix(totalNeeded: number, prefix: str
 }
 
 export function referenceColors(totalNeeded: number) {
-  const rootElement = document.getElementById('root')
+  const rootElement = document.getElementById("root")
   if (!rootElement) {
     return []
   }
 
   let style = getComputedStyle(rootElement)
 
-  return referenceColorClassesWithPrefix(totalNeeded, '--reference-color').map((variableName) =>
+  return referenceColorClassesWithPrefix(totalNeeded, "--reference-color").map((variableName) =>
     style.getPropertyValue(variableName).trim()
   )
 }
 
 export function referenceColorClassForUnassigned() {
-  return 'referenceColorUnassigned'
+  return "referenceColorUnassigned"
 }
 
 export function referenceColorForUnassigned() {
-  const rootElement = document.getElementById('root')
+  const rootElement = document.getElementById("root")
   if (!rootElement) {
-    return ''
+    return ""
   }
   let style = getComputedStyle(rootElement)
-  return style.getPropertyValue('--reference-color-unassigned')
+  return style.getPropertyValue("--reference-color-unassigned")
 }

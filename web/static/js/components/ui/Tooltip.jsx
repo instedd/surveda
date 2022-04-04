@@ -1,22 +1,22 @@
-import React, { Component } from 'react'
-import ReactDOM from 'react-dom'
-import throttle from 'lodash/throttle'
+import React, { Component } from "react"
+import ReactDOM from "react-dom"
+import throttle from "lodash/throttle"
 
 export class Tooltip extends Component {
   recalculate: Function
   static propTypes = {
     children: React.PropTypes.node.isRequired,
-    position: React.PropTypes.oneOf(['top', 'right', 'bottom', 'left']),
+    position: React.PropTypes.oneOf(["top", "right", "bottom", "left"]),
     delay: React.PropTypes.number,
     text: React.PropTypes.string.isRequired,
     acceptsHtml: React.PropTypes.bool,
-    className: React.PropTypes.string
+    className: React.PropTypes.string,
   }
 
   static defaultProps = {
     acceptsHtml: false,
-    position: 'top',
-    delay: 20
+    position: "top",
+    delay: 20,
   }
 
   constructor(props: Props) {
@@ -27,15 +27,15 @@ export class Tooltip extends Component {
 
   componentDidMount() {
     this.updateTooltip()
-    window.addEventListener('scroll', this.hideTooltip)
-    window.addEventListener('scroll', this.recalculate)
+    window.addEventListener("scroll", this.hideTooltip)
+    window.addEventListener("scroll", this.recalculate)
   }
 
   componentWillUnmount() {
-    window.removeEventListener('scroll', this.hideTooltip)
-    window.removeEventListener('scroll', this.recalculate)
+    window.removeEventListener("scroll", this.hideTooltip)
+    window.removeEventListener("scroll", this.recalculate)
     const node = ReactDOM.findDOMNode(this.refs.node)
-    $(node).tooltip('remove')
+    $(node).tooltip("remove")
   }
 
   componentDidUpdate(prevProps) {
@@ -48,27 +48,36 @@ export class Tooltip extends Component {
   updateTooltip() {
     const node = ReactDOM.findDOMNode(this.refs.node)
     const tooltip = $(node).tooltip()[0]
-    const tooltipId = tooltip.getAttribute('data-tooltip-id')
+    const tooltipId = tooltip.getAttribute("data-tooltip-id")
     $(`#${tooltipId}`).addClass(this.props.className)
   }
 
   hideTooltip() {
-    const tootlipElement = $('.material-tooltip')
-    const backdrop = $('.backdrop')
-    tootlipElement.velocity({
-      opacity: 0, translateY: 0, translateX: 0}, {duration: 225, queue: false})
-    backdrop.velocity({opacity: 0, scaleX: 1, scaleY: 1}, {
-      duration: 225,
-      queue: false,
-      complete: function() {
-        backdrop.css({ visibility: 'hidden' })
-        tootlipElement.css({ visibility: 'hidden' })
+    const tootlipElement = $(".material-tooltip")
+    const backdrop = $(".backdrop")
+    tootlipElement.velocity(
+      {
+        opacity: 0,
+        translateY: 0,
+        translateX: 0,
+      },
+      { duration: 225, queue: false }
+    )
+    backdrop.velocity(
+      { opacity: 0, scaleX: 1, scaleY: 1 },
+      {
+        duration: 225,
+        queue: false,
+        complete: function () {
+          backdrop.css({ visibility: "hidden" })
+          tootlipElement.css({ visibility: "hidden" })
+        },
       }
-    })
+    )
   }
 
   recalculate() {
-    const tootlipElement = $('.material-tooltip')
+    const tootlipElement = $(".material-tooltip")
     const { position } = this.props
     const origin = $(ReactDOM.findDOMNode(this.refs.node))
 
@@ -79,27 +88,47 @@ export class Tooltip extends Component {
     var originHeight = origin.outerHeight()
     var targetTop, targetLeft, newCoordinates
 
-    if (position === 'top') {
+    if (position === "top") {
       targetTop = origin.offset().top - tooltipHeight - margin
       targetLeft = origin.offset().left + originWidth / 2 - tooltipWidth / 2
-      newCoordinates = this.repositionWithinScreen(targetLeft, targetTop, tooltipWidth, tooltipHeight)
-    } else if (position === 'left') {
+      newCoordinates = this.repositionWithinScreen(
+        targetLeft,
+        targetTop,
+        tooltipWidth,
+        tooltipHeight
+      )
+    } else if (position === "left") {
       targetTop = origin.offset().top + originHeight / 2 - tooltipHeight / 2
       targetLeft = origin.offset().left - tooltipWidth - margin
-      newCoordinates = this.repositionWithinScreen(targetLeft, targetTop, tooltipWidth, tooltipHeight)
-    } else if (position === 'right') {
+      newCoordinates = this.repositionWithinScreen(
+        targetLeft,
+        targetTop,
+        tooltipWidth,
+        tooltipHeight
+      )
+    } else if (position === "right") {
       targetTop = origin.offset().top + originHeight / 2 - tooltipHeight / 2
       targetLeft = origin.offset().left + originWidth + margin
-      newCoordinates = this.repositionWithinScreen(targetLeft, targetTop, tooltipWidth, tooltipHeight)
+      newCoordinates = this.repositionWithinScreen(
+        targetLeft,
+        targetTop,
+        tooltipWidth,
+        tooltipHeight
+      )
     } else {
       // Bottom Position
       targetTop = origin.offset().top + origin.outerHeight() + margin
       targetLeft = origin.offset().left + originWidth / 2 - tooltipWidth / 2
-      newCoordinates = this.repositionWithinScreen(targetLeft, targetTop, tooltipWidth, tooltipHeight)
+      newCoordinates = this.repositionWithinScreen(
+        targetLeft,
+        targetTop,
+        tooltipWidth,
+        tooltipHeight
+      )
     }
     tootlipElement.css({
       top: newCoordinates.y,
-      left: newCoordinates.x
+      left: newCoordinates.x,
     })
   }
 
@@ -116,7 +145,7 @@ export class Tooltip extends Component {
       y -= y + height - window.innerHeight
     }
 
-    return {x: x, y: y}
+    return { x: x, y: y }
   }
 
   render() {
@@ -124,12 +153,12 @@ export class Tooltip extends Component {
     const child = React.Children.only(children)
 
     return React.cloneElement(child, {
-      className: child.props.className + ' tooltipped',
-      'data-position': position,
-      'data-delay': delay,
-      'data-html': acceptsHtml,
-      'data-tooltip': text,
-      'ref': 'node'
+      className: child.props.className + " tooltipped",
+      "data-position": position,
+      "data-delay": delay,
+      "data-html": acceptsHtml,
+      "data-tooltip": text,
+      ref: "node",
     })
   }
 }

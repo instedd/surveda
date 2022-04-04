@@ -1,17 +1,17 @@
-import Raven from 'raven-js'
-import { config } from './config'
-import { Unauthorized } from './api'
-import * as routes from './routes'
-import React from 'react'
-import { render } from 'react-dom'
-import { showError } from 'components/ui'
+import Raven from "raven-js"
+import { config } from "./config"
+import { Unauthorized } from "./api"
+import * as routes from "./routes"
+import React from "react"
+import { render } from "react-dom"
+import { showError } from "components/ui"
 
-if (typeof config != 'undefined') {
-  Raven.config(config.sentryDsn, {release: config.version}).install()
-  Raven.setUserContext({email: config.user})
+if (typeof config != "undefined") {
+  Raven.config(config.sentryDsn, { release: config.version }).install()
+  Raven.setUserContext({ email: config.user })
 }
 
-window.addEventListener('unhandledrejection', (e) => {
+window.addEventListener("unhandledrejection", (e) => {
   e.preventDefault()
   console.log(e)
 
@@ -25,12 +25,14 @@ window.addEventListener('unhandledrejection', (e) => {
     Raven.captureException(e.reason)
     onError(e.reason)
   } else {
-    Raven.captureMessage('Unhandled promise rejection', {extra: {reason: e.reason}})
-    onError(new Error('Unhandled promise rejection'))
+    Raven.captureMessage("Unhandled promise rejection", {
+      extra: { reason: e.reason },
+    })
+    onError(new Error("Unhandled promise rejection"))
   }
 })
 
-window.addEventListener('error', (e) => {
+window.addEventListener("error", (e) => {
   e.preventDefault()
   console.log(e)
   onError(e.error)
@@ -41,22 +43,28 @@ const onError = (error) => {
 
   const onDetails = (e) => {
     e.preventDefault()
-    $('.error-toast').remove()
+    $(".error-toast").remove()
     showError(errorId, error)
   }
 
   const onReload = (e) => {
     e.preventDefault()
-    window.location.href = '/'
+    window.location.href = "/"
   }
 
-  const message = <div style={{width: '500px'}}>
-    Something went wrong
-    <a className='btn-flat red-text' onClick={onDetails}>DETAILS</a>
-    <a className='btn-flat red-text' onClick={onReload}>RELOAD</a>
-  </div>
+  const message = (
+    <div style={{ width: "500px" }}>
+      Something went wrong
+      <a className="btn-flat red-text" onClick={onDetails}>
+        DETAILS
+      </a>
+      <a className="btn-flat red-text" onClick={onReload}>
+        RELOAD
+      </a>
+    </div>
+  )
 
-  const messageDom = document.createElement('div')
+  const messageDom = document.createElement("div")
   render(message, messageDom)
-  window.Materialize.toast(messageDom, null, 'error-toast')
+  window.Materialize.toast(messageDom, null, "error-toast")
 }

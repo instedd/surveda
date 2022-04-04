@@ -1,10 +1,10 @@
 // @flow
-import React, { Component } from 'react'
+import React, { Component } from "react"
 
 type Props = {
   children: any,
-  offset: number
-};
+  offset: number,
+}
 
 export class PositionFixer extends Component<Props> {
   recalculate: Function
@@ -15,18 +15,18 @@ export class PositionFixer extends Component<Props> {
   }
 
   static defaultProps = {
-    offset: 0
+    offset: 0,
   }
 
   componentDidMount() {
-    window.addEventListener('scroll', this.recalculate)
-    window.addEventListener('resize', this.recalculate)
+    window.addEventListener("scroll", this.recalculate)
+    window.addEventListener("resize", this.recalculate)
     this.recalculate()
   }
 
   componentWillUnmount() {
-    window.removeEventListener('scroll', this.recalculate)
-    window.removeEventListener('resize', this.recalculate)
+    window.removeEventListener("scroll", this.recalculate)
+    window.removeEventListener("resize", this.recalculate)
   }
 
   recalculate() {
@@ -41,7 +41,7 @@ export class PositionFixer extends Component<Props> {
     contents.style.width = `${Math.round(referenceRect.width)}px`
 
     if (referenceRect.top < offset) {
-      contents.style.position = 'fixed'
+      contents.style.position = "fixed"
       contents.style.top = `${offset}px`
     } else {
       contents.style.position = null
@@ -55,15 +55,14 @@ export class PositionFixer extends Component<Props> {
     // This is to avoid margin collapsing that would affect position calculation
     // https://www.w3.org/TR/CSS2/box.html#collapsing-margins
     const referenceStyle = {
-      paddingTop: '1px', marginTop: '-1px'
+      paddingTop: "1px",
+      marginTop: "-1px",
     }
 
     return (
       <div>
-        <div ref='reference' style={referenceStyle} />
-        <div ref='contents'>
-          {children}
-        </div>
+        <div ref="reference" style={referenceStyle} />
+        <div ref="contents">{children}</div>
       </div>
     )
   }

@@ -30,7 +30,7 @@
         line-height: 60px;
         position: relative;
         &:before {
-          content: '';
+          content: "";
           width: 60px;
           height: 60px;
           background-size: 60px 60px;
@@ -41,10 +41,10 @@
         }
       }
       &.verboice h5:before {
-        background-image: url('/images/verboice@2x.png')
+        background-image: url("/images/verboice@2x.png");
       }
       &.nuntium h5:before {
-        background-image: url('/images/nuntium@2x.png')
+        background-image: url("/images/nuntium@2x.png");
       }
       .switch {
         @include transform(scale(0.85) translate-x(-2rem));
@@ -62,8 +62,8 @@
         top: calc(50% - 10px);
       }
       &.disabled {
-        opacity: .5;
-        filter: url("data:image/svg+xml;utf8,&lt;svg xmlns=\'http://www.w3.org/2000/svg\'&gt;&lt;filter id=\'grayscale\'&gt;&lt;feColorMatrix type=\'matrix\' values=\'0.3333 0.3333 0.3333 0 0 0.3333 0.3333 0.3333 0 0 0.3333 0.3333 0.3333 0 0 0 0 0 1 0\'/&gt;&lt;/filter&gt;&lt;/svg&gt;#grayscale");
+        opacity: 0.5;
+        filter: url("data:image/svg+xml;utf8,&lt;svg xmlns='http://www.w3.org/2000/svg'&gt;&lt;filter id='grayscale'&gt;&lt;feColorMatrix type='matrix' values='0.3333 0.3333 0.3333 0 0 0.3333 0.3333 0.3333 0 0 0.3333 0.3333 0.3333 0 0 0 0 0 1 0'/&gt;&lt;/filter&gt;&lt;/svg&gt;#grayscale");
         filter: gray;
         -webkit-filter: grayscale(100%);
       }
@@ -106,7 +106,7 @@
           }
         }
         &:after {
-          content: '';
+          content: "";
           display: table;
           clear: both;
           zoom: 1;
@@ -115,8 +115,8 @@
           background-color: color("grey", "darken-1");
         }
         .button[disabled] {
-          border: 1px rgba(0,0,0,0.1) solid;
-          background-color: transparent
+          border: 1px rgba(0, 0, 0, 0.1) solid;
+          background-color: transparent;
         }
         .title {
           @extend .black-text;
@@ -125,7 +125,7 @@
           @extend .grey-text;
         }
         .disabled-clarification {
-          border: 1px rgba(0,0,0,0.1) solid;
+          border: 1px rgba(0, 0, 0, 0.1) solid;
           padding: 4px 8px;
           border-radius: 4px;
           margin-top: 12px;
@@ -206,7 +206,7 @@
   .card-content {
     overflow-y: auto;
     max-height: 250px;
-    padding: .8rem 1rem 0;
+    padding: 0.8rem 1rem 0;
 
     .row {
       .col {

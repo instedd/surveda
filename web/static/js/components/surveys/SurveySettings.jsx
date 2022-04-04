@@ -1,13 +1,13 @@
-import React, { PropTypes, Component } from 'react'
-import { connect } from 'react-redux'
-import { withRouter } from 'react-router'
-import * as actions from '../../actions/survey'
-import * as projectActions from '../../actions/project'
-import * as channelsActions from '../../actions/channels'
-import * as questionnairesActions from '../../actions/questionnaires'
-import * as respondentGroupsActions from '../../actions/respondentGroups'
-import SurveyForm from './SurveyForm'
-import { translate } from 'react-i18next'
+import React, { PropTypes, Component } from "react"
+import { connect } from "react-redux"
+import { withRouter } from "react-router"
+import * as actions from "../../actions/survey"
+import * as projectActions from "../../actions/project"
+import * as channelsActions from "../../actions/channels"
+import * as questionnairesActions from "../../actions/questionnaires"
+import * as respondentGroupsActions from "../../actions/respondentGroups"
+import SurveyForm from "./SurveyForm"
+import { translate } from "react-i18next"
 
 class SurveySettings extends Component {
   static propTypes = {
@@ -24,7 +24,7 @@ class SurveySettings extends Component {
     respondentGroupsUploading: PropTypes.bool,
     respondentGroupsUploadingExisting: PropTypes.object,
     invalidRespondents: PropTypes.object,
-    invalidGroup: PropTypes.bool
+    invalidGroup: PropTypes.bool,
   }
 
   componentWillMount() {
@@ -40,10 +40,23 @@ class SurveySettings extends Component {
   }
 
   render() {
-    const { survey, projectId, project, questionnaires, dispatch, channels, respondentGroups, respondentGroupsUploading, respondentGroupsUploadingExisting, invalidRespondents, invalidGroup, t } = this.props
+    const {
+      survey,
+      projectId,
+      project,
+      questionnaires,
+      dispatch,
+      channels,
+      respondentGroups,
+      respondentGroupsUploading,
+      respondentGroupsUploadingExisting,
+      invalidRespondents,
+      invalidGroup,
+      t,
+    } = this.props
 
     if (Object.keys(survey).length == 0 || !respondentGroups) {
-      return <div>{t('Loading...')}</div>
+      return <div>{t("Loading...")}</div>
     }
 
     const readOnly = !project || project.readOnly
@@ -55,8 +68,21 @@ class SurveySettings extends Component {
     }
 
     return (
-      <div className='white'>
-        <SurveyForm survey={survey} respondentGroups={respondentGroups} respondentGroupsUploading={respondentGroupsUploading} respondentGroupsUploadingExisting={respondentGroupsUploadingExisting} invalidRespondents={invalidRespondents} invalidGroup={invalidGroup} projectId={projectId} questionnaires={questionnaires} channels={channels} dispatch={dispatch} questionnaire={questionnaire} readOnly={readOnly} />
+      <div className="white">
+        <SurveyForm
+          survey={survey}
+          respondentGroups={respondentGroups}
+          respondentGroupsUploading={respondentGroupsUploading}
+          respondentGroupsUploadingExisting={respondentGroupsUploadingExisting}
+          invalidRespondents={invalidRespondents}
+          invalidGroup={invalidGroup}
+          projectId={projectId}
+          questionnaires={questionnaires}
+          channels={channels}
+          dispatch={dispatch}
+          questionnaire={questionnaire}
+          readOnly={readOnly}
+        />
       </div>
     )
   }
@@ -73,7 +99,7 @@ const mapStateToProps = (state, ownProps) => ({
   respondentGroupsUploadingExisting: state.respondentGroups.uploadingExisting,
   invalidRespondents: state.respondentGroups.invalidRespondents,
   invalidGroup: state.respondentGroups.invalidRespondentsForGroup,
-  survey: state.survey.data || {}
+  survey: state.survey.data || {},
 })
 
 export default translate()(withRouter(connect(mapStateToProps)(SurveySettings)))

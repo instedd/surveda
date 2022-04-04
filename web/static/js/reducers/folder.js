@@ -1,11 +1,11 @@
 // @flow
-import * as actions from '../actions/folder'
-import * as surveysActions from '../actions/surveys'
-import * as panelSurveysActions from '../actions/panelSurveys'
+import * as actions from "../actions/folder"
+import * as surveysActions from "../actions/surveys"
+import * as panelSurveysActions from "../actions/panelSurveys"
 
 const initialState = {
   fetching: false,
-  error: null
+  error: null,
 }
 
 export default (state: any = initialState, action: any) => {
@@ -13,13 +13,13 @@ export default (state: any = initialState, action: any) => {
     case actions.FETCH:
       return {
         ...state,
-        fetching: true
+        fetching: true,
       }
     case actions.RECEIVE:
       return {
         ...state,
         data: action.data,
-        fetching: false
+        fetching: false,
       }
     case surveysActions.DELETED:
       return removeSurvey(state, action.id)
@@ -38,11 +38,11 @@ function removeSurvey(state, surveyId) {
 
   if (folder) {
     const surveys = [].concat(folder.surveys || [])
-    const index = surveys.findIndex(s => s.id == surveyId)
+    const index = surveys.findIndex((s) => s.id == surveyId)
 
     if (index >= 0) {
       surveys.splice(index, 1)
-      return {...state, data: {...folder, surveys: surveys}}
+      return { ...state, data: { ...folder, surveys: surveys } }
     }
   }
   return state
@@ -53,11 +53,11 @@ function removePanelSurvey(state, panelSurveyId) {
 
   if (folder) {
     const panelSurveys = [].concat(folder.panelSurveys || [])
-    const index = panelSurveys.findIndex(s => s.id == panelSurveyId)
+    const index = panelSurveys.findIndex((s) => s.id == panelSurveyId)
 
     if (index >= 0) {
       panelSurveys.splice(index, 1)
-      return {...state, data: {...folder, panelSurveys: panelSurveys}}
+      return { ...state, data: { ...folder, panelSurveys: panelSurveys } }
     }
   }
   return state

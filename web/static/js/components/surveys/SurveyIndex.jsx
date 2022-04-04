@@ -1,27 +1,21 @@
 // @flow
-import React, { Component, PropTypes } from 'react'
-import { connect } from 'react-redux'
-import { withRouter } from 'react-router'
-import * as actions from '../../actions/surveys'
-import * as surveyActions from '../../actions/survey'
-import * as panelSurveyActions from '../../actions/panelSurvey'
-import * as foldersActions from '../../actions/folders'
-import * as panelSurveysActions from '../../actions/panelSurveys'
-import {
-  EmptyPage,
-  ConfirmationModal,
-  PagingFooter,
-  MainAction,
-  Action
-} from '../ui'
-import FolderCard from '../folders/FolderCard'
-import { SurveyCard, PanelSurveyCard } from './SurveyCard'
-import FolderForm from './FolderForm'
-import * as routes from '../../routes'
-import { translate } from 'react-i18next'
+import React, { Component, PropTypes } from "react"
+import { connect } from "react-redux"
+import { withRouter } from "react-router"
+import * as actions from "../../actions/surveys"
+import * as surveyActions from "../../actions/survey"
+import * as panelSurveyActions from "../../actions/panelSurvey"
+import * as foldersActions from "../../actions/folders"
+import * as panelSurveysActions from "../../actions/panelSurveys"
+import { EmptyPage, ConfirmationModal, PagingFooter, MainAction, Action } from "../ui"
+import FolderCard from "../folders/FolderCard"
+import { SurveyCard, PanelSurveyCard } from "./SurveyCard"
+import FolderForm from "./FolderForm"
+import * as routes from "../../routes"
+import { translate } from "react-i18next"
 
 type State = {
-  folderName: string
+  folderName: string,
 }
 
 class SurveyIndex extends Component<any, State> {
@@ -44,13 +38,13 @@ class SurveyIndex extends Component<any, State> {
 
     startIndex: PropTypes.number.isRequired,
     endIndex: PropTypes.number.isRequired,
-    totalCount: PropTypes.number.isRequired
+    totalCount: PropTypes.number.isRequired,
   }
 
   constructor(props) {
     super(props)
     this.state = {
-      folderName: ''
+      folderName: "",
     }
   }
 
@@ -63,52 +57,65 @@ class SurveyIndex extends Component<any, State> {
 
   newSurvey() {
     const { dispatch, projectId, router } = this.props
-    dispatch(surveyActions.createSurvey(projectId)).then(survey =>
+    dispatch(surveyActions.createSurvey(projectId)).then((survey) =>
       router.push(routes.surveyEdit(projectId, survey))
     )
   }
 
   newPanelSurvey() {
     const { dispatch, projectId, router } = this.props
-    dispatch(panelSurveyActions.createPanelSurvey(projectId)).then(firstWave =>
+    dispatch(panelSurveyActions.createPanelSurvey(projectId)).then((firstWave) =>
       router.push(routes.surveyEdit(projectId, firstWave))
     )
   }
 
   changeFolderName(name) {
-    this.setState({folderName: name})
+    this.setState({ folderName: name })
   }
 
   folderModal(onDispatch, cta, ref, folderId) {
     const modal: ConfirmationModal = ref
     const { dispatch } = this.props
 
-    const modalText = <FolderForm id={folderId} onChangeName={name => this.changeFolderName(name)} cta={cta} />
+    const modalText = (
+      <FolderForm id={folderId} onChangeName={(name) => this.changeFolderName(name)} cta={cta} />
+    )
     modal.open({
       modalText: modalText,
       onConfirm: async () => {
         const { folderName } = this.state
         const { error } = await dispatch(onDispatch(folderName))
         return !error
-      }
+      },
     })
   }
 
   newFolder() {
     const { projectId, t } = this.props
-    const onDispatch = folderName => foldersActions.createFolder(projectId, folderName)
-    this.folderModal(onDispatch, t('Please write the name of the folder you want to create'), this.refs.createFolderConfirmationModal)
+    const onDispatch = (folderName) => foldersActions.createFolder(projectId, folderName)
+    this.folderModal(
+      onDispatch,
+      t("Please write the name of the folder you want to create"),
+      this.refs.createFolderConfirmationModal
+    )
   }
 
   renameFolder = (id, name) => {
     const { projectId, t } = this.props
-    const onDispatch = folderName => foldersActions.renameFolder(projectId, id, folderName)
-    this.folderModal(onDispatch, t('Please write the new folder name'), this.refs.renameFolderConfirmationModal, id)
+    const onDispatch = (folderName) => foldersActions.renameFolder(projectId, id, folderName)
+    this.folderModal(
+      onDispatch,
+      t("Please write the new folder name"),
+      this.refs.renameFolderConfirmationModal,
+      id
+    )
   }
 
   deleteFolder = (id) => {
     const { dispatch, projectId, t } = this.props
-    dispatch(foldersActions.deleteFolder(projectId, id)).then(({ error }) => error ? window.Materialize.toast(t(error), 5000, 'error-toast') : null)
+    dispatch(foldersActions.deleteFolder(projectId, id)).then(({ error }) =>
+      error ? window.Materialize.toast(t(error), 5000, "error-toast") : null
+    )
   }
 
   nextPage() {
@@ -133,40 +140,64 @@ class SurveyIndex extends Component<any, State> {
       startIndex,
       endIndex,
       totalCount,
-      t
+      t,
     } = this.props
 
-    if (isLoading) return (<div>{t('Loading surveys...')}</div>)
+    if (isLoading) return <div>{t("Loading surveys...")}</div>
 
     return (
       <div>
         <MainActions isReadOnly={isReadOnly} t={t}>
-          <Action text={t('Survey')} icon={'assignment_turned_in'} onClick={() => this.newSurvey()} />
-          <Action text={t('Panel Survey')} icon={'repeat'} onClick={() => this.newPanelSurvey()} />
-          <Action text={t('Folder')} icon={'folder'} onClick={() => this.newFolder()} />
+          <Action
+            text={t("Survey")}
+            icon={"assignment_turned_in"}
+            onClick={() => this.newSurvey()}
+          />
+          <Action text={t("Panel Survey")} icon={"repeat"} onClick={() => this.newPanelSurvey()} />
+          <Action text={t("Folder")} icon={"folder"} onClick={() => this.newFolder()} />
         </MainActions>
 
-        <MainView isReadOnly={isReadOnly}
-                  isEmpty={isEmptyView}
-                  onNew={() => this.newSurvey()}
-                  t={t}>
-          <FoldersGrid folders={folders}
-                       isReadOnly={isReadOnly}
-                       onRename={(id) => this.renameFolder(id)}
-                       onDelete={(id) => this.deleteFolder(id)}
-                       t={t} />
+        <MainView
+          isReadOnly={isReadOnly}
+          isEmpty={isEmptyView}
+          onNew={() => this.newSurvey()}
+          t={t}
+        >
+          <FoldersGrid
+            folders={folders}
+            isReadOnly={isReadOnly}
+            onRename={(id) => this.renameFolder(id)}
+            onDelete={(id) => this.deleteFolder(id)}
+            t={t}
+          />
 
-          <SurveysGrid surveysAndPanelSurveys={surveysAndPanelSurveys}
-                       isReadOnly={isReadOnly}
-                       t={t} />
+          <SurveysGrid
+            surveysAndPanelSurveys={surveysAndPanelSurveys}
+            isReadOnly={isReadOnly}
+            t={t}
+          />
 
-          <PagingFooter {...{ startIndex, endIndex, totalCount }}
-                        onPreviousPage={() => this.previousPage()}
-                        onNextPage={() => this.nextPage()} />
+          <PagingFooter
+            {...{ startIndex, endIndex, totalCount }}
+            onPreviousPage={() => this.previousPage()}
+            onNextPage={() => this.nextPage()}
+          />
         </MainView>
 
-        <ConfirmationModal modalId='survey_index_folder_create' ref='createFolderConfirmationModal' confirmationText={t('Create')} header={t('Create Folder')} showCancel />
-        <ConfirmationModal modalId='survey_index_folder_rename' ref='renameFolderConfirmationModal' confirmationText={t('Rename')} header={t('Rename Folder')} showCancel />
+        <ConfirmationModal
+          modalId="survey_index_folder_create"
+          ref="createFolderConfirmationModal"
+          confirmationText={t("Create")}
+          header={t("Create Folder")}
+          showCancel
+        />
+        <ConfirmationModal
+          modalId="survey_index_folder_rename"
+          ref="renameFolderConfirmationModal"
+          confirmationText={t("Rename")}
+          header={t("Rename Folder")}
+          showCancel
+        />
       </div>
     )
   }
@@ -177,7 +208,7 @@ const MainActions = (props) => {
   if (isReadOnly) return null
 
   return (
-    <MainAction text={t('Add')} icon='add' className='survey-index-main-action'>
+    <MainAction text={t("Add")} icon="add" className="survey-index-main-action">
       {children}
     </MainAction>
   )
@@ -186,14 +217,16 @@ const MainActions = (props) => {
 MainActions.propTypes = {
   isReadOnly: PropTypes.bool,
   children: PropTypes.node,
-  t: PropTypes.func
+  t: PropTypes.func,
 }
 
 const MainView = (props) => {
   const { isReadOnly, isEmpty, onNew, children, t } = props
-  return (isEmpty)
-    ? <EmptyView isReadOnly={isReadOnly} onClick={onNew} t={t} />
-    : (<div>{children}</div>)
+  return isEmpty ? (
+    <EmptyView isReadOnly={isReadOnly} onClick={onNew} t={t} />
+  ) : (
+    <div>{children}</div>
+  )
 }
 
 MainView.propTypes = {
@@ -201,35 +234,43 @@ MainView.propTypes = {
   isEmpty: PropTypes.bool,
   onNew: PropTypes.func,
   children: PropTypes.node,
-  t: PropTypes.func
+  t: PropTypes.func,
 }
 
 const EmptyView = (props) => {
   const { isReadOnly, onClick, t } = props
-  return (<EmptyPage icon='assignment_turned_in'
-                     title={t('You have no surveys on this project')}
-                     onClick={onClick}
-                     readOnly={isReadOnly}
-                     createText={t('Create one', { context: 'survey' })} />)
+  return (
+    <EmptyPage
+      icon="assignment_turned_in"
+      title={t("You have no surveys on this project")}
+      onClick={onClick}
+      readOnly={isReadOnly}
+      createText={t("Create one", { context: "survey" })}
+    />
+  )
 }
 
 EmptyView.propTypes = {
   isReadOnly: PropTypes.bool,
   onClick: PropTypes.func,
-  t: PropTypes.func
+  t: PropTypes.func,
 }
 
 const FoldersGrid = (props) => {
   const { folders, isReadOnly, onRename, onDelete, t } = props
   return (
-    <div className='survey-index-grid'>
-      {folders && folders.map(folder =>
-        <FolderCard key={`folder-${folder.id}`}
-                    {...folder}
-                    onRename={onRename}
-                    onDelete={onDelete}
-                    readOnly={isReadOnly}
-                    t={t} />)}
+    <div className="survey-index-grid">
+      {folders &&
+        folders.map((folder) => (
+          <FolderCard
+            key={`folder-${folder.id}`}
+            {...folder}
+            onRename={onRename}
+            onDelete={onDelete}
+            readOnly={isReadOnly}
+            t={t}
+          />
+        ))}
     </div>
   )
 }
@@ -240,22 +281,29 @@ FoldersGrid.propTypes = {
   isEmpty: PropTypes.bool,
   onRename: PropTypes.func,
   onDelete: PropTypes.func,
-  t: PropTypes.func
+  t: PropTypes.func,
 }
 
 const SurveysGrid = (props) => {
   const { surveysAndPanelSurveys, isReadOnly, t } = props
 
-  const isPanelSurvey = function(survey) {
-    return survey.hasOwnProperty('latestWave')
+  const isPanelSurvey = function (survey) {
+    return survey.hasOwnProperty("latestWave")
   }
 
   return (
-    <div className='survey-index-grid'>
-      {surveysAndPanelSurveys.map(survey => {
-        return isPanelSurvey(survey)
-          ? <PanelSurveyCard panelSurvey={survey} key={`panelsurvey-${survey.id}`} readOnly={isReadOnly} t={t} />
-          : <SurveyCard survey={survey} key={`survey-${survey.id}`} readOnly={isReadOnly} t={t} />
+    <div className="survey-index-grid">
+      {surveysAndPanelSurveys.map((survey) => {
+        return isPanelSurvey(survey) ? (
+          <PanelSurveyCard
+            panelSurvey={survey}
+            key={`panelsurvey-${survey.id}`}
+            readOnly={isReadOnly}
+            t={t}
+          />
+        ) : (
+          <SurveyCard survey={survey} key={`survey-${survey.id}`} readOnly={isReadOnly} t={t} />
+        )
       })}
     </div>
   )
@@ -264,7 +312,7 @@ const SurveysGrid = (props) => {
 SurveysGrid.propTypes = {
   surveysAndPanelSurveys: PropTypes.array,
   isReadOnly: PropTypes.bool,
-  t: PropTypes.func
+  t: PropTypes.func,
 }
 
 const mapStateToFolders = (state) => {
@@ -290,19 +338,16 @@ const mapStateToProps = (state, ownProps) => {
   let panelSurveys = mapStateToPanelSurveys(state)
 
   // Merge all together and sort by updated_at (descending)
-  const surveysAndPanelSurveys = [
-    ...surveys,
-    ...panelSurveys
-  ].sort((x, y) => y.updatedAt.localeCompare(x.updatedAt))
+  const surveysAndPanelSurveys = [...surveys, ...panelSurveys].sort((x, y) =>
+    y.updatedAt.localeCompare(x.updatedAt)
+  )
 
   // pagination
   const { page } = state.surveys
-  const {
-    paginatedElements,
-    totalCount,
-    startIndex,
-    endIndex
-  } = paginate(surveysAndPanelSurveys, page)
+  const { paginatedElements, totalCount, startIndex, endIndex } = paginate(
+    surveysAndPanelSurveys,
+    page
+  )
 
   // loading, readonly and emptyview
   const isLoadingFolders = state.folders && state.folders.loadingFetch
@@ -328,7 +373,7 @@ const mapStateToProps = (state, ownProps) => {
 
     startIndex,
     endIndex,
-    totalCount
+    totalCount,
   }
 }
 
@@ -340,11 +385,12 @@ const paginate = (surveysAndPanelSurveys: Array<Survey | PanelSurvey>, page) => 
   const endIndex = Math.min(pageIndex + pageSize, totalCount)
 
   return {
-    paginatedElements: (surveysAndPanelSurveys
-      .slice(pageIndex, pageIndex + pageSize): Array<Survey | PanelSurvey>),
+    paginatedElements: (surveysAndPanelSurveys.slice(pageIndex, pageIndex + pageSize): Array<
+      Survey | PanelSurvey
+    >),
     totalCount,
     startIndex,
-    endIndex
+    endIndex,
   }
 }
 

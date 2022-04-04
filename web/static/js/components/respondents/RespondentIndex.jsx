@@ -1,13 +1,13 @@
 // @flow
-import React, { Component } from 'react'
-import { bindActionCreators } from 'redux'
-import { connect } from 'react-redux'
-import * as actions from '../../actions/respondents'
-import { fieldUniqueKey, isFieldSelected } from '../../reducers/respondents'
-import * as surveyActions from '../../actions/survey'
-import * as projectActions from '../../actions/project'
-import * as questionnairesActions from '../../actions/questionnaires'
-import values from 'lodash/values'
+import React, { Component } from "react"
+import { bindActionCreators } from "redux"
+import { connect } from "react-redux"
+import * as actions from "../../actions/respondents"
+import { fieldUniqueKey, isFieldSelected } from "../../reducers/respondents"
+import * as surveyActions from "../../actions/survey"
+import * as projectActions from "../../actions/project"
+import * as questionnairesActions from "../../actions/questionnaires"
+import values from "lodash/values"
 import {
   CardTable,
   UntitledIfEmpty,
@@ -16,17 +16,17 @@ import {
   Tooltip,
   PagingFooter,
   MainAction,
-  Action
-} from '../ui'
-import RespondentRow from './RespondentRow'
-import * as routes from '../../routes'
-import { modeLabel } from '../../questionnaire.mode'
-import find from 'lodash/find'
-import flatten from 'lodash/flatten'
-import { translate } from 'react-i18next'
-import classNames from 'classnames/bind'
-import RespondentsFilter from './RespondentsFilter'
-import { uniqueId } from 'lodash'
+  Action,
+} from "../ui"
+import RespondentRow from "./RespondentRow"
+import * as routes from "../../routes"
+import { modeLabel } from "../../questionnaire.mode"
+import find from "lodash/find"
+import flatten from "lodash/flatten"
+import { translate } from "react-i18next"
+import classNames from "classnames/bind"
+import RespondentsFilter from "./RespondentsFilter"
+import { uniqueId } from "lodash"
 
 type Props = {
   t: Function,
@@ -34,8 +34,8 @@ type Props = {
   surveyId: number,
   survey: Survey,
   project: Project,
-  questionnaires: {[id: any]: Questionnaire},
-  respondents: {[id: any]: Respondent},
+  questionnaires: { [id: any]: Questionnaire },
+  respondents: { [id: any]: Respondent },
   order: any[],
   userLevel: string,
   pageSize: number,
@@ -53,11 +53,11 @@ type Props = {
   filter: string,
   q: string,
   fields: Array<Object>,
-  selectedFields: Array<string>
+  selectedFields: Array<string>,
 }
 
 type State = {
-  csvType: string
+  csvType: string,
 }
 
 class RespondentIndex extends Component<Props, State> {
@@ -73,7 +73,7 @@ class RespondentIndex extends Component<Props, State> {
 
   constructor(props) {
     super(props)
-    this.state = {csvType: ''}
+    this.state = { csvType: "" }
     this.toggleResultsLink = this.toggleResultsLink.bind(this)
     this.toggleIncentivesLink = this.toggleIncentivesLink.bind(this)
     this.toggleInteractionsLink = this.toggleInteractionsLink.bind(this)
@@ -82,18 +82,12 @@ class RespondentIndex extends Component<Props, State> {
     this.refreshIncentivesLink = this.refreshIncentivesLink.bind(this)
     this.refreshInteractionsLink = this.refreshInteractionsLink.bind(this)
     this.refreshDispositionHistoryLink = this.refreshDispositionHistoryLink.bind(this)
-    this.columnPickerModalId = uniqueId('column-picker-modal-id_')
+    this.columnPickerModalId = uniqueId("column-picker-modal-id_")
   }
 
   componentDidMount() {
-    const {
-      projectId,
-      surveyId,
-      projectActions,
-      surveyActions,
-      questionnairesActions,
-      q
-    } = this.props
+    const { projectId, surveyId, projectActions, surveyActions, questionnairesActions, q } =
+      this.props
     if (projectId && surveyId) {
       projectActions.fetchProject(projectId)
       surveyActions.fetchSurvey(projectId, surveyId)
@@ -103,14 +97,7 @@ class RespondentIndex extends Component<Props, State> {
   }
 
   fetchRespondents(pageNumber = 1, overrideFilter = null) {
-    const {
-      projectId,
-      surveyId,
-      pageSize,
-      filter,
-      sortBy,
-      sortAsc
-    } = this.props
+    const { projectId, surveyId, pageSize, filter, sortBy, sortAsc } = this.props
     const _filter = overrideFilter == null ? filter : overrideFilter
     this.props.actions.fetchRespondents(
       projectId,
@@ -164,22 +151,22 @@ class RespondentIndex extends Component<Props, State> {
   }
 
   resultsAccessLink() {
-    const {survey} = this.props
+    const { survey } = this.props
     return find(survey.links, (link) => link.name == `survey/${survey.id}/results`)
   }
 
   incentivesAccessLink() {
-    const {survey} = this.props
+    const { survey } = this.props
     return find(survey.links, (link) => link.name == `survey/${survey.id}/incentives`)
   }
 
   interactionsAccessLink() {
-    const {survey} = this.props
+    const { survey } = this.props
     return find(survey.links, (link) => link.name == `survey/${survey.id}/interactions`)
   }
 
   dispositionHistoryAccessLink() {
-    const {survey} = this.props
+    const { survey } = this.props
     return find(survey.links, (link) => link.name == `survey/${survey.id}/disposition_history`)
   }
 
@@ -242,54 +229,56 @@ class RespondentIndex extends Component<Props, State> {
   copyLink(link) {
     try {
       window.getSelection().selectAllChildren(link)
-      document.execCommand('copy')
-      window.getSelection().collapse(document.getElementsByTagName('body')[0], 0)
+      document.execCommand("copy")
+      window.getSelection().collapse(document.getElementsByTagName("body")[0], 0)
 
-      window.Materialize.toast('Copied!', 3000)
+      window.Materialize.toast("Copied!", 3000)
     } catch (err) {
-      window.Materialize.toast('Oops, unable to copy!', 3000)
+      window.Materialize.toast("Oops, unable to copy!", 3000)
     }
   }
 
   downloadLink(link, onChange, refresh, name) {
     const { project, t } = this.props
 
-    return <div className='access-link'>
-      {
-        !project.readOnly
-        ? <div className='switch'>
-          <label>
-            <input type='checkbox' checked={link != null} onChange={() => onChange(link)} />
-            <span className='lever' />
-            <span className='label' >{t('Public link:')}</span>
-          </label>
-        </div>
-        : ''
-      }
-      {
-        link != null
-        ? <div className='link truncate'>
-          <span ref={name}>{link.url}</span>
-          <div className='buttons'>
-            {
-              !project.readOnly
-              ? <Tooltip text='Refresh'>
-                <a className='btn-icon-grey' onClick={refresh}>
-                  <i className='material-icons'>refresh</i>
+    return (
+      <div className="access-link">
+        {!project.readOnly ? (
+          <div className="switch">
+            <label>
+              <input type="checkbox" checked={link != null} onChange={() => onChange(link)} />
+              <span className="lever" />
+              <span className="label">{t("Public link:")}</span>
+            </label>
+          </div>
+        ) : (
+          ""
+        )}
+        {link != null ? (
+          <div className="link truncate">
+            <span ref={name}>{link.url}</span>
+            <div className="buttons">
+              {!project.readOnly ? (
+                <Tooltip text="Refresh">
+                  <a className="btn-icon-grey" onClick={refresh}>
+                    <i className="material-icons">refresh</i>
+                  </a>
+                </Tooltip>
+              ) : (
+                ""
+              )}
+              <Tooltip text="Copy to clipboard">
+                <a className="btn-icon-grey" onClick={() => this.copyLink(this.refs[name])}>
+                  <i className="material-icons">content_copy</i>
                 </a>
               </Tooltip>
-              : ''
-            }
-            <Tooltip text='Copy to clipboard'>
-              <a className='btn-icon-grey' onClick={() => this.copyLink(this.refs[name])}>
-                <i className='material-icons'>content_copy</i>
-              </a>
-            </Tooltip>
+            </div>
           </div>
-        </div>
-        : ''
-      }
-    </div>
+        ) : (
+          ""
+        )}
+      </div>
+    )
   }
 
   responsesByField(respondents) {
@@ -315,7 +304,7 @@ class RespondentIndex extends Component<Props, State> {
     let numericFields = []
     for (let responseField in responsesByField) {
       if (responsesByField.hasOwnProperty(responseField)) {
-        if (responsesByField[responseField].every(response => !isNaN(response))) {
+        if (responsesByField[responseField].every((response) => !isNaN(response))) {
           numericFields.push(responseField)
         }
       }
@@ -324,7 +313,7 @@ class RespondentIndex extends Component<Props, State> {
   }
 
   fieldIsNumeric(numericFields, filterField) {
-    return numericFields.some(field => field == filterField)
+    return numericFields.some((field) => field == filterField)
   }
 
   downloadItem(id, itemType) {
@@ -335,53 +324,81 @@ class RespondentIndex extends Component<Props, State> {
       disabledText?: String,
       disabled?: boolean,
       downloadLink: any,
-      onDownload: Function
+      onDownload: Function,
     } = null
     switch (id) {
-      case 'filtered-results':
+      case "filtered-results":
         item = {
-          title: t('Filtered survey results'),
+          title: t("Filtered survey results"),
           description: t(
-            '{{totalCount}} respondents resulting from applying the current filter: {{filter}}',
+            "{{totalCount}} respondents resulting from applying the current filter: {{filter}}",
             { totalCount, filter }
           ),
           downloadLink: null,
-          onDownload: () => this.downloadCSV(true)
+          onDownload: () => this.downloadCSV(true),
         }
         break
-      case 'results':
+      case "results":
         item = {
-          title: t('Survey results'),
-          description: t('One line per respondent, with a column for each variable in the questionnaire, including disposition and timestamp'),
-          downloadLink: this.downloadLink(this.resultsAccessLink(), this.toggleResultsLink, this.refreshResultsLink, 'resultsLink'),
-          onDownload: () => this.downloadCSV()
+          title: t("Survey results"),
+          description: t(
+            "One line per respondent, with a column for each variable in the questionnaire, including disposition and timestamp"
+          ),
+          downloadLink: this.downloadLink(
+            this.resultsAccessLink(),
+            this.toggleResultsLink,
+            this.refreshResultsLink,
+            "resultsLink"
+          ),
+          onDownload: () => this.downloadCSV(),
         }
         break
-      case 'disposition-history':
+      case "disposition-history":
         item = {
-          title: t('Disposition History'),
-          description: t('One line for each time the disposition of a respondent changed, including the timestamp'),
-          downloadLink: this.downloadLink(this.dispositionHistoryAccessLink(), this.toggleDispositionHistoryLink, this.refreshDispositionHistoryLink, 'dispositionHistoryLink'),
-          onDownload: () => this.downloadDispositionHistoryCSV()
+          title: t("Disposition History"),
+          description: t(
+            "One line for each time the disposition of a respondent changed, including the timestamp"
+          ),
+          downloadLink: this.downloadLink(
+            this.dispositionHistoryAccessLink(),
+            this.toggleDispositionHistoryLink,
+            this.refreshDispositionHistoryLink,
+            "dispositionHistoryLink"
+          ),
+          onDownload: () => this.downloadDispositionHistoryCSV(),
         }
         break
-      case 'incentives':
+      case "incentives":
         const disabled = !this.props.survey.incentivesEnabled
         item = {
-          title: t('Incentives file'),
-          description: t('One line for each respondent that completed the survey, including the experiment version and the full phone number'),
-          disabledText: t('Disabled because a CSV with respondent ids was uploaded'),
+          title: t("Incentives file"),
+          description: t(
+            "One line for each respondent that completed the survey, including the experiment version and the full phone number"
+          ),
+          disabledText: t("Disabled because a CSV with respondent ids was uploaded"),
           disabled: disabled,
-          downloadLink: this.downloadLink(this.incentivesAccessLink(), this.toggleIncentivesLink, this.refreshIncentivesLink, 'incentivesLink'),
-          onDownload: () => this.downloadIncentivesCSV()
+          downloadLink: this.downloadLink(
+            this.incentivesAccessLink(),
+            this.toggleIncentivesLink,
+            this.refreshIncentivesLink,
+            "incentivesLink"
+          ),
+          onDownload: () => this.downloadIncentivesCSV(),
         }
         break
-      case 'interactions':
+      case "interactions":
         item = {
-          title: t('Interactions'),
-          description: t('One line per respondent interaction, with a column describing the action type and data, including disposition and timestamp'),
-          downloadLink: this.downloadLink(this.interactionsAccessLink(), this.toggleInteractionsLink, this.refreshInteractionsLink, 'interactionsLink'),
-          onDownload: () => this.downloadInteractionsCSV()
+          title: t("Interactions"),
+          description: t(
+            "One line per respondent interaction, with a column describing the action type and data, including disposition and timestamp"
+          ),
+          downloadLink: this.downloadLink(
+            this.interactionsAccessLink(),
+            this.toggleInteractionsLink,
+            this.refreshInteractionsLink,
+            "interactionsLink"
+          ),
+          onDownload: () => this.downloadInteractionsCSV(),
         }
     }
 
@@ -391,37 +408,39 @@ class RespondentIndex extends Component<Props, State> {
       const disabled = item.disabled
       const titleDescription = (
         <div>
-          <p disabled={disabled} className='title'><b>{item.title}</b></p>
+          <p disabled={disabled} className="title">
+            <b>{item.title}</b>
+          </p>
           <p>{item.description}</p>
-          {
-              disabled
-              ? <p className='disabled-clarification'>
-                { item.disabledText }
-              </p>
-              : null
-          }
+          {disabled ? <p className="disabled-clarification">{item.disabledText}</p> : null}
         </div>
       )
 
       return (
-        <li disabled={disabled} className='collection-item'>
-          {
-            itemType == 'file'
-            ? (
-              <a href='#' className='download' onClick={e => { if (disabled) return; e.preventDefault(); item && item.onDownload() }}>
-                <div disabled={disabled} className='button'>
-                  {
-                    disabled
-                    ? <div disabled={disabled} className='file-download-off-icon' />
-                    : <i className='material-icons'>get_app</i>
-                  }
-                </div>
-                { titleDescription }
-              </a>
-            )
-            : <div className='link'>{titleDescription}</div>
-          }
-          { itemType == 'link' ? item.downloadLink : null }
+        <li disabled={disabled} className="collection-item">
+          {itemType == "file" ? (
+            <a
+              href="#"
+              className="download"
+              onClick={(e) => {
+                if (disabled) return
+                e.preventDefault()
+                item && item.onDownload()
+              }}
+            >
+              <div disabled={disabled} className="button">
+                {disabled ? (
+                  <div disabled={disabled} className="file-download-off-icon" />
+                ) : (
+                  <i className="material-icons">get_app</i>
+                )}
+              </div>
+              {titleDescription}
+            </a>
+          ) : (
+            <div className="link">{titleDescription}</div>
+          )}
+          {itemType == "link" ? item.downloadLink : null}
         </li>
       )
     }
@@ -435,45 +454,32 @@ class RespondentIndex extends Component<Props, State> {
 
   respondentsFilter() {
     const { q } = this.props
-    return (
-      <RespondentsFilter
-        defaultValue={q}
-        onChange={value => this.onFilterChange(value)}
-      />
-    )
+    return <RespondentsFilter defaultValue={q} onChange={(value) => this.onFilterChange(value)} />
   }
 
   downloadModal({ itemType }) {
     const { userLevel, t, filter } = this.props
-    const ownerOrAdmin = userLevel == 'owner' || userLevel == 'admin'
+    const ownerOrAdmin = userLevel == "owner" || userLevel == "admin"
     const [title, description] =
-      itemType == 'file'
-        ? [t('Download CSV'), t('Choose the data you want to download')]
+      itemType == "file"
+        ? [t("Download CSV"), t("Choose the data you want to download")]
         : [
-          t('Public links'),
-          t(
-            'Choose the data you want to be able to access through a public link'
-          )
-        ]
+            t("Public links"),
+            t("Choose the data you want to be able to access through a public link"),
+          ]
 
     return (
-      <Modal
-        id={`downloadCSV-${itemType}`}
-        confirmationText='Download CSV'
-        card
-      >
-        <div className='card-title header'>
+      <Modal id={`downloadCSV-${itemType}`} confirmationText="Download CSV" card>
+        <div className="card-title header">
           <h5>{title}</h5>
           <p>{description}</p>
         </div>
-        <ul className='collection repondents-index-modal'>
-          {itemType == 'file' && filter
-            ? this.downloadItem('filtered-results', itemType)
-            : null}
-          {this.downloadItem('results', itemType)}
-          {this.downloadItem('disposition-history', itemType)}
-          {ownerOrAdmin ? this.downloadItem('incentives', itemType) : null}
-          {ownerOrAdmin ? this.downloadItem('interactions', itemType) : null}
+        <ul className="collection repondents-index-modal">
+          {itemType == "file" && filter ? this.downloadItem("filtered-results", itemType) : null}
+          {this.downloadItem("results", itemType)}
+          {this.downloadItem("disposition-history", itemType)}
+          {ownerOrAdmin ? this.downloadItem("incentives", itemType) : null}
+          {ownerOrAdmin ? this.downloadItem("interactions", itemType) : null}
         </ul>
       </Modal>
     )
@@ -483,8 +489,8 @@ class RespondentIndex extends Component<Props, State> {
     const { sortBy, sortAsc } = this.props
     const uniqueKey = fieldUniqueKey(type, key)
     let className = classNames({
-      thNumber: dataType === 'number',
-      thDate: dataType === 'date'
+      thNumber: dataType === "number",
+      thDate: dataType === "date",
     })
 
     if (sortable) {
@@ -514,56 +520,50 @@ class RespondentIndex extends Component<Props, State> {
   }
 
   renderColumnPickerModal() {
-    const {fields, t} = this.props
+    const { fields, t } = this.props
     const onInputChange = (uniqueKey, newValue) =>
       this.props.actions.setRespondentsFieldSelection(uniqueKey, newValue)
 
     return (
-      <Modal
-        id={this.columnPickerModalId}
-        card
-        className={'column-picker'}
-      >
-        <div className='card-title header'>
-          <h5>{t('Column picker')}</h5>
-          <p>{t('Selected columns')}</p>
+      <Modal id={this.columnPickerModalId} card className={"column-picker"}>
+        <div className="card-title header">
+          <h5>{t("Column picker")}</h5>
+          <p>{t("Selected columns")}</p>
         </div>
-        <ul className='collection repondents-index-modal'>
-          {
-            fields.map(field => {
-              const uniqueKey = fieldUniqueKey(field.type, field.key)
-              const id = `column_picker_${uniqueKey}`
-              const checked = this.isFieldSelected(uniqueKey)
-              return (
-                <li className='collection-item' key={id}>
-                  <input className='filled-in'
-                    id={id}
-                    type='checkbox'
-                    checked={checked}
-                    onChange={event => onInputChange(uniqueKey, !checked)}
-                  />
-                  <label htmlFor={id}>{field.displayText}</label>
-                </li>
-              )
-            })
-          }
+        <ul className="collection repondents-index-modal">
+          {fields.map((field) => {
+            const uniqueKey = fieldUniqueKey(field.type, field.key)
+            const id = `column_picker_${uniqueKey}`
+            const checked = this.isFieldSelected(uniqueKey)
+            return (
+              <li className="collection-item" key={id}>
+                <input
+                  className="filled-in"
+                  id={id}
+                  type="checkbox"
+                  checked={checked}
+                  onChange={(event) => onInputChange(uniqueKey, !checked)}
+                />
+                <label htmlFor={id}>{field.displayText}</label>
+              </li>
+            )
+          })}
         </ul>
       </Modal>
     )
   }
 
   renderTitleWithColumnsPickerButton() {
-    const {t, totalCount} = this.props
-    const title = t('{{count}} respondent', {count: totalCount})
+    const { t, totalCount } = this.props
+    const title = t("{{count}} respondent", { count: totalCount })
     return (
-      <div className='valign-wrapper'>
-        <div>
-          {title}
-        </div>
-        <button className='transparent-button valign-wrapper'
-          onClick={() => $(`#${this.columnPickerModalId}`).modal('open')}
+      <div className="valign-wrapper">
+        <div>{title}</div>
+        <button
+          className="transparent-button valign-wrapper"
+          onClick={() => $(`#${this.columnPickerModalId}`).modal("open")}
         >
-          <i className='material-icons'>more_vert</i>
+          <i className="material-icons">more_vert</i>
         </button>
       </div>
     )
@@ -573,40 +573,40 @@ class RespondentIndex extends Component<Props, State> {
     const { startIndex, endIndex, totalCount, pageSize } = this.props
     return (
       <PagingFooter
-        {...{startIndex, endIndex, pageSize, totalCount}}
+        {...{ startIndex, endIndex, pageSize, totalCount }}
         onPreviousPage={() => this.previousPage()}
         onNextPage={() => this.nextPage()}
-        onPageSizeChange={pageSize => this.changePageSize(pageSize)}
-        pageSizeOptions={[ 5, 10, 20, 50 ]}
+        onPageSizeChange={(pageSize) => this.changePageSize(pageSize)}
+        pageSizeOptions={[5, 10, 20, 50]}
       />
     )
   }
 
   fieldDataType(field, isNumeric) {
-    return field.type == 'response' && isNumeric ? 'number' : field.dataType
+    return field.type == "response" && isNumeric ? "number" : field.dataType
   }
 
   renderHeaders(numericFields) {
-    const {fields} = this.props
-    const selectedFields = fields
-      .filter(field => this.isFieldSelected(fieldUniqueKey(field.type, field.key)))
+    const { fields } = this.props
+    const selectedFields = fields.filter((field) =>
+      this.isFieldSelected(fieldUniqueKey(field.type, field.key))
+    )
     return (
       <tr>
-        {
-          selectedFields.length
-          ? selectedFields
-            .map(field =>
-              this.renderHeader({
-                displayText: field.displayText,
-                key: field.key,
-                sortable: field.sortable,
-                type: field.type,
-                dataType: this.fieldDataType(field, this.fieldIsNumeric(numericFields, field.key))
-              })
-            )
+        {selectedFields.length ? (
+          selectedFields.map((field) =>
+            this.renderHeader({
+              displayText: field.displayText,
+              key: field.key,
+              sortable: field.sortable,
+              type: field.type,
+              dataType: this.fieldDataType(field, this.fieldIsNumeric(numericFields, field.key)),
+            })
+          )
+        ) : (
           // If no field is selected, render an empty header
-          : <th className='center'>-</th>
-        }
+          <th className="center">-</th>
+        )}
       </tr>
     )
   }
@@ -619,24 +619,11 @@ class RespondentIndex extends Component<Props, State> {
   }
 
   render() {
-    const { project,
-      survey,
-      questionnaires,
-      order,
-      t,
-      selectedFields
-    } = this.props
-    const loading = (
-      !project ||
-      !survey ||
-      !this.props.respondents ||
-      !questionnaires
-    )
+    const { project, survey, questionnaires, order, t, selectedFields } = this.props
+    const loading = !project || !survey || !this.props.respondents || !questionnaires
 
     if (loading) {
-      return <div>
-        {t('Loading...')}
-      </div>
+      return <div>{t("Loading...")}</div>
     }
 
     const hasComparisons = survey.comparisons.length > 0
@@ -669,50 +656,79 @@ class RespondentIndex extends Component<Props, State> {
     }
 
     function responseOf(rs, respondentId, fieldName) {
-      return hasResponded(rs, respondentId, fieldName) ? rs[respondentId].responses[fieldName] : '-'
+      return hasResponded(rs, respondentId, fieldName) ? rs[respondentId].responses[fieldName] : "-"
     }
 
     const responseKeys = this.props.fields
-      .filter(field => field.type == 'response')
-      .map(field => field.key)
+      .filter((field) => field.type == "response")
+      .map((field) => field.key)
 
-    const fixedFieldsCount = this.props.fields
-      .filter(field => field.type == 'fixed')
-      .length
+    const fixedFieldsCount = this.props.fields.filter((field) => field.type == "fixed").length
 
     let colspan = responseKeys.length + fixedFieldsCount
-    const [fileId, linkId] = ['file', 'link']
+    const [fileId, linkId] = ["file", "link"]
 
     return (
-      <div className='white'>
-        <div dangerouslySetInnerHTML={{
-          __html: '<style> body { overflow-y: auto !important; color: black}</style>' }} />
-        <MainAction text='Downloads' icon='get_app'>
-          <Action text='Download CSVs' icon='insert_drive_file' onClick={() => $(`#downloadCSV-${fileId}`).modal('open')} />
-          <Action text='Public links' icon='link' onClick={() => $(`#downloadCSV-${linkId}`).modal('open')} />
+      <div className="white">
+        <div
+          dangerouslySetInnerHTML={{
+            __html: "<style> body { overflow-y: auto !important; color: black}</style>",
+          }}
+        />
+        <MainAction text="Downloads" icon="get_app">
+          <Action
+            text="Download CSVs"
+            icon="insert_drive_file"
+            onClick={() => $(`#downloadCSV-${fileId}`).modal("open")}
+          />
+          <Action
+            text="Public links"
+            icon="link"
+            onClick={() => $(`#downloadCSV-${linkId}`).modal("open")}
+          />
         </MainAction>
-        { this.downloadModal({itemType: fileId}) }
-        { this.downloadModal({itemType: linkId}) }
-        { this.renderColumnPickerModal() }
-        { this.respondentsFilter() }
-        <CardTable title={this.renderTitleWithColumnsPickerButton()} footer={this.renderFooter()} tableScroll>
-          <thead>
-            { this.renderHeaders(numericFields) }
-          </thead>
+        {this.downloadModal({ itemType: fileId })}
+        {this.downloadModal({ itemType: linkId })}
+        {this.renderColumnPickerModal()}
+        {this.respondentsFilter()}
+        <CardTable
+          title={this.renderTitleWithColumnsPickerButton()}
+          footer={this.renderFooter()}
+          tableScroll
+        >
+          <thead>{this.renderHeaders(numericFields)}</thead>
           <tbody>
-            { order.map((respondentId, index) => {
-              const respondent = respondentsList.find(r => r.id == respondentId)
-              if (!respondent) return <tr key={-index} className='empty-row'><td colSpan={colspan} /></tr>
+            {order.map((respondentId, index) => {
+              const respondent = respondentsList.find((r) => r.id == respondentId)
+              if (!respondent)
+                return (
+                  <tr key={-index} className="empty-row">
+                    <td colSpan={colspan} />
+                  </tr>
+                )
 
               let variantColumn = null
               if (hasComparisons) {
                 let variantValue
                 let questionnaire
-                if (respondent.questionnaireId && respondent.mode && (questionnaire = questionnaires[respondent.questionnaireId])) {
-                  const questionnaireName = <UntitledIfEmpty text={questionnaire.name} emptyText={t('Untitled questionnaire')} />
-                  variantValue = <span>{questionnaireName} - {modeLabel(respondent.mode)}</span>
+                if (
+                  respondent.questionnaireId &&
+                  respondent.mode &&
+                  (questionnaire = questionnaires[respondent.questionnaireId])
+                ) {
+                  const questionnaireName = (
+                    <UntitledIfEmpty
+                      text={questionnaire.name}
+                      emptyText={t("Untitled questionnaire")}
+                    />
+                  )
+                  variantValue = (
+                    <span>
+                      {questionnaireName} - {modeLabel(respondent.mode)}
+                    </span>
+                  )
                 } else {
-                  variantValue = '-'
+                  variantValue = "-"
                 }
 
                 variantColumn = <td>{variantValue}</td>
@@ -721,20 +737,25 @@ class RespondentIndex extends Component<Props, State> {
               const responses = responseKeys.map((responseKey) => {
                 return {
                   name: responseKey,
-                  value: responseOf(respondents, respondent.id, responseKey)
+                  value: responseOf(respondents, respondent.id, responseKey),
                 }
               })
-              return <RespondentRow
-                cellClassNames={(fieldName) => classNames({
-                  'tdNowrap': true,
-                  'tdNumber': this.fieldIsNumeric(numericFields, fieldName)})}
-                key={index}
-                respondent={respondent}
-                responses={responses}
-                variantColumn={variantColumn}
-                surveyModes={this.getModes(survey.mode)}
-                selectedFields={selectedFields}
+              return (
+                <RespondentRow
+                  cellClassNames={(fieldName) =>
+                    classNames({
+                      tdNowrap: true,
+                      tdNumber: this.fieldIsNumeric(numericFields, fieldName),
+                    })
+                  }
+                  key={index}
+                  respondent={respondent}
+                  responses={responses}
+                  variantColumn={variantColumn}
+                  surveyModes={this.getModes(survey.mode)}
+                  selectedFields={selectedFields}
                 />
+              )
             })}
           </tbody>
         </CardTable>
@@ -754,13 +775,13 @@ const mapStateToProps = (state, ownProps) => {
   return {
     projectId,
     surveyId,
-    q: ownProps.location.query.q || '',
+    q: ownProps.location.query.q || "",
     survey: survey.data,
     project: project.data,
     questionnaires: questionnaires.items,
     respondents: items,
     order,
-    userLevel: project.data ? project.data.level : '',
+    userLevel: project.data ? project.data.level : "",
     pageNumber,
     pageSize,
     startIndex,
@@ -770,7 +791,7 @@ const mapStateToProps = (state, ownProps) => {
     sortAsc,
     filter,
     fields: fields || [],
-    selectedFields: selectedFields || []
+    selectedFields: selectedFields || [],
   }
 }
 
@@ -778,12 +799,7 @@ const mapDispatchToProps = (dispatch) => ({
   actions: bindActionCreators(actions, dispatch),
   surveyActions: bindActionCreators(surveyActions, dispatch),
   projectActions: bindActionCreators(projectActions, dispatch),
-  questionnairesActions: bindActionCreators(questionnairesActions, dispatch)
+  questionnairesActions: bindActionCreators(questionnairesActions, dispatch),
 })
 
-export default translate()(
-  connect(
-    mapStateToProps,
-    mapDispatchToProps
-  )(RespondentIndex)
-)
+export default translate()(connect(mapStateToProps, mapDispatchToProps)(RespondentIndex))

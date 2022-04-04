@@ -1,12 +1,12 @@
-import React, { Component, PropTypes } from 'react'
-import { connect } from 'react-redux'
-import { bindActionCreators } from 'redux'
-import {Tabs, TabLink} from '../ui'
-import * as routes from '../../routes'
-import { translate } from 'react-i18next'
-import * as channelActions from '../../actions/channel'
-import { config } from '../../config'
-import some from 'lodash/some'
+import React, { Component, PropTypes } from "react"
+import { connect } from "react-redux"
+import { bindActionCreators } from "redux"
+import { Tabs, TabLink } from "../ui"
+import * as routes from "../../routes"
+import { translate } from "react-i18next"
+import * as channelActions from "../../actions/channel"
+import { config } from "../../config"
+import some from "lodash/some"
 
 class ChannelTabs extends Component {
   componentDidMount() {
@@ -15,7 +15,10 @@ class ChannelTabs extends Component {
   }
 
   activeChannelUI(channel) {
-    return some(config[channel.provider], provider => (provider.baseUrl == channel.channelBaseUrl) && provider.channel_ui)
+    return some(
+      config[channel.provider],
+      (provider) => provider.baseUrl == channel.channelBaseUrl && provider.channel_ui
+    )
   }
 
   render() {
@@ -25,14 +28,20 @@ class ChannelTabs extends Component {
       return <div />
     }
 
-    const settingsTab = this.activeChannelUI(channel)
-      ? <TabLink key='settings' tabId='channel_tabs' to={routes.channelSettings(channelId)}>{t('Settings')}</TabLink>
-      : null
+    const settingsTab = this.activeChannelUI(channel) ? (
+      <TabLink key="settings" tabId="channel_tabs" to={routes.channelSettings(channelId)}>
+        {t("Settings")}
+      </TabLink>
+    ) : null
 
     return (
-      <Tabs id='channel_tabs'>
-        <TabLink key='share' tabId='channel_tabs' to={routes.channelShare(channelId)}>{t('Share')}</TabLink>
-        <TabLink key='patterns' tabId='channel_tabs' to={routes.channelPatterns(channelId)}>{t('Patterns')}</TabLink>
+      <Tabs id="channel_tabs">
+        <TabLink key="share" tabId="channel_tabs" to={routes.channelShare(channelId)}>
+          {t("Share")}
+        </TabLink>
+        <TabLink key="patterns" tabId="channel_tabs" to={routes.channelPatterns(channelId)}>
+          {t("Patterns")}
+        </TabLink>
         {settingsTab}
       </Tabs>
     )
@@ -43,16 +52,16 @@ ChannelTabs.propTypes = {
   t: PropTypes.func,
   channelId: PropTypes.any,
   channelActions: PropTypes.object,
-  channel: PropTypes.object
+  channel: PropTypes.object,
 }
 
 const mapStateToProps = (state, ownProps) => ({
   channelId: ownProps.params.channelId,
-  channel: state.channel.data
+  channel: state.channel.data,
 })
 
 const mapDispatchToProps = (dispatch) => ({
-  channelActions: bindActionCreators(channelActions, dispatch)
+  channelActions: bindActionCreators(channelActions, dispatch),
 })
 
 export default translate()(connect(mapStateToProps, mapDispatchToProps)(ChannelTabs))

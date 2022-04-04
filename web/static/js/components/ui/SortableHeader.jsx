@@ -1,4 +1,4 @@
-import React, { PropTypes } from 'react'
+import React, { PropTypes } from "react"
 
 export const SortableHeader = ({ property, text, sortBy, sortAsc, onClick, className }) => {
   const clickHandler = (e) => {
@@ -10,18 +10,20 @@ export const SortableHeader = ({ property, text, sortBy, sortAsc, onClick, class
   let arrow
   if (property == sortBy) {
     if (sortAsc) {
-      arrow = <i className='material-icons'>arrow_upward</i>
+      arrow = <i className="material-icons">arrow_upward</i>
     } else {
-      arrow = <i className='material-icons'>arrow_downward</i>
+      arrow = <i className="material-icons">arrow_downward</i>
     }
   } else {
-    arrow = ''
+    arrow = ""
   }
 
   return (
-    <th className={`sortable ${className || ''}`}>
+    <th className={`sortable ${className || ""}`}>
       {arrow}
-      <a href='#!' onClick={clickHandler}>{text}</a>
+      <a href="#!" onClick={clickHandler}>
+        {text}
+      </a>
     </th>
   )
 }
@@ -32,5 +34,5 @@ SortableHeader.propTypes = {
   sortBy: PropTypes.string,
   sortAsc: PropTypes.bool,
   onClick: PropTypes.func.isRequired,
-  className: PropTypes.string
+  className: PropTypes.string,
 }

@@ -1,5 +1,5 @@
-import React, { PropTypes, Component } from 'react'
-import { InputWithLabel } from '../ui'
+import React, { PropTypes, Component } from "react"
+import { InputWithLabel } from "../ui"
 
 export class PercentageInput extends Component {
   static propTypes = {
@@ -7,14 +7,14 @@ export class PercentageInput extends Component {
     label: PropTypes.node.isRequired,
     id: PropTypes.string.isRequired,
     onChange: PropTypes.func.isRequired,
-    readOnly: PropTypes.bool
+    readOnly: PropTypes.bool,
   }
 
   constructor(props) {
     super(props)
     this.state = {
       focused: false,
-      percentage: this.percentageRepresentation(props.value)
+      percentage: this.percentageRepresentation(props.value),
     }
     this.valueChange = this.valueChange.bind(this)
     this.onFocus = this.onFocus.bind(this)
@@ -30,33 +30,33 @@ export class PercentageInput extends Component {
       if (number > 100) {
         number = 100
       }
-      this.setState({percentage: number.toString()})
+      this.setState({ percentage: number.toString() })
       this.onChange(number, e.target.id)
     }
   }
 
   componentWillReceiveProps(props: Props) {
     if (!this.state.focused) {
-      this.setState({percentage: this.percentageRepresentation(props.value)})
+      this.setState({ percentage: this.percentageRepresentation(props.value) })
     }
   }
 
   onFocus(e) {
     this.setState({
       focused: true,
-      percentage: this.onlyNumbers(e.target.value).toString()
+      percentage: this.onlyNumbers(e.target.value).toString(),
     })
   }
 
   onBlur(e) {
     this.setState({
       focused: false,
-      percentage: this.percentageRepresentation(e.target.value)
+      percentage: this.percentageRepresentation(e.target.value),
     })
   }
 
   onlyNumbers(value) {
-    return value.replace(/[^0-9.]/g, '')
+    return value.replace(/[^0-9.]/g, "")
   }
 
   percentageRepresentation(numericValue) {
@@ -66,9 +66,9 @@ export class PercentageInput extends Component {
   render() {
     const { label, id, readOnly } = this.props
     return (
-      <InputWithLabel value={this.state.percentage} id={id} label={label} >
+      <InputWithLabel value={this.state.percentage} id={id} label={label}>
         <input
-          type='text'
+          type="text"
           onChange={this.valueChange}
           onBlur={this.onBlur}
           onFocus={this.onFocus}

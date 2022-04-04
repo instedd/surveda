@@ -1,10 +1,10 @@
-import * as api from '../api'
+import * as api from "../api"
 
-export const RECEIVE_PROJECT = 'RECEIVE_PROJECT'
-export const FETCH_PROJECT = 'FETCH_PROJECT'
-export const CREATE_PROJECT = 'CREATE_PROJECT'
-export const UPDATE_PROJECT = 'UPDATE_PROJECT'
-export const CLEAR_PROJECT = 'CLEAR_PROJECT'
+export const RECEIVE_PROJECT = "RECEIVE_PROJECT"
+export const FETCH_PROJECT = "FETCH_PROJECT"
+export const CREATE_PROJECT = "CREATE_PROJECT"
+export const UPDATE_PROJECT = "UPDATE_PROJECT"
+export const CLEAR_PROJECT = "CLEAR_PROJECT"
 
 export const fetchProject = (projectId) => (dispatch, getState) => {
   const state = getState()
@@ -28,31 +28,31 @@ export const fetchProject = (projectId) => (dispatch, getState) => {
     }
   }
 
-  api.fetchProject(projectId)
-    .then(response =>
-      dispatch(receiveProject(response.entities.projects[response.result])))
+  api
+    .fetchProject(projectId)
+    .then((response) => dispatch(receiveProject(response.entities.projects[response.result])))
 }
 
 export const startFetchingProject = (projectId) => ({
   type: FETCH_PROJECT,
-  projectId
+  projectId,
 })
 
 export const receiveProject = (project) => ({
   type: RECEIVE_PROJECT,
-  project
+  project,
 })
 
 export const createProject = (project) => ({
   type: CREATE_PROJECT,
-  project
+  project,
 })
 
 export const updateProject = (project) => ({
   type: UPDATE_PROJECT,
-  project
+  project,
 })
 
 export const clearProject = () => ({
-  type: CLEAR_PROJECT
+  type: CLEAR_PROJECT,
 })

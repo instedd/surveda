@@ -1,7 +1,7 @@
 // @flow
-import React, { Component, PropTypes } from 'react'
-import uuidv4 from 'uuid/v4'
-import classNames from 'classnames/bind'
+import React, { Component, PropTypes } from "react"
+import uuidv4 from "uuid/v4"
+import classNames from "classnames/bind"
 
 export class Modal extends Component<any> {
   componentDidMount() {
@@ -11,11 +11,11 @@ export class Modal extends Component<any> {
   }
 
   open() {
-    $(this.refs.modal).modal('open')
+    $(this.refs.modal).modal("open")
   }
 
   close() {
-    $(this.refs.modal).modal('close')
+    $(this.refs.modal).modal("close")
   }
 
   render() {
@@ -24,13 +24,22 @@ export class Modal extends Component<any> {
 
     let modalLink = null
     if (showLink) {
-      modalLink = (<a className='modal-trigger' href={`#${id}`}>{linkText}</a>)
+      modalLink = (
+        <a className="modal-trigger" href={`#${id}`}>
+          {linkText}
+        </a>
+      )
     }
 
     return (
       <div>
         {modalLink}
-        <div id={id} className={classNames(className, {'modal': true, 'card': card})} style={style} ref='modal'>
+        <div
+          id={id}
+          className={classNames(className, { modal: true, card: card })}
+          style={style}
+          ref="modal"
+        >
           {children}
         </div>
       </div>
@@ -46,5 +55,5 @@ Modal.propTypes = {
   id: PropTypes.string.isRequired,
   style: PropTypes.object,
   initOptions: PropTypes.object,
-  className: PropTypes.string
+  className: PropTypes.string,
 }

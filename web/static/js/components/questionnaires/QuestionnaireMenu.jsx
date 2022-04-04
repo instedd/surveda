@@ -1,16 +1,16 @@
-import React, { PropTypes, Component } from 'react'
-import { bindActionCreators } from 'redux'
-import { connect } from 'react-redux'
-import { withRouter } from 'react-router'
-import * as questionnaireActions from '../../actions/questionnaire'
-import * as uiActions from '../../actions/ui'
-import { csvForTranslation, csvTranslationFilename } from '../../reducers/questionnaire'
-import csvString from 'csv-string'
-import * as language from '../../language'
-import * as routes from '../../routes'
-import { Dropdown, DropdownItem } from '../ui'
-import withQuestionnaire from './withQuestionnaire'
-import { translate } from 'react-i18next'
+import React, { PropTypes, Component } from "react"
+import { bindActionCreators } from "redux"
+import { connect } from "react-redux"
+import { withRouter } from "react-router"
+import * as questionnaireActions from "../../actions/questionnaire"
+import * as uiActions from "../../actions/ui"
+import { csvForTranslation, csvTranslationFilename } from "../../reducers/questionnaire"
+import csvString from "csv-string"
+import * as language from "../../language"
+import * as routes from "../../routes"
+import { Dropdown, DropdownItem } from "../ui"
+import withQuestionnaire from "./withQuestionnaire"
+import { translate } from "react-i18next"
 
 class QuestionnaireMenu extends Component {
   static propTypes = {
@@ -18,7 +18,7 @@ class QuestionnaireMenu extends Component {
     questionnaireActions: PropTypes.object.isRequired,
     uiActions: PropTypes.object.isRequired,
     t: PropTypes.func,
-    readOnly: PropTypes.bool
+    readOnly: PropTypes.bool,
   }
 
   handleSubmit(newName) {
@@ -31,13 +31,13 @@ class QuestionnaireMenu extends Component {
   buildCsvLink() {
     const data = csvForTranslation(this.props.questionnaire)
     const csvData = csvString.stringify(data)
-    return 'data:text/csv;charset=utf-8,' + encodeURIComponent(csvData)
+    return "data:text/csv;charset=utf-8," + encodeURIComponent(csvData)
   }
 
   openUploadCsvDialog(e) {
     e.preventDefault()
 
-    $('#questionnaire_file_upload').trigger('click')
+    $("#questionnaire_file_upload").trigger("click")
   }
 
   uploadCsv(e) {
@@ -56,27 +56,40 @@ class QuestionnaireMenu extends Component {
 
       // Do some validations before uploading the CSV
       if (csv.length == 0) {
-        window.Materialize.toast(t('Error: CSV is empty'), 5000)
+        window.Materialize.toast(t("Error: CSV is empty"), 5000)
         return
       }
 
       let primaryLanguageCode = this.props.questionnaire.defaultLanguage
       let primaryLanguageName = language.codeToName(primaryLanguageCode)
       if (!primaryLanguageName) {
-        window.Materialize.toast(`${t('Error: primary language name not found for code')} ${primaryLanguageCode}`, 5000)
+        window.Materialize.toast(
+          `${t("Error: primary language name not found for code")} ${primaryLanguageCode}`,
+          5000
+        )
         return
       }
 
       let headers = csv[0]
       let defaultLanguageIndex = headers.indexOf(primaryLanguageName)
       if (defaultLanguageIndex == -1) {
-        window.Materialize.toast(`${t('Error: CSV doesn\'t have a header for the primary language')} '${primaryLanguageName}'`, 5000)
+        window.Materialize.toast(
+          `${t(
+            "Error: CSV doesn't have a header for the primary language"
+          )} '${primaryLanguageName}'`,
+          5000
+        )
         return
       }
 
       this.props.questionnaireActions.uploadCsvForTranslation(csv)
 
-      window.Materialize.toast(`${t('CSV uploaded successfully! {{count}} key was updated', {count: csv.length - 1})} ${t('in {{count}} language', {count: headers.length - 1})}`, 5000)
+      window.Materialize.toast(
+        `${t("CSV uploaded successfully! {{count}} key was updated", {
+          count: csv.length - 1,
+        })} ${t("in {{count}} language", { count: headers.length - 1 })}`,
+        5000
+      )
     }
     reader.readAsText(file)
 
@@ -109,9 +122,11 @@ class QuestionnaireMenu extends Component {
     // clicks are prevented.
     if (this.preventSecondImportZipDialog) return
     this.preventSecondImportZipDialog = true
-    setTimeout(() => { this.preventSecondImportZipDialog = false }, 2000)
+    setTimeout(() => {
+      this.preventSecondImportZipDialog = false
+    }, 2000)
 
-    $('#questionnaire_import_zip').trigger('click')
+    $("#questionnaire_import_zip").trigger("click")
   }
 
   importZip(e) {
@@ -133,42 +148,64 @@ class QuestionnaireMenu extends Component {
     const { questionnaire, readOnly, t } = this.props
 
     return (
-      <Dropdown className='title-options options questionnaire-menu' dataBelowOrigin={false} label={<i className='material-icons'>more_vert</i>}>
-        <DropdownItem className='dots'>
-          <i className='material-icons'>more_vert</i>
+      <Dropdown
+        className="title-options options questionnaire-menu"
+        dataBelowOrigin={false}
+        label={<i className="material-icons">more_vert</i>}
+      >
+        <DropdownItem className="dots">
+          <i className="material-icons">more_vert</i>
         </DropdownItem>
         <DropdownItem>
-          <a href='#' onClick={e => this.exportZip(e)}>
-            <i className='material-icons'>file_download</i>
-            <span>{t('Export questionnaire')}</span>
+          <a href="#" onClick={(e) => this.exportZip(e)}>
+            <i className="material-icons">file_download</i>
+            <span>{t("Export questionnaire")}</span>
           </a>
         </DropdownItem>
-        { !readOnly
-          ? <DropdownItem>
-            <input id='questionnaire_import_zip' type='file' accept='.zip' style={{display: 'none'}} onChange={e => this.importZip(e)} />
-            <a href='#' onClick={e => this.openImportZipDialog(e)}>
-              <i className='material-icons'>file_upload</i>
-              <span>{t('Import questionnaire')}</span>
+        {!readOnly ? (
+          <DropdownItem>
+            <input
+              id="questionnaire_import_zip"
+              type="file"
+              accept=".zip"
+              style={{ display: "none" }}
+              onChange={(e) => this.importZip(e)}
+            />
+            <a href="#" onClick={(e) => this.openImportZipDialog(e)}>
+              <i className="material-icons">file_upload</i>
+              <span>{t("Import questionnaire")}</span>
             </a>
           </DropdownItem>
-          : ''}
-        { !readOnly
-          ? <DropdownItem>
+        ) : (
+          ""
+        )}
+        {!readOnly ? (
+          <DropdownItem>
             <a href={this.buildCsvLink()} download={csvTranslationFilename(questionnaire)}>
-              <i className='material-icons'>file_download</i>
-              <span>{t('Download contents as CSV')}</span>
+              <i className="material-icons">file_download</i>
+              <span>{t("Download contents as CSV")}</span>
             </a>
           </DropdownItem>
-          : ''}
-        { !readOnly
-          ? <DropdownItem>
-            <input id='questionnaire_file_upload' type='file' accept='.csv' style={{display: 'none'}} onChange={e => this.uploadCsv(e)} />
-            <a href='#' onClick={e => this.openUploadCsvDialog(e)}>
-              <i className='material-icons'>file_upload</i>
-              <span>{t('Upload contents as CSV')}</span>
+        ) : (
+          ""
+        )}
+        {!readOnly ? (
+          <DropdownItem>
+            <input
+              id="questionnaire_file_upload"
+              type="file"
+              accept=".csv"
+              style={{ display: "none" }}
+              onChange={(e) => this.uploadCsv(e)}
+            />
+            <a href="#" onClick={(e) => this.openUploadCsvDialog(e)}>
+              <i className="material-icons">file_upload</i>
+              <span>{t("Upload contents as CSV")}</span>
             </a>
           </DropdownItem>
-          : ''}
+        ) : (
+          ""
+        )}
       </Dropdown>
     )
   }
@@ -176,7 +213,9 @@ class QuestionnaireMenu extends Component {
 
 const mapDispatchToProps = (dispatch) => ({
   questionnaireActions: bindActionCreators(questionnaireActions, dispatch),
-  uiActions: bindActionCreators(uiActions, dispatch)
+  uiActions: bindActionCreators(uiActions, dispatch),
 })
 
-export default translate()(withQuestionnaire(withRouter(connect(null, mapDispatchToProps)(QuestionnaireMenu))))
+export default translate()(
+  withQuestionnaire(withRouter(connect(null, mapDispatchToProps)(QuestionnaireMenu)))
+)
