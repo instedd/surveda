@@ -1,22 +1,22 @@
-import { normalize, Schema, arrayOf } from 'normalizr'
-import { camelizeKeys, decamelizeKeys } from 'humps'
-import 'isomorphic-fetch'
-import { upload } from './uploadManager'
+import { normalize, Schema, arrayOf } from "normalizr"
+import { camelizeKeys, decamelizeKeys } from "humps"
+import "isomorphic-fetch"
+import { upload } from "./uploadManager"
 
-const projectSchema = new Schema('projects')
-const folderSchema = new Schema('folders')
-const surveySchema = new Schema('surveys')
-const questionnaireSchema = new Schema('questionnaires')
-const respondentSchema = new Schema('respondents')
-const respondentGroupSchema = new Schema('respondentGroups')
-const responseSchema = new Schema('response')
-const respondentsStatsSchema = new Schema('respondents')
-const referenceSchema = new Schema('reference')
-const channelSchema = new Schema('channels')
-const audioSchema = new Schema('audios')
-const activitySchema = new Schema('activities')
-const integrationSchema = new Schema('integrations')
-const panelSurveySchema = new Schema('panelSurveys')
+const projectSchema = new Schema("projects")
+const folderSchema = new Schema("folders")
+const surveySchema = new Schema("surveys")
+const questionnaireSchema = new Schema("questionnaires")
+const respondentSchema = new Schema("respondents")
+const respondentGroupSchema = new Schema("respondentGroups")
+const responseSchema = new Schema("response")
+const respondentsStatsSchema = new Schema("respondents")
+const referenceSchema = new Schema("reference")
+const channelSchema = new Schema("channels")
+const audioSchema = new Schema("audios")
+const activitySchema = new Schema("activities")
+const integrationSchema = new Schema("integrations")
+const panelSurveySchema = new Schema("panelSurveys")
 
 export class Unauthorized {
   constructor(response) {
@@ -25,19 +25,20 @@ export class Unauthorized {
 }
 
 surveySchema.define({
-  channels: arrayOf(channelSchema)
+  channels: arrayOf(channelSchema),
 })
 
 responseSchema.define({
-  channels: arrayOf(responseSchema)
+  channels: arrayOf(responseSchema),
 })
 
 const apiFetch = (url, options) => {
-  return fetch(`/api/v1/${url}`, { ...options, credentials: 'same-origin' })
-    .then(response => {
-      return handleResponse(response, () =>
-        response)
-    })
+  return fetch(`/api/v1/${url}`, {
+    ...options,
+    credentials: "same-origin",
+  }).then((response) => {
+    return handleResponse(response, () => response)
+  })
 }
 
 const apiFetchJSON = (url, schema, options) => {
@@ -46,22 +47,24 @@ const apiFetchJSON = (url, schema, options) => {
 
 const apiFetchJSONWithCallback = (url, schema, options, responseCallback) => {
   return apiFetch(url, options)
-      .then(response => {
-        if (response.status == 204) {
-          // HTTP 204: No Content
-          return { json: null, response }
-        } else {
-          return response.json().then(json => ({ json, response }))
-        }
-      })
-      .then(({ json, response }) => {
-        return handleResponse(response, responseCallback(json, schema))
-      })
+    .then((response) => {
+      if (response.status == 204) {
+        // HTTP 204: No Content
+        return { json: null, response }
+      } else {
+        return response.json().then((json) => ({ json, response }))
+      }
+    })
+    .then(({ json, response }) => {
+      return handleResponse(response, responseCallback(json, schema))
+    })
 }
 
 const commonCallback = (json, schema) => {
   return () => {
-    if (!json) { return null }
+    if (!json) {
+      return null
+    }
     if (json.errors) {
       console.log(json.errors)
     }
@@ -108,43 +111,43 @@ const apiPutOrPostJSONWithCallback = (url, schema, verb, body, callback) => {
   const options = {
     method: verb,
     headers: {
-      'Accept': 'application/json',
-      'Content-Type': 'application/json'
-    }
+      Accept: "application/json",
+      "Content-Type": "application/json",
+    },
   }
   if (body) {
-    options.body = JSON.stringify(decamelizeKeys(body, { separator: '_' }))
+    options.body = JSON.stringify(decamelizeKeys(body, { separator: "_" }))
   }
   return apiFetchJSONWithCallback(url, schema, options, callback)
 }
 
 const apiPostJSON = (url, schema, body) => {
-  return apiPutOrPostJSON(url, schema, 'POST', body)
+  return apiPutOrPostJSON(url, schema, "POST", body)
 }
 
 const apiPutJSON = (url, schema, body) => {
-  return apiPutOrPostJSON(url, schema, 'PUT', body)
+  return apiPutOrPostJSON(url, schema, "PUT", body)
 }
 
 const apiDelete = (url) => {
-  return apiFetch(url, {method: 'DELETE'})
+  return apiFetch(url, { method: "DELETE" })
 }
 
 const apiPostFile = (url, schema, file) => {
   return apiFetchJSON(url, schema, {
-    method: 'POST',
-    body: newFormData(file)
+    method: "POST",
+    body: newFormData(file),
   })
 }
 
 const newFormData = (file) => {
   const formData = new FormData()
-  formData.append('file', file)
+  formData.append("file", file)
   return formData
 }
 
 export const fetchProjects = (options) => {
-  return apiFetchJSON(`projects?archived=${options['archived']}`, arrayOf(projectSchema))
+  return apiFetchJSON(`projects?archived=${options["archived"]}`, arrayOf(projectSchema))
 }
 
 export const fetchFolders = (projectId) => {
@@ -155,12 +158,15 @@ export const fetchFolder = (projectId, folderId) => {
   return apiFetchJSON(`projects/${projectId}/folders/${folderId}`, folderSchema)
 }
 
-export const fetchSurveys = projectId => {
+export const fetchSurveys = (projectId) => {
   return apiFetchJSON(`projects/${projectId}/surveys`, arrayOf(surveySchema))
 }
 
 export const fetchQuestionnaires = (projectId, options) => {
-  return apiFetchJSON(`projects/${projectId}/questionnaires?archived=${options['archived']}`, arrayOf(questionnaireSchema))
+  return apiFetchJSON(
+    `projects/${projectId}/questionnaires?archived=${options["archived"]}`,
+    arrayOf(questionnaireSchema)
+  )
 }
 
 export const fetchQuestionnaire = (projectId, id) => {
@@ -180,7 +186,7 @@ export const fetchPanelSurvey = (projectId, id) => {
 }
 
 export const createProject = (project) => {
-  return apiPostJSON('projects', projectSchema, { project })
+  return apiPostJSON("projects", projectSchema, { project })
 }
 
 export const leaveProject = (projectId) => {
@@ -188,7 +194,9 @@ export const leaveProject = (projectId) => {
 }
 
 export const createFolder = (projectId, name) => {
-  return apiPostJSON(`projects/${projectId}/folders`, folderSchema, {folder: {name}})
+  return apiPostJSON(`projects/${projectId}/folders`, folderSchema, {
+    folder: { name },
+  })
 }
 
 export const deleteFolder = (projectId, folderId) => {
@@ -203,11 +211,11 @@ export const createSurvey = (projectId, folderId, generatesPanelSurvey = false) 
   const timezone = getTimezone()
   let data
   if (timezone) {
-    data = {survey: {timezone, generatesPanelSurvey}}
+    data = { survey: { timezone, generatesPanelSurvey } }
   } else {
-    data = {survey: {generatesPanelSurvey}}
+    data = { survey: { generatesPanelSurvey } }
   }
-  let folderPath = folderId ? `/folders/${folderId}` : ''
+  let folderPath = folderId ? `/folders/${folderId}` : ""
   return apiPostJSON(`projects/${projectId}${folderPath}/surveys`, surveySchema, data)
 }
 
@@ -228,26 +236,39 @@ const getTimezone = () => {
 }
 
 export const createAudio = (files) => {
-  return apiPostFile('audios', audioSchema, files[0])
+  return apiPostFile("audios", audioSchema, files[0])
 }
 
 export const uploadRespondentGroup = (projectId, surveyId, files) => {
-  return apiPostFile(`projects/${projectId}/surveys/${surveyId}/respondent_groups`,
-    respondentGroupSchema, files[0])
+  return apiPostFile(
+    `projects/${projectId}/surveys/${surveyId}/respondent_groups`,
+    respondentGroupSchema,
+    files[0]
+  )
 }
 
 export const addMoreRespondentsToGroup = (projectId, surveyId, groupId, file) => {
-  return apiPostFile(`projects/${projectId}/surveys/${surveyId}/respondent_groups/${groupId}/add`,
-    respondentGroupSchema, file)
+  return apiPostFile(
+    `projects/${projectId}/surveys/${surveyId}/respondent_groups/${groupId}/add`,
+    respondentGroupSchema,
+    file
+  )
 }
 
 export const replaceRespondents = (projectId, surveyId, groupId, file) => {
-  return apiPostFile(`projects/${projectId}/surveys/${surveyId}/respondent_groups/${groupId}/replace`,
-    respondentGroupSchema, file)
+  return apiPostFile(
+    `projects/${projectId}/surveys/${surveyId}/respondent_groups/${groupId}/replace`,
+    respondentGroupSchema,
+    file
+  )
 }
 
 export const updateRespondentGroup = (projectId, surveyId, groupId, data) => {
-  return apiPutJSON(`projects/${projectId}/surveys/${surveyId}/respondent_groups/${groupId}`, respondentGroupSchema, { respondentGroup: data })
+  return apiPutJSON(
+    `projects/${projectId}/surveys/${surveyId}/respondent_groups/${groupId}`,
+    respondentGroupSchema,
+    { respondentGroup: data }
+  )
 }
 
 export const removeRespondentGroup = (projectId, surveyId, groupId) => {
@@ -262,15 +283,26 @@ export const fetchRespondents = (projectId, surveyId, limit, page, filter, sortB
   }
   if (filter) params.q = filter
   const queryString = new URLSearchParams(Object.entries(params)).toString()
-  return apiFetchJSONWithCallback(`projects/${projectId}/surveys/${surveyId}/respondents/?${queryString}`, arrayOf(respondentSchema), {}, respondentsCallback)
+  return apiFetchJSONWithCallback(
+    `projects/${projectId}/surveys/${surveyId}/respondents/?${queryString}`,
+    arrayOf(respondentSchema),
+    {},
+    respondentsCallback
+  )
 }
 
 export const fetchRespondentsStats = (projectId, surveyId) => {
-  return apiFetchJSON(`projects/${projectId}/surveys/${surveyId}/respondents/stats`, respondentsStatsSchema)
+  return apiFetchJSON(
+    `projects/${projectId}/surveys/${surveyId}/respondents/stats`,
+    respondentsStatsSchema
+  )
 }
 
 export const fetchRespondentGroups = (projectId, surveyId) => {
-  return apiFetchJSON(`projects/${projectId}/surveys/${surveyId}/respondent_groups`, arrayOf(respondentGroupSchema))
+  return apiFetchJSON(
+    `projects/${projectId}/surveys/${surveyId}/respondent_groups`,
+    arrayOf(respondentGroupSchema)
+  )
 }
 
 export const createQuestionnaire = (projectId, questionnaire) => {
@@ -286,7 +318,11 @@ export const updateProjectArchived = (project) => {
 }
 
 export const updateQuestionnaireArchived = (questionnaire) => {
-  return apiPutJSON(`projects/${questionnaire.projectId}/questionnaires/${questionnaire.id}/update_archived_status`, projectSchema, { questionnaire })
+  return apiPutJSON(
+    `projects/${questionnaire.projectId}/questionnaires/${questionnaire.id}/update_archived_status`,
+    projectSchema,
+    { questionnaire }
+  )
 }
 
 export const updateSurvey = (projectId, survey) => {
@@ -298,19 +334,29 @@ export const setSurveyName = (projectId, surveyId, name) => {
 }
 
 export const setFolderId = (projectId, surveyId, folderId) => {
-  return apiPostJSON(`projects/${projectId}/surveys/${surveyId}/set_folder_id`, null, { folderId: folderId || null })
+  return apiPostJSON(`projects/${projectId}/surveys/${surveyId}/set_folder_id`, null, {
+    folderId: folderId || null,
+  })
 }
 
 export const panelSurveySetFolderId = (projectId, panelSurveyId, folderId) => {
-  return apiPostJSON(`projects/${projectId}/panel_surveys/${panelSurveyId}/set_folder_id`, null, { folderId: folderId || null })
+  return apiPostJSON(`projects/${projectId}/panel_surveys/${panelSurveyId}/set_folder_id`, null, {
+    folderId: folderId || null,
+  })
 }
 
 export const setSurveyDescription = (projectId, surveyId, description) => {
-  return apiPostJSON(`projects/${projectId}/surveys/${surveyId}/set_description`, null, { description })
+  return apiPostJSON(`projects/${projectId}/surveys/${surveyId}/set_description`, null, {
+    description,
+  })
 }
 
 export const updateSurveyLockedStatus = (projectId, surveyId, locked) => {
-  return apiPutJSON(`projects/${projectId}/surveys/${surveyId}/update_locked_status`, surveySchema, { locked })
+  return apiPutJSON(
+    `projects/${projectId}/surveys/${surveyId}/update_locked_status`,
+    surveySchema,
+    { locked }
+  )
 }
 
 export const fetchChannels = () => {
@@ -334,8 +380,11 @@ export const createChannel = (provider, baseUrl, channel) => {
 }
 
 export const updateQuestionnaire = (projectId, questionnaire) => {
-  return apiPutJSON(`projects/${projectId}/questionnaires/${questionnaire.id}`,
-    questionnaireSchema, { questionnaire })
+  return apiPutJSON(
+    `projects/${projectId}/questionnaires/${questionnaire.id}`,
+    questionnaireSchema,
+    { questionnaire }
+  )
 }
 
 export const deleteQuestionnaire = (projectId, questionnaire) => {
@@ -367,7 +416,11 @@ export const fetchAuthorizations = () => {
 }
 
 export const deleteAuthorization = (provider, baseUrl, keepChannels = false) => {
-  return apiDelete(`authorizations/${provider}?base_url=${encodeURIComponent(baseUrl)}&keep_channels=${keepChannels}`)
+  return apiDelete(
+    `authorizations/${provider}?base_url=${encodeURIComponent(
+      baseUrl
+    )}&keep_channels=${keepChannels}`
+  )
 }
 
 export const synchronizeChannels = () => {
@@ -375,31 +428,49 @@ export const synchronizeChannels = () => {
 }
 
 export const getUIToken = (provider, baseUrl) => {
-  return apiFetch(`authorizations/ui_token?provider=${provider}&base_url=${encodeURIComponent(baseUrl)}`)
-    .then(response => response.json())
+  return apiFetch(
+    `authorizations/ui_token?provider=${provider}&base_url=${encodeURIComponent(baseUrl)}`
+  ).then((response) => response.json())
 }
 
 export const autocompleteVars = (projectId, text) => {
-  return apiFetch(`projects/${projectId}/autocomplete_vars?text=${encodeURIComponent(text)}`)
-  .then(response => response.json())
+  return apiFetch(`projects/${projectId}/autocomplete_vars?text=${encodeURIComponent(text)}`).then(
+    (response) => response.json()
+  )
 }
 
 export const autocompletePrimaryLanguage = (projectId, mode, scope, language, text) => {
-  return apiFetch(`projects/${projectId}/autocomplete_primary_language?mode=${mode}&scope=${scope}&language=${language}&text=${encodeURIComponent(text)}`)
-  .then(response => response.json())
-  .catch(error => {
-    console.log(error)
-    return []
-  })
+  return apiFetch(
+    `projects/${projectId}/autocomplete_primary_language?mode=${mode}&scope=${scope}&language=${language}&text=${encodeURIComponent(
+      text
+    )}`
+  )
+    .then((response) => response.json())
+    .catch((error) => {
+      console.log(error)
+      return []
+    })
 }
 
-export const autocompleteOtherLanguage = (projectId, mode, scope, primaryLanguage, otherLanguage, sourceText, targetText) => {
-  return apiFetch(`projects/${projectId}/autocomplete_other_language?mode=${mode}&scope=${scope}&primary_language=${primaryLanguage}&other_language=${otherLanguage}&source_text=${encodeURIComponent(sourceText)}&target_text=${encodeURIComponent(targetText)}`)
-  .then(response => response.json())
-  .catch(error => {
-    console.log(error)
-    return []
-  })
+export const autocompleteOtherLanguage = (
+  projectId,
+  mode,
+  scope,
+  primaryLanguage,
+  otherLanguage,
+  sourceText,
+  targetText
+) => {
+  return apiFetch(
+    `projects/${projectId}/autocomplete_other_language?mode=${mode}&scope=${scope}&primary_language=${primaryLanguage}&other_language=${otherLanguage}&source_text=${encodeURIComponent(
+      sourceText
+    )}&target_text=${encodeURIComponent(targetText)}`
+  )
+    .then((response) => response.json())
+    .catch((error) => {
+      console.log(error)
+      return []
+    })
 }
 
 export const fetchCollaborators = (projectId) => {
@@ -407,11 +478,17 @@ export const fetchCollaborators = (projectId) => {
 }
 
 export const removeCollaborator = (projectId, collaboratorEmail) => {
-  return apiDelete(`projects/${projectId}/memberships/remove?email=${encodeURIComponent(collaboratorEmail)}`)
+  return apiDelete(
+    `projects/${projectId}/memberships/remove?email=${encodeURIComponent(collaboratorEmail)}`
+  )
 }
 
 export const updateCollaboratorLevel = (projectId, collaboratorEmail, newLevel) => {
-  return apiPutJSON(`projects/${projectId}/memberships/update`, {}, { email: collaboratorEmail, level: newLevel })
+  return apiPutJSON(
+    `projects/${projectId}/memberships/update`,
+    {},
+    { email: collaboratorEmail, level: newLevel }
+  )
 }
 
 export const fetchPanelSurveys = (projectId) => {
@@ -419,7 +496,12 @@ export const fetchPanelSurveys = (projectId) => {
 }
 
 export const fetchActivities = (projectId, pageSize, pageNumber, sortBy, sortAsc) => {
-  return apiFetchJSONWithCallback(`projects/${projectId}/activities?limit=${pageSize}&page=${pageNumber}&sort_by=${sortBy}&sort_asc=${sortAsc}`, arrayOf(activitySchema), {}, activitiesCallback)
+  return apiFetchJSONWithCallback(
+    `projects/${projectId}/activities?limit=${pageSize}&page=${pageNumber}&sort_by=${sortBy}&sort_asc=${sortAsc}`,
+    arrayOf(activitySchema),
+    {},
+    activitiesCallback
+  )
 }
 
 export const fetchSettings = () => {
@@ -431,15 +513,25 @@ export const updateSettings = (params) => {
 }
 
 export const getInviteByEmailAndProject = (projectId, email) => {
-  return apiFetchJSON(`get_invite_by_email_and_project?project_id=${projectId}&email=${encodeURIComponent(email)}`)
+  return apiFetchJSON(
+    `get_invite_by_email_and_project?project_id=${projectId}&email=${encodeURIComponent(email)}`
+  )
 }
 
 export const invite = (projectId, code, level, email) => {
-  return apiFetchJSON(`invite?project_id=${projectId}&code=${encodeURIComponent(code)}&email=${encodeURIComponent(email)}&level=${encodeURIComponent(level)}`)
+  return apiFetchJSON(
+    `invite?project_id=${projectId}&code=${encodeURIComponent(code)}&email=${encodeURIComponent(
+      email
+    )}&level=${encodeURIComponent(level)}`
+  )
 }
 
 export const inviteMail = (projectId, code, level, email) => {
-  return apiFetchJSON(`send_invitation?project_id=${projectId}&code=${encodeURIComponent(code)}&email=${encodeURIComponent(email)}&level=${encodeURIComponent(level)}`)
+  return apiFetchJSON(
+    `send_invitation?project_id=${projectId}&code=${encodeURIComponent(
+      code
+    )}&email=${encodeURIComponent(email)}&level=${encodeURIComponent(level)}`
+  )
 }
 
 export const fetchInvite = (code) => {
@@ -447,21 +539,35 @@ export const fetchInvite = (code) => {
 }
 
 export const removeInvite = (projectId, collaboratorEmail) => {
-  return apiDelete(`invite_remove?project_id=${projectId}&email=${encodeURIComponent(collaboratorEmail)}`)
+  return apiDelete(
+    `invite_remove?project_id=${projectId}&email=${encodeURIComponent(collaboratorEmail)}`
+  )
 }
 
 export const updateInviteLevel = (projectId, collaboratorEmail, newLevel) => {
-  return apiPutJSON(`invite_update`, {}, { project_id: projectId, email: collaboratorEmail, level: newLevel })
+  return apiPutJSON(
+    `invite_update`,
+    {},
+    { project_id: projectId, email: collaboratorEmail, level: newLevel }
+  )
 }
 
 export const confirm = (code) => {
   return apiFetchJSON(`accept_invitation?code=${encodeURIComponent(code)}`)
 }
 
-export const importQuestionnaireZip = (projectId, questionnaireId, file, onCompleted, onProgress, onAbort, onError) => {
+export const importQuestionnaireZip = (
+  projectId,
+  questionnaireId,
+  file,
+  onCompleted,
+  onProgress,
+  onAbort,
+  onError
+) => {
   const url = `/api/v1/projects/${projectId}/questionnaires/${questionnaireId}/import_zip`
   const apiOnCompleted = (response) => {
-    const questionnaireSchema = new Schema('questionnaires')
+    const questionnaireSchema = new Schema("questionnaires")
     response = JSON.parse(response)
     response = normalize(camelizeKeys(response.data), questionnaireSchema)
     const questionnaire = response.entities.questionnaires[response.result]
@@ -471,8 +577,13 @@ export const importQuestionnaireZip = (projectId, questionnaireId, file, onCompl
 }
 
 export const simulateQuestionnaire = (projectId, questionnaireId, phoneNumber, mode, channelId) => {
-  return apiPostJSON(`projects/${projectId}/surveys/simulate_questionanire?questionnaire_id=${questionnaireId}&phone_number=${encodeURIComponent(phoneNumber)}&mode=${encodeURIComponent(mode)}&channel_id=${encodeURIComponent(channelId)}`,
-    surveySchema, {})
+  return apiPostJSON(
+    `projects/${projectId}/surveys/simulate_questionanire?questionnaire_id=${questionnaireId}&phone_number=${encodeURIComponent(
+      phoneNumber
+    )}&mode=${encodeURIComponent(mode)}&channel_id=${encodeURIComponent(channelId)}`,
+    surveySchema,
+    {}
+  )
 }
 
 export const fetchSurveySimulationStatus = (projectId, surveyId) => {
@@ -497,7 +608,9 @@ export const stopSurveySimulation = (projectId, surveyId) => {
 
 const passthroughCallback = (json, _schema) => {
   return () => {
-    if (!json) { return null }
+    if (!json) {
+      return null
+    }
     if (json.errors) {
       console.log(json.errors)
     }
@@ -506,52 +619,113 @@ const passthroughCallback = (json, _schema) => {
 }
 
 export const createResultsLink = (projectId, surveyId) => {
-  return apiFetchJSONWithCallback(`projects/${projectId}/surveys/${surveyId}/links/results`, arrayOf(referenceSchema), {}, passthroughCallback)
+  return apiFetchJSONWithCallback(
+    `projects/${projectId}/surveys/${surveyId}/links/results`,
+    arrayOf(referenceSchema),
+    {},
+    passthroughCallback
+  )
 }
 
 export const createIncentivesLink = (projectId, surveyId) => {
-  return apiFetchJSONWithCallback(`projects/${projectId}/surveys/${surveyId}/links/incentives`, arrayOf(referenceSchema), {}, passthroughCallback)
+  return apiFetchJSONWithCallback(
+    `projects/${projectId}/surveys/${surveyId}/links/incentives`,
+    arrayOf(referenceSchema),
+    {},
+    passthroughCallback
+  )
 }
 
 export const createInteractionsLink = (projectId, surveyId) => {
-  return apiFetchJSONWithCallback(`projects/${projectId}/surveys/${surveyId}/links/interactions`, arrayOf(referenceSchema), {}, passthroughCallback)
+  return apiFetchJSONWithCallback(
+    `projects/${projectId}/surveys/${surveyId}/links/interactions`,
+    arrayOf(referenceSchema),
+    {},
+    passthroughCallback
+  )
 }
 
 export const createDispositionHistoryLink = (projectId, surveyId) => {
-  return apiFetchJSONWithCallback(`projects/${projectId}/surveys/${surveyId}/links/disposition_history`, arrayOf(referenceSchema), {}, passthroughCallback)
+  return apiFetchJSONWithCallback(
+    `projects/${projectId}/surveys/${surveyId}/links/disposition_history`,
+    arrayOf(referenceSchema),
+    {},
+    passthroughCallback
+  )
 }
 
 export const refreshResultsLink = (projectId, surveyId) => {
-  return apiPutOrPostJSONWithCallback(`projects/${projectId}/surveys/${surveyId}/links/results`, arrayOf(referenceSchema), 'PUT', {}, passthroughCallback)
+  return apiPutOrPostJSONWithCallback(
+    `projects/${projectId}/surveys/${surveyId}/links/results`,
+    arrayOf(referenceSchema),
+    "PUT",
+    {},
+    passthroughCallback
+  )
 }
 
 export const refreshIncentivesLink = (projectId, surveyId) => {
-  return apiPutOrPostJSONWithCallback(`projects/${projectId}/surveys/${surveyId}/links/incentives`, arrayOf(referenceSchema), 'PUT', {}, passthroughCallback)
+  return apiPutOrPostJSONWithCallback(
+    `projects/${projectId}/surveys/${surveyId}/links/incentives`,
+    arrayOf(referenceSchema),
+    "PUT",
+    {},
+    passthroughCallback
+  )
 }
 
 export const refreshInteractionsLink = (projectId, surveyId) => {
-  return apiPutOrPostJSONWithCallback(`projects/${projectId}/surveys/${surveyId}/links/interactions`, arrayOf(referenceSchema), 'PUT', {}, passthroughCallback)
+  return apiPutOrPostJSONWithCallback(
+    `projects/${projectId}/surveys/${surveyId}/links/interactions`,
+    arrayOf(referenceSchema),
+    "PUT",
+    {},
+    passthroughCallback
+  )
 }
 
 export const refreshDispositionHistoryLink = (projectId, surveyId) => {
-  return apiPutOrPostJSONWithCallback(`projects/${projectId}/surveys/${surveyId}/links/disposition_history`, arrayOf(referenceSchema), 'PUT', {}, passthroughCallback)
+  return apiPutOrPostJSONWithCallback(
+    `projects/${projectId}/surveys/${surveyId}/links/disposition_history`,
+    arrayOf(referenceSchema),
+    "PUT",
+    {},
+    passthroughCallback
+  )
 }
 
 export const startSimulation = (projectId, questionnaireId, mode) => {
-  return apiPutOrPostJSONWithCallback(`projects/${projectId}/questionnaires/${questionnaireId}/simulation`, null, 'POST', { mode }, passthroughCallback)
+  return apiPutOrPostJSONWithCallback(
+    `projects/${projectId}/questionnaires/${questionnaireId}/simulation`,
+    null,
+    "POST",
+    { mode },
+    passthroughCallback
+  )
 }
 
 export const fetchSimulation = (projectId, questionnaireId, respondentId, mode) => {
-  return apiFetchJSONWithCallback(`projects/${projectId}/questionnaires/${questionnaireId}/simulation/${respondentId}`, null, {}, passthroughCallback)
+  return apiFetchJSONWithCallback(
+    `projects/${projectId}/questionnaires/${questionnaireId}/simulation/${respondentId}`,
+    null,
+    {},
+    passthroughCallback
+  )
 }
 
 export const messageSimulation = (projectId, questionnaireId, respondentId, message, mode) => {
   const body = {
     respondentId,
     response: message,
-    mode
+    mode,
   }
-  return apiPutOrPostJSONWithCallback(`projects/${projectId}/questionnaires/${questionnaireId}/simulation/message`, null, 'POST', body, passthroughCallback)
+  return apiPutOrPostJSONWithCallback(
+    `projects/${projectId}/questionnaires/${questionnaireId}/simulation/message`,
+    null,
+    "POST",
+    body,
+    passthroughCallback
+  )
 }
 
 export const deleteResultsLink = (projectId, surveyId) => {
@@ -571,9 +745,14 @@ export const deleteDispositionHistoryLink = (projectId, surveyId) => {
 }
 
 export const fetchIntegrations = (projectId, surveyId) => {
-  return apiFetchJSON(`projects/${projectId}/surveys/${surveyId}/integrations`, arrayOf(integrationSchema))
+  return apiFetchJSON(
+    `projects/${projectId}/surveys/${surveyId}/integrations`,
+    arrayOf(integrationSchema)
+  )
 }
 
 export const createIntegration = (projectId, surveyId, integration) => {
-  return apiPostJSON(`projects/${projectId}/surveys/${surveyId}/integrations`, integrationSchema, { integration })
+  return apiPostJSON(`projects/${projectId}/surveys/${surveyId}/integrations`, integrationSchema, {
+    integration,
+  })
 }

@@ -4,11 +4,12 @@
 // These values are set once when the React app is served
 const initialState = {
   introMessage: "",
-  colorStyle: {}
+  colorStyle: {},
 }
 
 export default (state: any = initialState, action: any) => {
   switch (action.type) {
-    default: return state
+    default:
+      return state
   }
 }

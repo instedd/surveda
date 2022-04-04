@@ -1,8 +1,8 @@
-import * as actions from '../actions/timezones'
+import * as actions from "../actions/timezones"
 
 const initialState = {
   fetching: false,
-  items: null
+  items: null,
 }
 
 export default (state = initialState, action) => {
@@ -11,15 +11,16 @@ export default (state = initialState, action) => {
       return {
         ...state,
         fetching: false,
-        items: action.timezones
+        items: action.timezones,
       }
     }
     case actions.FETCH_TIMEZONES: {
       return {
         ...state,
-        fetching: true
+        fetching: true,
       }
     }
-    default: return state
+    default:
+      return state
   }
 }

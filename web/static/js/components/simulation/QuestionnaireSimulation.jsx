@@ -1,33 +1,33 @@
 // @flow
-import React, { Component } from 'react'
-import { withRouter, browserHistory } from 'react-router'
-import * as questionnaireActions from '../../actions/questionnaire'
-import { connect } from 'react-redux'
-import { bindActionCreators } from 'redux'
-import * as routes from '../../routes'
-import { Tooltip } from '../ui'
-import { startSimulation, messageSimulation, fetchSimulation } from '../../api.js'
-import ChatWindow from './ChatWindow'
-import VoiceWindow from './VoiceWindow'
-import MobileWebWindow from './MobileWebWindow'
-import DispositionChart from './DispositionChart'
-import SimulationSteps from './SimulationSteps'
-import { translate } from 'react-i18next'
+import React, { Component } from "react"
+import { withRouter, browserHistory } from "react-router"
+import * as questionnaireActions from "../../actions/questionnaire"
+import { connect } from "react-redux"
+import { bindActionCreators } from "redux"
+import * as routes from "../../routes"
+import { Tooltip } from "../ui"
+import { startSimulation, messageSimulation, fetchSimulation } from "../../api.js"
+import ChatWindow from "./ChatWindow"
+import VoiceWindow from "./VoiceWindow"
+import MobileWebWindow from "./MobileWebWindow"
+import DispositionChart from "./DispositionChart"
+import SimulationSteps from "./SimulationSteps"
+import { translate } from "react-i18next"
 
 type ChatMessage = {
   type: string,
-  body: string
+  body: string,
 }
 
 type Submission = {
   stepId: string,
-  response: ?string
+  response: ?string,
 }
 
 type IVRPrompt = {
   text: string,
   audioSource: string,
-  audioId: string
+  audioId: string,
 }
 
 type Simulation = {
@@ -39,7 +39,7 @@ type Simulation = {
   respondentId: string,
   currentStep: string,
   questionnaire: Questionnaire,
-  indexUrl: string
+  indexUrl: string,
 }
 
 type Props = {
@@ -48,12 +48,12 @@ type Props = {
   mode: string,
   questionnaireActions: Object,
   t: Function,
-  router: Object
+  router: Object,
 }
 
 type State = {
   simulation: ?Simulation,
-  isSimulationTerminated: boolean
+  isSimulationTerminated: boolean,
 }
 
 class QuestionnaireSimulation extends Component<Props, State> {
@@ -61,7 +61,7 @@ class QuestionnaireSimulation extends Component<Props, State> {
 
   state = {
     simulation: null,
-    isSimulationTerminated: false
+    isSimulationTerminated: false,
   }
 
   componentDidMount() {
@@ -69,17 +69,19 @@ class QuestionnaireSimulation extends Component<Props, State> {
 
     browserHistory.listen(this.onRouteChange)
 
-    if (mode == 'mobileweb') {
-      this._onMessage = event => { this.onMessage(event) }
-      window.addEventListener('message', this._onMessage)
+    if (mode == "mobileweb") {
+      this._onMessage = (event) => {
+        this.onMessage(event)
+      }
+      window.addEventListener("message", this._onMessage)
     }
 
     if (projectId && questionnaireId) {
       this.fetchQuestionnaireForTitle()
 
-      if (['sms', 'ivr', 'mobileweb'].includes(mode)) {
-        startSimulation(projectId, questionnaireId, mode).then(result => {
-          this.setState({simulation: result})
+      if (["sms", "ivr", "mobileweb"].includes(mode)) {
+        startSimulation(projectId, questionnaireId, mode).then((result) => {
+          this.setState({ simulation: result })
         })
       }
     }
@@ -97,20 +99,20 @@ class QuestionnaireSimulation extends Component<Props, State> {
       //
       // See https://dev.to/zbmarius/react-route-refresh-without-page-reload-1907
       const pathname = window.location.pathname
-      router.push('/')
+      router.push("/")
       setImmediate(() => router.replace(pathname))
     }
   }
 
   componentWillUnmount() {
     if (this._onMessage) {
-      window.removeEventListener('message', this._onMessage)
+      window.removeEventListener("message", this._onMessage)
     }
     delete window.__refreshSimulation
   }
 
   onRouteChange = () => {
-    document.querySelectorAll('.toast').forEach(t => t.remove())
+    document.querySelectorAll(".toast").forEach((t) => t.remove())
   }
 
   /**
@@ -129,47 +131,50 @@ class QuestionnaireSimulation extends Component<Props, State> {
 
     if (event.data.simulationChanged && simulation) {
       const { projectId, questionnaireId } = this.props
-      return fetchSimulation(projectId, questionnaireId, simulation.respondentId, mode).then(result => {
-        this.onSimulationChanged(result)
-      })
+      return fetchSimulation(projectId, questionnaireId, simulation.respondentId, mode).then(
+        (result) => {
+          this.onSimulationChanged(result)
+        }
+      )
     }
   }
 
-  onSimulationChanged = result => {
+  onSimulationChanged = (result) => {
     if (this.state.isSimulationTerminated) return
 
     const { simulation } = this.state
     const { t } = this.props
     const { simulationStatus } = result
-    const isSimulationTerminated = simulationStatus == 'expired' || simulationStatus == 'ended'
+    const isSimulationTerminated = simulationStatus == "expired" || simulationStatus == "ended"
     let newSimulation
 
     if (isSimulationTerminated) {
-      let message = ''
+      let message = ""
 
       switch (simulationStatus) {
-        case 'expired':
-          message = t('This simulation has expired')
+        case "expired":
+          message = t("This simulation has expired")
           break
-        case 'ended':
-          message = t('This simulation has ended')
+        case "ended":
+          message = t("This simulation has ended")
           break
       }
 
       window.Materialize.toast(
         `${message} <a class="waves-effect waves-light btn btn-small" href="" onclick="__refreshSimulation()">
           <i class="material-icons left">replay</i>
-          ${t('Restart simulation')}
-        </a>`)
+          ${t("Restart simulation")}
+        </a>`
+      )
     }
 
-    if (simulationStatus == 'expired') {
+    if (simulationStatus == "expired") {
       // When the simulation expires we avoid refreshing (and so, erasing) the current state
       // So we only update the simulation status and we send a message to the end user
       // This allow us to handle this particular situation properly
       newSimulation = {
         ...simulation,
-        simulationStatus
+        simulationStatus,
       }
     } else {
       newSimulation = {
@@ -179,22 +184,28 @@ class QuestionnaireSimulation extends Component<Props, State> {
         submissions: result.submissions,
         simulationStatus,
         disposition: result.disposition,
-        currentStep: result.currentStep
+        currentStep: result.currentStep,
       }
     }
 
     this.setState({
       simulation: newSimulation,
-      isSimulationTerminated
+      isSimulationTerminated,
     })
   }
 
-  handleATMessage = message => {
+  handleATMessage = (message) => {
     const { projectId, questionnaireId, mode } = this.props
     const { simulation } = this.state
     if (simulation) {
       this.addMessage(message)
-      messageSimulation(projectId, questionnaireId, simulation.respondentId, message.body, mode).then(result => {
+      messageSimulation(
+        projectId,
+        questionnaireId,
+        simulation.respondentId,
+        message.body,
+        mode
+      ).then((result) => {
         this.onSimulationChanged(result)
       })
     }
@@ -207,8 +218,8 @@ class QuestionnaireSimulation extends Component<Props, State> {
       this.setState({
         simulation: {
           ...simulation,
-          messagesHistory: [...simulation.messagesHistory, message]
-        }
+          messagesHistory: [...simulation.messagesHistory, message],
+        },
       })
     }
   }
@@ -222,62 +233,78 @@ class QuestionnaireSimulation extends Component<Props, State> {
     const { simulation } = this.state
     const { mode, t } = this.props
 
-    if (!simulation) return <div>{t('Loading...')}</div>
+    if (!simulation) return <div>{t("Loading...")}</div>
 
-    const simulationIsActive = simulation && simulation.simulationStatus == 'active'
+    const simulationIsActive = simulation && simulation.simulationStatus == "active"
     const closeSimulationButton = (
       <div>
-        <Tooltip text='Close Simulation'>
-          <a key='one' className='btn-floating btn-large waves-effect waves-light red right mtop' href='#' onClick={this.closeSimulation}>
-            <i className='material-icons'>close</i>
+        <Tooltip text="Close Simulation">
+          <a
+            key="one"
+            className="btn-floating btn-large waves-effect waves-light red right mtop"
+            href="#"
+            onClick={this.closeSimulation}
+          >
+            <i className="material-icons">close</i>
           </a>
         </Tooltip>
       </div>
     )
     const phoneWindow = () => {
       switch (mode) {
-        case 'sms':
-          return <ChatWindow
-                    chatTitle={'SMS mode'}
-                    messages={simulation.messagesHistory}
-                    onSendMessage={this.handleATMessage}
-                    readOnly={!simulationIsActive}
-                    scrollToBottom />
-        case 'ivr':
-          return <VoiceWindow
-                    voiceTitle={'Voice mode'}
-                    messages={simulation.messagesHistory}
-                    prompts={simulation.prompts}
-                    onSendMessage={this.handleATMessage}
-                    readOnly={!simulationIsActive} />
-        case 'mobileweb':
+        case "sms":
+          return (
+            <ChatWindow
+              chatTitle={"SMS mode"}
+              messages={simulation.messagesHistory}
+              onSendMessage={this.handleATMessage}
+              readOnly={!simulationIsActive}
+              scrollToBottom
+            />
+          )
+        case "ivr":
+          return (
+            <VoiceWindow
+              voiceTitle={"Voice mode"}
+              messages={simulation.messagesHistory}
+              prompts={simulation.prompts}
+              onSendMessage={this.handleATMessage}
+              readOnly={!simulationIsActive}
+            />
+          )
+        case "mobileweb":
           return <MobileWebWindow indexUrl={simulation.indexUrl} />
       }
     }
 
-    return <div>
-      {closeSimulationButton}
-      <div className='quex-simulation-container'>
-        <DispositionChart disposition={simulation.disposition} />
-        <SimulationSteps steps={simulation.questionnaire.steps}
-          currentStepId={simulation.currentStep}
-          submissions={simulation.submissions}
-          simulationIsEnded={simulation.simulationStatus == 'ended'}
-        />
-        {phoneWindow()}
+    return (
+      <div>
+        {closeSimulationButton}
+        <div className="quex-simulation-container">
+          <DispositionChart disposition={simulation.disposition} />
+          <SimulationSteps
+            steps={simulation.questionnaire.steps}
+            currentStepId={simulation.currentStep}
+            submissions={simulation.submissions}
+            simulationIsEnded={simulation.simulationStatus == "ended"}
+          />
+          {phoneWindow()}
+        </div>
       </div>
-    </div>
+    )
   }
 }
 
 const mapStateToProps = (state, ownProps) => ({
   projectId: parseInt(ownProps.params.projectId),
   questionnaireId: parseInt(ownProps.params.questionnaireId),
-  mode: ownProps.params.mode
+  mode: ownProps.params.mode,
 })
 
 const mapDispatchToProps = (dispatch) => ({
-  questionnaireActions: bindActionCreators(questionnaireActions, dispatch)
+  questionnaireActions: bindActionCreators(questionnaireActions, dispatch),
 })
 
-export default translate()(withRouter(connect(mapStateToProps, mapDispatchToProps)(QuestionnaireSimulation)))
+export default translate()(
+  withRouter(connect(mapStateToProps, mapDispatchToProps)(QuestionnaireSimulation))
+)

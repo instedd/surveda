@@ -1,19 +1,30 @@
-import React, { PropTypes } from 'react'
-import classNames from 'classnames/bind'
+import React, { PropTypes } from "react"
+import classNames from "classnames/bind"
 
-export const CardTable = ({ title, children, className, footer, highlight = false, tableScroll = false, style }) => (
-  <div className='row'>
-    <div className='col s12'>
-      <div className={classNames(className, {'card': true, 'tableScroll': tableScroll})}>
-        <div className='card-table-title'>
-          { title }
-        </div>
-        <div className='card-table'>
-          <table className={classNames(className, {'highlight': highlight})} style={style}>
-            { children }
+export const CardTable = ({
+  title,
+  children,
+  className,
+  footer,
+  highlight = false,
+  tableScroll = false,
+  style,
+}) => (
+  <div className="row">
+    <div className="col s12">
+      <div
+        className={classNames(className, {
+          card: true,
+          tableScroll: tableScroll,
+        })}
+      >
+        <div className="card-table-title">{title}</div>
+        <div className="card-table">
+          <table className={classNames(className, { highlight: highlight })} style={style}>
+            {children}
           </table>
         </div>
-        { footer }
+        {footer}
       </div>
     </div>
   </div>
@@ -26,5 +37,5 @@ CardTable.propTypes = {
   children: PropTypes.node,
   footer: PropTypes.object,
   className: PropTypes.string,
-  style: PropTypes.object
+  style: PropTypes.object,
 }

@@ -3,22 +3,22 @@
 type ProviderConfig = {
   friendlyName: string,
   baseUrl: string,
-  channel_ui: boolean
+  channel_ui: boolean,
 }
 
 type Config = {
   nuntium: ProviderConfig[],
   verboice: ProviderConfig[],
-  available_languages_for_numbers: string[]
-};
+  available_languages_for_numbers: string[],
+}
 
 const defaultConfig = {
-  available_languages_for_numbers: ['en'],
+  available_languages_for_numbers: ["en"],
   user_settings: {
-    language: 'en'
+    language: "en",
   },
   nuntium: [],
-  verboice: []
+  verboice: [],
 }
 
 export const config: Config = window.appConfig || defaultConfig

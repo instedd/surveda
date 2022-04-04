@@ -1,10 +1,10 @@
-import React, { PureComponent } from 'react'
-import { referenceStrokeColorClasses } from '../../referenceColors'
-import * as d3 from 'd3'
+import React, { PureComponent } from "react"
+import { referenceStrokeColorClasses } from "../../referenceColors"
+import * as d3 from "d3"
 
 class RespondentsChart extends PureComponent {
   static propTypes = {
-    cumulativePercentages: React.PropTypes.object.isRequired
+    cumulativePercentages: React.PropTypes.object.isRequired,
   }
 
   componentDidMount() {
@@ -23,7 +23,7 @@ class RespondentsChart extends PureComponent {
   buildPaths(container, total) {
     let paths = []
     for (let i = 0; i < total; ++i) {
-      paths.push(container.append('path').attr('class', 'line'))
+      paths.push(container.append("path").attr("class", "line"))
     }
 
     return paths
@@ -35,8 +35,9 @@ class RespondentsChart extends PureComponent {
     const container = d3.select(this.refs.container)
     const backgroundPath = d3.select(this.refs.backgroundPath)
     const yaxisContainer = d3.select(this.refs.yaxis)
-    const xaxisContainer = d3.select(this.refs.xaxis)
-      .attr('transform', 'translate(0,' + (this.chartHeight) + ')')
+    const xaxisContainer = d3
+      .select(this.refs.xaxis)
+      .attr("transform", "translate(0," + this.chartHeight + ")")
 
     const xScale = d3.scaleTime()
     const yScale = d3.scaleLinear().domain([0, 100])
@@ -60,71 +61,72 @@ class RespondentsChart extends PureComponent {
       initialDate = new Date(Date.parse(randomQuestionnaireByDate[0].date))
       const nextThreeMonths = new Date(Date.parse(randomQuestionnaireByDate[0].date))
       nextThreeMonths.setDate(nextThreeMonths.getDate() + 90)
-      lastDate = new Date(Math.max(Date.parse(randomQuestionnaireByDate[randomQuestionnaireByDate.length - 1].date), nextThreeMonths))
+      lastDate = new Date(
+        Math.max(
+          Date.parse(randomQuestionnaireByDate[randomQuestionnaireByDate.length - 1].date),
+          nextThreeMonths
+        )
+      )
     }
 
-    const formatDate = date => new Date(Date.parse(date))
+    const formatDate = (date) => new Date(Date.parse(date))
     const datas = Object.entries(cumulativePercentages).map((entry) => {
       let completedPercentagesByDate = entry[1]
-      return completedPercentagesByDate.map(v => (
-        { date: formatDate(v.date), percent: Number(v.percent) }
-      ))
+      return completedPercentagesByDate.map((v) => ({
+        date: formatDate(v.date),
+        percent: Number(v.percent),
+      }))
     })
 
     xScale.domain([initialDate, lastDate])
 
-    const xaxis = d3.axisBottom()
-      .scale(xScale)
-      .ticks(3)
+    const xaxis = d3.axisBottom().scale(xScale).ticks(3)
 
-    const yaxis = d3.axisRight()
-      .scale(yScale)
-      .tickSize(this.width)
-      .ticks(4)
+    const yaxis = d3.axisRight().scale(yScale).tickSize(this.width).ticks(4)
 
-    xaxisContainer.call(xaxis
-        .ticks(3)
-        .tickFormat(d3.timeFormat('%b')))
-        .selectAll('text')
-        .attr('dy', 7)
-        .attr('x', 10)
+    xaxisContainer
+      .call(xaxis.ticks(3).tickFormat(d3.timeFormat("%b")))
+      .selectAll("text")
+      .attr("dy", 7)
+      .attr("x", 10)
 
-    yaxisContainer.call(yaxis)
-        .selectAll('text')
-          .attr('x', 0)
-          .attr('dy', 16)
+    yaxisContainer.call(yaxis).selectAll("text").attr("x", 0).attr("dy", 16)
 
-    const line = d3.line()
-      .x(d => xScale(d.date))
-      .y(d => yScale(d.percent))
+    const line = d3
+      .line()
+      .x((d) => xScale(d.date))
+      .y((d) => yScale(d.percent))
 
     const paths = this.buildPaths(container, totalQuestionnaires)
     let referenceClasses = referenceStrokeColorClasses(totalQuestionnaires)
     datas.forEach((data, index) => {
-      paths[index].datum(data)
-          .attr('class', `line respondentsData ${referenceClasses[index]}`)
-          .attr('d', line)
+      paths[index]
+        .datum(data)
+        .attr("class", `line respondentsData ${referenceClasses[index]}`)
+        .attr("d", line)
     })
 
-    const backgroundData = [{date: initialDate, percent: 0}, {date: lastDate, percent: 100}]
-    backgroundPath.datum(backgroundData)
-      .attr('class', 'line backgroundData')
-      .style('stroke-dasharray', '2,2')
-      .attr('d', line)
+    const backgroundData = [
+      { date: initialDate, percent: 0 },
+      { date: lastDate, percent: 100 },
+    ]
+    backgroundPath
+      .datum(backgroundData)
+      .attr("class", "line backgroundData")
+      .style("stroke-dasharray", "2,2")
+      .attr("d", line)
 
-    svg
-      .attr('width', this.width)
-      .attr('height', this.height)
+    svg.attr("width", this.width).attr("height", this.height)
   }
 
   render() {
     return (
-      <div ref='main'>
-        <svg ref='svg'>
-          <g ref='container'>
-            <g className='y axis' ref='yaxis' />
-            <g className='x axis' ref='xaxis' />
-            <path className='line' ref='backgroundPath' />
+      <div ref="main">
+        <svg ref="svg">
+          <g ref="container">
+            <g className="y axis" ref="yaxis" />
+            <g className="x axis" ref="xaxis" />
+            <path className="line" ref="backgroundPath" />
           </g>
         </svg>
       </div>

@@ -21,7 +21,7 @@ label {
 }
 
 .dropfile {
-  @include  transition(border-color ease-in-out .2s);
+  @include transition(border-color ease-in-out 0.2s);
   @extend .grey-text;
   font-size: 18px;
   width: 100%;
@@ -30,15 +30,15 @@ label {
   position: relative;
   cursor: pointer;
   .drop-icon {
-    @include  transition(color ease-in-out .2s);
+    @include transition(color ease-in-out 0.2s);
     color: inherit;
     position: absolute;
     width: 20%;
     top: calc(50% - 70px);
     margin: 0 40%;
     &:before {
-      content: 'insert_drive_file';
-      font-family: 'Material Icons';
+      content: "insert_drive_file";
+      font-family: "Material Icons";
       font-size: 50px;
       position: absolute;
       top: 0;
@@ -53,7 +53,7 @@ label {
     margin: 0 46%;
   }
   .drop-text {
-    @include  transition(color ease-in-out .2s);
+    @include transition(color ease-in-out 0.2s);
     color: inherit;
     position: absolute;
     width: 70%;
@@ -71,7 +71,7 @@ label {
     }
     // See web/static/js/i18nStyle.jsx
     // &.csv.uploading:before {
-      // content: 'Uploading...';
+    // content: 'Uploading...';
     // }
     &.audio:before {
       // See web/static/js/i18nStyle.jsx
@@ -93,7 +93,7 @@ label {
     @extend .red-text;
     border-color: color("red", "lighten-1");
     .drop-icon:before {
-      content: 'block';
+      content: "block";
     }
     // See web/static/js/i18nStyle.jsx
     // .drop-text:before {
@@ -138,7 +138,7 @@ label {
       top: 2px;
       left: 118px;
       cursor: pointer;
-      color: #F44336;
+      color: #f44336;
     }
   }
   audio {
@@ -159,11 +159,11 @@ label {
     &:before {
       // See web/static/js/i18nStyle.jsx
       // content: 'Uploading...';
-      font-size: .8rem;
+      font-size: 0.8rem;
       color: #4285f4;
       position: absolute;
       margin-top: 2.5rem;
-      margin-left: -.5rem;
+      margin-left: -0.5rem;
     }
   }
 }
@@ -183,15 +183,15 @@ label {
 .select-wrapper {
   .caret {
     @extend .transparent-text;
-    font-family: Arial, Helvetica, 'san-serif';
+    font-family: Arial, Helvetica, "san-serif";
     position: relative;
     width: 25px;
     &:after {
-      content: 'arrow_drop_down';
-      font-family: 'Material Icons';
+      content: "arrow_drop_down";
+      font-family: "Material Icons";
       @extend .grey-text;
       font-size: 20px;
-      line-height: .4;
+      line-height: 0.4;
       position: absolute;
       top: 0;
       right: 0;
@@ -221,7 +221,8 @@ label {
   min-width: 250px;
 }
 
-.ac-item { // autocomplete dropdown li
+.ac-item {
+  // autocomplete dropdown li
   padding: 10px;
   p {
     margin: 0;
@@ -237,7 +238,6 @@ label {
 }
 
 .questionnaire-step-group {
-
   margin-top: 0.5rem;
   margin-bottom: 1.5rem;
 
@@ -256,7 +256,7 @@ label {
   text-align: left;
   margin-right: 30px;
   min-width: 100px;
-    > a {
+  > a {
     @extend .grey-text;
 
     i {
@@ -302,7 +302,7 @@ label {
   display: flex;
   border-radius: 5px;
   padding: 5px;
-  transition: all ease-in .23s;
+  transition: all ease-in 0.23s;
 
   .bottom-align {
     display: flex;
@@ -340,15 +340,15 @@ label {
   right: 0;
   a[disabled] {
     background-color: #999999 !important;
-  };
+  }
   .switch {
     margin-right: 1rem;
-    label input[type=checkbox] {
+    label input[type="checkbox"] {
       &:checked + .lever {
-        background-color: desaturate(#F44336, 25%);
+        background-color: desaturate(#f44336, 25%);
 
         &:after {
-          background-color: #F44336;
+          background-color: #f44336;
         }
       }
     }

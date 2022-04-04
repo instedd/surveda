@@ -1,4 +1,4 @@
-import * as actions from '../actions/respondentGroups'
+import * as actions from "../actions/respondentGroups"
 
 const initialState = {
   fetching: false,
@@ -7,24 +7,37 @@ const initialState = {
   items: null,
   surveyId: null,
   invalidRespondents: null,
-  invalidRespondentsForGroup: null
+  invalidRespondentsForGroup: null,
 }
 
 export default (state = initialState, action) => {
   switch (action.type) {
-    case actions.FETCH_RESPONDENT_GROUPS: return fetchRespondentGroups(state, action)
-    case actions.UPLOAD_RESPONDENT_GROUP: return uploadRespondentGroup(state, action)
-    case actions.UPLOAD_EXISTING_RESPONDENT_GROUP_ID: return uploadExistingRespondentGroup(state, action)
-    case actions.DONE_UPLOAD_EXISTING_RESPONDENT_GROUP_ID: return doneUploadExistingRespondentGroup(state, action)
-    case actions.RECEIVE_RESPONDENT_GROUPS: return receiveRespondentGroups(state, action)
-    case actions.RECEIVE_RESPONDENT_GROUP: return receiveRespondentGroup(state, action)
-    case actions.REMOVE_RESPONDENT_GROUP: return removeRespondentGroup(state, action)
-    case actions.INVALID_RESPONDENTS: return receiveInvalids(state, action)
-    case actions.CLEAR_INVALIDS: return clearInvalids(state, action)
-    case actions.INVALID_RESPONDENTS_FOR_GROUP: return receiveInvalidsForGroup(state, action)
-    case actions.CLEAR_INVALID_RESPONDENTS_FOR_GROUP: return clearInvalidsForGroup(state, action)
-    case actions.SELECT_CHANNELS: return selectChannels(state, action)
-    default: return state
+    case actions.FETCH_RESPONDENT_GROUPS:
+      return fetchRespondentGroups(state, action)
+    case actions.UPLOAD_RESPONDENT_GROUP:
+      return uploadRespondentGroup(state, action)
+    case actions.UPLOAD_EXISTING_RESPONDENT_GROUP_ID:
+      return uploadExistingRespondentGroup(state, action)
+    case actions.DONE_UPLOAD_EXISTING_RESPONDENT_GROUP_ID:
+      return doneUploadExistingRespondentGroup(state, action)
+    case actions.RECEIVE_RESPONDENT_GROUPS:
+      return receiveRespondentGroups(state, action)
+    case actions.RECEIVE_RESPONDENT_GROUP:
+      return receiveRespondentGroup(state, action)
+    case actions.REMOVE_RESPONDENT_GROUP:
+      return removeRespondentGroup(state, action)
+    case actions.INVALID_RESPONDENTS:
+      return receiveInvalids(state, action)
+    case actions.CLEAR_INVALIDS:
+      return clearInvalids(state, action)
+    case actions.INVALID_RESPONDENTS_FOR_GROUP:
+      return receiveInvalidsForGroup(state, action)
+    case actions.CLEAR_INVALID_RESPONDENTS_FOR_GROUP:
+      return clearInvalidsForGroup(state, action)
+    case actions.SELECT_CHANNELS:
+      return selectChannels(state, action)
+    default:
+      return state
   }
 }
 
@@ -35,14 +48,14 @@ const fetchRespondentGroups = (state, action) => {
     items,
     fetching: true,
     surveyId: action.surveyId,
-    invalidRespondents: null
+    invalidRespondents: null,
   }
 }
 
 const uploadRespondentGroup = (state, action) => {
   return {
     ...state,
-    uploading: true
+    uploading: true,
   }
 }
 
@@ -51,8 +64,8 @@ const uploadExistingRespondentGroup = (state, action) => {
     ...state,
     uploadingExisting: {
       ...state.uploadingExisting,
-      [action.id]: true
-    }
+      [action.id]: true,
+    },
   }
 }
 
@@ -61,8 +74,8 @@ const doneUploadExistingRespondentGroup = (state, action) => {
     ...state,
     uploadingExisting: {
       ...state.uploadingExisting,
-      [action.id]: false
-    }
+      [action.id]: false,
+    },
   }
 }
 
@@ -77,7 +90,7 @@ const receiveRespondentGroups = (state, action) => {
     fetching: false,
     uploading: false,
     items: respondentGroups,
-    invalidRespondents: null
+    invalidRespondents: null,
   }
 }
 
@@ -89,32 +102,32 @@ const receiveRespondentGroup = (state, action) => {
     uploading: false,
     items: {
       ...state.items,
-      [group.id]: group
-    }
+      [group.id]: group,
+    },
   }
 }
 
 const removeRespondentGroup = (state, action) => {
-  const items = {...state.items}
+  const items = { ...state.items }
   delete items[action.id]
 
   return {
     ...state,
     fetching: false,
-    items
+    items,
   }
 }
 
 const receiveInvalids = (state, action) => ({
   ...state,
-  invalidRespondents: action.invalidRespondents
+  invalidRespondents: action.invalidRespondents,
 })
 
 const clearInvalids = (state, action) => {
   return {
     ...state,
     invalidRespondents: null,
-    uploading: false
+    uploading: false,
   }
 }
 
@@ -122,13 +135,16 @@ const receiveInvalidsForGroup = (state, action) => {
   const first = action.invalidRespondents.invalidEntries[0]
   return {
     ...state,
-    invalidRespondentsForGroup: {type: first.type, lineNumber: first.line_number}
+    invalidRespondentsForGroup: {
+      type: first.type,
+      lineNumber: first.line_number,
+    },
   }
 }
 
 const clearInvalidsForGroup = (state, action) => ({
   ...state,
-  invalidRespondentsForGroup: null
+  invalidRespondentsForGroup: null,
 })
 
 const selectChannels = (state, action) => {
@@ -138,8 +154,8 @@ const selectChannels = (state, action) => {
       ...state.items,
       [action.groupId]: {
         ...state.items[action.groupId],
-        channels: action.channels
-      }
-    }
+        channels: action.channels,
+      },
+    },
   }
 }

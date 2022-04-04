@@ -1,14 +1,14 @@
 // @flow
-import React, { Component, PropTypes } from 'react'
-import Prompt from '../Prompt'
+import React, { Component, PropTypes } from "react"
+import Prompt from "../Prompt"
 
 type Props = {
-  step: Object
-};
+  step: Object,
+}
 
 class EndStep extends Component<Props> {
   getValue() {
-    return ''
+    return ""
   }
 
   clearValue() {}
@@ -18,9 +18,9 @@ class EndStep extends Component<Props> {
 
     return (
       <div>
-        {(step.prompts || []).map(prompt =>
+        {(step.prompts || []).map((prompt) => (
           <Prompt key={prompt} text={prompt} />
-        )}
+        ))}
       </div>
     )
   }

@@ -1,206 +1,285 @@
 // @flow
-import React, { Component } from 'react'
-import { translate } from 'react-i18next'
-import { MessagesList, ChatMessage } from './MessagesList'
+import React, { Component } from "react"
+import { translate } from "react-i18next"
+import { MessagesList, ChatMessage } from "./MessagesList"
 
 type Message = {
   body: string,
-  type: string
+  type: string,
 }
 
 export type IVRPrompt = {
   text: string,
   audioSource: string,
-  audioId: string
+  audioId: string,
 }
 
 type VoiceWindowProps = {
   messages: Array<ChatMessage>,
   prompts: Array<IVRPrompt>,
   voiceTitle: string,
-  onSendMessage: Message => void,
-  readOnly: boolean
+  onSendMessage: (Message) => void,
+  readOnly: boolean,
 }
 
 function audioURL(ivr: IVRPrompt): string {
   if (!ivr) {
-    return ''
+    return ""
   }
-  if (ivr.audioSource == 'tts') {
+  if (ivr.audioSource == "tts") {
     return `/api/v1/audios/tts?text=${encodeURIComponent(ivr.text)}`
   }
   return `/api/v1/audios/${ivr.audioId}`
 }
 
-const VoiceWindow = translate()(class extends Component<VoiceWindowProps> {
-  audio: HTMLAudioElement
-  playPromise: Promise<any>
-  spectrum: VoiceSpectrum
+const VoiceWindow = translate()(
+  class extends Component<VoiceWindowProps> {
+    audio: HTMLAudioElement
+    playPromise: Promise<any>
+    spectrum: VoiceSpectrum
 
-  message: string
-  messageTimer: TimeoutID
+    message: string
+    messageTimer: TimeoutID
 
-  repeatMessageTimer: ?TimeoutID
-  timesRepeated: number
+    repeatMessageTimer: ?TimeoutID
+    timesRepeated: number
 
-  constructor(props) {
-    super(props)
-    this.spectrum = new VoiceSpectrum()
-    this.timesRepeated = 0
-  }
+    constructor(props) {
+      super(props)
+      this.spectrum = new VoiceSpectrum()
+      this.timesRepeated = 0
+    }
 
-  componentDidMount() {
-    this.message = ''
-    this.play()
-  }
-
-  componentDidUpdate(prevProps) {
-    if (prevProps.prompts !== this.props.prompts) {
+    componentDidMount() {
+      this.message = ""
       this.play()
     }
-  }
 
-  componentWillUnmount() {
-    if (this.spectrum) {
-      this.spectrum.stop()
+    componentDidUpdate(prevProps) {
+      if (prevProps.prompts !== this.props.prompts) {
+        this.play()
+      }
     }
 
-    this.stopRepeatingLastAudio()
-  }
+    componentWillUnmount() {
+      if (this.spectrum) {
+        this.spectrum.stop()
+      }
 
-  play() {
-    const ivr = this.props.prompts.shift()
-    if (ivr) {
-      if (this.playPromise) {
-        this.playPromise
-          .then(() => this.playIVR(ivr))
-          .catch(() => { /* audio prompt failed to load */ })
+      this.stopRepeatingLastAudio()
+    }
+
+    play() {
+      const ivr = this.props.prompts.shift()
+      if (ivr) {
+        if (this.playPromise) {
+          this.playPromise
+            .then(() => this.playIVR(ivr))
+            .catch(() => {
+              /* audio prompt failed to load */
+            })
+        } else {
+          // first audio prompt and/or older browser didn't return a promise on play
+          this.playIVR(ivr)
+        }
       } else {
-        // first audio prompt and/or older browser didn't return a promise on play
-        this.playIVR(ivr)
-      }
-    } else {
-      this.spectrum.stop()
+        this.spectrum.stop()
 
-      // if simulation still active then start repeating the last audio
-      if (!this.props.readOnly) {
-        this.startRepeatingLastAudio()
+        // if simulation still active then start repeating the last audio
+        if (!this.props.readOnly) {
+          this.startRepeatingLastAudio()
+        }
       }
     }
-  }
 
-  playIVR(ivr) {
-    // we may be interrupting an audio prompt here, so we stop any playing
-    // audio, before skipping to the next one:
-    this.audio.pause()
-    // we also stop any repeating question:
-    this.stopRepeatingLastAudio()
+    playIVR(ivr) {
+      // we may be interrupting an audio prompt here, so we stop any playing
+      // audio, before skipping to the next one:
+      this.audio.pause()
+      // we also stop any repeating question:
+      this.stopRepeatingLastAudio()
 
-    // play the IVR prompt, continuing to the next one when finished:
-    this.audio.src = audioURL(ivr)
-    this.audio.onended = () => { this.play() }
-    this.playPromise = this.audio.play()
+      // play the IVR prompt, continuing to the next one when finished:
+      this.audio.src = audioURL(ivr)
+      this.audio.onended = () => {
+        this.play()
+      }
+      this.playPromise = this.audio.play()
 
-    this.spectrum.start(this.audio)
-  }
+      this.spectrum.start(this.audio)
+    }
 
-  entered(character: string): void {
-    if (this.props.readOnly) return
-    if (this.messageTimer) clearTimeout(this.messageTimer)
-    this.stopRepeatingLastAudio()
-
-    this.message += character
-
-    this.messageTimer = setTimeout(() => {
+    entered(character: string): void {
       if (this.props.readOnly) return
+      if (this.messageTimer) clearTimeout(this.messageTimer)
+      this.stopRepeatingLastAudio()
 
-      this.props.onSendMessage({ body: this.message, type: 'at' })
-      this.message = ''
-    }, 2000)
-  }
+      this.message += character
 
-  hangUp(): void {
-    if (this.messageTimer) clearTimeout(this.messageTimer)
-    this.stopRepeatingLastAudio()
+      this.messageTimer = setTimeout(() => {
+        if (this.props.readOnly) return
 
-    if (!this.props.readOnly) {
-      this.props.onSendMessage({ body: 'stop', type: 'at' })
+        this.props.onSendMessage({ body: this.message, type: "at" })
+        this.message = ""
+      }, 2000)
+    }
+
+    hangUp(): void {
+      if (this.messageTimer) clearTimeout(this.messageTimer)
+      this.stopRepeatingLastAudio()
+
+      if (!this.props.readOnly) {
+        this.props.onSendMessage({ body: "stop", type: "at" })
+      }
+    }
+
+    startRepeatingLastAudio(): void {
+      if (!this.audio) return // no last audio available to repeat
+      if (this.repeatMessageTimer) return // already repeating audio
+
+      this.initRepeatTimer(() => {
+        if (this.timesRepeated < 3) {
+          this.clearRepeatTimer()
+          this.repeatLastAudio()
+        } else {
+          this.hangUp()
+        }
+      })
+    }
+
+    stopRepeatingLastAudio(): void {
+      this.clearRepeatTimer()
+      this.timesRepeated = 0
+    }
+
+    repeatLastAudio(): void {
+      if (!this.audio) return
+
+      this.timesRepeated += 1
+      this.spectrum.restart()
+      this.audio.play()
+    }
+
+    initRepeatTimer(func): void {
+      this.repeatMessageTimer = setTimeout(func, 5000)
+    }
+
+    clearRepeatTimer(): void {
+      if (this.repeatMessageTimer) clearTimeout(this.repeatMessageTimer)
+      this.repeatMessageTimer = null
+    }
+
+    render() {
+      const { voiceTitle, messages } = this.props
+
+      return (
+        <div className="voice-window quex-simulation-voice">
+          <div className="voice-header">{voiceTitle}</div>
+          <div className="voice-spectrum">
+            <canvas
+              ref={(canvas) => this.spectrum.setCanvas(canvas)}
+              className="voice-spectrum-bands"
+            />
+          </div>
+          <MessagesList messages={messages} scrollToBottom />
+
+          <div className="voice-keypad">
+            <div
+              onClick={() => this.entered("1")}
+              className="waves-effect waves-circle voice-button"
+            >
+              1
+            </div>
+            <div
+              onClick={() => this.entered("2")}
+              className="waves-effect waves-circle voice-button"
+            >
+              2
+            </div>
+            <div
+              onClick={() => this.entered("3")}
+              className="waves-effect waves-circle voice-button"
+            >
+              3
+            </div>
+            <div
+              onClick={() => this.entered("4")}
+              className="waves-effect waves-circle voice-button"
+            >
+              4
+            </div>
+            <div
+              onClick={() => this.entered("5")}
+              className="waves-effect waves-circle voice-button"
+            >
+              5
+            </div>
+            <div
+              onClick={() => this.entered("6")}
+              className="waves-effect waves-circle voice-button"
+            >
+              6
+            </div>
+            <div
+              onClick={() => this.entered("7")}
+              className="waves-effect waves-circle voice-button"
+            >
+              7
+            </div>
+            <div
+              onClick={() => this.entered("8")}
+              className="waves-effect waves-circle voice-button"
+            >
+              8
+            </div>
+            <div
+              onClick={() => this.entered("9")}
+              className="waves-effect waves-circle voice-button"
+            >
+              9
+            </div>
+            <div
+              onClick={() => this.entered("*")}
+              className="waves-effect waves-circle voice-button"
+            >
+              *
+            </div>
+            <div
+              onClick={() => this.entered("0")}
+              className="waves-effect waves-circle voice-button"
+            >
+              0
+            </div>
+            <div
+              onClick={() => this.entered("#")}
+              className="waves-effect waves-circle voice-button"
+            >
+              #
+            </div>
+            <div
+              onClick={() => this.hangUp()}
+              className="waves-effect waves-circle voice-button voice-button-end-call red"
+            >
+              <i className="material-icons">call_end</i>
+            </div>
+          </div>
+
+          <audio
+            ref={(audio) => {
+              this.setAudio(audio)
+            }}
+            preload
+          />
+        </div>
+      )
+    }
+
+    setAudio(element) {
+      if (!element) return
+      this.audio = element
     }
   }
-
-  startRepeatingLastAudio(): void {
-    if (!this.audio) return // no last audio available to repeat
-    if (this.repeatMessageTimer) return // already repeating audio
-
-    this.initRepeatTimer(() => {
-      if (this.timesRepeated < 3) {
-        this.clearRepeatTimer()
-        this.repeatLastAudio()
-      } else {
-        this.hangUp()
-      }
-    })
-  }
-
-  stopRepeatingLastAudio(): void {
-    this.clearRepeatTimer()
-    this.timesRepeated = 0
-  }
-
-  repeatLastAudio(): void {
-    if (!this.audio) return
-
-    this.timesRepeated += 1
-    this.spectrum.restart()
-    this.audio.play()
-  }
-
-  initRepeatTimer(func): void {
-    this.repeatMessageTimer = setTimeout(func, 5000)
-  }
-
-  clearRepeatTimer(): void {
-    if (this.repeatMessageTimer) clearTimeout(this.repeatMessageTimer)
-    this.repeatMessageTimer = null
-  }
-
-  render() {
-    const { voiceTitle, messages } = this.props
-
-    return <div className='voice-window quex-simulation-voice'>
-      <div className='voice-header'>{voiceTitle}</div>
-      <div className='voice-spectrum'>
-        <canvas ref={canvas => this.spectrum.setCanvas(canvas)} className='voice-spectrum-bands' />
-      </div>
-      <MessagesList messages={messages} scrollToBottom />
-
-      <div className='voice-keypad'>
-        <div onClick={() => this.entered('1')} className='waves-effect waves-circle voice-button'>1</div>
-        <div onClick={() => this.entered('2')} className='waves-effect waves-circle voice-button'>2</div>
-        <div onClick={() => this.entered('3')} className='waves-effect waves-circle voice-button'>3</div>
-        <div onClick={() => this.entered('4')} className='waves-effect waves-circle voice-button'>4</div>
-        <div onClick={() => this.entered('5')} className='waves-effect waves-circle voice-button'>5</div>
-        <div onClick={() => this.entered('6')} className='waves-effect waves-circle voice-button'>6</div>
-        <div onClick={() => this.entered('7')} className='waves-effect waves-circle voice-button'>7</div>
-        <div onClick={() => this.entered('8')} className='waves-effect waves-circle voice-button'>8</div>
-        <div onClick={() => this.entered('9')} className='waves-effect waves-circle voice-button'>9</div>
-        <div onClick={() => this.entered('*')} className='waves-effect waves-circle voice-button'>*</div>
-        <div onClick={() => this.entered('0')} className='waves-effect waves-circle voice-button'>0</div>
-        <div onClick={() => this.entered('#')} className='waves-effect waves-circle voice-button'>#</div>
-        <div onClick={() => this.hangUp()} className='waves-effect waves-circle voice-button voice-button-end-call red'>
-          <i className='material-icons'>call_end</i>
-        </div>
-      </div>
-
-      <audio ref={audio => { this.setAudio(audio) }} preload />
-    </div>
-  }
-
-  setAudio(element) {
-    if (!element) return
-    this.audio = element
-  }
-})
+)
 
 class VoiceSpectrum {
   audioContext: AudioContext
@@ -222,7 +301,7 @@ class VoiceSpectrum {
   setCanvas(canvas) {
     if (canvas) {
       this.canvas = canvas
-      this.context = canvas.getContext('2d')
+      this.context = canvas.getContext("2d")
 
       // fix canvas' size for HiDPI from its CSS size (DPI=1)
       const ratio = window.devicePixelRatio || 1
@@ -282,7 +361,7 @@ class VoiceSpectrum {
     let x = barGap
 
     ctx.clearRect(0, 0, width, height)
-    ctx.fillStyle = 'rgb(255, 255, 255)'
+    ctx.fillStyle = "rgb(255, 255, 255)"
 
     // only use some entries in the fft, to increase diversity and movement
     for (let i = 5; i < bufferLength; i += 5) {

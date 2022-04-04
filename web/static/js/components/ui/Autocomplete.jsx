@@ -1,5 +1,5 @@
-import React, { Component, PropTypes } from 'react'
-import 'materialize-autocomplete'
+import React, { Component, PropTypes } from "react"
+import "materialize-autocomplete"
 
 /**
  * Autocomplete component.
@@ -27,7 +27,7 @@ import 'materialize-autocomplete'
 export class Autocomplete extends Component {
   static defaultProps = {
     // plainText defaults to true for backward compatibility
-    plainText: true
+    plainText: true,
   }
 
   constructor(props) {
@@ -49,11 +49,14 @@ export class Autocomplete extends Component {
     const { className } = this.props
 
     return (
-      <ul className={`autocomplete-content dropdown-content ${className}`}
-        ref='dropdown'
-        onMouseDown={(e) => { this.clickingAutocomplete = true }}
-        style={{display: 'none'}}
-        />
+      <ul
+        className={`autocomplete-content dropdown-content ${className}`}
+        ref="dropdown"
+        onMouseDown={(e) => {
+          this.clickingAutocomplete = true
+        }}
+        style={{ display: "none" }}
+      />
     )
   }
 
@@ -82,7 +85,7 @@ export class Autocomplete extends Component {
       limit: 100,
       cacheable: false,
       multiple: {
-        enable: false
+        enable: false,
       },
       dropdown: {
         el: dropdown,
@@ -92,7 +95,7 @@ export class Autocomplete extends Component {
         // in texts other than because of splitted message, so this is safe
         // and much easier than escaping it everywhere (plus it's hard to do because
         // a newline will show as a blank space, but here we want a <br/>)
-        itemTemplate: `<li class="ac-item black-text" data-id="<%= item.id %>" data-text='<%= $("<div/>").text(item.text).html() %>'><%= ${liInnerText} %></li>`
+        itemTemplate: `<li class="ac-item black-text" data-id="<%= item.id %>" data-text='<%= $("<div/>").text(item.text).html() %>'><%= ${liInnerText} %></li>`,
       },
       onSelect: (item) => {
         this.clickingAutocomplete = false
@@ -103,7 +106,7 @@ export class Autocomplete extends Component {
           if (this.hidden) return
           callback(v, c)
         })
-      }
+      },
     })
   }
 }
@@ -114,5 +117,5 @@ Autocomplete.propTypes = {
   onSelect: PropTypes.func.isRequired,
   showOnClick: PropTypes.bool,
   className: PropTypes.string,
-  plainText: PropTypes.bool
+  plainText: PropTypes.bool,
 }

@@ -1,86 +1,160 @@
 // @flow
-import filter from 'lodash/filter'
-import findIndex from 'lodash/findIndex'
-import reduce from 'lodash/reduce'
-import map from 'lodash/map'
-import reject from 'lodash/reject'
-import concat from 'lodash/concat'
-import * as actions from '../actions/questionnaire'
-import uuidv4 from 'uuid/v4'
-import fetchReducer from './fetch'
-import { setStepPrompt, newStepPrompt, getStepPromptSms, getStepPromptIvrText,
-  getPromptSms, getPromptMobileWeb, getStepPromptMobileWeb, getPromptIvrText, getChoiceResponseSmsJoined,
-  getChoiceResponseMobileWebJoined, newIvrPrompt, newRefusal } from '../step'
-import * as language from '../language'
-import { validate } from './questionnaire.validation'
-import { defaultActiveMode } from '../questionnaire.mode'
-import undoReducer from './undo'
+import filter from "lodash/filter"
+import findIndex from "lodash/findIndex"
+import reduce from "lodash/reduce"
+import map from "lodash/map"
+import reject from "lodash/reject"
+import concat from "lodash/concat"
+import * as actions from "../actions/questionnaire"
+import uuidv4 from "uuid/v4"
+import fetchReducer from "./fetch"
+import {
+  setStepPrompt,
+  newStepPrompt,
+  getStepPromptSms,
+  getStepPromptIvrText,
+  getPromptSms,
+  getPromptMobileWeb,
+  getStepPromptMobileWeb,
+  getPromptIvrText,
+  getChoiceResponseSmsJoined,
+  getChoiceResponseMobileWebJoined,
+  newIvrPrompt,
+  newRefusal,
+} from "../step"
+import * as language from "../language"
+import { validate } from "./questionnaire.validation"
+import { defaultActiveMode } from "../questionnaire.mode"
+import undoReducer from "./undo"
 
 const dataReducer = (state: Questionnaire, action): Questionnaire => {
   switch (action.type) {
-    case actions.CHANGE_NAME: return changeName(state, action)
-    case actions.CHANGE_DESCRIPTION: return changeDescription(state, action)
-    case actions.SET_ACTIVE_MODE: return setActiveMode(state, action)
-    case actions.ADD_MODE: return addMode(state, action)
-    case actions.REMOVE_MODE: return removeMode(state, action)
-    case actions.TOGGLE_QUOTA_COMPLETED_STEPS: return toggleQuotaCompletedSteps(state, action)
-    case actions.CHANGE_PARTIAL_RELEVANT_ENABLED: return changePartialRelevantEnabled(state, action)
-    case actions.CHANGE_PARTIAL_RELEVANT_MIN_RELEVANT_STEPS: return changePartialRelevantMinRelevantSteps(state, action)
-    case actions.CHANGE_PARTIAL_RELEVANT_IGNORED_VALUES: return changePartialRelevantIgnoredValues(state, action)
-    case actions.ADD_LANGUAGE: return addLanguage(state, action)
-    case actions.REMOVE_LANGUAGE: return removeLanguage(state, action)
-    case actions.SET_DEFAULT_LANGUAGE: return setDefaultLanguage(state, action)
-    case actions.SET_ACTIVE_LANGUAGE: return setActiveLanguage(state, action)
-    case actions.REORDER_LANGUAGES: return reorderLanguages(state, action)
-    case actions.SET_SMS_QUESTIONNAIRE_MSG: return setSmsQuestionnaireMsg(state, action)
-    case actions.SET_IVR_QUESTIONNAIRE_MSG: return setIvrQuestionnaireMsg(state, action)
-    case actions.SET_MOBILE_WEB_QUESTIONNAIRE_MSG: return setMobileWebQuestionnaireMsg(state, action)
-    case actions.AUTOCOMPLETE_SMS_QUESTIONNAIRE_MSG: return autocompleteSmsQuestionnaireMsg(state, action)
-    case actions.AUTOCOMPLETE_IVR_QUESTIONNAIRE_MSG: return autocompleteIvrQuestionnaireMsg(state, action)
-    case actions.UPLOAD_CSV_FOR_TRANSLATION: return uploadCsvForTranslation(state, action)
-    case actions.SET_MOBILE_WEB_SMS_MESSAGE: return setMobileWebSmsMessage(state, action)
-    case actions.SET_MOBILE_WEB_INTRO_MESSAGE: return setMobileWebIntroMessage(state, action)
-    case actions.SET_MOBILE_WEB_SURVEY_IS_OVER_MESSAGE: return setMobileWebSurveyIsOverMessage(state, action)
-    case actions.SET_PRIMARY_COLOR: return setPrimaryColor(state, action)
-    case actions.SET_SECONDARY_COLOR: return setSecondaryColor(state, action)
-    case actions.SET_DISPLAYED_TITLE: return setDisplayedTitle(state, action)
-    case actions.SET_SURVEY_ALREADY_TAKEN_MESSAGE: return setSurveyAlreadyTakenMessage(state, action)
-    case actions.ADD_STEP: return addStep(state, action)
-    case actions.ADD_STEP_TO_SECTION: return addStepToSection(state, action)
-    case actions.ADD_QUOTA_COMPLETED_STEP: return addQuotaCompletedStep(state, action)
-    case actions.MOVE_STEP: return moveStep(state, action)
-    case actions.MOVE_SECTION: return moveSection(state, action)
-    case actions.MOVE_STEP_TO_TOP: return moveStepToTop(state, action)
-    case actions.MOVE_STEP_TO_TOP_OF_SECTION: return moveStepToTopOfSection(state, action)
-    case actions.CHANGE_STEP_TITLE: return changeStepTitle(state, action)
-    case actions.CHANGE_STEP_RELEVANT: return changeStepRelevant(state, action)
-    case actions.CHANGE_STEP_TYPE: return changeStepType(state, action)
-    case actions.CHANGE_STEP_PROMPT_SMS: return changeStepSmsPrompt(state, action)
-    case actions.CHANGE_STEP_PROMPT_IVR: return changeStepIvrPrompt(state, action)
-    case actions.CHANGE_STEP_PROMPT_MOBILE_WEB: return changeStepMobileWebPrompt(state, action)
-    case actions.CHANGE_STEP_AUDIO_ID_IVR: return changeStepIvrAudioId(state, action)
-    case actions.CHANGE_STEP_STORE: return changeStepStore(state, action)
-    case actions.AUTOCOMPLETE_STEP_PROMPT_SMS: return autocompleteStepSmsPrompt(state, action)
-    case actions.AUTOCOMPLETE_STEP_PROMPT_MOBILE_WEB: return autocompleteStepMobileWebPrompt(state, action)
-    case actions.AUTOCOMPLETE_STEP_PROMPT_IVR: return autocompleteStepIvrPrompt(state, action)
-    case actions.DELETE_STEP: return deleteStep(state, action)
-    case actions.DELETE_SECTION: return deleteSection(state, action)
-    case actions.CHANGE_SECTION_TITLE: return changeSectionTitle(state, action)
-    case actions.ADD_CHOICE: return addChoice(state, action)
-    case actions.DELETE_CHOICE: return deleteChoice(state, action)
-    case actions.CHANGE_CHOICE: return changeChoice(state, action)
-    case actions.AUTOCOMPLETE_CHOICE_SMS_VALUES: return autocompleteChoiceSmsValues(state, action)
-    case actions.CHANGE_NUMERIC_RANGES: return changeNumericRanges(state, action)
-    case actions.CHANGE_RANGE_SKIP_LOGIC: return changeRangeSkipLogic(state, action)
-    case actions.CHANGE_EXPLANATION_STEP_SKIP_LOGIC: return changeExplanationStepSkipLogic(state, action)
-    case actions.CHANGE_DISPOSITION: return changeDisposition(state, action)
-    case actions.TOGGLE_ACCEPT_REFUSALS: return toggleAcceptsRefusals(state, action)
-    case actions.TOGGLE_ACCEPTS_ALPHABETICAL_ANSWERS: return toggleAcceptsAlphabeticalAnswers(state, action)
-    case actions.CHANGE_REFUSAL: return changeRefusal(state, action)
-    case actions.SET_DIRTY: return setDirty(state)
-    case actions.ADD_SECTION: return addSection(state)
-    case actions.TOGGLE_RANDOMIZE_FOR_SECTION: return toggleRandomizeForSection(state, action)
-    default: return state
+    case actions.CHANGE_NAME:
+      return changeName(state, action)
+    case actions.CHANGE_DESCRIPTION:
+      return changeDescription(state, action)
+    case actions.SET_ACTIVE_MODE:
+      return setActiveMode(state, action)
+    case actions.ADD_MODE:
+      return addMode(state, action)
+    case actions.REMOVE_MODE:
+      return removeMode(state, action)
+    case actions.TOGGLE_QUOTA_COMPLETED_STEPS:
+      return toggleQuotaCompletedSteps(state, action)
+    case actions.CHANGE_PARTIAL_RELEVANT_ENABLED:
+      return changePartialRelevantEnabled(state, action)
+    case actions.CHANGE_PARTIAL_RELEVANT_MIN_RELEVANT_STEPS:
+      return changePartialRelevantMinRelevantSteps(state, action)
+    case actions.CHANGE_PARTIAL_RELEVANT_IGNORED_VALUES:
+      return changePartialRelevantIgnoredValues(state, action)
+    case actions.ADD_LANGUAGE:
+      return addLanguage(state, action)
+    case actions.REMOVE_LANGUAGE:
+      return removeLanguage(state, action)
+    case actions.SET_DEFAULT_LANGUAGE:
+      return setDefaultLanguage(state, action)
+    case actions.SET_ACTIVE_LANGUAGE:
+      return setActiveLanguage(state, action)
+    case actions.REORDER_LANGUAGES:
+      return reorderLanguages(state, action)
+    case actions.SET_SMS_QUESTIONNAIRE_MSG:
+      return setSmsQuestionnaireMsg(state, action)
+    case actions.SET_IVR_QUESTIONNAIRE_MSG:
+      return setIvrQuestionnaireMsg(state, action)
+    case actions.SET_MOBILE_WEB_QUESTIONNAIRE_MSG:
+      return setMobileWebQuestionnaireMsg(state, action)
+    case actions.AUTOCOMPLETE_SMS_QUESTIONNAIRE_MSG:
+      return autocompleteSmsQuestionnaireMsg(state, action)
+    case actions.AUTOCOMPLETE_IVR_QUESTIONNAIRE_MSG:
+      return autocompleteIvrQuestionnaireMsg(state, action)
+    case actions.UPLOAD_CSV_FOR_TRANSLATION:
+      return uploadCsvForTranslation(state, action)
+    case actions.SET_MOBILE_WEB_SMS_MESSAGE:
+      return setMobileWebSmsMessage(state, action)
+    case actions.SET_MOBILE_WEB_INTRO_MESSAGE:
+      return setMobileWebIntroMessage(state, action)
+    case actions.SET_MOBILE_WEB_SURVEY_IS_OVER_MESSAGE:
+      return setMobileWebSurveyIsOverMessage(state, action)
+    case actions.SET_PRIMARY_COLOR:
+      return setPrimaryColor(state, action)
+    case actions.SET_SECONDARY_COLOR:
+      return setSecondaryColor(state, action)
+    case actions.SET_DISPLAYED_TITLE:
+      return setDisplayedTitle(state, action)
+    case actions.SET_SURVEY_ALREADY_TAKEN_MESSAGE:
+      return setSurveyAlreadyTakenMessage(state, action)
+    case actions.ADD_STEP:
+      return addStep(state, action)
+    case actions.ADD_STEP_TO_SECTION:
+      return addStepToSection(state, action)
+    case actions.ADD_QUOTA_COMPLETED_STEP:
+      return addQuotaCompletedStep(state, action)
+    case actions.MOVE_STEP:
+      return moveStep(state, action)
+    case actions.MOVE_SECTION:
+      return moveSection(state, action)
+    case actions.MOVE_STEP_TO_TOP:
+      return moveStepToTop(state, action)
+    case actions.MOVE_STEP_TO_TOP_OF_SECTION:
+      return moveStepToTopOfSection(state, action)
+    case actions.CHANGE_STEP_TITLE:
+      return changeStepTitle(state, action)
+    case actions.CHANGE_STEP_RELEVANT:
+      return changeStepRelevant(state, action)
+    case actions.CHANGE_STEP_TYPE:
+      return changeStepType(state, action)
+    case actions.CHANGE_STEP_PROMPT_SMS:
+      return changeStepSmsPrompt(state, action)
+    case actions.CHANGE_STEP_PROMPT_IVR:
+      return changeStepIvrPrompt(state, action)
+    case actions.CHANGE_STEP_PROMPT_MOBILE_WEB:
+      return changeStepMobileWebPrompt(state, action)
+    case actions.CHANGE_STEP_AUDIO_ID_IVR:
+      return changeStepIvrAudioId(state, action)
+    case actions.CHANGE_STEP_STORE:
+      return changeStepStore(state, action)
+    case actions.AUTOCOMPLETE_STEP_PROMPT_SMS:
+      return autocompleteStepSmsPrompt(state, action)
+    case actions.AUTOCOMPLETE_STEP_PROMPT_MOBILE_WEB:
+      return autocompleteStepMobileWebPrompt(state, action)
+    case actions.AUTOCOMPLETE_STEP_PROMPT_IVR:
+      return autocompleteStepIvrPrompt(state, action)
+    case actions.DELETE_STEP:
+      return deleteStep(state, action)
+    case actions.DELETE_SECTION:
+      return deleteSection(state, action)
+    case actions.CHANGE_SECTION_TITLE:
+      return changeSectionTitle(state, action)
+    case actions.ADD_CHOICE:
+      return addChoice(state, action)
+    case actions.DELETE_CHOICE:
+      return deleteChoice(state, action)
+    case actions.CHANGE_CHOICE:
+      return changeChoice(state, action)
+    case actions.AUTOCOMPLETE_CHOICE_SMS_VALUES:
+      return autocompleteChoiceSmsValues(state, action)
+    case actions.CHANGE_NUMERIC_RANGES:
+      return changeNumericRanges(state, action)
+    case actions.CHANGE_RANGE_SKIP_LOGIC:
+      return changeRangeSkipLogic(state, action)
+    case actions.CHANGE_EXPLANATION_STEP_SKIP_LOGIC:
+      return changeExplanationStepSkipLogic(state, action)
+    case actions.CHANGE_DISPOSITION:
+      return changeDisposition(state, action)
+    case actions.TOGGLE_ACCEPT_REFUSALS:
+      return toggleAcceptsRefusals(state, action)
+    case actions.TOGGLE_ACCEPTS_ALPHABETICAL_ANSWERS:
+      return toggleAcceptsAlphabeticalAnswers(state, action)
+    case actions.CHANGE_REFUSAL:
+      return changeRefusal(state, action)
+    case actions.SET_DIRTY:
+      return setDirty(state)
+    case actions.ADD_SECTION:
+      return addSection(state)
+    case actions.TOGGLE_RANDOMIZE_FOR_SECTION:
+      return toggleRandomizeForSection(state, action)
+    default:
+      return state
   }
 }
 
@@ -91,14 +165,18 @@ const validateReducer = (reducer: StoreReducer<Questionnaire>): StoreReducer<Que
     const oldData = state ? state.data : null
     const newState = reducer(state, action)
 
-    if ((newState.data && oldData !== newState.data) || action.type == actions.UNDO || action.type == actions.REDO) {
+    if (
+      (newState.data && oldData !== newState.data) ||
+      action.type == actions.UNDO ||
+      action.type == actions.REDO
+    ) {
       validate(newState)
       return {
         ...newState,
         data: {
           ...newState.data,
-          valid: newState.errors.length == 0
-        }
+          valid: newState.errors.length == 0,
+        },
       }
     }
 
@@ -110,40 +188,44 @@ const validateReducer = (reducer: StoreReducer<Questionnaire>): StoreReducer<Que
 // as dirty, which will eventually autosave it.
 const dirtyPredicate = (action, oldData, newData) => {
   switch (action.type) {
-    case actions.SET_ACTIVE_LANGUAGE: return false
-    case actions.SET_ACTIVE_MODE: return false
-    default: return true
+    case actions.SET_ACTIVE_LANGUAGE:
+      return false
+    case actions.SET_ACTIVE_MODE:
+      return false
+    default:
+      return true
   }
 }
 
-export default (undoReducer(actions, dirtyPredicate, validateReducer(fetchReducer(actions, dataReducer, null, dirtyPredicate))): UndoReducer<Questionnaire>)
+export default (undoReducer(
+  actions,
+  dirtyPredicate,
+  validateReducer(fetchReducer(actions, dataReducer, null, dirtyPredicate))
+): UndoReducer<Questionnaire>)
 
 const addChoice = (state, action) => {
-  return changeStep(state, action.stepId, step => ({
+  return changeStep(state, action.stepId, (step) => ({
     ...step,
     choices: [
       ...step.choices,
       {
-        value: '',
+        value: "",
         responses: {
           ivr: [],
           sms: {
-            'en': []
-          }
+            en: [],
+          },
         },
-        skipLogic: null
-      }
-    ]
+        skipLogic: null,
+      },
+    ],
   }))
 }
 
 const deleteChoice = (state, action) => {
   return changeStep(state, action.stepId, (step) => ({
     ...step,
-    choices: [
-      ...step.choices.slice(0, action.index),
-      ...step.choices.slice(action.index + 1)
-    ]
+    choices: [...step.choices.slice(0, action.index), ...step.choices.slice(action.index + 1)],
   }))
 }
 
@@ -153,8 +235,12 @@ const changeChoice = (state, action) => {
   let ivrValues = action.choiceChange.ivrValues.trim()
   let mobilewebValues = action.choiceChange.mobilewebValues.trim()
 
-  if (action.choiceChange.autoComplete && smsValues == '' && ivrValues == '') {
-    [smsValues, ivrValues, mobilewebValues] = autoComplete(state.steps, state.activeLanguage, response)
+  if (action.choiceChange.autoComplete && smsValues == "" && ivrValues == "") {
+    ;[smsValues, ivrValues, mobilewebValues] = autoComplete(
+      state.steps,
+      state.activeLanguage,
+      response
+    )
   }
 
   return changeStep(state, action.stepId, (step) => {
@@ -162,7 +248,7 @@ const changeChoice = (state, action) => {
     const choice = step.choices[action.choiceChange.index]
     const nextChoices = step.choices.slice(action.choiceChange.index + 1)
 
-    return ({
+    return {
       ...step,
       choices: [
         ...previousChoices,
@@ -174,18 +260,18 @@ const changeChoice = (state, action) => {
             ivr: splitValues(ivrValues),
             sms: {
               ...choice.responses.sms,
-              [state.activeLanguage]: splitValues(smsValues)
+              [state.activeLanguage]: splitValues(smsValues),
             },
             mobileweb: {
               ...choice.responses.mobileweb,
-              [state.activeLanguage]: mobilewebValues
-            }
+              [state.activeLanguage]: mobilewebValues,
+            },
           },
-          skipLogic: action.choiceChange.skipLogic
+          skipLogic: action.choiceChange.skipLogic,
         },
-        ...nextChoices
-      ]
-    })
+        ...nextChoices,
+      ],
+    }
   })
 }
 
@@ -195,12 +281,12 @@ const autocompleteChoiceSmsValues = (state, action) => {
     const choice = step.choices[action.index]
     const nextChoices = step.choices.slice(action.index + 1)
 
-    let newChoice = {...choice}
+    let newChoice = { ...choice }
     let responses = newChoice.responses
-    let newResponses = {...responses}
+    let newResponses = { ...responses }
     newChoice.responses = newResponses
     let sms = newResponses.sms
-    let newSms = {...sms}
+    let newSms = { ...sms }
     newResponses.sms = newSms
 
     // First change default language
@@ -216,37 +302,33 @@ const autocompleteChoiceSmsValues = (state, action) => {
       }
     }
 
-    return ({
+    return {
       ...step,
-      choices: [
-        ...previousChoices,
-        newChoice,
-        ...nextChoices
-      ]
-    })
+      choices: [...previousChoices, newChoice, ...nextChoices],
+    }
   })
 }
 
 const autoComplete = (steps, activeLanguage, value) => {
   let setted = false
 
-  let smsValues = ''
-  let ivrValues = ''
-  let mobilewebValues = ''
+  let smsValues = ""
+  let ivrValues = ""
+  let mobilewebValues = ""
 
   steps.forEach((step) => {
     if (!setted) {
-      if ((step.type === 'multiple-choice')) {
+      if (step.type === "multiple-choice") {
         step.choices.forEach((choice) => {
           if (choice.value.toLowerCase() == value.toLowerCase() && !setted) {
             setted = true
 
             if (choice.responses.sms && choice.responses.sms[activeLanguage]) {
-              smsValues = choice.responses.sms[activeLanguage].join(',')
+              smsValues = choice.responses.sms[activeLanguage].join(",")
             }
 
             if (choice.responses.ivr) {
-              ivrValues = choice.responses.ivr.join(',')
+              ivrValues = choice.responses.ivr.join(",")
             }
 
             if (choice.responses.mobileweb && choice.responses.mobileweb[activeLanguage]) {
@@ -254,10 +336,10 @@ const autoComplete = (steps, activeLanguage, value) => {
             }
           }
         })
-      } else if (step.type === 'section') {
+      } else if (step.type === "section") {
         // Recursive call to autoComplete function when step is a section
-        [smsValues, ivrValues, mobilewebValues] = autoComplete(step.steps, activeLanguage, value)
-        if (smsValues !== '' || ivrValues !== '' || mobilewebValues !== '') {
+        ;[smsValues, ivrValues, mobilewebValues] = autoComplete(step.steps, activeLanguage, value)
+        if (smsValues !== "" || ivrValues !== "" || mobilewebValues !== "") {
           setted = true
         }
       }
@@ -267,35 +349,35 @@ const autoComplete = (steps, activeLanguage, value) => {
 }
 
 const splitValues = (values) => {
-  return values.split(',').map((r) => r.trim()).filter(r => r.length != 0)
+  return values
+    .split(",")
+    .map((r) => r.trim())
+    .filter((r) => r.length != 0)
 }
 
 const deleteStep = (state, action) => {
-  return changeStep(state, action.stepId, step => {
+  return changeStep(state, action.stepId, (step) => {
     return {
       ...step,
-      delete: true
+      delete: true,
     }
   })
 }
 
 const deleteSection = (state, action) => {
-  const section = state.steps.find(s => s.id == action.sectionId)
-  const filteredSteps = filter(state.steps, s => s.id != action.sectionId)
+  const section = state.steps.find((s) => s.id == action.sectionId)
+  const filteredSteps = filter(state.steps, (s) => s.id != action.sectionId)
 
   if (hasSections(filteredSteps)) {
     return {
       ...state,
-      steps: filteredSteps
+      steps: filteredSteps,
     }
   } else {
-    if (section && section.type === 'section') {
+    if (section && section.type === "section") {
       return {
         ...state,
-        steps: [
-          ...filteredSteps,
-          ...section.steps
-        ]
+        steps: [...filteredSteps, ...section.steps],
       }
     } else {
       return state
@@ -304,29 +386,42 @@ const deleteSection = (state, action) => {
 }
 
 const changeSectionTitle = (state, action) => {
-  return findAndUpdateRegularStep(state.steps, action.sectionId, state, section => {
-    if (section && section.type === 'section') {
-      return {
-        ...section,
-        title: action.newTitle.trim()
-      }
-    }
-    return section
-  }, 'steps') || state
+  return (
+    findAndUpdateRegularStep(
+      state.steps,
+      action.sectionId,
+      state,
+      (section) => {
+        if (section && section.type === "section") {
+          return {
+            ...section,
+            title: action.newTitle.trim(),
+          }
+        }
+        return section
+      },
+      "steps"
+    ) || state
+  )
 }
 
 const moveSection = (state, action) => {
   const reorderSections = (sections, sourceId, targetId) => {
     if (sourceId == targetId) return sections
 
-    let reordered = [ ...sections ]
-    const languageIndex = reordered.findIndex(s => s.type == 'language-selection')
+    let reordered = [...sections]
+    const languageIndex = reordered.findIndex((s) => s.type == "language-selection")
     const language = (languageIndex > -1 && reordered.splice(languageIndex, 1)) || []
-    const sourceIndex = reordered.findIndex(s => s.id == sourceId)
+    const sourceIndex = reordered.findIndex((s) => s.id == sourceId)
     const source = reordered.splice(sourceIndex, 1)
-    const insertIndex = targetId == 0 ? 0 : reordered.findIndex(s => s.id == targetId) + 1
+    const insertIndex = targetId == 0 ? 0 : reordered.findIndex((s) => s.id == targetId) + 1
 
-    return [...language, ...reordered.slice(0, insertIndex), ...source, ...reordered.slice(insertIndex)]
+    return [
+      ...language,
+      ...reordered.slice(0, insertIndex),
+      ...source,
+      ...reordered.slice(insertIndex),
+    ]
   }
 
   const { steps: sections } = state
@@ -334,7 +429,7 @@ const moveSection = (state, action) => {
 
   return {
     ...state,
-    steps: reorderSections(sections, sourceSectionId, targetSectionId)
+    steps: reorderSections(sections, sourceSectionId, targetSectionId),
   }
 }
 
@@ -357,12 +452,12 @@ const moveStep = (state, action) => {
   let stepAbove = null
 
   if (steps) {
-    stepToMove = steps[findIndex(steps, s => s.id === action.sourceStepId)]
-    stepAbove = steps[findIndex(steps, s => s.id === action.targetStepId)]
+    stepToMove = steps[findIndex(steps, (s) => s.id === action.sourceStepId)]
+    stepAbove = steps[findIndex(steps, (s) => s.id === action.targetStepId)]
     if (stepToMove && stepAbove) {
       return {
         ...state,
-        quotaCompletedSteps: reduce(steps, move, [])
+        quotaCompletedSteps: reduce(steps, move, []),
       }
     }
   }
@@ -400,26 +495,26 @@ const moveStep = (state, action) => {
               ...sectionSteps2.slice(0, targetStepIndex),
               stepAbove,
               stepToMove,
-              ...sectionSteps2.slice(targetStepIndex + 1)
-            ]
+              ...sectionSteps2.slice(targetStepIndex + 1),
+            ],
           },
-          ...finalSteps.slice(targetSectionIndex + 1)
+          ...finalSteps.slice(targetSectionIndex + 1),
         ]
 
         return {
           ...state,
-          steps: finalSteps
+          steps: finalSteps,
         }
       }
     }
   } else {
-    stepToMove = steps[findIndex(steps, s => s.id === action.sourceStepId)]
-    stepAbove = steps[findIndex(steps, s => s.id === action.targetStepId)]
+    stepToMove = steps[findIndex(steps, (s) => s.id === action.sourceStepId)]
+    stepAbove = steps[findIndex(steps, (s) => s.id === action.targetStepId)]
 
     if (stepToMove && stepAbove) {
       return {
         ...state,
-        steps: reduce(steps, move, [])
+        steps: reduce(steps, move, []),
       }
     }
   }
@@ -431,14 +526,14 @@ const moveStep = (state, action) => {
 
 function removeStepFromSection(steps, stepId, sectionIndex) {
   const section = steps[sectionIndex]
-  if (section.type === 'section') {
+  if (section.type === "section") {
     return [
       ...steps.slice(0, sectionIndex),
       {
         ...section,
-        steps: section.steps.filter(x => x.id !== stepId)
+        steps: section.steps.filter((x) => x.id !== stepId),
       },
-      ...steps.slice(sectionIndex + 1)
+      ...steps.slice(sectionIndex + 1),
     ]
   }
   return steps
@@ -449,11 +544,14 @@ const moveStepToTop = (state, action) => {
   let steps = state.quotaCompletedSteps
   let stepToMove = null
   if (steps) {
-    stepToMove = steps[findIndex(steps, s => s.id === action.stepId)]
+    stepToMove = steps[findIndex(steps, (s) => s.id === action.stepId)]
     if (stepToMove) {
       return {
         ...state,
-        quotaCompletedSteps: concat([stepToMove], reject(steps, s => s.id === action.stepId))
+        quotaCompletedSteps: concat(
+          [stepToMove],
+          reject(steps, (s) => s.id === action.stepId)
+        ),
       }
     }
   }
@@ -461,11 +559,14 @@ const moveStepToTop = (state, action) => {
   // Otherwise try with 'steps'
   steps = state.steps
   if (!hasSections(steps)) {
-    stepToMove = steps[findIndex(steps, s => s.id === action.stepId)]
+    stepToMove = steps[findIndex(steps, (s) => s.id === action.stepId)]
     if (stepToMove) {
       return {
         ...state,
-        steps: concat([stepToMove], reject(steps, s => s.id === action.stepId))
+        steps: concat(
+          [stepToMove],
+          reject(steps, (s) => s.id === action.stepId)
+        ),
       }
     }
   } else {
@@ -486,22 +587,24 @@ const moveStepToTopOfSection = (state, action) => {
     let stepToMove = steps[sourceSectionIndex].steps[sourceStepIndex]
     let finalSteps = removeStepFromSection(steps, action.stepId, sourceSectionIndex)
 
-    let sectionIndex = findIndex(steps, s => s.id === action.sectionId)
+    let sectionIndex = findIndex(steps, (s) => s.id === action.sectionId)
 
     let sectionStep = finalSteps[sectionIndex]
 
-    if (sectionStep.type === 'section' && stepToMove) {
+    if (sectionStep.type === "section" && stepToMove) {
       return {
         ...state,
         steps: [
           ...finalSteps.slice(0, sectionIndex),
           {
             ...sectionStep,
-            steps: concat([stepToMove], reject(sectionStep.steps, s => s.id === action.stepId))
+            steps: concat(
+              [stepToMove],
+              reject(sectionStep.steps, (s) => s.id === action.stepId)
+            ),
           },
-          ...finalSteps.slice(sectionIndex + 1)
-
-        ]
+          ...finalSteps.slice(sectionIndex + 1),
+        ],
       }
     }
   }
@@ -510,14 +613,14 @@ const moveStepToTopOfSection = (state, action) => {
 }
 
 export const hasSections = (steps: Array<Step>) => {
-  return steps.some(function(item) {
-    return item.type == 'section'
+  return steps.some(function (item) {
+    return item.type == "section"
   })
 }
 
 export const countRelevantSteps = (steps: Array<any>) => {
-  const filterAndCount = steps => steps.filter(({ relevant }) => relevant).length
-  const sections = steps.filter(s => s.type == 'section')
+  const filterAndCount = (steps) => steps.filter(({ relevant }) => relevant).length
+  const sections = steps.filter((s) => s.type == "section")
   return sections.reduce(
     (relevantSteps, section) => relevantSteps + filterAndCount(section.steps),
     filterAndCount(steps)
@@ -526,8 +629,8 @@ export const countRelevantSteps = (steps: Array<any>) => {
 
 export const canBeRelevant = (stepType: string) => {
   switch (stepType) {
-    case 'multiple-choice':
-    case 'numeric':
+    case "multiple-choice":
+    case "numeric":
       return true
     default:
       return false
@@ -536,14 +639,14 @@ export const canBeRelevant = (stepType: string) => {
 
 function changeStep<T: Step>(state, stepId, func: (step: Object) => T): Object {
   // First try to find the step in 'steps'
-  let inSteps = findAndUpdateStep(state.steps, stepId, state, func, 'steps')
+  let inSteps = findAndUpdateStep(state.steps, stepId, state, func, "steps")
 
   if (inSteps) return inSteps
 
   // If we couldn't find it there, it must be in 'quotaCompletedSteps'
   let steps = state.quotaCompletedSteps
   if (steps) {
-    let inQuotaCompleted = findAndUpdateStep(steps, stepId, state, func, 'quotaCompletedSteps')
+    let inQuotaCompleted = findAndUpdateStep(steps, stepId, state, func, "quotaCompletedSteps")
     if (inQuotaCompleted) return inQuotaCompleted
   }
 
@@ -578,11 +681,11 @@ function findAndUpdateStepInSection<T: Step>(items, stepId, state, func: (step: 
             steps: [
               ...steps.slice(0, stepIndex),
               func(steps[stepIndex]),
-              ...steps.slice(stepIndex + 1)
-            ].filter(x => !x.delete)
+              ...steps.slice(stepIndex + 1),
+            ].filter((x) => !x.delete),
           },
-          ...items.slice(sectionIndex + 1)
-        ]
+          ...items.slice(sectionIndex + 1),
+        ],
       }
     } else {
       return updateRegularStep(state, items, sectionIndex, func, key)
@@ -595,8 +698,8 @@ function findStepAndSectionIndex(stepId, items) {
   let stepIndex = null
 
   items.forEach((item, index) => {
-    if (item.type === 'section') {
-      let indexInSection = findIndex(item.steps, s => s.id == stepId)
+    if (item.type === "section") {
+      let indexInSection = findIndex(item.steps, (s) => s.id == stepId)
       if (indexInSection != -1) {
         sectionIndex = index
         stepIndex = indexInSection
@@ -612,65 +715,65 @@ function findStepAndSectionIndex(stepId, items) {
   return [sectionIndex, stepIndex]
 }
 
-function findAndUpdateRegularStep<T: Step>(steps, stepId, state, func: Object => T, key) {
-  let stepIndex = findIndex(steps, s => s.id == stepId)
+function findAndUpdateRegularStep<T: Step>(steps, stepId, state, func: (Object) => T, key) {
+  let stepIndex = findIndex(steps, (s) => s.id == stepId)
 
   if (stepIndex != -1 && stepIndex != null) {
     return updateRegularStep(state, steps, stepIndex, func, key)
   }
 }
 
-function updateRegularStep<T: Step>(state, steps, stepIndex, func: Object => T, key) {
+function updateRegularStep<T: Step>(state, steps, stepIndex, func: (Object) => T, key) {
   return {
     ...state,
     [key]: [
       ...steps.slice(0, stepIndex),
       func(steps[stepIndex]),
-      ...steps.slice(stepIndex + 1)
-    ].filter(x => !x.delete)
+      ...steps.slice(stepIndex + 1),
+    ].filter((x) => !x.delete),
   }
 }
 
 type ActionChangeStepSmsPrompt = {
   stepId: string,
-  newPrompt: string
-};
+  newPrompt: string,
+}
 
 const changeStepSmsPrompt = (state, action: ActionChangeStepSmsPrompt) => {
-  return changeStep(state, action.stepId, step => {
-    return setStepPrompt(step, state.activeLanguage, prompt => ({
+  return changeStep(state, action.stepId, (step) => {
+    return setStepPrompt(step, state.activeLanguage, (prompt) => ({
       ...prompt,
-      sms: action.newPrompt.trim()
+      sms: action.newPrompt.trim(),
     }))
   })
 }
 
 const changeStepMobileWebPrompt = (state, action: ActionChangeStepSmsPrompt) => {
-  return changeStep(state, action.stepId, step => {
-    return setStepPrompt(step, state.activeLanguage, prompt => ({
+  return changeStep(state, action.stepId, (step) => {
+    return setStepPrompt(step, state.activeLanguage, (prompt) => ({
       ...prompt,
-      mobileweb: action.newPrompt.trim()
+      mobileweb: action.newPrompt.trim(),
     }))
   })
 }
 
 const autocompleteStepSmsPrompt = (state, action) => {
-  return changeStep(state, action.stepId, step => {
+  return changeStep(state, action.stepId, (step) => {
     // First change default language
-    step = setStepPrompt(step, state.defaultLanguage, prompt => ({
+    step = setStepPrompt(step, state.defaultLanguage, (prompt) => ({
       ...prompt,
-      sms: action.item.text.trim()
+      sms: action.item.text.trim(),
     }))
 
     // Then change other languages
     for (let translation of action.item.translations) {
       if (!translation.language) continue
 
-      step = setStepPrompt(step, translation.language, prompt => {
-        if ((prompt || {}).sms == '') {
+      step = setStepPrompt(step, translation.language, (prompt) => {
+        if ((prompt || {}).sms == "") {
           return {
             ...prompt,
-            sms: translation.text.trim()
+            sms: translation.text.trim(),
           }
         } else {
           return prompt
@@ -683,22 +786,22 @@ const autocompleteStepSmsPrompt = (state, action) => {
 }
 
 const autocompleteStepMobileWebPrompt = (state, action) => {
-  return changeStep(state, action.stepId, step => {
+  return changeStep(state, action.stepId, (step) => {
     // First change default language
-    step = setStepPrompt(step, state.defaultLanguage, prompt => ({
+    step = setStepPrompt(step, state.defaultLanguage, (prompt) => ({
       ...prompt,
-      mobileweb: action.item.text.trim()
+      mobileweb: action.item.text.trim(),
     }))
 
     // Then change other languages
     for (let translation of action.item.translations) {
       if (!translation.language) continue
 
-      step = setStepPrompt(step, translation.language, prompt => {
-        if ((prompt || {}).mobileweb == '') {
+      step = setStepPrompt(step, translation.language, (prompt) => {
+        if ((prompt || {}).mobileweb == "") {
           return {
             ...prompt,
-            mobileweb: translation.text.trim()
+            mobileweb: translation.text.trim(),
           }
         } else {
           return prompt
@@ -711,29 +814,29 @@ const autocompleteStepMobileWebPrompt = (state, action) => {
 }
 
 const autocompleteStepIvrPrompt = (state, action) => {
-  return changeStep(state, action.stepId, step => {
+  return changeStep(state, action.stepId, (step) => {
     // First change default language
-    step = setStepPrompt(step, state.defaultLanguage, prompt => ({
+    step = setStepPrompt(step, state.defaultLanguage, (prompt) => ({
       ...prompt,
       ivr: {
         ...prompt.ivr,
-        text: action.item.text.trim()
-      }
+        text: action.item.text.trim(),
+      },
     }))
 
     // Then change other languages
     for (let translation of action.item.translations) {
       if (!translation.language) continue
 
-      step = setStepPrompt(step, translation.language, prompt => {
+      step = setStepPrompt(step, translation.language, (prompt) => {
         let ivr = prompt.ivr || newIvrPrompt()
-        if (ivr.text == '') {
+        if (ivr.text == "") {
           return {
             ...prompt,
             ivr: {
               ...ivr,
-              text: translation.text.trim()
-            }
+              text: translation.text.trim(),
+            },
           }
         } else {
           return prompt
@@ -746,54 +849,54 @@ const autocompleteStepIvrPrompt = (state, action) => {
 }
 
 const changeStepIvrPrompt = (state, action) => {
-  return changeStep(state, action.stepId, step => {
-    return setStepPrompt(step, state.activeLanguage, prompt => ({
+  return changeStep(state, action.stepId, (step) => {
+    return setStepPrompt(step, state.activeLanguage, (prompt) => ({
       ...prompt,
       ivr: {
         ...prompt.ivr,
         text: action.newPrompt.text.trim(),
-        audioSource: action.newPrompt.audioSource
-      }
+        audioSource: action.newPrompt.audioSource,
+      },
     }))
   })
 }
 
 const changeStepIvrAudioId = (state, action) => {
-  return changeStep(state, action.stepId, step => {
-    return setStepPrompt(step, state.activeLanguage, prompt => ({
+  return changeStep(state, action.stepId, (step) => {
+    return setStepPrompt(step, state.activeLanguage, (prompt) => ({
       ...prompt,
       ivr: {
         ...prompt.ivr,
         audioId: action.newId,
-        audioSource: action.audioSource
-      }
+        audioSource: action.audioSource,
+      },
     }))
   })
 }
 
 const changeStepTitle = (state, action) => {
-  return changeStep(state, action.stepId, step => ({
+  return changeStep(state, action.stepId, (step) => ({
     ...step,
-    title: action.newTitle.trim()
+    title: action.newTitle.trim(),
   }))
 }
 
 const changeStepRelevant = (state, action) => {
-  return changeStep(state, action.stepId, step => ({
+  return changeStep(state, action.stepId, (step) => ({
     ...step,
-    relevant: action.relevant
+    relevant: action.relevant,
   }))
 }
 
 const changeStepType = (state, action) => {
   switch (action.stepType) {
-    case 'multiple-choice':
-      return changeStep(state, action.stepId, step => {
+    case "multiple-choice":
+      return changeStep(state, action.stepId, (step) => {
         let prompt = {
-          'en': newStepPrompt()
+          en: newStepPrompt(),
         }
-        let store = ''
-        if (step.type !== 'flag' && step.type !== 'explanation') {
+        let store = ""
+        if (step.type !== "flag" && step.type !== "explanation") {
           store = step.store
           prompt = step.prompt
         }
@@ -803,16 +906,16 @@ const changeStepType = (state, action) => {
           store: store,
           type: action.stepType,
           prompt: prompt,
-          choices: []
+          choices: [],
         }
       })
-    case 'numeric':
-      return changeStep(state, action.stepId, step => {
+    case "numeric":
+      return changeStep(state, action.stepId, (step) => {
         let prompt = {
-          'en': newStepPrompt()
+          en: newStepPrompt(),
         }
-        let store = ''
-        if (step.type !== 'flag' && step.type !== 'explanation') {
+        let store = ""
+        if (step.type !== "flag" && step.type !== "explanation") {
           store = step.store
           prompt = step.prompt
         }
@@ -825,16 +928,16 @@ const changeStepType = (state, action) => {
           minValue: null,
           maxValue: null,
           rangesDelimiters: null,
-          ranges: [{from: null, to: null, skipLogic: null}],
-          refusal: newRefusal()
+          ranges: [{ from: null, to: null, skipLogic: null }],
+          refusal: newRefusal(),
         }
       })
-    case 'explanation':
-      return changeStep(state, action.stepId, step => {
+    case "explanation":
+      return changeStep(state, action.stepId, (step) => {
         let prompt = {
-          'en': newStepPrompt()
+          en: newStepPrompt(),
         }
-        if (step.type !== 'flag' && step.type !== 'explanation') {
+        if (step.type !== "flag" && step.type !== "explanation") {
           prompt = step.prompt
         }
         return {
@@ -842,17 +945,17 @@ const changeStepType = (state, action) => {
           type: action.stepType,
           title: step.title,
           prompt: prompt,
-          skipLogic: null
+          skipLogic: null,
         }
       })
-    case 'flag':
-      return changeStep(state, action.stepId, step => {
+    case "flag":
+      return changeStep(state, action.stepId, (step) => {
         return {
           id: step.id,
           type: action.stepType,
-          disposition: 'interim partial',
+          disposition: "interim partial",
           title: step.title,
-          skipLogic: null
+          skipLogic: null,
         }
       })
     default:
@@ -861,9 +964,9 @@ const changeStepType = (state, action) => {
 }
 
 const changeStepStore = (state, action) => {
-  return changeStep(state, action.stepId, step => ({
+  return changeStep(state, action.stepId, (step) => ({
     ...step,
-    store: action.newStore.trim()
+    store: action.newStore.trim(),
   }))
 }
 
@@ -872,38 +975,18 @@ const addSection = (state, action) => {
   if (hasSections(state.steps)) {
     return {
       ...state,
-      steps: [
-        ...state.steps,
-        {...section,
-          steps: [
-            newMultipleChoiceStep()
-          ]
-        }
-      ]
+      steps: [...state.steps, { ...section, steps: [newMultipleChoiceStep()] }],
     }
   } else {
-    if (state.steps[0] && state.steps[0].type === 'language-selection') {
+    if (state.steps[0] && state.steps[0].type === "language-selection") {
       return {
         ...state,
-        steps: [
-          state.steps[0],
-          {...section,
-            steps: [
-              ...state.steps.slice(1)
-            ]
-          }
-        ]
+        steps: [state.steps[0], { ...section, steps: [...state.steps.slice(1)] }],
       }
     } else {
       return {
         ...state,
-        steps: [
-          {...section,
-            steps: [
-              ...state.steps
-            ]
-          }
-        ]
+        steps: [{ ...section, steps: [...state.steps] }],
       }
     }
   }
@@ -911,21 +994,21 @@ const addSection = (state, action) => {
 
 const toggleRandomizeForSection = (state, action) => {
   const items = state.steps
-  let sectionIndex = findIndex(items, s => s.id == action.sectionId)
+  let sectionIndex = findIndex(items, (s) => s.id == action.sectionId)
 
   const sectionStep = items[sectionIndex]
 
-  if (sectionStep !== null && sectionStep.type === 'section') {
+  if (sectionStep !== null && sectionStep.type === "section") {
     return {
       ...state,
       steps: [
         ...items.slice(0, sectionIndex),
         {
           ...sectionStep,
-          randomize: !sectionStep.randomize
+          randomize: !sectionStep.randomize,
         },
-        ...items.slice(sectionIndex + 1)
-      ]
+        ...items.slice(sectionIndex + 1),
+      ],
     }
   } else {
     return state
@@ -935,34 +1018,28 @@ const toggleRandomizeForSection = (state, action) => {
 const addStep = (state, action) => {
   return {
     ...state,
-    steps: [
-      ...state.steps,
-      newMultipleChoiceStep()
-    ]
+    steps: [...state.steps, newMultipleChoiceStep()],
   }
 }
 
 const addStepToSection = (state, action) => {
   const step = newMultipleChoiceStep()
   const items = state.steps
-  let sectionIndex = findIndex(items, s => s.id == action.sectionId)
+  let sectionIndex = findIndex(items, (s) => s.id == action.sectionId)
 
   const sectionStep = items[sectionIndex]
 
-  if (sectionStep !== null && sectionStep.type === 'section') {
+  if (sectionStep !== null && sectionStep.type === "section") {
     return {
       ...state,
       steps: [
         ...items.slice(0, sectionIndex),
         {
           ...sectionStep,
-          steps: [
-            ...sectionStep.steps,
-            step
-          ]
+          steps: [...sectionStep.steps, step],
         },
-        ...items.slice(sectionIndex + 1)
-      ]
+        ...items.slice(sectionIndex + 1),
+      ],
     }
   } else {
     return state
@@ -971,49 +1048,46 @@ const addStepToSection = (state, action) => {
 
 const addQuotaCompletedStep = (state, action) => {
   if (!state.quotaCompletedSteps) {
-    throw new Error('Bug: expected state.quotaCompletedStepsComponent to be present')
+    throw new Error("Bug: expected state.quotaCompletedStepsComponent to be present")
   }
 
   return {
     ...state,
-    quotaCompletedSteps: [
-      ...state.quotaCompletedSteps,
-      newMultipleChoiceStep()
-    ]
+    quotaCompletedSteps: [...state.quotaCompletedSteps, newMultipleChoiceStep()],
   }
 }
 
 export const newLanguageSelectionStep = (first: string, second: string): LanguageSelectionStep => {
   return {
     id: uuidv4(),
-    type: 'language-selection',
-    title: 'Language selection',
-    store: 'language',
+    type: "language-selection",
+    title: "Language selection",
+    store: "language",
     prompt: newStepPrompt(),
-    languageChoices: [first, second]
+    languageChoices: [first, second],
   }
 }
 
 export const newMultipleChoiceStep = () => {
   return {
     id: uuidv4(),
-    type: 'multiple-choice',
-    title: '',
-    store: '',
+    type: "multiple-choice",
+    title: "",
+    store: "",
     prompt: {
-      'en': newStepPrompt()
+      en: newStepPrompt(),
     },
-    choices: []
+    choices: [],
   }
 }
 
 export const newSection = (): SectionStep => {
   return {
     id: uuidv4(),
-    title: '',
+    title: "",
     randomize: false,
-    type: 'section',
-    steps: []
+    type: "section",
+    steps: [],
   }
 }
 
@@ -1021,7 +1095,7 @@ const setActiveMode = (state, action) => {
   if (state.activeMode != action.mode) {
     return {
       ...state,
-      activeMode: action.mode
+      activeMode: action.mode,
     }
   } else {
     return state
@@ -1034,17 +1108,17 @@ const addMode = (state, action) => {
   return {
     ...state,
     modes,
-    activeMode
+    activeMode,
   }
 }
 
 const removeMode = (state, action) => {
-  const modes = state.modes.filter(mode => mode != action.mode)
+  const modes = state.modes.filter((mode) => mode != action.mode)
   const activeMode = state.activeMode == action.mode ? defaultActiveMode(modes) : state.activeMode
   return {
     ...state,
     modes,
-    activeMode
+    activeMode,
   }
 }
 
@@ -1052,12 +1126,12 @@ const toggleQuotaCompletedSteps = (state, action) => {
   if (state.quotaCompletedSteps) {
     return {
       ...state,
-      quotaCompletedSteps: null
+      quotaCompletedSteps: null,
     }
   } else {
     return {
       ...state,
-      quotaCompletedSteps: [newExplanationStep()]
+      quotaCompletedSteps: [newExplanationStep()],
     }
   }
 }
@@ -1066,15 +1140,15 @@ const changePartialRelevantEnabled = (state, action) => {
   return {
     ...state,
     partialRelevantConfig: state.partialRelevantConfig
-    ? {
-      ...state.partialRelevantConfig,
-      enabled: action.enabled
-    }
-    : {
-      ...state.partialRelevantConfig,
-      ignoredValues: 'Refused',
-      enabled: action.enabled
-    }
+      ? {
+          ...state.partialRelevantConfig,
+          enabled: action.enabled,
+        }
+      : {
+          ...state.partialRelevantConfig,
+          ignoredValues: "Refused",
+          enabled: action.enabled,
+        },
   }
 }
 
@@ -1085,14 +1159,14 @@ const changePartialRelevantMinRelevantSteps = (state, action) => {
       ...state,
       partialRelevantConfig: {
         ...partialRelevantConfig,
-        minRelevantSteps: action.minRelevantSteps
-      }
+        minRelevantSteps: action.minRelevantSteps,
+      },
     }
   } else {
     delete partialRelevantConfig.minRelevantSteps
     return {
       ...state,
-      partialRelevantConfig
+      partialRelevantConfig,
     }
   }
 }
@@ -1102,37 +1176,37 @@ const changePartialRelevantIgnoredValues = (state, action) => {
     ...state,
     partialRelevantConfig: {
       ...state.partialRelevantConfig,
-      ignoredValues: action.ignoredValues
-    }
+      ignoredValues: action.ignoredValues,
+    },
   }
 }
 
 export const newExplanationStep = () => ({
   id: uuidv4(),
-  type: 'explanation',
-  title: '',
-  store: '',
+  type: "explanation",
+  title: "",
+  store: "",
   prompt: {
-    'en': newStepPrompt()
+    en: newStepPrompt(),
   },
-  skipLogic: null
+  skipLogic: null,
 })
 
 type ActionChangeName = {
-  newName: string
-};
+  newName: string,
+}
 
 const changeName = (state: Questionnaire, action: ActionChangeName): Questionnaire => {
   return {
     ...state,
-    name: action.newName.trim()
+    name: action.newName.trim(),
   }
 }
 
 const changeDescription = (state, action) => {
   return {
     ...state,
-    description: action.newDescription.trim()
+    description: action.newDescription.trim(),
   }
 }
 
@@ -1147,7 +1221,7 @@ const addLanguage = (state, action) => {
     return {
       ...state,
       steps: steps,
-      languages: [...state.languages, action.language]
+      languages: [...state.languages, action.language],
     }
   } else {
     return state
@@ -1157,7 +1231,10 @@ const addLanguage = (state, action) => {
 const removeLanguage = (state, action) => {
   const indexToDelete = state.languages.indexOf(action.language)
   if (indexToDelete != -1) {
-    const newLanguages = [...state.languages.slice(0, indexToDelete), ...state.languages.slice(indexToDelete + 1)]
+    const newLanguages = [
+      ...state.languages.slice(0, indexToDelete),
+      ...state.languages.slice(indexToDelete + 1),
+    ]
     let newSteps = removeOptionFromLanguageSelectionStep(state, action.language).steps
 
     // If only one language remains, remove the language-selection
@@ -1176,7 +1253,7 @@ const removeLanguage = (state, action) => {
       ...state,
       steps: newSteps,
       activeLanguage,
-      languages: newLanguages
+      languages: newLanguages,
     }
   } else {
     return state
@@ -1186,7 +1263,7 @@ const removeLanguage = (state, action) => {
 const reorderLanguages = (state, action) => {
   let languageSelectionStep = state.steps[0]
 
-  if (languageSelectionStep.type === 'language-selection') {
+  if (languageSelectionStep.type === "language-selection") {
     let choices = languageSelectionStep.languageChoices
 
     var index = choices.indexOf(action.language)
@@ -1197,60 +1274,82 @@ const reorderLanguages = (state, action) => {
 
     return changeStep(state, state.steps[0].id, (step) => ({
       ...step,
-      languageChoices: choices
+      languageChoices: choices,
     }))
   } else {
     return state
   }
 }
 
-type LocalizedSettingKey = 'errorMessage' | 'thankYouMessage';
-type MsgAction<T> = {msgKey: LocalizedSettingKey, msg: T};
+type LocalizedSettingKey = "errorMessage" | "thankYouMessage"
+type MsgAction<T> = { msgKey: LocalizedSettingKey, msg: T }
 
-const updateLocalizedPrompt = (localizedPrompt: ?LocalizedPrompt, lang: string, update: Prompt => Prompt): LocalizedPrompt => {
-  let newLocalizedPrompt: LocalizedPrompt = {...localizedPrompt}
+const updateLocalizedPrompt = (
+  localizedPrompt: ?LocalizedPrompt,
+  lang: string,
+  update: (Prompt) => Prompt
+): LocalizedPrompt => {
+  let newLocalizedPrompt: LocalizedPrompt = { ...localizedPrompt }
   // HACK: we use this syntax because otherwise Flow would not type check this assignment
   newLocalizedPrompt[lang] = update(newLocalizedPrompt[lang])
   return newLocalizedPrompt
 }
 
-const setQuestionnaireAudioMsg = (state: Questionnaire, key: LocalizedSettingKey, msg: AudioPrompt): Questionnaire => {
+const setQuestionnaireAudioMsg = (
+  state: Questionnaire,
+  key: LocalizedSettingKey,
+  msg: AudioPrompt
+): Questionnaire => {
   const audioPrompt = {
     ...msg,
-    text: msg.text.trim()
+    text: msg.text.trim(),
   }
 
-  return {...state,
-    settings: {...state.settings,
-      [key]: updateLocalizedPrompt(state.settings[key], state.activeLanguage, prompt => ({...prompt,
-        ivr: audioPrompt
-      }))
-    }
+  return {
+    ...state,
+    settings: {
+      ...state.settings,
+      [key]: updateLocalizedPrompt(state.settings[key], state.activeLanguage, (prompt) => ({
+        ...prompt,
+        ivr: audioPrompt,
+      })),
+    },
   }
 }
 
-const setQuestionnaireTextMsg = (state: Questionnaire, key: LocalizedSettingKey, msg: string, mode: 'sms' | 'mobileweb'): Questionnaire => {
+const setQuestionnaireTextMsg = (
+  state: Questionnaire,
+  key: LocalizedSettingKey,
+  msg: string,
+  mode: "sms" | "mobileweb"
+): Questionnaire => {
   const textPrompt = msg.trim()
 
-  return {...state,
-    settings: {...state.settings,
-      [key]: updateLocalizedPrompt(state.settings[key], state.activeLanguage, prompt => ({...prompt,
-        [mode]: textPrompt
-      }))
-    }
+  return {
+    ...state,
+    settings: {
+      ...state.settings,
+      [key]: updateLocalizedPrompt(state.settings[key], state.activeLanguage, (prompt) => ({
+        ...prompt,
+        [mode]: textPrompt,
+      })),
+    },
   }
 }
 
-const setIvrQuestionnaireMsg = (state: Questionnaire, action: MsgAction<AudioPrompt>): Questionnaire => {
+const setIvrQuestionnaireMsg = (
+  state: Questionnaire,
+  action: MsgAction<AudioPrompt>
+): Questionnaire => {
   return setQuestionnaireAudioMsg(state, action.msgKey, action.msg)
 }
 
 const setSmsQuestionnaireMsg = (state: Questionnaire, action: MsgAction<string>) => {
-  return setQuestionnaireTextMsg(state, action.msgKey, action.msg, 'sms')
+  return setQuestionnaireTextMsg(state, action.msgKey, action.msg, "sms")
 }
 
 const setMobileWebQuestionnaireMsg = (state: Questionnaire, action: MsgAction<string>) => {
-  return setQuestionnaireTextMsg(state, action.msgKey, action.msg, 'mobileweb')
+  return setQuestionnaireTextMsg(state, action.msgKey, action.msg, "mobileweb")
 }
 
 const autocompleteSmsQuestionnaireMsg = (state, action) => {
@@ -1263,7 +1362,7 @@ const autocompleteSmsQuestionnaireMsg = (state, action) => {
   let langPrompt = msg[lang] || {}
   msg[lang] = {
     ...langPrompt,
-    sms: item.text.trim()
+    sms: item.text.trim(),
   }
 
   // Now translations
@@ -1272,11 +1371,11 @@ const autocompleteSmsQuestionnaireMsg = (state, action) => {
     if (!lang) continue
 
     let langPrompt = msg[lang] || {}
-    let sms = langPrompt.sms || ''
-    if (sms == '') {
+    let sms = langPrompt.sms || ""
+    if (sms == "") {
       msg[lang] = {
         ...langPrompt,
-        sms: translation.text.trim()
+        sms: translation.text.trim(),
       }
     }
   }
@@ -1285,8 +1384,8 @@ const autocompleteSmsQuestionnaireMsg = (state, action) => {
     ...state,
     settings: {
       ...state.settings,
-      [msgKey]: msg
-    }
+      [msgKey]: msg,
+    },
   }
 }
 
@@ -1303,8 +1402,8 @@ const autocompleteIvrQuestionnaireMsg = (state, action) => {
     ...langPrompt,
     ivr: {
       ...ivr,
-      text: item.text.trim()
-    }
+      text: item.text.trim(),
+    },
   }
 
   // Now translations
@@ -1314,14 +1413,14 @@ const autocompleteIvrQuestionnaireMsg = (state, action) => {
 
     let langPrompt = msg[lang] || {}
     let ivr = langPrompt.ivr || newIvrPrompt()
-    let text = ivr.text || ''
-    if (text == '') {
+    let text = ivr.text || ""
+    if (text == "") {
       msg[lang] = {
         ...langPrompt,
         ivr: {
           ...ivr,
-          text: translation.text.trim()
-        }
+          text: translation.text.trim(),
+        },
       }
     }
   }
@@ -1330,8 +1429,8 @@ const autocompleteIvrQuestionnaireMsg = (state, action) => {
     ...state,
     settings: {
       ...state.settings,
-      [msgKey]: msg
-    }
+      [msgKey]: msg,
+    },
   }
 }
 
@@ -1340,8 +1439,8 @@ const setMobileWebSmsMessage = (state, action) => {
     ...state,
     settings: {
       ...state.settings,
-      mobileWebSmsMessage: action.text
-    }
+      mobileWebSmsMessage: action.text,
+    },
   }
 }
 
@@ -1350,8 +1449,8 @@ const setMobileWebIntroMessage = (state, action) => {
     ...state,
     settings: {
       ...state.settings,
-      mobileWebIntroMessage: action.text
-    }
+      mobileWebIntroMessage: action.text,
+    },
   }
 }
 
@@ -1360,8 +1459,8 @@ const setMobileWebSurveyIsOverMessage = (state, action) => {
     ...state,
     settings: {
       ...state.settings,
-      mobileWebSurveyIsOverMessage: action.text
-    }
+      mobileWebSurveyIsOverMessage: action.text,
+    },
   }
 }
 
@@ -1374,9 +1473,9 @@ const setDisplayedTitle = (state, action) => {
       ...state.settings,
       title: {
         ...title,
-        [lang]: action.msg
-      }
-    }
+        [lang]: action.msg,
+      },
+    },
   }
 }
 
@@ -1389,26 +1488,23 @@ const setSurveyAlreadyTakenMessage = (state, action) => {
       ...state.settings,
       surveyAlreadyTakenMessage: {
         ...surveyAlreadyTakenMessage,
-        [lang]: action.msg
-      }
-    }
+        [lang]: action.msg,
+      },
+    },
   }
 }
 
 const addOptionToLanguageSelectionStep = (state, language) => {
   return changeStep(state, state.steps[0].id, (step) => ({
     ...step,
-    languageChoices: [
-      ...step.languageChoices,
-      language
-    ]
+    languageChoices: [...step.languageChoices, language],
   }))
 }
 
 const removeOptionFromLanguageSelectionStep = (state, language) => {
   const languageSelectionStep = state.steps[0]
 
-  if (languageSelectionStep.type === 'language-selection') {
+  if (languageSelectionStep.type === "language-selection") {
     const choices = languageSelectionStep.languageChoices
     const index = choices.indexOf(language)
 
@@ -1416,7 +1512,7 @@ const removeOptionFromLanguageSelectionStep = (state, language) => {
 
     return changeStep(state, languageSelectionStep.id, (step) => ({
       ...step,
-      languageChoices: newLanguages
+      languageChoices: newLanguages,
     }))
   } else {
     return state
@@ -1424,63 +1520,63 @@ const removeOptionFromLanguageSelectionStep = (state, language) => {
 }
 
 const addLanguageSelectionStep = (state, action) => {
-  return [
-    newLanguageSelectionStep(state.languages[0], action.language),
-    ...state.steps
-  ]
+  return [newLanguageSelectionStep(state.languages[0], action.language), ...state.steps]
 }
 
 const setDefaultLanguage = (state, action) => {
   return {
     ...state,
     defaultLanguage: action.language,
-    activeLanguage: action.language
+    activeLanguage: action.language,
   }
 }
 
 const setActiveLanguage = (state, action) => {
   return {
     ...state,
-    activeLanguage: action.language
+    activeLanguage: action.language,
   }
 }
 
 export const stepStoreValues = (questionnaire: Questionnaire) => {
-  const multipleChoiceSteps = reject(questionnaire.steps, (step) =>
-    step.type == 'language-selection'
+  const multipleChoiceSteps = reject(
+    questionnaire.steps,
+    (step) => step.type == "language-selection"
   )
 
   const reduceStep = (options, step) => {
     options[step.store] = {
       type: step.type,
-      values: map(step.choices, (choice) =>
-        choice.value
-      )
+      values: map(step.choices, (choice) => choice.value),
     }
     return options
   }
 
-  return reduce(multipleChoiceSteps, (options, step) => {
-    if (step.type === 'section') {
-      return reduce(step.steps, reduceStep, options)
-    } else {
-      return reduceStep(options, step)
-    }
-  }, {})
+  return reduce(
+    multipleChoiceSteps,
+    (options, step) => {
+      if (step.type === "section") {
+        return reduce(step.steps, reduceStep, options)
+      } else {
+        return reduceStep(options, step)
+      }
+    },
+    {}
+  )
 }
 
 export const csvForTranslation = (questionnaire: Questionnaire) => {
   const defaultLang = questionnaire.defaultLanguage
-  const nonDefaultLangs = filter(questionnaire.languages, lang => lang !== defaultLang)
+  const nonDefaultLangs = filter(questionnaire.languages, (lang) => lang !== defaultLang)
 
   // First column is the default lang, then the rest of the langs
   const headers = concat([defaultLang], nonDefaultLangs)
-  let languageNames = headers.map(h => language.codeToName(h))
+  let languageNames = headers.map((h) => language.codeToName(h))
   let rows = [languageNames]
 
   // Keep a record of exported strings to avoid dups
   let exported = {}
-  let context = {rows, headers, exported}
+  let context = { rows, headers, exported }
 
   csvStepsTranslations(questionnaire.steps, context, defaultLang)
 
@@ -1500,7 +1596,7 @@ export const csvForTranslation = (questionnaire: Questionnaire) => {
   if (title) {
     const defaultTitle = title[defaultLang]
     if (defaultTitle && defaultTitle.trim().length != 0) {
-      addToCsvForTranslation(defaultTitle, context, lang => title[lang] || '')
+      addToCsvForTranslation(defaultTitle, context, (lang) => title[lang] || "")
     }
   }
 
@@ -1508,8 +1604,10 @@ export const csvForTranslation = (questionnaire: Questionnaire) => {
   if (surveyAlreadyTakenMessage) {
     const defaultMessage = surveyAlreadyTakenMessage[defaultLang]
     if (defaultMessage && defaultMessage.trim().length != 0) {
-      addToCsvForTranslation(defaultMessage, context, lang =>
-        surveyAlreadyTakenMessage[lang] || ''
+      addToCsvForTranslation(
+        defaultMessage,
+        context,
+        (lang) => surveyAlreadyTakenMessage[lang] || ""
       )
     }
   }
@@ -1518,9 +1616,9 @@ export const csvForTranslation = (questionnaire: Questionnaire) => {
 }
 
 const csvStepsTranslations = (steps, context, defaultLang) => {
-  steps.forEach(step => {
-    if (step.type === 'section') {
-      step.steps.forEach(sectionStep => {
+  steps.forEach((step) => {
+    if (step.type === "section") {
+      step.steps.forEach((sectionStep) => {
         stepTranslations(sectionStep, context, defaultLang)
       })
     } else {
@@ -1530,31 +1628,31 @@ const csvStepsTranslations = (steps, context, defaultLang) => {
 }
 
 const stepTranslations = (step, context, defaultLang) => {
-  if (step.type !== 'language-selection') {
+  if (step.type !== "language-selection") {
     // Sms Prompt
     let defaultSms = getStepPromptSms(step, defaultLang)
-    addToCsvForTranslation(defaultSms, context, lang => getStepPromptSms(step, lang))
+    addToCsvForTranslation(defaultSms, context, (lang) => getStepPromptSms(step, lang))
 
     // Ivr Prompt
     let defaultIvr = getStepPromptIvrText(step, defaultLang)
-    addToCsvForTranslation(defaultIvr, context, lang => getStepPromptIvrText(step, lang))
+    addToCsvForTranslation(defaultIvr, context, (lang) => getStepPromptIvrText(step, lang))
 
     // Mobile Web Prompt
     let defaultMobileWeb = getStepPromptMobileWeb(step, defaultLang)
-    addToCsvForTranslation(defaultMobileWeb, context, lang => getStepPromptMobileWeb(step, lang))
+    addToCsvForTranslation(defaultMobileWeb, context, (lang) => getStepPromptMobileWeb(step, lang))
 
     // Sms Prompt. Note IVR responses shouldn't be translated because it is expected to be a digit.
-    if (step.type === 'multiple-choice') {
-      step.choices.forEach(choice => {
+    if (step.type === "multiple-choice") {
+      step.choices.forEach((choice) => {
         // Response sms
         const defaultResponseSms = getChoiceResponseSmsJoined(choice, defaultLang)
-        addToCsvForTranslation(defaultResponseSms, context, lang =>
+        addToCsvForTranslation(defaultResponseSms, context, (lang) =>
           getChoiceResponseSmsJoined(choice, lang)
         )
 
         // Response mobile web
         const defaultResponseMobileWeb = getChoiceResponseMobileWebJoined(choice, defaultLang)
-        addToCsvForTranslation(defaultResponseMobileWeb, context, lang =>
+        addToCsvForTranslation(defaultResponseMobileWeb, context, (lang) =>
           getChoiceResponseMobileWebJoined(choice, lang)
         )
       })
@@ -1564,20 +1662,22 @@ const stepTranslations = (step, context, defaultLang) => {
 
 const addMessageToCsvForTranslation = (m, defaultLang, context) => {
   let defaultSmsCompletedMsg = getPromptSms(m, defaultLang)
-  addToCsvForTranslation(defaultSmsCompletedMsg, context, lang => getPromptSms(m, lang))
+  addToCsvForTranslation(defaultSmsCompletedMsg, context, (lang) => getPromptSms(m, lang))
 
   let defaultIvrCompletedMsg = getPromptIvrText(m, defaultLang)
-  addToCsvForTranslation(defaultIvrCompletedMsg, context, lang => getPromptIvrText(m, lang))
+  addToCsvForTranslation(defaultIvrCompletedMsg, context, (lang) => getPromptIvrText(m, lang))
 
   let defaultMobileWebCompletedMsg = getPromptMobileWeb(m, defaultLang)
-  addToCsvForTranslation(defaultMobileWebCompletedMsg, context, lang => getPromptMobileWeb(m, lang))
+  addToCsvForTranslation(defaultMobileWebCompletedMsg, context, (lang) =>
+    getPromptMobileWeb(m, lang)
+  )
 }
 
 export const csvTranslationFilename = (questionnaire: Questionnaire): string => {
-  let filename = `${questionnaire.name || ''}`
-    .replace(/[^\p{L}\p{N}]+/gu, ' ') // remove special chars (replace with space)
-    .replace(/\s+/g, '_') // replace spaces with underscore (also check for continuos spaces)
-    .replace(/_+$/, '') // remove trailing underscores
+  let filename = `${questionnaire.name || ""}`
+    .replace(/[^\p{L}\p{N}]+/gu, " ") // remove special chars (replace with space)
+    .replace(/\s+/g, "_") // replace spaces with underscore (also check for continuos spaces)
+    .replace(/_+$/, "") // remove trailing underscores
 
   return `${questionnaire.id}-${filename}-translations.csv` // add id and add ending + extension
 }
@@ -1590,7 +1690,7 @@ const addToCsvForTranslation = (text, context, func) => {
 }
 
 const changeNumericRanges = (state, action) => {
-  return changeStep(state, action.stepId, step => {
+  return changeStep(state, action.stepId, (step) => {
     // validate
     let rangesDelimiters = action.rangesDelimiters
     let minValue: ?number = safeParseInt(action.minValue)
@@ -1601,8 +1701,12 @@ const changeNumericRanges = (state, action) => {
       values.push(minValue)
     }
     if (rangesDelimiters) {
-      let delimiters = rangesDelimiters.split(',')
-      values = values.concat(delimiters.map((e) => { return parseInt(e) }))
+      let delimiters = rangesDelimiters.split(",")
+      values = values.concat(
+        delimiters.map((e) => {
+          return parseInt(e)
+        })
+      )
     }
     if (maxValue != null) {
       values.push(maxValue)
@@ -1620,12 +1724,12 @@ const changeNumericRanges = (state, action) => {
         ...step,
         minValue: minValue,
         maxValue: maxValue,
-        rangesDelimiters: rangesDelimiters
+        rangesDelimiters: rangesDelimiters,
       }
     }
 
     // Just to please Flow...
-    let auxValues: Array<?number> = values.map(n => n)
+    let auxValues: Array<?number> = values.map((n) => n)
 
     // generate ranges
     if (minValue == null) {
@@ -1666,12 +1770,12 @@ const changeNumericRanges = (state, action) => {
         return range.from == from && range.to == to
       })
       if (prevRange) {
-        ranges.push({...prevRange})
+        ranges.push({ ...prevRange })
       } else {
         ranges.push({
           from: from,
           to: to,
-          skipLogic: null
+          skipLogic: null,
         })
       }
     }
@@ -1682,13 +1786,13 @@ const changeNumericRanges = (state, action) => {
       minValue: minValue,
       maxValue: maxValue,
       rangesDelimiters: rangesDelimiters,
-      ranges: ranges
+      ranges: ranges,
     }
   })
 }
 
 const safeParseInt = (obj) => {
-  if (typeof (obj) == 'string') {
+  if (typeof obj == "string") {
     if (obj.trim().length == 0) {
       return null
     } else {
@@ -1702,65 +1806,65 @@ const safeParseInt = (obj) => {
 }
 
 const changeRangeSkipLogic = (state, action) => {
-  return changeStep(state, action.stepId, step => {
+  return changeStep(state, action.stepId, (step) => {
     let newRange = {
       ...step.ranges[action.rangeIndex],
-      skipLogic: action.skipLogic
+      skipLogic: action.skipLogic,
     }
     return {
       ...step,
       ranges: [
         ...step.ranges.slice(0, action.rangeIndex),
         newRange,
-        ...step.ranges.slice(action.rangeIndex + 1)
-      ]
+        ...step.ranges.slice(action.rangeIndex + 1),
+      ],
     }
   })
 }
 
 const changeExplanationStepSkipLogic = (state, action) => {
-  return changeStep(state, action.stepId, step => {
+  return changeStep(state, action.stepId, (step) => {
     return {
       ...step,
-      skipLogic: action.skipLogic
+      skipLogic: action.skipLogic,
     }
   })
 }
 
 const changeDisposition = (state, action) => {
-  return changeStep(state, action.stepId, step => {
+  return changeStep(state, action.stepId, (step) => {
     return {
       ...step,
-      disposition: action.disposition
+      disposition: action.disposition,
     }
   })
 }
 
 const toggleAcceptsRefusals = (state, action) => {
-  return changeStep(state, action.stepId, step => {
+  return changeStep(state, action.stepId, (step) => {
     const refusal = step.refusal || newRefusal()
     return {
       ...step,
       refusal: {
         ...refusal,
-        enabled: !refusal.enabled
-      }
+        enabled: !refusal.enabled,
+      },
     }
   })
 }
 
 const toggleAcceptsAlphabeticalAnswers = (state, action) => {
-  return changeStep(state, action.stepId, step => {
+  return changeStep(state, action.stepId, (step) => {
     const alphabeticalAnswers = step.alphabeticalAnswers || false
     return {
       ...step,
-      alphabeticalAnswers: !alphabeticalAnswers
+      alphabeticalAnswers: !alphabeticalAnswers,
     }
   })
 }
 
 const changeRefusal = (state, action) => {
-  return changeStep(state, action.stepId, step => {
+  return changeStep(state, action.stepId, (step) => {
     return {
       ...step,
       refusal: {
@@ -1769,15 +1873,15 @@ const changeRefusal = (state, action) => {
           ivr: splitValues(action.ivrValues),
           sms: {
             ...step.refusal.responses.sms,
-            [state.activeLanguage]: splitValues(action.smsValues)
+            [state.activeLanguage]: splitValues(action.smsValues),
           },
           mobileweb: {
             ...step.refusal.responses.mobileweb,
-            [state.activeLanguage]: action.mobilewebValues
-          }
+            [state.activeLanguage]: action.mobilewebValues,
+          },
         },
-        skipLogic: action.skipLogic
-      }
+        skipLogic: action.skipLogic,
+      },
     }
   })
 }
@@ -1790,30 +1894,38 @@ const uploadCsvForTranslation = (state, action) => {
 
   // Replace language names with language codes
   const languageNames = csv[0]
-  const languageCodes = languageNames.map(name => language.nameToCode(name.trim()))
+  const languageCodes = languageNames.map((name) => language.nameToCode(name.trim()))
   csv[0] = languageCodes
 
   const lookup = buildCsvLookup(csv, defaultLanguage)
 
   let newState = {
     ...state,
-    settings: {...state.settings},
-    steps: translateSteps(state.steps, defaultLanguage, lookup)
+    settings: { ...state.settings },
+    steps: translateSteps(state.steps, defaultLanguage, lookup),
   }
 
   if (state.quotaCompletedSteps) {
     newState = {
       ...newState,
-      quotaCompletedSteps: translateSteps(state.quotaCompletedSteps, defaultLanguage, lookup)
+      quotaCompletedSteps: translateSteps(state.quotaCompletedSteps, defaultLanguage, lookup),
     }
   }
 
   if (state.settings.errorMessage) {
-    newState.settings.errorMessage = translatePrompt(state.settings.errorMessage, defaultLanguage, lookup)
+    newState.settings.errorMessage = translatePrompt(
+      state.settings.errorMessage,
+      defaultLanguage,
+      lookup
+    )
   }
 
   if (state.settings.thankYouMessage) {
-    newState.settings.thankYouMessage = translatePrompt(state.settings.thankYouMessage, defaultLanguage, lookup)
+    newState.settings.thankYouMessage = translatePrompt(
+      state.settings.thankYouMessage,
+      defaultLanguage,
+      lookup
+    )
   }
 
   if (state.settings.title) {
@@ -1821,18 +1933,22 @@ const uploadCsvForTranslation = (state, action) => {
   }
 
   if (state.settings.title) {
-    newState.settings.surveyAlreadyTakenMessage = translateLanguage(state.settings.surveyAlreadyTakenMessage, defaultLanguage, lookup)
+    newState.settings.surveyAlreadyTakenMessage = translateLanguage(
+      state.settings.surveyAlreadyTakenMessage,
+      defaultLanguage,
+      lookup
+    )
   }
 
   return newState
 }
 
 const translateSteps = (steps, defaultLanguage, lookup) => {
-  return steps.map(step => {
-    if (step.type === 'section') {
+  return steps.map((step) => {
+    if (step.type === "section") {
       return {
         ...step,
-        steps: step.steps.map(sectionStep => translateStep(sectionStep, defaultLanguage, lookup))
+        steps: step.steps.map((sectionStep) => translateStep(sectionStep, defaultLanguage, lookup)),
       }
     } else {
       return translateStep(step, defaultLanguage, lookup)
@@ -1841,11 +1957,14 @@ const translateSteps = (steps, defaultLanguage, lookup) => {
 }
 
 const translateStep = (step, defaultLanguage, lookup): Step => {
-  let newStep = {...step}
-  if (step.type !== 'language-selection' && step.type !== 'flag' && step.type !== 'section') {
+  let newStep = { ...step }
+  if (step.type !== "language-selection" && step.type !== "flag" && step.type !== "section") {
     newStep.prompt = translatePrompt(step.prompt, defaultLanguage, lookup)
-    if (step.type === 'multiple-choice') {
-      newStep = {...newStep, choices: translateChoices(step.choices, defaultLanguage, lookup)}
+    if (step.type === "multiple-choice") {
+      newStep = {
+        ...newStep,
+        choices: translateChoices(step.choices, defaultLanguage, lookup),
+      }
     }
   }
   return ((newStep: any): Step)
@@ -1855,12 +1974,12 @@ const translatePrompt = (prompt, defaultLanguage, lookup): LocalizedPrompt => {
   let defaultLanguagePrompt = prompt[defaultLanguage]
   if (!defaultLanguagePrompt) return prompt
 
-  let newPrompt = {...prompt}
+  let newPrompt = { ...prompt }
   let translations
 
   let sms = defaultLanguagePrompt.sms
   if (sms && (translations = lookup[sms])) {
-    addTranslations(newPrompt, translations, 'sms')
+    addTranslations(newPrompt, translations, "sms")
   }
 
   let ivr = defaultLanguagePrompt.ivr
@@ -1869,7 +1988,7 @@ const translatePrompt = (prompt, defaultLanguage, lookup): LocalizedPrompt => {
       const text = translations[lang]
 
       if (newPrompt[lang]) {
-        newPrompt[lang] = {...newPrompt[lang]}
+        newPrompt[lang] = { ...newPrompt[lang] }
       } else {
         newPrompt[lang] = newStepPrompt()
       }
@@ -1881,19 +2000,19 @@ const translatePrompt = (prompt, defaultLanguage, lookup): LocalizedPrompt => {
       // This isn't strictly necessary, but previous code
       // sometimes didn't add this default value to new prompts
       if (!newPrompt[lang].ivr.audioSource) {
-        newPrompt[lang].ivr.audioSource = 'tts'
+        newPrompt[lang].ivr.audioSource = "tts"
       }
 
       newPrompt[lang].ivr = {
         ...newPrompt[lang].ivr,
-        text
+        text,
       }
     }
   }
 
   let mobileweb = defaultLanguagePrompt.mobileweb
   if (mobileweb && (translations = lookup[mobileweb])) {
-    addTranslations(newPrompt, translations, 'mobileweb')
+    addTranslations(newPrompt, translations, "mobileweb")
   }
 
   return newPrompt
@@ -1907,10 +2026,10 @@ const translateLanguage = (obj, defaultLanguage, lookup) => {
   let translations = lookup[defaultLanguageMessage.trim()]
   if (!translations) return obj
 
-  let newObj = {...obj}
+  let newObj = { ...obj }
   for (let lang in translations) {
     const text = translations[lang]
-    newObj[lang] = (text || '').trim()
+    newObj[lang] = (text || "").trim()
   }
 
   return newObj
@@ -1920,11 +2039,11 @@ const addTranslations = (obj, translations, funcOrProperty) => {
   for (let lang in translations) {
     const text = translations[lang]
     if (obj[lang]) {
-      obj[lang] = {...obj[lang]}
+      obj[lang] = { ...obj[lang] }
     } else {
       obj[lang] = newStepPrompt()
     }
-    if (typeof (funcOrProperty) == 'function') {
+    if (typeof funcOrProperty == "function") {
       funcOrProperty(obj[lang], text)
     } else {
       obj[lang][funcOrProperty] = text
@@ -1933,7 +2052,7 @@ const addTranslations = (obj, translations, funcOrProperty) => {
 }
 
 const translateChoices = (choices, defaultLanguage, lookup) => {
-  return choices.map(choice => translateChoice(choice, defaultLanguage, lookup))
+  return choices.map((choice) => translateChoice(choice, defaultLanguage, lookup))
 }
 
 const translateChoice = (choice, defaultLanguage, lookup) => {
@@ -1941,17 +2060,25 @@ const translateChoice = (choice, defaultLanguage, lookup) => {
 
   let newChoice = {
     ...choice,
-    responses: {...choice.responses}
+    responses: { ...choice.responses },
   }
 
   if (responses.sms && responses.sms[defaultLanguage]) {
     const defLangSms = getChoiceResponseSmsJoined(choice, defaultLanguage)
-    newChoice.responses.sms = processTranslationsArray(defLangSms, newChoice.responses.sms || {}, lookup)
+    newChoice.responses.sms = processTranslationsArray(
+      defLangSms,
+      newChoice.responses.sms || {},
+      lookup
+    )
   }
 
   if (responses.mobileweb && responses.mobileweb[defaultLanguage]) {
     const defLangMobileWeb = getChoiceResponseMobileWebJoined(choice, defaultLanguage)
-    newChoice.responses.mobileweb = processTranslationsString(defLangMobileWeb, newChoice.responses.mobileweb || {}, lookup)
+    newChoice.responses.mobileweb = processTranslationsString(
+      defLangMobileWeb,
+      newChoice.responses.mobileweb || {},
+      lookup
+    )
   }
 
   return newChoice
@@ -1964,7 +2091,7 @@ const processTranslationsArray = (value, obj, lookup, split = true) => {
     for (let lang in translations) {
       obj = {
         ...obj,
-        [lang]: translations[lang].split(',').map(s => s.trim())
+        [lang]: translations[lang].split(",").map((s) => s.trim()),
       }
     }
   }
@@ -1978,7 +2105,7 @@ const processTranslationsString = (value, obj, lookup) => {
     for (let lang in translations) {
       obj = {
         ...obj,
-        [lang]: translations[lang]
+        [lang]: translations[lang],
       }
     }
   }
@@ -2029,9 +2156,9 @@ const setPrimaryColor = (state, action) => {
       ...state.settings,
       mobileWebColorStyle: {
         ...state.settings.mobileWebColorStyle,
-        primaryColor: action.color
-      }
-    }
+        primaryColor: action.color,
+      },
+    },
   }
 }
 
@@ -2042,14 +2169,13 @@ const setSecondaryColor = (state, action) => {
       ...state.settings,
       mobileWebColorStyle: {
         ...state.settings.mobileWebColorStyle,
-        secondaryColor: action.color
-      }
-    }
+        secondaryColor: action.color,
+      },
+    },
   }
 }
 
-const setDirty = (state) => ({...state})
+const setDirty = (state) => ({ ...state })
 
-export const isQuestionnaireReadOnly = (state: any) => (
+export const isQuestionnaireReadOnly = (state: any) =>
   state.questionnaire && state.questionnaire.data ? state.questionnaire.data.archived : true
-)

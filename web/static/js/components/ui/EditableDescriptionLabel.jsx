@@ -1,31 +1,31 @@
-import React, { Component, PropTypes } from 'react'
-import { UntitledIfEmpty } from '.'
-import classNames from 'classnames/bind'
+import React, { Component, PropTypes } from "react"
+import { UntitledIfEmpty } from "."
+import classNames from "classnames/bind"
 
 export class EditableDescriptionLabel extends Component {
   static propTypes = {
     description: PropTypes.string,
     emptyText: PropTypes.string.isRequired,
     onSubmit: PropTypes.func.isRequired,
-    readOnly: PropTypes.bool
+    readOnly: PropTypes.bool,
   }
 
   constructor(props) {
     super(props)
     this.state = {
-      editing: false
+      editing: false,
     }
     this.inputRef = null
   }
 
   handleClick() {
     if (!this.state.editing && !this.props.readOnly) {
-      this.setState({editing: !this.state.editing})
+      this.setState({ editing: !this.state.editing })
     }
   }
 
   endEdit() {
-    this.setState({editing: false})
+    this.setState({ editing: false })
   }
 
   endAndSubmit() {
@@ -35,19 +35,25 @@ export class EditableDescriptionLabel extends Component {
   }
 
   onKeyDown(event) {
-    if (event.key == 'Enter') {
+    if (event.key == "Enter") {
       this.endAndSubmit()
-    } else if (event.key == 'Escape') {
+    } else if (event.key == "Escape") {
       this.endEdit()
     }
   }
 
   render() {
-    const {description, emptyText} = this.props
+    const { description, emptyText } = this.props
     if (!this.state.editing) {
       return (
-        <div className='description'>
-          <a className={classNames({'page-description': true, 'truncate': (description && description.trim() != '')})} onClick={e => this.handleClick(e)}>
+        <div className="description">
+          <a
+            className={classNames({
+              "page-description": true,
+              truncate: description && description.trim() != "",
+            })}
+            onClick={(e) => this.handleClick(e)}
+          >
             <UntitledIfEmpty text={description} emptyText={emptyText} />
           </a>
         </div>
@@ -55,14 +61,16 @@ export class EditableDescriptionLabel extends Component {
     } else {
       return (
         <input
-          type='text'
-          ref={node => { this.inputRef = node }}
+          type="text"
+          ref={(node) => {
+            this.inputRef = node
+          }}
           autoFocus
-          maxLength='255'
+          maxLength="255"
           defaultValue={description}
-          onKeyDown={e => this.onKeyDown(e)}
-          onBlur={e => this.endAndSubmit(e)}
-          />
+          onKeyDown={(e) => this.onKeyDown(e)}
+          onBlur={(e) => this.endAndSubmit(e)}
+        />
       )
     }
   }

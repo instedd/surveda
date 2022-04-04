@@ -1,15 +1,15 @@
 // @flow
-import React, { Component, PropTypes } from 'react'
-import { connect } from 'react-redux'
-import { withRouter, Link } from 'react-router'
-import * as surveysActions from '../../actions/surveys'
-import * as surveyActions from '../../actions/survey'
-import * as actions from '../../actions/folder'
-import * as panelSurveyActions from '../../actions/panelSurvey'
-import { MainAction, Action, EmptyPage, PagingFooter } from '../ui'
-import { SurveyCard, PanelSurveyCard } from '../surveys/SurveyCard'
-import * as routes from '../../routes'
-import { translate } from 'react-i18next'
+import React, { Component, PropTypes } from "react"
+import { connect } from "react-redux"
+import { withRouter, Link } from "react-router"
+import * as surveysActions from "../../actions/surveys"
+import * as surveyActions from "../../actions/survey"
+import * as actions from "../../actions/folder"
+import * as panelSurveyActions from "../../actions/panelSurvey"
+import { MainAction, Action, EmptyPage, PagingFooter } from "../ui"
+import { SurveyCard, PanelSurveyCard } from "../surveys/SurveyCard"
+import * as routes from "../../routes"
+import { translate } from "react-i18next"
 // import { surveyIndexProps } from '../surveys/SurveyIndex'
 
 class FolderShow extends Component<any, any> {
@@ -35,7 +35,7 @@ class FolderShow extends Component<any, any> {
 
     startIndex: PropTypes.number.isRequired,
     endIndex: PropTypes.number.isRequired,
-    totalCount: PropTypes.number.isRequired
+    totalCount: PropTypes.number.isRequired,
   }
 
   componentDidMount() {
@@ -45,14 +45,14 @@ class FolderShow extends Component<any, any> {
 
   newSurvey() {
     const { dispatch, router, projectId, folderId } = this.props
-    dispatch(surveyActions.createSurvey(projectId, folderId)).then(survey =>
+    dispatch(surveyActions.createSurvey(projectId, folderId)).then((survey) =>
       router.push(routes.surveyEdit(projectId, survey))
     )
   }
 
   newPanelSurvey() {
     const { dispatch, projectId, router, folderId } = this.props
-    dispatch(panelSurveyActions.createPanelSurvey(projectId, folderId)).then(firstWave =>
+    dispatch(panelSurveyActions.createPanelSurvey(projectId, folderId)).then((firstWave) =>
       router.push(routes.surveyEdit(projectId, firstWave))
     )
   }
@@ -81,39 +81,44 @@ class FolderShow extends Component<any, any> {
       startIndex,
       endIndex,
       totalCount,
-      t
+      t,
     } = this.props
 
     if (isLoading) {
       return (
-        <div className='folder-show'>
+        <div className="folder-show">
           <Title project={project} projectId={projectId} folder={folder} t={t} />
-          {t('Loading surveys...')}
+          {t("Loading surveys...")}
         </div>
       )
     }
 
     return (
-      <div className='folder-show'>
+      <div className="folder-show">
         <MainActions isReadOnly={isReadOnly} t={t}>
-          <Action text={t('Survey')} icon='assignment_turned_in' onClick={() => this.newSurvey()} />
-          <Action text={t('Panel Survey')} icon='repeat' onClick={() => this.newPanelSurvey()} />
+          <Action text={t("Survey")} icon="assignment_turned_in" onClick={() => this.newSurvey()} />
+          <Action text={t("Panel Survey")} icon="repeat" onClick={() => this.newPanelSurvey()} />
         </MainActions>
 
         <Title projectId={projectId} folder={folder} t={t} />
 
-        <MainView isReadOnly={isReadOnly}
-                  isEmpty={isEmptyView}
-                  onNew={() => this.newSurvey()}
-                  t={t}>
+        <MainView
+          isReadOnly={isReadOnly}
+          isEmpty={isEmptyView}
+          onNew={() => this.newSurvey()}
+          t={t}
+        >
+          <SurveysGrid
+            surveysAndPanelSurveys={surveysAndPanelSurveys}
+            isReadOnly={isReadOnly}
+            t={t}
+          />
 
-          <SurveysGrid surveysAndPanelSurveys={surveysAndPanelSurveys}
-                       isReadOnly={isReadOnly}
-                       t={t} />
-
-          <PagingFooter {...{ startIndex, endIndex, totalCount }}
-                        onPreviousPage={() => this.previousPage()}
-                        onNextPage={() => this.nextPage()} />
+          <PagingFooter
+            {...{ startIndex, endIndex, totalCount }}
+            onPreviousPage={() => this.previousPage()}
+            onNextPage={() => this.nextPage()}
+          />
         </MainView>
       </div>
     )
@@ -128,9 +133,9 @@ const Title = (props) => {
   const to = routes.project(projectId)
 
   return (
-    <Link to={to} className='folder-header'>
-      <i className='material-icons black-text'>arrow_back</i>
-      {name || t('Untitled folder')}
+    <Link to={to} className="folder-header">
+      <i className="material-icons black-text">arrow_back</i>
+      {name || t("Untitled folder")}
     </Link>
   )
 }
@@ -138,7 +143,7 @@ const Title = (props) => {
 Title.propTypes = {
   projectId: PropTypes.any,
   folder: PropTypes.object,
-  t: PropTypes.func
+  t: PropTypes.func,
 }
 
 const MainActions = (props) => {
@@ -146,7 +151,7 @@ const MainActions = (props) => {
   if (isReadOnly) return null
 
   return (
-    <MainAction text={t('Add')} icon='add' className='folder-main-action'>
+    <MainAction text={t("Add")} icon="add" className="folder-main-action">
       {children}
     </MainAction>
   )
@@ -155,14 +160,16 @@ const MainActions = (props) => {
 MainActions.propTypes = {
   isReadOnly: PropTypes.bool,
   children: PropTypes.node,
-  t: PropTypes.func
+  t: PropTypes.func,
 }
 
 const MainView = (props) => {
   const { isReadOnly, isEmpty, onNew, children, t } = props
-  return (isEmpty)
-    ? <EmptyView isReadOnly={isReadOnly} onClick={onNew} t={t} />
-    : (<div>{children}</div>)
+  return isEmpty ? (
+    <EmptyView isReadOnly={isReadOnly} onClick={onNew} t={t} />
+  ) : (
+    <div>{children}</div>
+  )
 }
 
 MainView.propTypes = {
@@ -170,37 +177,48 @@ MainView.propTypes = {
   isEmpty: PropTypes.bool,
   onNew: PropTypes.func,
   children: PropTypes.node,
-  t: PropTypes.func
+  t: PropTypes.func,
 }
 
 const EmptyView = (props) => {
   const { isReadOnly, onClick, t } = props
-  return (<EmptyPage icon='assignment_turned_in'
-                     title={t('You have no surveys in this folder')}
-                     onClick={onClick}
-                     readOnly={isReadOnly}
-                     createText={t('Create one', { context: 'survey' })} />)
+  return (
+    <EmptyPage
+      icon="assignment_turned_in"
+      title={t("You have no surveys in this folder")}
+      onClick={onClick}
+      readOnly={isReadOnly}
+      createText={t("Create one", { context: "survey" })}
+    />
+  )
 }
 
 EmptyView.propTypes = {
   isReadOnly: PropTypes.bool,
   onClick: PropTypes.func,
-  t: PropTypes.func
+  t: PropTypes.func,
 }
 
 const SurveysGrid = (props) => {
   const { surveysAndPanelSurveys, isReadOnly, t } = props
 
-  const isPanelSurvey = function(survey) {
-    return survey.hasOwnProperty('latestWave')
+  const isPanelSurvey = function (survey) {
+    return survey.hasOwnProperty("latestWave")
   }
 
   return (
-    <div className='survey-index-grid'>
-      {surveysAndPanelSurveys.map(survey => {
-        return isPanelSurvey(survey)
-          ? <PanelSurveyCard panelSurvey={survey} key={`panelsurvey-${survey.id}`} readOnly={isReadOnly} t={t} />
-          : <SurveyCard survey={survey} key={`survey-${survey.id}`} readOnly={isReadOnly} t={t} />
+    <div className="survey-index-grid">
+      {surveysAndPanelSurveys.map((survey) => {
+        return isPanelSurvey(survey) ? (
+          <PanelSurveyCard
+            panelSurvey={survey}
+            key={`panelsurvey-${survey.id}`}
+            readOnly={isReadOnly}
+            t={t}
+          />
+        ) : (
+          <SurveyCard survey={survey} key={`survey-${survey.id}`} readOnly={isReadOnly} t={t} />
+        )
       })}
     </div>
   )
@@ -209,7 +227,7 @@ const SurveysGrid = (props) => {
 SurveysGrid.propTypes = {
   surveysAndPanelSurveys: PropTypes.array,
   isReadOnly: PropTypes.bool,
-  t: PropTypes.func
+  t: PropTypes.func,
 }
 
 const mapStateToFolder = (state, folderId) => {
@@ -226,7 +244,7 @@ const mapStateToFolder = (state, folderId) => {
   return {
     folder,
     surveys,
-    panelSurveys
+    panelSurveys,
   }
 }
 
@@ -235,28 +253,21 @@ const mapStateToProps = (state, ownProps) => {
   const { params, t } = ownProps
   const { projectId } = params
   const folderId = parseInt(params.folderId)
-  if (!folderId) throw new Error(t('Missing param: folderId'))
+  if (!folderId) throw new Error(t("Missing param: folderId"))
 
-  const {
-    folder,
-    surveys,
-    panelSurveys
-  } = mapStateToFolder(state, folderId)
+  const { folder, surveys, panelSurveys } = mapStateToFolder(state, folderId)
 
   // Merge all together and sort by updated_at (descending)
-  const surveysAndPanelSurveys = [
-    ...surveys,
-    ...panelSurveys
-  ].sort((x, y) => y.updatedAt.localeCompare(x.updatedAt))
+  const surveysAndPanelSurveys = [...surveys, ...panelSurveys].sort((x, y) =>
+    y.updatedAt.localeCompare(x.updatedAt)
+  )
 
   // pagination
   const { page } = state.surveys
-  const {
-    paginatedElements,
-    totalCount,
-    startIndex,
-    endIndex
-  } = paginate(surveysAndPanelSurveys, page)
+  const { paginatedElements, totalCount, startIndex, endIndex } = paginate(
+    surveysAndPanelSurveys,
+    page
+  )
 
   // loading, readonly and emptyview
   const isLoadingFolder = state.folder.fetching
@@ -282,7 +293,7 @@ const mapStateToProps = (state, ownProps) => {
 
     startIndex,
     endIndex,
-    totalCount
+    totalCount,
   }
 }
 
@@ -294,11 +305,12 @@ const paginate = (surveysAndPanelSurveys: Array<Survey | PanelSurvey>, page) => 
   const endIndex = Math.min(pageIndex + pageSize, totalCount)
 
   return {
-    paginatedElements: (surveysAndPanelSurveys
-      .slice(pageIndex, pageIndex + pageSize): Array<Survey | PanelSurvey>),
+    paginatedElements: (surveysAndPanelSurveys.slice(pageIndex, pageIndex + pageSize): Array<
+      Survey | PanelSurvey
+    >),
     totalCount,
     startIndex,
-    endIndex
+    endIndex,
   }
 }
 

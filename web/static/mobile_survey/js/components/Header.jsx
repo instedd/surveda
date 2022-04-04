@@ -1,11 +1,11 @@
 // @flow
-import React, { Component, PropTypes } from 'react'
-import { connect } from 'react-redux'
+import React, { Component, PropTypes } from "react"
+import { connect } from "react-redux"
 
 type Props = {
   progress: number,
-  title: string
-};
+  title: string,
+}
 
 class Header extends Component<Props> {
   render() {
@@ -14,10 +14,15 @@ class Header extends Component<Props> {
 
     return (
       <header>
-        <nav style={{'backgroundColor': this.context.primaryColor}}>
-          <h1 dangerouslySetInnerHTML={{__html: title}} />
-          <div className='progressBar'>
-            <span style={{ width: percent, backgroundColor: this.context.secondaryColor }} />
+        <nav style={{ backgroundColor: this.context.primaryColor }}>
+          <h1 dangerouslySetInnerHTML={{ __html: title }} />
+          <div className="progressBar">
+            <span
+              style={{
+                width: percent,
+                backgroundColor: this.context.secondaryColor,
+              }}
+            />
           </div>
         </nav>
       </header>
@@ -27,12 +32,12 @@ class Header extends Component<Props> {
 
 Header.contextTypes = {
   primaryColor: PropTypes.string,
-  secondaryColor: PropTypes.string
+  secondaryColor: PropTypes.string,
 }
 
 const mapStateToProps = (state) => ({
   progress: state.step.progress,
-  title: document.title
+  title: document.title,
 })
 
 export default connect(mapStateToProps)(Header)

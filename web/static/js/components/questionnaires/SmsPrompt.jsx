@@ -1,9 +1,9 @@
-import React, { Component, PropTypes } from 'react'
-import Draft from './Draft'
-import { splitSmsText, joinSmsPieces } from '../../step'
-import {limitExceeded} from '../../characterCounter'
-import map from 'lodash/map'
-import { translate } from 'react-i18next'
+import React, { Component, PropTypes } from "react"
+import Draft from "./Draft"
+import { splitSmsText, joinSmsPieces } from "../../step"
+import { limitExceeded } from "../../characterCounter"
+import map from "lodash/map"
+import { translate } from "react-i18next"
 
 const k = (...args: any) => args
 
@@ -24,7 +24,7 @@ class SmsPrompt extends Component {
     let before = value.slice(0, caretIndex)
     let after = value.slice(caretIndex)
 
-    let pieces = this.allInputs.map(x => x.getText())
+    let pieces = this.allInputs.map((x) => x.getText())
     pieces.splice(index, 1, before, after)
 
     const text = joinSmsPieces(pieces)
@@ -36,7 +36,7 @@ class SmsPrompt extends Component {
   joinPieceWithPreviousOne(e, index) {
     e.preventDefault()
 
-    let pieces = this.allInputs.slice().map(x => x.getText())
+    let pieces = this.allInputs.slice().map((x) => x.getText())
     pieces[index - 1] = `${pieces[index - 1].trim()} ${pieces[index].trim()}`
     pieces.splice(index, 1)
 
@@ -47,7 +47,7 @@ class SmsPrompt extends Component {
   }
 
   getText() {
-    return joinSmsPieces(this.allInputs.map(x => (x.getText() || '')))
+    return joinSmsPieces(this.allInputs.map((x) => x.getText() || ""))
   }
 
   renderSmsInput(total, index, value) {
@@ -55,12 +55,12 @@ class SmsPrompt extends Component {
 
     const shouldDisplayErrors = value == this.props.originalValue
 
-    let textBelow = ''
+    let textBelow = ""
     if (limitExceeded(value)) {
-      textBelow = k('Use SHIFT+ENTER to split in multiple parts')
+      textBelow = k("Use SHIFT+ENTER to split in multiple parts")
     }
 
-    if (!label) label = t('SMS message')
+    if (!label) label = t("SMS message")
 
     const labelComponent = total == 1 ? label : `${label} (part ${index + 1})`
     const last = index + 1 == total
@@ -71,7 +71,7 @@ class SmsPrompt extends Component {
       autocompleteProps = {
         autocomplete: this.props.autocomplete,
         autocompleteGetData: this.props.autocompleteGetData,
-        autocompleteOnSelect: this.props.autocompleteOnSelect
+        autocompleteOnSelect: this.props.autocompleteOnSelect,
       }
     }
 
@@ -83,33 +83,37 @@ class SmsPrompt extends Component {
           readOnly={readOnly}
           errors={shouldDisplayErrors && map(inputErrors, (error) => t(...error))}
           textBelow={textBelow}
-          onSplit={caretIndex => this.splitPiece(caretIndex, index)}
-          onBlur={e => this.onBlur()}
+          onSplit={(caretIndex) => this.splitPiece(caretIndex, index)}
+          onBlur={(e) => this.onBlur()}
           characterCounter
           characterCounterFixedLength={fixedLength}
           plainText
-          ref={ref => { if (ref) { this.allInputs.push(ref) } }}
+          ref={(ref) => {
+            if (ref) {
+              this.allInputs.push(ref)
+            }
+          }}
           {...autocompleteProps}
-          />
+        />
       </div>
     )
     if (total <= 1 || index == 0) {
       return (
-        <div className='row' key={index}>
-          <div className='col s12'>
-            {inputComponent}
-          </div>
+        <div className="row" key={index}>
+          <div className="col s12">{inputComponent}</div>
         </div>
       )
     } else {
       return (
-        <div className='row' key={index}>
-          <div className='col s11'>
-            {inputComponent}
-          </div>
-          <div className='col s1'>
-            <a href='#' onClick={e => this.joinPieceWithPreviousOne(e, index)} style={{position: 'relative', top: 38}}>
-              <i className='grey-text material-icons'>highlight_off</i>
+        <div className="row" key={index}>
+          <div className="col s11">{inputComponent}</div>
+          <div className="col s1">
+            <a
+              href="#"
+              onClick={(e) => this.joinPieceWithPreviousOne(e, index)}
+              style={{ position: "relative", top: 38 }}
+            >
+              <i className="grey-text material-icons">highlight_off</i>
             </a>
           </div>
         </div>
@@ -129,11 +133,7 @@ class SmsPrompt extends Component {
       return this.renderSmsInput(smsPieces.length, index, piece)
     })
 
-    return (
-      <div>
-        {inputs}
-      </div>
-    )
+    return <div>{inputs}</div>
   }
 }
 
@@ -149,6 +149,7 @@ SmsPrompt.propTypes = {
   fixedEndLength: PropTypes.number,
   autocomplete: PropTypes.bool,
   autocompleteGetData: PropTypes.func,
-  autocompleteOnSelect: PropTypes.func}
+  autocompleteOnSelect: PropTypes.func,
+}
 
 export default translate()(SmsPrompt)

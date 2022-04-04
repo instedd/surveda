@@ -1,58 +1,92 @@
 // @flow
-import * as actions from '../actions/survey'
-import * as respondentGroupActions from '../actions/respondentGroups'
-import fetchReducer from './fetch'
-import drop from 'lodash/drop'
-import flatten from 'lodash/flatten'
-import map from 'lodash/map'
-import split from 'lodash/split'
-import find from 'lodash/find'
-import findIndex from 'lodash/findIndex'
-import isEqual from 'lodash/isEqual'
-import uniqWith from 'lodash/uniqWith'
-import every from 'lodash/every'
-import some from 'lodash/some'
-import without from 'lodash/without'
-import filter from 'lodash/filter'
+import * as actions from "../actions/survey"
+import * as respondentGroupActions from "../actions/respondentGroups"
+import fetchReducer from "./fetch"
+import drop from "lodash/drop"
+import flatten from "lodash/flatten"
+import map from "lodash/map"
+import split from "lodash/split"
+import find from "lodash/find"
+import findIndex from "lodash/findIndex"
+import isEqual from "lodash/isEqual"
+import uniqWith from "lodash/uniqWith"
+import every from "lodash/every"
+import some from "lodash/some"
+import without from "lodash/without"
+import filter from "lodash/filter"
 
 const k = (...args: any) => args
 
 export const dataReducer = (state: Survey, action: any): Survey => {
   switch (action.type) {
-    case actions.CHANGE_NAME: return changeName(state, action)
-    case actions.CHANGE_DESCRIPTION: return changeDescription(state, action)
-    case actions.SWITCH_GENERATES_PANEL_SURVEY: return switchGeneratesPanelSurvey(state, action)
-    case actions.CHANGE_CUTOFF: return changeCutoff(state, action)
-    case actions.TOGGLE_COUNT_PARTIAL_RESULTS: return toggleCountPartialResults(state, action)
-    case actions.CHANGE_QUOTA: return quotaChange(state, action)
-    case actions.CHANGE_COMPARISON_RATIO: return comparisonRatioChange(state, action)
-    case actions.CHANGE_QUESTIONNAIRE: return changeQuestionnaire(state, action)
-    case actions.TOGGLE_DAY: return toggleDay(state, action)
-    case actions.SET_SCHEDULE_TO: return setScheduleTo(state, action)
-    case actions.SET_SCHEDULE_FROM: return setScheduleFrom(state, action)
-    case actions.ADD_SCHEDULE_BLOCKED_DAY: return addScheduleBlockedDay(state, action)
-    case actions.SELECT_SCHEDULE_START_DATE: return selectScheduleStartDate(state, action)
-    case actions.SELECT_SCHEDULE_END_DATE: return selectScheduleEndDate(state, action)
-    case actions.REMOVE_SCHEDULE_BLOCKED_DAY: return removeScheduleBlockedDay(state, action)
-    case actions.CLEAR_SCHEDULE_BLOCKED_DAYS: return clearScheduleBlockedDays(state, action)
-    case actions.SELECT_MODE: return selectMode(state, action)
-    case actions.CHANGE_MODE_COMPARISON: return changeModeComparison(state, action)
-    case actions.CHANGE_QUESTIONNAIRE_COMPARISON: return changeQuestionnaireComparison(state, action)
-    case actions.UPDATE_RESPONDENTS_COUNT: return updateRespondentsCount(state, action)
-    case actions.UPDATE_LOCK: return updateLock(state, action)
-    case actions.SET_STATE: return setState(state, action)
-    case actions.SET_TIMEZONE: return setTimezone(state, action)
-    case actions.SET_QUOTA_VARS: return setQuotaVars(state, action)
-    case actions.CHANGE_IVR_RETRY_CONFIGURATION: return changeIvrRetryConfiguration(state, action)
-    case actions.CHANGE_SMS_RETRY_CONFIGURATION: return changeSmsRetryConfiguration(state, action)
-    case actions.CHANGE_MOBILEWEB_RETRY_CONFIGURATION: return changeMobileWebRetryConfiguration(state, action)
-    case actions.CHANGE_FALLBACK_DELAY: return changeFallbackDelay(state, action)
-    case actions.RECEIVE_LINK: return receiveLink(state, action)
-    case actions.REFRESH_LINK: return refreshLink(state, action)
-    case actions.DELETE_LINK: return deleteLink(state, action)
-    case actions.SAVED: return saved(state, action)
-    case respondentGroupActions.RECEIVE_RESPONDENT_GROUP: return receiveRespondentGroup(state, action)
-    default: return state
+    case actions.CHANGE_NAME:
+      return changeName(state, action)
+    case actions.CHANGE_DESCRIPTION:
+      return changeDescription(state, action)
+    case actions.SWITCH_GENERATES_PANEL_SURVEY:
+      return switchGeneratesPanelSurvey(state, action)
+    case actions.CHANGE_CUTOFF:
+      return changeCutoff(state, action)
+    case actions.TOGGLE_COUNT_PARTIAL_RESULTS:
+      return toggleCountPartialResults(state, action)
+    case actions.CHANGE_QUOTA:
+      return quotaChange(state, action)
+    case actions.CHANGE_COMPARISON_RATIO:
+      return comparisonRatioChange(state, action)
+    case actions.CHANGE_QUESTIONNAIRE:
+      return changeQuestionnaire(state, action)
+    case actions.TOGGLE_DAY:
+      return toggleDay(state, action)
+    case actions.SET_SCHEDULE_TO:
+      return setScheduleTo(state, action)
+    case actions.SET_SCHEDULE_FROM:
+      return setScheduleFrom(state, action)
+    case actions.ADD_SCHEDULE_BLOCKED_DAY:
+      return addScheduleBlockedDay(state, action)
+    case actions.SELECT_SCHEDULE_START_DATE:
+      return selectScheduleStartDate(state, action)
+    case actions.SELECT_SCHEDULE_END_DATE:
+      return selectScheduleEndDate(state, action)
+    case actions.REMOVE_SCHEDULE_BLOCKED_DAY:
+      return removeScheduleBlockedDay(state, action)
+    case actions.CLEAR_SCHEDULE_BLOCKED_DAYS:
+      return clearScheduleBlockedDays(state, action)
+    case actions.SELECT_MODE:
+      return selectMode(state, action)
+    case actions.CHANGE_MODE_COMPARISON:
+      return changeModeComparison(state, action)
+    case actions.CHANGE_QUESTIONNAIRE_COMPARISON:
+      return changeQuestionnaireComparison(state, action)
+    case actions.UPDATE_RESPONDENTS_COUNT:
+      return updateRespondentsCount(state, action)
+    case actions.UPDATE_LOCK:
+      return updateLock(state, action)
+    case actions.SET_STATE:
+      return setState(state, action)
+    case actions.SET_TIMEZONE:
+      return setTimezone(state, action)
+    case actions.SET_QUOTA_VARS:
+      return setQuotaVars(state, action)
+    case actions.CHANGE_IVR_RETRY_CONFIGURATION:
+      return changeIvrRetryConfiguration(state, action)
+    case actions.CHANGE_SMS_RETRY_CONFIGURATION:
+      return changeSmsRetryConfiguration(state, action)
+    case actions.CHANGE_MOBILEWEB_RETRY_CONFIGURATION:
+      return changeMobileWebRetryConfiguration(state, action)
+    case actions.CHANGE_FALLBACK_DELAY:
+      return changeFallbackDelay(state, action)
+    case actions.RECEIVE_LINK:
+      return receiveLink(state, action)
+    case actions.REFRESH_LINK:
+      return refreshLink(state, action)
+    case actions.DELETE_LINK:
+      return deleteLink(state, action)
+    case actions.SAVED:
+      return saved(state, action)
+    case respondentGroupActions.RECEIVE_RESPONDENT_GROUP:
+      return receiveRespondentGroup(state, action)
+    default:
+      return state
   }
 }
 
@@ -66,14 +100,22 @@ const validateReducer = (reducer: StoreReducer<Survey>): StoreReducer<Survey> =>
 
 const dirtyPredicate = (action, oldData, newData) => {
   switch (action.type) {
-    case actions.RECEIVE_LINK: return false
-    case actions.REFRESH_LINK: return false
-    case actions.DELETE_LINK: return false
-    case actions.CHANGE_NAME: return false
-    case actions.CHANGE_DESCRIPTION: return false
-    case actions.UPDATE_LOCK: return false
-    case respondentGroupActions.RECEIVE_RESPONDENT_GROUP: return false
-    default: return true
+    case actions.RECEIVE_LINK:
+      return false
+    case actions.REFRESH_LINK:
+      return false
+    case actions.DELETE_LINK:
+      return false
+    case actions.CHANGE_NAME:
+      return false
+    case actions.CHANGE_DESCRIPTION:
+      return false
+    case actions.UPDATE_LOCK:
+      return false
+    case respondentGroupActions.RECEIVE_RESPONDENT_GROUP:
+      return false
+    default:
+      return true
   }
 }
 
@@ -81,9 +123,9 @@ export default validateReducer(fetchReducer(actions, dataReducer, null, dirtyPre
 
 const validate = (state) => {
   state.errorsByPath = {}
-  validateRetry(state, 'sms', 'smsRetryConfiguration')
-  validateRetry(state, 'ivr', 'ivrRetryConfiguration')
-  validateRetry(state, 'mobileweb', 'mobilewebRetryConfiguration')
+  validateRetry(state, "sms", "smsRetryConfiguration")
+  validateRetry(state, "ivr", "ivrRetryConfiguration")
+  validateRetry(state, "mobileweb", "mobilewebRetryConfiguration")
   validateFallbackDelay(state)
 }
 
@@ -96,16 +138,16 @@ const validateRetry = (state: DataStore<Survey>, mode, key) => {
   if (!modes) return
 
   // Don't validate retry configuration for a mode that's not active (#655)
-  if (!some(modes, ms => some(ms, m => m == mode))) return
+  if (!some(modes, (ms) => some(ms, (m) => m == mode))) return
 
   const retriesValue = data[key]
   if (!retriesValue) return
 
-  let values = retriesValue.split(' ')
+  let values = retriesValue.split(" ")
   values = values.filter((v) => v)
   const invalid = values.some((recontactTime) => !isValidReContactTime(recontactTime))
   if (invalid) {
-    state.errorsByPath[key] = [k('Re-contact configuration is invalid')]
+    state.errorsByPath[key] = [k("Re-contact configuration is invalid")]
   }
 }
 
@@ -118,14 +160,14 @@ const validateFallbackDelay = (state: DataStore<Survey>) => {
   if (!modes) return
 
   // Don't validate fallback delay if there's no fallback mode
-  if (!some(modes, ms => ms.length > 1)) return
+  if (!some(modes, (ms) => ms.length > 1)) return
 
   const fallbackDelay = data.fallbackDelay
   if (!fallbackDelay) return
 
   const invalid = !isValidReContactTime(fallbackDelay)
   if (invalid) {
-    state.errorsByPath.fallbackDelay = [k('Fallback delay is invalid')]
+    state.errorsByPath.fallbackDelay = [k("Fallback delay is invalid")]
   }
 }
 
@@ -141,49 +183,49 @@ const isValidReContactTime = (recontactTime) => {
   if (matches == null) return false
   const [quantity, unit] = [parseInt(matches[1]), matches[2]]
   if (quantity == 0) return false
-  if (unit == 'm' && quantity < 10) return false
+  if (unit == "m" && quantity < 10) return false
   return true
 }
 
 const changeName = (state, action) => {
   return {
     ...state,
-    name: action.newName
+    name: action.newName,
   }
 }
 
 const changeDescription = (state, action) => {
   return {
     ...state,
-    description: action.newDescription
+    description: action.newDescription,
   }
 }
 
 const switchGeneratesPanelSurvey = (state, action) => {
   return {
     ...state,
-    generatesPanelSurvey: action.newGeneratesPanelSurvey
+    generatesPanelSurvey: action.newGeneratesPanelSurvey,
   }
 }
 
 const changeCutoff = (state, action) => {
   return {
     ...state,
-    cutoff: action.cutoff
+    cutoff: action.cutoff,
   }
 }
 
 const toggleCountPartialResults = (state, action) => {
   return {
     ...state,
-    countPartialResults: !state.countPartialResults
+    countPartialResults: !state.countPartialResults,
   }
 }
 
 const setState = (state, action) => {
   return {
     ...state,
-    state: action.state
+    state: action.state,
   }
 }
 
@@ -194,9 +236,9 @@ const setQuotaVars = (state, action) => {
     ...state,
     quotas: {
       vars,
-      buckets: bucketsFor(action.vars, action.options)
+      buckets: bucketsFor(action.vars, action.options),
     },
-    cutoff
+    cutoff,
   }
 }
 
@@ -212,41 +254,45 @@ const buildBuckets = (storeVars, options) => {
   const firstVar = options[storeVars[0].var]
 
   let values = firstVar.values
-  if (firstVar.type == 'numeric') {
+  if (firstVar.type == "numeric") {
     values = intervalsFrom(storeVars[0].steps)
   }
 
-  return flatten(map(values, (value) => {
-    let buckets = []
-    if (drop(storeVars).length == 0) {
-      buckets = [{}]
-    } else {
-      buckets = buildBuckets(drop(storeVars), options)
-    }
-
-    return map(buckets, (bucket) => {
-      let condition = []
-      if (bucket.condition && bucket.condition.length > 0) {
-        condition = bucket.condition
+  return flatten(
+    map(values, (value) => {
+      let buckets = []
+      if (drop(storeVars).length == 0) {
+        buckets = [{}]
+      } else {
+        buckets = buildBuckets(drop(storeVars), options)
       }
 
-      return ({
-        ...bucket,
-        condition: [
-          ...condition,
-          {
-            store: storeVars[0].var,
-            value: value
-          }
-        ],
-        quota: 0
+      return map(buckets, (bucket) => {
+        let condition = []
+        if (bucket.condition && bucket.condition.length > 0) {
+          condition = bucket.condition
+        }
+
+        return {
+          ...bucket,
+          condition: [
+            ...condition,
+            {
+              store: storeVars[0].var,
+              value: value,
+            },
+          ],
+          quota: 0,
+        }
       })
     })
-  }))
+  )
 }
 
 const intervalsFrom = (valueString) => {
-  const values = map(split(valueString, ','), (value) => parseInt(value.trim())).sort((a, b) => a - b)
+  const values = map(split(valueString, ","), (value) => parseInt(value.trim())).sort(
+    (a, b) => a - b
+  )
   if (values.length <= 1) {
     return []
   }
@@ -259,8 +305,10 @@ const intervalsFrom = (valueString) => {
 }
 
 const comparisonRatioChange = (state, action) => {
-  const bucketIndex = findIndex(state.comparisons, (bucket) =>
-    bucket.questionnaireId == action.questionnaireId && isEqual(bucket.mode, action.mode)
+  const bucketIndex = findIndex(
+    state.comparisons,
+    (bucket) =>
+      bucket.questionnaireId == action.questionnaireId && isEqual(bucket.mode, action.mode)
   )
   return {
     ...state,
@@ -268,10 +316,10 @@ const comparisonRatioChange = (state, action) => {
       ...state.comparisons.slice(0, bucketIndex),
       {
         ...state.comparisons[bucketIndex],
-        ratio: action.ratio
+        ratio: action.ratio,
       },
-      ...state.comparisons.slice(bucketIndex + 1)
-    ]
+      ...state.comparisons.slice(bucketIndex + 1),
+    ],
   }
 }
 
@@ -285,23 +333,21 @@ const quotaChange = (state, action) => {
         ...state.quotas.buckets.slice(0, bucketIndex),
         {
           ...state.quotas.buckets[bucketIndex],
-          quota: action.quota
+          quota: action.quota,
         },
-        ...state.quotas.buckets.slice(bucketIndex + 1)
-      ]
-    }
+        ...state.quotas.buckets.slice(bucketIndex + 1),
+      ],
+    },
   }
 }
 
 const getBucketIndexFromCondition = (buckets: Bucket[], condition: Condition) => {
-  return findIndex(buckets, (bucket) =>
-    isEqual(bucket.condition, condition)
-  )
+  return findIndex(buckets, (bucket) => isEqual(bucket.condition, condition))
 }
 
 export const getQuotasTotal = (quotaBuckets: Bucket[]) => {
   if (quotaBuckets) {
-    let quotasSum = quotaBuckets.reduce(function(sum, current) {
+    let quotasSum = quotaBuckets.reduce(function (sum, current) {
       return sum + parseInt(current.quota)
     }, 0)
     return quotasSum
@@ -315,10 +361,15 @@ export const sumQuotasIfValid = (condition: Condition[], buckets: Bucket[], newQ
 }
 
 export const rebuildInputFromQuotaBuckets = (store: string, survey: Survey) => {
-  const buckets = survey.quotas.buckets.filter((bucket) => bucket.condition.map((condition) => condition.store).includes(store))
-  let conditions = uniqWith(buckets.map((bucket) => find(bucket.condition, (condition) => condition.store == store).value), isEqual)
+  const buckets = survey.quotas.buckets.filter((bucket) =>
+    bucket.condition.map((condition) => condition.store).includes(store)
+  )
+  let conditions = uniqWith(
+    buckets.map((bucket) => find(bucket.condition, (condition) => condition.store == store).value),
+    isEqual
+  )
   let lastCondition = conditions.pop() // last condition's upper bound doesn't have to be incremented
-  conditions = conditions.map(x => [x[0], x[1] + 1])
+  conditions = conditions.map((x) => [x[0], x[1] + 1])
   conditions.push(lastCondition)
   conditions = flatten(conditions)
   conditions = uniqWith(conditions, isEqual)
@@ -328,7 +379,7 @@ export const rebuildInputFromQuotaBuckets = (store: string, survey: Survey) => {
 const saved = (state, action) => {
   return {
     ...state,
-    state: action.data.state
+    state: action.data.state,
   }
 }
 
@@ -354,7 +405,12 @@ const changeQuestionnaire = (state, action) => {
   // If any questionnaire has a mode that's not present in the current survey mode,
   // unleselect the mode
   let mode = state.mode
-  if (mode && mode.length > 0 && action.questionnaires && !questionnairesMatchModes(mode, newQuestionnaireIds, action.questionnaires)) {
+  if (
+    mode &&
+    mode.length > 0 &&
+    action.questionnaires &&
+    !questionnairesMatchModes(mode, newQuestionnaireIds, action.questionnaires)
+  ) {
     mode = []
   }
 
@@ -363,19 +419,34 @@ const changeQuestionnaire = (state, action) => {
     questionnaireIds: newQuestionnaireIds,
     questionnaireComparison,
     mode,
-    comparisons: buildComparisons(state.modeComparison, questionnaireComparison, state.mode, newQuestionnaireIds),
+    comparisons: buildComparisons(
+      state.modeComparison,
+      questionnaireComparison,
+      state.mode,
+      newQuestionnaireIds
+    ),
     quotas: {
       vars: [],
-      buckets: []
-    }
+      buckets: [],
+    },
   }
 }
 
 const questionnairesMatchModes = (modes, ids, questionnaires) => {
-  return every(modes, mode =>
-    every(mode, m =>
-      ids && every(ids, id =>
-        questionnaires[id] && questionnaires[id].modes && questionnaires[id].modes.indexOf(m) != -1)))
+  return every(modes, (mode) =>
+    every(
+      mode,
+      (m) =>
+        ids &&
+        every(
+          ids,
+          (id) =>
+            questionnaires[id] &&
+            questionnaires[id].modes &&
+            questionnaires[id].modes.indexOf(m) != -1
+        )
+    )
+  )
 }
 
 const toggleDay = (state, action) => {
@@ -385,9 +456,9 @@ const toggleDay = (state, action) => {
       ...state.schedule,
       dayOfWeek: {
         ...state.schedule.dayOfWeek,
-        [action.day]: !state.schedule.dayOfWeek[action.day]
-      }
-    }
+        [action.day]: !state.schedule.dayOfWeek[action.day],
+      },
+    },
   }
 }
 
@@ -401,8 +472,8 @@ const setScheduleFrom = (state, action) => {
     schedule: {
       ...state.schedule,
       endTime: endTime,
-      startTime: action.hour
-    }
+      startTime: action.hour,
+    },
   }
 }
 
@@ -416,8 +487,8 @@ const setScheduleTo = (state, action) => {
     schedule: {
       ...state.schedule,
       startTime: startTime,
-      endTime: action.hour
-    }
+      endTime: action.hour,
+    },
   }
 }
 
@@ -426,11 +497,8 @@ const addScheduleBlockedDay = (state, action) => {
     ...state,
     schedule: {
       ...state.schedule,
-      blockedDays: Array.from(new Set([
-        ...state.schedule.blockedDays,
-        action.day
-      ]))
-    }
+      blockedDays: Array.from(new Set([...state.schedule.blockedDays, action.day])),
+    },
   }
 }
 
@@ -439,8 +507,8 @@ const selectScheduleStartDate = (state, action) => {
     ...state,
     schedule: {
       ...state.schedule,
-      startDate: action.date
-    }
+      startDate: action.date,
+    },
   }
 }
 
@@ -449,8 +517,8 @@ const selectScheduleEndDate = (state, action) => {
     ...state,
     schedule: {
       ...state.schedule,
-      endDate: action.date
-    }
+      endDate: action.date,
+    },
   }
 }
 
@@ -459,8 +527,8 @@ const removeScheduleBlockedDay = (state, action) => {
     ...state,
     schedule: {
       ...state.schedule,
-      blockedDays: without(state.schedule.blockedDays, action.day)
-    }
+      blockedDays: without(state.schedule.blockedDays, action.day),
+    },
   }
 }
 
@@ -469,8 +537,8 @@ const clearScheduleBlockedDays = (state, action) => {
     ...state,
     schedule: {
       ...state.schedule,
-      blockedDays: []
-    }
+      blockedDays: [],
+    },
   }
 }
 
@@ -485,8 +553,8 @@ const selectMode = (state, action) => {
 
   if (modeComparison) {
     let mode = state.mode || []
-    if (some(mode, m => isEqual(m, action.mode))) {
-      newMode = mode.filter(m => !isEqual(m, action.mode))
+    if (some(mode, (m) => isEqual(m, action.mode))) {
+      newMode = mode.filter((m) => !isEqual(m, action.mode))
     } else {
       newMode = mode.slice()
       newMode.push(action.mode)
@@ -503,7 +571,12 @@ const selectMode = (state, action) => {
     ...state,
     mode: newMode,
     modeComparison,
-    comparisons: buildComparisons(modeComparison, state.questionnaireComparison, newMode, state.questionnaireIds)
+    comparisons: buildComparisons(
+      modeComparison,
+      state.questionnaireComparison,
+      newMode,
+      state.questionnaireIds
+    ),
   }
 }
 
@@ -523,8 +596,13 @@ const changeModeComparison = (state, action) => {
   return {
     ...state,
     mode: newMode,
-    comparisons: buildComparisons(newModeComparison, state.questionnaireComparison, newMode, state.questionnaireIds),
-    modeComparison: newModeComparison
+    comparisons: buildComparisons(
+      newModeComparison,
+      state.questionnaireComparison,
+      newMode,
+      state.questionnaireIds
+    ),
+    modeComparison: newModeComparison,
   }
 }
 
@@ -545,20 +623,27 @@ const changeQuestionnaireComparison = (state, action) => {
     ...state,
     questionnaireIds: newQuestionnaireIds,
     questionnaireComparison: newQuestionnaireComparison,
-    comparisons: buildComparisons(state.modeComparison, newQuestionnaireComparison, state.mode, newQuestionnaireIds)
+    comparisons: buildComparisons(
+      state.modeComparison,
+      newQuestionnaireComparison,
+      state.mode,
+      newQuestionnaireIds
+    ),
   }
 }
 
 const buildComparisons = (modeComparison, questionnaireComparison, modes, questionnaires) => {
   if ((modeComparison || questionnaireComparison) && modes && questionnaires) {
-    return flatten(map(modes, (mode) => {
-      return map(questionnaires, (questionnaire) => {
-        return ({
-          mode: mode,
-          questionnaireId: questionnaire
+    return flatten(
+      map(modes, (mode) => {
+        return map(questionnaires, (questionnaire) => {
+          return {
+            mode: mode,
+            questionnaireId: questionnaire,
+          }
         })
       })
-    }))
+    )
   } else {
     return []
   }
@@ -569,76 +654,70 @@ const setTimezone = (state, action) => {
     ...state,
     schedule: {
       ...state.schedule,
-      timezone: action.timezone
-    }
+      timezone: action.timezone,
+    },
   }
 }
 
 const updateRespondentsCount = (state, action) => {
   return {
     ...state,
-    respondentsCount: action.respondentsCount
+    respondentsCount: action.respondentsCount,
   }
 }
 
 const updateLock = (state, action) => {
   return {
     ...state,
-    locked: action.newLockValue
+    locked: action.newLockValue,
   }
 }
 
 const changeSmsRetryConfiguration = (state, action) => {
   return {
     ...state,
-    smsRetryConfiguration: action.smsRetryConfiguration
+    smsRetryConfiguration: action.smsRetryConfiguration,
   }
 }
 
 const changeIvrRetryConfiguration = (state, action) => {
   return {
     ...state,
-    ivrRetryConfiguration: action.ivrRetryConfiguration
+    ivrRetryConfiguration: action.ivrRetryConfiguration,
   }
 }
 
 const changeMobileWebRetryConfiguration = (state, action) => {
   return {
     ...state,
-    mobilewebRetryConfiguration: action.mobilewebRetryConfiguration
+    mobilewebRetryConfiguration: action.mobilewebRetryConfiguration,
   }
 }
 const changeFallbackDelay = (state, action) => {
   return {
     ...state,
-    fallbackDelay: action.fallbackDelay
+    fallbackDelay: action.fallbackDelay,
   }
 }
 
 const receiveLink = (state, action) => {
   return {
     ...state,
-    links: [
-      ...state.links,
-      action.link
-    ]
+    links: [...state.links, action.link],
   }
 }
 
 const refreshLink = (state, action) => {
   return {
     ...state,
-    links: [
-      ...filter(state.links, (link) => link.name != action.link.name),
-      action.link
-    ]
+    links: [...filter(state.links, (link) => link.name != action.link.name), action.link],
   }
 }
 
 const deleteLink = (state, action) => {
   return {
     ...state,
-    links: without(state.links, action.link)
+    links: without(state.links, action.link),
   }
 }
 
@@ -648,6 +727,6 @@ const receiveRespondentGroup = (state, action) => {
     ...state,
     // TODO: presenting this survey flag in the respondent group is a workaround
     // In the future we should handle the survey / respondent_group UI updates better
-    incentivesEnabled: group.incentivesEnabled
+    incentivesEnabled: group.incentivesEnabled,
   }
 }

@@ -1,9 +1,9 @@
 // @flow
-import React, { Component } from 'react'
+import React, { Component } from "react"
 
 type Props = {
-  integration: Integration
-};
+  integration: Integration,
+}
 
 class IntegrationRow extends Component<Props> {
   render() {

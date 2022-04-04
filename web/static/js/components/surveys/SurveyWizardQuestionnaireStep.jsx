@@ -1,11 +1,11 @@
-import React, { PropTypes, Component } from 'react'
-import { withRouter } from 'react-router'
-import { connect } from 'react-redux'
-import * as actions from '../../actions/survey'
-import * as questionnaireActions from '../../actions/questionnaire'
-import * as routes from '../../routes'
-import { UntitledIfEmpty } from '../ui'
-import { translate } from 'react-i18next'
+import React, { PropTypes, Component } from "react"
+import { withRouter } from "react-router"
+import { connect } from "react-redux"
+import * as actions from "../../actions/survey"
+import * as questionnaireActions from "../../actions/questionnaire"
+import * as routes from "../../routes"
+import { UntitledIfEmpty } from "../ui"
+import { translate } from "react-i18next"
 
 class SurveyWizardQuestionnaireStep extends Component {
   static propTypes = {
@@ -15,7 +15,7 @@ class SurveyWizardQuestionnaireStep extends Component {
     projectId: PropTypes.any.isRequired,
     dispatch: PropTypes.func.isRequired,
     router: PropTypes.object,
-    readOnly: PropTypes.bool.isRequired
+    readOnly: PropTypes.bool.isRequired,
   }
 
   questionnaireChange(e) {
@@ -34,8 +34,7 @@ class SurveyWizardQuestionnaireStep extends Component {
 
     const { router, projectId, dispatch } = this.props
 
-    dispatch(questionnaireActions.createQuestionnaire(projectId))
-    .then(questionnaire => {
+    dispatch(questionnaireActions.createQuestionnaire(projectId)).then((questionnaire) => {
       this.creatingQuestionnaire = false
       router.push(routes.questionnaire(projectId, questionnaire.id))
     })
@@ -43,14 +42,18 @@ class SurveyWizardQuestionnaireStep extends Component {
 
   newQuestionnaireButton(projectId, questionnaires) {
     const { t } = this.props
-    let buttonLabel = t('New questionnaire')
+    let buttonLabel = t("New questionnaire")
     if (Object.keys(questionnaires).length == 0) {
-      buttonLabel = t('Create a questionnaire')
+      buttonLabel = t("Create a questionnaire")
     }
 
     return (
-      <div className='col s12'>
-        <a className='waves-effect waves-teal btn-flat btn-flat-link' href='#' onClick={e => this.createQuestionnaire(e)}>
+      <div className="col s12">
+        <a
+          className="waves-effect waves-teal btn-flat btn-flat-link"
+          href="#"
+          onClick={(e) => this.createQuestionnaire(e)}
+        >
           {buttonLabel}
         </a>
       </div>
@@ -66,55 +69,69 @@ class SurveyWizardQuestionnaireStep extends Component {
     const { questionnaires, projectId, survey, readOnly, t } = this.props
 
     const questionnaireIds = survey.questionnaireIds || []
-    const questionnaireComparison = (questionnaireIds.length > 1) ? true : (!!survey.questionnaireComparison)
-    const inputType = questionnaireComparison ? 'checkbox' : 'radio'
+    const questionnaireComparison =
+      questionnaireIds.length > 1 ? true : !!survey.questionnaireComparison
+    const inputType = questionnaireComparison ? "checkbox" : "radio"
 
     let newQuestionnaireComponent = null
     if (!readOnly) {
-      newQuestionnaireComponent =
-        this.newQuestionnaireButton(projectId, questionnaires)
+      newQuestionnaireComponent = this.newQuestionnaireButton(projectId, questionnaires)
     }
 
     return (
       <div>
-        <div className='row'>
-          <div className='col s12'>
-            <h4>{t('Select a questionnaire')}</h4>
-            <p className='flow-text'>{t('The selected questionnaire will be sent over the survey channels to every respondent until a cutoff rule is reached. If you wish, you can try an experiment to compare questionnaires performance.')}</p>
-          </div>
-        </div>
-        <div className='row'>
-          <div className='col s12'>
-            <p>
-              <input
-                id='questionnaires_comparison'
-                type='checkbox'
-                checked={questionnaireComparison}
-                onChange={e => this.questionnaireComparisonChange(e)}
-                className='filled-in'
-                disabled={readOnly}
-                />
-              <label htmlFor='questionnaires_comparison'>{t('Run a comparison with different questionnaires (you can setup the allocations later in the Comparisons section)')}</label>
+        <div className="row">
+          <div className="col s12">
+            <h4>{t("Select a questionnaire")}</h4>
+            <p className="flow-text">
+              {t(
+                "The selected questionnaire will be sent over the survey channels to every respondent until a cutoff rule is reached. If you wish, you can try an experiment to compare questionnaires performance."
+              )}
             </p>
           </div>
-          <div className='col s12 survey-questionnaires'>
-            { Object.keys(questionnaires).map((questionnaireId) => {
+        </div>
+        <div className="row">
+          <div className="col s12">
+            <p>
+              <input
+                id="questionnaires_comparison"
+                type="checkbox"
+                checked={questionnaireComparison}
+                onChange={(e) => this.questionnaireComparisonChange(e)}
+                className="filled-in"
+                disabled={readOnly}
+              />
+              <label htmlFor="questionnaires_comparison">
+                {t(
+                  "Run a comparison with different questionnaires (you can setup the allocations later in the Comparisons section)"
+                )}
+              </label>
+            </p>
+          </div>
+          <div className="col s12 survey-questionnaires">
+            {Object.keys(questionnaires).map((questionnaireId) => {
               const questionnaire = questionnaires[questionnaireId]
-              const className = questionnaire.valid ? null : 'tooltip-error'
+              const className = questionnaire.valid ? null : "tooltip-error"
               return (
                 <div key={questionnaireId}>
                   <p>
                     <input
                       id={questionnaireId}
                       type={inputType}
-                      name='questionnaire'
-                      className={questionnaireComparison ? 'filled-in' : 'with-gap'}
+                      name="questionnaire"
+                      className={questionnaireComparison ? "filled-in" : "with-gap"}
                       value={questionnaireId}
                       checked={questionnaireIds.indexOf(parseInt(questionnaireId)) != -1}
-                      onChange={e => this.questionnaireChange(e)}
+                      onChange={(e) => this.questionnaireChange(e)}
                       disabled={readOnly}
                     />
-                    <label htmlFor={questionnaireId}><UntitledIfEmpty text={questionnaires[questionnaireId].name} emptyText={t('Untitled questionnaire')} className={className} /></label>
+                    <label htmlFor={questionnaireId}>
+                      <UntitledIfEmpty
+                        text={questionnaires[questionnaireId].name}
+                        emptyText={t("Untitled questionnaire")}
+                        className={className}
+                      />
+                    </label>
                   </p>
                 </div>
               )

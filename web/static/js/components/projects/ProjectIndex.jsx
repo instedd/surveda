@@ -1,10 +1,10 @@
-import React, { Component, PropTypes } from 'react'
-import { bindActionCreators } from 'redux'
-import { connect } from 'react-redux'
-import { withRouter } from 'react-router'
-import { createProject } from '../../api'
-import * as actions from '../../actions/projects'
-import * as projectActions from '../../actions/project'
+import React, { Component, PropTypes } from "react"
+import { bindActionCreators } from "redux"
+import { connect } from "react-redux"
+import { withRouter } from "react-router"
+import { createProject } from "../../api"
+import * as actions from "../../actions/projects"
+import * as projectActions from "../../actions/project"
 import {
   AddButton,
   EmptyPage,
@@ -13,12 +13,13 @@ import {
   UntitledIfEmpty,
   ArchiveIcon,
   ArchiveFilter,
-  PagingFooter } from '../ui'
-import * as routes from '../../routes'
-import range from 'lodash/range'
-import { orderedItems } from '../../reducers/collection'
-import { FormattedDate } from 'react-intl'
-import { translate } from 'react-i18next'
+  PagingFooter,
+} from "../ui"
+import * as routes from "../../routes"
+import range from "lodash/range"
+import { orderedItems } from "../../reducers/collection"
+import { FormattedDate } from "react-intl"
+import { translate } from "react-i18next"
 
 class ProjectIndex extends Component {
   componentWillMount() {
@@ -36,15 +37,15 @@ class ProjectIndex extends Component {
     this.creatingProject = true
 
     let theProject
-    createProject({name: ''})
-        .then(response => {
-          theProject = response.entities.projects[response.result]
-          this.props.projectActions.createProject(theProject)
-        })
-        .then(() => {
-          this.creatingProject = false
-          this.navigateToProject(theProject.id)
-        })
+    createProject({ name: "" })
+      .then((response) => {
+        theProject = response.entities.projects[response.result]
+        this.props.projectActions.createProject(theProject)
+      })
+      .then(() => {
+        this.creatingProject = false
+        this.navigateToProject(theProject.id)
+      })
   }
 
   nextPage() {
@@ -66,23 +67,26 @@ class ProjectIndex extends Component {
       if (projects.length == 0 && startIndex > 0) {
         actions.previousProjectsPage()
       }
-      const description = action == 'unarchive' ? t('Project successfully unarchived') : t('Project successfully archived')
+      const description =
+        action == "unarchive"
+          ? t("Project successfully unarchived")
+          : t("Project successfully archived")
       window.Materialize.toast(description, 5000)
     })
   }
 
   fetchProjects(archived: boolean = false) {
-    this.props.actions.fetchProjects({'archived': archived})
+    this.props.actions.fetchProjects({ archived: archived })
   }
 
   archiveIconForProject(archived: boolean, project: Project) {
     if (!project.owner) {
       return <td />
     } else {
-      const action = archived ? 'unarchive' : 'archive'
+      const action = archived ? "unarchive" : "archive"
       const onClick = () => this.archiveOrUnarchive(project, action)
       return (
-        <td className='action'>
+        <td className="action">
           <ArchiveIcon archived={archived} onClick={onClick} />
         </td>
       )
@@ -98,98 +102,132 @@ class ProjectIndex extends Component {
     const { archived, t } = this.props
     return (
       <div>
-        <AddButton text={t('Add project')} onClick={e => this.newProject(e)} />
-        <div className='row'>
+        <AddButton text={t("Add project")} onClick={(e) => this.newProject(e)} />
+        <div className="row">
           <ArchiveFilter
             archived={archived}
-            onChange={selection => this.fetchProjects(selection == 'archived')}
+            onChange={(selection) => this.fetchProjects(selection == "archived")}
           />
         </div>
-        { this.renderTable() }
+        {this.renderTable()}
       </div>
     )
   }
 
   renderTable() {
-    const { projects, sortBy, sortAsc, pageSize, startIndex, endIndex, totalCount, archived, t } = this.props
+    const { projects, sortBy, sortAsc, pageSize, startIndex, endIndex, totalCount, archived, t } =
+      this.props
 
     if (!projects) {
       return (
         <div>
-          <CardTable title={t('Loading projects...')} highlight />
+          <CardTable title={t("Loading projects...")} highlight />
         </div>
       )
     }
 
-    const title = `${totalCount} ${(totalCount == 1) ? t('project') : t('projects')}`
-    const footer = <PagingFooter
-      {...{startIndex, endIndex, totalCount}}
-      onPreviousPage={() => this.previousPage()}
-      onNextPage={() => this.nextPage()} />
+    const title = `${totalCount} ${totalCount == 1 ? t("project") : t("projects")}`
+    const footer = (
+      <PagingFooter
+        {...{ startIndex, endIndex, totalCount }}
+        onPreviousPage={() => this.previousPage()}
+        onNextPage={() => this.nextPage()}
+      />
+    )
 
     return (
       <div>
-        { (projects.length == 0 && !archived)
-          ? <div className='empty-projects'>
-            <EmptyPage icon='folder' title={t('You have no active projects')} onClick={e => this.newProject(e)} createText={t('Create one', {context: 'project'})} />
-            <div className='organize'>
-              <div className='icons'>
-                <i className='material-icons'>assignment_turned_in</i>
-                <i className='material-icons'>assignment</i>
-                <i className='material-icons'>perm_phone_msg</i>
-                <i className='material-icons'>folder_shared</i>
+        {projects.length == 0 && !archived ? (
+          <div className="empty-projects">
+            <EmptyPage
+              icon="folder"
+              title={t("You have no active projects")}
+              onClick={(e) => this.newProject(e)}
+              createText={t("Create one", { context: "project" })}
+            />
+            <div className="organize">
+              <div className="icons">
+                <i className="material-icons">assignment_turned_in</i>
+                <i className="material-icons">assignment</i>
+                <i className="material-icons">perm_phone_msg</i>
+                <i className="material-icons">folder_shared</i>
               </div>
               <p>
-                <b>{t('Organize your work')}</b><br />
-                {t('Manage surveys, questionnaires, and collaborators for each of your projects.')}
+                <b>{t("Organize your work")}</b>
+                <br />
+                {t("Manage surveys, questionnaires, and collaborators for each of your projects.")}
               </p>
             </div>
           </div>
-          : <CardTable title={title} footer={footer} highlight>
+        ) : (
+          <CardTable title={title} footer={footer} highlight>
             <colgroup>
-              <col width='50%' />
-              <col width='20%' />
-              <col width='20%' />
-              <col width='10%' />
+              <col width="50%" />
+              <col width="20%" />
+              <col width="20%" />
+              <col width="10%" />
             </colgroup>
             <thead>
               <tr>
-                <SortableHeader text={t('Name')} property='name' sortBy={sortBy} sortAsc={sortAsc} onClick={(name) => this.sortBy(name)} />
-                <SortableHeader className='right-align' text={t('Running surveys')} property='runningSurveys' sortBy={sortBy} sortAsc={sortAsc} onClick={(name) => this.sortBy(name)} />
-                <SortableHeader className='right-align' text={t('Last activity date')} property='updatedAt' sortBy={sortBy} sortAsc={sortAsc} onClick={(name) => this.sortBy(name)} />
+                <SortableHeader
+                  text={t("Name")}
+                  property="name"
+                  sortBy={sortBy}
+                  sortAsc={sortAsc}
+                  onClick={(name) => this.sortBy(name)}
+                />
+                <SortableHeader
+                  className="right-align"
+                  text={t("Running surveys")}
+                  property="runningSurveys"
+                  sortBy={sortBy}
+                  sortAsc={sortAsc}
+                  onClick={(name) => this.sortBy(name)}
+                />
+                <SortableHeader
+                  className="right-align"
+                  text={t("Last activity date")}
+                  property="updatedAt"
+                  sortBy={sortBy}
+                  sortAsc={sortAsc}
+                  onClick={(name) => this.sortBy(name)}
+                />
                 <th />
               </tr>
             </thead>
             <tbody>
-              { range(0, pageSize).map(index => {
+              {range(0, pageSize).map((index) => {
                 const project = projects[index]
-                if (!project) return <tr key={-index} className='empty-row'><td colSpan='4' /></tr>
+                if (!project)
+                  return (
+                    <tr key={-index} className="empty-row">
+                      <td colSpan="4" />
+                    </tr>
+                  )
 
                 return (
                   <tr key={project.id}>
-                    <td className='project-name' onClick={() => this.navigateToProject(project.id)}>
-                      <UntitledIfEmpty text={project.name} emptyText={t('Untitled project')} />
+                    <td className="project-name" onClick={() => this.navigateToProject(project.id)}>
+                      <UntitledIfEmpty text={project.name} emptyText={t("Untitled project")} />
                     </td>
-                    <td className='right-align' onClick={() => this.navigateToProject(project.id)}>
+                    <td className="right-align" onClick={() => this.navigateToProject(project.id)}>
                       {project.runningSurveys}
                     </td>
-                    <td className='right-align' onClick={() => this.navigateToProject(project.id)}>
+                    <td className="right-align" onClick={() => this.navigateToProject(project.id)}>
                       <FormattedDate
                         value={Date.parse(project.updatedAt)}
-                        day='numeric'
-                        month='short'
-                        year='numeric' />
+                        day="numeric"
+                        month="short"
+                        year="numeric"
+                      />
                     </td>
-                    {
-                      this.archiveIconForProject(archived, project)
-                    }
+                    {this.archiveIconForProject(archived, project)}
                   </tr>
                 )
-              })
-              }
+              })}
             </tbody>
           </CardTable>
-        }
+        )}
       </div>
     )
   }
@@ -207,7 +245,7 @@ ProjectIndex.propTypes = {
   totalCount: PropTypes.number.isRequired,
   archived: PropTypes.bool,
   t: PropTypes.func,
-  router: PropTypes.object
+  router: PropTypes.object,
 }
 
 const mapStateToProps = (state) => {
@@ -231,13 +269,13 @@ const mapStateToProps = (state) => {
     startIndex,
     endIndex,
     totalCount,
-    archived
+    archived,
   }
 }
 
 const mapDispatchToProps = (dispatch) => ({
   actions: bindActionCreators(actions, dispatch),
-  projectActions: bindActionCreators(projectActions, dispatch)
+  projectActions: bindActionCreators(projectActions, dispatch),
 })
 
 export default translate()(withRouter(connect(mapStateToProps, mapDispatchToProps)(ProjectIndex)))

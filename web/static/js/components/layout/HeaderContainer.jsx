@@ -1,9 +1,9 @@
-import React, { Component, PropTypes } from 'react'
-import { connect } from 'react-redux'
-import { withRouter } from 'react-router'
-import Header from './Header'
-import * as projectActions from '../../actions/project'
-import { translate } from 'react-i18next'
+import React, { Component, PropTypes } from "react"
+import { connect } from "react-redux"
+import { withRouter } from "react-router"
+import Header from "./Header"
+import * as projectActions from "../../actions/project"
+import { translate } from "react-i18next"
 
 class HeaderContainer extends Component {
   static propTypes = {
@@ -15,7 +15,7 @@ class HeaderContainer extends Component {
     user: PropTypes.string.isRequired,
     folder: PropTypes.object,
     panelSurveyId: PropTypes.number,
-    panelSurvey: PropTypes.object
+    panelSurvey: PropTypes.object,
   }
 
   componentDidMount() {
@@ -37,13 +37,22 @@ class HeaderContainer extends Component {
       // (it's still being loaded) we don't want to reset the body
       // class that came from the server.
     } else {
-      let className = (project && project.colourScheme == 'better_data_for_health') ? 'bdfh' : ''
-      $('body').removeClass('bdfh')
-      $('body').addClass(className)
+      let className = project && project.colourScheme == "better_data_for_health" ? "bdfh" : ""
+      $("body").removeClass("bdfh")
+      $("body").addClass(className)
     }
 
     return (
-      <Header tabs={tabs} logout={logout} user={user} showProjectLink={!!showProjectLink} showQuestionnairesLink={!!questionnaireId} project={project || null} folder={folder} panelSurvey={panelSurvey} />
+      <Header
+        tabs={tabs}
+        logout={logout}
+        user={user}
+        showProjectLink={!!showProjectLink}
+        showQuestionnairesLink={!!questionnaireId}
+        project={project || null}
+        folder={folder}
+        panelSurvey={panelSurvey}
+      />
     )
   }
 }
@@ -62,8 +71,8 @@ const mapStateToProps = (state, ownProps) => {
   */
   const { params } = ownProps
 
-  const surveyId = params['surveyId']
-  const panelSurveyId = params['panelSurveyId']
+  const surveyId = params["surveyId"]
+  const panelSurveyId = params["panelSurveyId"]
   let panelSurvey, folder
 
   // We build the breadcrumb in reverse order, and never display the current
@@ -74,20 +83,24 @@ const mapStateToProps = (state, ownProps) => {
     // 2. survey -> folder
     // 3. survey -> panel survey
     // 4. survey -> panel survey -> folder
-    const currentSurvey = state.survey.data && state.survey.data.id == parseInt(surveyId) && state.survey.data
+    const currentSurvey =
+      state.survey.data && state.survey.data.id == parseInt(surveyId) && state.survey.data
     panelSurvey = currentSurvey ? currentSurvey.panelSurvey : null
-    folder = panelSurvey ? panelSurvey.folder : (currentSurvey ? currentSurvey.folder : null)
+    folder = panelSurvey ? panelSurvey.folder : currentSurvey ? currentSurvey.folder : null
   } else if (panelSurveyId) {
     // 5. panel survey (no parent)
     // 6. panel survey -> folder
-    const currentPanelSurvey = state.panelSurvey.data && state.panelSurvey.data.id == parseInt(panelSurveyId) && state.panelSurvey.data
+    const currentPanelSurvey =
+      state.panelSurvey.data &&
+      state.panelSurvey.data.id == parseInt(panelSurveyId) &&
+      state.panelSurvey.data
     folder = currentPanelSurvey ? currentPanelSurvey.folder : null
   }
 
   return {
     project: state.project.data,
     folder,
-    panelSurvey
+    panelSurvey,
   }
 }
 

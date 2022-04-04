@@ -1,12 +1,12 @@
-import React, { PropTypes, Component } from 'react'
-import { connect } from 'react-redux'
-import {EditableDescriptionLabel, EditableTitleLabel} from '../ui'
-import QuestionnaireMenu from './QuestionnaireMenu'
-import * as questionnaireActions from '../../actions/questionnaire'
-import withQuestionnaire from './withQuestionnaire'
-import { translate } from 'react-i18next'
-import { isProjectReadOnly } from '../../reducers/project'
-import { isQuestionnaireReadOnly } from '../../reducers/questionnaire'
+import React, { PropTypes, Component } from "react"
+import { connect } from "react-redux"
+import { EditableDescriptionLabel, EditableTitleLabel } from "../ui"
+import QuestionnaireMenu from "./QuestionnaireMenu"
+import * as questionnaireActions from "../../actions/questionnaire"
+import withQuestionnaire from "./withQuestionnaire"
+import { translate } from "react-i18next"
+import { isProjectReadOnly } from "../../reducers/project"
+import { isQuestionnaireReadOnly } from "../../reducers/questionnaire"
 
 class QuestionnaireTitle extends Component {
   static propTypes = {
@@ -14,7 +14,7 @@ class QuestionnaireTitle extends Component {
     dispatch: PropTypes.func.isRequired,
     questionnaire: PropTypes.object,
     readOnly: PropTypes.bool,
-    hideMenu: PropTypes.bool
+    hideMenu: PropTypes.bool,
   }
 
   handleSubmit(newName) {
@@ -35,9 +35,24 @@ class QuestionnaireTitle extends Component {
     const { questionnaire, readOnly, hideMenu, t } = this.props
 
     return (
-      <div className='title-container'>
-        <EditableTitleLabel title={questionnaire.name} onSubmit={(value) => { this.handleSubmit(value) }} emptyText={t('Untitled questionnaire')} readOnly={readOnly} more={hideMenu ? '' : <QuestionnaireMenu readOnly={readOnly} />} />
-        <EditableDescriptionLabel description={questionnaire.description} emptyText={readOnly ? '' : t('Add description')} onSubmit={(value) => { this.handleSubmitDescription(value) }} readOnly={readOnly} />
+      <div className="title-container">
+        <EditableTitleLabel
+          title={questionnaire.name}
+          onSubmit={(value) => {
+            this.handleSubmit(value)
+          }}
+          emptyText={t("Untitled questionnaire")}
+          readOnly={readOnly}
+          more={hideMenu ? "" : <QuestionnaireMenu readOnly={readOnly} />}
+        />
+        <EditableDescriptionLabel
+          description={questionnaire.description}
+          emptyText={readOnly ? "" : t("Add description")}
+          onSubmit={(value) => {
+            this.handleSubmitDescription(value)
+          }}
+          readOnly={readOnly}
+        />
       </div>
     )
   }
@@ -45,11 +60,13 @@ class QuestionnaireTitle extends Component {
 
 const mapStateToProps = (state, ownProps) => {
   const { readOnly } = ownProps
-  if (typeof readOnly === 'boolean') {
+  if (typeof readOnly === "boolean") {
     // Explicitly set by the component user
     return { readOnly }
   } else {
-    return { readOnly: isProjectReadOnly(state) || isQuestionnaireReadOnly(state) }
+    return {
+      readOnly: isProjectReadOnly(state) || isQuestionnaireReadOnly(state),
+    }
   }
 }
 

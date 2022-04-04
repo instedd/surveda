@@ -1,12 +1,16 @@
 // @flow
-import React, { Component } from 'react'
-import { UntitledIfEmpty, Tooltip, Autocomplete } from '../ui'
-import classNames from 'classnames/bind'
-import SkipLogic from './SkipLogic'
-import { getChoiceResponseSmsJoined, getChoiceResponseIvrJoined, getChoiceResponseMobileWebJoined } from '../../step'
-import propsAreEqual from '../../propsAreEqual'
-import map from 'lodash/map'
-import { translate } from 'react-i18next'
+import React, { Component } from "react"
+import { UntitledIfEmpty, Tooltip, Autocomplete } from "../ui"
+import classNames from "classnames/bind"
+import SkipLogic from "./SkipLogic"
+import {
+  getChoiceResponseSmsJoined,
+  getChoiceResponseIvrJoined,
+  getChoiceResponseMobileWebJoined,
+} from "../../step"
+import propsAreEqual from "../../propsAreEqual"
+import map from "lodash/map"
+import { translate } from "react-i18next"
 
 type Props = {
   onDelete: Function,
@@ -26,10 +30,10 @@ type Props = {
   t: Function,
   smsAutocompleteGetData: Function,
   smsAutocompleteOnSelect: Function,
-  isNew: boolean
-};
+  isNew: boolean,
+}
 
-type Focus = null | 'response' | 'sms' | 'ivr' | 'mobileweb';
+type Focus = null | "response" | "sms" | "ivr" | "mobileweb"
 
 type State = {
   response: string,
@@ -40,12 +44,18 @@ type State = {
   focus: Focus,
   doNotClose: boolean,
   skipLogic: ?string,
-};
+}
 
 class ChoiceEditor extends Component<Props, State> {
   constructor(props: Props) {
     super(props)
-    this.state = { ...this.stateFromProps(props), editing: false, doNotClose: false, focus: null, errors: null }
+    this.state = {
+      ...this.stateFromProps(props),
+      editing: false,
+      doNotClose: false,
+      focus: null,
+      errors: null,
+    }
   }
 
   responseChange(event: Event) {
@@ -53,7 +63,7 @@ class ChoiceEditor extends Component<Props, State> {
     if (event.target instanceof HTMLInputElement) {
       this.setState({
         ...this.state,
-        response: event.target.value
+        response: event.target.value,
       })
     }
   }
@@ -62,7 +72,7 @@ class ChoiceEditor extends Component<Props, State> {
     if (event) event.preventDefault()
     this.setState({
       ...this.state,
-      sms
+      sms,
     })
   }
 
@@ -70,7 +80,7 @@ class ChoiceEditor extends Component<Props, State> {
     if (event) event.preventDefault()
     this.setState({
       ...this.state,
-      mobileweb
+      mobileweb,
     })
   }
 
@@ -79,7 +89,7 @@ class ChoiceEditor extends Component<Props, State> {
     if (event.target instanceof HTMLInputElement) {
       this.setState({
         ...this.state,
-        ivr: event.target.value
+        ivr: event.target.value,
       })
     }
   }
@@ -99,19 +109,19 @@ class ChoiceEditor extends Component<Props, State> {
       sms: getChoiceResponseSmsJoined(choice, lang),
       ivr: getChoiceResponseIvrJoined(choice),
       mobileweb: getChoiceResponseMobileWebJoined(choice, lang),
-      skipLogic: choice.skipLogic
+      skipLogic: choice.skipLogic,
     }
   }
 
   enterEditMode(event: ?Event, focus: Focus) {
     if (event) event.preventDefault()
 
-    const {readOnly} = this.props
+    const { readOnly } = this.props
     if (!readOnly) {
       this.setState({
         ...this.state,
         editing: true,
-        focus: focus
+        focus: focus,
       })
     }
   }
@@ -124,15 +134,32 @@ class ChoiceEditor extends Component<Props, State> {
     if (this.state.doNotClose) {
       this.state.doNotClose = false
       if (autoComplete) {
-        onChoiceChange(this.state.response, this.state.sms, this.state.ivr, this.state.mobileweb, this.state.skipLogic, true)
+        onChoiceChange(
+          this.state.response,
+          this.state.sms,
+          this.state.ivr,
+          this.state.mobileweb,
+          this.state.skipLogic,
+          true
+        )
       }
     } else {
-      this.setState({
-        ...this.state,
-        editing: false
-      }, () => {
-        onChoiceChange(this.state.response, this.state.sms, this.state.ivr, this.state.mobileweb, this.state.skipLogic, autoComplete)
-      })
+      this.setState(
+        {
+          ...this.state,
+          editing: false,
+        },
+        () => {
+          onChoiceChange(
+            this.state.response,
+            this.state.sms,
+            this.state.ivr,
+            this.state.mobileweb,
+            this.state.skipLogic,
+            autoComplete
+          )
+        }
+      )
     }
   }
 
@@ -148,10 +175,10 @@ class ChoiceEditor extends Component<Props, State> {
   }
 
   onKeyDown(event: SyntheticKeyboardEvent<any>, focus: Focus, autoComplete: boolean = false) {
-    if (event.key == 'Enter') {
+    if (event.key == "Enter") {
       event.preventDefault()
       this.exitEditMode(autoComplete)
-    } else if (event.key == 'Tab') {
+    } else if (event.key == "Tab") {
       this.setDoNotClose(focus)
     }
   }
@@ -159,24 +186,33 @@ class ChoiceEditor extends Component<Props, State> {
   smsCheckEmptyString(event: SyntheticEvent<HTMLInputElement>) {
     // This is due to a materialize css bug. Analogous to SmsPrompt
     if (!event.currentTarget.value) {
-      this.smsChange(event, '')
+      this.smsChange(event, "")
     }
   }
 
   skipLogicChange(skipOption: ?string) {
     const { onChoiceChange } = this.props
-    this.setState({
-      ...this.state,
-      skipLogic: skipOption
-    }, () => {
-      onChoiceChange(this.state.response, this.state.sms, this.state.ivr, this.state.mobileweb, this.state.skipLogic)
-    })
+    this.setState(
+      {
+        ...this.state,
+        skipLogic: skipOption,
+      },
+      () => {
+        onChoiceChange(
+          this.state.response,
+          this.state.sms,
+          this.state.ivr,
+          this.state.mobileweb,
+          this.state.skipLogic
+        )
+      }
+    )
   }
 
   maybeTooltip(shouldWrap: any, elem: any, tooltipText: string) {
     if (shouldWrap) {
       return (
-        <Tooltip text={tooltipText} position='bottom' className='error'>
+        <Tooltip text={tooltipText} position="bottom" className="error">
           {elem}
         </Tooltip>
       )
@@ -185,123 +221,161 @@ class ChoiceEditor extends Component<Props, State> {
     }
   }
 
-  cell(value: string, errors: ?string[], shouldDisplay: boolean, onClick: Function) {
+  cell(value: string, errors: ?(string[]), shouldDisplay: boolean, onClick: Function) {
     const { isNew, t } = this.props
 
-    const tooltip = (map(errors, (error) => t(...error)) || [value]).join(', ')
+    const tooltip = (map(errors, (error) => t(...error)) || [value]).join(", ")
 
-    const elem = shouldDisplay
-      ? <div>
+    const elem = shouldDisplay ? (
+      <div>
         <UntitledIfEmpty
           text={value}
-          emptyText={'\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0'}
-          className={classNames({'basic-error': errors, 'isNew-error': isNew && (!value || value.trim().length == 0)})} />
+          emptyText={"\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0"}
+          className={classNames({
+            "basic-error": errors,
+            "isNew-error": isNew && (!value || value.trim().length == 0),
+          })}
+        />
       </div>
-    : null
+    ) : null
 
-    return shouldDisplay
-    ? <td onClick={onClick}>
-      {this.maybeTooltip(errors, elem, tooltip)}
-    </td> : null
+    return shouldDisplay ? (
+      <td onClick={onClick}>{this.maybeTooltip(errors, elem, tooltip)}</td>
+    ) : null
   }
 
   render() {
-    const { onDelete, stepsBefore, stepsAfter, readOnly, choiceIndex, sms, ivr, mobileweb, errorPath, errorsByPath, isNew, lang, smsAutocompleteGetData, smsAutocompleteOnSelect, t } = this.props
+    const {
+      onDelete,
+      stepsBefore,
+      stepsAfter,
+      readOnly,
+      choiceIndex,
+      sms,
+      ivr,
+      mobileweb,
+      errorPath,
+      errorsByPath,
+      isNew,
+      lang,
+      smsAutocompleteGetData,
+      smsAutocompleteOnSelect,
+      t,
+    } = this.props
 
-    const isRefusal = choiceIndex == 'refusal'
+    const isRefusal = choiceIndex == "refusal"
 
-    let skipLogicInput =
-      <td className='skipLogic'>
+    let skipLogicInput = (
+      <td className="skipLogic">
         <SkipLogic
-          onChange={skipOption => this.skipLogicChange(skipOption)}
+          onChange={(skipOption) => this.skipLogicChange(skipOption)}
           readOnly={readOnly}
           value={this.state.skipLogic}
           errorPath={`${errorPath}[${choiceIndex}].skipLogic`}
           errorsByPath={errorsByPath}
           stepsAfter={stepsAfter}
           stepsBefore={stepsBefore}
-          />
+        />
       </td>
+    )
 
     if (this.state.editing) {
       return (
         <tr>
-          {!isRefusal
-          ? <td onMouseDown={e => this.setDoNotClose('response')}>
-            <input
-              type='text'
-              placeholder={t('Response')}
-              value={this.state.response}
-              autoFocus={this.state.focus == 'response'}
-              onChange={e => this.responseChange(e)}
-              onBlur={e => this.autoComplete(e)}
-              onKeyDown={e => this.onKeyDown(e, 'sms', true)}
-              draggable
-              onDragStart={e => { e.stopPropagation(); e.preventDefault(); return false }}
+          {!isRefusal ? (
+            <td onMouseDown={(e) => this.setDoNotClose("response")}>
+              <input
+                type="text"
+                placeholder={t("Response")}
+                value={this.state.response}
+                autoFocus={this.state.focus == "response"}
+                onChange={(e) => this.responseChange(e)}
+                onBlur={(e) => this.autoComplete(e)}
+                onKeyDown={(e) => this.onKeyDown(e, "sms", true)}
+                draggable
+                onDragStart={(e) => {
+                  e.stopPropagation()
+                  e.preventDefault()
+                  return false
+                }}
               />
-          </td>
-          : null }
-          { sms
-          ? <td onMouseDown={e => this.setDoNotClose('sms')}>
-            <input
-              type='text'
-              ref='smsInput'
-              placeholder={t('Valid entries')}
-              value={this.state.sms}
-              autoFocus={this.state.focus == 'sms'}
-              onChange={e => this.smsChange(e, e.target.value)}
-              onBlur={e => this.exitEditMode()}
-              onKeyUp={e => this.smsCheckEmptyString(e)}
-              onKeyDown={e => this.onKeyDown(e, 'ivr')}
-              draggable
-              onDragStart={e => { e.stopPropagation(); e.preventDefault(); return false }}
+            </td>
+          ) : null}
+          {sms ? (
+            <td onMouseDown={(e) => this.setDoNotClose("sms")}>
+              <input
+                type="text"
+                ref="smsInput"
+                placeholder={t("Valid entries")}
+                value={this.state.sms}
+                autoFocus={this.state.focus == "sms"}
+                onChange={(e) => this.smsChange(e, e.target.value)}
+                onBlur={(e) => this.exitEditMode()}
+                onKeyUp={(e) => this.smsCheckEmptyString(e)}
+                onKeyDown={(e) => this.onKeyDown(e, "ivr")}
+                draggable
+                onDragStart={(e) => {
+                  e.stopPropagation()
+                  e.preventDefault()
+                  return false
+                }}
               />
-            <Autocomplete
-              getInput={() => this.refs.smsInput}
-              getData={(value, callback) => smsAutocompleteGetData(value, callback)}
-              onSelect={(item) => smsAutocompleteOnSelect(item)}
-              ref='autocomplete'
+              <Autocomplete
+                getInput={() => this.refs.smsInput}
+                getData={(value, callback) => smsAutocompleteGetData(value, callback)}
+                onSelect={(item) => smsAutocompleteOnSelect(item)}
+                ref="autocomplete"
               />
-          </td> : null
-          }
-          { ivr
-          ? <td onMouseDown={e => this.setDoNotClose('ivr')}>
-            <input
-              type='text'
-              placeholder={t('Valid entries')}
-              value={this.state.ivr}
-              autoFocus={this.state.focus == 'ivr'}
-              onChange={e => this.ivrChange(e)}
-              onBlur={e => this.exitEditMode()}
-              onKeyDown={e => this.onKeyDown(e, 'mobileweb')}
-              draggable
-              onDragStart={e => { e.stopPropagation(); e.preventDefault(); return false }}
+            </td>
+          ) : null}
+          {ivr ? (
+            <td onMouseDown={(e) => this.setDoNotClose("ivr")}>
+              <input
+                type="text"
+                placeholder={t("Valid entries")}
+                value={this.state.ivr}
+                autoFocus={this.state.focus == "ivr"}
+                onChange={(e) => this.ivrChange(e)}
+                onBlur={(e) => this.exitEditMode()}
+                onKeyDown={(e) => this.onKeyDown(e, "mobileweb")}
+                draggable
+                onDragStart={(e) => {
+                  e.stopPropagation()
+                  e.preventDefault()
+                  return false
+                }}
               />
-          </td> : null
-          }
-          {
-            mobileweb
-          ? <td onMouseDown={e => this.setDoNotClose('mobileweb')}>
-            <input
-              type='text'
-              placeholder={t('Valid entries')}
-              value={this.state.mobileweb}
-              autoFocus={this.state.focus == 'mobileweb'}
-              onChange={e => this.mobilewebChange(e, e.target.value)}
-              onBlur={e => this.exitEditMode()}
-              onKeyDown={e => this.onKeyDown(e, null)}
-              draggable
-              onDragStart={e => { e.stopPropagation(); e.preventDefault(); return false }}
+            </td>
+          ) : null}
+          {mobileweb ? (
+            <td onMouseDown={(e) => this.setDoNotClose("mobileweb")}>
+              <input
+                type="text"
+                placeholder={t("Valid entries")}
+                value={this.state.mobileweb}
+                autoFocus={this.state.focus == "mobileweb"}
+                onChange={(e) => this.mobilewebChange(e, e.target.value)}
+                onBlur={(e) => this.exitEditMode()}
+                onKeyDown={(e) => this.onKeyDown(e, null)}
+                draggable
+                onDragStart={(e) => {
+                  e.stopPropagation()
+                  e.preventDefault()
+                  return false
+                }}
               />
-          </td> : null
-          }
+            </td>
+          ) : null}
           {skipLogicInput}
-          { (!isRefusal)
-          ? <td className='tdDelete'>
-            <a href='#!' onFocus={e => this.exitEditMode()} onClick={onDelete}><i className='material-icons grey-text'>delete</i></a>
-          </td> : null
-          }
-        </tr>)
+          {!isRefusal ? (
+            <td className="tdDelete">
+              <a href="#!" onFocus={(e) => this.exitEditMode()} onClick={onDelete}>
+                <i className="material-icons grey-text">delete</i>
+              </a>
+            </td>
+          ) : null}
+        </tr>
+      )
     } else {
       const path = `${errorPath}[${choiceIndex}]`
 
@@ -320,18 +394,25 @@ class ChoiceEditor extends Component<Props, State> {
       return (
         <tr>
           {!isRefusal
-          ? this.cell(this.state.response, responseErrors, true, e => this.enterEditMode(e, 'response'))
-          : null
-          }
-          {this.cell(this.state.sms, smsErrors, sms, e => this.enterEditMode(e, 'sms'))}
-          {this.cell(this.state.ivr, ivrErrors, ivr, e => this.enterEditMode(e, 'ivr'))}
-          {this.cell(this.state.mobileweb, mobilewebErrors, mobileweb, e => this.enterEditMode(e, 'mobileweb'))}
+            ? this.cell(this.state.response, responseErrors, true, (e) =>
+                this.enterEditMode(e, "response")
+              )
+            : null}
+          {this.cell(this.state.sms, smsErrors, sms, (e) => this.enterEditMode(e, "sms"))}
+          {this.cell(this.state.ivr, ivrErrors, ivr, (e) => this.enterEditMode(e, "ivr"))}
+          {this.cell(this.state.mobileweb, mobilewebErrors, mobileweb, (e) =>
+            this.enterEditMode(e, "mobileweb")
+          )}
           {skipLogicInput}
-          { readOnly || isRefusal ? <td />
-            : <td className='tdDelete'>
-              <a href='#!' onClick={onDelete}><i className='material-icons grey-text'>delete</i></a>
+          {readOnly || isRefusal ? (
+            <td />
+          ) : (
+            <td className="tdDelete">
+              <a href="#!" onClick={onDelete}>
+                <i className="material-icons grey-text">delete</i>
+              </a>
             </td>
-          }
+          )}
         </tr>
       )
     }
@@ -342,4 +423,4 @@ class ChoiceEditor extends Component<Props, State> {
   }
 }
 
-export default translate(null, {withRef: true})(ChoiceEditor)
+export default translate(null, { withRef: true })(ChoiceEditor)

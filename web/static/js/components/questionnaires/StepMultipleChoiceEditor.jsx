@@ -1,13 +1,13 @@
 // @flow
-import React, { Component } from 'react'
-import { bindActionCreators } from 'redux'
-import { connect } from 'react-redux'
-import * as actions from '../../actions/questionnaire'
-import ChoiceEditor from './ChoiceEditor'
-import { Card } from '../ui'
-import { getChoiceResponseSmsJoined } from '../../step'
-import * as api from '../../api'
-import { translate } from 'react-i18next'
+import React, { Component } from "react"
+import { bindActionCreators } from "redux"
+import { connect } from "react-redux"
+import * as actions from "../../actions/questionnaire"
+import ChoiceEditor from "./ChoiceEditor"
+import { Card } from "../ui"
+import { getChoiceResponseSmsJoined } from "../../step"
+import * as api from "../../api"
+import { translate } from "react-i18next"
 
 type Props = {
   actions: any,
@@ -20,8 +20,8 @@ type Props = {
   t: Function,
   errorPath: string,
   errorsByPath: ErrorsByPath,
-  isNew: boolean
-};
+  isNew: boolean,
+}
 
 class StepMultipleChoiceEditor extends Component<Props> {
   smsAutocompleteItems: AutocompleteItem[]
@@ -55,7 +55,16 @@ class StepMultipleChoiceEditor extends Component<Props> {
   changeChoice(index) {
     const { step, actions } = this.props
     return (response, smsValues, ivrValues, mobilewebValues, skipLogic, autoComplete = false) => {
-      actions.changeChoice(step.id, index, response, smsValues, ivrValues, mobilewebValues, skipLogic, autoComplete)
+      actions.changeChoice(
+        step.id,
+        index,
+        response,
+        smsValues,
+        ivrValues,
+        mobilewebValues,
+        skipLogic,
+        autoComplete
+      )
     }
   }
 
@@ -66,22 +75,42 @@ class StepMultipleChoiceEditor extends Component<Props> {
     const activeLanguage = questionnaire.activeLanguage
 
     if (activeLanguage == defaultLanguage) {
-      api.autocompletePrimaryLanguage(questionnaire.projectId, 'sms', 'response', defaultLanguage, value)
-      .then(response => {
-        const items = response.map(r => ({id: r.text, text: r.text, translations: r.translations}))
-        this.smsAutocompleteItems = items
-        callback(value, items)
-      })
+      api
+        .autocompletePrimaryLanguage(
+          questionnaire.projectId,
+          "sms",
+          "response",
+          defaultLanguage,
+          value
+        )
+        .then((response) => {
+          const items = response.map((r) => ({
+            id: r.text,
+            text: r.text,
+            translations: r.translations,
+          }))
+          this.smsAutocompleteItems = items
+          callback(value, items)
+        })
     } else {
       let sms = getChoiceResponseSmsJoined(choice, defaultLanguage)
       if (sms.length == 0) return
 
-      api.autocompleteOtherLanguage(questionnaire.projectId, 'sms', 'response', defaultLanguage, activeLanguage, sms, value)
-      .then(response => {
-        const items = response.map(r => ({id: r, text: r}))
-        this.smsAutocompleteItems = items
-        callback(value, items)
-      })
+      api
+        .autocompleteOtherLanguage(
+          questionnaire.projectId,
+          "sms",
+          "response",
+          defaultLanguage,
+          activeLanguage,
+          sms,
+          value
+        )
+        .then((response) => {
+          const items = response.map((r) => ({ id: r, text: r }))
+          this.smsAutocompleteItems = items
+          callback(value, items)
+        })
     }
   }
 
@@ -93,7 +122,7 @@ class StepMultipleChoiceEditor extends Component<Props> {
     const editor = ChoiceEditor.fromRef(this.refs[`choiceEditor${index}`])
 
     if (activeLanguage == defaultLanguage) {
-      let value = this.smsAutocompleteItems.find(i => i.id == item.id)
+      let value = this.smsAutocompleteItems.find((i) => i.id == item.id)
       actions.autocompleteChoiceSmsValues(step.id, index, value)
       editor.smsChange(null, (value || {}).text)
     } else {
@@ -109,53 +138,61 @@ class StepMultipleChoiceEditor extends Component<Props> {
     const { choices } = this.props.step
 
     const editor = ChoiceEditor.fromRef(this.refs[`choiceEditor${choices.length - 1}`])
-    editor.enterEditMode(null, 'response')
+    editor.enterEditMode(null, "response")
     this.addingChoice = false
   }
 
   render() {
-    const { questionnaire, readOnly, step, stepIndex, stepsBefore, stepsAfter, errorPath, errorsByPath, isNew, t } = this.props
+    const {
+      questionnaire,
+      readOnly,
+      step,
+      stepIndex,
+      stepsBefore,
+      stepsAfter,
+      errorPath,
+      errorsByPath,
+      isNew,
+      t,
+    } = this.props
     const { choices } = step
 
-    const sms = questionnaire.activeMode == 'sms'
-    const ivr = questionnaire.activeMode == 'ivr'
-    const mobileweb = questionnaire.activeMode == 'mobileweb'
+    const sms = questionnaire.activeMode == "sms"
+    const ivr = questionnaire.activeMode == "ivr"
+    const mobileweb = questionnaire.activeMode == "mobileweb"
 
     const choicesErrorPath = `${errorPath}.choices`
 
     let myErrors = isNew ? null : errorsByPath[choicesErrorPath]
     if (myErrors) {
-      myErrors.join(', ')
+      myErrors.join(", ")
     }
 
     return (
       <div>
         <h5>Responses</h5>
-        <p><b>{t('List the texts you want to store for each possible choice and define valid values by commas.')}</b></p>
-        <Card className='scrollX'>
-          <div className='card-table'>
-            <table className='responses-table'>
+        <p>
+          <b>
+            {t(
+              "List the texts you want to store for each possible choice and define valid values by commas."
+            )}
+          </b>
+        </p>
+        <Card className="scrollX">
+          <div className="card-table">
+            <table className="responses-table">
               <thead>
                 <tr>
-                  <th style={{width: '30%'}}>{t('Response')}</th>
-                  { sms
-                  ? <th style={{width: '20%'}}>{t('SMS')}</th>
-                  : null
-                  }
-                  { ivr
-                  ? <th style={{width: '20%'}}>{t('Phone call')}</th>
-                  : null
-                  }
-                  { mobileweb
-                  ? <th style={{width: '20%'}}>{t('Mobile web')}</th>
-                  : null
-                  }
-                  <th style={{width: '35%'}}>{t('Skip logic')}</th>
-                  <th style={{width: '15%'}} />
+                  <th style={{ width: "30%" }}>{t("Response")}</th>
+                  {sms ? <th style={{ width: "20%" }}>{t("SMS")}</th> : null}
+                  {ivr ? <th style={{ width: "20%" }}>{t("Phone call")}</th> : null}
+                  {mobileweb ? <th style={{ width: "20%" }}>{t("Mobile web")}</th> : null}
+                  <th style={{ width: "35%" }}>{t("Skip logic")}</th>
+                  <th style={{ width: "15%" }} />
                 </tr>
               </thead>
               <tbody>
-                { choices.map((choice, index) =>
+                {choices.map((choice, index) => (
                   <ChoiceEditor
                     ref={`choiceEditor${index}`}
                     key={index}
@@ -173,23 +210,26 @@ class StepMultipleChoiceEditor extends Component<Props> {
                     mobileweb={mobileweb}
                     errorPath={choicesErrorPath}
                     errorsByPath={errorsByPath}
-                    smsAutocompleteGetData={(value, callback) => this.smsAutocompleteGetData(value, callback, choice, index)}
-                    smsAutocompleteOnSelect={item => this.smsAutocompleteOnSelect(item, choice, index)}
+                    smsAutocompleteGetData={(value, callback) =>
+                      this.smsAutocompleteGetData(value, callback, choice, index)
+                    }
+                    smsAutocompleteOnSelect={(item) =>
+                      this.smsAutocompleteOnSelect(item, choice, index)
+                    }
                     isNew={isNew}
-                    />
-                  )}
+                  />
+                ))}
               </tbody>
             </table>
           </div>
-          {readOnly ? null
-            : <div className='card-action'>
-              <a className='blue-text' href='#!' onClick={(e) => this.addChoice(e)}><b>ADD</b></a>
-              { myErrors
-            ? <span className='card-error'>{myErrors}</span>
-            : null
-            }
+          {readOnly ? null : (
+            <div className="card-action">
+              <a className="blue-text" href="#!" onClick={(e) => this.addChoice(e)}>
+                <b>ADD</b>
+              </a>
+              {myErrors ? <span className="card-error">{myErrors}</span> : null}
             </div>
-          }
+          )}
         </Card>
       </div>
     )
@@ -197,7 +237,7 @@ class StepMultipleChoiceEditor extends Component<Props> {
 }
 
 const mapDispatchToProps = (dispatch) => ({
-  actions: bindActionCreators(actions, dispatch)
+  actions: bindActionCreators(actions, dispatch),
 })
 
 export default translate()(connect(null, mapDispatchToProps)(StepMultipleChoiceEditor))

@@ -1,4 +1,4 @@
-import * as actions from '../actions/respondents'
+import * as actions from "../actions/respondents"
 
 export default (state = {}, action) => {
   switch (action.type) {

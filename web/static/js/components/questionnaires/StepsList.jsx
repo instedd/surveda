@@ -1,16 +1,17 @@
-import React, { PropTypes, Component } from 'react'
-import QuestionnaireClosedStep from './QuestionnaireClosedStep'
+import React, { PropTypes, Component } from "react"
+import QuestionnaireClosedStep from "./QuestionnaireClosedStep"
 
 class StepsList extends Component {
   render() {
-    const { steps, errorPath, onClick, readOnly, quotaCompletedSteps, increaseErrorIndex } = this.props
+    const { steps, errorPath, onClick, readOnly, quotaCompletedSteps, increaseErrorIndex } =
+      this.props
     let { startIndex } = this.props
     if (startIndex == null) startIndex = 0
 
     if (steps.length != 0) {
       return (
-        <ul className='collapsible'>
-          { steps.map((step, index) => {
+        <ul className="collapsible">
+          {steps.map((step, index) => {
             const errorIndex = increaseErrorIndex ? startIndex + index + 1 : startIndex + index
             return (
               <li key={step.id}>
@@ -18,7 +19,7 @@ class StepsList extends Component {
                   step={step}
                   stepIndex={startIndex + index}
                   errorPath={`${errorPath}[${errorIndex}]`}
-                  onClick={stepId => onClick(stepId)}
+                  onClick={(stepId) => onClick(stepId)}
                   readOnly={readOnly}
                   quotaCompletedSteps={quotaCompletedSteps}
                 />
@@ -40,7 +41,7 @@ StepsList.propTypes = {
   readOnly: PropTypes.bool,
   quotaCompletedSteps: PropTypes.bool,
   startIndex: PropTypes.number,
-  increaseErrorIndex: PropTypes.bool
+  increaseErrorIndex: PropTypes.bool,
 }
 
 export default StepsList

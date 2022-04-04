@@ -1,8 +1,8 @@
 // @flow
 export function getStepPrompt(step: Step, language: string): Prompt {
   let prompt = null
-  if (step.type !== 'flag' && step.type !== 'section') {
-    if (step.type === 'language-selection') {
+  if (step.type !== "flag" && step.type !== "section") {
+    if (step.type === "language-selection") {
       prompt = step.prompt
     } else {
       prompt = step.prompt[language]
@@ -15,19 +15,19 @@ export function setStepPrompt<T: Step>(step: T, language: string, func: (prompt:
   let prompt = getStepPrompt(step, language) || newStepPrompt()
   prompt = func(prompt)
   let newStep
-  if (step.type === 'language-selection') {
+  if (step.type === "language-selection") {
     newStep = {
       ...step,
-      prompt
+      prompt,
     }
   } else {
-    if (step.type !== 'flag' && step.type !== 'section') {
+    if (step.type !== "flag" && step.type !== "section") {
       newStep = {
         ...step,
         prompt: {
           ...step.prompt,
-          [language]: prompt
-        }
+          [language]: prompt,
+        },
       }
     } else {
       newStep = step
@@ -37,60 +37,65 @@ export function setStepPrompt<T: Step>(step: T, language: string, func: (prompt:
 }
 
 export function getStepPromptSms(step: Step, language: string): string {
-  return ((getStepPrompt(step, language) || {}).sms || '').trim()
+  return ((getStepPrompt(step, language) || {}).sms || "").trim()
 }
 
 export function getStepPromptMobileWeb(step: Step, language: string): string {
-  return ((getStepPrompt(step, language) || {}).mobileweb || '').trim()
+  return ((getStepPrompt(step, language) || {}).mobileweb || "").trim()
 }
 
 export function getStepPromptIvr(step: Step, language: string): AudioPrompt {
-  return (getStepPrompt(step, language) || {}).ivr || {audioSource: 'tts', text: ''}
+  return (
+    (getStepPrompt(step, language) || {}).ivr || {
+      audioSource: "tts",
+      text: "",
+    }
+  )
 }
 
 export function getStepPromptIvrText(step: Step, language: string): string {
-  return (getStepPromptIvr(step, language).text || '').trim()
+  return (getStepPromptIvr(step, language).text || "").trim()
 }
 
 export function getPromptSms(prompt: ?LocalizedPrompt, language: string): string {
-  return (((prompt || {})[language] || {}).sms || '').trim()
+  return (((prompt || {})[language] || {}).sms || "").trim()
 }
 
 export function getPromptMobileWeb(prompt: ?LocalizedPrompt, language: string): string {
-  return (((prompt || {})[language] || {}).mobileweb || '').trim()
+  return (((prompt || {})[language] || {}).mobileweb || "").trim()
 }
 
 export function getPromptIvr(prompt: ?LocalizedPrompt, language: string): AudioPrompt {
-  return ((prompt || {})[language] || {}).ivr || {audioSource: 'tts', text: ''}
+  return ((prompt || {})[language] || {}).ivr || { audioSource: "tts", text: "" }
 }
 
 export function getPromptIvrText(prompt: ?LocalizedPrompt, language: string): string {
-  return (getPromptIvr(prompt, language).text || '').trim()
+  return (getPromptIvr(prompt, language).text || "").trim()
 }
 
 export function getChoiceResponseSmsJoined(choice: Choice, language: string): string {
-  return ((choice.responses.sms || {})[language] || []).join(', ')
+  return ((choice.responses.sms || {})[language] || []).join(", ")
 }
 
 export function getChoiceResponseIvrJoined(choice: Choice): string {
-  return (choice.responses.ivr || []).join(', ')
+  return (choice.responses.ivr || []).join(", ")
 }
 
 export function getChoiceResponseMobileWebJoined(choice: Choice, language: string): string {
-  return (choice.responses.mobileweb || {})[language] || ''
+  return (choice.responses.mobileweb || {})[language] || ""
 }
 
 export const newStepPrompt = () => {
   return {
-    sms: '',
+    sms: "",
     ivr: newIvrPrompt(),
-    mobileweb: ''
+    mobileweb: "",
   }
 }
 
 export const newIvrPrompt = () => ({
-  text: '',
-  audioSource: 'tts'
+  text: "",
+  audioSource: "tts",
 })
 
 export const newRefusal = () => ({
@@ -98,10 +103,10 @@ export const newRefusal = () => ({
   responses: {
     ivr: [],
     sms: {
-      'en': []
-    }
+      en: [],
+    },
   },
-  skipLogic: null
+  skipLogic: null,
 })
 
 export const splitSmsText = (string: string): string[] => {
@@ -116,22 +121,22 @@ export const containsSeparator = (text: string): boolean => {
   return text.includes(smsSplitSeparator)
 }
 
-export const smsSplitSeparator = '\u001E'
+export const smsSplitSeparator = "\u001E"
 
 export const icon = (stepType: string): string => {
   switch (stepType) {
-    case 'language-selection':
-      return 'language'
-    case 'multiple-choice':
-      return 'list'
-    case 'numeric':
-      return 'dialpad'
-    case 'explanation':
-      return 'chat_bubble_outline'
-    case 'flag':
-      return 'flag'
-    case 'section':
-      return 'view_stream'
+    case "language-selection":
+      return "language"
+    case "multiple-choice":
+      return "list"
+    case "numeric":
+      return "dialpad"
+    case "explanation":
+      return "chat_bubble_outline"
+    case "flag":
+      return "flag"
+    case "section":
+      return "view_stream"
     default:
       throw new Error(`unknown step type: ${stepType}`)
   }

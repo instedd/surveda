@@ -1,15 +1,15 @@
 // @flow
-import React, { Component } from 'react'
-import { Button } from 'react-materialize'
-import { Tooltip } from './Tooltip'
+import React, { Component } from "react"
+import { Button } from "react-materialize"
+import { Tooltip } from "./Tooltip"
 
 type BaseActionProps = {
   icon: string,
-  text: string
+  text: string,
 }
 
 type ActionProps = BaseActionProps & {
-  onClick: Function
+  onClick: Function,
 }
 
 export class Action extends Component<ActionProps> {
@@ -19,10 +19,10 @@ export class Action extends Component<ActionProps> {
       <li>
         <Button
           onClick={() => onClick()}
-          className='btn-floating waves-effect waves-light right mbottom white black-text'
+          className="btn-floating waves-effect waves-light right mbottom white black-text"
         >
-          <Tooltip text={text} position='left'>
-            <i className='material-icons black-text'>{icon}</i>
+          <Tooltip text={text} position="left">
+            <i className="material-icons black-text">{icon}</i>
           </Tooltip>
         </Button>
       </li>
@@ -33,22 +33,22 @@ export class Action extends Component<ActionProps> {
 type MainActionProps = BaseActionProps & {
   onClick?: Function,
   children?: any, // Array<Action>
-  className?: String
+  className?: String,
 }
 
 export class MainAction extends Component<MainActionProps> {
   render = () => {
     const { icon, text, onClick, children, className } = this.props
     return (
-      <div className='fixed-action-btn click-to-toggle'>
+      <div className="fixed-action-btn click-to-toggle">
         <a
-          className='btn-floating btn-large waves-effect waves-light green right mtop direction-bottom'
+          className="btn-floating btn-large waves-effect waves-light green right mtop direction-bottom"
           onClick={() => {
             if (onClick) onClick()
           }}
         >
-          <Tooltip text={text} position='left'>
-            <i className='material-icons'>{icon}</i>
+          <Tooltip text={text} position="left">
+            <i className="material-icons">{icon}</i>
           </Tooltip>
         </a>
         {children ? <ul className={className}>{children}</ul> : null}

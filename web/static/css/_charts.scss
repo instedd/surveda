@@ -1,5 +1,5 @@
-@import url('https://fonts.googleapis.com/css?family=Roboto');
-@import url('https://fonts.googleapis.com/icon?family=Material+Icons');
+@import url("https://fonts.googleapis.com/css?family=Roboto");
+@import url("https://fonts.googleapis.com/icon?family=Material+Icons");
 
 /*Donut*/
 .donut .background {
@@ -8,7 +8,7 @@
 
 /*Forecasts*/
 .forecasts {
-  font-family: 'Roboto', sans-serif;
+  font-family: "Roboto", sans-serif;
   font-size: 12px;
   text-anchor: middle;
   margin: 0 auto;
@@ -16,7 +16,7 @@
 }
 
 .forecasts .icon {
-  font-family: 'Material Icons';
+  font-family: "Material Icons";
   font-size: 24px;
   baseline-shift: -8px;
   fill: #999999;
@@ -68,14 +68,14 @@
 
 /*QueueSize*/
 .queueSize {
-  font-family: 'Roboto', sans-serif;
+  font-family: "Roboto", sans-serif;
   font-size: 12px;
   text-anchor: middle;
   shape-rendering: crispEdges;
 }
 
 .queueSize .icon {
-  font-family: 'Material Icons';
+  font-family: "Material Icons";
   font-size: 24px;
   baseline-shift: -6px;
   fill: #f44336;
@@ -118,12 +118,12 @@
 .queueSize .dottedLine {
   stroke: #ccc;
   fill: none;
-  stroke-dasharray:1 1
+  stroke-dasharray: 1 1;
 }
 
 /*References*/
 .references {
-  font-family: 'Roboto', sans-serif;
+  font-family: "Roboto", sans-serif;
   font-size: 10px;
   margin: 0;
 }
@@ -150,7 +150,7 @@
 
 /*RetriesHistogram*/
 .retriesHistogram {
-  font-family: 'Roboto', sans-serif;
+  font-family: "Roboto", sans-serif;
   font-size: 12px;
   text-anchor: middle;
   margin: 0 auto;
@@ -158,7 +158,7 @@
 }
 
 .retriesHistogram .icon {
-  font-family: 'Material Icons';
+  font-family: "Material Icons";
   font-size: 24px;
   baseline-shift: -8px;
   fill: #999999;
@@ -204,9 +204,9 @@
 
 .retriesHistogram .out {
   pointer-events: none;
-  fill-opacity: .9;
+  fill-opacity: 0.9;
   fill: #ddd;
-  opacity: .9;
+  opacity: 0.9;
   background: #ddd;
 }
 
@@ -252,7 +252,7 @@
 .retriesHistogram .dottedLine {
   stroke: #ccc;
   fill: none;
-  stroke-dasharray:1 1
+  stroke-dasharray: 1 1;
 }
 
 .retriesHistogram .dottedLine.trying {
@@ -265,7 +265,7 @@
 
 /*Stats*/
 .stats {
-  font-family: 'Roboto', sans-serif;
+  font-family: "Roboto", sans-serif;
   font-size: 48px;
   text-align: center;
   display: grid;
@@ -281,7 +281,7 @@
 
 /*SuccessRate*/
 .successRate {
-  font-family: 'Roboto', sans-serif;
+  font-family: "Roboto", sans-serif;
   font-size: 12px;
   text-anchor: middle;
 }
@@ -309,7 +309,7 @@
 .successRate .dottedLine {
   stroke: #ccc;
   fill: none;
-  stroke-dasharray:1 1
+  stroke-dasharray: 1 1;
 }
 
 .successRate .initial {
@@ -329,7 +329,7 @@
 }
 
 .successRate .icon {
-  font-family: 'Material Icons';
+  font-family: "Material Icons";
   font-size: 24px;
   baseline-shift: -6px;
   fill: #999;
@@ -344,8 +344,8 @@
 }
 
 .tooltip {
-  background-color: rgba(0,0,0,0.85) !important;
-  font-family: 'Roboto', sans-serif !important;
+  background-color: rgba(0, 0, 0, 0.85) !important;
+  font-family: "Roboto", sans-serif !important;
   font-size: 11px !important;
   height: 12px !important;
   padding: 4px 8px !important;

@@ -2,7 +2,8 @@
   position: relative;
   background-color: #fff;
   border-radius: 3px !important;
-  box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.14), 0 1px 5px 0 rgba(0, 0, 0, 0.12), 0 3px 1px -2px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.14), 0 1px 5px 0 rgba(0, 0, 0, 0.12),
+    0 3px 1px -2px rgba(0, 0, 0, 0.2);
 }
 
 .panel-survey-card-1 {
@@ -17,11 +18,11 @@
 
 .error {
   color: $input-error-color;
-  font-size: 0.8rem
+  font-size: 0.8rem;
 }
 
 .folder-input {
-  margin: 0 0 0.5rem 0 !important
+  margin: 0 0 0.5rem 0 !important;
 }
 
 .transparent-button {
@@ -59,14 +60,14 @@
 }
 
 .error-toast {
-  color: $input-error-color
+  color: $input-error-color;
 }
 
 // --------- NCD classes ---------------
 
 .clearfix {
   &:after {
-    content: '';
+    content: "";
     display: block;
     height: 0;
     clear: both;
@@ -78,7 +79,7 @@
 // ------- Surveys -------------------------------------------------------------
 
 .respondent-chart {
-  margin: .5rem 0 2rem;
+  margin: 0.5rem 0 2rem;
 }
 
 .disposition-flow-chart-link {
@@ -127,13 +128,12 @@
   }
 }
 
-
-.survey-modes { // modes for completed surveys
+.survey-modes {
+  // modes for completed surveys
   .type {
     font-size: 12px;
     color: gray;
   }
-
 }
 
 .timezone-selection {
@@ -151,7 +151,6 @@
 
 .mode {
   margin-top: 15px;
-
 }
 
 .mode-label.name {
@@ -163,7 +162,7 @@
   display: inline-block;
   vertical-align: text-top;
   margin-right: 12px;
-  &:last-child{
+  &:last-child {
     margin-left: -6px;
   }
 }
@@ -174,7 +173,8 @@
   margin-top: 1rem;
 }
 
-.comparisons { // class for last step on surveys when comparison checked
+.comparisons {
+  // class for last step on surveys when comparison checked
   p.grey-text {
     padding-right: 20px;
     margin: 0;
@@ -192,9 +192,9 @@
       top: 0;
       left: 0;
     }
-    input[type='text'] {
+    input[type="text"] {
       height: 2rem;
-      border-bottom-color: color('grey', 'lighten-2');
+      border-bottom-color: color("grey", "lighten-2");
       position: absolute;
       width: 40px;
       margin: 8px 0;
@@ -256,59 +256,159 @@
   --single-reference-stroke-color: #4faf55;
 }
 
-div.card-table td.referenceColor0 { color: var(--reference-color0) !important; }
-div.card-table td.referenceColor1 { color: var(--reference-color1) !important; }
-div.card-table td.referenceColor2 { color: var(--reference-color2) !important; }
-div.card-table td.referenceColor3 { color: var(--reference-color3) !important; }
-div.card-table td.referenceColor4 { color: var(--reference-color4) !important; }
-div.card-table td.referenceColor5 { color: var(--reference-color5) !important; }
-div.card-table td.referenceColor6 { color: var(--reference-color6) !important; }
-div.card-table td.referenceColor7 { color: var(--reference-color7) !important; }
-div.card-table td.referenceColor8 { color: var(--reference-color8) !important; }
-div.card-table td.referenceColor9 { color: var(--reference-color9) !important; }
-div.card-table td.referenceColor10 { color: var(--reference-color10) !important; }
-div.card-table td.referenceColor11 { color: var(--reference-color11) !important; }
-div.card-table td.referenceColor12 { color: var(--reference-color12) !important; }
-div.card-table td.referenceColor13 { color: var(--reference-color13) !important; }
-div.card-table td.referenceColor14 { color: var(--reference-color14) !important; }
-div.card-table td.referenceColor15 { color: var(--reference-color15) !important; }
-div.card-table td.referenceColorUnassigned { color: var(--reference-color-unassigned) !important; }
+div.card-table td.referenceColor0 {
+  color: var(--reference-color0) !important;
+}
+div.card-table td.referenceColor1 {
+  color: var(--reference-color1) !important;
+}
+div.card-table td.referenceColor2 {
+  color: var(--reference-color2) !important;
+}
+div.card-table td.referenceColor3 {
+  color: var(--reference-color3) !important;
+}
+div.card-table td.referenceColor4 {
+  color: var(--reference-color4) !important;
+}
+div.card-table td.referenceColor5 {
+  color: var(--reference-color5) !important;
+}
+div.card-table td.referenceColor6 {
+  color: var(--reference-color6) !important;
+}
+div.card-table td.referenceColor7 {
+  color: var(--reference-color7) !important;
+}
+div.card-table td.referenceColor8 {
+  color: var(--reference-color8) !important;
+}
+div.card-table td.referenceColor9 {
+  color: var(--reference-color9) !important;
+}
+div.card-table td.referenceColor10 {
+  color: var(--reference-color10) !important;
+}
+div.card-table td.referenceColor11 {
+  color: var(--reference-color11) !important;
+}
+div.card-table td.referenceColor12 {
+  color: var(--reference-color12) !important;
+}
+div.card-table td.referenceColor13 {
+  color: var(--reference-color13) !important;
+}
+div.card-table td.referenceColor14 {
+  color: var(--reference-color14) !important;
+}
+div.card-table td.referenceColor15 {
+  color: var(--reference-color15) !important;
+}
+div.card-table td.referenceColorUnassigned {
+  color: var(--reference-color-unassigned) !important;
+}
 
-.referenceBackgroundColor0 { background-color: var(--reference-color0); }
-.referenceBackgroundColor1 { background-color: var(--reference-color1); }
-.referenceBackgroundColor2 { background-color: var(--reference-color2); }
-.referenceBackgroundColor3 { background-color: var(--reference-color3); }
-.referenceBackgroundColor4 { background-color: var(--reference-color4); }
-.referenceBackgroundColor5 { background-color: var(--reference-color5); }
-.referenceBackgroundColor6 { background-color: var(--reference-color6); }
-.referenceBackgroundColor7 { background-color: var(--reference-color7); }
-.referenceBackgroundColor8 { background-color: var(--reference-color8); }
-.referenceBackgroundColor9 { background-color: var(--reference-color9); }
-.referenceBackgroundColor10 { background-color: var(--reference-color10); }
-.referenceBackgroundColor11 { background-color: var(--reference-color11); }
-.referenceBackgroundColor12 { background-color: var(--reference-color12); }
-.referenceBackgroundColor13 { background-color: var(--reference-color13); }
-.referenceBackgroundColor14 { background-color: var(--reference-color14); }
-.referenceBackgroundColor15 { background-color: var(--reference-color15); }
+.referenceBackgroundColor0 {
+  background-color: var(--reference-color0);
+}
+.referenceBackgroundColor1 {
+  background-color: var(--reference-color1);
+}
+.referenceBackgroundColor2 {
+  background-color: var(--reference-color2);
+}
+.referenceBackgroundColor3 {
+  background-color: var(--reference-color3);
+}
+.referenceBackgroundColor4 {
+  background-color: var(--reference-color4);
+}
+.referenceBackgroundColor5 {
+  background-color: var(--reference-color5);
+}
+.referenceBackgroundColor6 {
+  background-color: var(--reference-color6);
+}
+.referenceBackgroundColor7 {
+  background-color: var(--reference-color7);
+}
+.referenceBackgroundColor8 {
+  background-color: var(--reference-color8);
+}
+.referenceBackgroundColor9 {
+  background-color: var(--reference-color9);
+}
+.referenceBackgroundColor10 {
+  background-color: var(--reference-color10);
+}
+.referenceBackgroundColor11 {
+  background-color: var(--reference-color11);
+}
+.referenceBackgroundColor12 {
+  background-color: var(--reference-color12);
+}
+.referenceBackgroundColor13 {
+  background-color: var(--reference-color13);
+}
+.referenceBackgroundColor14 {
+  background-color: var(--reference-color14);
+}
+.referenceBackgroundColor15 {
+  background-color: var(--reference-color15);
+}
 
-path.respondentsData.referenceStrokeColor0 { stroke: var(--reference-color0); }
-path.respondentsData.referenceStrokeColor1 { stroke: var(--reference-color1); }
-path.respondentsData.referenceStrokeColor2 { stroke: var(--reference-color2); }
-path.respondentsData.referenceStrokeColor3 { stroke: var(--reference-color3); }
-path.respondentsData.referenceStrokeColor4 { stroke: var(--reference-color4); }
-path.respondentsData.referenceStrokeColor5 { stroke: var(--reference-color5); }
-path.respondentsData.referenceStrokeColor6 { stroke: var(--reference-color6); }
-path.respondentsData.referenceStrokeColor7 { stroke: var(--reference-color7); }
-path.respondentsData.referenceStrokeColor8 { stroke: var(--reference-color8); }
-path.respondentsData.referenceStrokeColor9 { stroke: var(--reference-color9); }
-path.respondentsData.referenceStrokeColor10 { stroke: var(--reference-color10); }
-path.respondentsData.referenceStrokeColor11 { stroke: var(--reference-color11); }
-path.respondentsData.referenceStrokeColor12 { stroke: var(--reference-color12); }
-path.respondentsData.referenceStrokeColor13 { stroke: var(--reference-color13); }
-path.respondentsData.referenceStrokeColor14 { stroke: var(--reference-color14); }
-path.respondentsData.referenceStrokeColor15 { stroke: var(--reference-color15); }
+path.respondentsData.referenceStrokeColor0 {
+  stroke: var(--reference-color0);
+}
+path.respondentsData.referenceStrokeColor1 {
+  stroke: var(--reference-color1);
+}
+path.respondentsData.referenceStrokeColor2 {
+  stroke: var(--reference-color2);
+}
+path.respondentsData.referenceStrokeColor3 {
+  stroke: var(--reference-color3);
+}
+path.respondentsData.referenceStrokeColor4 {
+  stroke: var(--reference-color4);
+}
+path.respondentsData.referenceStrokeColor5 {
+  stroke: var(--reference-color5);
+}
+path.respondentsData.referenceStrokeColor6 {
+  stroke: var(--reference-color6);
+}
+path.respondentsData.referenceStrokeColor7 {
+  stroke: var(--reference-color7);
+}
+path.respondentsData.referenceStrokeColor8 {
+  stroke: var(--reference-color8);
+}
+path.respondentsData.referenceStrokeColor9 {
+  stroke: var(--reference-color9);
+}
+path.respondentsData.referenceStrokeColor10 {
+  stroke: var(--reference-color10);
+}
+path.respondentsData.referenceStrokeColor11 {
+  stroke: var(--reference-color11);
+}
+path.respondentsData.referenceStrokeColor12 {
+  stroke: var(--reference-color12);
+}
+path.respondentsData.referenceStrokeColor13 {
+  stroke: var(--reference-color13);
+}
+path.respondentsData.referenceStrokeColor14 {
+  stroke: var(--reference-color14);
+}
+path.respondentsData.referenceStrokeColor15 {
+  stroke: var(--reference-color15);
+}
 
-.singleReferenceStrokeColor { stroke: var(--single-reference-stroke-color); }
+.singleReferenceStrokeColor {
+  stroke: var(--single-reference-stroke-color);
+}
 
 // ------- Folder Card index page ----
 .folder-card {
@@ -335,7 +435,6 @@ path.respondentsData.referenceStrokeColor15 { stroke: var(--reference-color15); 
       display: flex;
       width: 100%;
     }
-
   }
 
   .folder-card-error {
@@ -407,7 +506,7 @@ path.respondentsData.referenceStrokeColor15 { stroke: var(--reference-color15); 
       padding-right: 30px;
     }
     .card-status {
-      border-top: 1px solid color("grey","lighten-3");
+      border-top: 1px solid color("grey", "lighten-3");
       padding-top: 58px;
       position: relative;
       padding-bottom: 20px;
@@ -427,7 +526,8 @@ path.respondentsData.referenceStrokeColor15 { stroke: var(--reference-color15); 
   }
 }
 
-i.survey-status { // icon for survey status on index
+i.survey-status {
+  // icon for survey status on index
   vertical-align: top;
   margin-right: 10px;
 }
@@ -466,7 +566,7 @@ i.survey-status { // icon for survey status on index
     @extend .grey, .lighten-4;
     position: relative;
     p {
-      @extend .grey-text
+      @extend .grey-text;
     }
     .progress {
       @extend .grey, .lighten-2;
@@ -477,7 +577,7 @@ i.survey-status { // icon for survey status on index
       width: 100%;
       height: 6px;
       .determinate {
-       @extend .green, .accent-4;
+        @extend .green, .accent-4;
       }
     }
   }
@@ -508,66 +608,64 @@ i.survey-status { // icon for survey status on index
       @extend .grey.lighten-4;
     }
     &.completed {
-      a, a.active {
+      a,
+      a.active {
         @extend .green-text;
       }
     }
   }
 }
 
-.sidebar.pinned { // width fix when sidebar is pinned on top
+.sidebar.pinned {
+  // width fix when sidebar is pinned on top
   width: 24.9vw;
   .wizard {
     margin-top: 0px;
   }
 }
 
+// ------- Respondent Chart SVG classes for completed Surveys -----------
 
+.line.respondentsData {
+  fill: none;
+  stroke: #4caf50;
+  stroke-width: 2px;
+}
 
+.line.backgroundData {
+  fill: none;
+  stroke: #999;
+  stroke-width: 0.75px;
+}
 
-  // ------- Respondent Chart SVG classes for completed Surveys -----------
+.axis line,
+.axis path {
+  fill: none;
+  stroke: #000;
+  stroke-width: 1;
+  opacity: 0.25;
+}
 
-    .line.respondentsData {
-      fill: none;
-      stroke: #4caf50;
-      stroke-width: 2.0px;
-    }
+.axis > path {
+  stroke: none;
+}
 
-    .line.backgroundData {
-      fill: none;
-      stroke: #999;
-      stroke-width: 0.75px;
-    }
+.y.axis g:first-child text {
+  fill: none;
+}
 
-    .axis line, .axis path{
-      fill: none;
-      stroke: #000;
-      stroke-width: 1.0;
-      opacity: 0.25;
-    }
+.x.axis .tick line {
+  stroke: none;
+}
 
-    .axis > path{
-      stroke: none;
-    }
+.axis text {
+  text-transform: uppercase;
+  dominant-baseline: text-after-edge;
+  font-size: 12px;
+  opacity: 0.25;
+}
 
-    .y.axis g:first-child text{
-      fill: none;
-    }
-
-    .x.axis .tick line{
-      stroke: none;
-    }
-
-    .axis text {
-      text-transform: uppercase;
-      dominant-baseline:text-after-edge;
-      font-size: 12px;
-      opacity: 0.25;
-    }
-
-  // ------- / Respondent Chart SVG classes for completed Surveys -----------
-
-
+// ------- / Respondent Chart SVG classes for completed Surveys -----------
 
 // -----------------------------------------------------------------------------
 // ------- Questionnaires ------------------------------------------------------
@@ -615,7 +713,7 @@ i.survey-status { // icon for survey status on index
       &.tooltip-error {
         position: relative;
         &:after {
-          content: '';
+          content: "";
           @extend .back-error;
           display: block;
           border-radius: 50%;
@@ -653,7 +751,7 @@ i.survey-status { // icon for survey status on index
     }
 
     ul {
-      box-shadow: 0 2px 10px 2px rgba(0,0,0,.4);
+      box-shadow: 0 2px 10px 2px rgba(0, 0, 0, 0.4);
       width: auto !important;
       margin-left: -15px;
       margin-top: -10px;
@@ -687,7 +785,7 @@ i.survey-status { // icon for survey status on index
     margin-top: 1rem;
     margin-bottom: 1.5rem;
   }
-  & li:last-of-type{
+  & li:last-of-type {
     padding-bottom: 2rem;
   }
 }
@@ -696,7 +794,7 @@ i.survey-status { // icon for survey status on index
   .tooltip-error {
     position: relative;
     &:after {
-      content: '';
+      content: "";
       @extend .back-error;
       display: block;
       border-radius: 50%;
@@ -750,7 +848,7 @@ i.survey-status { // icon for survey status on index
     }
   }
   &.underlined {
-    border-bottom: 1px solid color('grey','lighten-2');
+    border-bottom: 1px solid color("grey", "lighten-2");
     display: inline-block;
     padding-bottom: 5px;
     span {
@@ -777,22 +875,11 @@ label + .tooltipped {
   margin-left: 6px;
 }
 
-  // ------- Questionnaires language selector ----------
+// ------- Questionnaires language selector ----------
 
-  .language-selection {
-    position: relative;
-    .language-dropdown {
-      position: absolute;
-      width: 100%;
-      max-height: 280px;
-      li {
-        line-height: 3;
-        padding: 0 1rem;
-      }
-    }
-  }
-
-  .var-dropdown {
+.language-selection {
+  position: relative;
+  .language-dropdown {
     position: absolute;
     width: 100%;
     max-height: 280px;
@@ -801,89 +888,98 @@ label + .tooltipped {
       padding: 0 1rem;
     }
   }
+}
 
-  .languages {
-    .tooltip-error {
-      position: relative;
-      &:after {
-        content: '';
-        @extend .back-error;
-        display: block;
-        border-radius: 50%;
-        width: 12px;
-        height: 12px;
-        position: absolute;
-        top: 1.4rem;
-        right: 2.3rem;
-      }
+.var-dropdown {
+  position: absolute;
+  width: 100%;
+  max-height: 280px;
+  li {
+    line-height: 3;
+    padding: 0 1rem;
+  }
+}
+
+.languages {
+  .tooltip-error {
+    position: relative;
+    &:after {
+      content: "";
+      @extend .back-error;
+      display: block;
+      border-radius: 50%;
+      width: 12px;
+      height: 12px;
+      position: absolute;
+      top: 1.4rem;
+      right: 2.3rem;
     }
   }
+}
 
-  .languages-list {
-    li {
-      @extend .grey-text;
-      position: relative;
-      padding-left: 30px;
-      height: 54px;
-      cursor: pointer;
-      span {
-        line-height: 54px;
-      }
+.languages-list {
+  li {
+    @extend .grey-text;
+    position: relative;
+    padding-left: 30px;
+    height: 54px;
+    cursor: pointer;
+    span {
+      line-height: 54px;
+    }
 
+    .button {
+      opacity: 0;
+    }
+    &:hover {
       .button {
-        opacity: 0;
-      }
-      &:hover {
-        .button {
-          opacity: 1;
-          &:hover {
-            @extend .black-text;
-          }
-        }
-      }
-
-      .active-mark {
-        @extend .black-text;
-        position: absolute;
-        left: 10px;
-        top: 6px;
-      }
-      .remove-language {
-        @extend .button;
-        position: absolute;
-        left: 10px;
-        top: 6px;
-      }
-      .set-default-language {
-        @extend .button;
-        position: absolute;
-        right: 0px;
-        top: 8px;
-      }
-      .language-name {
-        @extend .truncate;
-        padding-left: 15px;
-        width: 70%;
-      }
-      &.active-language {
-        .language-name {
+        opacity: 1;
+        &:hover {
           @extend .black-text;
         }
       }
-      &:hover {
-        @extend .grey, .lighten-2;
+    }
+
+    .active-mark {
+      @extend .black-text;
+      position: absolute;
+      left: 10px;
+      top: 6px;
+    }
+    .remove-language {
+      @extend .button;
+      position: absolute;
+      left: 10px;
+      top: 6px;
+    }
+    .set-default-language {
+      @extend .button;
+      position: absolute;
+      right: 0px;
+      top: 8px;
+    }
+    .language-name {
+      @extend .truncate;
+      padding-left: 15px;
+      width: 70%;
+    }
+    &.active-language {
+      .language-name {
+        @extend .black-text;
       }
     }
+    &:hover {
+      @extend .grey, .lighten-2;
+    }
   }
+}
 
-  // ------- / Questionnaires language selector ----------
+// ------- / Questionnaires language selector ----------
 
-
-
-  // ------- Questionnaires web settings ----------
+// ------- Questionnaires web settings ----------
 .style.row {
-  border-top: 1px solid color('grey', 'lighten-1');
-  border-bottom: 1px solid color('grey', 'lighten-1');
+  border-top: 1px solid color("grey", "lighten-1");
+  border-bottom: 1px solid color("grey", "lighten-1");
   margin-left: -18px;
   margin-right: -18px;
   padding-left: 18px;
@@ -893,104 +989,99 @@ label + .tooltipped {
   }
 }
 
-  .circle {
+.circle {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  + div {
     display: inline-block;
-    width: 20px;
-    height: 20px;
-    border-radius: 50%;
-    + div {
-      display: inline-block;
-      margin-left: 10px;
+    margin-left: 10px;
+  }
+}
+
+// ------- / Questionnaires web settings ----------
+
+ul.disposition {
+  .row {
+    margin-bottom: 0;
+    border-bottom: 1px dashed #cdcdcd;
+
+    p {
+      @extend .grey-text;
+      font-size: 0.8rem;
+      line-height: 0.6rem;
+      font-style: italic;
     }
   }
+  li:last-child .row {
+    border-bottom: none;
+  }
 
-  // ------- / Questionnaires web settings ----------
-
-  ul.disposition {
-
-    .row {
-      margin-bottom: 0;
-      border-bottom: 1px dashed #cdcdcd;
-
-      p {
-        @extend .grey-text;
-        font-size: .8rem;
-        line-height: .6rem;
-        font-style: italic;
+  ul {
+    position: relative;
+    padding-bottom: 2rem;
+    &:before {
+      content: "";
+      @extend .grey;
+      width: 5px;
+      position: absolute;
+      bottom: -5px;
+      top: 3px;
+      left: 9px;
+    }
+    li {
+      padding-top: 1rem;
+      &:first-child {
+        padding-top: 0;
       }
     }
-    li:last-child .row {
-      border-bottom: none;
-    }
-
     ul {
-      position: relative;
-      padding-bottom: 2rem;
-      &:before {
-        content: '';
-        @extend .grey;
-        width: 5px;
-        position: absolute;
-        bottom: -5px;
-        top: 3px;
-        left: 9px;
-      }
+      margin-left: 3rem;
+      padding-top: 1rem;
+      padding-bottom: 0;
       li {
-        padding-top: 1rem;
-        &:first-child {
-          padding-top: 0;
-        }
-      }
-      ul {
-        margin-left: 3rem;
-        padding-top: 1rem;
         padding-bottom: 0;
-        li {
-          padding-bottom: 0;
-          padding-top: 0;
-          padding-left: 2rem;
-          position: relative;
-          &:before {
-            content: '';
-            @extend .grey;
-            height: 5px;
-            width: 1.4rem;
-            position: absolute;
-            top: .74rem;
-            left: .9rem;
-          }
-        }
+        padding-top: 0;
+        padding-left: 2rem;
+        position: relative;
         &:before {
-          top: -.1rem;
-          bottom: .6rem;
-          @media #{$medium-and-down} {
-            bottom: .65rem;
-          }
+          content: "";
+          @extend .grey;
+          height: 5px;
+          width: 1.4rem;
+          position: absolute;
+          top: 0.74rem;
+          left: 0.9rem;
         }
       }
-      label:before {
-        @extend .grey, .lighten-3;
-      }
-      &.last {
-        padding-bottom: 0;
-        &:before {
-          bottom: 5px;
+      &:before {
+        top: -0.1rem;
+        bottom: 0.6rem;
+        @media #{$medium-and-down} {
+          bottom: 0.65rem;
         }
       }
     }
-
+    label:before {
+      @extend .grey, .lighten-3;
+    }
+    &.last {
+      padding-bottom: 0;
+      &:before {
+        bottom: 5px;
+      }
+    }
   }
+}
 
+// ------- Questionnaires Disposition ----------
 
-  // ------- Questionnaires Disposition ----------
+// ------- /Questionnaires Disposition ----------
 
-
-
-  // ------- /Questionnaires Disposition ----------
-
-
-.collapsible { // class for collapsed questionnaires
-  @include transition(all ease-in-out .25s);
+.collapsible {
+  // class for collapsed questionnaires
+  @include transition(all ease-in-out 0.25s);
   margin-bottom: 0;
   li {
     border-bottom: 1px solid color("grey", "lighten-2");
@@ -1027,7 +1118,8 @@ label + .tooltipped {
       }
     }
   }
-  &.dark { // this class 'dark' is for quotas and error cards when collapsed
+  &.dark {
+    // this class 'dark' is for quotas and error cards when collapsed
     @extend .z-depth-0;
     border: none;
     li .card {
@@ -1050,7 +1142,7 @@ label + .tooltipped {
     font-size: 1.6rem;
     top: 1.8rem;
   }
-  input[type=text] {
+  input[type="text"] {
     font-size: 20px;
     border-bottom: none;
     width: 78%;
@@ -1062,10 +1154,12 @@ label + .tooltipped {
     @extend .grey-text, .lighten-2;
     margin-right: -10px;
   }
-  .dropdown-content li a, .dropdown-button {
+  .dropdown-content li a,
+  .dropdown-button {
     @extend .black-text;
   }
-  .row , input {
+  .row,
+  input {
     margin-bottom: 0;
   }
   a.page-title {
@@ -1085,8 +1179,9 @@ label + .tooltipped {
   }
 }
 
-
-.sms-attempts, .ivr-attempts, .mobileweb-attempts {
+.sms-attempts,
+.ivr-attempts,
+.mobileweb-attempts {
   li {
     display: inline-block;
     vertical-align: text-top;
@@ -1098,11 +1193,11 @@ label + .tooltipped {
       display: inline-block;
       padding: 0 15px 0 12px;
       vertical-align: bottom;
-      border-top: 1px solid color('grey', 'lighten-2');
+      border-top: 1px solid color("grey", "lighten-2");
       position: relative;
       &:after {
-        content: 'keyboard_arrow_right';
-        font-family: 'Material Icons';
+        content: "keyboard_arrow_right";
+        font-family: "Material Icons";
         font-weight: normal;
         font-style: normal;
         font-size: 11px;
@@ -1110,7 +1205,7 @@ label + .tooltipped {
         letter-spacing: normal;
         text-transform: none;
         text-rendering: optimizeLegibility;
-        font-feature-settings: 'liga';
+        font-feature-settings: "liga";
         position: absolute;
         top: -6px;
         right: -6px;
@@ -1119,7 +1214,7 @@ label + .tooltipped {
     }
     &:after {
       @extend .black-text;
-      font-family: 'Material Icons';
+      font-family: "Material Icons";
       font-weight: normal;
       font-style: normal;
       font-size: 24px;
@@ -1127,7 +1222,7 @@ label + .tooltipped {
       letter-spacing: normal;
       text-transform: none;
       text-rendering: optimizeLegibility;
-      font-feature-settings: 'liga';
+      font-feature-settings: "liga";
       margin-left: 10px;
     }
     &:first-child {
@@ -1144,7 +1239,7 @@ label + .tooltipped {
 .sms-attempts {
   li {
     &:after {
-      content: 'sms';
+      content: "sms";
     }
   }
 }
@@ -1152,7 +1247,7 @@ label + .tooltipped {
 .ivr-attempts {
   li {
     &:after {
-      content: 'phone';
+      content: "phone";
     }
   }
 }
@@ -1160,12 +1255,13 @@ label + .tooltipped {
 .mobileweb-attempts {
   li {
     &:after {
-      content: 'phone_android';
+      content: "phone_android";
     }
   }
 }
 
-.collection.dark { // this class 'dark' is for quotas and error cards
+.collection.dark {
+  // this class 'dark' is for quotas and error cards
   border: none;
   border-radius: 3px;
   .collection-item {
@@ -1180,8 +1276,8 @@ label + .tooltipped {
         line-height: 1.4;
       }
     }
-    input[type='text'] {
-      border-bottom-color: color('grey', 'darken-1')!important;
+    input[type="text"] {
+      border-bottom-color: color("grey", "darken-1") !important;
       box-shadow: none !important;
     }
   }
@@ -1191,7 +1287,7 @@ label + .tooltipped {
     }
   }
   .dropfile {
-    border-color: color('grey', 'base');
+    border-color: color("grey", "base");
   }
 }
 
@@ -1204,11 +1300,11 @@ label + .tooltipped {
   .col > div {
     position: relative;
     margin-left: 36px;
-    input[type='text'] {
+    input[type="text"] {
       max-width: 90px;
       margin-left: 250px;
       height: 2rem;
-      border-bottom-color: color('grey', 'lighten-2');
+      border-bottom-color: color("grey", "lighten-2");
     }
     label {
       @extend .truncate;
@@ -1241,7 +1337,6 @@ button.partial-relevant-button {
 // -----------------------------------------------------------------------------
 // ------- Questionnaire Mobile Web Prompt -------------------------------------
 
-
 .RichEditor-root {
   position: relative;
   margin-top: 30px;
@@ -1250,7 +1345,7 @@ button.partial-relevant-button {
     cursor: text;
     padding-bottom: 11px;
     &:focus {
-      transition: all .26s;
+      transition: all 0.26s;
       border-bottom-color: color("green", "darken-2");
       box-shadow: 0 1px 0 0 color("green", "darken-2");
     }
@@ -1259,20 +1354,20 @@ button.partial-relevant-button {
     @extend .grey-text;
     font-size: 1rem;
     position: absolute;
-    transition: all .26s;
+    transition: all 0.26s;
     &.focus {
       color: color("green", "darken-2") !important;
-      font-size: .8rem;
+      font-size: 0.8rem;
       transform: translate(0, -140%);
     }
     &.text {
-      font-size: .8rem;
+      font-size: 0.8rem;
       transform: translate(0, -140%);
     }
   }
   .error {
     color: $input-error-color;
-    font-size: 0.8rem
+    font-size: 0.8rem;
   }
 }
 
@@ -1294,7 +1389,6 @@ button.partial-relevant-button {
   }
 }
 
-
 // -----------------------------------------------------------------------------
 // ------- Collaborators -------------------------------------------------------
 
@@ -1302,7 +1396,7 @@ button.partial-relevant-button {
   @extend .grey-text;
   i {
     vertical-align: middle;
-    margin-right: .5rem;
+    margin-right: 0.5rem;
   }
   a {
     @extend .grey-text;
@@ -1323,7 +1417,7 @@ button.partial-relevant-button {
     font-size: 1.1rem;
     padding: 1.2rem 2rem;
     margin-top: 2rem;
-    border-top: 1px solid color('grey', 'lighten-2');
+    border-top: 1px solid color("grey", "lighten-2");
   }
 }
 .accept-invitation {
@@ -1356,7 +1450,6 @@ button.partial-relevant-button {
   }
 }
 
-
 // -----------------------------------------------------------------------------
 // ------- Helper classes  -----------------------------------------------------
 
@@ -1376,7 +1469,7 @@ button.partial-relevant-button {
   vertical-align: middle;
 }
 .icon-text {
-  margin-right: .5rem;
+  margin-right: 0.5rem;
 }
 .no-padd {
   padding: 0;
@@ -1395,12 +1488,12 @@ button.partial-relevant-button {
   margin: 0 auto;
 
   .icons {
-    border-top: 1px solid color('grey', 'lighten-2');
+    border-top: 1px solid color("grey", "lighten-2");
     padding-top: 3rem;
     margin-top: 3rem;
     i {
       font-size: 46px;
-      margin: 0 .9rem;
+      margin: 0 0.9rem;
     }
   }
   p {
@@ -1418,29 +1511,28 @@ button.partial-relevant-button {
 }
 
 .checkbox-error {
-  font-size: .8rem;
+  font-size: 0.8rem;
   position: absolute;
   margin-left: 2.3rem;
   margin-top: -1.3rem;
 }
 
+// ------- Error classes -----------
 
-  // ------- Error classes -----------
+.reg-error {
+  font-size: 0.85rem;
+  color: #ff5722;
+  position: absolute;
+  top: 45px;
+}
 
-  .reg-error {
-    font-size: .85rem;
-    color: #ff5722;
-    position: absolute;
-    top: 45px;
-  }
+.back-error {
+  background-color: #ff5722 !important;
+}
 
-  .back-error {
-    background-color: #ff5722 !important;
-  }
-
-  .text-error {
-    color: #ff5722 !important;
-  }
+.text-error {
+  color: #ff5722 !important;
+}
 .alert-left-icon {
   text-transform: uppercase;
   i {
@@ -1448,8 +1540,6 @@ button.partial-relevant-button {
     margin-right: 10px;
   }
 }
-
-
 
 // ----- Static empty pages ------
 
@@ -1462,11 +1552,11 @@ button.partial-relevant-button {
 // See: http://stackoverflow.com/a/41136470/4990850
 
 audio::-internal-media-controls-download-button {
-  display:none;
+  display: none;
 }
 
 audio::-webkit-media-controls-enclosure {
-  overflow:hidden;
+  overflow: hidden;
 }
 
 audio::-webkit-media-controls-panel {
@@ -1475,39 +1565,39 @@ audio::-webkit-media-controls-panel {
 
 body.bdfh {
   header {
-    background-color: #6648A2
+    background-color: #6648a2;
   }
   nav {
-    background-color: #6648A2
+    background-color: #6648a2;
   }
   #TopNav {
-    border-bottom-color: rgba(0,0,0,.25);
+    border-bottom-color: rgba(0, 0, 0, 0.25);
     ul {
       a {
-        color: rgba(255, 255, 255, .33);
+        color: rgba(255, 255, 255, 0.33);
       }
     }
   }
   .tabs {
     .tab {
       a {
-        color: rgba(255, 255, 255, .33);
+        color: rgba(255, 255, 255, 0.33);
       }
     }
     .indicator {
-      background-color: #FBA400;
+      background-color: #fba400;
     }
   }
   .logo {
     .logo-container {
-      background-image: url('../images/header_icon_bloomberg.svg');
+      background-image: url("../images/header_icon_bloomberg.svg");
     }
   }
 }
 
 .file-download-off-icon {
   opacity: 40%;
-  background-image: url('../images/file_download_off.svg');
+  background-image: url("../images/file_download_off.svg");
   height: 24px;
   width: 24px;
   margin-right: 12px;
@@ -1524,7 +1614,7 @@ body.bdfh {
 }
 
 #colourSchemeModal {
-  .modal-overlay{
+  .modal-overlay {
     z-index: 0;
   }
   .card-content {
@@ -1535,13 +1625,11 @@ body.bdfh {
       padding-top: 1rem;
       padding-bottom: 1rem;
     }
-
   }
 }
 
 // ----- Three dots option menu next to Tabs ------
 .options {
-
   height: 2.2rem;
   width: 1rem;
 
@@ -1554,7 +1642,7 @@ body.bdfh {
     }
   }
   ul {
-    box-shadow: 0 2px 10px 2px rgba(0,0,0,.4);
+    box-shadow: 0 2px 10px 2px rgba(0, 0, 0, 0.4);
     width: auto !important;
     margin-left: -15px;
     margin-top: -10px;
@@ -1624,15 +1712,15 @@ a.disabled {
 
     &.active:not(.section) {
       color: black;
-      background-color: #E0E0E0;
+      background-color: #e0e0e0;
     }
 
     &.done:not(.section) {
-      color: #3FA43E;
+      color: #3fa43e;
     }
 
     &.skipped:not(.section) {
-      color: #C2C2C2;
+      color: #c2c2c2;
     }
   }
 }
@@ -1664,7 +1752,7 @@ a.disabled {
 }
 
 .Cal__Header__root {
-  display:none;
+  display: none;
 }
 
 .row.mb0 {
@@ -1677,15 +1765,15 @@ a.disabled {
 }
 
 .multi-date-picker .Cal__Day__selection:before {
-  content: 'block';
-  font-family: 'Material Icons';
+  content: "block";
+  font-family: "Material Icons";
   font-weight: normal;
   font-style: normal;
   color: #ff551b;
   font-size: 62px;
   line-height: 52px;
   text-rendering: optimizeLegibility;
-  font-feature-settings: 'liga';
+  font-feature-settings: "liga";
   position: absolute;
   top: 0px;
   right: -5px;
@@ -1717,7 +1805,7 @@ a.disabled {
   .material-icons.check {
     @extend .green-text;
     font-size: 100px;
-    border: 6px solid color('grey', 'lighten-2');
+    border: 6px solid color("grey", "lighten-2");
     border-radius: 50%;
     padding: 30px;
   }
@@ -1735,7 +1823,7 @@ a.disabled {
 .channel-status {
   position: absolute;
   right: 0px;
-  background-color: #FF5722;
+  background-color: #ff5722;
   border-radius: 25px;
   line-height: 1;
   height: auto;
@@ -1745,13 +1833,13 @@ a.disabled {
 
 .repeat-survey {
   .top-separator {
-    border-bottom: 1px solid color('grey', 'lighten-1');
+    border-bottom: 1px solid color("grey", "lighten-1");
     margin-left: 0.75rem;
     margin-right: 0.75rem;
   }
 
   .hint {
-    color: color('grey', 'base');
+    color: color("grey", "base");
     line-height: 2.4rem;
   }
 }

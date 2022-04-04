@@ -1,4 +1,4 @@
-import queryString from 'query-string'
+import queryString from "query-string"
 
 class GuissoSession {
   constructor(config) {
@@ -13,7 +13,7 @@ class GuissoSession {
     if (this.popup) {
       this.popup.location = url
     } else {
-      this.popup = window.open(url, '_blank', 'chrome=yes,centerscreen=yes,width=600,height=400')
+      this.popup = window.open(url, "_blank", "chrome=yes,centerscreen=yes,width=600,height=400")
       window.the_guisso_popup = this.popup
     }
     return this.popup
@@ -28,13 +28,20 @@ class GuissoSession {
 
   authorize(responseType, provider = null, baseUrl = null) {
     return new Promise((resolve, reject) => {
-      const state = (provider && baseUrl ? `${provider}|${baseUrl}` : null)
-      const authorizeUrl = this.config.baseUrl + '/oauth2/authorize' +
-        '?client_id=' + this.config.clientId +
-        '&scope=' + encodeURIComponent('app=' + this.config.appId) +
-        '&state=' + state +
-        '&response_type=' + responseType +
-        '&redirect_uri=' + encodeURIComponent(window.location.origin + '/oauth_client/callback')
+      const state = provider && baseUrl ? `${provider}|${baseUrl}` : null
+      const authorizeUrl =
+        this.config.baseUrl +
+        "/oauth2/authorize" +
+        "?client_id=" +
+        this.config.clientId +
+        "&scope=" +
+        encodeURIComponent("app=" + this.config.appId) +
+        "&state=" +
+        state +
+        "&response_type=" +
+        responseType +
+        "&redirect_uri=" +
+        encodeURIComponent(window.location.origin + "/oauth_client/callback")
 
       const popup = this.showPopup(authorizeUrl)
       const watchdog = window.setInterval(() => {
@@ -42,9 +49,9 @@ class GuissoSession {
           reject()
         }
       }, 100)
-      const listener = function(event) {
+      const listener = function (event) {
         if (event.source == popup) {
-          window.removeEventListener('message', listener)
+          window.removeEventListener("message", listener)
           window.clearInterval(watchdog)
           if (event.data.error && event.data.error.length > 0) {
             console.log(event.data)
@@ -55,7 +62,7 @@ class GuissoSession {
           }
         }
       }
-      window.addEventListener('message', listener, false)
+      window.addEventListener("message", listener, false)
     })
   }
 }

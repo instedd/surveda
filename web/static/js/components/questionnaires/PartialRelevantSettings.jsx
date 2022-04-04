@@ -1,12 +1,12 @@
 // @flow
-import React, { Component } from 'react'
-import Draft from './Draft'
-import { translate } from 'react-i18next'
-import { Card } from '../ui'
+import React, { Component } from "react"
+import Draft from "./Draft"
+import { translate } from "react-i18next"
+import { Card } from "../ui"
 
 type State = {
   minRelevantSteps: ?number,
-  minRelevantStepsKey: number
+  minRelevantStepsKey: number,
 }
 
 type Props = {
@@ -17,7 +17,7 @@ type Props = {
   minRelevantSteps: number,
   ignoredValues: string,
   errorsByPath: Object,
-  relevantStepsQuantity: number
+  relevantStepsQuantity: number,
 }
 
 class PartialRelevantSettings extends Component<Props, State> {
@@ -30,7 +30,7 @@ class PartialRelevantSettings extends Component<Props, State> {
     const { minRelevantSteps } = props
     return {
       minRelevantSteps,
-      minRelevantStepsKey: 0
+      minRelevantStepsKey: 0,
     }
   }
 
@@ -48,7 +48,10 @@ class PartialRelevantSettings extends Component<Props, State> {
       }
     }
     if (!minRelevantSteps && !nextValue) {
-      this.setState({ minRelevantSteps: nextValue, minRelevantStepsKey: minRelevantStepsKey + 1 })
+      this.setState({
+        minRelevantSteps: nextValue,
+        minRelevantStepsKey: minRelevantStepsKey + 1,
+      })
     }
     changeMinRelevantSteps(nextValue)
   }
@@ -58,71 +61,72 @@ class PartialRelevantSettings extends Component<Props, State> {
   }
 
   minRelevantStepsErrors() {
-    return this.errorsByPath('partialRelevant.minRelevantSteps')
+    return this.errorsByPath("partialRelevant.minRelevantSteps")
   }
 
   ignoredValuesErrors() {
-    return this.errorsByPath('partialRelevant.ignoredValuesErrors')
+    return this.errorsByPath("partialRelevant.ignoredValuesErrors")
   }
 
   hasErrors() {
-    return !!this.minRelevantStepsErrors() ||
-      !!this.ignoredValuesErrors()
+    return !!this.minRelevantStepsErrors() || !!this.ignoredValuesErrors()
   }
 
   minRelevantStepsComponent() {
     const { readOnly, t, relevantStepsQuantity } = this.props
     const { minRelevantSteps, minRelevantStepsKey } = this.state
 
-    return <Draft
-      id='partial_relevant_min_relevant_steps'
-      key={minRelevantStepsKey}
-      value={(minRelevantSteps || '').toString()}
-      label={t('Min Relevant Steps')}
-      textBelow={t('out of {{relevantStepsQuantity}} relevant questions selected', {relevantStepsQuantity})}
-      errors={this.minRelevantStepsErrors()}
-      readOnly={readOnly}
-      plainText
-      onBlur={inputText => this.handleMinRelevantStepsOnBlur(inputText)}
-    />
+    return (
+      <Draft
+        id="partial_relevant_min_relevant_steps"
+        key={minRelevantStepsKey}
+        value={(minRelevantSteps || "").toString()}
+        label={t("Min Relevant Steps")}
+        textBelow={t("out of {{relevantStepsQuantity}} relevant questions selected", {
+          relevantStepsQuantity,
+        })}
+        errors={this.minRelevantStepsErrors()}
+        readOnly={readOnly}
+        plainText
+        onBlur={(inputText) => this.handleMinRelevantStepsOnBlur(inputText)}
+      />
+    )
   }
 
   ignoredRelevantValuesComponent() {
     const { readOnly, ignoredValues, changeIgnoredValues, t } = this.props
 
-    return <Draft
-      id='partial_relevant_ignored_values'
-      value={ignoredValues || ''}
-      label={t('Ignored Values')}
-      textBelow='Refused, Skip, etc.'
-      errors={this.ignoredValuesErrors()}
-      readOnly={readOnly}
-      plainText
-      onBlur={inputText => changeIgnoredValues(inputText)}
-    />
+    return (
+      <Draft
+        id="partial_relevant_ignored_values"
+        value={ignoredValues || ""}
+        label={t("Ignored Values")}
+        textBelow="Refused, Skip, etc."
+        errors={this.ignoredValuesErrors()}
+        readOnly={readOnly}
+        plainText
+        onBlur={(inputText) => changeIgnoredValues(inputText)}
+      />
+    )
   }
 
   render() {
     return (
-      <div className='row' ref='self'>
-        <Card className='z-depth-0'>
-          <ul className='collection collection-card dark partial-relevant'>
-            <li className='collection-item header'>
-              <div className='row'>
-                <div className='col s12'>
-                  <i className='material-icons left'>build</i>
-                  <a className='page-title truncate'>
-                    <span>{this.props.t('Partial relevant settings')}</span>
+      <div className="row" ref="self">
+        <Card className="z-depth-0">
+          <ul className="collection collection-card dark partial-relevant">
+            <li className="collection-item header">
+              <div className="row">
+                <div className="col s12">
+                  <i className="material-icons left">build</i>
+                  <a className="page-title truncate">
+                    <span>{this.props.t("Partial relevant settings")}</span>
                   </a>
                 </div>
               </div>
             </li>
-            <li className='collection-item'>
-              {this.minRelevantStepsComponent()}
-            </li>
-            <li className='collection-item'>
-              {this.ignoredRelevantValuesComponent()}
-            </li>
+            <li className="collection-item">{this.minRelevantStepsComponent()}</li>
+            <li className="collection-item">{this.ignoredRelevantValuesComponent()}</li>
           </ul>
         </Card>
       </div>

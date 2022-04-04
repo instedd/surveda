@@ -1,31 +1,36 @@
-import React, { Component } from 'react'
-import linkifyStr from 'linkifyjs/string'
+import React, { Component } from "react"
+import linkifyStr from "linkifyjs/string"
 
 export type ChatMessage = {
   type: string,
-  body: string
+  body: string,
 }
 
 type MessageBulkProps = {
-  messages: Array<ChatMessage>
+  messages: Array<ChatMessage>,
 }
 
 type MessagesListProps = {
   messages: Array<ChatMessage>,
-  scrollToBottom: boolean
+  scrollToBottom: boolean,
 }
 
 function MessageBulk(props: MessageBulkProps) {
   const { messages } = props
-  const ATMessage = messages[0].type === 'at'
+  const ATMessage = messages[0].type === "at"
 
   return (
-    <div className={'message-bubble'}>
-      {messages.map((message, ix) =>
-        <li key={ix} className={ATMessage ? 'at-message' : 'ao-message'}>
-          <div className='content-text' dangerouslySetInnerHTML={{__html: linkifyStr(message.body.trim())}} />
+    <div className={"message-bubble"}>
+      {messages.map((message, ix) => (
+        <li key={ix} className={ATMessage ? "at-message" : "ao-message"}>
+          <div
+            className="content-text"
+            dangerouslySetInnerHTML={{
+              __html: linkifyStr(message.body.trim()),
+            }}
+          />
         </li>
-      )}
+      ))}
     </div>
   )
 }
@@ -36,7 +41,7 @@ export class MessagesList extends Component<MessagesListProps> {
   scrollToBottom = () => {
     if (this.props.scrollToBottom) {
       window.setTimeout(() => {
-        this.messagesBottomDivRef.scrollIntoView({ behavior: 'smooth' })
+        this.messagesBottomDivRef.scrollIntoView({ behavior: "smooth" })
       }, 0)
     }
   }
@@ -51,9 +56,9 @@ export class MessagesList extends Component<MessagesListProps> {
 
   render() {
     const groupBy = (elems, func) => {
-      const lastElem = (collection: Array<any>) => (collection[collection.length - 1])
+      const lastElem = (collection: Array<any>) => collection[collection.length - 1]
 
-      return elems.reduce(function(groups, elem) {
+      return elems.reduce(function (groups, elem) {
         const lastGroup = lastElem(groups)
         if (groups.length == 0 || func(lastElem(lastGroup)) != func(elem)) {
           groups.push([elem])
@@ -68,16 +73,18 @@ export class MessagesList extends Component<MessagesListProps> {
     const groupedMessages = groupBy(messages, (message: ChatMessage) => message.type)
 
     return (
-      <div className='chat-window-body'>
+      <div className="chat-window-body">
         <ul>
-          {groupedMessages.map((messages, ix) =>
-            <MessageBulk
-              key={`msg-bulk-${ix}`}
-              messages={messages}
-            />
-          )}
+          {groupedMessages.map((messages, ix) => (
+            <MessageBulk key={`msg-bulk-${ix}`} messages={messages} />
+          ))}
         </ul>
-        <div style={{ float: 'left', clear: 'both' }} ref={el => { this.messagesBottomDivRef = el }} />
+        <div
+          style={{ float: "left", clear: "both" }}
+          ref={(el) => {
+            this.messagesBottomDivRef = el
+          }}
+        />
       </div>
     )
   }

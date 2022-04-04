@@ -1,16 +1,16 @@
 // @flow
-import React, { Component, PropTypes } from 'react'
-import { connect } from 'react-redux'
-import { withRouter, Link } from 'react-router'
-import * as surveysActions from '../../actions/surveys'
-import * as actions from '../../actions/panelSurvey'
-import * as panelSurveysActions from '../../actions/panelSurveys'
-import { PagingFooter } from '../ui'
-import { SurveyCard } from '../surveys/SurveyCard'
-import * as routes from '../../routes'
-import { translate } from 'react-i18next'
-import { RepeatButton } from '../ui/RepeatButton'
-import { newWave } from '../../api'
+import React, { Component, PropTypes } from "react"
+import { connect } from "react-redux"
+import { withRouter, Link } from "react-router"
+import * as surveysActions from "../../actions/surveys"
+import * as actions from "../../actions/panelSurvey"
+import * as panelSurveysActions from "../../actions/panelSurveys"
+import { PagingFooter } from "../ui"
+import { SurveyCard } from "../surveys/SurveyCard"
+import * as routes from "../../routes"
+import { translate } from "react-i18next"
+import { RepeatButton } from "../ui/RepeatButton"
+import { newWave } from "../../api"
 
 class PanelSurveyShow extends Component<any, any> {
   state = {}
@@ -34,7 +34,7 @@ class PanelSurveyShow extends Component<any, any> {
 
     startIndex: PropTypes.number.isRequired,
     endIndex: PropTypes.number.isRequired,
-    totalCount: PropTypes.number.isRequired
+    totalCount: PropTypes.number.isRequired,
   }
 
   componentDidMount() {
@@ -58,15 +58,14 @@ class PanelSurveyShow extends Component<any, any> {
   newWave() {
     const { projectId, router, panelSurvey, dispatch, panelSurveyId } = this.props
 
-    newWave(projectId, panelSurvey.id)
-      .then(response => {
-        const panelSurvey = response.entities.surveys[response.result]
-        const survey = panelSurvey.latestWave
-        // A wave of the panel survey was created -> the panel survey has changed.
-        // The Redux store must be updated with the panel survey new state.
-        panelSurveysActions.updateStore(dispatch, projectId, panelSurveyId)
-        router.push(routes.surveyEdit(projectId, survey.id))
-      })
+    newWave(projectId, panelSurvey.id).then((response) => {
+      const panelSurvey = response.entities.surveys[response.result]
+      const survey = panelSurvey.latestWave
+      // A wave of the panel survey was created -> the panel survey has changed.
+      // The Redux store must be updated with the panel survey new state.
+      panelSurveysActions.updateStore(dispatch, projectId, panelSurveyId)
+      router.push(routes.surveyEdit(projectId, survey.id))
+    })
   }
 
   render() {
@@ -82,34 +81,42 @@ class PanelSurveyShow extends Component<any, any> {
       startIndex,
       endIndex,
       totalCount,
-      t
+      t,
     } = this.props
 
     if (isLoading) {
       return (
-        <div className='folder-show'>
+        <div className="folder-show">
           <Title projectId={projectId} panelSurvey={panelSurvey} t={t} />
-          {t('Loading panel survey...')}
+          {t("Loading panel survey...")}
         </div>
       )
     }
 
     return (
-      <div className='folder-show'>
+      <div className="folder-show">
         <MainActions isReadOnly={isReadOnly}>
-          <RepeatButton text={t('Add wave')} disabled={!panelSurvey.isRepeatable} onClick={() => this.newWave()} />
+          <RepeatButton
+            text={t("Add wave")}
+            disabled={!panelSurvey.isRepeatable}
+            onClick={() => this.newWave()}
+          />
         </MainActions>
 
         <Title projectId={projectId} panelSurvey={panelSurvey} t={t} />
 
         <MainView isEmpty={isEmptyView} t={t}>
-          <SurveysGrid surveysAndPanelSurveys={surveysAndPanelSurveys}
-                       isReadOnly={isReadOnly}
-                       t={t} />
+          <SurveysGrid
+            surveysAndPanelSurveys={surveysAndPanelSurveys}
+            isReadOnly={isReadOnly}
+            t={t}
+          />
 
-          <PagingFooter {...{ startIndex, endIndex, totalCount }}
+          <PagingFooter
+            {...{ startIndex, endIndex, totalCount }}
             onPreviousPage={() => this.previousPage()}
-            onNextPage={() => this.nextPage()} />
+            onNextPage={() => this.nextPage()}
+          />
         </MainView>
       </div>
     )
@@ -121,14 +128,12 @@ const Title = (props) => {
   if (!panelSurvey) return null
 
   const { folderId, name } = panelSurvey
-  const to = folderId
-    ? routes.folder(projectId, folderId)
-    : routes.project(projectId)
+  const to = folderId ? routes.folder(projectId, folderId) : routes.project(projectId)
 
   return (
-    <Link to={to} className='folder-header'>
-      <i className='material-icons black-text'>arrow_back</i>
-      {name || t('Untitled panel survey')}
+    <Link to={to} className="folder-header">
+      <i className="material-icons black-text">arrow_back</i>
+      {name || t("Untitled panel survey")}
     </Link>
   )
 }
@@ -136,42 +141,42 @@ const Title = (props) => {
 Title.propTypes = {
   projectId: PropTypes.any,
   panelSurvey: PropTypes.object,
-  t: PropTypes.func
+  t: PropTypes.func,
 }
 
 const MainActions = (props) => {
   const { isReadOnly, children } = props
   if (isReadOnly) return null
 
-  return (<div>{children}</div>)
+  return <div>{children}</div>
 }
 
 MainActions.propTypes = {
   isReadOnly: PropTypes.bool,
-  children: PropTypes.node
+  children: PropTypes.node,
 }
 
 const MainView = (props) => {
   const { isEmpty, children, t } = props
 
-  if (isEmpty) throw Error(t('Empty panel survey'))
+  if (isEmpty) throw Error(t("Empty panel survey"))
 
-  return (<div>{children}</div>)
+  return <div>{children}</div>
 }
 
 MainView.propTypes = {
   isEmpty: PropTypes.bool,
   children: PropTypes.node,
-  t: PropTypes.func
+  t: PropTypes.func,
 }
 
 const SurveysGrid = (props) => {
   const { surveysAndPanelSurveys, isReadOnly, t } = props
 
   return (
-    <div className='survey-index-grid'>
-      {surveysAndPanelSurveys.map(survey => {
-        return (<SurveyCard survey={survey} key={survey.id} readOnly={isReadOnly} t={t} />)
+    <div className="survey-index-grid">
+      {surveysAndPanelSurveys.map((survey) => {
+        return <SurveyCard survey={survey} key={survey.id} readOnly={isReadOnly} t={t} />
       })}
     </div>
   )
@@ -180,7 +185,7 @@ const SurveysGrid = (props) => {
 SurveysGrid.propTypes = {
   surveysAndPanelSurveys: PropTypes.array,
   isReadOnly: PropTypes.bool,
-  t: PropTypes.func
+  t: PropTypes.func,
 }
 
 const mapStateToPanelSurvey = (state, panelSurveyId) => {
@@ -188,7 +193,11 @@ const mapStateToPanelSurvey = (state, panelSurveyId) => {
   let surveys = []
   let panelSurveys = []
 
-  if (state.panelSurvey.data && state.panelSurvey.data.id === panelSurveyId && !state.panelSurvey.dirty) {
+  if (
+    state.panelSurvey.data &&
+    state.panelSurvey.data.id === panelSurveyId &&
+    !state.panelSurvey.dirty
+  ) {
     panelSurvey = state.panelSurvey.data
     surveys = panelSurvey.waves
   }
@@ -196,7 +205,7 @@ const mapStateToPanelSurvey = (state, panelSurveyId) => {
   return {
     panelSurvey,
     surveys,
-    panelSurveys
+    panelSurveys,
   }
 }
 
@@ -205,28 +214,21 @@ const mapStateToProps = (state, ownProps) => {
   const { params, t } = ownProps
   const { projectId } = params
   const panelSurveyId = params.panelSurveyId && parseInt(params.panelSurveyId)
-  if (!panelSurveyId) throw new Error(t('Missing param: panelSurveyId'))
+  if (!panelSurveyId) throw new Error(t("Missing param: panelSurveyId"))
 
-  const {
-    panelSurvey,
-    surveys,
-    panelSurveys
-  } = mapStateToPanelSurvey(state, panelSurveyId)
+  const { panelSurvey, surveys, panelSurveys } = mapStateToPanelSurvey(state, panelSurveyId)
 
   // Merge all together and sort by updated_at (descending)
-  const surveysAndPanelSurveys = [
-    ...surveys,
-    ...panelSurveys
-  ].sort((x, y) => y.updatedAt.localeCompare(x.updatedAt))
+  const surveysAndPanelSurveys = [...surveys, ...panelSurveys].sort((x, y) =>
+    y.updatedAt.localeCompare(x.updatedAt)
+  )
 
   // pagination
   const { page } = state.surveys
-  const {
-    paginatedElements,
-    totalCount,
-    startIndex,
-    endIndex
-  } = paginate(surveysAndPanelSurveys, page)
+  const { paginatedElements, totalCount, startIndex, endIndex } = paginate(
+    surveysAndPanelSurveys,
+    page
+  )
 
   // loading, readonly and emptyview
   const isLoadingPanelSurvey = state.panelSurvey.loading || state.panelSurvey.fetching
@@ -251,7 +253,7 @@ const mapStateToProps = (state, ownProps) => {
 
     startIndex,
     endIndex,
-    totalCount
+    totalCount,
   }
 }
 
@@ -263,11 +265,12 @@ const paginate = (surveysAndPanelSurveys: Array<Survey | PanelSurvey>, page) => 
   const endIndex = Math.min(pageIndex + pageSize, totalCount)
 
   return {
-    paginatedElements: (surveysAndPanelSurveys
-      .slice(pageIndex, pageIndex + pageSize): Array<Survey | PanelSurvey>),
+    paginatedElements: (surveysAndPanelSurveys.slice(pageIndex, pageIndex + pageSize): Array<
+      Survey | PanelSurvey
+    >),
     totalCount,
     startIndex,
-    endIndex
+    endIndex,
   }
 }
 

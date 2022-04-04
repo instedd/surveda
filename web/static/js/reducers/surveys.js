@@ -1,6 +1,6 @@
 // @flow
-import * as actions from '../actions/surveys'
-import collectionReducer, { projectFilterProvider } from './collection'
+import * as actions from "../actions/surveys"
+import collectionReducer, { projectFilterProvider } from "./collection"
 
 const itemsReducer = (items: IndexedList<Survey>, action): IndexedList<Survey> => {
   switch (action.type) {
@@ -15,7 +15,7 @@ const itemsReducer = (items: IndexedList<Survey>, action): IndexedList<Survey> =
 
 function removeItem(items: IndexedList<Survey>, surveyId: number) {
   if (items[surveyId]) {
-    items = {...items}
+    items = { ...items }
     delete items[surveyId]
   }
   return items
@@ -30,8 +30,8 @@ const initialState = {
   sortAsc: true,
   page: {
     index: 0,
-    size: 15
-  }
+    size: 15,
+  },
 }
 
 export default collectionReducer(actions, itemsReducer, projectFilterProvider, initialState)

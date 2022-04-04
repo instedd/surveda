@@ -12,8 +12,8 @@ export type Questionnaire = {
   settings: Settings,
   projectId: number,
   valid: ?boolean,
-  partialRelevantConfig: Object
-};
+  partialRelevantConfig: Object,
+}
 
 export type Settings = {
   errorMessage?: LocalizedPrompt,
@@ -21,129 +21,141 @@ export type Settings = {
   mobileWebSmsMessage?: ?string,
   mobileWebSurveyIsOverMessage?: ?string,
   mobileWebColorStyle?: ColorStylePrompt,
-  title?: {[lang: string]: string},
-  surveyAlreadyTakenMessage?: {[lang: string]: string},
+  title?: { [lang: string]: string },
+  surveyAlreadyTakenMessage?: { [lang: string]: string },
   thankYouMessage?: LocalizedPrompt,
-};
+}
 
 export type ChoiceErrors = {
   value: string[],
   sms: string[],
-  ivr: string[]
-};
+  ivr: string[],
+}
 
 export type AudioPrompt = {
-    audioSource: 'tts' | 'upload',
-    text: string,
-    audioId?: ?string
-};
+  audioSource: "tts" | "upload",
+  text: string,
+  audioId?: ?string,
+}
 
 export type Prompt = {
   sms?: string,
   ivr?: AudioPrompt,
-  mobileweb?: string
-};
+  mobileweb?: string,
+}
 
 export type ColorStylePrompt = {
   primaryColor?: string,
-  secondaryColor?: string
-};
+  secondaryColor?: string,
+}
 
-export type LocalizedPrompt = { [lang: string]: Prompt };
+export type LocalizedPrompt = { [lang: string]: Prompt }
 
-export type MultipleChoiceStep = BaseStep & StoreStep & MultilingualStep & {
-  type: 'multiple-choice',
-  choices: Choice[]
-};
+export type MultipleChoiceStep = BaseStep &
+  StoreStep &
+  MultilingualStep & {
+    type: "multiple-choice",
+    choices: Choice[],
+  }
 
-export type LanguageSelectionStep = BaseStep & StoreStep & {
-  type: 'language-selection',
-  languageChoices: string[],
-  prompt: Prompt
-};
+export type LanguageSelectionStep = BaseStep &
+  StoreStep & {
+    type: "language-selection",
+    languageChoices: string[],
+    prompt: Prompt,
+  }
 
-export type ExplanationStep = BaseStep & MultilingualStep & {
-  type: 'explanation',
-  skipLogic: ?string
-};
+export type ExplanationStep = BaseStep &
+  MultilingualStep & {
+    type: "explanation",
+    skipLogic: ?string,
+  }
 
 export type FlagStep = BaseStep & {
-  type: 'flag',
-  disposition: 'completed' | 'interim partial' | 'ineligible',
-  skipLogic: ?string
-};
+  type: "flag",
+  disposition: "completed" | "interim partial" | "ineligible",
+  skipLogic: ?string,
+}
 
-export type NumericStep = BaseStep & StoreStep & MultilingualStep & {
-  type: 'numeric',
-  minValue: ?number,
-  maxValue: ?number,
-  rangesDelimiters: ?string,
-  ranges: Range[],
-  refusal: ?Refusal
-};
+export type NumericStep = BaseStep &
+  StoreStep &
+  MultilingualStep & {
+    type: "numeric",
+    minValue: ?number,
+    maxValue: ?number,
+    rangesDelimiters: ?string,
+    ranges: Range[],
+    refusal: ?Refusal,
+  }
 
 export type Range = {
   from: ?number,
   to: ?number,
-  skipLogic: ?string
-};
+  skipLogic: ?string,
+}
 
 export type BaseChoice = {
   skipLogic: ?string,
   responses: {
     ivr?: string[],
     sms?: {
-      [lang: string]: string[]
+      [lang: string]: string[],
     },
     mobileweb?: {
-      [lang: string]: ?string
-    }
-  }
-};
+      [lang: string]: ?string,
+    },
+  },
+}
 
 export type Choice = BaseChoice & {
-  value: string
-};
+  value: string,
+}
 
 export type Refusal = BaseChoice & {
-  enabled: boolean
-};
+  enabled: boolean,
+}
 
-export type Step = LanguageSelectionStep | MultipleChoiceStep | NumericStep | ExplanationStep | FlagStep | SectionStep;
+export type Step =
+  | LanguageSelectionStep
+  | MultipleChoiceStep
+  | NumericStep
+  | ExplanationStep
+  | FlagStep
+  | SectionStep
 export type BaseStep = {
   delete?: boolean,
   id: string,
   title: string,
-  relevant?: boolean
-};
+  relevant?: boolean,
+}
 
 export type StoreStep = {
-  store: string
-};
+  store: string,
+}
 
 export type MultilingualStep = {
-  prompt: LocalizedPrompt
-};
+  prompt: LocalizedPrompt,
+}
 
 export type SectionStep = BaseStep & {
-  type: 'section',
+  type: "section",
   randomize: boolean,
-  steps: Step[]
-};
+  steps: Step[],
+}
 
 export type SkipOption = {
   id: string,
   title: string,
-  enabled: boolean
-};
+  enabled: boolean,
+}
 
 export type Translation = {
   text: string,
-  language: string
-};
+  language: string,
+}
 
 export type AutocompleteItem = {
   id: string,
   text: string,
-  translations: Translation[]
-};
+  translations: Translation[],
+}

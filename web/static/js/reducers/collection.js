@@ -1,7 +1,7 @@
 // @flow
-import isEqual from 'lodash/isEqual'
-import toInteger from 'lodash/toInteger'
-import values from 'lodash/values'
+import isEqual from "lodash/isEqual"
+import toInteger from "lodash/toInteger"
+import values from "lodash/values"
 
 const defaultInitialState = {
   fetching: false,
@@ -12,38 +12,50 @@ const defaultInitialState = {
   sortAsc: true,
   page: {
     index: 0,
-    size: 5
-  }
+    size: 5,
+  },
 }
 
 export const projectFilterProvider = (action: FilteredAction) => ({
-  projectId: toInteger(action.projectId)
+  projectId: toInteger(action.projectId),
 })
 
 export const defaultFilterProvider = (_: Action) => ({})
 
-export default (actions: any, itemsReducer: Reducer<any>, filterProvider: (action: FilteredAction) => Filter = defaultFilterProvider, initialState: ListStore<any> = defaultInitialState) => (state: ?ListStore<any>, action: any): ListStore<any> => {
-  state = state || initialState
-  switch (action.type) {
-    case actions.FETCH: return fetch(state, action, filterProvider)
-    case actions.RECEIVE: return receive(state, action, filterProvider)
-    case actions.NEXT_PAGE: return nextPage(state)
-    case actions.PREVIOUS_PAGE: return previousPage(state)
-    case actions.SORT: return sortItems(state, action)
-    default: return items(state, action, itemsReducer)
+export default (
+    actions: any,
+    itemsReducer: Reducer<any>,
+    filterProvider: (action: FilteredAction) => Filter = defaultFilterProvider,
+    initialState: ListStore<any> = defaultInitialState
+  ) =>
+  (state: ?ListStore<any>, action: any): ListStore<any> => {
+    state = state || initialState
+    switch (action.type) {
+      case actions.FETCH:
+        return fetch(state, action, filterProvider)
+      case actions.RECEIVE:
+        return receive(state, action, filterProvider)
+      case actions.NEXT_PAGE:
+        return nextPage(state)
+      case actions.PREVIOUS_PAGE:
+        return previousPage(state)
+      case actions.SORT:
+        return sortItems(state, action)
+      default:
+        return items(state, action, itemsReducer)
+    }
   }
-}
 
 const items = (state, action, itemsReducer) => {
   const newItems: any = state.items == null ? null : itemsReducer(state.items, action)
 
   if (newItems !== state.items) {
     let order = itemsOrder(newItems, state.sortBy, state.sortAsc)
-    return ({
+    return {
       ...state,
       items: newItems,
-      order
-    })
+      order,
+    }
   }
 
   return state
@@ -59,7 +71,7 @@ const receive = (state: ListStore<any>, action: ReceiveFilteredItemsAction, filt
       ...state,
       fetching: false,
       items: items,
-      order
+      order,
     }
   }
 
@@ -82,8 +94,8 @@ const fetch = (state, action, filterProvider) => {
     items: newItems,
     page: {
       ...state.page,
-      index: 0
-    }
+      index: 0,
+    },
   }
 }
 
@@ -95,13 +107,13 @@ const itemsOrder = (items, sortBy, sortAsc) => {
       let x1 = p1[sortBy]
       let x2 = p2[sortBy]
 
-      if (typeof (x1) == 'string') {
+      if (typeof x1 == "string") {
         x1 = x1.toLowerCase()
-        if (x2 == null) x2 = 'untitled'
+        if (x2 == null) x2 = "untitled"
       }
-      if (typeof (x2) == 'string') {
+      if (typeof x2 == "string") {
         x2 = x2.toLowerCase()
-        if (x1 == null) x1 = 'untitled'
+        if (x1 == null) x1 = "untitled"
       }
 
       if (x1 < x2) {
@@ -114,7 +126,7 @@ const itemsOrder = (items, sortBy, sortAsc) => {
     })
   }
 
-  return itemsValues.map(p => p.id)
+  return itemsValues.map((p) => p.id)
 }
 
 const sortItems = (state: ListStore<any>, action: any) => {
@@ -125,7 +137,7 @@ const sortItems = (state: ListStore<any>, action: any) => {
     ...state,
     order,
     sortBy,
-    sortAsc
+    sortAsc,
   }
 }
 
@@ -133,21 +145,21 @@ const nextPage = (state: ListStore<any>) => ({
   ...state,
   page: {
     ...state.page,
-    index: state.page.index + state.page.size
-  }
+    index: state.page.index + state.page.size,
+  },
 })
 
 const previousPage = (state: ListStore<any>) => ({
   ...state,
   page: {
     ...state.page,
-    index: state.page.index - state.page.size
-  }
+    index: state.page.index - state.page.size,
+  },
 })
 
-export const orderedItems = <T>(items: IndexedList<T>, order: string[]): ?T[] => {
+export const orderedItems = <T>(items: IndexedList<T>, order: string[]): ?(T[]) => {
   if (items && order) {
-    return order.map(id => items[id])
+    return order.map((id) => items[id])
   } else {
     return null
   }

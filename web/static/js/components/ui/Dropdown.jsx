@@ -1,5 +1,5 @@
-import { uniqueId } from 'lodash'
-import React, { Component, PropTypes } from 'react'
+import { uniqueId } from "lodash"
+import React, { Component, PropTypes } from "react"
 export class Dropdown extends Component {
   static propTypes = {
     label: PropTypes.node.isRequired,
@@ -9,12 +9,12 @@ export class Dropdown extends Component {
     constrainWidth: PropTypes.bool,
     readOnly: PropTypes.bool,
     dataBelowOrigin: PropTypes.bool,
-    className: PropTypes.string
+    className: PropTypes.string,
   }
 
   constructor(props) {
     super(props)
-    this.dropdownId = uniqueId('dropdown')
+    this.dropdownId = uniqueId("dropdown")
   }
 
   componentDidMount() {
@@ -22,18 +22,39 @@ export class Dropdown extends Component {
   }
 
   render() {
-    const { label, icon = 'arrow_drop_down', dataBelowOrigin = true, children, constrainWidth = true, className, readOnly, iconLeft = false } = this.props
+    const {
+      label,
+      icon = "arrow_drop_down",
+      dataBelowOrigin = true,
+      children,
+      constrainWidth = true,
+      className,
+      readOnly,
+      iconLeft = false,
+    } = this.props
     const onButtonClick = (event) => {
       event.preventDefault()
     }
 
     return (
       <span className={className}>
-        <a className='dropdown-button' href='#!' onClick={onButtonClick} data-induration='100' data-outduration='50' data-beloworigin={dataBelowOrigin} data-activates={this.dropdownId} data-constrainwidth={constrainWidth} ref='node'>
+        <a
+          className="dropdown-button"
+          href="#!"
+          onClick={onButtonClick}
+          data-induration="100"
+          data-outduration="50"
+          data-beloworigin={dataBelowOrigin}
+          data-activates={this.dropdownId}
+          data-constrainwidth={constrainWidth}
+          ref="node"
+        >
           {label}
-          {readOnly ? null : <i className={iconLeft ? 'material-icons left' : 'material-icons right'}>{icon}</i> }
+          {readOnly ? null : (
+            <i className={iconLeft ? "material-icons left" : "material-icons right"}>{icon}</i>
+          )}
         </a>
-        <ul id={this.dropdownId} className='dropdown-content'>
+        <ul id={this.dropdownId} className="dropdown-content">
           {children}
         </ul>
       </span>
@@ -41,15 +62,11 @@ export class Dropdown extends Component {
   }
 }
 
-export const DropdownItem = ({children, className}) => (
-  <li className={className}>{children}</li>
-)
+export const DropdownItem = ({ children, className }) => <li className={className}>{children}</li>
 
 DropdownItem.propTypes = {
   children: PropTypes.node,
-  className: PropTypes.string
+  className: PropTypes.string,
 }
 
-export const DropdownDivider = () => (
-  <li className='divider' />
-)
+export const DropdownDivider = () => <li className="divider" />

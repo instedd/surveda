@@ -1,18 +1,18 @@
 // @flow
-import React, { Component, PropTypes } from 'react'
-import Prompt from '../Prompt'
+import React, { Component, PropTypes } from "react"
+import Prompt from "../Prompt"
 
 type State = {
   value: string,
-  valid: boolean
-};
+  valid: boolean,
+}
 
 class NumericStep extends Component<any, State> {
   handleChange: PropTypes.func.isRequired
 
   constructor(props: any) {
     super(props)
-    this.state = {value: '', valid: false}
+    this.state = { value: "", valid: false }
 
     this.handleChange = this.handleChange.bind(this)
   }
@@ -21,8 +21,9 @@ class NumericStep extends Component<any, State> {
     const { step } = this.props
     const { value } = event.target
     const intValue = parseInt(value)
-    const valid = (step.min == null || intValue >= step.min) && (step.max == null || intValue <= step.max)
-    this.setState({value, valid})
+    const valid =
+      (step.min == null || intValue >= step.min) && (step.max == null || intValue <= step.max)
+    this.setState({ value, valid })
   }
 
   getValue() {
@@ -30,19 +31,19 @@ class NumericStep extends Component<any, State> {
   }
 
   clearValue() {
-    this.setState({value: '', valid: false})
+    this.setState({ value: "", valid: false })
   }
 
   render() {
     const { step, errorMessage, onRefusal } = this.props
-    const hasError = this.state.value != '' && !this.state.valid
+    const hasError = this.state.value != "" && !this.state.valid
 
     let errorDiv = null
     let inputClassName = null
     if (hasError) {
-      inputClassName = 'error'
+      inputClassName = "error"
       errorDiv = (
-        <div className='error-message' dangerouslySetInnerHTML={{__html: errorMessage}} />
+        <div className="error-message" dangerouslySetInnerHTML={{ __html: errorMessage }} />
       )
     }
 
@@ -50,12 +51,18 @@ class NumericStep extends Component<any, State> {
 
     if (step.refusal) {
       refusalComponent = (
-        <div className='refusal'>
-          <a href='#' onClick={e => { e.preventDefault(); onRefusal(step.refusal) }}>
+        <div className="refusal">
+          <a
+            href="#"
+            onClick={(e) => {
+              e.preventDefault()
+              onRefusal(step.refusal)
+            }}
+          >
             <i>
-              <svg height='24' viewBox='0 0 24 24' width='24' xmlns='http://www.w3.org/2000/svg'>
-                <path d='M0 0h24v24H0z' fill='none' />
-                <path d='M18.4 10.6C16.55 8.99 14.15 8 11.5 8c-4.65 0-8.58 3.03-9.96 7.22L3.9 16c1.05-3.19 4.05-5.5 7.6-5.5 1.95 0 3.73.72 5.12 1.88L13 16h9V7l-3.6 3.6z' />
+              <svg height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg">
+                <path d="M0 0h24v24H0z" fill="none" />
+                <path d="M18.4 10.6C16.55 8.99 14.15 8 11.5 8c-4.65 0-8.58 3.03-9.96 7.22L3.9 16c1.05-3.19 4.05-5.5 7.6-5.5 1.95 0 3.73.72 5.12 1.88L13 16h9V7l-3.6 3.6z" />
               </svg>
             </i>
             {step.refusal}
@@ -65,21 +72,28 @@ class NumericStep extends Component<any, State> {
     }
 
     const disabled = !this.state.valid
-    const fillColor = disabled ? '' : this.context.primaryColor
+    const fillColor = disabled ? "" : this.context.primaryColor
 
     return (
-      <div className='numeric'>
-        {(step.prompts || []).map(prompt =>
+      <div className="numeric">
+        {(step.prompts || []).map((prompt) => (
           <Prompt key={prompt} text={prompt} />
-        )}
-        <div className='input-button-inline'>
-          <div className='input-with-error'>
-            <input type='number' value={this.state.value} onChange={this.handleChange} min={step.min} max={step.max} className={inputClassName} />
+        ))}
+        <div className="input-button-inline">
+          <div className="input-with-error">
+            <input
+              type="number"
+              value={this.state.value}
+              onChange={this.handleChange}
+              min={step.min}
+              max={step.max}
+              className={inputClassName}
+            />
             {errorDiv}
           </div>
-          <button className='btn square' style={{borderColor: fillColor}} disabled={disabled} >
-            <svg height='24' viewBox='0 0 24 24' width='24' xmlns='http://www.w3.org/2000/svg'>
-              <path d='M9 16.2L4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4L9 16.2z' fill={fillColor} />
+          <button className="btn square" style={{ borderColor: fillColor }} disabled={disabled}>
+            <svg height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg">
+              <path d="M9 16.2L4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4L9 16.2z" fill={fillColor} />
             </svg>
           </button>
         </div>
@@ -92,11 +106,11 @@ class NumericStep extends Component<any, State> {
 NumericStep.propTypes = {
   step: PropTypes.object,
   errorMessage: PropTypes.string,
-  onRefusal: PropTypes.func
+  onRefusal: PropTypes.func,
 }
 
 NumericStep.contextTypes = {
-  primaryColor: PropTypes.string
+  primaryColor: PropTypes.string,
 }
 
 export default NumericStep

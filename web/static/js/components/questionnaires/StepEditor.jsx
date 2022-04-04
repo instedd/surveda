@@ -1,13 +1,13 @@
 // @flow
-import React, { Component } from 'react'
-import { bindActionCreators } from 'redux'
-import { connect } from 'react-redux'
-import * as questionnaireActions from '../../actions/questionnaire'
-import MultipleChoiceStepEditor from './MultipleChoiceStepEditor'
-import NumericStepEditor from './NumericStepEditor'
-import LanguageSelectionStepEditor from './LanguageSelectionStepEditor'
-import ExplanationStepEditor from './ExplanationStepEditor'
-import FlagStepEditor from './FlagStepEditor'
+import React, { Component } from "react"
+import { bindActionCreators } from "redux"
+import { connect } from "react-redux"
+import * as questionnaireActions from "../../actions/questionnaire"
+import MultipleChoiceStepEditor from "./MultipleChoiceStepEditor"
+import NumericStepEditor from "./NumericStepEditor"
+import LanguageSelectionStepEditor from "./LanguageSelectionStepEditor"
+import ExplanationStepEditor from "./ExplanationStepEditor"
+import FlagStepEditor from "./FlagStepEditor"
 
 type Props = {
   step: Step,
@@ -21,8 +21,8 @@ type Props = {
   onCollapse: Function,
   stepsAfter: Step[],
   stepsBefore: Step[],
-  isNew: boolean
-};
+  isNew: boolean,
+}
 
 class StepEditor extends Component<Props> {
   clickedVarAutocomplete: boolean
@@ -50,25 +50,25 @@ class StepEditor extends Component<Props> {
     if (step.id != this.lastStepId) {
       const elem = $(`#step-id-${step.id}`)
       if (elem.length > 0) {
-        $('html, body').animate({scrollTop: elem.offset().top}, 500)
+        $("html, body").animate({ scrollTop: elem.offset().top }, 500)
       }
     }
     this.lastStepId = step.id
   }
 
   render() {
-    const {step, ...commonProps} = this.props
+    const { step, ...commonProps } = this.props
 
     switch (step.type) {
-      case 'multiple-choice':
+      case "multiple-choice":
         return <MultipleChoiceStepEditor {...commonProps} step={step} />
-      case 'numeric':
+      case "numeric":
         return <NumericStepEditor {...commonProps} step={step} />
-      case 'explanation':
+      case "explanation":
         return <ExplanationStepEditor {...commonProps} step={step} />
-      case 'flag':
+      case "flag":
         return <FlagStepEditor {...commonProps} step={step} />
-      case 'language-selection':
+      case "language-selection":
         return <LanguageSelectionStepEditor {...commonProps} step={step} />
       default:
         throw new Error(`unknown step type: ${step.type}`)
@@ -76,11 +76,10 @@ class StepEditor extends Component<Props> {
   }
 }
 
-const mapStateToProps = (state, ownProps) => ({
-})
+const mapStateToProps = (state, ownProps) => ({})
 
 const mapDispatchToProps = (dispatch) => ({
-  questionnaireActions: bindActionCreators(questionnaireActions, dispatch)
+  questionnaireActions: bindActionCreators(questionnaireActions, dispatch),
 })
 
 export default connect(mapStateToProps, mapDispatchToProps)(StepEditor)

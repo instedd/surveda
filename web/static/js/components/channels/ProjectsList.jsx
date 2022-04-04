@@ -1,20 +1,20 @@
 // @flow
-import * as actions from '../../actions/channel'
-import React, { Component, PropTypes } from 'react'
-import { connect } from 'react-redux'
-import 'materialize-autocomplete'
-import AddProject from './AddProject'
-import map from 'lodash/map'
-import { translate } from 'react-i18next'
-import { UntitledIfEmpty } from '../ui'
+import * as actions from "../../actions/channel"
+import React, { Component, PropTypes } from "react"
+import { connect } from "react-redux"
+import "materialize-autocomplete"
+import AddProject from "./AddProject"
+import map from "lodash/map"
+import { translate } from "react-i18next"
+import { UntitledIfEmpty } from "../ui"
 
 type Props = {
   projects: IndexedList<Project>,
   selectedProjects: number[],
   channelId: number,
   dispatch: Function,
-  t: Function
-};
+  t: Function,
+}
 
 class ProjectsList extends Component<Props> {
   removeSharedProject(projectId) {
@@ -23,14 +23,20 @@ class ProjectsList extends Component<Props> {
 
   renderProjectRow(projectId, name) {
     const { t } = this.props
-    return <li key={projectId}>
-      <span key='remove-language' className='remove-language' onClick={this.removeSharedProject(projectId)}>
-        <i className='material-icons'>close</i>
-      </span>
-      <span className='language-name' title={name}>
-        <UntitledIfEmpty text={name} emptyText={t('Untitled project')} />
-      </span>
-    </li>
+    return (
+      <li key={projectId}>
+        <span
+          key="remove-language"
+          className="remove-language"
+          onClick={this.removeSharedProject(projectId)}
+        >
+          <i className="material-icons">close</i>
+        </span>
+        <span className="language-name" title={name}>
+          <UntitledIfEmpty text={name} emptyText={t("Untitled project")} />
+        </span>
+      </li>
+    )
   }
 
   render() {
@@ -41,17 +47,17 @@ class ProjectsList extends Component<Props> {
     }
 
     return (
-      <div className='projects'>
-        {
-          selectedProjects && selectedProjects.length != 0
-            ? <ProjectSection title={t('Share on projects')}>
-              {
-                map(selectedProjects, (id) => this.renderProjectRow(id, projects[id] && projects[id].name))
-              }
-            </ProjectSection>
-            : ''
-        }
-        <div className='row'>
+      <div className="projects">
+        {selectedProjects && selectedProjects.length != 0 ? (
+          <ProjectSection title={t("Share on projects")}>
+            {map(selectedProjects, (id) =>
+              this.renderProjectRow(id, projects[id] && projects[id].name)
+            )}
+          </ProjectSection>
+        ) : (
+          ""
+        )}
+        <div className="row">
           <AddProject selectedProjects={selectedProjects} projects={projects} />
         </div>
       </div>
@@ -59,21 +65,22 @@ class ProjectsList extends Component<Props> {
   }
 }
 
-const ProjectSection = ({title, children}) =>
-  <div className='row'>
-    <div className='col s12'>
-      <p className='grey-text'>{title}</p>
-      <ul className='languages-list'>{children}</ul>
+const ProjectSection = ({ title, children }) => (
+  <div className="row">
+    <div className="col s12">
+      <p className="grey-text">{title}</p>
+      <ul className="languages-list">{children}</ul>
     </div>
   </div>
+)
 
 ProjectSection.propTypes = {
   title: PropTypes.string,
-  children: PropTypes.node
+  children: PropTypes.node,
 }
 
 const mapStateToProps = (state) => ({
-  projects: state.projects.items
+  projects: state.projects.items,
 })
 
 export default translate()(connect(mapStateToProps)(ProjectsList))

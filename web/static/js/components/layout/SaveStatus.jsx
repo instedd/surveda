@@ -1,9 +1,9 @@
-import React, { PropTypes, Component } from 'react'
-import { connect } from 'react-redux'
-import TimeAgo from 'react-timeago'
-import { withRouter } from 'react-router'
+import React, { PropTypes, Component } from "react"
+import { connect } from "react-redux"
+import TimeAgo from "react-timeago"
+import { withRouter } from "react-router"
 
-import { translate } from 'react-i18next'
+import { translate } from "react-i18next"
 
 class SaveStatus extends Component {
   bindedFormatter: Function
@@ -16,30 +16,30 @@ class SaveStatus extends Component {
     const { t } = this.props
 
     switch (unit) {
-      case 'second':
-        return t('All changes saved')
-      case 'minute':
-        return t('Last saved {{count}} minute ago', {count: number})
-      case 'hour':
-        return t('Last saved {{count}} hour ago', {count: number})
-      case 'day':
-        return t('Last saved {{count}} day ago', {count: number})
-      case 'week':
-        return t('Last saved {{count}} week ago', {count: number})
-      case 'month':
-        return t('Last saved {{count}} month ago', {count: number})
-      case 'year':
-        return t('Last saved {{count}} year ago', {count: number})
+      case "second":
+        return t("All changes saved")
+      case "minute":
+        return t("Last saved {{count}} minute ago", { count: number })
+      case "hour":
+        return t("Last saved {{count}} hour ago", { count: number })
+      case "day":
+        return t("Last saved {{count}} day ago", { count: number })
+      case "week":
+        return t("Last saved {{count}} week ago", { count: number })
+      case "month":
+        return t("Last saved {{count}} month ago", { count: number })
+      case "year":
+        return t("Last saved {{count}} year ago", { count: number })
     }
   }
 
   componentWillMount() {
-    window.addEventListener('beforeunload', (ev) => {
+    window.addEventListener("beforeunload", (ev) => {
       const { saveStatus, t } = this.props
 
       if (saveStatus && (saveStatus.saving || saveStatus.error)) {
         ev.preventDefault()
-        ev.returnValue = t('You have unsaved changes. Are you sure you want to close?')
+        ev.returnValue = t("You have unsaved changes. Are you sure you want to close?")
         return ev
       } else {
         return null
@@ -62,19 +62,19 @@ class SaveStatus extends Component {
     if (show && saveStatus && (saveStatus.saving || saveStatus.updatedAt)) {
       if (saveStatus.error) {
         return (
-          <div className='right grey-text'>{t('Warning! Changes were not saved. Retrying...')}</div>
+          <div className="right grey-text">{t("Warning! Changes were not saved. Retrying...")}</div>
         )
       } else if (saveStatus.saving) {
-        return (
-          <div className='right grey-text'>{t('Saving...')}</div>
-        )
+        return <div className="right grey-text">{t("Saving...")}</div>
       } else {
         return (
-          <div className='right grey-text'><TimeAgo minPeriod='60' date={saveStatus.updatedAt} formatter={this.bindedFormatter} /></div>
+          <div className="right grey-text">
+            <TimeAgo minPeriod="60" date={saveStatus.updatedAt} formatter={this.bindedFormatter} />
+          </div>
         )
       }
     } else {
-      return (<div />)
+      return <div />
     }
   }
 }
@@ -82,11 +82,11 @@ class SaveStatus extends Component {
 SaveStatus.propTypes = {
   saveStatus: PropTypes.any,
   t: PropTypes.func,
-  routes: PropTypes.any
+  routes: PropTypes.any,
 }
 
 const mapStateToProps = (state, ownProps) => ({
-  saveStatus: state.autoSaveStatus || {}
+  saveStatus: state.autoSaveStatus || {},
 })
 
 export default translate()(withRouter(connect(mapStateToProps)(SaveStatus)))

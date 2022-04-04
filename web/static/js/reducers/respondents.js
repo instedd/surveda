@@ -1,4 +1,4 @@
-import * as actions from '../actions/respondents'
+import * as actions from "../actions/respondents"
 
 const initialState = {
   fetching: false,
@@ -10,21 +10,27 @@ const initialState = {
   page: {
     number: 1,
     size: 5,
-    totalCount: 0
+    totalCount: 0,
   },
   filter: null,
   fields: null,
-  selectedFields: null
+  selectedFields: null,
 }
 
 export default (state = initialState, action) => {
   switch (action.type) {
-    case actions.FETCH_RESPONDENTS: return fetchRespondents(state, action)
-    case actions.CREATE_RESPONDENT: return createOrUpdateRespondent(state, action)
-    case actions.UPDATE_RESPONDENT: return createOrUpdateRespondent(state, action)
-    case actions.RECEIVE_RESPONDENTS: return receiveRespondents(state, action)
-    case actions.SET_RESPONDENTS_FIELD_SELECTION: return setRespondentsFieldSelection(state, action)
-    default: return state
+    case actions.FETCH_RESPONDENTS:
+      return fetchRespondents(state, action)
+    case actions.CREATE_RESPONDENT:
+      return createOrUpdateRespondent(state, action)
+    case actions.UPDATE_RESPONDENT:
+      return createOrUpdateRespondent(state, action)
+    case actions.RECEIVE_RESPONDENTS:
+      return receiveRespondents(state, action)
+    case actions.SET_RESPONDENTS_FIELD_SELECTION:
+      return setRespondentsFieldSelection(state, action)
+    default:
+      return state
   }
 }
 
@@ -43,25 +49,26 @@ const fetchRespondents = (state, action) => {
     page: {
       ...state.page,
       size: action.pageSize,
-      number: action.pageNumber
-    }
+      number: action.pageNumber,
+    },
   }
 }
 
 const createOrUpdateRespondent = (state, action) => ({
   ...state,
   [action.id]: {
-    ...action.respondent
-  }
+    ...action.respondent,
+  },
 })
 
 const receiveRespondents = (state, action) => {
-  const selectedFields = state.selectedFields || !action.fields
-    ? state.selectedFields
-    // Select every field except responses (only the first time)
-    : action.fields
-        .filter(field => field.type != 'response')
-        .map(field => fieldUniqueKey(field.type, field.key))
+  const selectedFields =
+    state.selectedFields || !action.fields
+      ? state.selectedFields
+      : // Select every field except responses (only the first time)
+        action.fields
+          .filter((field) => field.type != "response")
+          .map((field) => fieldUniqueKey(field.type, field.key))
   return {
     ...state,
     fetching: false,
@@ -69,16 +76,16 @@ const receiveRespondents = (state, action) => {
     order: action.order,
     page: {
       ...state.page,
-      totalCount: action.respondentsCount
+      totalCount: action.respondentsCount,
     },
     fields: action.fields,
-    selectedFields: selectedFields
+    selectedFields: selectedFields,
   }
 }
 
 const setRespondentsFieldSelection = (state, action) => {
   const selectField = () => [...state.selectedFields, action.fieldUniqueKey]
-  const unselectField = () => state.selectedFields.filter(key => key != action.fieldUniqueKey)
+  const unselectField = () => state.selectedFields.filter((key) => key != action.fieldUniqueKey)
   const isSelected = isFieldSelected(state.selectedFields, action.fieldUniqueKey)
   const shouldSelectField = action.selected && !isSelected
   const shouldUnselectField = !action.selected && isSelected
@@ -95,13 +102,11 @@ const setRespondentsFieldSelection = (state, action) => {
 
   return {
     ...state,
-    selectedFields: selectedFields()
+    selectedFields: selectedFields(),
   }
 }
 
 export const fieldUniqueKey = (type, key) => `${type}_${key}`
 
 export const isFieldSelected = (selectedFields, uniqueKey) =>
-  selectedFields.some(
-    selectedFieldUniqueKey => selectedFieldUniqueKey == uniqueKey
-  )
+  selectedFields.some((selectedFieldUniqueKey) => selectedFieldUniqueKey == uniqueKey)

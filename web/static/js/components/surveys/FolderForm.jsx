@@ -1,15 +1,15 @@
-import React, { Component, PropTypes } from 'react'
-import { translate } from 'react-i18next'
-import { Input } from 'react-materialize'
-import { connect } from 'react-redux'
+import React, { Component, PropTypes } from "react"
+import { translate } from "react-i18next"
+import { Input } from "react-materialize"
+import { connect } from "react-redux"
 
 class FolderForm extends Component<any> {
-  state = { name: '' }
+  state = { name: "" }
   static propTypes = {
     t: PropTypes.func,
     error: PropTypes.string,
     onChangeName: PropTypes.func,
-    cta: PropTypes.string
+    cta: PropTypes.string,
   }
 
   onChangeName(e) {
@@ -26,23 +26,24 @@ class FolderForm extends Component<any> {
     const { name } = this.state
 
     return (
-      <form onSubmit={e => this.onSubmit(e)}>
+      <form onSubmit={(e) => this.onSubmit(e)}>
+        <p>{cta}</p>
 
-        <p>
-          {cta}
-        </p>
-
-        <Input className='folder-input' placeholder={t('Name')} value={name} onChange={e => this.onChangeName(e)} error={error} />
-        <div className='error'>
-          {error}
-        </div>
+        <Input
+          className="folder-input"
+          placeholder={t("Name")}
+          value={name}
+          onChange={(e) => this.onChangeName(e)}
+          error={error}
+        />
+        <div className="error">{error}</div>
       </form>
     )
   }
 }
 
 FolderForm.defaultProps = {
-  onChangeName: () => {}
+  onChangeName: () => {},
 }
 
 const mapStateToProps = (state, ownProps) => {
@@ -56,7 +57,7 @@ const mapStateToProps = (state, ownProps) => {
 
   return {
     ...ownProps,
-    error: error
+    error: error,
   }
 }
 

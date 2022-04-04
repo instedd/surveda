@@ -1,10 +1,10 @@
-import { combineReducers } from 'redux'
-import questionnaireEditor from './questionnaireEditor'
-import surveyWizard from './surveyWizard'
+import { combineReducers } from "redux"
+import questionnaireEditor from "./questionnaireEditor"
+import surveyWizard from "./surveyWizard"
 
 const data = combineReducers({
   questionnaireEditor,
-  surveyWizard
+  surveyWizard,
 })
 
-export default combineReducers({data})
+export default combineReducers({ data })

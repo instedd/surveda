@@ -1,9 +1,9 @@
 // @flow weak
-import React, { Component } from 'react'
-import { bindActionCreators } from 'redux'
-import { connect } from 'react-redux'
-import { DragSource, DropTarget } from 'react-dnd'
-import * as questionnaireActions from '../../actions/questionnaire'
+import React, { Component } from "react"
+import { bindActionCreators } from "redux"
+import { connect } from "react-redux"
+import { DragSource, DropTarget } from "react-dnd"
+import * as questionnaireActions from "../../actions/questionnaire"
 
 type Props = {
   step: Step,
@@ -16,29 +16,26 @@ type Props = {
   questionnaireActions: any,
   quotaCompletedSteps: boolean,
   readOnly: boolean,
-  dropOnly: boolean
-};
+  dropOnly: boolean,
+}
 
 class DraggableStep extends Component<Props> {
-  static defaultProps = {dropOnly: false}
+  static defaultProps = { dropOnly: false }
   draggableStep() {
     const { step, isDragging, isOver, connectDragSource, children, readOnly, dropOnly } = this.props
 
-    const draggable = !readOnly && (step == null || step.type != 'language-selection')
+    const draggable = !readOnly && (step == null || step.type != "language-selection")
 
     let draggableStyle: any = {
       opacity: isDragging ? 0.0 : 1,
-      cursor: draggable ? 'move' : ''
+      cursor: draggable ? "move" : "",
     }
 
     if (isOver) {
-      draggableStyle['borderBottom'] = 'green medium solid'
+      draggableStyle["borderBottom"] = "green medium solid"
     }
 
-    const renderedDraggable =
-      <div style={draggableStyle}>
-        {children}
-      </div>
+    const renderedDraggable = <div style={draggableStyle}>{children}</div>
 
     if (draggable && !dropOnly) {
       return connectDragSource(renderedDraggable)
@@ -56,7 +53,7 @@ class DraggableStep extends Component<Props> {
 export const stepSource = {
   beginDrag(props, monitor, component) {
     return {
-      id: props.step.id
+      id: props.step.id,
     }
   },
 
@@ -74,38 +71,38 @@ export const stepSource = {
         questionnaireActions.moveStep(step.id, monitor.getDropResult().step.id)
       }
     }
-  }
+  },
 }
 
 export const collectSource = (connect, monitor) => {
   return {
     connectDragSource: connect.dragSource(),
-    isDragging: monitor.isDragging()
+    isDragging: monitor.isDragging(),
   }
 }
 
 export const collectTarget = (connect, monitor) => {
   return {
     connectDropTarget: connect.dropTarget(),
-    isOver: monitor.isOver()
+    isOver: monitor.isOver(),
   }
 }
 
 export const stepTarget = {
   drop(props, monitor) {
     return { step: props.step, sectionId: props.sectionId }
-  }
+  },
 }
 
 const mapDispatchToProps = (dispatch) => ({
-  questionnaireActions: bindActionCreators(questionnaireActions, dispatch)
+  questionnaireActions: bindActionCreators(questionnaireActions, dispatch),
 })
 
 const typeFromProps = (props) => {
   if (props.quotaCompletedSteps) {
-    return 'QUOTA_COMPLETED_STEPS'
+    return "QUOTA_COMPLETED_STEPS"
   } else {
-    return 'STEPS'
+    return "STEPS"
   }
 }
 

@@ -1,10 +1,10 @@
-import React, { Component, PropTypes } from 'react'
+import React, { Component, PropTypes } from "react"
 
 export class Tabs extends Component {
   static propTypes = {
     children: PropTypes.node,
     more: PropTypes.node,
-    id: PropTypes.string.isRequired
+    id: PropTypes.string.isRequired,
   }
 
   componentDidMount() {
@@ -14,11 +14,11 @@ export class Tabs extends Component {
   render() {
     const { children, more, id } = this.props
     return (
-      <nav id='BottomNav'>
-        <div className='nav-wrapper'>
-          <div className='row'>
-            <div className='col'>
-              <ul id={id} className='tabs' key='foo' ref='node'>
+      <nav id="BottomNav">
+        <div className="nav-wrapper">
+          <div className="row">
+            <div className="col">
+              <ul id={id} className="tabs" key="foo" ref="node">
                 {children}
               </ul>
             </div>

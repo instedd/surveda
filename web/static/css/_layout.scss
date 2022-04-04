@@ -1,10 +1,9 @@
 // ---------NCD general layout classes ---------------
 
-
-html, body {
+html,
+body {
   @extend .grey, .lighten-3;
 }
-
 
 main:not(.main-welcome) {
   @include flexbox();
@@ -41,7 +40,7 @@ header {
       display: none;
     }
     .logo-container {
-      background-image: url('../images/header_icon_default.svg');
+      background-image: url("../images/header_icon_default.svg");
       background-repeat: no-repeat;
       display: block;
       width: 60px;
@@ -71,7 +70,7 @@ header {
         @extend .white-text;
       }
     }
-    .dropdown-content > li >  a {
+    .dropdown-content > li > a {
       @extend .black-text;
     }
     .user-icon {
@@ -90,7 +89,7 @@ header {
     }
     &.user-menu a {
       max-height: 64px;
-       > div {
+      > div {
         display: inline;
       }
     }
@@ -104,8 +103,8 @@ header {
         max-width: 180px;
       }
       &.breadcrumb-item:before {
-        content: 'chevron_right';
-        font-family: 'Material Icons';
+        content: "chevron_right";
+        font-family: "Material Icons";
         font-weight: 300;
         font-style: normal;
         font-size: 15px;
@@ -113,15 +112,15 @@ header {
         letter-spacing: normal;
         text-transform: none;
         text-rendering: optimizeLegibility;
-        font-feature-settings: 'liga';
+        font-feature-settings: "liga";
         color: color("grey", "darken-4");
         position: absolute;
-        left: -.5rem;
+        left: -0.5rem;
         top: 38%;
       }
       &.channels-tab a {
         &:before {
-          content: '';
+          content: "";
           @extend .grey, .darken-4;
           left: 0px;
           top: 20px;
@@ -214,7 +213,6 @@ header {
     margin-bottom: 0;
   }
 }
-
 
 footer {
   position: absolute;

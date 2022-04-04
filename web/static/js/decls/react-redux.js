@@ -1,8 +1,10 @@
-declare module 'react-redux' {
-  declare type MapStateToProps<OP, SP> = (state: any, ownProps: OP) => SP;
-  declare type MapDispatchToProps<OP, DP> = (dispatch: Function, ownProps: OP) => DP;
+declare module "react-redux" {
+  declare type MapStateToProps<OP, SP> = (state: any, ownProps: OP) => SP
+  declare type MapDispatchToProps<OP, DP> = (dispatch: Function, ownProps: OP) => DP
 
-  declare type Connect<P, SP, DP> = <S>(c: Class<React$Component<P, S>>) => Class<React$Component<$Diff<$Diff<P, SP>, DP>, S>>;
+  declare type Connect<P, SP, DP> = <S>(
+    c: Class<React$Component<P, S>>
+  ) => Class<React$Component<$Diff<$Diff<P, SP>, DP>, S>>
 
   declare function connect<P, OP, SP, DP>(
     mapStateToProps: MapStateToProps<OP, SP>,

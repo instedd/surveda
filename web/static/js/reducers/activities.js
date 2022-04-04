@@ -1,24 +1,27 @@
-import * as actions from '../actions/activities'
+import * as actions from "../actions/activities"
 
 const initialState = {
   fetching: false,
   items: null,
   order: [],
   projectId: null,
-  sortBy: 'insertedAt',
+  sortBy: "insertedAt",
   sortAsc: false,
   page: {
     number: 1,
     size: 15,
-    totalCount: 0
-  }
+    totalCount: 0,
+  },
 }
 
 export default (state = initialState, action) => {
   switch (action.type) {
-    case actions.FETCH_ACTIVITIES: return fetchActivities(state, action)
-    case actions.RECEIVE_ACTIVITIES: return receiveActivities(state, action)
-    default: return state
+    case actions.FETCH_ACTIVITIES:
+      return fetchActivities(state, action)
+    case actions.RECEIVE_ACTIVITIES:
+      return receiveActivities(state, action)
+    default:
+      return state
   }
 }
 
@@ -35,8 +38,8 @@ const fetchActivities = (state, action) => {
     page: {
       ...state.page,
       size: action.pageSize,
-      number: action.pageNumber
-    }
+      number: action.pageNumber,
+    },
   }
 }
 
@@ -47,6 +50,6 @@ const receiveActivities = (state, action) => ({
   order: action.order,
   page: {
     ...state.page,
-    totalCount: action.activitiesCount
-  }
+    totalCount: action.activitiesCount,
+  },
 })

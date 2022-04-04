@@ -1,7 +1,7 @@
 // @flow
-import React, { Component } from 'react'
-import { Modal } from './Modal'
-import { I18n } from 'react-i18next'
+import React, { Component } from "react"
+import { Modal } from "./Modal"
+import { I18n } from "react-i18next"
 
 type Props = {
   showLink?: boolean,
@@ -17,8 +17,8 @@ type Props = {
   children?: any,
   style?: Object,
   initOptions?: any,
-  disabled: boolean
-};
+  disabled: boolean,
+}
 
 export class ConfirmationModal extends Component<Props, Props> {
   constructor(props: Props) {
@@ -52,22 +52,43 @@ export class ConfirmationModal extends Component<Props, Props> {
   }
 
   render() {
-    const { disabled, showLink, linkText, header, modalText, confirmationText, onNo, onConfirm, modalId, style, children, showCancel = false, initOptions } = this.state
+    const {
+      disabled,
+      showLink,
+      linkText,
+      header,
+      modalText,
+      confirmationText,
+      onNo,
+      onConfirm,
+      modalId,
+      style,
+      children,
+      showCancel = false,
+      initOptions,
+    } = this.state
     let { noText } = this.state
-    if (!noText) noText = 'No'
+    if (!noText) noText = "No"
 
     let cancelLink = null
     if (showCancel) {
       const onCancelClick = (e) => {
         e.preventDefault()
       }
-      cancelLink = <I18n>
-        {
-          t => (
-            <a href='#!' disabled={disabled} onClick={onCancelClick} className='modal-action modal-close waves-effect waves-green btn-flat'>{t('Cancel')}</a>
-          )
-        }
-      </I18n>
+      cancelLink = (
+        <I18n>
+          {(t) => (
+            <a
+              href="#!"
+              disabled={disabled}
+              onClick={onCancelClick}
+              className="modal-action modal-close waves-effect waves-green btn-flat"
+            >
+              {t("Cancel")}
+            </a>
+          )}
+        </I18n>
+      )
     }
 
     let noLink = null
@@ -76,7 +97,16 @@ export class ConfirmationModal extends Component<Props, Props> {
         e.preventDefault()
         onNo()
       }
-      noLink = <a href='#!' disabled={disabled} onClick={onNoClick} className='modal-action modal-close waves-effect waves-green btn-flat'>{noText}</a>
+      noLink = (
+        <a
+          href="#!"
+          disabled={disabled}
+          onClick={onNoClick}
+          className="modal-action modal-close waves-effect waves-green btn-flat"
+        >
+          {noText}
+        </a>
+      )
     }
 
     const onConfirmClick = async (e) => {
@@ -87,7 +117,7 @@ export class ConfirmationModal extends Component<Props, Props> {
     }
 
     var content
-    if (typeof modalText === 'string') {
+    if (typeof modalText === "string") {
       content = <p>{modalText}</p>
     } else if (children) {
       content = children
@@ -98,17 +128,31 @@ export class ConfirmationModal extends Component<Props, Props> {
     let footer = null
     if (cancelLink || noLink || onConfirm || confirmationText) {
       footer = (
-        <div className='modal-footer'>
+        <div className="modal-footer">
           {cancelLink}
           {noLink}
-          <a disabled={disabled} href='#!' className='modal-action waves-effect waves-green btn-flat' onClick={onConfirmClick}>{confirmationText}</a>
+          <a
+            disabled={disabled}
+            href="#!"
+            className="modal-action waves-effect waves-green btn-flat"
+            onClick={onConfirmClick}
+          >
+            {confirmationText}
+          </a>
         </div>
       )
     }
 
     return (
-      <Modal id={modalId} ref='modal' style={style} showLink={showLink} linkText={linkText} initOptions={initOptions}>
-        <div className='modal-content'>
+      <Modal
+        id={modalId}
+        ref="modal"
+        style={style}
+        showLink={showLink}
+        linkText={linkText}
+        initOptions={initOptions}
+      >
+        <div className="modal-content">
           <h4>{header}</h4>
           {content}
         </div>

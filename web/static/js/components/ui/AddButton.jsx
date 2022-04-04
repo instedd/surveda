@@ -1,21 +1,28 @@
-import React, { PropTypes } from 'react'
-import { Link } from 'react-router'
-import { Tooltip } from '.'
+import React, { PropTypes } from "react"
+import { Link } from "react-router"
+import { Tooltip } from "."
 
 export const AddButton = ({ text, linkPath, onClick, children }) => {
-  const icon = <i className='material-icons'>add</i>
+  const icon = <i className="material-icons">add</i>
 
   let link
   if (linkPath) {
     link = (
-      <Link className='btn-floating btn-large waves-effect waves-light green right mbottom' to={linkPath}>
-        { icon }
+      <Link
+        className="btn-floating btn-large waves-effect waves-light green right mbottom"
+        to={linkPath}
+      >
+        {icon}
       </Link>
     )
   } else if (onClick) {
     link = (
-      <a className='btn-floating btn-large waves-effect waves-light green right mtop' href='#' onClick={onClick}>
-        { icon }
+      <a
+        className="btn-floating btn-large waves-effect waves-light green right mtop"
+        href="#"
+        onClick={onClick}
+      >
+        {icon}
       </a>
     )
   } else {
@@ -29,5 +36,5 @@ AddButton.propTypes = {
   text: PropTypes.string.isRequired,
   linkPath: PropTypes.string,
   onClick: PropTypes.func,
-  children: PropTypes.node
+  children: PropTypes.node,
 }
