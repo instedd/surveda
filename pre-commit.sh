@@ -3,53 +3,32 @@ NC='\033[0m'
 GREEN='\033[0;32m'
 RED='\033[0;31m'
 
-echo "----==== Running Mix tests ====----"
-docker-compose run --rm -e MIX_ENV=test app mix do compile --force --warnings-as-errors, test
-MIX=$?
+STAGED_FILES="git diff-index --cached HEAD --name-only --diff-filter d"
+STAGED_ELIXIR_FILES=$($STAGED_FILES | egrep '\.(ex|exs|eex|heex)$')
+STAGED_ASSET_FILES=$($STAGED_FILES | egrep '\.(js|css|scss)$' | grep -v web/static/vendor)
 
-if [ $MIX -eq 0 ]; then
-  echo "${GREEN}OK${NC}";
-fi
+MIX="docker-compose run --rm app mix"
+YARN="docker-compose run --rm webpack yarn"
 
-echo "----==== Running JS tests ====----"
-docker-compose run --rm webpack yarn test
-JS=$?
-
-if [ $JS -eq 0 ]; then
-  echo "${GREEN}OK${NC}";
-fi
-
-echo "----==== Running Flow tests ====----"
-docker-compose run --rm webpack yarn flow check
-FLOW=$?
-
-if [ $FLOW -eq 0 ]; then
-  echo "${GREEN}OK${NC}";
-fi
-
-echo "----==== Running Eslint tests ====----"
-docker-compose run --rm webpack yarn eslint
-ESLINT=$?
-
-if [ $ESLINT -eq 0 ]; then
-  echo "${GREEN}OK${NC}";
-fi
-
-if [ $MIX -eq 0 ] && [ $JS -eq 0 ] && [ $FLOW -eq 0 ] && [ $ESLINT -eq 0 ]; then
-  echo "${GREEN}----==== Good to go! ====----${NC}"
-else
-  echo "${RED}----==== Oops! ====----${NC}"
-  if [ $MIX -ne 0 ]; then
-  echo "${RED}Mix tests failed${NC}";
+report() {
+  if [ $1 -eq 0 ]; then
+    echo "[${GREEN}OK${NC}]"
+  else
+    echo "[${RED}ERROR${NC}]"
+    exit 1
   fi
-  if [ $JS -ne 0 ]; then
-    echo "${RED}JS tests failed${NC}";
-  fi
-  if [ $FLOW -ne 0 ]; then
-    echo "${RED}Flow tests failed${NC}";
-  fi
-  if [ $ESLINT -ne 0 ]; then
-    echo "${RED}ESLint tests failed${NC}";
-  fi
-  echo "${RED}----==== Oops! ====----${NC}"
+}
+
+if [ ! -z $STAGED_ELIXIR_FILES ]; then
+  echo -n "==== Running mix format... "
+  $MIX format ${STAGED_ELIXIR_FILES}
+  report $?
 fi
+
+if [ ! -z $STAGED_ASSET_FILES ]; then
+  echo -n "==== Running prettier... "
+  $YARN -s prettier -c ${STAGED_ASSET_FILES}
+  report $?
+fi
+
+exit 0
