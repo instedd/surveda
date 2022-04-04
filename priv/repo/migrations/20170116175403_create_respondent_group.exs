@@ -8,6 +8,5 @@ defmodule Ask.Repo.Migrations.CreateRespondentGroup do
 
       timestamps()
     end
-
   end
 end

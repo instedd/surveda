@@ -24,8 +24,10 @@ defmodule Ask.Runtime.QuestionnaireSimulatorStoreTest do
     simulation = %QuestionnaireSmsSimulation{messages: [%{body: "hello", type: "ao"}]}
     QuestionnaireSimulatorStore.add_respondent_simulation(respondent_id, simulation)
 
-    time_passes(minutes: 4, seconds: 59) # ttl is 5 minutes
-    GenServer.call(QuestionnaireSimulatorStore, :clean) # force the cleanup
+    # ttl is 5 minutes
+    time_passes(minutes: 4, seconds: 59)
+    # force the cleanup
+    GenServer.call(QuestionnaireSimulatorStore, :clean)
 
     assert simulation == QuestionnaireSimulatorStore.get_respondent_simulation(respondent_id)
   end
@@ -34,7 +36,11 @@ defmodule Ask.Runtime.QuestionnaireSimulatorStoreTest do
     respondent_id = Ecto.UUID.generate()
     simulation = %QuestionnaireSmsSimulation{messages: [%{body: "hello", type: "ao"}]}
     QuestionnaireSimulatorStore.add_respondent_simulation(respondent_id, simulation)
-    new_simulation = %QuestionnaireSmsSimulation{messages: [%{body: "hello", type: "ao"}, %{body: "hi", type: "at"}]}
+
+    new_simulation = %QuestionnaireSmsSimulation{
+      messages: [%{body: "hello", type: "ao"}, %{body: "hi", type: "at"}]
+    }
+
     QuestionnaireSimulatorStore.add_respondent_simulation(respondent_id, new_simulation)
     assert new_simulation == QuestionnaireSimulatorStore.get_respondent_simulation(respondent_id)
   end
@@ -46,8 +52,10 @@ defmodule Ask.Runtime.QuestionnaireSimulatorStoreTest do
     simulation = %QuestionnaireSmsSimulation{messages: [%{body: "hello", type: "ao"}]}
     QuestionnaireSimulatorStore.add_respondent_simulation(respondent_id, simulation)
 
-    time_passes(minutes: 5, seconds: 1) # more than 5 minutes (default value) have passed
-    GenServer.call(QuestionnaireSimulatorStore, :clean) # force the cleanup
+    # more than 5 minutes (default value) have passed
+    time_passes(minutes: 5, seconds: 1)
+    # force the cleanup
+    GenServer.call(QuestionnaireSimulatorStore, :clean)
 
     assert nil == QuestionnaireSimulatorStore.get_respondent_simulation(respondent_id)
   end

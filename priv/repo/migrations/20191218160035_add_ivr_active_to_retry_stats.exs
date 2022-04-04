@@ -13,7 +13,6 @@ defmodule Ask.Repo.Migrations.AddIvrActiveToRetryStats do
     alter table(:retry_stats) do
       modify(:ivr_active, :boolean, null: false)
     end
-
   end
 
   def down do

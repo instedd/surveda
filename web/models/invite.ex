@@ -3,7 +3,8 @@ defmodule Ask.Invite do
 
   schema "invites" do
     field :code, :string
-    field :level, :string # reader, editor
+    # reader, editor
+    field :level, :string
     field :email, :string
     field :inviter_email, :string
     belongs_to :project, Ask.Project
@@ -22,5 +23,4 @@ defmodule Ask.Invite do
     |> validate_inclusion(:level, ["admin", "editor", "reader"])
     |> unique_constraint(:project_id, name: :project_id)
   end
-
 end

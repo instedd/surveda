@@ -4,7 +4,7 @@ defmodule Ask.Repo.Migrations.AddRangesToNumericSteps do
   defp index_of(enum, field), do: Enum.find_index(enum, fn c -> c == field end)
 
   def change do
-    Ask.Repo.transaction fn ->
+    Ask.Repo.transaction(fn ->
       quizzes = Ask.Repo.query!("select * from questionnaires")
 
       id_index = quizzes.columns |> index_of("id")
@@ -13,16 +13,20 @@ defmodule Ask.Repo.Migrations.AddRangesToNumericSteps do
       quizzes.rows
       |> Enum.each(fn quiz_row ->
         upgraded_steps = upgrade(quiz_row |> Enum.at(steps_index))
-        Ask.Repo.query!("update questionnaires set steps = ? where id = ?", [upgraded_steps, quiz_row |> Enum.at(id_index)])
+
+        Ask.Repo.query!("update questionnaires set steps = ? where id = ?", [
+          upgraded_steps,
+          quiz_row |> Enum.at(id_index)
+        ])
       end)
-    end
+    end)
   end
 
   def upgrade(steps) do
     steps
-    |> Poison.decode!
+    |> Poison.decode!()
     |> Enum.map(&upgrade_step/1)
-    |> Poison.encode!
+    |> Poison.encode!()
   end
 
   def upgrade_step(step) do
@@ -30,9 +34,9 @@ defmodule Ask.Repo.Migrations.AddRangesToNumericSteps do
       step["type"] == "numeric" && !Map.has_key?(step, "ranges") ->
         ranges = [%{"from" => nil, "to" => nil, "skip_logic" => nil}]
         Map.put(step, "ranges", ranges)
+
       :else ->
         step
     end
   end
-
 end

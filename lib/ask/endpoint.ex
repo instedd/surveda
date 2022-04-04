@@ -2,8 +2,7 @@ defmodule Ask.Endpoint do
   use Phoenix.Endpoint, otp_app: :ask
   use Sentry.Phoenix.Endpoint
 
-  socket "/socket", Ask.UserSocket,
-    websocket: true
+  socket "/socket", Ask.UserSocket, websocket: true
 
   plug Ask.Static
 

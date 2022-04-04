@@ -11,6 +11,7 @@ defmodule Ask.Repo.Migrations.AddFloipEndpointsTable do
 
       timestamps()
     end
+
     create index(:surveys, [:id])
   end
 end

@@ -1,14 +1,28 @@
 defmodule Ask.SurveyController do
   use Ask.Web, :api_controller
 
-  alias Ask.{Project, Folder, Survey, Logger, ActivityLog, RetriesHistogram, ScheduleError, ConflictError}
+  alias Ask.{
+    Project,
+    Folder,
+    Survey,
+    Logger,
+    ActivityLog,
+    RetriesHistogram,
+    ScheduleError,
+    ConflictError
+  }
+
   alias Ask.Runtime.SurveyAction
   alias Ecto.Multi
 
   def index(conn, %{"project_id" => project_id} = params) do
     project = load_project(conn, project_id)
 
-    dynamic = dynamic([s], s.project_id == ^project.id and is_nil(s.folder_id) and is_nil(s.panel_survey_id))
+    dynamic =
+      dynamic(
+        [s],
+        s.project_id == ^project.id and is_nil(s.folder_id) and is_nil(s.panel_survey_id)
+      )
 
     # Hide simulations from the index
     dynamic = dynamic([s], s.simulation == false and ^dynamic)
@@ -32,10 +46,13 @@ defmodule Ask.SurveyController do
         dynamic
       end
 
-    surveys = Repo.all(from s in Survey,
-      preload: [respondent_groups: [respondent_group_channels: :channel]],
-      where: ^dynamic)
-      |> Enum.map(&(&1 |> Survey.with_down_channels))
+    surveys =
+      Repo.all(
+        from s in Survey,
+          preload: [respondent_groups: [respondent_group_channels: :channel]],
+          where: ^dynamic
+      )
+      |> Enum.map(&(&1 |> Survey.with_down_channels()))
 
     render(conn, "index.json", surveys: surveys)
   end
@@ -47,6 +64,7 @@ defmodule Ask.SurveyController do
     timezone = Map.get(survey_params, "timezone", Ask.Schedule.default_timezone())
     schedule = Map.merge(Ask.Schedule.default(), %{timezone: timezone})
     generates_panel_survey = Map.get(survey_params, "generates_panel_survey", false)
+
     props = %{
       "project_id" => project_id,
       "folder_id" => Map.get(params, "folder_id"),
@@ -55,32 +73,37 @@ defmodule Ask.SurveyController do
       "generates_panel_survey" => generates_panel_survey
     }
 
-    changeset = project
-    |> build_assoc(:surveys)
-    |> Survey.changeset(props)
+    changeset =
+      project
+      |> build_assoc(:surveys)
+      |> Survey.changeset(props)
 
-    multi = Multi.new
-    |> Multi.insert(:survey, changeset)
-    |> Multi.run(:log, fn _, %{survey: survey} ->
-      ActivityLog.create_survey(project, conn, survey) |> Repo.insert
-    end)
-    |> Repo.transaction
+    multi =
+      Multi.new()
+      |> Multi.insert(:survey, changeset)
+      |> Multi.run(:log, fn _, %{survey: survey} ->
+        ActivityLog.create_survey(project, conn, survey) |> Repo.insert()
+      end)
+      |> Repo.transaction()
 
     case multi do
       {:ok, %{survey: survey}} ->
-        project |> Project.touch!
+        project |> Project.touch!()
 
-        survey = survey
-        |> Repo.preload([:quota_buckets])
-        |> Repo.preload(:questionnaires)
-        |> Survey.with_links(user_level(project_id, current_user(conn).id))
+        survey =
+          survey
+          |> Repo.preload([:quota_buckets])
+          |> Repo.preload(:questionnaires)
+          |> Survey.with_links(user_level(project_id, current_user(conn).id))
 
         conn
         |> put_status(:created)
         |> put_resp_header("location", project_survey_path(conn, :show, project_id, survey))
         |> render("show.json", survey: survey)
+
       {:error, _, changeset, _} ->
-        Logger.warn "Error when creating a survey: #{inspect changeset}"
+        Logger.warn("Error when creating a survey: #{inspect(changeset)}")
+
         conn
         |> put_status(:unprocessable_entity)
         |> put_view(Ask.ChangesetView)
@@ -89,34 +112,37 @@ defmodule Ask.SurveyController do
   end
 
   def show(conn, %{"project_id" => project_id, "id" => id}) do
-    survey = conn
-    |> load_project(project_id)
-    |> load_survey(id)
-    |> Repo.preload([:quota_buckets])
-    |> Repo.preload(:questionnaires)
-    |> Repo.preload(:folder)
-    |> Repo.preload(panel_survey: [:folder])
-    |> Repo.preload(respondent_groups: [respondent_group_channels: :channel])
-    |> Survey.with_links(user_level(project_id, current_user(conn).id))
-    |> Survey.with_down_channels
+    survey =
+      conn
+      |> load_project(project_id)
+      |> load_survey(id)
+      |> Repo.preload([:quota_buckets])
+      |> Repo.preload(:questionnaires)
+      |> Repo.preload(:folder)
+      |> Repo.preload(panel_survey: [:folder])
+      |> Repo.preload(respondent_groups: [respondent_group_channels: :channel])
+      |> Survey.with_links(user_level(project_id, current_user(conn).id))
+      |> Survey.with_down_channels()
 
     render(conn, "show.json", survey: survey)
   end
 
   def stats(conn, %{"project_id" => project_id, "survey_id" => survey_id}) do
-    stats = conn
-    |> load_project(project_id)
-    |> load_survey(survey_id)
-    |> Survey.stats()
+    stats =
+      conn
+      |> load_project(project_id)
+      |> load_survey(survey_id)
+      |> Survey.stats()
 
     render(conn, "stats.json", stats)
   end
 
   def retries_histograms(conn, %{"project_id" => project_id, "survey_id" => survey_id}) do
-    retries_histograms = conn
-    |> load_project(project_id)
-    |> load_survey(survey_id)
-    |> RetriesHistogram.survey_histograms()
+    retries_histograms =
+      conn
+      |> load_project(project_id)
+      |> load_survey(survey_id)
+      |> RetriesHistogram.survey_histograms()
 
     render(conn, "retries_histograms.json", %{histograms: retries_histograms})
   end
@@ -125,65 +151,95 @@ defmodule Ask.SurveyController do
     project = load_project_for_change(conn, project_id)
     survey = load_survey(project, id)
 
-    if survey |> Survey.editable? do
-      changeset = survey
+    if survey |> Survey.editable?() do
+      changeset =
+        survey
         |> Repo.preload([:questionnaires])
         |> Repo.preload([:quota_buckets])
         |> Repo.preload(respondent_groups: [respondent_group_channels: :channel])
         |> Survey.changeset(survey_params)
         |> update_questionnaires(survey_params)
-        |> Survey.update_state
+        |> Survey.update_state()
 
       changed_properties = changed_properties(changeset)
-      rename_log = if :name in changed_properties, do: ActivityLog.rename_survey(project, conn, survey, survey.name, changeset.changes.name), else: nil
-      edit_log = if Enum.any?(changed_properties, &(&1 != :name)), do: ActivityLog.edit_survey(project, conn, survey), else: nil
 
-      multi = Multi.new
-      |> Multi.run(:survey, fn _, _ ->
-        Repo.update(changeset, force: Map.has_key?(changeset.changes, :questionnaires))
-      end)
-      |> Multi.run(:rename_log, fn _, _ ->
-        if rename_log, do: rename_log |> Repo.insert, else: {:ok, nil}
-      end)
-      |> Multi.run(:edit_log, fn _, _ ->
-        if edit_log, do: edit_log |> Repo.insert, else: {:ok, nil}
-      end)
-      |> Repo.transaction
+      rename_log =
+        if :name in changed_properties,
+          do:
+            ActivityLog.rename_survey(project, conn, survey, survey.name, changeset.changes.name),
+          else: nil
+
+      edit_log =
+        if Enum.any?(changed_properties, &(&1 != :name)),
+          do: ActivityLog.edit_survey(project, conn, survey),
+          else: nil
+
+      multi =
+        Multi.new()
+        |> Multi.run(:survey, fn _, _ ->
+          Repo.update(changeset, force: Map.has_key?(changeset.changes, :questionnaires))
+        end)
+        |> Multi.run(:rename_log, fn _, _ ->
+          if rename_log, do: rename_log |> Repo.insert(), else: {:ok, nil}
+        end)
+        |> Multi.run(:edit_log, fn _, _ ->
+          if edit_log, do: edit_log |> Repo.insert(), else: {:ok, nil}
+        end)
+        |> Repo.transaction()
 
       case multi do
         {:ok, %{survey: survey}} ->
-          project |> Project.touch!
-          render(conn, "show.json", survey: survey |> Repo.preload(:questionnaires) |> Survey.with_links(user_level(project_id, current_user(conn).id)))
+          project |> Project.touch!()
+
+          render(conn, "show.json",
+            survey:
+              survey
+              |> Repo.preload(:questionnaires)
+              |> Survey.with_links(user_level(project_id, current_user(conn).id))
+          )
+
         {:error, _, changeset, _} ->
-          Logger.warn "Error when updating survey: #{inspect changeset}"
+          Logger.warn("Error when updating survey: #{inspect(changeset)}")
+
           conn
-            |> put_status(:unprocessable_entity)
-            |> put_view(Ask.ChangesetView)
-            |> render("error.json", changeset: changeset)
+          |> put_status(:unprocessable_entity)
+          |> put_view(Ask.ChangesetView)
+          |> render("error.json", changeset: changeset)
       end
     else
       conn
-        |> put_status(:unprocessable_entity)
-        |> put_view(Ask.ChangesetView)
-        |> render("error.json", changeset: change(%Survey{}, %{}))
+      |> put_status(:unprocessable_entity)
+      |> put_view(Ask.ChangesetView)
+      |> render("error.json", changeset: change(%Survey{}, %{}))
     end
   end
 
-  def set_folder_id(conn, %{"project_id" => project_id, "survey_id" => survey_id, "folder_id" => folder_id}) do
+  def set_folder_id(conn, %{
+        "project_id" => project_id,
+        "survey_id" => survey_id,
+        "folder_id" => folder_id
+      }) do
     project = load_project_for_change(conn, project_id)
     survey = load_survey(project, survey_id)
 
     # Panel surveys can belong to a folder, but their waves don't.
-    if Survey.belongs_to_panel_survey?(survey), do: raise ConflictError
+    if Survey.belongs_to_panel_survey?(survey), do: raise(ConflictError)
 
-    old_folder_name = if survey.folder_id, do: Repo.get(Folder, survey.folder_id).name, else: "No Folder"
+    old_folder_name =
+      if survey.folder_id, do: Repo.get(Folder, survey.folder_id).name, else: "No Folder"
 
-    new_folder_name = if folder_id, do: (project |> assoc(:folders) |> Repo.get!(folder_id)).name, else: "No Folder"
+    new_folder_name =
+      if folder_id,
+        do: (project |> assoc(:folders) |> Repo.get!(folder_id)).name,
+        else: "No Folder"
 
     result =
       Multi.new()
       |> Multi.update(:set_folder_id, Survey.changeset(survey, %{folder_id: folder_id}))
-      |> Multi.insert(:change_folder_log, ActivityLog.change_folder(project, conn, survey, old_folder_name, new_folder_name))
+      |> Multi.insert(
+        :change_folder_log,
+        ActivityLog.change_folder(project, conn, survey, old_folder_name, new_folder_name)
+      )
       |> Repo.transaction()
 
     case result do
@@ -197,7 +253,6 @@ defmodule Ask.SurveyController do
         |> render("error.json", changeset: changeset)
     end
   end
-
 
   def set_name(conn, %{"project_id" => project_id, "survey_id" => survey_id, "name" => name}) do
     project = load_project_for_change(conn, project_id)
@@ -206,7 +261,10 @@ defmodule Ask.SurveyController do
     result =
       Multi.new()
       |> Multi.update(:set_name, Survey.changeset(survey, %{name: name}))
-      |> Multi.insert(:rename_log, ActivityLog.rename_survey(project, conn, survey, survey.name, name))
+      |> Multi.insert(
+        :rename_log,
+        ActivityLog.rename_survey(project, conn, survey, survey.name, name)
+      )
       |> Repo.transaction()
 
     case result do
@@ -221,14 +279,27 @@ defmodule Ask.SurveyController do
     end
   end
 
-  def set_description(conn, %{"project_id" => project_id, "survey_id" => survey_id, "description" => description}) do
+  def set_description(conn, %{
+        "project_id" => project_id,
+        "survey_id" => survey_id,
+        "description" => description
+      }) do
     project = load_project_for_change(conn, project_id)
     survey = load_survey(project, survey_id)
 
     result =
       Multi.new()
       |> Multi.update(:set_description, Survey.changeset(survey, %{description: description}))
-      |> Multi.insert(:change_description_log, ActivityLog.change_survey_description(project, conn, survey, survey.description, description))
+      |> Multi.insert(
+        :change_description_log,
+        ActivityLog.change_survey_description(
+          project,
+          conn,
+          survey,
+          survey.description,
+          description
+        )
+      )
       |> Repo.transaction()
 
     case result do
@@ -255,12 +326,13 @@ defmodule Ask.SurveyController do
     project = load_project_for_change(conn, project_id)
     survey = load_survey(project, id)
 
-    unless Survey.deletable?(survey), do: raise ConflictError
+    unless Survey.deletable?(survey), do: raise(ConflictError)
 
     case SurveyAction.delete(survey, conn) do
       {:ok, _} ->
-        project |> Project.touch!
+        project |> Project.touch!()
         send_resp(conn, :no_content, "")
+
       {:error, _, changeset, _} ->
         conn
         |> put_status(:unprocessable_entity)
@@ -310,9 +382,10 @@ defmodule Ask.SurveyController do
   end
 
   def stop(conn, %{"project_id" => project_id, "survey_id" => survey_id}) do
-    survey = conn
-    |> load_project_for_change(project_id)
-    |> load_survey(survey_id)
+    survey =
+      conn
+      |> load_project_for_change(project_id)
+      |> load_survey(survey_id)
 
     case SurveyAction.stop(survey, conn) do
       {:ok, %{survey: survey, cancellers_pids: cancellers_pids}} ->
@@ -344,25 +417,39 @@ defmodule Ask.SurveyController do
     render(conn, "show.json", survey: survey_with_links)
   end
 
-  def update_locked_status(conn, %{"project_id" => project_id, "survey_id" => survey_id, "locked" => locked}) do
+  def update_locked_status(conn, %{
+        "project_id" => project_id,
+        "survey_id" => survey_id,
+        "locked" => locked
+      }) do
     project = load_project_for_owner(conn, project_id)
 
-    survey = project
-    |> load_survey(survey_id)
-    |> Repo.preload([:quota_buckets])
-    |> Repo.preload(:questionnaires)
-    |> Survey.with_links(user_level(project_id, current_user(conn).id))
+    survey =
+      project
+      |> load_survey(survey_id)
+      |> Repo.preload([:quota_buckets])
+      |> Repo.preload(:questionnaires)
+      |> Survey.with_links(user_level(project_id, current_user(conn).id))
 
     case survey.state do
       "running" ->
-        [survey_changeset, activity_log] = case locked do
-          true ->
-            [Survey.changeset(survey, %{locked: true}), ActivityLog.lock_survey(project, conn, survey)]
-          false ->
-            [Survey.changeset(survey, %{locked: false}), ActivityLog.unlock_survey(project, conn, survey)]
-          _ ->
-            [Survey.changeset(%Survey{}), ActivityLog.changeset(%ActivityLog{})]
-        end
+        [survey_changeset, activity_log] =
+          case locked do
+            true ->
+              [
+                Survey.changeset(survey, %{locked: true}),
+                ActivityLog.lock_survey(project, conn, survey)
+              ]
+
+            false ->
+              [
+                Survey.changeset(survey, %{locked: false}),
+                ActivityLog.unlock_survey(project, conn, survey)
+              ]
+
+            _ ->
+              [Survey.changeset(%Survey{}), ActivityLog.changeset(%ActivityLog{})]
+          end
 
         multi =
           Multi.new()
@@ -372,20 +459,23 @@ defmodule Ask.SurveyController do
 
         case multi do
           {:ok, %{survey: survey}} ->
-            project |> Project.touch!
+            project |> Project.touch!()
             render(conn, "show.json", survey: survey)
+
           {:error, _, changeset, _} ->
-            Logger.warn "Error when updating locked status: #{inspect changeset}"
+            Logger.warn("Error when updating locked status: #{inspect(changeset)}")
+
             conn
-              |> put_status(:unprocessable_entity)
-              |> put_view(Ask.ChangesetView)
-              |> render("error.json", changeset: changeset)
+            |> put_status(:unprocessable_entity)
+            |> put_view(Ask.ChangesetView)
+            |> render("error.json", changeset: changeset)
         end
+
       _ ->
         conn
-          |> put_status(:unprocessable_entity)
-          |> put_view(Ask.ChangesetView)
-          |> render("error.json", changeset: change(%Survey{}, %{}))
+        |> put_status(:unprocessable_entity)
+        |> put_view(Ask.ChangesetView)
+        |> render("error.json", changeset: change(%Survey{}, %{}))
     end
   end
 

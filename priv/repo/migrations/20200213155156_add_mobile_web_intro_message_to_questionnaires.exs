@@ -45,18 +45,19 @@ defmodule Ask.Repo.Migrations.AddMobileWebIntroMessageToQuestionnaires do
     end
   end
 
-  defp mobile_web_intro_message(%{"title" => title} = _settings, default_language), do:
-    Map.get(title, default_language)
+  defp mobile_web_intro_message(%{"title" => title} = _settings, default_language),
+    do: Map.get(title, default_language)
 
   defp mobile_web_intro_message(_settings, _default_language), do: nil
 
   def up do
     for q <- Repo.all(Questionnaire) do
       mobile_web_intro_message = mobile_web_intro_message(q.settings, q.default_language)
-        if mobile_web_intro_message do
-          settings = Map.put(q.settings, "mobile_web_intro_message", mobile_web_intro_message)
-          Questionnaire.changeset(q, %{"settings" => settings}) |> Repo.update!()
-        end
+
+      if mobile_web_intro_message do
+        settings = Map.put(q.settings, "mobile_web_intro_message", mobile_web_intro_message)
+        Questionnaire.changeset(q, %{"settings" => settings}) |> Repo.update!()
+      end
     end
   end
 

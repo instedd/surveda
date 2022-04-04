@@ -2,7 +2,6 @@ defmodule :"Elixir.Ask.Repo.Migrations.Set-not-null-in-retry-stats" do
   use Ecto.Migration
 
   def up do
-
     execute "DELETE FROM retry_stats WHERE mode IS NULL or attempt IS NULL or retry_time IS NULL or count IS NULL or survey_id IS NULL"
     execute "ALTER TABLE retry_stats DROP FOREIGN KEY retry_stats_survey_id_fkey"
 
@@ -16,7 +15,6 @@ defmodule :"Elixir.Ask.Repo.Migrations.Set-not-null-in-retry-stats" do
   end
 
   def down do
-
     execute "ALTER TABLE retry_stats DROP FOREIGN KEY retry_stats_survey_id_fkey"
 
     alter table(:retry_stats) do
@@ -27,5 +25,4 @@ defmodule :"Elixir.Ask.Repo.Migrations.Set-not-null-in-retry-stats" do
       modify :survey_id, references(:surveys, on_delete: :delete_all), null: true
     end
   end
-
 end

@@ -1,6 +1,6 @@
 defmodule Ask.PanelSurveyView do
   use Ask.Web, :view
-  alias Ask.{PanelSurveyView,PanelSurvey}
+  alias Ask.{PanelSurveyView, PanelSurvey}
 
   def render("index.json", %{panel_surveys: panel_surveys}) do
     %{data: render_many(panel_surveys, PanelSurveyView, "panel_survey.json")}
@@ -11,21 +11,23 @@ defmodule Ask.PanelSurveyView do
   end
 
   def render("panel_survey.json", %{
-    panel_survey: %{
-      folder_id: folder_id,
-      id: id,
-      project_id: project_id,
-      name: name,
-      waves: waves
-    } = panel_survey
-  }) do
+        panel_survey:
+          %{
+            folder_id: folder_id,
+            id: id,
+            project_id: project_id,
+            name: name,
+            waves: waves
+          } = panel_survey
+      }) do
     data = %{
       folder_id: folder_id,
       id: id,
       name: name,
       project_id: project_id,
       updated_at: PanelSurvey.updated_at(panel_survey),
-      latest_wave: render_one(PanelSurvey.latest_wave(panel_survey), Ask.SurveyView, "survey.json"),
+      latest_wave:
+        render_one(PanelSurvey.latest_wave(panel_survey), Ask.SurveyView, "survey.json"),
       is_repeatable: PanelSurvey.repeatable?(panel_survey)
     }
 

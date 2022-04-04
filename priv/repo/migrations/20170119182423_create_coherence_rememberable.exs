@@ -1,5 +1,6 @@
 defmodule Ask.Repo.Migrations.CreateCoherenceRememberable do
   use Ecto.Migration
+
   def change do
     create table(:rememberables) do
       add :series_hash, :string
@@ -9,6 +10,7 @@ defmodule Ask.Repo.Migrations.CreateCoherenceRememberable do
 
       timestamps()
     end
+
     create index(:rememberables, [:user_id])
     create index(:rememberables, [:series_hash])
     create index(:rememberables, [:token_hash])

@@ -33,6 +33,7 @@ defmodule Ask.Repo.Migrations.FixDefaultAudioSourceForQuestionnaireMessages do
   defp fix_ivr_prompt(ivr_prompt), do: ivr_prompt
 
   defp fix(nil), do: nil
+
   defp fix(prompt) do
     prompt
     |> Enum.map(&fix_language_prompt/1)
@@ -40,10 +41,15 @@ defmodule Ask.Repo.Migrations.FixDefaultAudioSourceForQuestionnaireMessages do
   end
 
   def up do
-    Questionnaire |> Repo.all |> Enum.each(fn q ->
+    Questionnaire
+    |> Repo.all()
+    |> Enum.each(fn q ->
       q
-      |> Questionnaire.changeset(%{quota_completed_msg: fix(q.quota_completed_msg), error_msg: fix(q.error_msg)})
-      |> Repo.update!
+      |> Questionnaire.changeset(%{
+        quota_completed_msg: fix(q.quota_completed_msg),
+        error_msg: fix(q.error_msg)
+      })
+      |> Repo.update!()
     end)
   end
 

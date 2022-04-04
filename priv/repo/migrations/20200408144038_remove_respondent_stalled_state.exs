@@ -18,8 +18,13 @@ defmodule Ask.Repo.Migrations.RemoveRespondentStalledState do
       new_disposition = failed_disposition_from(respondent.disposition)
 
       respondent
-      |> Respondent.changeset(%{state: "failed", session: nil, timeout_at: nil, disposition: new_disposition})
-      |> Repo.update!
+      |> Respondent.changeset(%{
+        state: "failed",
+        session: nil,
+        timeout_at: nil,
+        disposition: new_disposition
+      })
+      |> Repo.update!()
     end
 
     def changeset(struct, params \\ %{}) do
@@ -40,7 +45,6 @@ defmodule Ask.Repo.Migrations.RemoveRespondentStalledState do
         _ -> "failed"
       end
     end
-
   end
 
   def up do

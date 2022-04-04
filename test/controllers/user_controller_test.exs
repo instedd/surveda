@@ -1,5 +1,4 @@
 defmodule Ask.UserControllerTest do
-
   import Ecto.Query
 
   alias Ask.User
@@ -8,7 +7,9 @@ defmodule Ask.UserControllerTest do
 
   setup %{conn: conn} do
     user = insert(:user)
-    conn = conn
+
+    conn =
+      conn
       |> put_private(:test_user, user)
       |> put_req_header("accept", "application/json")
 
@@ -23,10 +24,11 @@ defmodule Ask.UserControllerTest do
 
   test "fetches settings", %{conn: conn, user: user} do
     attrs = %{onboarding: %{questionnaire: true}}
+
     User.changeset(user, %{settings: attrs})
-    |> Repo.update!
-    conn = get conn, settings_path(conn, :settings)
+    |> Repo.update!()
+
+    conn = get(conn, settings_path(conn, :settings))
     assert json_response(conn, 200)["data"]["settings"]["onboarding"]["questionnaire"]
   end
-
 end

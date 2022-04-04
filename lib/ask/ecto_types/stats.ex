@@ -87,11 +87,11 @@ defmodule Ask.Stats do
   defp grouped_calls_time(%Stats{total_call_time_seconds: seconds}) when seconds != nil,
     do: seconds
 
-  def total_call_time_seconds(stats), do:
-    grouped_calls_time(stats) + individual_calls_time(stats)
+  def total_call_time_seconds(stats), do: grouped_calls_time(stats) + individual_calls_time(stats)
 
-  defp individual_calls_time(%{call_durations: call_durations}), do:
-    call_durations |> Enum.reduce(0, fn {_call_id, duration}, acum -> acum + duration end)
+  defp individual_calls_time(%{call_durations: call_durations}),
+    do: call_durations |> Enum.reduce(0, fn {_call_id, duration}, acum -> acum + duration end)
+
   defp individual_calls_time(_stats), do: 0
 
   def with_call_time(%{call_durations: call_durations} = stats, call_id, seconds) do
@@ -130,13 +130,15 @@ defmodule Ask.Stats do
 
   def add_attempt(stats, mode) do
     stats = add_attempt_internal(stats, mode)
+
     case mode do
       :ivr -> stats |> Map.put(:pending_call, true)
       _ -> stats
     end
   end
 
-  defp add_attempt_internal(%Stats{attempts: nil} = stats, :sms), do: %{stats | attempts: %{"sms" => 1}}
+  defp add_attempt_internal(%Stats{attempts: nil} = stats, :sms),
+    do: %{stats | attempts: %{"sms" => 1}}
 
   defp add_attempt_internal(%Stats{attempts: %{"sms" => total} = attempts} = stats, :sms),
     do: %{stats | attempts: %{attempts | "sms" => total + 1}}
@@ -144,7 +146,8 @@ defmodule Ask.Stats do
   defp add_attempt_internal(%Stats{attempts: attempts} = stats, :sms),
     do: %{stats | attempts: Map.put(attempts, "sms", 1)}
 
-  defp add_attempt_internal(%Stats{attempts: nil} = stats, :ivr), do: %{stats | attempts: %{"ivr" => 1}}
+  defp add_attempt_internal(%Stats{attempts: nil} = stats, :ivr),
+    do: %{stats | attempts: %{"ivr" => 1}}
 
   defp add_attempt_internal(%Stats{attempts: %{"ivr" => total} = attempts} = stats, :ivr),
     do: %{stats | attempts: %{attempts | "ivr" => total + 1}}
@@ -155,8 +158,11 @@ defmodule Ask.Stats do
   defp add_attempt_internal(%Stats{attempts: nil} = stats, :mobileweb),
     do: %{stats | attempts: %{"mobileweb" => 1}}
 
-  defp add_attempt_internal(%Stats{attempts: %{"mobileweb" => total} = attempts} = stats, :mobileweb),
-    do: %{stats | attempts: %{attempts | "mobileweb" => total + 1}}
+  defp add_attempt_internal(
+         %Stats{attempts: %{"mobileweb" => total} = attempts} = stats,
+         :mobileweb
+       ),
+       do: %{stats | attempts: %{attempts | "mobileweb" => total + 1}}
 
   defp add_attempt_internal(%Stats{attempts: attempts} = stats, :mobileweb),
     do: %{stats | attempts: Map.put(attempts, "mobileweb", 1)}

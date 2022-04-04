@@ -11,6 +11,7 @@ defmodule Ask.UserController do
 
   def update_settings(conn, user_params) do
     user = conn |> current_user
+
     # changeset is made in 2 passes because is not posible a deep merge between a %User{} and a map (user_params)
     settings = %{settings: DeepMerge.deep_merge(user.settings, user_params["settings"] || %{})}
     user_params = Map.delete(user_params, "settings")
@@ -22,10 +23,10 @@ defmodule Ask.UserController do
       {:ok, user} ->
         conn
         |> render("settings.json", settings: user.settings)
+
       {:error, changeset} ->
         conn
         |> render("error.json", changeset: changeset)
     end
   end
-
 end

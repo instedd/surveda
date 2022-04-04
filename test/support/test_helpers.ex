@@ -12,7 +12,7 @@ defmodule Ask.TestHelpers do
       def create_project_for_user(user, options \\ []) do
         level = options[:level] || "owner"
         archived = options[:archived] || false
-        updated_at = options[:updated_at] || Timex.now
+        updated_at = options[:updated_at] || Timex.now()
         project = insert(:project, archived: archived, updated_at: updated_at)
         insert(:project_membership, user: user, project: project, level: level)
         project
@@ -25,13 +25,12 @@ defmodule Ask.TestHelpers do
             insert(
               :respondent_group,
               survey: s,
-              respondent_group_channels:
-                [
-                  insert(
-                    :respondent_group_channel,
-                    channel: c
-                  )
-                ]
+              respondent_group_channels: [
+                insert(
+                  :respondent_group_channel,
+                  channel: c
+                )
+              ]
             )
           end)
 
@@ -46,22 +45,45 @@ defmodule Ask.TestHelpers do
         user = Keyword.get(options, :user, nil)
         simulation = Keyword.get(options, :simulation, false)
 
-        project = if (user), do: create_project_for_user(user), else: nil
+        project = if user, do: create_project_for_user(user), else: nil
         test_channel = Ask.TestChannel.new(false, mode == "sms")
 
-        channel_type = case mode do
-          "mobileweb" -> "sms"
-          _ -> mode
-        end
+        channel_type =
+          case mode do
+            "mobileweb" -> "sms"
+            _ -> mode
+          end
 
-        channel = insert(:channel, settings: test_channel |> Ask.TestChannel.settings, type: channel_type)
+        channel =
+          insert(:channel,
+            settings: test_channel |> Ask.TestChannel.settings(),
+            type: channel_type
+          )
+
         quiz = insert(:questionnaire, steps: steps, quota_completed_steps: nil)
-        survey = %{schedule: schedule, state: "running", questionnaires: [quiz], mode: [[mode]], fallback_delay: fallback_delay, simulation: simulation}
-        survey = if (project), do: Map.put(survey, :project, project), else: survey
-        survey = insert(:survey, survey)
-        group = insert(:respondent_group, survey: survey, respondents_count: 1) |> Ask.Repo.preload(:channels)
 
-        Ask.RespondentGroupChannel.changeset(%Ask.RespondentGroupChannel{}, %{respondent_group_id: group.id, channel_id: channel.id, mode: mode}) |> Ask.Repo.insert
+        survey = %{
+          schedule: schedule,
+          state: "running",
+          questionnaires: [quiz],
+          mode: [[mode]],
+          fallback_delay: fallback_delay,
+          simulation: simulation
+        }
+
+        survey = if project, do: Map.put(survey, :project, project), else: survey
+        survey = insert(:survey, survey)
+
+        group =
+          insert(:respondent_group, survey: survey, respondents_count: 1)
+          |> Ask.Repo.preload(:channels)
+
+        Ask.RespondentGroupChannel.changeset(%Ask.RespondentGroupChannel{}, %{
+          respondent_group_id: group.id,
+          channel_id: channel.id,
+          mode: mode
+        })
+        |> Ask.Repo.insert()
 
         respondent = insert(:respondent, survey: survey, respondent_group: group)
         phone_number = respondent.canonical_phone_number
@@ -69,7 +91,12 @@ defmodule Ask.TestHelpers do
         [survey, group, test_channel, respondent, phone_number]
       end
 
-      defp create_running_survey_with_channel_and_respondent(steps \\ @dummy_steps, mode \\ "sms", schedule \\ Ask.Schedule.always(), fallback_delay \\ "10m") do
+      defp create_running_survey_with_channel_and_respondent(
+             steps \\ @dummy_steps,
+             mode \\ "sms",
+             schedule \\ Ask.Schedule.always(),
+             fallback_delay \\ "10m"
+           ) do
         create_running_survey_with_channel_and_respondent_with_options(
           steps: steps,
           mode: mode,
@@ -83,7 +110,10 @@ defmodule Ask.TestHelpers do
       end
 
       def create_several_respondents(survey, group, n) do
-        [create_several_respondents(survey, group, n - 1) | insert(:respondent, survey: survey, respondent_group: group)]
+        [
+          create_several_respondents(survey, group, n - 1)
+          | insert(:respondent, survey: survey, respondent_group: group)
+        ]
       end
 
       def assert_respondents_by_state(survey, active, pending) do
@@ -101,10 +131,14 @@ defmodule Ask.TestHelpers do
       end
 
       defp get_respondents_by_state(survey) do
-        by_state = Ask.Repo.all(
-                     from r in assoc(survey, :respondents),
-                     group_by: :state,
-                     select: {r.state, count("*")}) |> Enum.into(%{})
+        by_state =
+          Ask.Repo.all(
+            from r in assoc(survey, :respondents),
+              group_by: :state,
+              select: {r.state, count("*")}
+          )
+          |> Enum.into(%{})
+
         [by_state[:active] || 0, by_state[:pending] || 0]
       end
 
@@ -120,14 +154,17 @@ defmodule Ask.TestHelpers do
 
       defp panel_survey_generator_survey_with_cutoff_and_comparisons() do
         survey = panel_survey_generator_survey()
+
         dummy_cutoff_and_comparisons = %{
           comparisons: @foo_string,
           quota_vars: @bar_string,
           cutoff: @dummy_int,
           count_partial_results: true
         }
-        survey = Survey.changeset(survey, dummy_cutoff_and_comparisons)
-        |> Repo.update!()
+
+        survey =
+          Survey.changeset(survey, dummy_cutoff_and_comparisons)
+          |> Repo.update!()
       end
 
       defp panel_survey_generator_survey_in_folder(project \\ nil) do
@@ -138,6 +175,7 @@ defmodule Ask.TestHelpers do
       defp include_in_folder(survey) do
         project = Repo.preload(survey, :project).project
         folder = insert(:folder, project: project)
+
         Survey.changeset(survey, %{folder_id: folder.id})
         |> Repo.update!()
       end
@@ -158,7 +196,7 @@ defmodule Ask.TestHelpers do
 
       defp panel_survey_with_wave() do
         panel_survey = insert(:panel_survey)
-        insert(:survey, panel_survey:  panel_survey, project: panel_survey.project)
+        insert(:survey, panel_survey: panel_survey, project: panel_survey.project)
         # Reload the panel survey. One of its surveys has changed, so it's outdated
         Repo.get!(Ask.PanelSurvey, panel_survey.id)
       end

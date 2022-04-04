@@ -3,7 +3,7 @@ defmodule Ask.Repo.Migrations.PopulateSaltFieldInProjects do
 
   alias Ask.Repo
 
-   defmodule Project do
+  defmodule Project do
     use Ask.Web, :model
 
     schema "projects" do
@@ -17,17 +17,20 @@ defmodule Ask.Repo.Migrations.PopulateSaltFieldInProjects do
   end
 
   def up do
-    Project |> Repo.all |> Enum.each(fn p ->
-      salt = Ecto.UUID.generate
-      p |> Project.changeset(%{salt: salt}) |> Repo.update
+    Project
+    |> Repo.all()
+    |> Enum.each(fn p ->
+      salt = Ecto.UUID.generate()
+      p |> Project.changeset(%{salt: salt}) |> Repo.update()
     end)
   end
 
   def down do
-    Project |> Repo.all |> Enum.each(fn p ->
+    Project
+    |> Repo.all()
+    |> Enum.each(fn p ->
       salt = nil
-      p |> Project.changeset(%{salt: salt}) |> Repo.update
+      p |> Project.changeset(%{salt: salt}) |> Repo.update()
     end)
   end
-
 end

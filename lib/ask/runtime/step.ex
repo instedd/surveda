@@ -10,8 +10,9 @@ defmodule Ask.Runtime.Step do
 
   def is_refusal_option(%{"refusal" => %{"enabled" => true} = refusal}, reply, mode, language) do
     fetch(:response, refusal, mode, language)
-    |> Enum.any?(fn r -> (r |> clean_string) == reply end)
+    |> Enum.any?(fn r -> r |> clean_string == reply end)
   end
+
   def is_refusal_option(_, _, _, _), do: false
 
   def validate(step, reply, mode, language) do
@@ -19,30 +20,40 @@ defmodule Ask.Runtime.Step do
 
     case step["type"] do
       "multiple-choice" ->
-        choice = step["choices"]
-        |> Enum.find(fn choice ->
-          fetch(:response, choice, mode, language) |> Enum.any?(fn r -> (r |> clean_string) == reply end)
-        end)
-        if (choice), do: choice["value"], else: :invalid_answer
+        choice =
+          step["choices"]
+          |> Enum.find(fn choice ->
+            fetch(:response, choice, mode, language)
+            |> Enum.any?(fn r -> r |> clean_string == reply end)
+          end)
+
+        if choice, do: choice["value"], else: :invalid_answer
+
       "numeric" ->
         num = is_numeric_permissive(reply, language, step)
+
         cond do
           is_refusal_option(step, reply, mode, language) ->
             {:refusal, reply}
+
           num && is_in_numeric_range(step, num) ->
             to_string(num)
+
           :else ->
             :invalid_answer
         end
+
       "language-selection" ->
         if is_numeric(reply) do
           choices = step["language_choices"]
           {num, ""} = Integer.parse(reply)
-          (choices |> Enum.at(num - 1)) || (choices |> Enum.at(0))
+          choices |> Enum.at(num - 1) || choices |> Enum.at(0)
         else
           :invalid_answer
         end
-      _ -> nil
+
+      _ ->
+        nil
     end
   end
 
@@ -53,39 +64,64 @@ defmodule Ask.Runtime.Step do
           step["refusal"]["skip_logic"]
         else
           value = is_numeric_permissive(reply, language, step)
+
           step["ranges"]
-          |> Enum.find_value(nil, fn (range) ->
-            if (range["from"] == nil || range["from"] <= value) && (range["to"]
-              == nil || range["to"] >= value), do: range["skip_logic"], else: false
+          |> Enum.find_value(nil, fn range ->
+            if (range["from"] == nil || range["from"] <= value) &&
+                 (range["to"] ==
+                    nil || range["to"] >= value),
+               do: range["skip_logic"],
+               else: false
           end)
         end
+
       "multiple-choice" ->
         step
         |> Map.get("choices")
         |> Enum.find(fn choice -> choice["value"] == reply end)
         |> Map.get("skip_logic")
-      "explanation" -> step["skip_logic"]
-      "flag" -> step["skip_logic"]
-      _ -> nil
+
+      "explanation" ->
+        step["skip_logic"]
+
+      "flag" ->
+        step["skip_logic"]
+
+      _ ->
+        nil
     end
   end
 
   def fetch(:reply_step, step, mode, language) do
-    choices = case step["type"] do
-      "multiple-choice" ->
-        step["choices"]
-        |> Enum.map(fn choice ->
-          fetch(:response, choice, mode, language)
-        end)
-      "language-selection" ->
-        step["language_choices"]
-      _ -> []
-    end
+    choices =
+      case step["type"] do
+        "multiple-choice" ->
+          step["choices"]
+          |> Enum.map(fn choice ->
+            fetch(:response, choice, mode, language)
+          end)
+
+        "language-selection" ->
+          step["language_choices"]
+
+        _ ->
+          []
+      end
 
     refusal = fetch(:refusal, step, mode, language)
     num_digits = fetch(:num_digits, step, mode, language)
 
-    ReplyStep.new(fetch(:prompt, step, mode, language), step["title"], step["type"], step["id"], choices, step["min_value"], step["max_value"], refusal, num_digits)
+    ReplyStep.new(
+      fetch(:prompt, step, mode, language),
+      step["title"],
+      step["type"],
+      step["id"],
+      choices,
+      step["min_value"],
+      step["max_value"],
+      refusal,
+      num_digits
+    )
   end
 
   def fetch(:prompt, step = %{"type" => "language-selection"}, mode, _language) do
@@ -105,10 +141,11 @@ defmodule Ask.Runtime.Step do
 
   def fetch(:response, step, mode, language) do
     case step
-    |> Map.get("responses", %{})
-    |> Map.get(mode, %{}) do
+         |> Map.get("responses", %{})
+         |> Map.get(mode, %{}) do
       response when is_map(response) ->
         response |> Map.get(language) |> to_list
+
       response ->
         response |> to_list
     end
@@ -125,6 +162,7 @@ defmodule Ask.Runtime.Step do
     case step do
       %{"type" => "numeric", "refusal" => %{"enabled" => true, "responses" => %{"ivr" => value}}} ->
         value
+
       _ ->
         nil
     end
@@ -132,8 +170,12 @@ defmodule Ask.Runtime.Step do
 
   def fetch(:refusal, step, mode, language) do
     case step do
-      %{"type" => "numeric", "refusal" => %{"enabled" => true, "responses" => %{^mode => %{^language => value}}}} ->
+      %{
+        "type" => "numeric",
+        "refusal" => %{"enabled" => true, "responses" => %{^mode => %{^language => value}}}
+      } ->
         value
+
       _ ->
         nil
     end
@@ -145,23 +187,27 @@ defmodule Ask.Runtime.Step do
         # If we have 9 choices (1..9) then we can set numDigits to 1,
         # otherwise we can't (it's either 1 or 2 digits).
         choices = step["language_choices"]
+
         if length(choices) < 9 do
           1
         else
           nil
         end
+
       "multiple-choice" ->
-        lengths = step["choices"]
-        |> Enum.flat_map(&(&1["responses"]["ivr"]))
-        |> Enum.flat_map(fn v -> v |> String.split(",") end)
-        |> Enum.map(fn v -> v |> String.trim |> String.length end)
-        |> Enum.uniq
+        lengths =
+          step["choices"]
+          |> Enum.flat_map(& &1["responses"]["ivr"])
+          |> Enum.flat_map(fn v -> v |> String.split(",") end)
+          |> Enum.map(fn v -> v |> String.trim() |> String.length() end)
+          |> Enum.uniq()
 
         # Only send numDigits if all choices have the same length
         case lengths do
           [length] -> length
           _ -> nil
         end
+
       "numeric" ->
         # Only send numDigits if the min and max values have the same string length,
         # also taking into account the values of refusal responses
@@ -170,9 +216,10 @@ defmodule Ask.Runtime.Step do
         refusal_values = fetch(:refusal, step, "ivr", language) || []
 
         if min_value && max_value do
-          values = [min_value, max_value | refusal_values]
-          |> Enum.map(fn v -> v |> to_string |> String.length end)
-          |> Enum.uniq
+          values =
+            [min_value, max_value | refusal_values]
+            |> Enum.map(fn v -> v |> to_string |> String.length() end)
+            |> Enum.uniq()
 
           if length(values) == 1 do
             hd(values)
@@ -182,6 +229,7 @@ defmodule Ask.Runtime.Step do
         else
           nil
         end
+
       _ ->
         nil
     end
@@ -212,20 +260,21 @@ defmodule Ask.Runtime.Step do
   end
 
   def split_by_newlines(text) do
-    text |> String.split(Questionnaire.sms_split_separator)
+    text |> String.split(Questionnaire.sms_split_separator())
   end
 
   defp clean_string(nil), do: ""
 
   defp clean_string(string) do
-    string |> String.trim |> String.downcase
+    string |> String.trim() |> String.downcase()
   end
 
   defp is_numeric(str) do
     case Float.parse(str) do
-      {num, ""}  -> num
-      {_num, _r} -> false               # _r : remainder_of_bianry
-      :error     -> false
+      {num, ""} -> num
+      # _r : remainder_of_bianry
+      {_num, _r} -> false
+      :error -> false
     end
   end
 
@@ -237,6 +286,7 @@ defmodule Ask.Runtime.Step do
         else
           num
         end
+
       :error ->
         if step["alphabetical_answers"] do
           Ask.NumberTranslator.try_parse(str, language)

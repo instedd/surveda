@@ -9,9 +9,12 @@ defmodule Ask.SurveyCancellerTest do
 
   setup %{conn: conn} do
     user = insert(:user)
-    conn = conn
-           |> put_private(:test_user, user)
-           |> put_req_header("accept", "application/json")
+
+    conn =
+      conn
+      |> put_private(:test_user, user)
+      |> put_req_header("accept", "application/json")
+
     {:ok, conn: conn, user: user}
   end
 
@@ -19,11 +22,12 @@ defmodule Ask.SurveyCancellerTest do
     test "survey canceller does not have pending surveys to cancel" do
       survey_canceller = Ask.SurveyCanceller.start_cancelling(nil)
       assert survey_canceller == :ignore
+
       assert length(
                Repo.all(
                  from(
                    r in Ask.Respondent,
-                   where: (r.state == :cancelled and is_nil(r.session) and is_nil(r.timeout_at))
+                   where: r.state == :cancelled and is_nil(r.session) and is_nil(r.timeout_at)
                  )
                )
              ) == 0
@@ -34,16 +38,21 @@ defmodule Ask.SurveyCancellerTest do
       questionnaire = insert(:questionnaire, name: "test", project: project)
       survey_1 = insert(:survey, project: project, state: "cancelling")
       test_channel = TestChannel.new(false)
-      channel = insert(
-        :channel,
-        settings: test_channel
-                  |> TestChannel.settings,
-        type: "sms"
-      )
+
+      channel =
+        insert(
+          :channel,
+          settings:
+            test_channel
+            |> TestChannel.settings(),
+          type: "sms"
+        )
+
       group = create_group(survey_1, channel)
       r1 = insert(:respondent, survey: survey_1, state: "active", respondent_group: group)
-      insert_list(3, :respondent, survey: survey_1, state: "active", timeout_at: Timex.now)
+      insert_list(3, :respondent, survey: survey_1, state: "active", timeout_at: Timex.now())
       channel_state = %{"call_id" => 123}
+
       session = %Session{
         current_mode: SessionModeProvider.new("sms", channel, []),
         channel_state: channel_state,
@@ -51,12 +60,15 @@ defmodule Ask.SurveyCancellerTest do
         flow: %Flow{
           questionnaire: questionnaire
         },
-        schedule: survey_1.schedule,
+        schedule: survey_1.schedule
       }
+
       session = Session.dump(session)
+
       r1
       |> Ask.Respondent.changeset(%{session: session})
-      |> Repo.update!
+      |> Repo.update!()
+
       survey_canceller = Ask.SurveyCanceller.start_cancelling(nil)
 
       assert %Ask.SurveyCanceller{processes: _, consumers_pids: _} = survey_canceller
@@ -65,14 +77,16 @@ defmodule Ask.SurveyCancellerTest do
 
       survey = Repo.get(Survey, survey_1.id)
       assert Survey.cancelled?(survey)
+
       assert length(
                Repo.all(
                  from(
                    r in Ask.Respondent,
-                   where: (r.state == :cancelled and is_nil(r.session) and is_nil(r.timeout_at))
+                   where: r.state == :cancelled and is_nil(r.session) and is_nil(r.timeout_at)
                  )
                )
              ) == 4
+
       assert_receive [:cancel_message, ^test_channel, ^channel_state]
     end
 
@@ -82,17 +96,22 @@ defmodule Ask.SurveyCancellerTest do
       survey_1 = insert(:survey, project: project, state: "cancelling")
       survey_2 = insert(:survey, project: project, state: "cancelling")
       test_channel = TestChannel.new(false)
-      channel = insert(
-        :channel,
-        settings: test_channel
-                  |> TestChannel.settings,
-        type: "sms"
-      )
+
+      channel =
+        insert(
+          :channel,
+          settings:
+            test_channel
+            |> TestChannel.settings(),
+          type: "sms"
+        )
+
       group = create_group(survey_1, channel)
       r1 = insert(:respondent, survey: survey_1, state: "active", respondent_group: group)
-      insert_list(3, :respondent, survey: survey_1, state: "active", timeout_at: Timex.now)
-      insert_list(3, :respondent, survey: survey_2, state: "active", timeout_at: Timex.now)
+      insert_list(3, :respondent, survey: survey_1, state: "active", timeout_at: Timex.now())
+      insert_list(3, :respondent, survey: survey_2, state: "active", timeout_at: Timex.now())
       channel_state = %{"call_id" => 123}
+
       session = %Session{
         current_mode: SessionModeProvider.new("sms", channel, []),
         channel_state: channel_state,
@@ -100,12 +119,15 @@ defmodule Ask.SurveyCancellerTest do
         flow: %Flow{
           questionnaire: questionnaire
         },
-        schedule: survey_1.schedule,
+        schedule: survey_1.schedule
       }
+
       session = Session.dump(session)
+
       r1
       |> Ask.Respondent.changeset(%{session: session})
-      |> Repo.update!
+      |> Repo.update!()
+
       survey_canceller = Ask.SurveyCanceller.start_cancelling(nil)
 
       assert %Ask.SurveyCanceller{processes: _, consumers_pids: _} = survey_canceller
@@ -116,36 +138,46 @@ defmodule Ask.SurveyCancellerTest do
       survey_2 = Repo.get(Survey, survey_2.id)
       assert Survey.cancelled?(survey)
       assert Survey.cancelled?(survey_2)
+
       assert length(
                Repo.all(
                  from(
                    r in Ask.Respondent,
-                   where: (r.state == :cancelled and is_nil(r.session) and is_nil(r.timeout_at))
+                   where: r.state == :cancelled and is_nil(r.session) and is_nil(r.timeout_at)
                  )
                )
              ) == 7
+
       assert_receive [:cancel_message, ^test_channel, ^channel_state]
     end
 
-    test "stops multiple surveys from canceller and from controller simultaneously", %{conn: conn, user: user} do
+    test "stops multiple surveys from canceller and from controller simultaneously", %{
+      conn: conn,
+      user: user
+    } do
       project = create_project_for_user(user)
       questionnaire = insert(:questionnaire, name: "test", project: project)
       survey_1 = insert(:survey, project: project, state: "cancelling")
       survey_2 = insert(:survey, project: project, state: "cancelling")
       survey_3 = insert(:survey, project: project, state: "running")
       test_channel = TestChannel.new(false)
-      channel = insert(
-        :channel,
-        settings: test_channel
-                  |> TestChannel.settings,
-        type: "sms"
-      )
+
+      channel =
+        insert(
+          :channel,
+          settings:
+            test_channel
+            |> TestChannel.settings(),
+          type: "sms"
+        )
+
       group_1 = create_group(survey_1, channel)
       r1 = insert(:respondent, survey: survey_1, state: "active", respondent_group: group_1)
-      insert_list(3, :respondent, survey: survey_1, state: "active", timeout_at: Timex.now)
-      insert_list(4, :respondent, survey: survey_2, state: "active", timeout_at: Timex.now)
-      insert_list(3, :respondent, survey: survey_3, state: "active", timeout_at: Timex.now)
+      insert_list(3, :respondent, survey: survey_1, state: "active", timeout_at: Timex.now())
+      insert_list(4, :respondent, survey: survey_2, state: "active", timeout_at: Timex.now())
+      insert_list(3, :respondent, survey: survey_3, state: "active", timeout_at: Timex.now())
       channel_state = %{"call_id" => 123}
+
       session = %Session{
         current_mode: SessionModeProvider.new("sms", channel, []),
         channel_state: channel_state,
@@ -153,15 +185,17 @@ defmodule Ask.SurveyCancellerTest do
         flow: %Flow{
           questionnaire: questionnaire
         },
-        schedule: survey_1.schedule,
+        schedule: survey_1.schedule
       }
+
       session = Session.dump(session)
+
       r1
       |> Ask.Respondent.changeset(%{session: session})
-      |> Repo.update!
+      |> Repo.update!()
 
       survey_canceller = Ask.SurveyCanceller.start_cancelling(nil)
-      conn = post conn, project_survey_survey_path(conn, :stop, survey_3.project, survey_3)
+      conn = post(conn, project_survey_survey_path(conn, :stop, survey_3.project, survey_3))
 
       assert %Ask.SurveyCanceller{processes: _, consumers_pids: _} = survey_canceller
 
@@ -174,23 +208,27 @@ defmodule Ask.SurveyCancellerTest do
       assert Survey.cancelled?(survey)
       assert Survey.cancelled?(survey_2)
       assert Survey.cancelled?(survey_3)
+
       assert length(
                Repo.all(
                  from(
                    r in Ask.Respondent,
-                   where: (r.state == :cancelled and is_nil(r.session) and is_nil(r.timeout_at))
+                   where: r.state == :cancelled and is_nil(r.session) and is_nil(r.timeout_at)
                  )
                )
              ) == 11
+
       assert_receive [:cancel_message, ^test_channel, ^channel_state]
     end
 
     defp create_group(survey, channel) do
       group = insert(:respondent_group, survey: survey, respondents_count: 1)
+
       if channel do
         add_channel_to(group, channel)
       end
-      add_respondent_to group
+
+      add_respondent_to(group)
       group
     end
 
@@ -203,7 +241,7 @@ defmodule Ask.SurveyCancellerTest do
         %RespondentGroupChannel{},
         %{respondent_group_id: group.id, channel_id: channel.id, mode: channel.type}
       )
-      |> Repo.insert
+      |> Repo.insert()
     end
 
     def wait_all_cancellations_from_pids(pids) do

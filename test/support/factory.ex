@@ -3,7 +3,7 @@ defmodule Ask.Factory do
 
   def audio_factory do
     %Ask.Audio{
-      uuid: Ecto.UUID.generate,
+      uuid: Ecto.UUID.generate(),
       filename: "test_audio.mp3",
       data: File.read!("test/fixtures/audio.mp3")
     }
@@ -14,8 +14,9 @@ defmodule Ask.Factory do
       name: "John",
       email: sequence(:email, &"email-#{&1}@example.com"),
       settings: %{},
-      password_hash: "$2b$12$m0Ftkllx0UK4/bgtbNlV0eVRbxMzbUVtGtOnihUveAZnqNwSG7y6i", # 1234
-      confirmed_at: DateTime.utc_now
+      # 1234
+      password_hash: "$2b$12$m0Ftkllx0UK4/bgtbNlV0eVRbxMzbUVtGtOnihUveAZnqNwSG7y6i",
+      confirmed_at: DateTime.utc_now()
     }
   end
 
@@ -36,7 +37,7 @@ defmodule Ask.Factory do
   def project_factory do
     %Ask.Project{
       name: sequence(:project, &"Project #{&1}"),
-      salt: Ecto.UUID.generate,
+      salt: Ecto.UUID.generate(),
       colour_scheme: "default"
     }
   end
@@ -48,7 +49,7 @@ defmodule Ask.Factory do
       name: sequence(:survey, &"Survey #{&1}"),
       mode: [["sms"]],
       state: "not_ready",
-      floip_package_id: Ecto.UUID.generate
+      floip_package_id: Ecto.UUID.generate()
     }
   end
 
@@ -61,7 +62,7 @@ defmodule Ask.Factory do
       disposition: "completed",
       action_type: "prompt",
       action_data: "explanation",
-      timestamp: DateTime.utc_now
+      timestamp: DateTime.utc_now()
     }
   end
 
@@ -79,21 +80,23 @@ defmodule Ask.Factory do
       name: sequence(:questionnaire, &"Questionnaire #{&1}"),
       modes: ["sms", "ivr"],
       steps: [],
-      quota_completed_steps: [%{
-        "id" => "quota-completed-step",
-        "type" => "explanation",
-        "title" => "Completed",
-        "prompt" => %{
-          "en" => %{
-            "sms" => "Quota completed",
-            "ivr" => %{
-              "audio_source" => "tts",
-              "text" => "Quota completed (ivr)"
+      quota_completed_steps: [
+        %{
+          "id" => "quota-completed-step",
+          "type" => "explanation",
+          "title" => "Completed",
+          "prompt" => %{
+            "en" => %{
+              "sms" => "Quota completed",
+              "ivr" => %{
+                "audio_source" => "tts",
+                "text" => "Quota completed (ivr)"
+              }
             }
-          }
-        },
-        "skip_logic" => nil
-      }],
+          },
+          "skip_logic" => nil
+        }
+      ],
       default_language: "en",
       settings: %{
         "error_message" => %{
@@ -116,10 +119,10 @@ defmodule Ask.Factory do
             },
             "mobileweb" => "Thanks for completing this survey (mobileweb)"
           }
-        },
+        }
       },
       languages: [],
-      valid: true,
+      valid: true
     }
   end
 
@@ -142,18 +145,15 @@ defmodule Ask.Factory do
   end
 
   def respondent_group_channel_factory do
-    %Ask.RespondentGroupChannel{
-    }
+    %Ask.RespondentGroupChannel{}
   end
 
   def project_membership_factory do
-    %Ask.ProjectMembership{
-    }
+    %Ask.ProjectMembership{}
   end
 
   def invite_factory do
-    %Ask.Invite{
-    }
+    %Ask.Invite{}
   end
 
   def respondent_group_factory do
@@ -161,21 +161,27 @@ defmodule Ask.Factory do
       survey: build(:survey),
       name: "Respondent Group",
       sample: [],
-      respondents_count: 0,
+      respondents_count: 0
     }
   end
 
   def floip_endpoint_factory do
     port = Process.get(:port, 1234)
+
     %Ask.FloipEndpoint{
       uri: sequence(:string, &"http://localhost:#{port}/#{&1}")
     }
   end
 
   def respondent_factory do
-    phone_number = "#{Integer.to_string(:rand.uniform(100))} #{Integer.to_string(:rand.uniform(100))} #{Integer.to_string(:rand.uniform(100))}"
+    phone_number =
+      "#{Integer.to_string(:rand.uniform(100))} #{Integer.to_string(:rand.uniform(100))} #{
+        Integer.to_string(:rand.uniform(100))
+      }"
+
     respondent_group = insert(:respondent_group)
     canonical_phone_number = Ask.Respondent.canonicalize_phone_number(phone_number)
+
     %Ask.Respondent{
       respondent_group: respondent_group,
       survey: (respondent_group |> Ask.Repo.preload(:survey)).survey,
@@ -195,7 +201,7 @@ defmodule Ask.Factory do
     %Ask.RespondentDispositionHistory{
       respondent: build(:respondent),
       disposition: "partial",
-      mode: "sms",
+      mode: "sms"
     }
   end
 
@@ -205,9 +211,9 @@ defmodule Ask.Factory do
       base_url: "http://test.com",
       user: build(:user),
       access_token: %{
-        "access_token" => :crypto.strong_rand_bytes(27) |> Base.encode64,
+        "access_token" => :crypto.strong_rand_bytes(27) |> Base.encode64()
       },
-      expires_at: DateTime.utc_now |> Timex.add(Timex.Duration.from_hours(1))
+      expires_at: DateTime.utc_now() |> Timex.add(Timex.Duration.from_hours(1))
     }
   end
 

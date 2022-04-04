@@ -19,11 +19,16 @@ defmodule Ask.Repo.Migrations.RemoveDummyChoiceFromLanguageStep do
   def up do
     for q <- Repo.all(Questionnaire) do
       case q.steps do
-        [step = %{"type" => "language-selection", "language_choices" => [nil | other_choices]} | other_steps] ->
+        [
+          step = %{"type" => "language-selection", "language_choices" => [nil | other_choices]}
+          | other_steps
+        ] ->
           step = Map.put(step, "language_choices", other_choices)
           steps = [step | other_steps]
-          Questionnaire.changeset(q, %{"steps" => steps}) |> Repo.update!
-        _ -> :ok
+          Questionnaire.changeset(q, %{"steps" => steps}) |> Repo.update!()
+
+        _ ->
+          :ok
       end
     end
   end
@@ -34,8 +39,10 @@ defmodule Ask.Repo.Migrations.RemoveDummyChoiceFromLanguageStep do
         [step = %{"type" => "language-selection", "language_choices" => choices} | other_steps] ->
           step = Map.put(step, "language_choices", [nil | choices])
           steps = [step | other_steps]
-          Questionnaire.changeset(q, %{"steps" => steps}) |> Repo.update!
-        _ -> :ok
+          Questionnaire.changeset(q, %{"steps" => steps}) |> Repo.update!()
+
+        _ ->
+          :ok
       end
     end
   end

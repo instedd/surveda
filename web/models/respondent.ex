@@ -4,20 +4,32 @@ defmodule Ask.Respondent do
   alias Ask.{Stats, Repo, Respondent, Survey, Questionnaire}
 
   schema "respondents" do
-    field :phone_number, :string # phone_number as-it-is in the respondents_list
-    field :sanitized_phone_number, :string # phone_number with the channel's patterns applied `channel.apply_patterns(canonical_phone_number)`
-    field :canonical_phone_number, :string # phone_number with the basic prunes/validations applied
+    # phone_number as-it-is in the respondents_list
+    field :phone_number, :string
+
+    # phone_number with the channel's patterns applied `channel.apply_patterns(canonical_phone_number)`
+    field :sanitized_phone_number, :string
+    # phone_number with the basic prunes/validations applied
+    field :canonical_phone_number, :string
     field :hashed_number, :string
     field :section_order, JSON
 
-    field :state, Ecto.Enum, values: [
-      :pending,   # the initial state of a respondent, before communication starts
-      :active,    # a communication is being held with the respondent
-      :completed, # the communication finished succesfully (it reached the end)
-      :failed,    # communication couldn't be established or was cut
-      :rejected,  # communication ended because the respondent fell in a full quota bucket
-      :cancelled, # when the survey is stopped and has :terminated state, all the active respondents will be updated with this state.
-    ], default: :pending
+    field :state, Ecto.Enum,
+      values: [
+        # the initial state of a respondent, before communication starts
+        :pending,
+        # a communication is being held with the respondent
+        :active,
+        # the communication finished succesfully (it reached the end)
+        :completed,
+        # communication couldn't be established or was cut
+        :failed,
+        # communication ended because the respondent fell in a full quota bucket
+        :rejected,
+        # when the survey is stopped and has :terminated state, all the active respondents will be updated with this state.
+        :cancelled
+      ],
+      default: :pending
 
     # Disposition flow:
     #
@@ -46,28 +58,44 @@ defmodule Ask.Respondent do
     #     │     Partial     │     │   Completed   │
     #     └─────────────────┘     └───────────────┘
     #
-    field :disposition, Ecto.Enum, values: [
-      # Uncontacted:
-      :registered,        # initial state
-      :queued,            # call/SMS queued for call/delivery
-      :failed,            # call was never answered / SMS was never sent => the channel was broken or the number doesn't exist
+    field :disposition, Ecto.Enum,
+      values: [
+        # Uncontacted:
+        # initial state
+        :registered,
+        # call/SMS queued for call/delivery
+        :queued,
+        # call was never answered / SMS was never sent => the channel was broken or the number doesn't exist
+        :failed,
 
-      # Contacted:
-      :contacted,         # call answered (or no_answer reply from Verboice) / SMS delivery confirmed
-      :unresponsive,      # exhausted retries after initial contact
+        # Contacted:
+        # call answered (or no_answer reply from Verboice) / SMS delivery confirmed
+        :contacted,
+        # exhausted retries after initial contact
+        :unresponsive,
 
-      # Responsive:
-      :refused,           # respondent refused to take the survey (e.g. sent STOP MO)
-      :started,           # answered at least one question
-      :ineligible,        # reached 'ineligible' flag step
-      :rejected,          # reached full quota
-      :breakoff,          # stopped responding (exhausted retries) or sent STOP MO
-      :"interim partial", # reached 'partial' flag step
-      :partial,           # stopped responding after reaching 'partial' flag step
-      :completed,         # reached 'completed' flag step => DONE
-    ], default: :registered
+        # Responsive:
+        # respondent refused to take the survey (e.g. sent STOP MO)
+        :refused,
+        # answered at least one question
+        :started,
+        # reached 'ineligible' flag step
+        :ineligible,
+        # reached full quota
+        :rejected,
+        # stopped responding (exhausted retries) or sent STOP MO
+        :breakoff,
+        # reached 'partial' flag step
+        :"interim partial",
+        # stopped responding after reaching 'partial' flag step
+        :partial,
+        # reached 'completed' flag step => DONE
+        :completed
+      ],
+      default: :registered
 
-    field :completed_at, :utc_datetime # only when state==:pending
+    # only when state==:pending
+    field :completed_at, :utc_datetime
     field :timeout_at, :utc_datetime
     field :session, JSON
     # In Respondent model, "mode" field name should change in the future.
@@ -104,7 +132,26 @@ defmodule Ask.Respondent do
   """
   def changeset(struct, params \\ %{}) do
     struct
-    |> cast(params, [:phone_number, :sanitized_phone_number, :canonical_phone_number, :state, :session, :quota_bucket_id, :completed_at, :timeout_at, :questionnaire_id, :mode, :disposition, :mobile_web_cookie_code, :language, :effective_modes, :stats, :section_order, :retry_stat_id, :user_stopped])
+    |> cast(params, [
+      :phone_number,
+      :sanitized_phone_number,
+      :canonical_phone_number,
+      :state,
+      :session,
+      :quota_bucket_id,
+      :completed_at,
+      :timeout_at,
+      :questionnaire_id,
+      :mode,
+      :disposition,
+      :mobile_web_cookie_code,
+      :language,
+      :effective_modes,
+      :stats,
+      :section_order,
+      :retry_stat_id,
+      :user_stopped
+    ])
     |> validate_required([:phone_number, :state, :user_stopped])
     |> validate_inclusion(:disposition, Ecto.Enum.values(Ask.Respondent, :disposition))
     |> validate_inclusion(:state, Ecto.Enum.values(Ask.Respondent, :state))
@@ -116,7 +163,12 @@ defmodule Ask.Respondent do
   end
 
   def hash_phone_number(phone_number, salt) do
-    "r" <> (String.slice(:crypto.hash(:md5, salt <> phone_number) |> Base.encode16(case: :lower), -12, 12))
+    "r" <>
+      String.slice(
+        :crypto.hash(:md5, salt <> phone_number) |> Base.encode16(case: :lower),
+        -12,
+        12
+      )
   end
 
   def mask_respondent_entry(entry) do
@@ -128,7 +180,13 @@ defmodule Ask.Respondent do
   end
 
   def mask_phone_number(phone_number) do
-    Enum.join([replace_numbers_by_hash(String.slice(phone_number, 0..-5)), String.slice(phone_number, -4, 4)], "")
+    Enum.join(
+      [
+        replace_numbers_by_hash(String.slice(phone_number, 0..-5)),
+        String.slice(phone_number, -4, 4)
+      ],
+      ""
+    )
   end
 
   def is_phone_number?(entry), do: Regex.match?(~r/^([0-9]|\(|\)|\+|\-| )+$/, entry)
@@ -139,14 +197,19 @@ defmodule Ask.Respondent do
   end
 
   def show_disposition(disposition) do
-    (disposition || "") |> to_string() |> String.capitalize
+    (disposition || "") |> to_string() |> String.capitalize()
   end
 
   def show_section_order(%{section_order: nil}, _), do: ""
 
-  def show_section_order(%{section_order: section_order, questionnaire_id: questionnaire_id}, questionnaires) do
+  def show_section_order(
+        %{section_order: section_order, questionnaire_id: questionnaire_id},
+        questionnaires
+      ) do
     questionnaire = questionnaires |> Enum.find(fn q -> q.id == questionnaire_id end)
-    Enum.map(section_order, fn i -> questionnaire.steps |> Enum.at(i) |> show_section_title(i) end) |> Enum.join(", ")
+
+    Enum.map(section_order, fn i -> questionnaire.steps |> Enum.at(i) |> show_section_title(i) end)
+    |> Enum.join(", ")
   end
 
   defp show_section_title(%{"title" => nil}, index) do
@@ -161,8 +224,16 @@ defmodule Ask.Respondent do
     title
   end
 
-  def token(respondent_id)do
-    String.slice(:crypto.hash(:md5, Application.get_env(:ask, Ask.Endpoint)[:secret_key_base] <> "#{respondent_id}") |> Base.encode16(case: :lower), -12, 12)
+  def token(respondent_id) do
+    String.slice(
+      :crypto.hash(
+        :md5,
+        Application.get_env(:ask, Ask.Endpoint)[:secret_key_base] <> "#{respondent_id}"
+      )
+      |> Base.encode16(case: :lower),
+      -12,
+      12
+    )
   end
 
   def mobile_web_cookie_name(respondent_id) do
@@ -173,8 +244,7 @@ defmodule Ask.Respondent do
 
   def completed_dispositions(false), do: [:completed]
 
-  def completed_dispositions(true), do:
-    completed_dispositions() ++ [:partial, :"interim partial"]
+  def completed_dispositions(true), do: completed_dispositions() ++ [:partial, :"interim partial"]
 
   def completed_disposition?(disposition, count_partial_results \\ false),
     do:
@@ -198,24 +268,26 @@ defmodule Ask.Respondent do
       quota_bucket_id != nil &&
         completed_disposition?(disposition, count_partial_results)
 
-  def final_dispositions(), do: [
-    :failed,
-    :unresponsive,
-    :ineligible,
-    :rejected,
-    :breakoff,
-    :refused,
-    :partial,
-    :completed,
-  ]
+  def final_dispositions(),
+    do: [
+      :failed,
+      :unresponsive,
+      :ineligible,
+      :rejected,
+      :breakoff,
+      :refused,
+      :partial,
+      :completed
+    ]
 
-  def non_final_dispositions(), do: [
-    :registered,
-    :queued,
-    :contacted,
-    :started,
-    :"interim partial"
-  ]
+  def non_final_dispositions(),
+    do: [
+      :registered,
+      :queued,
+      :contacted,
+      :started,
+      :"interim partial"
+    ]
 
   # Interim partial was created to distinguish between the respondents that reached partial but
   # still can reach a complete and those who cannot. In the context of the current cockpit, it
@@ -243,19 +315,26 @@ defmodule Ask.Respondent do
   @doc """
   Interim partial is a non final disposition but it's considered final for metrics
   """
-  def metrics_non_final_dispositions(true), do:
-    List.delete(non_final_dispositions(), :"interim partial")
+  def metrics_non_final_dispositions(true),
+    do: List.delete(non_final_dispositions(), :"interim partial")
 
-  def add_mode_attempt!(respondent, mode), do: respondent |> changeset(%{stats: Stats.add_attempt(respondent.stats, mode)}) |> Repo.update!
+  def add_mode_attempt!(respondent, mode),
+    do:
+      respondent
+      |> changeset(%{stats: Stats.add_attempt(respondent.stats, mode)})
+      |> Repo.update!()
 
-  def call_attempted(%{stats: %{pending_call: false} } = respondent), do: respondent
-  def call_attempted(%{stats: stats} = respondent), do: respondent |> changeset(%{stats: Stats.with_last_call_attempted(stats)}) |> Repo.update!
+  def call_attempted(%{stats: %{pending_call: false}} = respondent), do: respondent
+
+  def call_attempted(%{stats: stats} = respondent),
+    do: respondent |> changeset(%{stats: Stats.with_last_call_attempted(stats)}) |> Repo.update!()
 
   @doc """
   Computes the date-time on which the respondent should be retried given the timeout and time-window availability
   """
   def next_actual_timeout(%Respondent{} = respondent, timeout, now, persist \\ true) do
     timeout_at = next_timeout_lowerbound(timeout, now)
+
     respondent
     |> survey(persist)
     |> Survey.next_available_date_time(timeout_at)
@@ -272,8 +351,7 @@ defmodule Ask.Respondent do
   @doc """
   Computes the date-time on which the respondent would be retried , ignoring their survey's inactivity windows (ie, if it Schedule was to always run)
   """
-  def next_timeout_lowerbound(timeout, now), do:
-    Timex.shift(now, minutes: timeout)
+  def next_timeout_lowerbound(timeout, now), do: Timex.shift(now, minutes: timeout)
 
   @doc """
   This function uses Mutex. Its locks aren't reentrant
@@ -286,9 +364,11 @@ defmodule Ask.Respondent do
     mutex_key = "#{respondent_id}"
 
     Mutex.under(Ask.Mutex, mutex_key, fn ->
-      respondent = Respondent
-                   |> Repo.get(respondent_id)
-                   |> respondent_modifier.()
+      respondent =
+        Respondent
+        |> Repo.get(respondent_id)
+        |> respondent_modifier.()
+
       operation.(respondent)
     end)
   end
@@ -297,7 +377,7 @@ defmodule Ask.Respondent do
     if(persist) do
       respondent
       |> Respondent.changeset(changes)
-      |> Repo.update!
+      |> Repo.update!()
     else
       Map.merge(respondent, changes)
     end
@@ -309,6 +389,7 @@ defmodule Ask.Respondent do
         do: from(r in Ask.Response, where: r.respondent_id == ^respondent.id) |> Repo.all(),
         else: respondent.responses
       )
+
   def partial_relevant_answered_count(respondent, persist \\ true)
 
   def partial_relevant_answered_count(

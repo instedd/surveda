@@ -53,12 +53,12 @@ defmodule Ask.RespondentTest do
   end
 
   test "respondent stats should be empty by default" do
-    respondent = build(:respondent) |> Repo.insert!
+    respondent = build(:respondent) |> Repo.insert!()
     respondent = Respondent |> Repo.get(respondent.id)
 
     assert respondent.stats == %Stats{}
 
-    assert respondent.stats |> Stats.add_sent_sms |> Stats.total_sent_sms == 1
+    assert respondent.stats |> Stats.add_sent_sms() |> Stats.total_sent_sms() == 1
   end
 
   test "next_timeout_lowerbound equals next_actual_timeout when the survey is active" do
@@ -70,7 +70,7 @@ defmodule Ask.RespondentTest do
 
     result = Respondent.next_timeout_lowerbound(timeout, now)
 
-    assert result == assert Respondent.next_actual_timeout(respondent, timeout, now)
+    assert result == assert(Respondent.next_actual_timeout(respondent, timeout, now))
     assert result == expected_timeout
   end
 
@@ -82,13 +82,17 @@ defmodule Ask.RespondentTest do
     {:ok, expected_actual_timeout, _} = DateTime.from_iso8601("2019-10-02T09:00:00Z")
     timeout = 120
 
-    refute Respondent.next_timeout_lowerbound(timeout, now) == Respondent.next_actual_timeout(respondent, timeout, now)
+    refute Respondent.next_timeout_lowerbound(timeout, now) ==
+             Respondent.next_actual_timeout(respondent, timeout, now)
+
     assert Respondent.next_timeout_lowerbound(timeout, now) == expected_timeout_lowerbound
     assert Respondent.next_actual_timeout(respondent, timeout, now) == expected_actual_timeout
   end
 
   test "final and non-final dispositions don't overlap" do
-    assert MapSet.disjoint?(Respondent.final_dispositions |> MapSet.new, Respondent.non_final_dispositions |> MapSet.new)
+    assert MapSet.disjoint?(
+             Respondent.final_dispositions() |> MapSet.new(),
+             Respondent.non_final_dispositions() |> MapSet.new()
+           )
   end
-
 end

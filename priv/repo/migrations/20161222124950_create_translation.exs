@@ -13,8 +13,8 @@ defmodule Ask.Repo.Migrations.CreateTranslation do
 
       timestamps()
     end
+
     create index(:translations, [:project_id])
     create index(:translations, [:questionnaire_id])
-
   end
 end

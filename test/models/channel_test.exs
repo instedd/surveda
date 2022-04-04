@@ -14,7 +14,9 @@ defmodule Ask.ChannelTest do
   test "user must exist" do
     changeset = Channel.changeset(%Channel{}, @valid_attrs)
     assert {:error, changeset} = Repo.insert(changeset)
-    assert {:user, {"does not exist", [constraint: :assoc, constraint_name: "channels_user_id_fkey"]}} in changeset.errors
+
+    assert {:user,
+            {"does not exist", [constraint: :assoc, constraint_name: "channels_user_id_fkey"]}} in changeset.errors
 
     user = insert(:user)
     changeset = Channel.changeset(%Channel{}, %{@valid_attrs | user_id: user.id})
@@ -31,21 +33,21 @@ defmodule Ask.ChannelTest do
       patterns = %{patterns: [%{"input" => "", "output" => ""}]}
       changeset = Channel.changeset(%Channel{}, Map.merge(@valid_attrs, patterns))
       refute changeset.valid?
-      assert (changeset.errors |> Enum.at(0) |> elem(0) == :patterns)
+      assert changeset.errors |> Enum.at(0) |> elem(0) == :patterns
     end
 
     test "validates that number of X's matches" do
       patterns = %{patterns: [%{"input" => "X", "output" => "XX"}]}
       changeset = Channel.changeset(%Channel{}, Map.merge(@valid_attrs, patterns))
       refute changeset.valid?
-      assert (changeset.errors |> Enum.at(0) |> elem(0) == :patterns)
+      assert changeset.errors |> Enum.at(0) |> elem(0) == :patterns
     end
 
     test "validates valid characters" do
       patterns = %{patterns: [%{"input" => "X", "output" => "$X"}]}
       changeset = Channel.changeset(%Channel{}, Map.merge(@valid_attrs, patterns))
       refute changeset.valid?
-      assert (changeset.errors |> Enum.at(0) |> elem(0) == :patterns)
+      assert changeset.errors |> Enum.at(0) |> elem(0) == :patterns
     end
   end
 end

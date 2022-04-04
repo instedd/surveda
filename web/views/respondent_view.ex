@@ -18,7 +18,9 @@ defmodule Ask.RespondentView do
     }
   end
 
-  def render("index_field.json", %{index_field: %{type: "fixed" = type, key: "phone_number" = key}}) do
+  def render("index_field.json", %{
+        index_field: %{type: "fixed" = type, key: "phone_number" = key}
+      }) do
     %{
       display_text: Ask.Gettext.gettext("Respondent ID"),
       key: key,
@@ -184,7 +186,18 @@ defmodule Ask.RespondentView do
     }
   end
 
-  def render("stats.json", %{stats: %{id: id, respondents_by_disposition: respondents_by_disposition, reference: reference, cumulative_percentages: cumulative_percentages, attempted_respondents: attempted_respondents, total_respondents: total_respondents, target: target, completion_percentage: completion_percentage}}) do
+  def render("stats.json", %{
+        stats: %{
+          id: id,
+          respondents_by_disposition: respondents_by_disposition,
+          reference: reference,
+          cumulative_percentages: cumulative_percentages,
+          attempted_respondents: attempted_respondents,
+          total_respondents: total_respondents,
+          target: target,
+          completion_percentage: completion_percentage
+        }
+      }) do
     %{
       data: %{
         id: id,
@@ -193,7 +206,10 @@ defmodule Ask.RespondentView do
         cumulative_percentages:
           cumulative_percentages
           |> Enum.map(fn {questionnaire_id, date_percentages} ->
-            {to_string(questionnaire_id), render_many(date_percentages, Ask.RespondentView, "date_percentages.json", as: :completed)}
+            {to_string(questionnaire_id),
+             render_many(date_percentages, Ask.RespondentView, "date_percentages.json",
+               as: :completed
+             )}
           end)
           |> Enum.into(%{}),
         completion_percentage: completion_percentage,
@@ -204,7 +220,18 @@ defmodule Ask.RespondentView do
     }
   end
 
-  def render("quotas_stats.json", %{stats: %{id: id, reference: buckets, respondents_by_disposition: respondents_by_disposition, cumulative_percentages: cumulative_percentages, attempted_respondents: attempted_respondents, total_respondents: total_respondents, target: target, completion_percentage: completion_percentage}}) do
+  def render("quotas_stats.json", %{
+        stats: %{
+          id: id,
+          reference: buckets,
+          respondents_by_disposition: respondents_by_disposition,
+          cumulative_percentages: cumulative_percentages,
+          attempted_respondents: attempted_respondents,
+          total_respondents: total_respondents,
+          target: target,
+          completion_percentage: completion_percentage
+        }
+      }) do
     %{
       data: %{
         id: id,
@@ -213,7 +240,10 @@ defmodule Ask.RespondentView do
         cumulative_percentages:
           cumulative_percentages
           |> Enum.map(fn {questionnaire_id, date_percentages} ->
-            {to_string(questionnaire_id), render_many(date_percentages, Ask.RespondentView, "date_percentages.json", as: :completed)}
+            {to_string(questionnaire_id),
+             render_many(date_percentages, Ask.RespondentView, "date_percentages.json",
+               as: :completed
+             )}
           end)
           |> Enum.into(%{}),
         completion_percentage: completion_percentage,
@@ -228,13 +258,16 @@ defmodule Ask.RespondentView do
     condition =
       bucket.condition
       |> Enum.reduce([], fn {store, value}, conditions ->
-        value = case value do
-          [lower, upper] -> "#{lower} - #{upper}"
-          _ -> value
-        end
+        value =
+          case value do
+            [lower, upper] -> "#{lower} - #{upper}"
+            _ -> value
+          end
+
         ["#{store}: #{value}" | conditions]
       end)
       |> Enum.join(" - ")
+
     %{
       "id" => bucket.id,
       "name" => condition

@@ -8,6 +8,7 @@ defmodule Ask.Plugs.SentryContext do
       nil -> :ok
       user -> Sentry.Context.set_user_context(%{email: user.email})
     end
+
     conn
   end
 end

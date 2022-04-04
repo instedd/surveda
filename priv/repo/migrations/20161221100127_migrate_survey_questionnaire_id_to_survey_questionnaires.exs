@@ -31,13 +31,14 @@ defmodule Ask.Repo.Migrations.MigrateSurveyQuestionnaireIdToSurveyQuestionnaires
 
   def change do
     Survey
-    |> Repo.all
+    |> Repo.all()
     |> Enum.each(fn survey ->
       if survey.questionnaire_id do
         %SurveyQuestionnaire{
           survey_id: survey.id,
-          questionnaire_id: survey.questionnaire_id,
-        } |> Repo.insert
+          questionnaire_id: survey.questionnaire_id
+        }
+        |> Repo.insert()
       end
     end)
   end

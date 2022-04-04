@@ -5,7 +5,7 @@ defmodule Ask.NumberTranslator.Macros do
       filename = filename |> Path.basename(".json")
 
       data = Poison.decode!(File.read!("#{__DIR__}/numbers/#{filename}.json"))
-      data = {:%{}, [], data |> Enum.to_list}
+      data = {:%{}, [], data |> Enum.to_list()}
 
       quote do
         @external_resource Path.join([__DIR__, "numbers/#{unquote(filename)}.json"])
@@ -16,9 +16,13 @@ defmodule Ask.NumberTranslator.Macros do
 
   defmacro generate_langs() do
     {:ok, filenames} = File.ls(Path.join([__DIR__, "numbers"]))
-      languages = filenames |> Enum.map(fn filename ->
+
+    languages =
+      filenames
+      |> Enum.map(fn filename ->
         String.replace(filename, ".json", "")
       end)
+
     quote do
       @external_resource Path.join([__DIR__, "numbers"])
 
@@ -28,7 +32,7 @@ defmodule Ask.NumberTranslator.Macros do
 end
 
 defmodule Ask.NumberTranslator do
-  @spec match(lang :: String.t, srt :: String.t) :: {:ok, integer} | :not_found
+  @spec match(lang :: String.t(), srt :: String.t()) :: {:ok, integer} | :not_found
   def match(lang, str) do
     table = map(lang)
 
@@ -39,8 +43,8 @@ defmodule Ask.NumberTranslator do
   end
 
   require Ask.NumberTranslator.Macros
-  Ask.NumberTranslator.Macros.generate_map
-  Ask.NumberTranslator.Macros.generate_langs
+  Ask.NumberTranslator.Macros.generate_map()
+  Ask.NumberTranslator.Macros.generate_langs()
   def map(_), do: %{}
 
   def try_parse(string, language) do
@@ -55,16 +59,17 @@ defmodule Ask.NumberTranslator do
 
     input_length = String.length(string)
 
-    {min_levenshtein, min_values} = Enum.reduce(current_language_list, {input_length, []}, fn({key, number}, min) ->
-      new_levenshtein = Simetric.Levenshtein.compare(key, string)
-      {current_min, current_numbers} = min
+    {min_levenshtein, min_values} =
+      Enum.reduce(current_language_list, {input_length, []}, fn {key, number}, min ->
+        new_levenshtein = Simetric.Levenshtein.compare(key, string)
+        {current_min, current_numbers} = min
 
-      cond do
-        new_levenshtein < current_min -> {new_levenshtein, [number]}
-        new_levenshtein == current_min -> {new_levenshtein, [number | current_numbers]}
-        true -> min
-      end
-    end)
+        cond do
+          new_levenshtein < current_min -> {new_levenshtein, [number]}
+          new_levenshtein == current_min -> {new_levenshtein, [number | current_numbers]}
+          true -> min
+        end
+      end)
 
     if min_levenshtein <= Float.ceil(input_length / 5.0) && has_unique_value(min_values) do
       Enum.at(min_values, 0)
@@ -78,11 +83,10 @@ defmodule Ask.NumberTranslator do
   end
 
   defp compare_list([head | tail], value) do
-    (head == value) && compare_list(tail, value)
+    head == value && compare_list(tail, value)
   end
 
   defp compare_list([], _) do
     true
   end
-
 end

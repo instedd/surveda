@@ -11,7 +11,7 @@ defmodule Ask.Repo.Migrations.CreateChannel do
 
       timestamps()
     end
-    create index(:channels, [:user_id])
 
+    create index(:channels, [:user_id])
   end
 end

@@ -3,15 +3,16 @@ defmodule CSV.Helper do
   @chunk_lines 100
 
   def csv_stream(conn, rows, filename) do
-    conn = conn
+    conn =
+      conn
       |> put_resp_content_type("text/csv")
       |> put_resp_header("content-disposition", "attachment; filename=\"#{filename}\"")
       |> send_chunked(200)
 
     rows
-    |> CSV.encode
+    |> CSV.encode()
     |> Stream.chunk_every(@chunk_lines)
-    |> Enum.reduce(conn, fn (lines, conn) ->
+    |> Enum.reduce(conn, fn lines, conn ->
       {:ok, conn} = chunk(conn, lines)
       conn
     end)

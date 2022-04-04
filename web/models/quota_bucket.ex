@@ -1,7 +1,7 @@
 defmodule Ask.QuotaBucket do
   use Ask.Web, :model
 
-  @max_int 2147483647
+  @max_int 2_147_483_647
 
   schema "quota_buckets" do
     field :condition, Ask.Ecto.Type.JSON
@@ -18,6 +18,7 @@ defmodule Ask.QuotaBucket do
       |> Enum.map(fn quota ->
         %{quota | "condition" => index_by_store(quota["condition"])}
       end)
+
     Enum.map(quotas_with_conditions_by_store, fn quota ->
       changeset(build_assoc(survey, :quota_buckets, quota), quota)
     end)
@@ -41,10 +42,11 @@ defmodule Ask.QuotaBucket do
   # Numeric condition
   def matches_condition?(value, [from, to]) when is_integer(from) and is_integer(to) do
     case Integer.parse(value) do
-    {value, ""} ->
-      from <= value && value <= to
-    _ ->
-      false
+      {value, ""} ->
+        from <= value && value <= to
+
+      _ ->
+        false
     end
   end
 

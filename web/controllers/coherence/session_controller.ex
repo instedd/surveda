@@ -17,6 +17,7 @@ defmodule Ask.Coherence.SessionController do
     layout: {Ask.Coherence.LayoutView, :app},
     view: Coherence.SessionView,
     caller: __MODULE__
+
   plug :redirect_logged_in when action in [:new, :create]
   plug :guisso_authentication when action in [:new]
 
@@ -35,7 +36,7 @@ defmodule Ask.Coherence.SessionController do
     user = find_or_create_user(email, name)
 
     conn
-    |> Coherence.Authentication.Session.create_login(user, [id_key: Config.schema_key])
+    |> Coherence.Authentication.Session.create_login(user, id_key: Config.schema_key())
     |> put_flash(:notice, "Signed in successfully.")
     |> redirect(to: redirect || "/")
   end
@@ -45,13 +46,13 @@ defmodule Ask.Coherence.SessionController do
       nil ->
         %User{}
         |> User.changeset(%{email: email, name: name, password: UUID.uuid4()})
-        |> Repo.insert!
+        |> Repo.insert!()
 
       user ->
         if user.name != name && name != nil && name != "" do
           user
           |> User.changeset(%{name: name})
-          |> Repo.update!
+          |> Repo.update!()
         else
           user
         end

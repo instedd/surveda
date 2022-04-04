@@ -11,9 +11,9 @@ config :ask, Ask.Endpoint,
   debug_errors: true,
   code_reloader: true,
   check_origin: false
-  # watchers: [node: ["node_modules/brunch/bin/brunch", "watch", "--stdin",
-  #                   cd: Path.expand("../", __DIR__)]]
 
+# watchers: [node: ["node_modules/brunch/bin/brunch", "watch", "--stdin",
+#                   cd: Path.expand("../", __DIR__)]]
 
 # Watch static and templates for browser reloading.
 config :ask, Ask.Endpoint,
@@ -39,12 +39,10 @@ config :ask, Ask.Repo,
   hostname: System.get_env("DATABASE_HOST") || "localhost",
   pool_size: 10
 
-config :ask, Ask.Mailer,
-  adapter: Swoosh.Adapters.Local
+config :ask, Ask.Mailer, adapter: Swoosh.Adapters.Local
 
 config :coherence,
   email_from_name: "Surveda Dev",
   email_from_email: "myname@domain.com"
 
-config :coherence, Ask.Coherence.Mailer,
-  adapter: Swoosh.Adapters.Local
+config :coherence, Ask.Coherence.Mailer, adapter: Swoosh.Adapters.Local

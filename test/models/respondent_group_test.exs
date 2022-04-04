@@ -19,8 +19,14 @@ defmodule Ask.RespondentGroupTest do
   test "primary SMS and no fallback channel" do
     group = %RespondentGroup{
       respondent_group_channels: [
-        %RespondentGroupChannel{channel: %Channel{type: "ivr", name: "An IVR Channel"}, mode: "ivr"},
-        %RespondentGroupChannel{channel: %Channel{type: "sms", name: "An SMS Channel"}, mode: "sms"}
+        %RespondentGroupChannel{
+          channel: %Channel{type: "ivr", name: "An IVR Channel"},
+          mode: "ivr"
+        },
+        %RespondentGroupChannel{
+          channel: %Channel{type: "sms", name: "An SMS Channel"},
+          mode: "sms"
+        }
       ]
     }
 
@@ -32,11 +38,17 @@ defmodule Ask.RespondentGroupTest do
     assert fallback == nil
   end
 
-   test "primary IVR and no fallback channel" do
+  test "primary IVR and no fallback channel" do
     group = %RespondentGroup{
       respondent_group_channels: [
-        %RespondentGroupChannel{channel: %Channel{type: "ivr", name: "An IVR Channel"}, mode: "ivr"},
-        %RespondentGroupChannel{channel: %Channel{type: "sms", name: "An SMS Channel"}, mode: "sms"}
+        %RespondentGroupChannel{
+          channel: %Channel{type: "ivr", name: "An IVR Channel"},
+          mode: "ivr"
+        },
+        %RespondentGroupChannel{
+          channel: %Channel{type: "sms", name: "An SMS Channel"},
+          mode: "sms"
+        }
       ]
     }
 
@@ -51,8 +63,14 @@ defmodule Ask.RespondentGroupTest do
   test "primary SMS and fallback IVR channel" do
     group = %RespondentGroup{
       respondent_group_channels: [
-        %RespondentGroupChannel{channel: %Channel{type: "ivr", name: "An IVR Channel"}, mode: "ivr"},
-        %RespondentGroupChannel{channel: %Channel{type: "sms", name: "An SMS Channel"}, mode: "sms"}
+        %RespondentGroupChannel{
+          channel: %Channel{type: "ivr", name: "An IVR Channel"},
+          mode: "ivr"
+        },
+        %RespondentGroupChannel{
+          channel: %Channel{type: "sms", name: "An SMS Channel"},
+          mode: "sms"
+        }
       ]
     }
 
@@ -68,10 +86,17 @@ defmodule Ask.RespondentGroupTest do
   test "primary IVR and fallback SMS channel" do
     group = %RespondentGroup{
       respondent_group_channels: [
-        %RespondentGroupChannel{channel: %Channel{type: "ivr", name: "An IVR Channel"}, mode: "ivr"},
-        %RespondentGroupChannel{channel: %Channel{type: "sms", name: "An SMS Channel"}, mode: "sms"}
+        %RespondentGroupChannel{
+          channel: %Channel{type: "ivr", name: "An IVR Channel"},
+          mode: "ivr"
+        },
+        %RespondentGroupChannel{
+          channel: %Channel{type: "sms", name: "An SMS Channel"},
+          mode: "sms"
+        }
       ]
     }
+
     prim = RespondentGroup.primary_channel(group, ["ivr", "sms"])
     assert prim.name == "An IVR Channel"
     assert prim.type == "ivr"
@@ -84,10 +109,17 @@ defmodule Ask.RespondentGroupTest do
   test "primary mobileweb and fallback ivr channel" do
     group = %RespondentGroup{
       respondent_group_channels: [
-        %RespondentGroupChannel{channel: %Channel{type: "sms", name: "An SMS Channel"}, mode: "mobileweb"},
-        %RespondentGroupChannel{channel: %Channel{type: "ivr", name: "An IVR Channel"}, mode: "ivr"}
+        %RespondentGroupChannel{
+          channel: %Channel{type: "sms", name: "An SMS Channel"},
+          mode: "mobileweb"
+        },
+        %RespondentGroupChannel{
+          channel: %Channel{type: "ivr", name: "An IVR Channel"},
+          mode: "ivr"
+        }
       ]
     }
+
     prim = RespondentGroup.primary_channel(group, ["mobileweb", "ivr"])
     assert prim.name == "An SMS Channel"
     assert prim.type == "sms"
@@ -100,10 +132,17 @@ defmodule Ask.RespondentGroupTest do
   test "primary ivr and fallback mobileweb channel" do
     group = %RespondentGroup{
       respondent_group_channels: [
-        %RespondentGroupChannel{channel: %Channel{type: "sms", name: "An SMS Channel"}, mode: "mobileweb"},
-        %RespondentGroupChannel{channel: %Channel{type: "ivr", name: "An IVR Channel"}, mode: "ivr"}
+        %RespondentGroupChannel{
+          channel: %Channel{type: "sms", name: "An SMS Channel"},
+          mode: "mobileweb"
+        },
+        %RespondentGroupChannel{
+          channel: %Channel{type: "ivr", name: "An IVR Channel"},
+          mode: "ivr"
+        }
       ]
     }
+
     prim = RespondentGroup.primary_channel(group, ["ivr", "mobileweb"])
     assert prim.name == "An IVR Channel"
     assert prim.type == "ivr"

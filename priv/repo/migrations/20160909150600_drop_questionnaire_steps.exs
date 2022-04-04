@@ -13,6 +13,7 @@ defmodule Ask.Repo.Migrations.DropQuestionnaireSteps do
 
       timestamps()
     end
+
     create index(:questionnaire_steps, [:questionnaire_id])
   end
 end

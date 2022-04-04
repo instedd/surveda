@@ -8,9 +8,9 @@ defmodule Ask.Coherence.Helper do
 
   Returns true when the confirmation has expired.
   """
-  @spec confirmable_expired?(Ecto.Schema.t) :: boolean
+  @spec confirmable_expired?(Ecto.Schema.t()) :: boolean
   def confirmable_expired?(user) do
-    expired?(user.confirmation_sent_at, days: Config.confirmation_token_expire_days)
+    expired?(user.confirmation_sent_at, days: Config.confirmation_token_expire_days())
   end
 
   @doc """
@@ -33,10 +33,11 @@ defmodule Ask.Coherence.Helper do
       ...> |> Ask.Coherence.Helper.expired?(days: 1)
       true
   """
-  @spec expired?(nil | struct, Keyword.t) :: boolean
+  @spec expired?(nil | struct, Keyword.t()) :: boolean
   def expired?(nil, _), do: true
+
   def expired?(datetime, opts) do
-    not Timex.before?(DateTime.utc_now, shift(datetime, opts))
+    not Timex.before?(DateTime.utc_now(), shift(datetime, opts))
   end
 
   @doc """
@@ -50,11 +51,11 @@ defmodule Ask.Coherence.Helper do
       ...> |> to_string
       "2016-10-08 10:10:10Z"
   """
-  @spec shift(struct, Keyword.t) :: struct
+  @spec shift(struct, Keyword.t()) :: struct
   def shift(datetime, opts) do
     datetime
-    |> Timex.to_erl
-    |> Timex.to_datetime
+    |> Timex.to_erl()
+    |> Timex.to_datetime()
     |> Timex.shift(opts)
   end
 end

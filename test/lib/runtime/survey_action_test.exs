@@ -6,7 +6,6 @@ defmodule Ask.Runtime.SurveyActionTest do
   alias Ask.Survey
 
   describe "start/1" do
-
     test "generates a panel survey if generates_panel_survey is ON" do
       survey = panel_survey_generator_survey()
 

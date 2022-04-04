@@ -11,6 +11,5 @@ defmodule Ask.Repo.Migrations.CreateAudios do
 
       timestamps()
     end
-
   end
 end

@@ -30,7 +30,7 @@ defmodule Ask.RetriesHistogram do
         current_attempt: attempt,
         stats: stats,
         mode: mode,
-        now: SystemTime.time.now,
+        now: SystemTime.time().now,
         next_attempt: Enum.at(enhanced_flow, index + 1)
       })
     end)
@@ -74,7 +74,7 @@ defmodule Ask.RetriesHistogram do
         current_attempt: attempt,
         stats: stats,
         mode: mode,
-        now: SystemTime.time.now,
+        now: SystemTime.time().now,
         next_attempt: Enum.at(enhanced_flow, index + 1)
       })
     end)
@@ -160,25 +160,38 @@ defmodule Ask.RetriesHistogram do
   defp attempt_delay(nil), do: nil
   defp attempt_delay(%{delay: delay}), do: delay
 
-  defp count_actives(%{stats: stats, attempt: attempt, mode: mode, current_mode: "ivr", next_attempt: nil}),
-    do:
-      RetryStat.count(stats, %{
-        attempt: attempt,
-        mode: mode
-      })
+  defp count_actives(%{
+         stats: stats,
+         attempt: attempt,
+         mode: mode,
+         current_mode: "ivr",
+         next_attempt: nil
+       }),
+       do:
+         RetryStat.count(stats, %{
+           attempt: attempt,
+           mode: mode
+         })
 
-  defp count_actives(%{stats: stats, attempt: attempt, mode: mode, current_mode: "ivr", retry_time: retry_time}),
-    do:
-      RetryStat.count(stats, %{
-        attempt: attempt,
-        mode: mode,
-        ivr_active: true
-      }) + RetryStat.count(stats, %{
-        attempt: attempt,
-        mode: mode,
-        retry_time: retry_time,
-        ivr_active: false
-      })
+  defp count_actives(%{
+         stats: stats,
+         attempt: attempt,
+         mode: mode,
+         current_mode: "ivr",
+         retry_time: retry_time
+       }),
+       do:
+         RetryStat.count(stats, %{
+           attempt: attempt,
+           mode: mode,
+           ivr_active: true
+         }) +
+           RetryStat.count(stats, %{
+             attempt: attempt,
+             mode: mode,
+             retry_time: retry_time,
+             ivr_active: false
+           })
 
   defp count_actives(%{stats: stats, attempt: attempt, mode: mode, retry_time: retry_time}),
     do:

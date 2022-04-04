@@ -3,7 +3,7 @@ defmodule Ask.OAuthTokenServerTest do
   alias Ask.OAuthTokenServer
 
   setup do
-    OAuthTokenServer.start_link
+    OAuthTokenServer.start_link()
     :ok
   end
 
@@ -26,8 +26,10 @@ defmodule Ask.OAuthTokenServerTest do
     access_token1 = OAuthTokenServer.get_token("test", "http://test.com", user.id)
 
     token
-    |> Ask.OAuthToken.changeset(%{expires_at: Timex.now |> Timex.add(Timex.Duration.from_seconds(5))})
-    |> Repo.update!
+    |> Ask.OAuthToken.changeset(%{
+      expires_at: Timex.now() |> Timex.add(Timex.Duration.from_seconds(5))
+    })
+    |> Repo.update!()
 
     access_token2 = OAuthTokenServer.get_token("test", "http://test.com", user.id)
     refute access_token2.access_token == access_token1.access_token

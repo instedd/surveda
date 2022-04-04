@@ -27,19 +27,23 @@ defmodule Ask.Ecto.Type.Steps do
   end
 
   defp transform(steps) when is_nil(steps), do: nil
+
   defp transform(steps) do
-    steps |> Enum.map(fn (item) ->
+    steps
+    |> Enum.map(fn item ->
       case item["type"] do
         "section" ->
-          %{ item | "steps" => Enum.map(item["steps"], &transform_one(&1)) }
+          %{item | "steps" => Enum.map(item["steps"], &transform_one(&1))}
+
         _ ->
           transform_one(item)
       end
     end)
   end
 
-  defp transform_one(%{ "disposition" => disposition } = step) when is_binary(disposition) do
-    %{ step | "disposition" => String.to_existing_atom(disposition) }
+  defp transform_one(%{"disposition" => disposition} = step) when is_binary(disposition) do
+    %{step | "disposition" => String.to_existing_atom(disposition)}
   end
+
   defp transform_one(step), do: step
 end

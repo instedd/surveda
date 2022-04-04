@@ -15,14 +15,17 @@ defmodule Ask.Runtime.QuestionnaireSimulatorStore do
   end
 
   defp ttl_expired?({_key, {ts, _}}) do
-    ttl_minutes_ago = Timex.shift(SystemTime.time.now, minutes: -@ttl_minutes)
+    ttl_minutes_ago = Timex.shift(SystemTime.time().now, minutes: -@ttl_minutes)
     Timex.before?(ts, ttl_minutes_ago)
   end
 
   def handle_info(:clean, state) do
     old_keys = state |> Enum.filter(&ttl_expired?/1) |> Enum.map(fn {key, _} -> key end)
     new_state = old_keys |> Enum.reduce(state, fn key, accum -> Map.delete(accum, key) end)
-    if(old_keys != []) do Logger.debug("Cleaning old simulations. Respondent ids: #{inspect old_keys}") end
+
+    if(old_keys != []) do
+      Logger.debug("Cleaning old simulations. Respondent ids: #{inspect(old_keys)}")
+    end
 
     :timer.send_after(:timer.minutes(1), :clean)
     {:noreply, new_state}
@@ -30,11 +33,17 @@ defmodule Ask.Runtime.QuestionnaireSimulatorStore do
 
   def handle_call({:get_status, respondent_id}, _from, state) do
     status = state |> Map.get(respondent_id)
-    {:reply, if status do elem(status, 1) else nil end, state}
+
+    {:reply,
+     if status do
+       elem(status, 1)
+     else
+       nil
+     end, state}
   end
 
   def handle_call({:add_status, respondent_id, status}, _from, state) do
-    new_state = state |> Map.put(respondent_id, {SystemTime.time.now, status})
+    new_state = state |> Map.put(respondent_id, {SystemTime.time().now, status})
     {:reply, status, new_state}
   end
 

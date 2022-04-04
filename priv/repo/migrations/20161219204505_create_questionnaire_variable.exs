@@ -9,8 +9,8 @@ defmodule Ask.Repo.Migrations.CreateQuestionnaireVariable do
 
       timestamps()
     end
+
     create index(:questionnaire_variables, [:project_id])
     create index(:questionnaire_variables, [:questionnaire_id])
-
   end
 end

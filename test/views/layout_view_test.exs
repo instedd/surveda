@@ -2,14 +2,15 @@ defmodule Ask.LayoutViewTest do
   use Ask.ConnCase, async: true
 
   setup do
-    Ask.Config.start_link
+    Ask.Config.start_link()
     :ok
   end
 
   defp test_rendered_guisso_config(env, json_root) do
-    rendered_config = assign(build_conn(), :current_user, %{name: "John Doe", email: "john@doe.com", id: 3})
-                        |> Ask.LayoutView.config
-                        |> Poison.Parser.parse!
+    rendered_config =
+      assign(build_conn(), :current_user, %{name: "John Doe", email: "john@doe.com", id: 3})
+      |> Ask.LayoutView.config()
+      |> Poison.Parser.parse!()
 
     assert rendered_config[json_root] != nil
 

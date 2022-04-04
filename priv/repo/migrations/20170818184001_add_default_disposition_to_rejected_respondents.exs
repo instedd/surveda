@@ -4,12 +4,15 @@ defmodule Ask.Repo.Migrations.AddDefaultDispositionToRejectedRespondents do
 
   def up do
     Repo.transaction(fn ->
-      Repo.query!("""
+      Repo.query!(
+        """
         UPDATE respondents
         SET disposition = 'rejected'
         WHERE state = 'rejected'
         AND disposition IS NULL
-        """, [])
+        """,
+        []
+      )
     end)
   end
 

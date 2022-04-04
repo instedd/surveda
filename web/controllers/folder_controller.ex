@@ -32,26 +32,31 @@ defmodule Ask.FolderController do
   end
 
   def index(conn, %{"project_id" => project_id}) do
-    project = conn
-    |> load_project(project_id)
+    project =
+      conn
+      |> load_project(project_id)
 
-    folders = (from f in Folder,
-          where: f.project_id == ^project.id)
-    |> Repo.all
+    folders =
+      from(f in Folder,
+        where: f.project_id == ^project.id
+      )
+      |> Repo.all()
 
     conn
     |> render("index.json", folders: folders)
   end
 
   def show(conn, %{"project_id" => project_id, "id" => folder_id}) do
-    project = conn
-    |> load_project(project_id)
+    project =
+      conn
+      |> load_project(project_id)
 
-    folder = project
-    |> assoc(:folders)
-    |> Repo.get!(folder_id)
-    |> Repo.preload(:panel_surveys)
-    |> Repo.preload(:surveys)
+    folder =
+      project
+      |> assoc(:folders)
+      |> Repo.get!(folder_id)
+      |> Repo.preload(:panel_surveys)
+      |> Repo.preload(:surveys)
 
     render(conn, "show.json", folder: folder)
   end
@@ -97,7 +102,10 @@ defmodule Ask.FolderController do
     result =
       Multi.new()
       |> Multi.update(:set_name, Folder.changeset(folder, %{name: name}))
-      |> Multi.insert(:rename_log, ActivityLog.rename_folder(project, conn, folder, folder.name, name))
+      |> Multi.insert(
+        :rename_log,
+        ActivityLog.rename_folder(project, conn, folder, folder.name, name)
+      )
       |> Repo.transaction()
 
     case result do
@@ -111,5 +119,4 @@ defmodule Ask.FolderController do
         |> render("error.json", changeset: changeset)
     end
   end
-
 end

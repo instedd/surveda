@@ -8,6 +8,5 @@ defmodule Ask.Repo.Migrations.CreateUser do
 
       timestamps()
     end
-
   end
 end

@@ -11,7 +11,8 @@ defmodule Ask.Audio do
     field :filename, :string
     field :source, :string, default: "upload"
     # :duration is unused. We should remove it from the model (and DB)
-    field :duration, :integer, default: 0 # seconds
+    # seconds
+    field :duration, :integer, default: 0
 
     timestamps()
   end
@@ -42,21 +43,28 @@ defmodule Ask.Audio do
 
   def params_from_converted_upload(upload) do
     case Path.extname(upload.filename) do
-      ".wav" -> case Sox.convert("wav", upload.path, @stored_audio_extension) do
-                  {:ok, data} ->
-                    %{"uuid" => Ecto.UUID.generate, "data" => data, "filename" => "#{Path.basename(upload.filename, ".wav")}.#{@stored_audio_extension}"}
-                  {:error, error} ->
-                    Logger.warn("Error converting file #{upload.path}: #{error}")
-                    params_from_upload(upload)
-                end
-      ".#{@stored_audio_extension}"
-        -> params_from_upload(upload)
+      ".wav" ->
+        case Sox.convert("wav", upload.path, @stored_audio_extension) do
+          {:ok, data} ->
+            %{
+              "uuid" => Ecto.UUID.generate(),
+              "data" => data,
+              "filename" => "#{Path.basename(upload.filename, ".wav")}.#{@stored_audio_extension}"
+            }
+
+          {:error, error} ->
+            Logger.warn("Error converting file #{upload.path}: #{error}")
+            params_from_upload(upload)
+        end
+
+      ".#{@stored_audio_extension}" ->
+        params_from_upload(upload)
     end
   end
 
   defp params_from_upload(upload) do
     {:ok, data} = File.read(upload.path)
-    %{"uuid" => Ecto.UUID.generate, "data" => data, "filename" => upload.filename}
+    %{"uuid" => Ecto.UUID.generate(), "data" => data, "filename" => upload.filename}
   end
 
   def validate_file_type(:filename, filename) do
@@ -72,7 +80,8 @@ defmodule Ask.Audio do
   end
 
   def validate_size(:size, size) do
-    mb_size = size/:math.pow(2, 20)
+    mb_size = size / :math.pow(2, 20)
+
     if mb_size < 16 do
       []
     else
@@ -91,5 +100,4 @@ defmodule Ask.Audio do
       _ -> "application/octet-stream"
     end
   end
-
 end

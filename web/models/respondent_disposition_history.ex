@@ -30,8 +30,9 @@ defmodule Ask.RespondentDispositionHistory do
         survey_id: respondent.survey_id,
         respondent_hashed_number: respondent.hashed_number
       }
-      |> Repo.insert!
+      |> Repo.insert!()
     end
+
     respondent
   end
 end

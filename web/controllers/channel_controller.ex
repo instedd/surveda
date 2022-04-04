@@ -4,31 +4,34 @@ defmodule Ask.ChannelController do
   alias Ask.{Channel, Project, Logger}
 
   def index(conn, %{"project_id" => project_id}) do
-    channels = conn
-    |> load_project(project_id)
-    |> assoc(:channels)
-    |> Repo.all
+    channels =
+      conn
+      |> load_project(project_id)
+      |> assoc(:channels)
+      |> Repo.all()
 
     render(conn, "index.json", channels: channels |> Repo.preload(:projects))
   end
 
   def index(conn, _params) do
-    channels = conn
-    |> current_user
-    |> assoc(:channels)
-    |> Repo.all
-    |> Repo.preload(:projects)
-    |> Enum.map(&(&1 |> Channel.with_status))
+    channels =
+      conn
+      |> current_user
+      |> assoc(:channels)
+      |> Repo.all()
+      |> Repo.preload(:projects)
+      |> Enum.map(&(&1 |> Channel.with_status()))
 
     render(conn, "index.json", channels: channels)
   end
 
   def show(conn, %{"id" => id}) do
-    channel = Channel
-    |> Repo.get!(id)
-    |> authorize_channel(conn)
-    |> Repo.preload(:projects)
-    |> Channel.with_status
+    channel =
+      Channel
+      |> Repo.get!(id)
+      |> authorize_channel(conn)
+      |> Repo.preload(:projects)
+      |> Channel.with_status()
 
     render(conn, "show.json", channel: channel)
   end
@@ -87,7 +90,8 @@ defmodule Ask.ChannelController do
   def create(conn, %{"provider" => provider, "base_url" => base_url, "channel" => api_channel}) do
     user = current_user(conn)
 
-    token = user
+    token =
+      user
       |> assoc(:oauth_tokens)
       |> Repo.get_by(provider: provider, base_url: base_url)
 

@@ -7,7 +7,8 @@ defmodule Ask.FloipEndpoint do
     field :last_pushed_response_id, :integer
     field :retries, :integer
 
-    field :state, :string, default: "enabled" # disabled | enabled | terminated
+    # disabled | enabled | terminated
+    field :state, :string, default: "enabled"
     field :auth_token, :string, default: ""
 
     belongs_to :survey, Ask.Survey
@@ -23,4 +24,3 @@ defmodule Ask.FloipEndpoint do
     |> cast(params, [:name, :uri, :auth_token])
   end
 end
-

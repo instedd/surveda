@@ -1,6 +1,7 @@
 defmodule Ask.ActivityLog do
   use Ask.Web, :model
   import User.Helper
+
   alias Ask.{
     ActivityLog,
     Folder,
@@ -22,26 +23,76 @@ defmodule Ask.ActivityLog do
     timestamps()
   end
 
-  def valid_actions("project"), do:
-    ["create_invite", "edit_invite", "delete_invite", "edit_collaborator", "remove_collaborator"]
+  def valid_actions("project"),
+    do: [
+      "create_invite",
+      "edit_invite",
+      "delete_invite",
+      "edit_collaborator",
+      "remove_collaborator"
+    ]
 
-  def valid_actions("survey"), do:
-    ["create", "edit", "rename", "change_description", "lock", "unlock", "delete", "start", "repeat", "request_cancel", "completed_cancel", "download", "enable_public_link", "regenerate_public_link", "disable_public_link", "change_folder", "add_respondents"]
+  def valid_actions("survey"),
+    do: [
+      "create",
+      "edit",
+      "rename",
+      "change_description",
+      "lock",
+      "unlock",
+      "delete",
+      "start",
+      "repeat",
+      "request_cancel",
+      "completed_cancel",
+      "download",
+      "enable_public_link",
+      "regenerate_public_link",
+      "disable_public_link",
+      "change_folder",
+      "add_respondents"
+    ]
 
-  def valid_actions("panel_survey"), do:
-    ["change_folder"]
+  def valid_actions("panel_survey"), do: ["change_folder"]
 
-  def valid_actions("questionnaire"), do:
-    ["create", "edit", "rename", "delete", "add_mode", "remove_mode", "add_language", "remove_language", "create_step", "delete_step", "rename_step", "edit_step", "edit_settings", "create_section", "rename_section", "delete_section", "edit_section", "archive", "unarchive"]
+  def valid_actions("questionnaire"),
+    do: [
+      "create",
+      "edit",
+      "rename",
+      "delete",
+      "add_mode",
+      "remove_mode",
+      "add_language",
+      "remove_language",
+      "create_step",
+      "delete_step",
+      "rename_step",
+      "edit_step",
+      "edit_settings",
+      "create_section",
+      "rename_section",
+      "delete_section",
+      "edit_section",
+      "archive",
+      "unarchive"
+    ]
 
-  def valid_actions("folder"), do:
-    ["create", "rename", "delete"]
+  def valid_actions("folder"), do: ["create", "rename", "delete"]
 
   def valid_actions(_), do: []
 
   def changeset(struct, params \\ %{}) do
     struct
-    |> cast(params, [:project_id, :user_id, :entity_id, :entity_type, :action, :metadata, :remote_ip])
+    |> cast(params, [
+      :project_id,
+      :user_id,
+      :entity_id,
+      :entity_type,
+      :action,
+      :metadata,
+      :remote_ip
+    ])
     |> validate_inclusion(:action, valid_actions(params[:entity_type] || struct.entity_type))
     |> validate_required([:project_id, :entity_id, :entity_type, :action, :remote_ip])
   end
@@ -53,15 +104,19 @@ defmodule Ask.ActivityLog do
   defp typeof(%Folder{}), do: "folder"
 
   defp create(action, project, conn, entity, metadata) do
-    {user_id, remote_ip} = case conn do
-      nil -> {nil, "0.0.0.0"}
-      conn ->
-        remote_ip = to_string(:inet_parse.ntoa(conn.remote_ip))
-        case current_user(conn) do
-          nil -> {nil, remote_ip}
-          user -> {user.id, remote_ip}
+    {user_id, remote_ip} =
+      case conn do
+        nil ->
+          {nil, "0.0.0.0"}
+
+        conn ->
+          remote_ip = to_string(:inet_parse.ntoa(conn.remote_ip))
+
+          case current_user(conn) do
+            nil -> {nil, remote_ip}
+            user -> {user.id, remote_ip}
+          end
       end
-    end
 
     ActivityLog.changeset(%ActivityLog{}, %{
       project_id: project.id,
@@ -82,7 +137,8 @@ defmodule Ask.ActivityLog do
   end
 
   def edit_collaborator(project, conn, collaborator, old_role, new_role) do
-    create("edit_collaborator", project, conn, project, %{project_name: project.name,
+    create("edit_collaborator", project, conn, project, %{
+      project_name: project.name,
       collaborator_email: collaborator.email,
       collaborator_name: collaborator.name,
       old_role: old_role,
@@ -148,7 +204,7 @@ defmodule Ask.ActivityLog do
   def disable_public_link(project, conn, survey, link) do
     create("disable_public_link", project, conn, survey, %{
       survey_name: survey.name,
-      report_type: report_type_from(link.name |> String.split("/") |> List.last)
+      report_type: report_type_from(link.name |> String.split("/") |> List.last())
     })
   end
 
@@ -167,7 +223,10 @@ defmodule Ask.ActivityLog do
     })
   end
 
-  def add_respondents(project, conn, survey, %{file_name: file_name, respondents_count: respondents_count}) do
+  def add_respondents(project, conn, survey, %{
+        file_name: file_name,
+        respondents_count: respondents_count
+      }) do
     create("add_respondents", project, conn, survey, %{
       survey_name: survey.name,
       file_name: file_name,
@@ -198,7 +257,13 @@ defmodule Ask.ActivityLog do
     })
   end
 
-  def change_survey_description(project, conn, survey, old_survey_description, new_survey_description) do
+  def change_survey_description(
+        project,
+        conn,
+        survey,
+        old_survey_description,
+        new_survey_description
+      ) do
     create("change_description", project, conn, survey, %{
       survey_name: survey.name,
       old_survey_description: old_survey_description,
@@ -247,58 +312,180 @@ defmodule Ask.ActivityLog do
   end
 
   def add_questionnaire_mode(project, conn, questionnaire, questionnaire_name, added_mode) do
-    create("add_mode", project, conn, questionnaire, %{questionnaire_name: questionnaire_name, mode: added_mode})
+    create("add_mode", project, conn, questionnaire, %{
+      questionnaire_name: questionnaire_name,
+      mode: added_mode
+    })
   end
 
   def remove_questionnaire_mode(project, conn, questionnaire, questionnaire_name, removed_mode) do
-    create("remove_mode", project, conn, questionnaire, %{questionnaire_name: questionnaire_name, mode: removed_mode})
+    create("remove_mode", project, conn, questionnaire, %{
+      questionnaire_name: questionnaire_name,
+      mode: removed_mode
+    })
   end
 
   def add_questionnaire_language(project, conn, questionnaire, questionnaire_name, added_language) do
-    create("add_language", project, conn, questionnaire, %{questionnaire_name: questionnaire_name, language: added_language})
+    create("add_language", project, conn, questionnaire, %{
+      questionnaire_name: questionnaire_name,
+      language: added_language
+    })
   end
 
-  def remove_questionnaire_language(project, conn, questionnaire, questionnaire_name, removed_language) do
-    create("remove_language", project, conn, questionnaire, %{questionnaire_name: questionnaire_name, language: removed_language})
+  def remove_questionnaire_language(
+        project,
+        conn,
+        questionnaire,
+        questionnaire_name,
+        removed_language
+      ) do
+    create("remove_language", project, conn, questionnaire, %{
+      questionnaire_name: questionnaire_name,
+      language: removed_language
+    })
   end
 
-  def create_questionnaire_section(project, conn, questionnaire, questionnaire_name, section_id, section_title) do
-    create("create_section", project, conn, questionnaire, %{questionnaire_name: questionnaire_name, section_id: section_id, section_title: section_title})
+  def create_questionnaire_section(
+        project,
+        conn,
+        questionnaire,
+        questionnaire_name,
+        section_id,
+        section_title
+      ) do
+    create("create_section", project, conn, questionnaire, %{
+      questionnaire_name: questionnaire_name,
+      section_id: section_id,
+      section_title: section_title
+    })
   end
 
-  def rename_questionnaire_section(project, conn, questionnaire, questionnaire_name, section_id, old_section_title, new_section_title) do
-    create("rename_section", project, conn, questionnaire, %{questionnaire_name: questionnaire_name, section_id: section_id, old_section_title: old_section_title, new_section_title: new_section_title})
+  def rename_questionnaire_section(
+        project,
+        conn,
+        questionnaire,
+        questionnaire_name,
+        section_id,
+        old_section_title,
+        new_section_title
+      ) do
+    create("rename_section", project, conn, questionnaire, %{
+      questionnaire_name: questionnaire_name,
+      section_id: section_id,
+      old_section_title: old_section_title,
+      new_section_title: new_section_title
+    })
   end
 
-  def delete_questionnaire_section(project, conn, questionnaire, questionnaire_name, section_id, section_title) do
-    create("delete_section", project, conn, questionnaire, %{questionnaire_name: questionnaire_name, section_id: section_id, section_title: section_title})
+  def delete_questionnaire_section(
+        project,
+        conn,
+        questionnaire,
+        questionnaire_name,
+        section_id,
+        section_title
+      ) do
+    create("delete_section", project, conn, questionnaire, %{
+      questionnaire_name: questionnaire_name,
+      section_id: section_id,
+      section_title: section_title
+    })
   end
 
-  def edit_questionnaire_section(project, conn, questionnaire, questionnaire_name, section_id, section_title) do
-    create("edit_section", project, conn, questionnaire, %{questionnaire_name: questionnaire_name, section_id: section_id, section_title: section_title})
+  def edit_questionnaire_section(
+        project,
+        conn,
+        questionnaire,
+        questionnaire_name,
+        section_id,
+        section_title
+      ) do
+    create("edit_section", project, conn, questionnaire, %{
+      questionnaire_name: questionnaire_name,
+      section_id: section_id,
+      section_title: section_title
+    })
   end
 
-  def create_questionnaire_step(project, conn, questionnaire, questionnaire_name, step_id, step_title, step_type) do
-    create("create_step", project, conn, questionnaire, %{questionnaire_name: questionnaire_name, step_id: step_id, step_title: step_title, step_type: step_type})
+  def create_questionnaire_step(
+        project,
+        conn,
+        questionnaire,
+        questionnaire_name,
+        step_id,
+        step_title,
+        step_type
+      ) do
+    create("create_step", project, conn, questionnaire, %{
+      questionnaire_name: questionnaire_name,
+      step_id: step_id,
+      step_title: step_title,
+      step_type: step_type
+    })
   end
 
-  def delete_questionnaire_step(project, conn, questionnaire, questionnaire_name, step_id, step_title, step_type) do
-    create("delete_step", project, conn, questionnaire, %{questionnaire_name: questionnaire_name, step_id: step_id, step_title: step_title, step_type: step_type})
+  def delete_questionnaire_step(
+        project,
+        conn,
+        questionnaire,
+        questionnaire_name,
+        step_id,
+        step_title,
+        step_type
+      ) do
+    create("delete_step", project, conn, questionnaire, %{
+      questionnaire_name: questionnaire_name,
+      step_id: step_id,
+      step_title: step_title,
+      step_type: step_type
+    })
   end
 
-  def rename_questionnaire_step(project, conn, questionnaire, questionnaire_name, step_id, old_step_title, new_step_title) do
-    create("rename_step", project, conn, questionnaire, %{questionnaire_name: questionnaire_name, step_id: step_id, old_step_title: old_step_title, new_step_title: new_step_title})
+  def rename_questionnaire_step(
+        project,
+        conn,
+        questionnaire,
+        questionnaire_name,
+        step_id,
+        old_step_title,
+        new_step_title
+      ) do
+    create("rename_step", project, conn, questionnaire, %{
+      questionnaire_name: questionnaire_name,
+      step_id: step_id,
+      old_step_title: old_step_title,
+      new_step_title: new_step_title
+    })
   end
 
   def edit_settings(project, conn, questionnaire) do
-    create("edit_settings", project, conn, questionnaire, %{questionnaire_name: questionnaire.name})
+    create("edit_settings", project, conn, questionnaire, %{
+      questionnaire_name: questionnaire.name
+    })
   end
 
-  def edit_questionnaire_step(project, conn, questionnaire, questionnaire_name, step_id, step_title) do
-    create("edit_step", project, conn, questionnaire, %{questionnaire_name: questionnaire_name, step_id: step_id, step_title: step_title})
+  def edit_questionnaire_step(
+        project,
+        conn,
+        questionnaire,
+        questionnaire_name,
+        step_id,
+        step_title
+      ) do
+    create("edit_step", project, conn, questionnaire, %{
+      questionnaire_name: questionnaire_name,
+      step_id: step_id,
+      step_title: step_title
+    })
   end
 
-  def rename_questionnaire(project, conn, questionnaire, old_questionnaire_name, new_questionnaire_name) do
+  def rename_questionnaire(
+        project,
+        conn,
+        questionnaire,
+        old_questionnaire_name,
+        new_questionnaire_name
+      ) do
     create("rename", project, conn, questionnaire, %{
       old_questionnaire_name: old_questionnaire_name,
       new_questionnaire_name: new_questionnaire_name

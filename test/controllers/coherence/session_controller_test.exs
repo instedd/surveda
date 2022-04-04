@@ -7,7 +7,7 @@ defmodule Ask.Coherence.SessionControllerTest do
   test "new with guisso enabled", %{conn: conn} do
     enable_guisso()
 
-    conn = get conn, session_path(conn, :new)
+    conn = get(conn, session_path(conn, :new))
     location = redirected_to(conn, 302)
     assert location =~ ~r{^http://guisso.localhost/oauth2/authorize}
 
@@ -19,7 +19,7 @@ defmodule Ask.Coherence.SessionControllerTest do
   test "new with guisso disabled", %{conn: conn} do
     disable_guisso()
 
-    conn = get conn, session_path(conn, :new)
+    conn = get(conn, session_path(conn, :new))
     assert html_response(conn, 200)
   end
 
@@ -27,8 +27,8 @@ defmodule Ask.Coherence.SessionControllerTest do
     test "login existing user", %{conn: conn} do
       user = insert(:user, email: "someone@ask.dev", name: "John")
 
-      GuissoMock |>
-      expect(:request_auth_token, fn (_, _) ->
+      GuissoMock
+      |> expect(:request_auth_token, fn _, _ ->
         {:ok, "someone@ask.dev", "Neil", nil}
       end)
 
@@ -41,8 +41,8 @@ defmodule Ask.Coherence.SessionControllerTest do
     end
 
     test "register new user", %{conn: conn} do
-      GuissoMock |>
-      expect(:request_auth_token, fn (_, _) ->
+      GuissoMock
+      |> expect(:request_auth_token, fn _, _ ->
         {:ok, "someone@ask.dev", "Someone", nil}
       end)
 
@@ -50,8 +50,12 @@ defmodule Ask.Coherence.SessionControllerTest do
       assert redirected_to(conn, 302) == "/"
 
       # it created the user
-      assert user = Repo.one(from u in User,
-        where: u.email == "someone@ask.dev")
+      assert user =
+               Repo.one(
+                 from u in User,
+                   where: u.email == "someone@ask.dev"
+               )
+
       assert user.name == "Someone"
     end
   end
@@ -60,20 +64,31 @@ defmodule Ask.Coherence.SessionControllerTest do
     test "create redirects unconfirmed user to confirmation page", %{conn: conn} do
       user = insert(:user, confirmed_at: nil)
 
-      conn = post conn, session_path(conn, :create, session: %{ "email" => user.email, "password" => "1234" })
+      conn =
+        post(
+          conn,
+          session_path(conn, :create, session: %{"email" => user.email, "password" => "1234"})
+        )
+
       assert redirected_to(conn, 302) == "/registrations/confirmation_sent"
     end
 
     test "api_delete", %{conn: conn} do
       user = insert(:user)
 
-      conn = conn
-      |> post(session_path(conn, :create, session: %{ "email" => user.email, "password" => "1234" }))
+      conn =
+        conn
+        |> post(
+          session_path(conn, :create, session: %{"email" => user.email, "password" => "1234"})
+        )
+
       assert redirected_to(conn, 302)
 
-      conn = conn
-      |> recycle()
-      |> delete(session_path(conn, :api_delete))
+      conn =
+        conn
+        |> recycle()
+        |> delete(session_path(conn, :api_delete))
+
       assert conn.status == 204
     end
   end

@@ -9,15 +9,20 @@ defmodule Pagination.Helper do
   end
 
   def conditional_page(query, limit, page) do
-    limit_number = case limit do
-      "" -> 10
-      _ ->
-        {limit_value, _} = Integer.parse(limit)
-        limit_value
-    end
+    limit_number =
+      case limit do
+        "" ->
+          10
+
+        _ ->
+          {limit_value, _} = Integer.parse(limit)
+          limit_value
+      end
 
     case page do
-      "" -> query
+      "" ->
+        query
+
       _ ->
         {page_number, _} = Integer.parse(page)
         offset = limit_number * (page_number - 1)

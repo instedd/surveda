@@ -2,7 +2,20 @@ defmodule Ask.Runtime.Broker do
   use GenServer
   import Ecto.Query
   import Ecto
-  alias Ask.{Repo, Logger, Survey, Respondent, RespondentGroup, QuotaBucket, RespondentDispositionHistory, SystemTime, Schedule, SurvedaMetrics}
+
+  alias Ask.{
+    Repo,
+    Logger,
+    Survey,
+    Respondent,
+    RespondentGroup,
+    QuotaBucket,
+    RespondentDispositionHistory,
+    SystemTime,
+    Schedule,
+    SurvedaMetrics
+  }
+
   alias Ask.Runtime.{Session, RetriesHistogram, ChannelStatusServer, SurveyAction}
 
   @poll_interval :timer.minutes(1)
@@ -22,7 +35,13 @@ defmodule Ask.Runtime.Broker do
 
   def init(_args) do
     :timer.send_after(1000, :poll)
-    Logger.info "Broker started. Default batch size=#{default_batch_size()}. Limit per minute=#{batch_limit_per_minute()}."
+
+    Logger.info(
+      "Broker started. Default batch size=#{default_batch_size()}. Limit per minute=#{
+        batch_limit_per_minute()
+      }."
+    )
+
     {:ok, nil}
   end
 
@@ -38,7 +57,7 @@ defmodule Ask.Runtime.Broker do
   end
 
   def handle_info(:poll, state) do
-    handle_info(:poll, state, SystemTime.time.now)
+    handle_info(:poll, state, SystemTime.time().now)
   end
 
   def handle_info(_, state) do
@@ -52,11 +71,11 @@ defmodule Ask.Runtime.Broker do
 
   # visible for testing
   def retry_respondent(respondent) do
-    session = respondent.session |> Session.load
+    session = respondent.session |> Session.load()
 
     Repo.transaction(fn ->
       try do
-        Ask.Runtime.Survey.handle_session_step(Session.timeout(session), SystemTime.time.now)
+        Ask.Runtime.Survey.handle_session_step(Session.timeout(session), SystemTime.time().now)
       rescue
         e ->
           Logger.error(e, __STACKTRACE__, "Error retrying respondent. Rolling back transaction")
@@ -68,9 +87,14 @@ defmodule Ask.Runtime.Broker do
   # visible for testing
   def configure_new_respondent(respondent, questionnaire_id, sequence_mode) do
     {primary_mode, _} = get_modes(sequence_mode)
+
     respondent
-    |> Respondent.changeset(%{questionnaire_id: questionnaire_id, mode: sequence_mode, disposition: :queued})
-    |> Repo.update!
+    |> Respondent.changeset(%{
+      questionnaire_id: questionnaire_id,
+      mode: sequence_mode,
+      disposition: :queued
+    })
+    |> Repo.update!()
     |> RespondentDispositionHistory.create(respondent.disposition, primary_mode)
   end
 
@@ -99,54 +123,73 @@ defmodule Ask.Runtime.Broker do
   end
 
   def poll_survey(survey, now) do
-    channels = survey |> Survey.survey_channels
-    channel_is_down? = channels |> Enum.any?(fn c ->
-      status = c.id |> ChannelStatusServer.get_channel_status
-      (status != :up && status != :unknown)
-    end)
+    channels = survey |> Survey.survey_channels()
+
+    channel_is_down? =
+      channels
+      |> Enum.any?(fn c ->
+        status = c.id |> ChannelStatusServer.get_channel_status()
+        status != :up && status != :unknown
+      end)
+
     poll_survey(survey, now, channel_is_down?)
   end
 
   defp poll_survey(survey, _now, true = _channel_is_down) do
-    ChannelStatusServer.log_info "Survey #{survey.id} was not polled because a channel is down"
+    ChannelStatusServer.log_info("Survey #{survey.id} was not polled because a channel is down")
   end
 
   defp poll_survey(survey, _now, false = _channel_is_down) do
     try do
       by_state = Ask.RespondentStats.respondents_by_state(survey)
+
       %{
         active: active,
         pending: pending,
-        completed: completed,
+        completed: completed
       } = by_state
 
       reached_quotas = reached_quotas?(survey)
       survey_completed = survey.cutoff <= completed || reached_quotas
       batch_size = batch_size(survey, by_state)
       survey = update_survey_on_poll(survey)
-      Logger.info "Polling survey #{survey.id} (active=#{active}, pending=#{pending}, completed=#{completed}, batch_size=#{batch_size})"
+
+      Logger.info(
+        "Polling survey #{survey.id} (active=#{active}, pending=#{pending}, completed=#{completed}, batch_size=#{
+          batch_size
+        })"
+      )
+
       SurvedaMetrics.increment_counter_with_label(:surveda_survey_poll, [survey.id])
 
       cond do
-        (active == 0 && (pending == 0 || survey_completed)) ->
-          Logger.info "Survey #{survey.id} completed"
+        active == 0 && (pending == 0 || survey_completed) ->
+          Logger.info("Survey #{survey.id} completed")
           complete(survey)
 
         active < batch_size && pending > 0 && !survey_completed ->
           count = batch_size - active
-          Logger.info "Survey #{survey.id}. Starting up to #{count} respondents."
+          Logger.info("Survey #{survey.id}. Starting up to #{count} respondents.")
           start_some(survey, count)
 
-        true -> :ok
+        true ->
+          :ok
       end
     rescue
       e ->
-        handle_exception(survey, e, __STACKTRACE__, "Error occurred while polling survey (id: #{survey.id})")
+        handle_exception(
+          survey,
+          e,
+          __STACKTRACE__,
+          "Error occurred while polling survey (id: #{survey.id})"
+        )
     end
   end
 
-  defp update_survey_on_poll(%{first_window_started_at: nil} = survey), do:
-    Survey.changeset(survey, %{first_window_started_at: SystemTime.time.now}) |> Repo.update!
+  defp update_survey_on_poll(%{first_window_started_at: nil} = survey),
+    do:
+      Survey.changeset(survey, %{first_window_started_at: SystemTime.time().now})
+      |> Repo.update!()
 
   defp update_survey_on_poll(survey), do: survey
 
@@ -155,25 +198,40 @@ defmodule Ask.Runtime.Broker do
       SurveyAction.stop(survey)
     rescue
       e ->
-        handle_exception(survey, e, __STACKTRACE__, "Error occurred while stopping survey (id: #{survey.id})")
+        handle_exception(
+          survey,
+          e,
+          __STACKTRACE__,
+          "Error occurred while stopping survey (id: #{survey.id})"
+        )
     end
   end
 
   defp handle_exception(survey, e, stacktrace, message) do
-    if Mix.env == :test do
-      IO.inspect e
-      IO.inspect stacktrace
+    if Mix.env() == :test do
+      IO.inspect(e)
+      IO.inspect(stacktrace)
       raise e
     end
+
     Logger.error(e, stacktrace, message)
-    Sentry.capture_exception(e, [
+
+    Sentry.capture_exception(e,
       stacktrace: stacktrace,
-      extra: %{survey_id: survey.id}])
+      extra: %{survey_id: survey.id}
+    )
   end
 
   defp retry_respondents(now) do
-    Repo.all(from r in Respondent, select: r.id, where: r.state == :active and r.timeout_at <= ^now, limit: ^batch_limit_per_minute())
-    |> Enum.each(fn respondent_id -> Respondent.with_lock(respondent_id, &retry_respondent(&1)) end)
+    Repo.all(
+      from r in Respondent,
+        select: r.id,
+        where: r.state == :active and r.timeout_at <= ^now,
+        limit: ^batch_limit_per_minute()
+    )
+    |> Enum.each(fn respondent_id ->
+      Respondent.with_lock(respondent_id, &retry_respondent(&1))
+    end)
   end
 
   defp start(survey, respondent) do
@@ -191,16 +249,31 @@ defmodule Ask.Runtime.Broker do
     fallback_channel = RespondentGroup.fallback_channel(group, mode)
 
     retries = Survey.retries_configuration(survey, primary_mode)
-    fallback_retries = case fallback_channel do
-      nil -> []
-      _ -> Survey.retries_configuration(survey, fallback_mode)
-    end
+
+    fallback_retries =
+      case fallback_channel do
+        nil -> []
+        _ -> Survey.retries_configuration(survey, fallback_mode)
+      end
 
     fallback_delay = survey |> Survey.fallback_delay()
     SurvedaMetrics.increment_counter_with_label(:surveda_broker_respondent_start, [survey.id])
-    Session.start(questionnaire, respondent, primary_channel, primary_mode, survey.schedule, retries, fallback_channel, fallback_mode, fallback_retries, fallback_delay, survey.count_partial_results)
+
+    Session.start(
+      questionnaire,
+      respondent,
+      primary_channel,
+      primary_mode,
+      survey.schedule,
+      retries,
+      fallback_channel,
+      fallback_mode,
+      fallback_retries,
+      fallback_delay,
+      survey.count_partial_results
+    )
     |> handle_session_started
-    |> Ask.Runtime.Survey.handle_session_step(SystemTime.time.now)
+    |> Ask.Runtime.Survey.handle_session_step(SystemTime.time().now)
   end
 
   defp default_batch_size do
@@ -209,13 +282,18 @@ defmodule Ask.Runtime.Broker do
 
   defp reached_quotas?(survey) do
     case survey.quota_vars do
-      [] -> false
+      [] ->
+        false
+
       _ ->
         survey_id = survey.id
-        Repo.one(from q in QuotaBucket,
-                 where: q.survey_id == ^survey_id,
-                 where: q.count < q.quota,
-                 select: count(q.id)) == 0
+
+        Repo.one(
+          from q in QuotaBucket,
+            where: q.survey_id == ^survey_id,
+            where: q.count < q.quota,
+            select: count(q.id)
+        ) == 0
     end
   end
 
@@ -229,7 +307,8 @@ defmodule Ask.Runtime.Broker do
       respondents_target when is_integer(respondents_target) ->
         successful = Survey.completed_state_respondents(survey, respondents_by_state)
         estimated_success_rate = estimated_success_rate(survey, respondents_target)
-        (respondents_target - successful) / estimated_success_rate
+
+        ((respondents_target - successful) / estimated_success_rate)
         |> trunc
     end
   end
@@ -239,18 +318,31 @@ defmodule Ask.Runtime.Broker do
   end
 
   defp complete(survey) do
-    Repo.update Survey.changeset(survey, %{state: "terminated", exit_code: 0, exit_message: "Successfully completed"})
+    Repo.update(
+      Survey.changeset(survey, %{
+        state: "terminated",
+        exit_code: 0,
+        exit_message: "Successfully completed"
+      })
+    )
   end
 
   defp start_some(survey, count) do
     count = Enum.min([batch_limit_per_minute(), count])
 
-    (from r in assoc(survey, :respondents),
+    from(r in assoc(survey, :respondents),
       select: r.id,
       where: r.state == :pending,
-      limit: ^count)
-    |> Repo.all
-    |> Enum.each(fn respondent_id -> Respondent.with_lock(respondent_id, &start(survey, &1), &Repo.preload(&1, respondent_group: [respondent_group_channels: :channel])) end)
+      limit: ^count
+    )
+    |> Repo.all()
+    |> Enum.each(fn respondent_id ->
+      Respondent.with_lock(
+        respondent_id,
+        &start(survey, &1),
+        &Repo.preload(&1, respondent_group: [respondent_group_channels: :channel])
+      )
+    end)
   end
 
   defp select_questionnaire_and_mode(%Survey{comparisons: []} = survey) do
@@ -272,21 +364,26 @@ defmodule Ask.Runtime.Broker do
     # be [{10, false}, {25, false}, {35, true}, {30, true}] because
     # after the entry with ratio 25 the total accumulated ratio will be
     # 10 + 25 + 35 = 70 >= 45. Then we keep the first one that's true.
-    {candidates, _} = comparisons
-                      |> Enum.map_reduce(0, fn (comparison, total_count) ->
-      ratio = comparison["ratio"]
-      total_count = total_count + (ratio || 0)
-      included = total_count >= rand
-      {{comparison, included}, total_count}
-    end)
+    {candidates, _} =
+      comparisons
+      |> Enum.map_reduce(0, fn comparison, total_count ->
+        ratio = comparison["ratio"]
+        total_count = total_count + (ratio || 0)
+        included = total_count >= rand
+        {{comparison, included}, total_count}
+      end)
 
-    candidate = candidates
-                |> Enum.find(fn {_, included} -> included end)
+    candidate =
+      candidates
+      |> Enum.find(fn {_, included} -> included end)
 
     if candidate do
       {comparison, _} = candidate
-      questionnaire = survey.questionnaires
-                      |> Enum.find(fn q -> q.id == comparison["questionnaire_id"] end)
+
+      questionnaire =
+        survey.questionnaires
+        |> Enum.find(fn q -> q.id == comparison["questionnaire_id"] end)
+
       mode = comparison["mode"]
       {questionnaire, mode}
     else
@@ -303,17 +400,27 @@ defmodule Ask.Runtime.Broker do
     end
   end
 
-  defp handle_session_started(session_started)do
+  defp handle_session_started(session_started) do
     case session_started do
-      {:ok, session, reply, timeout} -> {:ok, %Session{session | respondent: RetriesHistogram.add_new_respondent(session.respondent, session, timeout)}, reply, timeout}
-      other -> other
+      {:ok, session, reply, timeout} ->
+        {:ok,
+         %Session{
+           session
+           | respondent: RetriesHistogram.add_new_respondent(session.respondent, session, timeout)
+         }, reply, timeout}
+
+      other ->
+        other
     end
   end
 
   defp estimated_success_rate(survey, respondents_target) do
-    respondents_by_disposition = survey |> Ask.RespondentStats.respondents_by_disposition
-    completion_rate = Survey.get_completion_rate(survey, respondents_by_disposition, respondents_target)
-    current_success_rate = Survey.get_success_rate(survey, respondents_by_disposition )
+    respondents_by_disposition = survey |> Ask.RespondentStats.respondents_by_disposition()
+
+    completion_rate =
+      Survey.get_completion_rate(survey, respondents_by_disposition, respondents_target)
+
+    current_success_rate = Survey.get_success_rate(survey, respondents_by_disposition)
     initial_success_rate = Survey.initial_success_rate()
     Survey.estimated_success_rate(initial_success_rate, current_success_rate, completion_rate)
   end

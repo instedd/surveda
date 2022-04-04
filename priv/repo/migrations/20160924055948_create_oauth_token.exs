@@ -9,7 +9,7 @@ defmodule Ask.Repo.Migrations.CreateOAuthToken do
 
       timestamps()
     end
-    create unique_index(:oauth_tokens, [:user_id, :provider])
 
+    create unique_index(:oauth_tokens, [:user_id, :provider])
   end
 end

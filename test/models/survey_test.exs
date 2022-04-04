@@ -87,9 +87,10 @@ defmodule Ask.SurveyTest do
 
   @tag :time_mock
   test "changeset with terminated state has ended_at field set" do
-    test_now = DateTime.utc_now |> DateTime.truncate(:second)
+    test_now = DateTime.utc_now() |> DateTime.truncate(:second)
+
     TimeMock
-    |> expect(:now, fn () -> test_now end)
+    |> expect(:now, fn -> test_now end)
 
     changeset = Survey.changeset(%Survey{state: "terminated"})
     assert get_field(changeset, :ended_at) == test_now
@@ -136,6 +137,7 @@ defmodule Ask.SurveyTest do
   describe "expired?" do
     setup do
       {:ok, last_window_ends_at, _} = DateTime.from_iso8601("2021-02-11T15:00:00Z")
+
       {
         :ok,
         expirable_survey: insert(:survey, last_window_ends_at: last_window_ends_at),
@@ -143,7 +145,9 @@ defmodule Ask.SurveyTest do
       }
     end
 
-    test "returns false when the survey cancellation isnt' scheduled", %{non_expirable_survey: survey} do
+    test "returns false when the survey cancellation isnt' scheduled", %{
+      non_expirable_survey: survey
+    } do
       expired? = Survey.expired?(survey)
 
       assert expired? == false
@@ -159,7 +163,9 @@ defmodule Ask.SurveyTest do
     end
 
     @tag :time_mock
-    test "returns false when last_window_ends_at passed less than 5 minutes ago", %{expirable_survey: survey} do
+    test "returns false when last_window_ends_at passed less than 5 minutes ago", %{
+      expirable_survey: survey
+    } do
       Timex.shift(survey.last_window_ends_at, minutes: 4, seconds: 59) |> mock_time()
 
       expired? = Survey.expired?(survey)
@@ -168,7 +174,9 @@ defmodule Ask.SurveyTest do
     end
 
     @tag :time_mock
-    test "returns true when last_window_ends_at passed more than 5 minutes ago", %{expirable_survey: survey} do
+    test "returns true when last_window_ends_at passed more than 5 minutes ago", %{
+      expirable_survey: survey
+    } do
       Timex.shift(survey.last_window_ends_at, minutes: 5) |> mock_time()
 
       expired? = Survey.expired?(survey)
@@ -192,7 +200,8 @@ defmodule Ask.SurveyTest do
       panel_survey = insert(:panel_survey, project: project, name: "foo")
       survey = insert(:survey, project: project, panel_survey: panel_survey)
 
-      created_survey = Repo.get!(Survey, survey.id) |> Repo.preload([:project, panel_survey: :project])
+      created_survey =
+        Repo.get!(Survey, survey.id) |> Repo.preload([:project, panel_survey: :project])
 
       assert created_survey == survey
       assert created_survey.panel_survey_id == panel_survey.id

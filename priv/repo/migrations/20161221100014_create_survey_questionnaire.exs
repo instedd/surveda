@@ -8,8 +8,8 @@ defmodule Ask.Repo.Migrations.CreateSurveyQuestionnaire do
 
       timestamps()
     end
+
     create index(:survey_questionnaires, [:survey_id])
     create index(:survey_questionnaires, [:questionnaire_id])
-
   end
 end

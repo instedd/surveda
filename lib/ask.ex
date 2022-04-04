@@ -1,12 +1,10 @@
 defmodule Ask do
   use Application
 
-
   # See http://elixir-lang.org/docs/stable/elixir/Application.html
   # for more information on OTP Applications
   def start(_type, _args) do
     import Supervisor.Spec
-
 
     Ask.PhoenixInstrumenter.setup()
     Ask.PrometheusExporter.setup()
@@ -24,20 +22,22 @@ defmodule Ask do
       # worker(Ask.Worker, [arg1, arg2, arg3]),
     ]
 
-    children = if Mix.env != :test && !IEx.started? do
-      [
-        worker(Ask.OAuthTokenServer, []),
-        worker(Ask.Runtime.SurveyLogger, []),
-        worker(Ask.Runtime.Broker, []),
-        worker(Ask.FloipPusher, []),
-        worker(Ask.JsonSchema, []),
-        worker(Ask.Runtime.ChannelStatusServer, []),
-        worker(Ask.Config, []),
-        worker(Ask.Runtime.QuestionnaireSimulatorStore, [])
-      | children]
-    else
-      children
-    end
+    children =
+      if Mix.env() != :test && !IEx.started?() do
+        [
+          worker(Ask.OAuthTokenServer, []),
+          worker(Ask.Runtime.SurveyLogger, []),
+          worker(Ask.Runtime.Broker, []),
+          worker(Ask.FloipPusher, []),
+          worker(Ask.JsonSchema, []),
+          worker(Ask.Runtime.ChannelStatusServer, []),
+          worker(Ask.Config, []),
+          worker(Ask.Runtime.QuestionnaireSimulatorStore, [])
+          | children
+        ]
+      else
+        children
+      end
 
     # See http://elixir-lang.org/docs/stable/elixir/Supervisor.html
     # for other strategies and supported options
@@ -45,19 +45,25 @@ defmodule Ask do
     {:ok, _} = Logger.add_backend(Sentry.LoggerBackend)
 
     supervisor_result = Supervisor.start_link(children, opts)
-    survey_canceller_children = if Mix.env != :test && !IEx.started? do
-      # Start cancelling with survey_id = nil to check all surveys that must be cancelled
-      survey_canceller = Ask.SurveyCanceller.start_cancelling(nil)
-      case survey_canceller do
-        :ignore -> nil
-        %Ask.SurveyCanceller{processes: _, consumers_pids: _} ->
-          survey_canceller.processes
-      end
-    end
 
-    if Mix.env != :test && !IEx.started? && survey_canceller_children do
+    survey_canceller_children =
+      if Mix.env() != :test && !IEx.started?() do
+        # Start cancelling with survey_id = nil to check all surveys that must be cancelled
+        survey_canceller = Ask.SurveyCanceller.start_cancelling(nil)
+
+        case survey_canceller do
+          :ignore ->
+            nil
+
+          %Ask.SurveyCanceller{processes: _, consumers_pids: _} ->
+            survey_canceller.processes
+        end
+      end
+
+    if Mix.env() != :test && !IEx.started?() && survey_canceller_children do
       Supervisor.start_link(survey_canceller_children, strategy: :rest_for_one)
     end
+
     supervisor_result
   end
 

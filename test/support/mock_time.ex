@@ -16,6 +16,7 @@ defmodule Ask.MockTime do
   setup context do
     if context[:time_mock] do
       Application.put_env(:ask, :time, Ask.TimeMock)
+
       on_exit(fn ->
         Application.delete_env(:ask, :time)
       end)
@@ -34,7 +35,8 @@ defmodule Ask.MockTime do
 
       defp mock_time(time) do
         Ask.TimeMock
-        |> stub(:now, fn () -> time end)
+        |> stub(:now, fn -> time end)
+
         time
       end
 
@@ -43,12 +45,13 @@ defmodule Ask.MockTime do
         mock_time(now)
       end
 
-      defp set_actual_time, do: mock_time(Timex.now)
+      defp set_actual_time, do: mock_time(Timex.now())
 
-      defp time_passes(diff), do:
-        SystemTime.time.now
-        |> Timex.shift(diff)
-        |> mock_time
+      defp time_passes(diff),
+        do:
+          SystemTime.time().now
+          |> Timex.shift(diff)
+          |> mock_time
     end
   end
 end

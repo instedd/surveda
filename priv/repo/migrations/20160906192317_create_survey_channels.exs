@@ -8,6 +8,5 @@ defmodule Ask.Repo.Migrations.CreateSurveyChannel do
 
       timestamps()
     end
-
   end
 end

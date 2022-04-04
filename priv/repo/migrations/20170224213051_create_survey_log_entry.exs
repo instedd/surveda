@@ -15,6 +15,5 @@ defmodule Ask.Repo.Migrations.CreateSurveyLogEntry do
 
       timestamps()
     end
-
   end
 end

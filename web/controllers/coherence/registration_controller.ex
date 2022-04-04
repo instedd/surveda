@@ -23,6 +23,7 @@ defmodule Ask.Coherence.RegistrationController do
     layout: {Ask.Coherence.LayoutView, :app},
     view: Coherence.RegistrationView,
     caller: __MODULE__
+
   plug :redirect_logged_in when action in [:new, :create]
   plug :guisso_signup when action in [:new]
 

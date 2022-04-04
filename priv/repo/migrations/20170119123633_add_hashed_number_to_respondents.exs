@@ -12,5 +12,4 @@ defmodule Ask.Repo.Migrations.AddHashedNumberToRespondents do
       remove :hashed_number
     end
   end
-
 end

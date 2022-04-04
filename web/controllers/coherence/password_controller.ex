@@ -18,6 +18,7 @@ defmodule Ask.Coherence.PasswordController do
     layout: {Ask.Coherence.LayoutView, :app},
     view: Coherence.PasswordView,
     caller: __MODULE__
+
   plug :redirect_logged_in when action in [:new, :create, :edit, :update]
 
   def password_recovery_sent(conn, _) do

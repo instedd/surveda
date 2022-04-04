@@ -30,8 +30,8 @@ defmodule Ask.Router do
 
     plug Coherence.Authentication.Session, db_model: Ask.User
 
-    #plug Guardian.Plug.VerifyHeader
-    #plug Guardian.Plug.LoadResource
+    # plug Guardian.Plug.VerifyHeader
+    # plug Guardian.Plug.LoadResource
   end
 
   pipeline :csv_json_api do
@@ -55,10 +55,10 @@ defmodule Ask.Router do
     plug :accepts, ["mp3"]
   end
 
-  if Mix.env == :dev do
+  if Mix.env() == :dev do
     scope "/dev" do
       pipe_through [:browser]
-      forward "/mailbox", Plug.Swoosh.MailboxPreview, [base_path: "/dev/mailbox"]
+      forward "/mailbox", Plug.Swoosh.MailboxPreview, base_path: "/dev/mailbox"
     end
   end
 
@@ -79,18 +79,22 @@ defmodule Ask.Router do
       delete "/sessions", Coherence.SessionController, :api_delete
 
       get "/timezones", TimezoneController, :timezones
+
       resources "/projects", ProjectController, except: [:new, :edit] do
         resources "/folders", FolderController, only: [:create, :index, :show, :delete] do
           post "/set_name", FolderController, :set_name
           resources "/surveys", SurveyController, only: [:create]
         end
+
         resources "/panel_surveys", PanelSurveyController, except: [:new, :edit] do
           post "/new_wave/", PanelSurveyController, :new_wave
           post "/set_folder_id", PanelSurveyController, :set_folder_id
         end
+
         delete "/memberships/remove", MembershipController, :remove, as: :membership_remove
         put "/memberships/update", MembershipController, :update, as: :membership_update
         resources "/channels", ChannelController, only: [:index]
+
         resources "/surveys", SurveyController, except: [:new, :edit] do
           post "/set_name", SurveyController, :set_name
           post "/set_folder_id", SurveyController, :set_folder_id
@@ -98,16 +102,22 @@ defmodule Ask.Router do
           post "/launch", SurveyController, :launch
           post "/stop", SurveyController, :stop
           post "/config", SurveyController, :config
-          put "/update_locked_status", SurveyController, :update_locked_status, as: :update_locked_status
+
+          put "/update_locked_status", SurveyController, :update_locked_status,
+            as: :update_locked_status
+
           get "/config", SurveyController, :config
           get "/stats", SurveyController, :stats
           get "/retries_histograms", SurveyController, :retries_histograms
           resources "/integrations", IntegrationController, only: [:index, :create]
           resources "/respondents", RespondentController, only: [:index]
-          resources "/respondent_groups", RespondentGroupController, only: [:index, :create, :update, :delete] do
+
+          resources "/respondent_groups", RespondentGroupController,
+            only: [:index, :create, :update, :delete] do
             post "/add", RespondentGroupController, :add, as: :add
             post "/replace", RespondentGroupController, :replace, as: :replace
           end
+
           get "/respondents/stats", RespondentController, :stats, as: :respondents_stats
           get "/simulation/initial_state/:mode", SurveySimulationController, :initial_state
           get "/simulation_status", SurveySimulationController, :status
@@ -115,29 +125,51 @@ defmodule Ask.Router do
           get "/links/:name", SurveyLinkController, :create, as: :links
           put "/links/:name", SurveyLinkController, :refresh, as: :links
           delete "/links/:name", SurveyLinkController, :delete, as: :links
+
           scope "/flow-results" do
             get "/packages", FloipController, :index, as: :packages
             get "/packages/:floip_package_id", FloipController, :show, as: :package_descriptor
-            get "/packages/:floip_package_id/responses", FloipController, :responses, as: :package_responses
+
+            get "/packages/:floip_package_id/responses", FloipController, :responses,
+              as: :package_responses
           end
         end
+
         post "/surveys/simulate_questionanire", SurveySimulationController, :simulate
+
         resources "/questionnaires", QuestionnaireController, except: [:new, :edit] do
           get "/export_zip", QuestionnaireController, :export_zip, as: :questionnaires_export_zip
           post "/import_zip", QuestionnaireController, :import_zip, as: :questionnaires_import_zip
-          put "/update_archived_status", QuestionnaireController, :update_archived_status, as: :update_archived_status
-          post "/simulation", QuestionnaireSimulationController, :start, as: :questionnaires_start_simulation
-          post "/simulation/message", QuestionnaireSimulationController, :sync, as: :questionnaires_sync_simulation
-          get "/simulation/:respondent_id", QuestionnaireSimulationController, :get_last_response, as: :get_last_simulation_response
+
+          put "/update_archived_status", QuestionnaireController, :update_archived_status,
+            as: :update_archived_status
+
+          post "/simulation", QuestionnaireSimulationController, :start,
+            as: :questionnaires_start_simulation
+
+          post "/simulation/message", QuestionnaireSimulationController, :sync,
+            as: :questionnaires_sync_simulation
+
+          get "/simulation/:respondent_id", QuestionnaireSimulationController, :get_last_response,
+            as: :get_last_simulation_response
         end
+
         get "/autocomplete_vars", ProjectController, :autocomplete_vars, as: :autocomplete_vars
-        get "/autocomplete_primary_language", ProjectController, :autocomplete_primary_language, as: :autocomplete_primary_language
-        get "/autocomplete_other_language", ProjectController, :autocomplete_other_language, as: :autocomplete_other_language
+
+        get "/autocomplete_primary_language", ProjectController, :autocomplete_primary_language,
+          as: :autocomplete_primary_language
+
+        get "/autocomplete_other_language", ProjectController, :autocomplete_other_language,
+          as: :autocomplete_other_language
+
         get "/collaborators", ProjectController, :collaborators, as: :collaborators
         get "/activities", ProjectController, :activities, as: :activities
         post "/leave", ProjectController, :leave, as: :leave
-        put "/update_archived_status", ProjectController, :update_archived_status, as: :update_archived_status
+
+        put "/update_archived_status", ProjectController, :update_archived_status,
+          as: :update_archived_status
       end
+
       resources "/channels", ChannelController, except: [:new, :edit]
       get "/audios/tts", AudioController, :tts
       resources "/audios", AudioController, only: [:create, :show]
@@ -156,7 +188,7 @@ defmodule Ask.Router do
     end
   end
 
-  scope "/api" , Ask do
+  scope "/api", Ask do
     scope "/v1" do
       resources "/projects", ProjectController, only: [] do
         resources "/surveys", SurveyController, only: [] do
@@ -164,11 +196,17 @@ defmodule Ask.Router do
             pipe_through :csv_json_api
             get "/results", RespondentController, :results, as: :respondents_results
           end
+
           scope "/respondents" do
             pipe_through :csv_api
-            get "/disposition_history", RespondentController, :disposition_history, as: :respondents_disposition_history
+
+            get "/disposition_history", RespondentController, :disposition_history,
+              as: :respondents_disposition_history
+
             get "/incentives", RespondentController, :incentives, as: :respondents_incentives
-            get "/interactions", RespondentController, :interactions, as: :respondents_interactions
+
+            get "/interactions", RespondentController, :interactions,
+              as: :respondents_interactions
           end
         end
       end
@@ -185,8 +223,15 @@ defmodule Ask.Router do
   get "/callbacks/:provider/*path", Ask.CallbackController, :callback
   post "/callbacks/:provider/*path", Ask.CallbackController, :callback
   get "/mobile/simulation/:respondent_id", Ask.MobileSurveySimulationController, :index
-  get "/mobile/simulation/get_step/:respondent_id", Ask.MobileSurveySimulationController, :get_step
-  post "/mobile/simulation/send_reply/:respondent_id", Ask.MobileSurveySimulationController, :send_reply
+
+  get "/mobile/simulation/get_step/:respondent_id",
+      Ask.MobileSurveySimulationController,
+      :get_step
+
+  post "/mobile/simulation/send_reply/:respondent_id",
+       Ask.MobileSurveySimulationController,
+       :send_reply
+
   get "/mobile/:respondent_id", Ask.MobileSurveyController, :index
   get "/mobile/get_step/:respondent_id", Ask.MobileSurveyController, :get_step
   post "/mobile/send_reply/:respondent_id", Ask.MobileSurveyController, :send_reply
@@ -198,7 +243,11 @@ defmodule Ask.Router do
 
     get "/oauth_client/callback", OAuthClientController, :callback
     get "/registrations/confirmation_sent", Coherence.RegistrationController, :confirmation_sent
-    get "/registrations/confirmation_expired", Coherence.RegistrationController, :confirmation_expired
+
+    get "/registrations/confirmation_expired",
+        Coherence.RegistrationController,
+        :confirmation_expired
+
     get "/passwords/password_recovery_sent", Coherence.PasswordController, :password_recovery_sent
     get "/session/oauth_callback", Coherence.SessionController, :oauth_callback
     get "/*path", PageController, :index

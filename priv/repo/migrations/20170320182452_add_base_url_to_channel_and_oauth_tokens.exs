@@ -5,6 +5,7 @@ defmodule Ask.Repo.Migrations.AddFriendlyNameToChannelAndOauthTokens do
     alter table(:channels) do
       add :base_url, :string
     end
+
     alter table(:oauth_tokens) do
       add :base_url, :string
     end

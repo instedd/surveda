@@ -33,7 +33,7 @@ defmodule Ask.ShortLinkTest do
 
     {:ok, new_link} = link |> ShortLink.regenerate()
 
-    assert (ShortLink |> Repo.all() |> length()) == 1
+    assert ShortLink |> Repo.all() |> length() == 1
     assert link.hash != new_link.hash
     assert new_link.name == link.name
     assert new_link.id == link.id

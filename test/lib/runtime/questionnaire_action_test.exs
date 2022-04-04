@@ -81,8 +81,6 @@ defmodule Ask.Runtime.QuestionnaireExportTest do
                build_expected_export(quiz, [@ivr_audio_id])
     end
 
-
-
     test "Mobile Web - exports a simple questionnaire" do
       quiz =
         build_quiz(

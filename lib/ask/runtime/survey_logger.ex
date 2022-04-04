@@ -12,21 +12,44 @@ defmodule Ask.Runtime.SurveyLogger do
     GenServer.start_link(__MODULE__, [], name: @server_ref)
   end
 
-  def log(survey_id, mode, respondent_id, respondent_hash, channel_id, disposition, action_type, action_data, timestamp \\ DateTime.utc_now) do
-    GenServer.cast(@server_ref, {:log, survey_id, mode, respondent_id, respondent_hash, channel_id, disposition, action_type, action_data, timestamp})
+  def log(
+        survey_id,
+        mode,
+        respondent_id,
+        respondent_hash,
+        channel_id,
+        disposition,
+        action_type,
+        action_data,
+        timestamp \\ DateTime.utc_now()
+      ) do
+    GenServer.cast(
+      @server_ref,
+      {:log, survey_id, mode, respondent_id, respondent_hash, channel_id, disposition,
+       action_type, action_data, timestamp}
+    )
   end
 
   def init(_args) do
     {:ok, nil}
   end
 
-  def handle_cast({:log, survey_id, mode, respondent_id, respondent_hash, channel_id, disposition, action_type, action_data, timestamp}, state) do
-    Logger.debug "Survey log entry: #{survey_id} #{mode} #{respondent_id} #{respondent_hash} #{channel_id} #{disposition} #{action_type} #{action_data} #{timestamp}"
+  def handle_cast(
+        {:log, survey_id, mode, respondent_id, respondent_hash, channel_id, disposition,
+         action_type, action_data, timestamp},
+        state
+      ) do
+    Logger.debug(
+      "Survey log entry: #{survey_id} #{mode} #{respondent_id} #{respondent_hash} #{channel_id} #{
+        disposition
+      } #{action_type} #{action_data} #{timestamp}"
+    )
 
-    action_type = case action_type do
-      type when is_atom(type) -> Atom.to_string(type)
-      type -> type
-    end
+    action_type =
+      case action_type do
+        type when is_atom(type) -> Atom.to_string(type)
+        type -> type
+      end
 
     %SurveyLogEntry{
       survey_id: survey_id,
@@ -38,7 +61,8 @@ defmodule Ask.Runtime.SurveyLogger do
       action_type: action_type,
       action_data: action_data,
       timestamp: DateTime.truncate(timestamp, :second)
-    } |> Repo.insert!
+    }
+    |> Repo.insert!()
 
     {:noreply, state}
   end

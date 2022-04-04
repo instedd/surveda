@@ -8,7 +8,7 @@ defmodule Ask.Repo.Migrations.CreateRespondentDispositionHistory do
 
       timestamps()
     end
-    create index(:respondent_disposition_history, [:respondent_id])
 
+    create index(:respondent_disposition_history, [:respondent_id])
   end
 end

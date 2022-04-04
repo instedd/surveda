@@ -61,8 +61,7 @@ config :logger, level: :info
 #
 #     config :ask, Ask.Endpoint, root: "."
 
-config :ask, Ask.Endpoint,
-  secret_key_base: System.get_env("SECRET_KEY_BASE")
+config :ask, Ask.Endpoint, secret_key_base: System.get_env("SECRET_KEY_BASE")
 
 # Configure your database
 config :ask, Ask.Repo,
@@ -79,8 +78,10 @@ smtp_config = [
   port: {:system, "SMTP_PORT"},
   username: {:system, "SMTP_USER"},
   password: {:system, "SMTP_PASS"},
-  tls: :always, # can be `:always` or `:never`
-  ssl: false, # can be `true`
+  # can be `:always` or `:never`
+  tls: :always,
+  # can be `true`
+  ssl: false,
   retries: 1
 ]
 
