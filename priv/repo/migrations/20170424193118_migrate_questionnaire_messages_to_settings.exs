@@ -15,7 +15,13 @@ defmodule Ask.Repo.Migrations.MigrateQuestionnaireMessagesToSettings do
 
     def changeset(struct, params \\ %{}) do
       struct
-      |> cast(params, [:settings, :quota_completed_msg, :error_msg, :mobile_web_sms_message, :mobile_web_survey_is_over_message])
+      |> cast(params, [
+        :settings,
+        :quota_completed_msg,
+        :error_msg,
+        :mobile_web_sms_message,
+        :mobile_web_survey_is_over_message
+      ])
     end
   end
 
@@ -27,7 +33,8 @@ defmodule Ask.Repo.Migrations.MigrateQuestionnaireMessagesToSettings do
         "mobile_web_sms_message" => q.mobile_web_sms_message,
         "mobile_web_survey_is_over_message" => q.mobile_web_survey_is_over_message
       }
-      Questionnaire.changeset(q, %{"settings" => settings}) |> Repo.update!
+
+      Questionnaire.changeset(q, %{"settings" => settings}) |> Repo.update!()
     end
   end
 
@@ -37,8 +44,9 @@ defmodule Ask.Repo.Migrations.MigrateQuestionnaireMessagesToSettings do
         "quota_completed_msg" => q.settings["quota_completed_message"],
         "error_msg" => q.settings["error_message"],
         "mobile_web_sms_message" => q.settings["mobile_web_sms_message"],
-        "mobile_web_survey_is_over_message"  => q.settings["mobile_web_survey_is_over_message"]
-      }) |> Repo.update!
+        "mobile_web_survey_is_over_message" => q.settings["mobile_web_survey_is_over_message"]
+      })
+      |> Repo.update!()
     end
   end
 end

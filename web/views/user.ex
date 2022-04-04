@@ -2,16 +2,16 @@ defmodule Ask.UserView do
   use Ask.Web, :view
 
   def render("settings.json", %{settings: settings}) do
-    %{data:
-      %{
+    %{
+      data: %{
         settings: settings
       }
     }
   end
 
   def render("error.json", %{changeset: changeset}) do
-    %{data:
-      %{
+    %{
+      data: %{
         changeset: changeset
       }
     }

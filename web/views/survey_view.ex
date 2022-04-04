@@ -9,16 +9,21 @@ defmodule Ask.SurveyView do
   def render("index.json", %{surveys: surveys}) do
     %{data: render_many(surveys, Ask.SurveyView, "survey.json")}
   end
+
   def render("show.json", %{survey: survey}) do
     %{data: render_one(survey, Ask.SurveyView, "survey_detail.json")}
   end
+
   def render("config.json", %{config: config}) do
     config
   end
-  def render("stats.json", %{success_rate_data: success_rate_data, queue_size_data: queue_size_data}) do
+
+  def render("stats.json", %{
+        success_rate_data: success_rate_data,
+        queue_size_data: queue_size_data
+      }) do
     %{
-      data:
-      %{
+      data: %{
         success_rate: success_rate_data.success_rate,
         completion_rate: success_rate_data.completion_rate,
         initial_success_rate: success_rate_data.initial_success_rate,
@@ -31,13 +36,16 @@ defmodule Ask.SurveyView do
       }
     }
   end
+
   def render("retries_histograms.json", %{histograms: histograms}) do
     %{
       data: histograms
     }
   end
+
   def render("survey.json", %{survey: survey}) do
-    %{id: survey.id,
+    %{
+      id: survey.id,
       name: survey.name,
       description: survey.description,
       mode: survey.mode,
@@ -62,13 +70,15 @@ defmodule Ask.SurveyView do
       generates_panel_survey: survey.generates_panel_survey
     }
   end
+
   def render("survey_detail.json", %{survey: survey}) do
     survey =
       survey
       |> Repo.preload(:questionnaires)
       |> Repo.preload(:quota_buckets)
 
-    map = %{id: survey.id,
+    map = %{
+      id: survey.id,
       name: survey.name,
       description: survey.description,
       mode: survey.mode,
@@ -89,7 +99,8 @@ defmodule Ask.SurveyView do
       mobileweb_retry_configuration: survey.mobileweb_retry_configuration,
       fallback_delay: survey.fallback_delay,
       quotas: %{
-        buckets: render_many(survey.quota_buckets, Ask.SurveyView, "survey_bucket.json", as: :bucket),
+        buckets:
+          render_many(survey.quota_buckets, Ask.SurveyView, "survey_bucket.json", as: :bucket),
         vars: survey.quota_vars || []
       },
       links: render_many(survey.links, Ask.SurveyView, "link.json", as: :link),
@@ -120,37 +131,43 @@ defmodule Ask.SurveyView do
           id: panel_survey.id,
           project_id: panel_survey.project_id,
           name: panel_survey.name,
-          folder: if panel_survey.folder_id && Ecto.assoc_loaded?(panel_survey.folder) do
-            render_folder(panel_survey.folder)
-          end
+          folder:
+            if panel_survey.folder_id && Ecto.assoc_loaded?(panel_survey.folder) do
+              render_folder(panel_survey.folder)
+            end
         })
       else
         map
       end
 
     if Ask.Survey.launched?(survey) || survey.simulation do
-      qs = survey.questionnaires
-      |> Enum.map(fn q ->
-        {to_string(q.id), %{id: q.id, name: q.name, valid: true, modes: q.modes}}
-      end)
-      |> Enum.into(%{})
+      qs =
+        survey.questionnaires
+        |> Enum.map(fn q ->
+          {to_string(q.id), %{id: q.id, name: q.name, valid: true, modes: q.modes}}
+        end)
+        |> Enum.into(%{})
+
       Map.put(map, :questionnaires, qs)
     else
       map
     end
   end
+
   def render("survey_bucket.json", %{bucket: bucket}) do
     condition =
       bucket.condition
       |> Enum.reduce([], fn {store, value}, conditions ->
         [%{"store" => store, "value" => value} | conditions]
       end)
+
     %{
       "condition" => condition,
       "quota" => bucket.quota,
       "count" => bucket.count
     }
   end
+
   def render("link.json", %{link: link}) do
     %{
       "name" => link.name,
@@ -166,20 +183,24 @@ defmodule Ask.SurveyView do
     }
   end
 
-  defp format_date(date), do: if(date, do: date |> Timex.format!("%FT%T%:z", :strftime), else: nil)
+  defp format_date(date),
+    do: if(date, do: date |> Timex.format!("%FT%T%:z", :strftime), else: nil)
 
   defp questionnaire_ids(survey = %Ask.Survey{}) do
-    Enum.map(survey.questionnaires, &(&1.id))
+    Enum.map(survey.questionnaires, & &1.id)
   end
 
   defp next_schedule_time(survey) do
-    now = SystemTime.time.now
-    next_schedule_time = try do
-      Survey.next_available_date_time(survey, now)
-    rescue
-      # If there're surveys with bad schedule configuration, avoid the UI crash
-      ScheduleError -> nil
-    end
+    now = SystemTime.time().now
+
+    next_schedule_time =
+      try do
+        Survey.next_available_date_time(survey, now)
+      rescue
+        # If there're surveys with bad schedule configuration, avoid the UI crash
+        ScheduleError -> nil
+      end
+
     if next_schedule_time in [now, nil] do
       nil
     else

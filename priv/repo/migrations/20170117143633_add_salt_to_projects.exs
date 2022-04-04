@@ -12,5 +12,4 @@ defmodule Ask.Repo.Migrations.AddSaltToProjects do
       remove :salt
     end
   end
-
 end

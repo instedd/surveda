@@ -38,6 +38,7 @@ defmodule Ask.RetryStat do
 
   defp validate_retry_time(changeset) do
     retry_time = get_field(changeset, :retry_time)
+
     if not is_valid_retry_time?(retry_time) do
       add_error(changeset, :retry_time, "Retry time must be YYYYMMDDHH")
     else
@@ -49,6 +50,7 @@ defmodule Ask.RetryStat do
     case Timex.parse(retry_time, @retry_time_format, :strftime) do
       {:ok, _} ->
         true
+
       {_, _} ->
         false
     end
@@ -56,6 +58,7 @@ defmodule Ask.RetryStat do
 
   def transition(retry_stat_id, increase_filter) do
     add_changeset = add_changeset(increase_filter)
+
     case retry_stat_id != nil and add_changeset.valid? do
       true ->
         case Repo.update_all(subtract_query(retry_stat_id), []) do
@@ -68,48 +71,56 @@ defmodule Ask.RetryStat do
               on_conflict: [inc: [count: 1]]
             )
         end
+
       _ ->
         {:error, nil}
     end
   end
 
-  defp is_valid_count_filter(filter), do:
-    RetryStat.count_changeset(%RetryStat{}, filter).valid?
+  defp is_valid_count_filter(filter), do: RetryStat.count_changeset(%RetryStat{}, filter).valid?
 
-  defp add_changeset(%{attempt: attempt, mode: mode, retry_time: retry_time, ivr_active: ivr_active, survey_id: survey_id}), do:
-    RetryStat.changeset(%RetryStat{}, %{
-      attempt: attempt,
-      count: 1,
-      mode: mode,
-      retry_time: retry_time,
-      ivr_active: ivr_active,
-      survey_id: survey_id
-    })
+  defp add_changeset(%{
+         attempt: attempt,
+         mode: mode,
+         retry_time: retry_time,
+         ivr_active: ivr_active,
+         survey_id: survey_id
+       }),
+       do:
+         RetryStat.changeset(%RetryStat{}, %{
+           attempt: attempt,
+           count: 1,
+           mode: mode,
+           retry_time: retry_time,
+           ivr_active: ivr_active,
+           survey_id: survey_id
+         })
 
   defp add_changeset(_), do: RetryStat.changeset(%RetryStat{}, %{})
 
   defp subtract_query(retry_stat_id),
-  do:
-    from(
-      s in RetryStat,
-      where:
-        s.id == ^retry_stat_id and s.count > 0,
-      update: [inc: [count: -1]]
-    )
+    do:
+      from(
+        s in RetryStat,
+        where: s.id == ^retry_stat_id and s.count > 0,
+        update: [inc: [count: -1]]
+      )
 
-  def add(filter), do:
-    Repo.insert(
-      add_changeset(filter),
-      on_conflict: [inc: [count: 1]]
-    )
+  def add(filter),
+    do:
+      Repo.insert(
+        add_changeset(filter),
+        on_conflict: [inc: [count: 1]]
+      )
 
   def subtract(retry_stat_id) do
     case retry_stat_id do
       nil ->
         {:error}
+
       _ ->
         case subtract_query(retry_stat_id)
-              |> Repo.update_all([]) do
+             |> Repo.update_all([]) do
           {0, _} ->
             {:error}
 
@@ -133,6 +144,7 @@ defmodule Ask.RetryStat do
     case is_valid_count_filter(filter) do
       true ->
         stats |> count_valid(filter)
+
       _ ->
         0
     end
@@ -140,23 +152,42 @@ defmodule Ask.RetryStat do
 
   defp count_valid(stats, %{overdue: true} = filter), do: stats |> count_overdue(filter)
 
-  defp count_valid(stats, %{attempt: filter_attempt, mode: filter_mode, retry_time: filter_retry_time, ivr_active: filter_ivr_active}),
-    do:
-      sum_all_stats_matches(stats, fn %RetryStat{attempt: attempt, retry_time: retry_time, ivr_active: ivr_active, mode: mode} ->
-        attempt == filter_attempt and retry_time == filter_retry_time and ivr_active == filter_ivr_active and mode == filter_mode
-      end)
+  defp count_valid(stats, %{
+         attempt: filter_attempt,
+         mode: filter_mode,
+         retry_time: filter_retry_time,
+         ivr_active: filter_ivr_active
+       }),
+       do:
+         sum_all_stats_matches(stats, fn %RetryStat{
+                                           attempt: attempt,
+                                           retry_time: retry_time,
+                                           ivr_active: ivr_active,
+                                           mode: mode
+                                         } ->
+           attempt == filter_attempt and retry_time == filter_retry_time and
+             ivr_active == filter_ivr_active and mode == filter_mode
+         end)
 
-  defp count_valid(stats, %{attempt: filter_attempt, mode: filter_mode, ivr_active: filter_ivr_active}),
-  do:
-    sum_all_stats_matches(stats, fn %RetryStat{attempt: attempt, ivr_active: ivr_active, mode: mode} ->
-      attempt == filter_attempt and ivr_active == filter_ivr_active and mode == filter_mode
-    end)
+  defp count_valid(stats, %{
+         attempt: filter_attempt,
+         mode: filter_mode,
+         ivr_active: filter_ivr_active
+       }),
+       do:
+         sum_all_stats_matches(stats, fn %RetryStat{
+                                           attempt: attempt,
+                                           ivr_active: ivr_active,
+                                           mode: mode
+                                         } ->
+           attempt == filter_attempt and ivr_active == filter_ivr_active and mode == filter_mode
+         end)
 
   defp count_valid(stats, %{attempt: filter_attempt, mode: filter_mode}),
-  do:
-    sum_all_stats_matches(stats, fn %RetryStat{attempt: attempt, mode: mode} ->
-       attempt == filter_attempt and mode == filter_mode
-     end)
+    do:
+      sum_all_stats_matches(stats, fn %RetryStat{attempt: attempt, mode: mode} ->
+        attempt == filter_attempt and mode == filter_mode
+      end)
 
   defp sum_all_stats_matches(stats, predicate) do
     Enum.filter(stats, predicate)
@@ -172,7 +203,12 @@ defmodule Ask.RetryStat do
          retry_time: filter_retry_time
        }),
        do:
-        sum_all_stats_matches(stats, fn %RetryStat{attempt: attempt, retry_time: retry_time, mode: mode, ivr_active: ivr_active} ->
+         sum_all_stats_matches(stats, fn %RetryStat{
+                                           attempt: attempt,
+                                           retry_time: retry_time,
+                                           mode: mode,
+                                           ivr_active: ivr_active
+                                         } ->
            attempt == filter_attempt and retry_time <= filter_retry_time and
              mode == filter_mode and not ivr_active
          end)

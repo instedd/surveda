@@ -6,7 +6,7 @@ defmodule Ask.Coherence.Rememberable do
   import Ecto.Query
 
   alias Coherence.Config
-  
+
   schema "rememberables" do
     field(:series_hash, :string)
     field(:token_hash, :string)

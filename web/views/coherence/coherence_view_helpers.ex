@@ -121,6 +121,7 @@ defmodule Ask.Coherence.ViewHelpers do
   """
   @spec coherence_links(conn, atom, keyword()) :: tuple
   def coherence_links(conn, which, opts \\ [])
+
   def coherence_links(conn, :new_session, opts) do
     recover_link = Keyword.get(opts, :recover, recover_link_text())
     unlock_link = Keyword.get(opts, :unlock, unlock_link_text())
@@ -128,6 +129,7 @@ defmodule Ask.Coherence.ViewHelpers do
     confirm_link = Keyword.get(opts, :confirm, confirm_link_text())
 
     user_schema = Coherence.Config.user_schema()
+
     [
       recover_link(conn, user_schema, recover_link),
       unlock_link(conn, user_schema, unlock_link),
@@ -147,6 +149,7 @@ defmodule Ask.Coherence.ViewHelpers do
 
     if Coherence.logged_in?(conn) do
       current_user = Coherence.current_user(conn)
+
       [
         content_tag(list_tag, profile_link(current_user, conn)),
         content_tag(list_tag, signout_link(conn, signout, signout_class))
@@ -157,6 +160,7 @@ defmodule Ask.Coherence.ViewHelpers do
           list_tag,
           link(signin, to: coherence_path(@helpers, :session_path, conn, :new))
         )
+
       if Config.has_option(:registerable) && register do
         [
           content_tag(
@@ -178,6 +182,7 @@ defmodule Ask.Coherence.ViewHelpers do
   def coherence_path(module, route_name, conn, action) do
     apply(module, route_name, [conn, action])
   end
+
   def coherence_path(module, route_name, conn, action, opts) do
     apply(module, route_name, [conn, action, opts])
   end
@@ -191,6 +196,7 @@ defmodule Ask.Coherence.ViewHelpers do
   """
   @spec recover_link(conn, module, false | String.t()) :: [any] | []
   def recover_link(_conn, _user_schema, false), do: []
+
   def recover_link(conn, user_schema, text) do
     if user_schema.recoverable?, do: [recover_link(conn, text)], else: []
   end
@@ -204,6 +210,7 @@ defmodule Ask.Coherence.ViewHelpers do
   """
   @spec register_link(conn, module, false | String.t()) :: [any] | []
   def register_link(_conn, _user_schema, false), do: []
+
   def register_link(conn, user_schema, text) do
     if user_schema.registerable?, do: [register_link(conn, text)], else: []
   end
@@ -217,6 +224,7 @@ defmodule Ask.Coherence.ViewHelpers do
   """
   @spec unlock_link(conn, module, false | String.t()) :: [any] | []
   def unlock_link(_conn, _user_schema, false), do: []
+
   def unlock_link(conn, _user_schema, text) do
     if conn.assigns[:locked], do: [unlock_link(conn, text)], else: []
   end
@@ -251,9 +259,11 @@ defmodule Ask.Coherence.ViewHelpers do
   """
   @spec confirmation_link(conn, module, false | String.t()) :: [any] | []
   def confirmation_link(_conn, _user_schema, false), do: []
+
   def confirmation_link(conn, user_schema, text) do
     if user_schema.confirmable?, do: [confirmation_link(conn, text)], else: []
   end
+
   @spec confirmation_link(conn, String.t()) :: tuple
   def confirmation_link(conn, text \\ confirm_link_text()) do
     link(text, to: coherence_path(@helpers, :confirmation_path, conn, :new))
@@ -266,6 +276,7 @@ defmodule Ask.Coherence.ViewHelpers do
   def required_label(f, name, opts \\ []) do
     {label, opts} = Keyword.pop(opts, :label)
     label = label || humanize(name)
+
     label f, name, opts do
       [
         "#{label}\n",

@@ -31,15 +31,21 @@ defmodule Ask.Project do
 
   def touch!(project) do
     project
-    |> Ask.Project.changeset
+    |> Ask.Project.changeset()
     |> Ask.Repo.update!(force: true)
   end
 
   defp validate_colour_scheme(changeset) do
     colour_scheme = get_field(changeset, :colour_scheme)
+
     cond do
       colour_scheme && !Enum.member?(["default", "better_data_for_health"], colour_scheme) ->
-        add_error(changeset, :colour_scheme, "value has to be either default or better_data_for_health")
+        add_error(
+          changeset,
+          :colour_scheme,
+          "value has to be either default or better_data_for_health"
+        )
+
       true ->
         changeset
     end

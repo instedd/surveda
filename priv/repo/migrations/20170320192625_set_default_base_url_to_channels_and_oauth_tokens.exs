@@ -35,17 +35,17 @@ defmodule Ask.Repo.Migrations.SetDefaultBaseUrlToChannelsAndOauthTokens do
 
   def up do
     Channel
-    |> Repo.all
+    |> Repo.all()
     |> Enum.each(fn channel ->
       base_url = fetch_base_url(channel.provider)
-      channel |> Channel.changeset(%{base_url: base_url}) |> Repo.update!
+      channel |> Channel.changeset(%{base_url: base_url}) |> Repo.update!()
     end)
 
     OAuthToken
-    |> Repo.all
+    |> Repo.all()
     |> Enum.each(fn channel ->
       base_url = fetch_base_url(channel.provider)
-      channel |> Channel.changeset(%{base_url: base_url}) |> Repo.update!
+      channel |> Channel.changeset(%{base_url: base_url}) |> Repo.update!()
     end)
   end
 
@@ -53,11 +53,11 @@ defmodule Ask.Repo.Migrations.SetDefaultBaseUrlToChannelsAndOauthTokens do
   end
 
   defp fetch_base_url("nuntium") do
-    fetch_base_url Application.get_env(:ask, Nuntium)
+    fetch_base_url(Application.get_env(:ask, Nuntium))
   end
 
   defp fetch_base_url("verboice") do
-    fetch_base_url Application.get_env(:ask, Verboice)
+    fetch_base_url(Application.get_env(:ask, Verboice))
   end
 
   defp fetch_base_url(config) do

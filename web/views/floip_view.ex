@@ -8,25 +8,25 @@ defmodule Ask.FloipView do
     }
   end
 
-  def render("show.json", %{ self_link: self_link, descriptor: descriptor }) do
-    %{ "links" => render_links(self_link) }
+  def render("show.json", %{self_link: self_link, descriptor: descriptor}) do
+    %{"links" => render_links(self_link)}
     |> Map.merge(descriptor)
   end
 
   def render("responses.json", %{
-    self_link: self_link,
-    next_link: next_link,
-    previous_link: previous_link,
-    descriptor_link: descriptor_link,
-    id: id,
-    responses: responses }) do
-
+        self_link: self_link,
+        next_link: next_link,
+        previous_link: previous_link,
+        descriptor_link: descriptor_link,
+        id: id,
+        responses: responses
+      }) do
     %{
       "data" => %{
         "id" => id,
         "type" => "flow-results-data",
         "attributes" => %{
-          "responses" => responses,
+          "responses" => responses
         },
         "relationships" => %{
           "descriptor" => %{

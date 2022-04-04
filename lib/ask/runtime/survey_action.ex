@@ -1,5 +1,17 @@
 defmodule Ask.Runtime.SurveyAction do
-  alias Ask.{Survey, Logger, Repo, Questionnaire, ActivityLog, SurveyCanceller, Project, SystemTime, Schedule, PanelSurvey}
+  alias Ask.{
+    Survey,
+    Logger,
+    Repo,
+    Questionnaire,
+    ActivityLog,
+    SurveyCanceller,
+    Project,
+    SystemTime,
+    Schedule,
+    PanelSurvey
+  }
+
   alias Ecto.Multi
 
   def delete(survey, conn) do
@@ -8,7 +20,7 @@ defmodule Ask.Runtime.SurveyAction do
     multi = Survey.delete_multi(survey)
 
     log = ActivityLog.delete_survey(survey.project, conn, survey)
-    Multi.insert(multi, :log, log) |> Repo.transaction
+    Multi.insert(multi, :log, log) |> Repo.transaction()
   end
 
   def start(survey) do
@@ -34,6 +46,7 @@ defmodule Ask.Runtime.SurveyAction do
           Logger.warn(
             "Error when preparing channels for launching survey #{survey.id} (#{reason})"
           )
+
           {:error, %{survey: survey}}
       end
     else
@@ -44,6 +57,7 @@ defmodule Ask.Runtime.SurveyAction do
 
   defp generate_panel_survey_if_needed(%{generates_panel_survey: true} = survey) do
     {:ok, panel_survey} = Ask.Runtime.PanelSurvey.create_panel_survey_from_survey(survey)
+
     PanelSurvey.latest_wave(panel_survey)
     |> Repo.preload(:questionnaires)
   end
@@ -63,37 +77,50 @@ defmodule Ask.Runtime.SurveyAction do
         # We must not error, because this can happen if a user has the survey
         # UI open with the cancel button, and meanwhile the survey finished
         {:ok, %{survey: survey}}
-      ["running", false] ->
-        changeset = Survey.changeset(survey, %{state: "cancelling", exit_code: 1, exit_message: "Cancelled by user"})
 
-        multi = Multi.new
-        |> Multi.update(:survey, changeset)
-        |> Multi.insert(:log, ActivityLog.request_cancel(survey.project, conn, survey))
-        |> Repo.transaction
+      ["running", false] ->
+        changeset =
+          Survey.changeset(survey, %{
+            state: "cancelling",
+            exit_code: 1,
+            exit_message: "Cancelled by user"
+          })
+
+        multi =
+          Multi.new()
+          |> Multi.update(:survey, changeset)
+          |> Multi.insert(:log, ActivityLog.request_cancel(survey.project, conn, survey))
+          |> Repo.transaction()
 
         case multi do
           {:ok, %{survey: survey}} ->
-            survey.project |> Project.touch!
-            %{consumers_pids: consumers_pids, processes: processes} = SurveyCanceller.start_cancelling(survey.id)
+            survey.project |> Project.touch!()
+
+            %{consumers_pids: consumers_pids, processes: processes} =
+              SurveyCanceller.start_cancelling(survey.id)
+
             {:ok, %{survey: survey, cancellers_pids: consumers_pids, processes: processes}}
+
           {:error, _, changeset, _} ->
-            Logger.warn "Error when stopping survey #{inspect survey}"
+            Logger.warn("Error when stopping survey #{inspect(survey)}")
             {:error, %{changeset: changeset}}
         end
+
       [_, _] ->
         # Cancelling a pending survey, a survey in any other state or that it
         # is locked, should result in an error.
-        Logger.warn "Error when stopping survey #{inspect survey}: Wrong state or locked"
+        Logger.warn("Error when stopping survey #{inspect(survey)}: Wrong state or locked")
         {:error, %{survey: survey}}
-      end
+    end
   end
 
   defp perform_start(survey) do
-    changeset = Survey.changeset(survey, %{
-      state: "running",
-      started_at: SystemTime.time.now,
-      last_window_ends_at: Schedule.last_window_ends_at(survey.schedule)
-    })
+    changeset =
+      Survey.changeset(survey, %{
+        state: "running",
+        started_at: SystemTime.time().now,
+        last_window_ends_at: Schedule.last_window_ends_at(survey.schedule)
+      })
 
     case Repo.update(changeset) do
       {:ok, survey} ->

@@ -3,15 +3,18 @@ defmodule Ask.TimezoneControllerTest do
 
   setup %{conn: conn} do
     user = insert(:user)
-    conn = conn
+
+    conn =
+      conn
       |> put_private(:test_user, user)
       |> put_req_header("accept", "application/json")
+
     {:ok, conn: conn, user: user}
   end
 
   describe "the timezones map" do
     test "should link each deprecated timezone with its canonical timezone", %{conn: conn} do
-      conn = get conn, timezone_path(conn, :timezones)
+      conn = get(conn, timezone_path(conn, :timezones))
       timezones = json_response(conn, 200)["timezones"]
 
       Tzdata.zone_alias_list()
@@ -21,7 +24,7 @@ defmodule Ask.TimezoneControllerTest do
     end
 
     test "should link each canonical timezone with itself", %{conn: conn} do
-      conn = get conn, timezone_path(conn, :timezones)
+      conn = get(conn, timezone_path(conn, :timezones))
       timezones = json_response(conn, 200)["timezones"]
 
       Tzdata.canonical_zone_list()
@@ -31,7 +34,7 @@ defmodule Ask.TimezoneControllerTest do
     end
 
     test "should contain all the timezones defined in Timex.timezones", %{conn: conn} do
-      conn = get conn, timezone_path(conn, :timezones)
+      conn = get(conn, timezone_path(conn, :timezones))
       timezones = json_response(conn, 200)["timezones"]
 
       assert map_size(timezones) == length(Timex.timezones())

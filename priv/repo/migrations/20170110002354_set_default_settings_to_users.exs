@@ -16,8 +16,10 @@ defmodule Ask.Repo.Migrations.SetDefaultSettingsToUsers do
   end
 
   def change do
-    User |> Repo.all |> Enum.each(fn u ->
-      u |> User.changeset(%{settings: %{}}) |> Repo.update
+    User
+    |> Repo.all()
+    |> Enum.each(fn u ->
+      u |> User.changeset(%{settings: %{}}) |> Repo.update()
     end)
   end
 end

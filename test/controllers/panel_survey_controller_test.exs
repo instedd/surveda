@@ -74,11 +74,12 @@ defmodule Ask.PanelSurveyControllerTest do
         )
 
       assert_showed_panel_survey(conn, panel_survey)
+
       assert json_response(conn, 200)["data"]["folder"] == %{
-        "id" => folder.id,
-        "project_id" => project.id,
-        "name" => folder.name
-      }
+               "id" => folder.id,
+               "project_id" => project.id,
+               "name" => folder.name
+             }
     end
 
     test "shows a panel survey with surveys", %{conn: conn, user: user} do
@@ -97,25 +98,40 @@ defmodule Ask.PanelSurveyControllerTest do
   describe "create" do
     test "creates panel survey", %{conn: conn, user: user} do
       project = create_project_for_user(user)
-      survey = insert(:survey, project: project, generates_panel_survey: true, state: "ready", name: @foo_string)
 
-      conn =
-        post(conn, project_panel_survey_path(conn, :create, project.id),
-          survey_id: survey.id
+      survey =
+        insert(:survey,
+          project: project,
+          generates_panel_survey: true,
+          state: "ready",
+          name: @foo_string
         )
 
-      assert_created_panel_survey(conn, %{name: survey.name, project_id: project.id, folder_id: nil})
+      conn =
+        post(conn, project_panel_survey_path(conn, :create, project.id), survey_id: survey.id)
+
+      assert_created_panel_survey(conn, %{
+        name: survey.name,
+        project_id: project.id,
+        folder_id: nil
+      })
     end
 
     test "creates panel survey inside a folder", %{conn: conn, user: user} do
       project = create_project_for_user(user)
       folder = insert(:folder, project: project)
-      survey = insert(:survey, project: project, generates_panel_survey: true, folder: folder, state: "ready", name: @foo_string)
+
+      survey =
+        insert(:survey,
+          project: project,
+          generates_panel_survey: true,
+          folder: folder,
+          state: "ready",
+          name: @foo_string
+        )
 
       conn =
-        post(conn, project_panel_survey_path(conn, :create, project.id),
-          survey_id: survey.id
-        )
+        post(conn, project_panel_survey_path(conn, :create, project.id), survey_id: survey.id)
 
       assert_created_panel_survey(conn, %{
         name: survey.name,
@@ -177,10 +193,16 @@ defmodule Ask.PanelSurveyControllerTest do
       panel_survey = panel_survey_with_last_wave_terminated(user)
       previous_wave = PanelSurvey.latest_wave(panel_survey)
 
-      conn = post(
-        conn,
-        project_panel_survey_panel_survey_path(conn, :new_wave, panel_survey.project_id, panel_survey.id)
-      )
+      conn =
+        post(
+          conn,
+          project_panel_survey_panel_survey_path(
+            conn,
+            :new_wave,
+            panel_survey.project_id,
+            panel_survey.id
+          )
+        )
 
       response_panel_survey = json_response(conn, 200)["data"]
       panel_survey = Repo.get!(PanelSurvey, panel_survey.id)
@@ -212,6 +234,7 @@ defmodule Ask.PanelSurveyControllerTest do
 
   defp panel_survey(user, inside_folder \\ false) do
     project = create_project_for_user(user)
+
     if inside_folder do
       dummy_panel_survey_in_folder(project)
     else
@@ -225,10 +248,10 @@ defmodule Ask.PanelSurveyControllerTest do
   end
 
   defp assert_created_panel_survey(conn, %{
-    project_id: project_id,
-    name: name,
-    folder_id: folder_id
-  }) do
+         project_id: project_id,
+         name: name,
+         folder_id: folder_id
+       }) do
     assert_panel_survey_action(conn, %{
       project_id: project_id,
       name: name,
@@ -238,10 +261,10 @@ defmodule Ask.PanelSurveyControllerTest do
   end
 
   defp assert_updated_panel_survey(conn, %{
-    project_id: project_id,
-    name: name,
-    folder_id: folder_id
-  }) do
+         project_id: project_id,
+         name: name,
+         folder_id: folder_id
+       }) do
     assert_panel_survey_action(conn, %{
       project_id: project_id,
       name: name,
@@ -286,10 +309,11 @@ defmodule Ask.PanelSurveyControllerTest do
 
   defp assert_panel_survey(panel_survey, base_panel_survey) do
     # It's easier to compare with the base panel without surveys.
-    panel_survey_without_surveys = panel_survey
-    |> Map.delete("waves")
-    |> Map.delete("latest_wave")
-    |> Map.delete("folder")
+    panel_survey_without_surveys =
+      panel_survey
+      |> Map.delete("waves")
+      |> Map.delete("latest_wave")
+      |> Map.delete("folder")
 
     assert panel_survey_without_surveys == %{
              "folder_id" => base_panel_survey.folder_id,

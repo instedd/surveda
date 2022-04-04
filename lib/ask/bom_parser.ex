@@ -2,7 +2,8 @@
 defmodule Ask.BomParser do
   def parse(string) do
     case :unicode.bom_to_encoding(string) do
-      {_, 0} -> string
+      {_, 0} ->
+        string
 
       {encoding, bom_size} ->
         # Strip BOM

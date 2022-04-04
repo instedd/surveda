@@ -1,5 +1,11 @@
 defmodule Ask.StepBuilder do
-  def language_selection_step(id: id, title: title, prompt: prompt, store: store, choices: choices) do
+  def language_selection_step(
+        id: id,
+        title: title,
+        prompt: prompt,
+        store: store,
+        choices: choices
+      ) do
     %{
       "id" => id,
       "type" => "language-selection",
@@ -10,10 +16,25 @@ defmodule Ask.StepBuilder do
     }
   end
 
-  def multiple_choice_step(id: id, title: title, prompt: prompt, store: store, choices: choices), do:
-    multiple_choice_step(id: id, title: title, prompt: prompt, store: store, choices: choices, relevant: false)
+  def multiple_choice_step(id: id, title: title, prompt: prompt, store: store, choices: choices),
+    do:
+      multiple_choice_step(
+        id: id,
+        title: title,
+        prompt: prompt,
+        store: store,
+        choices: choices,
+        relevant: false
+      )
 
-  def multiple_choice_step(id: id, title: title, prompt: prompt, store: store, choices: choices, relevant: relevant) do
+  def multiple_choice_step(
+        id: id,
+        title: title,
+        prompt: prompt,
+        store: store,
+        choices: choices,
+        relevant: relevant
+      ) do
     %{
       "id" => id,
       "type" => "multiple-choice",
@@ -25,13 +46,37 @@ defmodule Ask.StepBuilder do
     }
   end
 
-  def numeric_step(id: id, title: title, prompt: prompt, store: store,
-        skip_logic: skip_logic, alphabetical_answers: alphabetical_answers, refusal: refusal), do:
-    numeric_step(id: id, title: title, prompt: prompt, store: store, skip_logic: skip_logic,
-      alphabetical_answers: alphabetical_answers, refusal: refusal, relevant: false)
+  def numeric_step(
+        id: id,
+        title: title,
+        prompt: prompt,
+        store: store,
+        skip_logic: skip_logic,
+        alphabetical_answers: alphabetical_answers,
+        refusal: refusal
+      ),
+      do:
+        numeric_step(
+          id: id,
+          title: title,
+          prompt: prompt,
+          store: store,
+          skip_logic: skip_logic,
+          alphabetical_answers: alphabetical_answers,
+          refusal: refusal,
+          relevant: false
+        )
 
-  def numeric_step(id: id, title: title, prompt: prompt, store: store,
-        skip_logic: skip_logic, alphabetical_answers: alphabetical_answers, refusal: refusal, relevant: relevant) do
+  def numeric_step(
+        id: id,
+        title: title,
+        prompt: prompt,
+        store: store,
+        skip_logic: skip_logic,
+        alphabetical_answers: alphabetical_answers,
+        refusal: refusal,
+        relevant: relevant
+      ) do
     base = %{
       "id" => id,
       "type" => "numeric",
@@ -42,6 +87,7 @@ defmodule Ask.StepBuilder do
       "relevant" => relevant,
       "alphabetical_answers" => alphabetical_answers
     }
+
     Map.merge(base, skip_logic)
   end
 
@@ -51,7 +97,7 @@ defmodule Ask.StepBuilder do
       "type" => "explanation",
       "title" => title,
       "prompt" => prompt,
-      "skip_logic" => skip_logic,
+      "skip_logic" => skip_logic
     }
   end
 
@@ -65,7 +111,7 @@ defmodule Ask.StepBuilder do
       "type" => "flag",
       "title" => title,
       "disposition" => disposition,
-      "skip_logic" => skip_logic,
+      "skip_logic" => skip_logic
     }
   end
 
@@ -248,8 +294,12 @@ defmodule Ask.StepBuilder do
     }
   end
 
-  def numeric_skip_logic(min_value: min_value, max_value: max_value, ranges_delimiters:
-    ranges_delimiters, ranges: ranges) do
+  def numeric_skip_logic(
+        min_value: min_value,
+        max_value: max_value,
+        ranges_delimiters: ranges_delimiters,
+        ranges: ranges
+      ) do
     # froms =
     #   ranges_delimiters
     #   |> String.split(",")
@@ -271,44 +321,60 @@ end
 
 defmodule Ask.DummySteps do
   import Ask.StepBuilder
+
   defmacro __using__(_) do
     quote do
       @dummy_steps [
         multiple_choice_step(
-          id: Ecto.UUID.generate,
+          id: Ecto.UUID.generate(),
           title: "Do you smoke?",
-          prompt: prompt(
-            sms: sms_prompt("Do you smoke? Reply 1 for YES, 2 for NO"),
-            ivr: tts_prompt("Do you smoke? Press 8 for YES, 9 for NO"),
-            mobileweb: "Do you smoke?"
-          ),
+          prompt:
+            prompt(
+              sms: sms_prompt("Do you smoke? Reply 1 for YES, 2 for NO"),
+              ivr: tts_prompt("Do you smoke? Press 8 for YES, 9 for NO"),
+              mobileweb: "Do you smoke?"
+            ),
           store: "Smokes",
           choices: [
-            choice(value: "Yes", responses: responses(sms: ["Yes", "Y", "1"], ivr: ["8"], mobileweb: ["Yes"])),
-            choice(value: "No", responses: responses(sms: ["No", "N", "2"], ivr: ["9"], mobileweb: ["No"]))
+            choice(
+              value: "Yes",
+              responses: responses(sms: ["Yes", "Y", "1"], ivr: ["8"], mobileweb: ["Yes"])
+            ),
+            choice(
+              value: "No",
+              responses: responses(sms: ["No", "N", "2"], ivr: ["9"], mobileweb: ["No"])
+            )
           ]
         ),
         multiple_choice_step(
-          id: Ecto.UUID.generate,
+          id: Ecto.UUID.generate(),
           title: "Do you exercise",
-          prompt: prompt(
-            sms: sms_prompt("Do you exercise? Reply 1 for YES, 2 for NO"),
-            ivr: tts_prompt("Do you exercise? Press 1 for YES, 2 for NO"),
-            mobileweb: "Do you exercise?"
-          ),
+          prompt:
+            prompt(
+              sms: sms_prompt("Do you exercise? Reply 1 for YES, 2 for NO"),
+              ivr: tts_prompt("Do you exercise? Press 1 for YES, 2 for NO"),
+              mobileweb: "Do you exercise?"
+            ),
           store: "Exercises",
           choices: [
-            choice(value: "Yes", responses: responses(sms: ["Yes", "Y", "1"], ivr: ["1"], mobileweb: ["Yes"])),
-            choice(value: "No", responses: responses(sms: ["No", "N", "2"], ivr: ["2"], mobileweb: ["No"]))
+            choice(
+              value: "Yes",
+              responses: responses(sms: ["Yes", "Y", "1"], ivr: ["1"], mobileweb: ["Yes"])
+            ),
+            choice(
+              value: "No",
+              responses: responses(sms: ["No", "N", "2"], ivr: ["2"], mobileweb: ["No"])
+            )
           ]
         ),
         numeric_step(
-          id: Ecto.UUID.generate,
+          id: Ecto.UUID.generate(),
           title: "Which is the second perfect number?",
-          prompt: prompt(
-            sms: sms_prompt("Which is the second perfect number??"),
-            ivr: tts_prompt("Which is the second perfect number"),
-            mobileweb: "Which is the second perfect number?"
+          prompt:
+            prompt(
+              sms: sms_prompt("Which is the second perfect number??"),
+              ivr: tts_prompt("Which is the second perfect number"),
+              mobileweb: "Which is the second perfect number?"
             ),
           store: "Perfect Number",
           skip_logic: default_numeric_skip_logic(),
@@ -316,12 +382,13 @@ defmodule Ask.DummySteps do
           refusal: nil
         ),
         numeric_step(
-          id: Ecto.UUID.generate,
+          id: Ecto.UUID.generate(),
           title: "What's the number of this question?",
-          prompt: prompt(
-            sms: sms_prompt("What's the number of this question??"),
-            ivr: tts_prompt("What's the number of this question"),
-            mobileweb: "What's the number of this question"
+          prompt:
+            prompt(
+              sms: sms_prompt("What's the number of this question??"),
+              ivr: tts_prompt("What's the number of this question"),
+              mobileweb: "What's the number of this question"
             ),
           store: "Question",
           skip_logic: default_numeric_skip_logic(),
@@ -332,12 +399,13 @@ defmodule Ask.DummySteps do
 
       @steps_with_duplicate_store [
         multiple_choice_step(
-          id: Ecto.UUID.generate,
+          id: Ecto.UUID.generate(),
           title: "Do you smoke?",
-          prompt: prompt(
-            sms: sms_prompt("Do you smoke? Reply 1 for YES, 2 for NO"),
-            ivr: tts_prompt("Do you smoke? Press 8 for YES, 9 for NO")
-          ),
+          prompt:
+            prompt(
+              sms: sms_prompt("Do you smoke? Reply 1 for YES, 2 for NO"),
+              ivr: tts_prompt("Do you smoke? Press 8 for YES, 9 for NO")
+            ),
           store: "Smokes",
           choices: [
             choice(value: "Yes", responses: responses(sms: ["Yes", "Y", "1"], ivr: ["8"])),
@@ -345,12 +413,13 @@ defmodule Ask.DummySteps do
           ]
         ),
         multiple_choice_step(
-          id: Ecto.UUID.generate,
+          id: Ecto.UUID.generate(),
           title: "Do you smoke?",
-          prompt: prompt(
-            sms: sms_prompt("Do you smoke? Reply 1 for YES, 2 for NO"),
-            ivr: tts_prompt("Do you smoke? Press 8 for YES, 9 for NO")
-          ),
+          prompt:
+            prompt(
+              sms: sms_prompt("Do you smoke? Reply 1 for YES, 2 for NO"),
+              ivr: tts_prompt("Do you smoke? Press 8 for YES, 9 for NO")
+            ),
           store: "Smokes",
           choices: [
             choice(value: "Yes", responses: responses(sms: ["Yes", "Y", "1"], ivr: ["8"])),
@@ -361,12 +430,13 @@ defmodule Ask.DummySteps do
 
       @dummy_steps_with_flag [
         multiple_choice_step(
-          id: Ecto.UUID.generate,
+          id: Ecto.UUID.generate(),
           title: "Do you smoke?",
-          prompt: prompt(
-            sms: sms_prompt("Do you smoke? Reply 1 for YES, 2 for NO"),
-            ivr: tts_prompt("Do you smoke? Press 8 for YES, 9 for NO")
-          ),
+          prompt:
+            prompt(
+              sms: sms_prompt("Do you smoke? Reply 1 for YES, 2 for NO"),
+              ivr: tts_prompt("Do you smoke? Press 8 for YES, 9 for NO")
+            ),
           store: "Smokes",
           choices: [
             choice(value: "Yes", responses: responses(sms: ["Yes", "Y", "1"], ivr: ["8"])),
@@ -379,12 +449,13 @@ defmodule Ask.DummySteps do
           disposition: "interim partial"
         ),
         multiple_choice_step(
-          id: Ecto.UUID.generate,
+          id: Ecto.UUID.generate(),
           title: "Do you exercise",
-          prompt: prompt(
-            sms: sms_prompt("Do you exercise? Reply 1 for YES, 2 for NO"),
-            ivr: tts_prompt("Do you exercise? Press 1 for YES, 2 for NO")
-          ),
+          prompt:
+            prompt(
+              sms: sms_prompt("Do you exercise? Reply 1 for YES, 2 for NO"),
+              ivr: tts_prompt("Do you exercise? Press 1 for YES, 2 for NO")
+            ),
           store: "Exercises",
           choices: [
             choice(value: "Yes", responses: responses(sms: ["Yes", "Y", "1"], ivr: ["1"])),
@@ -397,7 +468,7 @@ defmodule Ask.DummySteps do
           disposition: "completed"
         ),
         numeric_step(
-          id: Ecto.UUID.generate,
+          id: Ecto.UUID.generate(),
           title: "Which is the second perfect number?",
           prompt: prompt(sms: sms_prompt("Which is the second perfect number??")),
           store: "Perfect Number",
@@ -410,13 +481,14 @@ defmodule Ask.DummySteps do
           title: "Let there be rock",
           disposition: "completed"
         ),
-        flag_step( # This step is here to make sure we ignore this change
+        # This step is here to make sure we ignore this change
+        flag_step(
           id: "aaa",
           title: "Let there be rock",
           disposition: "interim partial"
         ),
         numeric_step(
-          id: Ecto.UUID.generate,
+          id: Ecto.UUID.generate(),
           title: "What's the number of this question?",
           prompt: prompt(sms: sms_prompt("What's the number of this question??")),
           store: "Question",
@@ -428,12 +500,13 @@ defmodule Ask.DummySteps do
 
       @completed_dispositions_shouldnt_be_rejected_dummy_steps [
         multiple_choice_step(
-          id: Ecto.UUID.generate,
+          id: Ecto.UUID.generate(),
           title: "City question",
-          prompt: prompt(
-            sms: sms_prompt("Where do you live? Reply 1 for GBA, 2 for CABA"),
-            ivr: tts_prompt("Where do you live? Press 1 for GBA, 2 for CABA")
-          ),
+          prompt:
+            prompt(
+              sms: sms_prompt("Where do you live? Reply 1 for GBA, 2 for CABA"),
+              ivr: tts_prompt("Where do you live? Press 1 for GBA, 2 for CABA")
+            ),
           store: "City",
           choices: [
             choice(value: "GBA", responses: responses(sms: ["1"], ivr: ["1"])),
@@ -446,24 +519,26 @@ defmodule Ask.DummySteps do
           disposition: "interim partial"
         ),
         numeric_step(
-          id: Ecto.UUID.generate,
+          id: Ecto.UUID.generate(),
           title: "Random question 1",
-          prompt: prompt(
-            sms: sms_prompt("Please give me a random number"),
-            ivr: tts_prompt("Please give me a random number")
-          ),
+          prompt:
+            prompt(
+              sms: sms_prompt("Please give me a random number"),
+              ivr: tts_prompt("Please give me a random number")
+            ),
           store: "RQ1",
           skip_logic: default_numeric_skip_logic(),
           alphabetical_answers: false,
           refusal: nil
         ),
         numeric_step(
-          id: Ecto.UUID.generate,
+          id: Ecto.UUID.generate(),
           title: "Random question 2",
-          prompt: prompt(
-            sms: sms_prompt("Please give me another random number"),
-            ivr: tts_prompt("Please give me another random number")
-          ),
+          prompt:
+            prompt(
+              sms: sms_prompt("Please give me another random number"),
+              ivr: tts_prompt("Please give me another random number")
+            ),
           store: "RQ2",
           skip_logic: default_numeric_skip_logic(),
           alphabetical_answers: false,
@@ -475,37 +550,67 @@ defmodule Ask.DummySteps do
         multiple_choice_step(
           id: "aaa",
           title: "Do you smoke?",
-          prompt: prompt(
-            sms: sms_prompt("Do you smoke? Reply 1 for YES, 2 for NO, 3 for MAYBE, 4 for SOMETIMES, 5 for ALWAYS, 6 for I dont know")
-          ),
+          prompt:
+            prompt(
+              sms:
+                sms_prompt(
+                  "Do you smoke? Reply 1 for YES, 2 for NO, 3 for MAYBE, 4 for SOMETIMES, 5 for ALWAYS, 6 for I dont know"
+                )
+            ),
           store: "Smokes",
           choices: [
-            choice(value: "Yes", responses: responses(sms: ["Yes", "Y", "1"], ivr: ["1"]), skip_logic: "end"),
-            choice(value: "No", responses: responses(sms: ["No", "N", "2"], ivr: ["2"]), skip_logic: nil),
+            choice(
+              value: "Yes",
+              responses: responses(sms: ["Yes", "Y", "1"], ivr: ["1"]),
+              skip_logic: "end"
+            ),
+            choice(
+              value: "No",
+              responses: responses(sms: ["No", "N", "2"], ivr: ["2"]),
+              skip_logic: nil
+            ),
             choice(value: "Maybe", responses: responses(sms: ["Maybe", "M", "3"], ivr: ["3"])),
-            choice(value: "Sometimes", responses: responses(sms: ["Sometimes", "S", "4"], ivr: ["4"]), skip_logic: "ddd"),
-            choice(value: "ALWAYS", responses: responses(sms: ["Always", "A", "5"], ivr: ["5"]), skip_logic: "undefined_id"),
-            choice(value: "I don't know", responses: responses(sms: ["Dont know", "D", "6"], ivr: ["6"]), skip_logic: "")
+            choice(
+              value: "Sometimes",
+              responses: responses(sms: ["Sometimes", "S", "4"], ivr: ["4"]),
+              skip_logic: "ddd"
+            ),
+            choice(
+              value: "ALWAYS",
+              responses: responses(sms: ["Always", "A", "5"], ivr: ["5"]),
+              skip_logic: "undefined_id"
+            ),
+            choice(
+              value: "I don't know",
+              responses: responses(sms: ["Dont know", "D", "6"], ivr: ["6"]),
+              skip_logic: ""
+            )
           ]
         ),
         multiple_choice_step(
           id: "bbb",
           title: "Do you exercise?",
-          prompt: prompt(
-            sms: sms_prompt("Do you exercise? Reply 1 for YES, 2 for NO")
-          ),
+          prompt: prompt(sms: sms_prompt("Do you exercise? Reply 1 for YES, 2 for NO")),
           store: "Exercises",
           choices: [
-            choice(value: "Yes", responses: responses(sms: ["Yes", "Y", "1"], ivr: ["1"]), skip_logic: "aaa"),
+            choice(
+              value: "Yes",
+              responses: responses(sms: ["Yes", "Y", "1"], ivr: ["1"]),
+              skip_logic: "aaa"
+            ),
             choice(value: "No", responses: responses(sms: ["No", "N", "2"], ivr: ["2"]))
           ]
         ),
         multiple_choice_step(
           id: "ccc",
           title: "Is this questionnaire refreshing?",
-          prompt: prompt(
-            sms: sms_prompt("Is this questionnaire refreshing? Reply 1 for YES, 2 for NO, 3 for MAYBE")
-          ),
+          prompt:
+            prompt(
+              sms:
+                sms_prompt(
+                  "Is this questionnaire refreshing? Reply 1 for YES, 2 for NO, 3 for MAYBE"
+                )
+            ),
           store: "Refresh",
           choices: [
             choice(value: "Yes", responses: responses(sms: ["Yes", "Y", "1"], ivr: ["1"])),
@@ -515,13 +620,21 @@ defmodule Ask.DummySteps do
         numeric_step(
           id: "ddd",
           title:
-          "What is the probability that a number has more prime factors than the sum of its digits?",
-          prompt: prompt(
-            sms: sms_prompt("What is the probability that a number has more prime factors than the sum of its digits?")
-          ),
+            "What is the probability that a number has more prime factors than the sum of its digits?",
+          prompt:
+            prompt(
+              sms:
+                sms_prompt(
+                  "What is the probability that a number has more prime factors than the sum of its digits?"
+                )
+            ),
           store: "Probability",
-          skip_logic: numeric_skip_logic(min_value: 0, max_value: 100,
-            ranges_delimiters: "25,75", ranges: [
+          skip_logic:
+            numeric_skip_logic(
+              min_value: 0,
+              max_value: 100,
+              ranges_delimiters: "25,75",
+              ranges: [
                 %{
                   "from" => nil,
                   "to" => 24,
@@ -539,42 +652,44 @@ defmodule Ask.DummySteps do
                 }
               ]
             ),
-            alphabetical_answers: true,
-            refusal: nil
-          ),
-          multiple_choice_step(
-            id: "eee",
-            title: "Is this the last question?",
-            prompt: prompt(
-              sms: sms_prompt("Is this the last question?")
-            ),
-            store: "Last",
-            choices: [
-              choice(value: "Yes", responses: responses(sms: ["Yes", "Y", "1"], ivr: ["1"])),
-              choice(value: "No", responses: responses(sms: ["No", "N", "2"], ivr: ["2"]))
-            ]
-          )
+          alphabetical_answers: true,
+          refusal: nil
+        ),
+        multiple_choice_step(
+          id: "eee",
+          title: "Is this the last question?",
+          prompt: prompt(sms: sms_prompt("Is this the last question?")),
+          store: "Last",
+          choices: [
+            choice(value: "Yes", responses: responses(sms: ["Yes", "Y", "1"], ivr: ["1"])),
+            choice(value: "No", responses: responses(sms: ["No", "N", "2"], ivr: ["2"]))
+          ]
+        )
       ]
 
       @explanation_steps_minimal [
         explanation_step(
           id: "aaa",
           title: "Let there be rock",
-          prompt: prompt(
-            sms: sms_prompt("Is this the last question?")
-          ),
+          prompt: prompt(sms: sms_prompt("Is this the last question?")),
           skip_logic: nil
         ),
         multiple_choice_step(
           id: "bbb",
           title: "Do you exercise?",
-          prompt: prompt(
-            sms: sms_prompt("Do you exercise? Reply 1 for YES, 2 for NO")
-          ),
+          prompt: prompt(sms: sms_prompt("Do you exercise? Reply 1 for YES, 2 for NO")),
           store: "Exercises",
           choices: [
-            choice(value: "Yes", responses: responses(sms: ["Yes", "Y", "1"], ivr: ["1"]), skip_logic: "aaa"),
-            choice(value: "No", responses: responses(sms: ["No", "N", "2"], ivr: ["2"]), skip_logic: "end")
+            choice(
+              value: "Yes",
+              responses: responses(sms: ["Yes", "Y", "1"], ivr: ["1"]),
+              skip_logic: "aaa"
+            ),
+            choice(
+              value: "No",
+              responses: responses(sms: ["No", "N", "2"], ivr: ["2"]),
+              skip_logic: "end"
+            )
           ]
         )
       ]
@@ -583,9 +698,7 @@ defmodule Ask.DummySteps do
         explanation_step(
           id: "aaa",
           title: "Let there be rock",
-          prompt: prompt(
-            sms: sms_prompt("Is this the last question?")
-          ),
+          prompt: prompt(sms: sms_prompt("Is this the last question?")),
           skip_logic: nil
         )
       ]
@@ -599,9 +712,7 @@ defmodule Ask.DummySteps do
         multiple_choice_step(
           id: "bbb",
           title: "Do you exercise?",
-          prompt: prompt(
-            sms: sms_prompt("Do you exercise? Reply 1 for YES, 2 for NO")
-          ),
+          prompt: prompt(sms: sms_prompt("Do you exercise? Reply 1 for YES, 2 for NO")),
           store: "Exercises",
           choices: [
             choice(value: "Yes", responses: responses(sms: ["Yes", "Y", "1"], ivr: ["1"])),
@@ -611,9 +722,7 @@ defmodule Ask.DummySteps do
         multiple_choice_step(
           id: "eee",
           title: "Is this the last question?",
-          prompt: prompt(
-            sms: sms_prompt("Is this the last question?")
-          ),
+          prompt: prompt(sms: sms_prompt("Is this the last question?")),
           store: "Last",
           choices: [
             choice(value: "Yes", responses: responses(sms: ["Yes", "Y", "1"], ivr: ["1"])),
@@ -626,10 +735,11 @@ defmodule Ask.DummySteps do
         multiple_choice_step(
           id: "bbb",
           title: "Do you exercise?",
-          prompt: prompt(
-            sms: sms_prompt("Do you exercise? Reply 1 for YES, 2 for NO"),
-            ivr: tts_prompt("Do you exercise? Reply 1 for YES, 2 for NO")
-          ),
+          prompt:
+            prompt(
+              sms: sms_prompt("Do you exercise? Reply 1 for YES, 2 for NO"),
+              ivr: tts_prompt("Do you exercise? Reply 1 for YES, 2 for NO")
+            ),
           store: "Exercises",
           choices: [
             choice(value: "Yes", responses: responses(sms: ["Yes", "Y", "1"], ivr: ["1"])),
@@ -644,10 +754,11 @@ defmodule Ask.DummySteps do
         multiple_choice_step(
           id: "eee",
           title: "Is this the last question?",
-          prompt: prompt(
-            sms: sms_prompt("Is this the last question?"),
-            ivr: tts_prompt("Is this the last question?")
-          ),
+          prompt:
+            prompt(
+              sms: sms_prompt("Is this the last question?"),
+              ivr: tts_prompt("Is this the last question?")
+            ),
           store: "Last",
           choices: [
             choice(value: "Yes", responses: responses(sms: ["Yes", "Y", "1"], ivr: ["1"])),
@@ -660,10 +771,11 @@ defmodule Ask.DummySteps do
         multiple_choice_step(
           id: "bbb",
           title: "Do you exercise?",
-          prompt: prompt(
-            sms: sms_prompt("Do you exercise? Reply 1 for YES, 2 for NO"),
-            ivr: tts_prompt("Do you exercise? Reply 1 for YES, 2 for NO")
-          ),
+          prompt:
+            prompt(
+              sms: sms_prompt("Do you exercise? Reply 1 for YES, 2 for NO"),
+              ivr: tts_prompt("Do you exercise? Reply 1 for YES, 2 for NO")
+            ),
           store: "Exercises",
           choices: [
             choice(value: "Yes", responses: responses(sms: ["Yes", "Y", "1"], ivr: ["1"])),
@@ -681,9 +793,7 @@ defmodule Ask.DummySteps do
         multiple_choice_step(
           id: "aaa",
           title: "Do you exercise?",
-          prompt: prompt(
-            sms: sms_prompt("Do you exercise? Reply 1 for YES, 2 for NO")
-          ),
+          prompt: prompt(sms: sms_prompt("Do you exercise? Reply 1 for YES, 2 for NO")),
           store: "Exercises",
           choices: [
             choice(value: "Yes", responses: responses(sms: ["Yes", "Y", "1"], ivr: ["1"])),
@@ -698,20 +808,16 @@ defmodule Ask.DummySteps do
         explanation_step(
           id: "ccc",
           title: "Bye",
-          prompt: prompt(
-            sms: sms_prompt("Good bye")
-          ),
+          prompt: prompt(sms: sms_prompt("Good bye")),
           skip_logic: "end"
-        ),
+        )
       ]
 
       @flag_steps_refused_skip_logic [
         multiple_choice_step(
           id: "aaa",
           title: "Do you exercise?",
-          prompt: prompt(
-            sms: sms_prompt("Do you exercise? Reply 1 for YES, 2 for NO")
-          ),
+          prompt: prompt(sms: sms_prompt("Do you exercise? Reply 1 for YES, 2 for NO")),
           store: "Exercises",
           choices: [
             choice(value: "Yes", responses: responses(sms: ["Yes", "Y", "1"], ivr: ["1"])),
@@ -726,20 +832,16 @@ defmodule Ask.DummySteps do
         explanation_step(
           id: "ccc",
           title: "Bye",
-          prompt: prompt(
-            sms: sms_prompt("Good bye")
-          ),
+          prompt: prompt(sms: sms_prompt("Good bye")),
           skip_logic: "end"
-        ),
+        )
       ]
 
       @flag_steps_partial_skip_logic [
         multiple_choice_step(
           id: "aaa",
           title: "Do you exercise?",
-          prompt: prompt(
-            sms: sms_prompt("Do you exercise? Reply 1 for YES, 2 for NO")
-          ),
+          prompt: prompt(sms: sms_prompt("Do you exercise? Reply 1 for YES, 2 for NO")),
           store: "Exercises",
           choices: [
             choice(value: "Yes", responses: responses(sms: ["Yes", "Y", "1"], ivr: ["1"])),
@@ -754,11 +856,9 @@ defmodule Ask.DummySteps do
         explanation_step(
           id: "ccc",
           title: "Bye",
-          prompt: prompt(
-            sms: sms_prompt("Good bye")
-          ),
+          prompt: prompt(sms: sms_prompt("Good bye")),
           skip_logic: "end"
-        ),
+        )
       ]
 
       @partial_step [
@@ -802,9 +902,7 @@ defmodule Ask.DummySteps do
         multiple_choice_step(
           id: "bbb",
           title: "Do you exercise?",
-          prompt: prompt(
-            sms: sms_prompt("Do you exercise? Reply 1 for YES, 2 for NO")
-          ),
+          prompt: prompt(sms: sms_prompt("Do you exercise? Reply 1 for YES, 2 for NO")),
           store: "Exercises",
           choices: [
             choice(value: "Yes", responses: responses(sms: ["Yes", "Y", "1"], ivr: ["1"])),
@@ -819,9 +917,7 @@ defmodule Ask.DummySteps do
         multiple_choice_step(
           id: "eee",
           title: "Is this the last question?",
-          prompt: prompt(
-            sms: sms_prompt("Is this the last question?")
-          ),
+          prompt: prompt(sms: sms_prompt("Is this the last question?")),
           store: "Last",
           choices: [
             choice(value: "Yes", responses: responses(sms: ["Yes", "Y", "1"], ivr: ["1"])),
@@ -839,9 +935,7 @@ defmodule Ask.DummySteps do
         multiple_choice_step(
           id: "bbb",
           title: "Do you exercise?",
-          prompt: prompt(
-            sms: sms_prompt("Do you exercise? Reply 1 for YES, 2 for NO")
-          ),
+          prompt: prompt(sms: sms_prompt("Do you exercise? Reply 1 for YES, 2 for NO")),
           store: "Exercises",
           choices: [
             choice(value: "Yes", responses: responses(sms: ["Yes", "Y", "1"], ivr: ["1"])),
@@ -856,9 +950,7 @@ defmodule Ask.DummySteps do
         multiple_choice_step(
           id: "eee",
           title: "Is this the last question?",
-          prompt: prompt(
-            sms: sms_prompt("Is this the last question?")
-          ),
+          prompt: prompt(sms: sms_prompt("Is this the last question?")),
           store: "Last",
           choices: [
             choice(value: "Yes", responses: responses(sms: ["Yes", "Y", "1"], ivr: ["1"])),
@@ -876,9 +968,7 @@ defmodule Ask.DummySteps do
         multiple_choice_step(
           id: "bbb",
           title: "Do you exercise?",
-          prompt: prompt(
-            sms: sms_prompt("Do you exercise? Reply 1 for YES, 2 for NO")
-          ),
+          prompt: prompt(sms: sms_prompt("Do you exercise? Reply 1 for YES, 2 for NO")),
           store: "Exercises",
           choices: [
             choice(value: "Yes", responses: responses(sms: ["Yes", "Y", "1"], ivr: ["1"])),
@@ -893,9 +983,7 @@ defmodule Ask.DummySteps do
         multiple_choice_step(
           id: "eee",
           title: "Is this the last question?",
-          prompt: prompt(
-            sms: sms_prompt("Is this the last question?")
-          ),
+          prompt: prompt(sms: sms_prompt("Is this the last question?")),
           store: "Last",
           choices: [
             choice(value: "Yes", responses: responses(sms: ["Yes", "Y", "1"], ivr: ["1"])),
@@ -913,9 +1001,7 @@ defmodule Ask.DummySteps do
         multiple_choice_step(
           id: "bbb",
           title: "Do you exercise?",
-          prompt: prompt(
-            sms: sms_prompt("Do you exercise? Reply 1 for YES, 2 for NO")
-          ),
+          prompt: prompt(sms: sms_prompt("Do you exercise? Reply 1 for YES, 2 for NO")),
           store: "Exercises",
           choices: [
             choice(value: "Yes", responses: responses(sms: ["Yes", "Y", "1"], ivr: ["1"])),
@@ -930,9 +1016,7 @@ defmodule Ask.DummySteps do
         multiple_choice_step(
           id: "eee",
           title: "Is this the last question?",
-          prompt: prompt(
-            sms: sms_prompt("Is this the last question?")
-          ),
+          prompt: prompt(sms: sms_prompt("Is this the last question?")),
           store: "Last",
           choices: [
             choice(value: "Yes", responses: responses(sms: ["Yes", "Y", "1"], ivr: ["1"])),
@@ -945,17 +1029,13 @@ defmodule Ask.DummySteps do
         explanation_step(
           id: "s1",
           title: "Let there be rock",
-          prompt: prompt(
-            mobileweb: sms_prompt("Welcome to the survey!")
-          ),
+          prompt: prompt(mobileweb: sms_prompt("Welcome to the survey!")),
           skip_logic: nil
         ),
         multiple_choice_step(
           id: "s2",
           title: "Do you smoke?",
-          prompt: prompt(
-            mobileweb: "Do you smoke?"
-          ),
+          prompt: prompt(mobileweb: "Do you smoke?"),
           store: "Smokes",
           choices: [
             choice(value: "Yes", responses: responses(mobileweb: "Yes")),
@@ -970,9 +1050,7 @@ defmodule Ask.DummySteps do
         multiple_choice_step(
           id: "s4",
           title: "Do you exercise",
-          prompt: prompt(
-            mobileweb: "Do you exercise?"
-          ),
+          prompt: prompt(mobileweb: "Do you exercise?"),
           store: "Exercises",
           choices: [
             choice(value: "Yes", responses: responses(mobileweb: "Yes")),
@@ -982,9 +1060,7 @@ defmodule Ask.DummySteps do
         numeric_step(
           id: "s5",
           title: "Which is the second perfect number?",
-          prompt: prompt(
-            mobileweb: "Which is the second perfect number??"
-            ),
+          prompt: prompt(mobileweb: "Which is the second perfect number??"),
           store: "Perfect Number",
           skip_logic: default_numeric_skip_logic(),
           alphabetical_answers: false,
@@ -992,18 +1068,16 @@ defmodule Ask.DummySteps do
             "enabled" => true,
             "responses" => %{
               "mobileweb" => %{
-                "en" => "skip me",
+                "en" => "skip me"
               }
             },
-            "skip_logic" => "end",
+            "skip_logic" => "end"
           }
         ),
         numeric_step(
           id: "s6",
           title: "What's the number of this question?",
-          prompt: prompt(
-            mobileweb: "What's the number of this question??"
-            ),
+          prompt: prompt(mobileweb: "What's the number of this question??"),
           store: "Question",
           skip_logic: default_numeric_skip_logic(),
           alphabetical_answers: false,
@@ -1015,9 +1089,7 @@ defmodule Ask.DummySteps do
         explanation_step(
           id: "s1",
           title: "Let there be rock",
-          prompt: prompt(
-            mobileweb: sms_prompt("Welcome to the survey!")
-          ),
+          prompt: prompt(mobileweb: sms_prompt("Welcome to the survey!")),
           skip_logic: nil
         ),
         flag_step(
@@ -1025,7 +1097,7 @@ defmodule Ask.DummySteps do
           title: "Let there be rock",
           disposition: "refused",
           skip_logic: "end"
-        ),
+        )
       ]
 
       @one_section [
@@ -1153,19 +1225,30 @@ defmodule Ask.DummySteps do
           id: "section 1",
           title: "First section",
           randomize: false,
-          steps: [
-            multiple_choice_step(
-              id: "aaa",
-              title: "Do you want to end this section?",
-              prompt: prompt(
-                sms: sms_prompt("Do you want to end this section? Reply 1 for YES, 2 for NO")
-              ),
-              store: "end_section",
-              choices: [
-                choice(value: "Yes", responses: responses(sms: ["Yes", "Y", "1"], ivr: ["1"]), skip_logic: "end_section"),
-                choice(value: "No", responses: responses(sms: ["No", "N", "2"], ivr: ["2"]), skip_logic: "ddd")
-              ]
-            )] ++ @skip_logic
+          steps:
+            [
+              multiple_choice_step(
+                id: "aaa",
+                title: "Do you want to end this section?",
+                prompt:
+                  prompt(
+                    sms: sms_prompt("Do you want to end this section? Reply 1 for YES, 2 for NO")
+                  ),
+                store: "end_section",
+                choices: [
+                  choice(
+                    value: "Yes",
+                    responses: responses(sms: ["Yes", "Y", "1"], ivr: ["1"]),
+                    skip_logic: "end_section"
+                  ),
+                  choice(
+                    value: "No",
+                    responses: responses(sms: ["No", "N", "2"], ivr: ["2"]),
+                    skip_logic: "ddd"
+                  )
+                ]
+              )
+            ] ++ @skip_logic
         ),
         section(
           id: "section 2",
@@ -1188,164 +1271,196 @@ defmodule Ask.QuestionnaireRelevantSteps do
   use Ask.DummySteps
   import Ask.StepBuilder
 
-  def all_relevant_steps(), do: @dummy_steps |> Enum.map(fn step -> Map.put(step, "relevant", true) end)
+  def all_relevant_steps(),
+    do: @dummy_steps |> Enum.map(fn step -> Map.put(step, "relevant", true) end)
 
-  def odd_relevant_steps(), do: @dummy_steps |> Enum.map_every(2, fn step -> Map.put(step, "relevant", true) end) # Only the odd steps are relevant
+  # Only the odd steps are relevant
+  def odd_relevant_steps(),
+    do: @dummy_steps |> Enum.map_every(2, fn step -> Map.put(step, "relevant", true) end)
 
-  def odd_relevant_with_numeric_refusal(), do: [
-        multiple_choice_step(
-          id: Ecto.UUID.generate,
-          title: "Do you smoke?",
-          prompt: prompt(
+  def odd_relevant_with_numeric_refusal(),
+    do: [
+      multiple_choice_step(
+        id: Ecto.UUID.generate(),
+        title: "Do you smoke?",
+        prompt:
+          prompt(
             sms: sms_prompt("Do you smoke? Reply 1 for YES, 2 for NO"),
             ivr: tts_prompt("Do you smoke? Press 8 for YES, 9 for NO")
           ),
-          store: "Smokes",
-          choices: [
-            choice(value: "Yes", responses: responses(sms: ["Yes", "Y", "1"], ivr: ["8"])),
-            choice(value: "No", responses: responses(sms: ["No", "N", "2"], ivr: ["9"]))
-          ],
-          relevant: true
-        ),
-        multiple_choice_step(
-          id: Ecto.UUID.generate,
-          title: "Do you exercise",
-          prompt: prompt(
+        store: "Smokes",
+        choices: [
+          choice(value: "Yes", responses: responses(sms: ["Yes", "Y", "1"], ivr: ["8"])),
+          choice(value: "No", responses: responses(sms: ["No", "N", "2"], ivr: ["9"]))
+        ],
+        relevant: true
+      ),
+      multiple_choice_step(
+        id: Ecto.UUID.generate(),
+        title: "Do you exercise",
+        prompt:
+          prompt(
             sms: sms_prompt("Do you exercise? Reply 1 for YES, 2 for NO"),
             ivr: tts_prompt("Do you exercise? Press 1 for YES, 2 for NO")
           ),
-          store: "Exercises",
-          choices: [
-            choice(value: "Yes", responses: responses(sms: ["Yes", "Y", "1"], ivr: ["1"])),
-            choice(value: "No", responses: responses(sms: ["No", "N", "2"], ivr: ["2"]))
-          ]
-        ),
-        numeric_step(
-          id: Ecto.UUID.generate,
-          title: "Which is the second perfect number?",
-          prompt: prompt(
+        store: "Exercises",
+        choices: [
+          choice(value: "Yes", responses: responses(sms: ["Yes", "Y", "1"], ivr: ["1"])),
+          choice(value: "No", responses: responses(sms: ["No", "N", "2"], ivr: ["2"]))
+        ]
+      ),
+      numeric_step(
+        id: Ecto.UUID.generate(),
+        title: "Which is the second perfect number?",
+        prompt:
+          prompt(
             sms: sms_prompt("Which is the second perfect number??"),
             ivr: tts_prompt("Which is the second perfect number")
           ),
-          store: "Perfect Number",
-          skip_logic: default_numeric_skip_logic(),
-          alphabetical_answers: false,
-          refusal: %{
-            "enabled" => true,
-            "responses" => %{
-              "sms" => %{
-                "en" => ["#", "0"],
-                "skip_logic" => nil
-              },
-              "ivr" => %{
-                "en" => ["#", "0"],
-                "skip_logic" => nil
-              }
+        store: "Perfect Number",
+        skip_logic: default_numeric_skip_logic(),
+        alphabetical_answers: false,
+        refusal: %{
+          "enabled" => true,
+          "responses" => %{
+            "sms" => %{
+              "en" => ["#", "0"],
+              "skip_logic" => nil
+            },
+            "ivr" => %{
+              "en" => ["#", "0"],
+              "skip_logic" => nil
             }
-          },
-          relevant: true
-        ),
-        numeric_step(
-          id: Ecto.UUID.generate,
-          title: "What's the number of this question?",
-          prompt: prompt(
+          }
+        },
+        relevant: true
+      ),
+      numeric_step(
+        id: Ecto.UUID.generate(),
+        title: "What's the number of this question?",
+        prompt:
+          prompt(
             sms: sms_prompt("What's the number of this question??"),
             ivr: tts_prompt("What's the number of this question")
           ),
-          store: "Question",
-          skip_logic: default_numeric_skip_logic(),
-          alphabetical_answers: false,
-          refusal: nil
-        )
-      ]
+        store: "Question",
+        skip_logic: default_numeric_skip_logic(),
+        alphabetical_answers: false,
+        refusal: nil
+      )
+    ]
 
-  def odd_relevant_with_multiple_choice_refusal(), do: [
-    multiple_choice_step(
-     id: Ecto.UUID.generate,
-     title: "Do you smoke?",
-     prompt: prompt(
-       sms: sms_prompt("Do you smoke? Reply 1 for YES, 2 for NO"),
-       ivr: tts_prompt("Do you smoke? Press 8 for YES, 9 for NO")
-     ),
-     store: "Smokes",
-     choices: [
-       choice(value: "Yes", responses: responses(sms: ["Yes", "Y", "1"], ivr: ["8"])),
-       choice(value: "No", responses: responses(sms: ["No", "N", "2"], ivr: ["9"])),
-       choice(value: "Skip", responses: responses(sms: ["skip", "S", "#"], ivr: ["#"]))
-     ],
-     relevant: true
-    ),
-    multiple_choice_step(
-     id: Ecto.UUID.generate,
-     title: "Do you exercise",
-     prompt: prompt(
-       sms: sms_prompt("Do you exercise? Reply 1 for YES, 2 for NO"),
-       ivr: tts_prompt("Do you exercise? Press 1 for YES, 2 for NO")
-     ),
-     store: "Exercises",
-     choices: [
-       choice(value: "Yes", responses: responses(sms: ["Yes", "Y", "1"], ivr: ["1"])),
-       choice(value: "No", responses: responses(sms: ["No", "N", "2"], ivr: ["2"]))
-     ]
-    ),
-    numeric_step(
-     id: Ecto.UUID.generate,
-     title: "Which is the second perfect number?",
-     prompt: prompt(
-       sms: sms_prompt("Which is the second perfect number??"),
-       ivr: tts_prompt("Which is the second perfect number")
-     ),
-     store: "Perfect Number",
-     skip_logic: default_numeric_skip_logic(),
-     alphabetical_answers: false,
-     refusal: nil,
-     relevant: true
-    ),
-    numeric_step(
-     id: Ecto.UUID.generate,
-     title: "What's the number of this question?",
-     prompt: prompt(
-       sms: sms_prompt("What's the number of this question??"),
-       ivr: tts_prompt("What's the number of this question")
-     ),
-     store: "Question",
-     skip_logic: default_numeric_skip_logic(),
-     alphabetical_answers: false,
-     refusal: nil
-    )
-  ]
-
-  def relevant_steps_in_multiple_sections(), do: [
-    section(id: "section 1", title: "First section", randomize: false, steps: [
+  def odd_relevant_with_multiple_choice_refusal(),
+    do: [
       multiple_choice_step(
-      id: Ecto.UUID.generate,
-      title: "Do you sleep well?",
-      prompt: prompt(
-        sms: sms_prompt("Do you sleep well? Reply 1 for YES, 2 for NO"),
-        ivr: tts_prompt("Do you sleep well? Press 8 for YES, 9 for NO"),
-        mobileweb: "Do you sleep well?"
+        id: Ecto.UUID.generate(),
+        title: "Do you smoke?",
+        prompt:
+          prompt(
+            sms: sms_prompt("Do you smoke? Reply 1 for YES, 2 for NO"),
+            ivr: tts_prompt("Do you smoke? Press 8 for YES, 9 for NO")
+          ),
+        store: "Smokes",
+        choices: [
+          choice(value: "Yes", responses: responses(sms: ["Yes", "Y", "1"], ivr: ["8"])),
+          choice(value: "No", responses: responses(sms: ["No", "N", "2"], ivr: ["9"])),
+          choice(value: "Skip", responses: responses(sms: ["skip", "S", "#"], ivr: ["#"]))
+        ],
+        relevant: true
       ),
-      store: "Sleep",
-      choices: [
-        choice(value: "Yes", responses: responses(sms: ["Yes", "Y", "1"], ivr: ["8"], mobileweb: ["Yes"])),
-        choice(value: "No", responses: responses(sms: ["No", "N", "2"], ivr: ["9"], mobileweb: ["No"]))
-      ],
-      relevant: true
-    ),
-    numeric_step(
-     id: Ecto.UUID.generate,
-     title: "How many hours do you sleep?",
-     prompt: prompt(
-       sms: sms_prompt("How many hours do you sleep??"),
-       ivr: tts_prompt("How many hours do you sleep"),
-       mobileweb: "How many hours do you sleep?"
-     ),
-     store: "SleepHours",
-     skip_logic: default_numeric_skip_logic(),
-     alphabetical_answers: false,
-     refusal: nil
-    )
-    ]),
-    section(id: "section 2", title: "Second section", randomize: false, steps: all_relevant_steps()),
-  ]
+      multiple_choice_step(
+        id: Ecto.UUID.generate(),
+        title: "Do you exercise",
+        prompt:
+          prompt(
+            sms: sms_prompt("Do you exercise? Reply 1 for YES, 2 for NO"),
+            ivr: tts_prompt("Do you exercise? Press 1 for YES, 2 for NO")
+          ),
+        store: "Exercises",
+        choices: [
+          choice(value: "Yes", responses: responses(sms: ["Yes", "Y", "1"], ivr: ["1"])),
+          choice(value: "No", responses: responses(sms: ["No", "N", "2"], ivr: ["2"]))
+        ]
+      ),
+      numeric_step(
+        id: Ecto.UUID.generate(),
+        title: "Which is the second perfect number?",
+        prompt:
+          prompt(
+            sms: sms_prompt("Which is the second perfect number??"),
+            ivr: tts_prompt("Which is the second perfect number")
+          ),
+        store: "Perfect Number",
+        skip_logic: default_numeric_skip_logic(),
+        alphabetical_answers: false,
+        refusal: nil,
+        relevant: true
+      ),
+      numeric_step(
+        id: Ecto.UUID.generate(),
+        title: "What's the number of this question?",
+        prompt:
+          prompt(
+            sms: sms_prompt("What's the number of this question??"),
+            ivr: tts_prompt("What's the number of this question")
+          ),
+        store: "Question",
+        skip_logic: default_numeric_skip_logic(),
+        alphabetical_answers: false,
+        refusal: nil
+      )
+    ]
+
+  def relevant_steps_in_multiple_sections(),
+    do: [
+      section(
+        id: "section 1",
+        title: "First section",
+        randomize: false,
+        steps: [
+          multiple_choice_step(
+            id: Ecto.UUID.generate(),
+            title: "Do you sleep well?",
+            prompt:
+              prompt(
+                sms: sms_prompt("Do you sleep well? Reply 1 for YES, 2 for NO"),
+                ivr: tts_prompt("Do you sleep well? Press 8 for YES, 9 for NO"),
+                mobileweb: "Do you sleep well?"
+              ),
+            store: "Sleep",
+            choices: [
+              choice(
+                value: "Yes",
+                responses: responses(sms: ["Yes", "Y", "1"], ivr: ["8"], mobileweb: ["Yes"])
+              ),
+              choice(
+                value: "No",
+                responses: responses(sms: ["No", "N", "2"], ivr: ["9"], mobileweb: ["No"])
+              )
+            ],
+            relevant: true
+          ),
+          numeric_step(
+            id: Ecto.UUID.generate(),
+            title: "How many hours do you sleep?",
+            prompt:
+              prompt(
+                sms: sms_prompt("How many hours do you sleep??"),
+                ivr: tts_prompt("How many hours do you sleep"),
+                mobileweb: "How many hours do you sleep?"
+              ),
+            store: "SleepHours",
+            skip_logic: default_numeric_skip_logic(),
+            alphabetical_answers: false,
+            refusal: nil
+          )
+        ]
+      ),
+      section(
+        id: "section 2",
+        title: "Second section",
+        randomize: false,
+        steps: all_relevant_steps()
+      )
+    ]
 end

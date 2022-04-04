@@ -7,14 +7,16 @@ defmodule Ask.EctoDbSession do
   def get_user_data(repo, _user, creds, _id_key) do
     Ask.Session
     |> where([s], s.token == ^creds)
-    |> Repo.one
+    |> Repo.one()
     |> case do
-      nil -> nil
+      nil ->
+        nil
+
       session ->
-        user_id = String.to_integer session.user_id
+        user_id = String.to_integer(session.user_id)
 
         session.user_type
-        |> String.to_atom
+        |> String.to_atom()
         |> where([u], u.id == ^user_id)
         |> repo.one
     end
@@ -28,10 +30,10 @@ defmodule Ask.EctoDbSession do
     }
 
     where(Session, [s], s.user_id == ^id_str(user))
-    |> Repo.delete_all
+    |> Repo.delete_all()
 
-    Session.changeset(Session.__struct__, params)
-    |> Repo.insert
+    Session.changeset(Session.__struct__(), params)
+    |> Repo.insert()
     |> case do
       {:ok, _} -> :ok
       {:error, changeset} -> {:error, changeset}
@@ -41,19 +43,20 @@ defmodule Ask.EctoDbSession do
   def delete_credentials(_user, creds) do
     Session
     |> where([s], s.token == ^creds)
-    |> Repo.one
+    |> Repo.one()
     |> case do
       nil ->
         nil
+
       user ->
-        Repo.delete user
+        Repo.delete(user)
     end
   end
 
   def delete_user_logins(user) do
     Session
     |> where([s], s.user_id == ^id_str(user))
-    |> Repo.delete_all
+    |> Repo.delete_all()
   end
 
   defp id_str(user) do

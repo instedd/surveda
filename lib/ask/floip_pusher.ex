@@ -21,7 +21,7 @@ defmodule Ask.FloipPusher do
 
   def init(_args) do
     :timer.send_after(1000, :poll)
-    log_info "started."
+    log_info("started.")
     {:ok, nil}
   end
 
@@ -29,7 +29,8 @@ defmodule Ask.FloipPusher do
     try do
       query =
         from endpoint in FloipEndpoint,
-          join: survey in Survey, on: endpoint.survey_id == survey.id,
+          join: survey in Survey,
+          on: endpoint.survey_id == survey.id,
           where: survey.state == "running" or survey.state == "terminated",
           where: endpoint.retries < 10,
           where: endpoint.state == "enabled",
@@ -37,32 +38,53 @@ defmodule Ask.FloipPusher do
 
       query
       |> preload(:survey)
-      |> Repo.all
-      |> Enum.map(fn(endpoint) ->
+      |> Repo.all()
+      |> Enum.map(fn endpoint ->
         {responses, _first_response, last_response} =
-          FloipPackage.responses(endpoint.survey, after_cursor: endpoint.last_pushed_response_id, size: 1000)
+          FloipPackage.responses(endpoint.survey,
+            after_cursor: endpoint.last_pushed_response_id,
+            size: 1000
+          )
 
         responses_payload = FloipPackage.responses_for_aggregator(endpoint.survey, responses)
 
         if length(responses) > 0 do
           try do
             :ok = push_responses(endpoint, responses_payload)
+
             endpoint =
-              Ecto.Changeset.change(endpoint, last_pushed_response_id: Enum.at(last_response, 1), retries: 0)
+              Ecto.Changeset.change(endpoint,
+                last_pushed_response_id: Enum.at(last_response, 1),
+                retries: 0
+              )
+
             Repo.update!(endpoint)
           rescue
             error ->
               log_error("failed to push to endpoint #{show(endpoint)}: #{inspect(error)}")
-              {new_retries, new_state} = if (endpoint.retries == 9), do: {0, "disabled"}, else: {endpoint.retries + 1, endpoint.state}
-              endpoint_change = Ecto.Changeset.change(endpoint, retries: new_retries, state: new_state)
+
+              {new_retries, new_state} =
+                if endpoint.retries == 9,
+                  do: {0, "disabled"},
+                  else: {endpoint.retries + 1, endpoint.state}
+
+              endpoint_change =
+                Ecto.Changeset.change(endpoint, retries: new_retries, state: new_state)
+
               Repo.update!(endpoint_change)
-              log_info("retries was #{endpoint.retries}, now it is #{endpoint_change.changes[:retries]}")
+
+              log_info(
+                "retries was #{endpoint.retries}, now it is #{endpoint_change.changes[:retries]}"
+              )
           end
         else
           if endpoint.survey.state == "terminated" do
             endpoint_change = Ecto.Changeset.change(endpoint, state: "terminated")
             Repo.update!(endpoint_change)
-            Logger.info("Marking endpoint #{show(endpoint)} as 'terminated' because we have already pushed all messages to it and the survey is terminated.")
+
+            Logger.info(
+              "Marking endpoint #{show(endpoint)} as 'terminated' because we have already pushed all messages to it and the survey is terminated."
+            )
           else
             Logger.info("No new responses for endpoint #{show(endpoint)}.")
           end
@@ -76,12 +98,13 @@ defmodule Ask.FloipPusher do
       log_info("Scheduling next run in #{poll_interval} minutes")
 
       poll_interval
-      |> :timer.minutes
+      |> :timer.minutes()
       |> :timer.send_after(:poll)
     end
   end
 
-  defp poll_interval_in_minutes(), do: ConfigHelper.get_config(Ask.FloipPusher, :poll_interval_in_minutes, &String.to_integer/1)
+  defp poll_interval_in_minutes(),
+    do: ConfigHelper.get_config(Ask.FloipPusher, :poll_interval_in_minutes, &String.to_integer/1)
 
   defp show(endpoint) do
     "(survey: #{endpoint.survey.id}, uri: #{endpoint.uri})"
@@ -96,7 +119,7 @@ defmodule Ask.FloipPusher do
   end
 
   def handle_info(:poll, state) do
-    handle_info(:poll, state, Timex.now)
+    handle_info(:poll, state, Timex.now())
   end
 
   def handle_call(:poll, _from, state) do
@@ -105,7 +128,7 @@ defmodule Ask.FloipPusher do
   end
 
   def create_package(survey, endpoint, responses_uri) do
-    {:ok, body} = FloipPackage.descriptor(survey, responses_uri) |> Poison.encode
+    {:ok, body} = FloipPackage.descriptor(survey, responses_uri) |> Poison.encode()
 
     endpoint_uri = String.to_charlist("#{endpoint.uri}/flow-results/packages")
 
@@ -129,7 +152,10 @@ defmodule Ask.FloipPusher do
   defp push_responses(endpoint, responses) do
     {:ok, body} = Poison.encode(responses)
 
-    endpoint_uri = String.to_charlist("#{endpoint.uri}/flow-results/packages/#{endpoint.survey.floip_package_id}/responses")
+    endpoint_uri =
+      String.to_charlist(
+        "#{endpoint.uri}/flow-results/packages/#{endpoint.survey.floip_package_id}/responses"
+      )
 
     request = {
       endpoint_uri,

@@ -2,7 +2,10 @@ defmodule Ask.QuestionnaireSimulationView do
   alias Ask.{QuestionnaireSmsSimulationStep, QuestionnaireIvrSimulationStep}
   use Ask.Web, :view
 
-  def render("simulation.json", %{simulation: %{respondent_id: respondent_id} = simulation, mode: "mobileweb"}) do
+  def render("simulation.json", %{
+        simulation: %{respondent_id: respondent_id} = simulation,
+        mode: "mobileweb"
+      }) do
     render_simulation(simulation)
     |> Map.put(:index_url, "/mobile/simulation/#{respondent_id}")
   end
@@ -11,18 +14,22 @@ defmodule Ask.QuestionnaireSimulationView do
     render_simulation(simulation)
   end
 
-  defp render_simulation(%QuestionnaireSmsSimulationStep{
-    messages_history: messages_history,
-  } = simulation) do
+  defp render_simulation(
+         %QuestionnaireSmsSimulationStep{
+           messages_history: messages_history
+         } = simulation
+       ) do
     simulation = prepare_simulation(simulation)
     simulation = Map.put(simulation, :messages_history, messages_history)
     render_prepared_simulation(simulation)
   end
 
-  defp render_simulation(%QuestionnaireIvrSimulationStep{
-    messages_history: messages_history,
-    prompts: prompts,
-  } = simulation) do
+  defp render_simulation(
+         %QuestionnaireIvrSimulationStep{
+           messages_history: messages_history,
+           prompts: prompts
+         } = simulation
+       ) do
     simulation = prepare_simulation(simulation)
     simulation = Map.put(simulation, :messages_history, messages_history)
     simulation = Map.put(simulation, :prompts, prompts)
@@ -35,20 +42,21 @@ defmodule Ask.QuestionnaireSimulationView do
   end
 
   defp prepare_simulation(%{
-    respondent_id: respondent_id,
-    simulation_status: simulation_status,
-    disposition: disposition,
-    submissions: submissions,
-    current_step: current_step,
-    questionnaire: questionnaire
-  }) do
+         respondent_id: respondent_id,
+         simulation_status: simulation_status,
+         disposition: disposition,
+         submissions: submissions,
+         current_step: current_step,
+         questionnaire: questionnaire
+       }) do
     %{
       respondent_id: respondent_id,
       simulation_status: simulation_status,
       disposition: disposition,
       submissions: submissions,
       current_step: current_step,
-      questionnaire: Ask.QuestionnaireView.render("questionnaire.json", %{questionnaire: questionnaire})
+      questionnaire:
+        Ask.QuestionnaireView.render("questionnaire.json", %{questionnaire: questionnaire})
     }
   end
 

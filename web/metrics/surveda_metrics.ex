@@ -1,68 +1,67 @@
 defmodule Ask.SurvedaMetrics do
-    use Prometheus.Metric
-    def setup() do
-        Counter.declare(
-          name: :surveda_survey_poll,
-          help: "Surveda survey poll",
-          labels: [:survey_id]
-        )
+  use Prometheus.Metric
 
-        Counter.declare(
-          name: :surveda_broker_respondent_start,
-          help: "Surveda broker respondent start",
-          labels: [:survey_id]
-        )
+  def setup() do
+    Counter.declare(
+      name: :surveda_survey_poll,
+      help: "Surveda survey poll",
+      labels: [:survey_id]
+    )
 
-        Counter.declare(
-          name: :surveda_verboice_enqueue,
-          help: "Surveda verboice enqueue",
-          labels: [:response_status]
-        )
+    Counter.declare(
+      name: :surveda_broker_respondent_start,
+      help: "Surveda broker respondent start",
+      labels: [:survey_id]
+    )
 
-        Counter.declare(
-          name: :surveda_verboice_status_callback,
-          help: "Surveda verboice status callback",
-          labels: [:call_status]
-        )
+    Counter.declare(
+      name: :surveda_verboice_enqueue,
+      help: "Surveda verboice enqueue",
+      labels: [:response_status]
+    )
 
-        Counter.declare(
-          name: :surveda_nuntium_enqueue,
-          help: "Surveda nuntium enqueue",
-          labels: [:response_status]
-        )
+    Counter.declare(
+      name: :surveda_verboice_status_callback,
+      help: "Surveda verboice status callback",
+      labels: [:call_status]
+    )
 
-        Counter.declare(
-          name: :surveda_nuntium_status_callback,
-          help: "Surveda nuntium status callback",
-          labels: [:status]
-        )
+    Counter.declare(
+      name: :surveda_nuntium_enqueue,
+      help: "Surveda nuntium enqueue",
+      labels: [:response_status]
+    )
 
-        Counter.declare(
-          name: :surveda_nuntium_incoming,
-          help: "Surveda nuntium incoming"
-        )
+    Counter.declare(
+      name: :surveda_nuntium_status_callback,
+      help: "Surveda nuntium status callback",
+      labels: [:status]
+    )
 
-        Gauge.declare(
-          name: :surveda_version_info,
-          labels: [:elixir, :surveda],
-          help: "Surveda version info"
-        )
+    Counter.declare(
+      name: :surveda_nuntium_incoming,
+      help: "Surveda nuntium incoming"
+    )
 
-        elixir_version = System.version
-        surveda_version = Application.get_env(:ask, :version)
-        Gauge.set([name: :surveda_version_info, labels: [elixir_version, surveda_version]], 1)
-    end
+    Gauge.declare(
+      name: :surveda_version_info,
+      labels: [:elixir, :surveda],
+      help: "Surveda version info"
+    )
 
-    def increment_counter_with_label(counter_name, labels) do
-      Counter.inc(
-        name: counter_name,
-        labels: labels
-      )
-    end
+    elixir_version = System.version()
+    surveda_version = Application.get_env(:ask, :version)
+    Gauge.set([name: :surveda_version_info, labels: [elixir_version, surveda_version]], 1)
+  end
 
-    def increment_counter(counter_name) do
-      Counter.inc(
-        name: counter_name
-      )
-    end
+  def increment_counter_with_label(counter_name, labels) do
+    Counter.inc(
+      name: counter_name,
+      labels: labels
+    )
+  end
+
+  def increment_counter(counter_name) do
+    Counter.inc(name: counter_name)
+  end
 end

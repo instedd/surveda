@@ -4,25 +4,27 @@ defmodule Ask.StepsValidatorTest do
   alias Ask.JsonSchema
 
   setup_all do
-    GenServer.start_link(JsonSchema, [], name: JsonSchema.server_ref)
+    GenServer.start_link(JsonSchema, [], name: JsonSchema.server_ref())
     :ok
   end
 
-  defp assert_ok(validation_result), do: assert([] == validation_result, inspect validation_result)
+  defp assert_ok(validation_result),
+    do: assert([] == validation_result, inspect(validation_result))
+
   defp assert_invalid(validation_result, case_desc, thing) do
     assert([] != validation_result, "#{case_desc}: #{thing}")
   end
 
   defp valid_thing(json_thing, thing_type) do
     json_thing
-    |> Poison.decode!
+    |> Poison.decode!()
     |> JsonSchema.validate(thing_type)
     |> assert_ok
   end
 
   defp invalid_thing(json_thing, thing_type, case_desc) do
     json_thing
-    |> Poison.decode!
+    |> Poison.decode!()
     |> JsonSchema.validate(thing_type)
     |> assert_invalid(case_desc, json_thing)
   end
@@ -38,7 +40,9 @@ defmodule Ask.StepsValidatorTest do
   defp invalid_section(json, case_desc), do: invalid_thing(json, :section, case_desc)
 
   defp valid_localized_prompt(json), do: valid_thing(json, :localized_prompt)
-  defp invalid_localized_prompt(json, case_desc), do: invalid_thing(json, :localized_prompt, case_desc)
+
+  defp invalid_localized_prompt(json, case_desc),
+    do: invalid_thing(json, :localized_prompt, case_desc)
 
   defp valid_prompt(json), do: valid_thing(json, :prompt)
   defp invalid_prompt(json, case_desc), do: invalid_thing(json, :prompt, case_desc)
@@ -283,7 +287,6 @@ defmodule Ask.StepsValidatorTest do
       }]
     })
     |> invalid_section("Section must have valid steps")
-
   end
 
   test "localized prompt" do
@@ -306,7 +309,7 @@ defmodule Ask.StepsValidatorTest do
       "fr": {}
     }) |> valid_localized_prompt
 
-     ~s({}) |> valid_localized_prompt
+    ~s({}) |> valid_localized_prompt
   end
 
   test "prompt" do
@@ -334,6 +337,7 @@ defmodule Ask.StepsValidatorTest do
     |> valid_prompt
 
     ~s({"mobileweb": {}}) |> invalid_prompt("Prompt mobile-web must be a string")
+
     ~s({
       "sms": "Do you smoke? Reply YES or NO",
       "ivr": {

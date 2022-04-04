@@ -1,24 +1,34 @@
 defmodule Ask.ProjectView do
   use Ask.Web, :view
 
-  def render("index.json", %{projects: projects, running_surveys_by_project: running_surveys_by_project, levels_by_project: levels_by_project}) do
-    rendered = projects |> Enum.map(fn(project) ->
-      level = levels_by_project |> Map.get(project.id, "reader")
-      one = render_one(project)
-      one
-      |> Map.put(:running_surveys, Map.get(running_surveys_by_project, project.id, 0))
-      |> Map.put(:read_only, level == "reader" || project.archived)
-      |> Map.put(:owner, level == "owner")
-      |> Map.put(:level, level)
-    end)
+  def render("index.json", %{
+        projects: projects,
+        running_surveys_by_project: running_surveys_by_project,
+        levels_by_project: levels_by_project
+      }) do
+    rendered =
+      projects
+      |> Enum.map(fn project ->
+        level = levels_by_project |> Map.get(project.id, "reader")
+        one = render_one(project)
+
+        one
+        |> Map.put(:running_surveys, Map.get(running_surveys_by_project, project.id, 0))
+        |> Map.put(:read_only, level == "reader" || project.archived)
+        |> Map.put(:owner, level == "owner")
+        |> Map.put(:level, level)
+      end)
+
     %{data: rendered}
   end
 
   def render("show.json", %{project: project, read_only: read_only, owner: owner, level: level}) do
-    rendered = render_one(project, Ask.ProjectView, "project.json")
+    rendered =
+      render_one(project, Ask.ProjectView, "project.json")
       |> Map.put(:read_only, read_only)
       |> Map.put(:owner, owner)
       |> Map.put(:level, level)
+
     %{data: rendered}
   end
 
@@ -27,11 +37,17 @@ defmodule Ask.ProjectView do
   end
 
   def render("collaborators.json", %{collaborators: collaborators}) do
-    %{data: %{collaborators: render_many(collaborators, Ask.ProjectView, "collaborator.json", as: :collaborator)}}
+    %{
+      data: %{
+        collaborators:
+          render_many(collaborators, Ask.ProjectView, "collaborator.json", as: :collaborator)
+      }
+    }
   end
 
   def render("collaborator.json", %{collaborator: collaborator}) do
-    %{email: collaborator.email,
+    %{
+      email: collaborator.email,
       role: collaborator.level,
       invited: collaborator.invited,
       code: collaborator.code
@@ -39,7 +55,12 @@ defmodule Ask.ProjectView do
   end
 
   def render("activities.json", %{activities: activities, activities_count: activities_count}) do
-    %{data: %{activities: render_many(activities, Ask.ProjectView, "activity.json", as: :activity)}, meta: %{count: activities_count}}
+    %{
+      data: %{
+        activities: render_many(activities, Ask.ProjectView, "activity.json", as: :activity)
+      },
+      meta: %{count: activities_count}
+    }
   end
 
   def render("activity.json", %{activity: %{user: %{name: name, email: email}} = activity}) do
@@ -66,7 +87,8 @@ defmodule Ask.ProjectView do
   end
 
   defp render_one(project) do
-    %{id: project.id,
+    %{
+      id: project.id,
       name: project.name,
       updated_at: project.updated_at,
       colour_scheme: project.colour_scheme

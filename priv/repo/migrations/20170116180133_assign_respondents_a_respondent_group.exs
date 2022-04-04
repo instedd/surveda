@@ -21,20 +21,27 @@ defmodule Ask.Repo.Migrations.AssignRespondentsARespondentGroup do
 
   def change do
     # Traverse all surveys
-    Repo.query!("select id from surveys").rows |> Enum.each(fn [survey_id] ->
+    Repo.query!("select id from surveys").rows
+    |> Enum.each(fn [survey_id] ->
       # Check if the survey has respondents
       respondents_count =
-        Repo.query!("select count(*) from respondents where survey_id = #{survey_id}").rows |> hd |> hd
+        Repo.query!("select count(*) from respondents where survey_id = #{survey_id}").rows
+        |> hd
+        |> hd
 
       if respondents_count > 0 do
         # Create a new respondent group for this survey
-        group = %RespondentGroup{
-          name: "Group",
-          survey_id: survey_id,
-        } |> Repo.insert!
+        group =
+          %RespondentGroup{
+            name: "Group",
+            survey_id: survey_id
+          }
+          |> Repo.insert!()
 
         # Assign the group to all respondents in the survey
-        Repo.query!("update respondents set respondent_group_id = #{group.id} where survey_id = #{survey_id}")
+        Repo.query!(
+          "update respondents set respondent_group_id = #{group.id} where survey_id = #{survey_id}"
+        )
       end
     end)
   end

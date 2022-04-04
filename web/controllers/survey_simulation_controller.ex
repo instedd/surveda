@@ -7,52 +7,62 @@ defmodule Ask.SurveySimulationController do
   plug :put_view, Ask.SurveyView
 
   def simulate(conn, %{
-    "project_id" => project_id,
-    "questionnaire_id" => questionnaire_id,
-    "phone_number" => phone_number,
-    "mode" => mode,
-    "channel_id" => channel_id
-  }) do
-    project = conn
-    |> load_project_for_change(project_id)
+        "project_id" => project_id,
+        "questionnaire_id" => questionnaire_id,
+        "phone_number" => phone_number,
+        "mode" => mode,
+        "channel_id" => channel_id
+      }) do
+    project =
+      conn
+      |> load_project_for_change(project_id)
 
-    questionnaire = Repo.one!(from q in Questionnaire,
-      where: q.project_id == ^project.id,
-      where: q.id == ^questionnaire_id)
+    questionnaire =
+      Repo.one!(
+        from q in Questionnaire,
+          where: q.project_id == ^project.id,
+          where: q.id == ^questionnaire_id
+      )
 
     channel = Repo.get!(Channel, channel_id)
 
-    survey = %Survey{
-      simulation: true,
-      project_id: project.id,
-      name: questionnaire.name,
-      mode: [[mode]],
-      state: "ready",
-      cutoff: 1,
-      schedule: Ask.Schedule.always()}
-    |> Ecto.Changeset.change
-    |> Repo.insert!
+    survey =
+      %Survey{
+        simulation: true,
+        project_id: project.id,
+        name: questionnaire.name,
+        mode: [[mode]],
+        state: "ready",
+        cutoff: 1,
+        schedule: Ask.Schedule.always()
+      }
+      |> Ecto.Changeset.change()
+      |> Repo.insert!()
 
-    respondent_group = %RespondentGroup{
-      survey_id: survey.id,
-      name: "default",
-      sample: [phone_number],
-      respondents_count: 1}
-    |> Ecto.Changeset.change
-    |> Repo.insert!
+    respondent_group =
+      %RespondentGroup{
+        survey_id: survey.id,
+        name: "default",
+        sample: [phone_number],
+        respondents_count: 1
+      }
+      |> Ecto.Changeset.change()
+      |> Repo.insert!()
 
     %Ask.SurveyQuestionnaire{
       survey_id: survey.id,
-      questionnaire_id: String.to_integer(questionnaire_id)}
-    |> Ecto.Changeset.change
-    |> Repo.insert!
+      questionnaire_id: String.to_integer(questionnaire_id)
+    }
+    |> Ecto.Changeset.change()
+    |> Repo.insert!()
 
     %Ask.RespondentGroupChannel{
       respondent_group_id: respondent_group.id,
       channel_id: channel.id,
-      mode: mode}
-    |> Ecto.Changeset.change
-    |> Repo.insert!
+      mode: mode
+    }
+    |> Ecto.Changeset.change()
+    |> Repo.insert!()
 
     %Respondent{
       survey_id: survey.id,
@@ -60,32 +70,39 @@ defmodule Ask.SurveySimulationController do
       phone_number: phone_number,
       sanitized_phone_number: phone_number,
       canonical_phone_number: phone_number,
-      hashed_number: phone_number}
-    |> Ecto.Changeset.change
-    |> Repo.insert!
+      hashed_number: phone_number
+    }
+    |> Ecto.Changeset.change()
+    |> Repo.insert!()
 
     Ask.SurveyController.launch(conn, %{
       "project_id" => project.id,
-      "survey_id" => survey.id,
+      "survey_id" => survey.id
     })
   end
 
   def status(conn, %{"project_id" => project_id, "survey_id" => survey_id}) do
-    survey = conn
-    |> load_project(project_id)
-    |> load_survey_simulation(survey_id)
+    survey =
+      conn
+      |> load_project(project_id)
+      |> load_survey_simulation(survey_id)
 
     # The simulation has only one respondent
-    respondent = Repo.one!(from r in Respondent,
-      where: r.survey_id == ^survey.id)
+    respondent =
+      Repo.one!(
+        from r in Respondent,
+          where: r.survey_id == ^survey.id
+      )
 
-    responses = respondent
-    |> assoc(:responses)
-    |> Repo.all
-    |> Enum.map(fn response -> {response.field_name, response.value} end)
-    |> Enum.into(%{})
+    responses =
+      respondent
+      |> assoc(:responses)
+      |> Repo.all()
+      |> Enum.map(fn response -> {response.field_name, response.value} end)
+      |> Enum.into(%{})
 
     session = respondent.session
+
     session =
       if session do
         Session.load(session)
@@ -112,7 +129,7 @@ defmodule Ask.SurveySimulationController do
         "disposition" => respondent.disposition,
         "step_id" => step_id,
         "step_index" => step_index,
-        "responses" => responses,
+        "responses" => responses
       }
     })
   end
@@ -121,9 +138,10 @@ defmodule Ask.SurveySimulationController do
     project = conn |> load_project(project_id)
     survey = load_survey_simulation(project, survey_id)
 
-    questionnaire = survey
-    |> assoc(:questionnaires)
-    |> Repo.one!
+    questionnaire =
+      survey
+      |> assoc(:questionnaires)
+      |> Repo.one!()
 
     Repo.delete!(survey)
     Project.touch!(project)
@@ -136,33 +154,38 @@ defmodule Ask.SurveySimulationController do
   end
 
   def initial_state(conn, %{
-    "project_id" => project_id,
-    "survey_id" => survey_id,
-    "mode" => mode
-  }) do
-    survey = conn
-    |> load_project(project_id)
-    |> load_survey_simulation(survey_id)
+        "project_id" => project_id,
+        "survey_id" => survey_id,
+        "mode" => mode
+      }) do
+    survey =
+      conn
+      |> load_project(project_id)
+      |> load_survey_simulation(survey_id)
 
     render_initial_state(conn, survey.id, mode)
   end
 
   defp render_initial_state(conn, survey_id, "mobileweb" = _mode) do
     # The simulation has only one respondent
-    respondent = Repo.one!(from r in Respondent,
-    where: r.survey_id == ^survey_id)
+    respondent =
+      Repo.one!(
+        from r in Respondent,
+          where: r.survey_id == ^survey_id
+      )
 
-    response = if (respondent.session) do
-      session = Session.load_respondent_session(respondent, true)
+    response =
+      if respondent.session do
+        session = Session.load_respondent_session(respondent, true)
 
-      json(conn, %{
-        "data" => %{
-          "mobile_contact_messages" => Session.mobile_contact_message(session)
-        }
-      })
-    else
-      send_resp(conn, :not_found, "")
-    end
+        json(conn, %{
+          "data" => %{
+            "mobile_contact_messages" => Session.mobile_contact_message(session)
+          }
+        })
+      else
+        send_resp(conn, :not_found, "")
+      end
 
     response
   end

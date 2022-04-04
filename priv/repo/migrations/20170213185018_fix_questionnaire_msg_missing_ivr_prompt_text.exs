@@ -18,13 +18,15 @@ defmodule Ask.Repo.Migrations.FixQuestionnaireMsgMissingIvrPromptText do
   end
 
   def up do
-    Questionnaire |> Repo.all |> Enum.each(fn questionnaire ->
+    Questionnaire
+    |> Repo.all()
+    |> Enum.each(fn questionnaire ->
       questionnaire
       |> Questionnaire.changeset(%{
-          quota_completed_msg: fix_prompt(questionnaire.quota_completed_msg),
-          error_msg: fix_prompt(questionnaire.error_msg)
-        })
-      |> Repo.update!
+        quota_completed_msg: fix_prompt(questionnaire.quota_completed_msg),
+        error_msg: fix_prompt(questionnaire.error_msg)
+      })
+      |> Repo.update!()
     end)
   end
 
@@ -35,9 +37,9 @@ defmodule Ask.Repo.Migrations.FixQuestionnaireMsgMissingIvrPromptText do
 
   defp fix_prompt(msg) do
     msg
-    |> Map.to_list
+    |> Map.to_list()
     |> Enum.map(fn {lang, prompt} -> {lang, prompt |> fix_lang_prompt} end)
-    |> Map.new
+    |> Map.new()
   end
 
   defp fix_lang_prompt(prompt = %{"ivr" => %{"text" => _}}) do

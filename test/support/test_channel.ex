@@ -16,27 +16,33 @@ defmodule Ask.TestChannel do
 
   def new(channel) do
     %Ask.TestChannel{
-      pid: channel.settings["pid"] |> Base.decode64! |> :erlang.binary_to_term,
-      has_queued_message: channel.settings["has_queued_message"] |> String.to_atom,
-      delivery: channel.settings["delivery"] |> String.to_atom,
-      message_expired: channel.settings["message_expired"] |> String.to_atom,
+      pid: channel.settings["pid"] |> Base.decode64!() |> :erlang.binary_to_term(),
+      has_queued_message: channel.settings["has_queued_message"] |> String.to_atom(),
+      delivery: channel.settings["delivery"] |> String.to_atom(),
+      message_expired: channel.settings["message_expired"] |> String.to_atom(),
       test_id: channel.settings["test_id"],
-      status: case channel.settings["status"] do
-        "up" -> :up
-        "down" -> {:down, []}
-        "error" -> {:error, "some code"}
-        _ -> :up
-      end
+      status:
+        case channel.settings["status"] do
+          "up" -> :up
+          "down" -> {:down, []}
+          "error" -> {:error, "some code"}
+          _ -> :up
+        end
     }
   end
 
   def new(has_queued_message, delivery) do
-    %Ask.TestChannel{pid: self(), has_queued_message: has_queued_message, delivery: delivery, status: :up}
+    %Ask.TestChannel{
+      pid: self(),
+      has_queued_message: has_queued_message,
+      delivery: delivery,
+      status: :up
+    }
   end
 
   def settings(channel, test_id \\ nil, status \\ nil) do
     %{
-      "pid" => channel.pid |> :erlang.term_to_binary |> Base.encode64,
+      "pid" => channel.pid |> :erlang.term_to_binary() |> Base.encode64(),
       "has_queued_message" => Atom.to_string(channel.has_queued_message),
       "delivery" => Atom.to_string(channel.delivery),
       "message_expired" => Atom.to_string(channel.message_expired),
@@ -55,17 +61,30 @@ defmodule Ask.TestChannel do
 
   def sync_channels(user_id, base_url) do
     user = Ask.User |> Ask.Repo.get(user_id)
+
     user
     |> Ecto.build_assoc(:channels)
-    |> Ask.Channel.changeset(%{name: "test", provider: "test", base_url: base_url, type: "ivr", settings: %{}})
-    |> Ask.Repo.insert!
+    |> Ask.Channel.changeset(%{
+      name: "test",
+      provider: "test",
+      base_url: base_url,
+      type: "ivr",
+      settings: %{}
+    })
+    |> Ask.Repo.insert!()
   end
 
   def create_channel(user, base_url, api_channel) do
     user
     |> Ecto.build_assoc(:channels)
-    |> Ask.Channel.changeset(%{name: "test", provider: "test", base_url: base_url, type: "ivr", settings: api_channel})
-    |> Ask.Repo.insert!
+    |> Ask.Channel.changeset(%{
+      name: "test",
+      provider: "test",
+      base_url: base_url,
+      type: "ivr",
+      settings: api_channel
+    })
+    |> Ask.Repo.insert!()
   end
 
   def callback(_conn, _params) do
@@ -73,25 +92,25 @@ defmodule Ask.TestChannel do
 
   defp random_access_token do
     %OAuth2.AccessToken{
-      access_token: :crypto.strong_rand_bytes(27) |> Base.encode64,
-      expires_at: OAuth2.Util.unix_now + 3600
+      access_token: :crypto.strong_rand_bytes(27) |> Base.encode64(),
+      expires_at: OAuth2.Util.unix_now() + 3600
     }
   end
 end
 
 defimpl Ask.Runtime.Channel, for: Ask.TestChannel do
   def prepare(channel) do
-    send channel.pid, [:prepare, channel]
+    send(channel.pid, [:prepare, channel])
     :ok
   end
 
   def setup(channel, respondent, token, _not_before, _not_after) do
-    send channel.pid, [:setup, channel, respondent, token]
+    send(channel.pid, [:setup, channel, respondent, token])
     {:ok, 0}
   end
 
   def ask(channel, respondent, token, prompts) do
-    send channel.pid, [:ask, channel, respondent, token, prompts]
+    send(channel.pid, [:ask, channel, respondent, token, prompts])
     respondent
   end
 
@@ -102,12 +121,12 @@ defimpl Ask.Runtime.Channel, for: Ask.TestChannel do
   def message_expired?(%{message_expired: message_expired}, _), do: message_expired
 
   def cancel_message(channel, channel_state) do
-    send channel.pid, [:cancel_message, channel, channel_state]
+    send(channel.pid, [:cancel_message, channel, channel_state])
     :ok
   end
 
   def check_status(channel) do
-    send channel.pid, [:check_status, channel]
+    send(channel.pid, [:check_status, channel])
     channel.status
   end
 end

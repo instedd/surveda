@@ -25,10 +25,10 @@ defmodule Ask.FlowTest do
       "sms" => "1 for English, 2 for Spanish",
       "ivr" => %{
         "text" => "1 para ingles, 2 para español",
-        "audioSource" => "tts",
+        "audioSource" => "tts"
       }
     },
-    "language_choices" => ["en", "es"],
+    "language_choices" => ["en", "es"]
   }
 
   test "first step of empty quiz" do
@@ -40,7 +40,8 @@ defmodule Ask.FlowTest do
   test "first step (sms mode)" do
     step = Flow.start(@quiz, "sms") |> test_step("sms")
     assert {:ok, %Flow{}, reply} = step
-    assert Reply.num_digits(reply) == nil # because of sms mode
+    # because of sms mode
+    assert Reply.num_digits(reply) == nil
     assert ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO") = reply
   end
 
@@ -48,24 +49,34 @@ defmodule Ask.FlowTest do
     step = start_ivr()
     assert {:ok, %Flow{}, reply} = step
     assert Reply.num_digits(reply) == 1
-    assert ReplyHelper.simple("Do you smoke?", %{"text" => "Do you smoke? Press 8 for YES, 9 for NO", "audio_source" => "tts"}) = reply
+
+    assert ReplyHelper.simple("Do you smoke?", %{
+             "text" => "Do you smoke? Press 8 for YES, 9 for NO",
+             "audio_source" => "tts"
+           }) = reply
   end
 
   test "first step (ivr mode) with multiple choice for num digits, different lengths" do
     steps = [
       multiple_choice_step(
-        id: Ecto.UUID.generate,
+        id: Ecto.UUID.generate(),
         title: "Do you smoke?",
-        prompt: prompt(
-          sms: sms_prompt("Do you smoke? Reply 1 for YES, 2 for NO"),
-          ivr: tts_prompt("Do you smoke? Press 8 for YES, 9 for NO")
-        ),
+        prompt:
+          prompt(
+            sms: sms_prompt("Do you smoke? Reply 1 for YES, 2 for NO"),
+            ivr: tts_prompt("Do you smoke? Press 8 for YES, 9 for NO")
+          ),
         store: "Smokes",
         choices: [
           choice(value: "Yes", responses: responses(sms: ["Yes", "Y", "1"], ivr: ["8, 123, 45"])),
-          choice(value: "No", responses: responses(sms: ["No", "N", "2"], ivr: ["9, 67, #, 6789"]))
+          choice(
+            value: "No",
+            responses: responses(sms: ["No", "N", "2"], ivr: ["9, 67, #, 6789"])
+          )
         ]
-      )]
+      )
+    ]
+
     quiz = build(:questionnaire, steps: steps)
     step = start_ivr(quiz)
     assert {:ok, %Flow{}, reply} = step
@@ -75,18 +86,21 @@ defmodule Ask.FlowTest do
   test "first step (ivr mode) with multiple choice for num digits, all same length" do
     steps = [
       multiple_choice_step(
-        id: Ecto.UUID.generate,
+        id: Ecto.UUID.generate(),
         title: "Do you smoke?",
-        prompt: prompt(
-          sms: sms_prompt("Do you smoke? Reply 1 for YES, 2 for NO"),
-          ivr: tts_prompt("Do you smoke? Press 8 for YES, 9 for NO")
-        ),
+        prompt:
+          prompt(
+            sms: sms_prompt("Do you smoke? Reply 1 for YES, 2 for NO"),
+            ivr: tts_prompt("Do you smoke? Press 8 for YES, 9 for NO")
+          ),
         store: "Smokes",
         choices: [
           choice(value: "Yes", responses: responses(sms: ["Yes", "Y", "1"], ivr: ["8, 7, 6"])),
           choice(value: "No", responses: responses(sms: ["No", "N", "2"], ivr: ["9, 1, #, 2"]))
         ]
-      )]
+      )
+    ]
+
     quiz = build(:questionnaire, steps: steps)
     step = start_ivr(quiz)
     assert {:ok, %Flow{}, reply} = step
@@ -96,7 +110,7 @@ defmodule Ask.FlowTest do
   test "first step (ivr mode) with language selection for num digits" do
     steps = [
       language_selection_step(
-        id: Ecto.UUID.generate,
+        id: Ecto.UUID.generate(),
         title: "Do you smoke?",
         prompt: %{
           "sms" => sms_prompt("Do you smoke? Reply 1 for YES, 2 for NO"),
@@ -104,7 +118,9 @@ defmodule Ask.FlowTest do
         },
         store: "Smokes",
         choices: ["en", "es"]
-      )]
+      )
+    ]
+
     quiz = build(:questionnaire, steps: steps)
     step = start_ivr(quiz)
     assert {:ok, %Flow{}, reply} = step
@@ -114,7 +130,7 @@ defmodule Ask.FlowTest do
   test "first step (ivr mode) with language selection for num digits, too many languages" do
     steps = [
       language_selection_step(
-        id: Ecto.UUID.generate,
+        id: Ecto.UUID.generate(),
         title: "Do you smoke?",
         prompt: %{
           "sms" => sms_prompt("Do you smoke? Reply 1 for YES, 2 for NO"),
@@ -122,7 +138,9 @@ defmodule Ask.FlowTest do
         },
         store: "Smokes",
         choices: ["en", "es", "a", "b", "c", "d", "e", "f", "g", "h"]
-      )]
+      )
+    ]
+
     quiz = build(:questionnaire, steps: steps)
     step = start_ivr(quiz)
     assert {:ok, %Flow{}, reply} = step
@@ -132,17 +150,20 @@ defmodule Ask.FlowTest do
   test "first step (ivr mode) with numeric, no min/max, for num digits" do
     steps = [
       numeric_step(
-        id: Ecto.UUID.generate,
+        id: Ecto.UUID.generate(),
         title: "Which is the second perfect number?",
-        prompt: prompt(
-          sms: sms_prompt("Which is the second perfect number??"),
-          ivr: tts_prompt("Which is the second perfect number")
+        prompt:
+          prompt(
+            sms: sms_prompt("Which is the second perfect number??"),
+            ivr: tts_prompt("Which is the second perfect number")
           ),
         store: "Perfect Number",
         skip_logic: default_numeric_skip_logic(),
         alphabetical_answers: false,
         refusal: nil
-      )]
+      )
+    ]
+
     quiz = build(:questionnaire, steps: steps)
     step = start_ivr(quiz)
     assert {:ok, %Flow{}, reply} = step
@@ -152,17 +173,26 @@ defmodule Ask.FlowTest do
   test "first step (ivr mode) with numeric, with max and min, for num digits, different lengths" do
     steps = [
       numeric_step(
-        id: Ecto.UUID.generate,
+        id: Ecto.UUID.generate(),
         title: "Which is the second perfect number?",
-        prompt: prompt(
-          sms: sms_prompt("Which is the second perfect number??"),
-          ivr: tts_prompt("Which is the second perfect number")
+        prompt:
+          prompt(
+            sms: sms_prompt("Which is the second perfect number??"),
+            ivr: tts_prompt("Which is the second perfect number")
           ),
         store: "Perfect Number",
-        skip_logic: numeric_skip_logic(min_value: 0, max_value: 12345, ranges_delimiters: "25,75", ranges: []),
+        skip_logic:
+          numeric_skip_logic(
+            min_value: 0,
+            max_value: 12345,
+            ranges_delimiters: "25,75",
+            ranges: []
+          ),
         alphabetical_answers: false,
         refusal: nil
-      )]
+      )
+    ]
+
     quiz = build(:questionnaire, steps: steps)
     step = start_ivr(quiz)
     assert {:ok, %Flow{}, reply} = step
@@ -172,17 +202,26 @@ defmodule Ask.FlowTest do
   test "first step (ivr mode) with numeric, with max and min, for num digits, same lengths" do
     steps = [
       numeric_step(
-        id: Ecto.UUID.generate,
+        id: Ecto.UUID.generate(),
         title: "Which is the second perfect number?",
-        prompt: prompt(
-          sms: sms_prompt("Which is the second perfect number??"),
-          ivr: tts_prompt("Which is the second perfect number")
+        prompt:
+          prompt(
+            sms: sms_prompt("Which is the second perfect number??"),
+            ivr: tts_prompt("Which is the second perfect number")
           ),
         store: "Perfect Number",
-        skip_logic: numeric_skip_logic(min_value: 12345, max_value: 56789, ranges_delimiters: "25,75", ranges: []),
+        skip_logic:
+          numeric_skip_logic(
+            min_value: 12345,
+            max_value: 56789,
+            ranges_delimiters: "25,75",
+            ranges: []
+          ),
         alphabetical_answers: false,
         refusal: nil
-      )]
+      )
+    ]
+
     quiz = build(:questionnaire, steps: steps)
     step = start_ivr(quiz)
     assert {:ok, %Flow{}, reply} = step
@@ -192,14 +231,21 @@ defmodule Ask.FlowTest do
   test "first step (ivr mode) with numeric, with max and min, for num digits, same lengths but refusal different length" do
     steps = [
       numeric_step(
-        id: Ecto.UUID.generate,
+        id: Ecto.UUID.generate(),
         title: "Which is the second perfect number?",
-        prompt: prompt(
-          sms: sms_prompt("Which is the second perfect number??"),
-          ivr: tts_prompt("Which is the second perfect number")
+        prompt:
+          prompt(
+            sms: sms_prompt("Which is the second perfect number??"),
+            ivr: tts_prompt("Which is the second perfect number")
           ),
         store: "Perfect Number",
-        skip_logic: numeric_skip_logic(min_value: 12345, max_value: 56789, ranges_delimiters: "25,75", ranges: []),
+        skip_logic:
+          numeric_skip_logic(
+            min_value: 12345,
+            max_value: 56789,
+            ranges_delimiters: "25,75",
+            ranges: []
+          ),
         alphabetical_answers: false,
         refusal: %{
           "enabled" => true,
@@ -207,7 +253,9 @@ defmodule Ask.FlowTest do
             "ivr" => ["#", "12"]
           }
         }
-      )]
+      )
+    ]
+
     quiz = build(:questionnaire, steps: steps)
     step = start_ivr(quiz)
     assert {:ok, %Flow{}, reply} = step
@@ -217,14 +265,21 @@ defmodule Ask.FlowTest do
   test "first step (ivr mode) for num digits, with disabled refusal" do
     steps = [
       numeric_step(
-        id: Ecto.UUID.generate,
+        id: Ecto.UUID.generate(),
         title: "Which is the second perfect number?",
-        prompt: prompt(
-          sms: sms_prompt("Which is the second perfect number??"),
-          ivr: tts_prompt("Which is the second perfect number")
+        prompt:
+          prompt(
+            sms: sms_prompt("Which is the second perfect number??"),
+            ivr: tts_prompt("Which is the second perfect number")
           ),
         store: "Perfect Number",
-        skip_logic: numeric_skip_logic(min_value: 12345, max_value: 56789, ranges_delimiters: "25,75", ranges: []),
+        skip_logic:
+          numeric_skip_logic(
+            min_value: 12345,
+            max_value: 56789,
+            ranges_delimiters: "25,75",
+            ranges: []
+          ),
         alphabetical_answers: false,
         refusal: %{
           "enabled" => false,
@@ -232,7 +287,9 @@ defmodule Ask.FlowTest do
             "ivr" => ["#", "12"]
           }
         }
-      )]
+      )
+    ]
+
     quiz = build(:questionnaire, steps: steps)
     step = start_ivr(quiz)
     assert {:ok, %Flow{}, reply} = step
@@ -241,26 +298,43 @@ defmodule Ask.FlowTest do
 
   test "retry step" do
     {:ok, flow, _prompts} = start_sms()
-    {:ok, %Flow{}, ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO")} = flow |> Flow.retry(@sms_visitor, "any_disposition")
+
+    {:ok, %Flow{}, ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO")} =
+      flow |> Flow.retry(@sms_visitor, "any_disposition")
   end
 
   test "replies when never started" do
     # this can happen on a fallback channel
-    step = Flow.start(@quiz, "sms")
-    |> reply_sms("Y")
-    assert {:ok, %Flow{}, ReplyHelper.simple("Do you exercise", "Do you exercise? Reply 1 for YES, 2 for NO", %{"Smokes" => "Yes"})} = step
+    step =
+      Flow.start(@quiz, "sms")
+      |> reply_sms("Y")
+
+    assert {:ok, %Flow{},
+            ReplyHelper.simple("Do you exercise", "Do you exercise? Reply 1 for YES, 2 for NO", %{
+              "Smokes" => "Yes"
+            })} = step
   end
 
   test "next step with store" do
     {:ok, flow, _} = start_sms()
     step = flow |> reply_sms("Y")
-    assert {:ok, %Flow{}, ReplyHelper.simple("Do you exercise", "Do you exercise? Reply 1 for YES, 2 for NO", %{"Smokes" => "Yes"})} = step
+
+    assert {:ok, %Flow{},
+            ReplyHelper.simple("Do you exercise", "Do you exercise? Reply 1 for YES, 2 for NO", %{
+              "Smokes" => "Yes"
+            })} = step
   end
 
   test "next step (ivr mode)" do
     {:ok, flow, _} = start_ivr()
     step = flow |> reply_ivr("8")
-    assert {:ok, %Flow{}, ReplyHelper.simple("Do you exercise", %{"text" => "Do you exercise? Press 1 for YES, 2 for NO", "audio_source" => "tts"}, %{"Smokes" => "Yes"})} = step
+
+    assert {:ok, %Flow{},
+            ReplyHelper.simple(
+              "Do you exercise",
+              %{"text" => "Do you exercise? Press 1 for YES, 2 for NO", "audio_source" => "tts"},
+              %{"Smokes" => "Yes"}
+            )} = step
   end
 
   test "next step with STOP when started" do
@@ -281,9 +355,11 @@ defmodule Ask.FlowTest do
     step = test_reply(flow, "sms", "x")
     assert {:ok, %Flow{}, reply} = step
     prompts = Reply.prompts(reply)
+
     assert prompts == [
-      "You have entered an invalid answer",
-      "Do you smoke? Reply 1 for YES, 2 for NO"]
+             "You have entered an invalid answer",
+             "Do you smoke? Reply 1 for YES, 2 for NO"
+           ]
   end
 
   test "retry step (ivr mode)" do
@@ -291,9 +367,11 @@ defmodule Ask.FlowTest do
     step = test_reply(flow, "ivr", "0")
     assert {:ok, %Flow{}, reply} = step
     prompts = Reply.prompts(reply)
+
     assert prompts == [
-      %{"text" => "You have entered an invalid answer (ivr)", "audio_source" => "tts"},
-      %{"text" => "Do you smoke? Press 8 for YES, 9 for NO", "audio_source" => "tts"}]
+             %{"text" => "You have entered an invalid answer (ivr)", "audio_source" => "tts"},
+             %{"text" => "Do you smoke? Press 8 for YES, 9 for NO", "audio_source" => "tts"}
+           ]
   end
 
   test "retry step up to 3 times (sms mode)" do
@@ -303,20 +381,22 @@ defmodule Ask.FlowTest do
     prompts = Reply.prompts(reply)
 
     assert flow.retries == 1
+
     assert prompts == [
-      "You have entered an invalid answer",
-      "Do you smoke? Reply 1 for YES, 2 for NO"
-    ]
+             "You have entered an invalid answer",
+             "Do you smoke? Reply 1 for YES, 2 for NO"
+           ]
 
     step = flow |> reply_sms("x")
     {:ok, flow, reply} = step
     prompts = Reply.prompts(reply)
 
     assert flow.retries == 2
+
     assert prompts == [
-      "You have entered an invalid answer",
-      "Do you smoke? Reply 1 for YES, 2 for NO"
-    ]
+             "You have entered an invalid answer",
+             "Do you smoke? Reply 1 for YES, 2 for NO"
+           ]
 
     step = flow |> reply_sms("x")
 
@@ -331,10 +411,11 @@ defmodule Ask.FlowTest do
     prompts = Reply.prompts(reply)
 
     assert flow.retries == 1
+
     assert prompts == [
-      %{"text" => "You have entered an invalid answer (ivr)", "audio_source" => "tts"},
-      %{"text" => "Do you smoke? Press 8 for YES, 9 for NO", "audio_source" => "tts"}
-    ]
+             %{"text" => "You have entered an invalid answer (ivr)", "audio_source" => "tts"},
+             %{"text" => "Do you smoke? Press 8 for YES, 9 for NO", "audio_source" => "tts"}
+           ]
 
     step = flow |> reply_ivr("8")
 
@@ -344,7 +425,10 @@ defmodule Ask.FlowTest do
 
     assert flow.retries == 0
     assert stores == %{"Smokes" => "Yes"}
-    assert prompts == [%{"text" => "Do you exercise? Press 1 for YES, 2 for NO", "audio_source" => "tts"}]
+
+    assert prompts == [
+             %{"text" => "Do you exercise? Press 1 for YES, 2 for NO", "audio_source" => "tts"}
+           ]
 
     step = flow |> reply_ivr("8")
 
@@ -352,10 +436,11 @@ defmodule Ask.FlowTest do
     prompts = Reply.prompts(reply)
 
     assert flow.retries == 1
+
     assert prompts == [
-      %{"text" => "You have entered an invalid answer (ivr)", "audio_source" => "tts"},
-      %{"text" => "Do you exercise? Press 1 for YES, 2 for NO", "audio_source" => "tts"}
-    ]
+             %{"text" => "You have entered an invalid answer (ivr)", "audio_source" => "tts"},
+             %{"text" => "Do you exercise? Press 1 for YES, 2 for NO", "audio_source" => "tts"}
+           ]
 
     step = flow |> reply_ivr("8")
 
@@ -363,10 +448,11 @@ defmodule Ask.FlowTest do
     prompts = Reply.prompts(reply)
 
     assert flow.retries == 2
+
     assert prompts == [
-      %{"text" => "You have entered an invalid answer (ivr)", "audio_source" => "tts"},
-      %{"text" => "Do you exercise? Press 1 for YES, 2 for NO", "audio_source" => "tts"}
-    ]
+             %{"text" => "You have entered an invalid answer (ivr)", "audio_source" => "tts"},
+             %{"text" => "Do you exercise? Press 1 for YES, 2 for NO", "audio_source" => "tts"}
+           ]
 
     step = flow |> reply_ivr("8")
 
@@ -379,13 +465,21 @@ defmodule Ask.FlowTest do
 
     assert {:ok, flow, reply} = step
     assert flow.retries == 1
-    assert ReplyHelper.simple("Do you smoke?", %{"text" => "Do you smoke? Press 8 for YES, 9 for NO", "audio_source" => "tts"}) = reply
+
+    assert ReplyHelper.simple("Do you smoke?", %{
+             "text" => "Do you smoke? Press 8 for YES, 9 for NO",
+             "audio_source" => "tts"
+           }) = reply
 
     step = flow |> reply_ivr(nil)
 
     assert {:ok, flow, reply} = step
     assert flow.retries == 2
-    assert ReplyHelper.simple("Do you smoke?", %{"text" => "Do you smoke? Press 8 for YES, 9 for NO", "audio_source" => "tts"}) = reply
+
+    assert ReplyHelper.simple("Do you smoke?", %{
+             "text" => "Do you smoke? Press 8 for YES, 9 for NO",
+             "audio_source" => "tts"
+           }) = reply
 
     step = flow |> reply_ivr(nil)
 
@@ -396,13 +490,21 @@ defmodule Ask.FlowTest do
     {:ok, flow, _} = start_ivr()
     step = flow |> reply_ivr(nil)
 
-    assert {:ok, %Flow{retries: 1}, ReplyHelper.simple("Do you smoke?", %{"text" => "Do you smoke? Press 8 for YES, 9 for NO", "audio_source" => "tts"})} = step
+    assert {:ok, %Flow{retries: 1},
+            ReplyHelper.simple("Do you smoke?", %{
+              "text" => "Do you smoke? Press 8 for YES, 9 for NO",
+              "audio_source" => "tts"
+            })} = step
   end
 
   test "next step with store, case insensitive, strip space" do
     {:ok, flow, _} = start_sms()
     step = flow |> reply_sms(" y ")
-    assert {:ok, %Flow{}, ReplyHelper.simple("Do you exercise", "Do you exercise? Reply 1 for YES, 2 for NO", %{"Smokes" => "Yes"})} = step
+
+    assert {:ok, %Flow{},
+            ReplyHelper.simple("Do you exercise", "Do you exercise? Reply 1 for YES, 2 for NO", %{
+              "Smokes" => "Yes"
+            })} = step
   end
 
   test "last step" do
@@ -415,11 +517,12 @@ defmodule Ask.FlowTest do
     assert {:end, _, _} = step
   end
 
-  def init_quiz_and_send_response response do
+  def init_quiz_and_send_response(response) do
     {:ok, flow, _} =
       build(:questionnaire, steps: @skip_logic)
       |> Flow.start("sms")
       |> test_step("sms")
+
     flow |> reply_sms(response)
   end
 
@@ -452,7 +555,7 @@ defmodule Ask.FlowTest do
   test "when refusal skip_logic is end it ends the flow" do
     steps = [
       numeric_step(
-        id: Ecto.UUID.generate,
+        id: Ecto.UUID.generate(),
         title: "Which is the second perfect number?",
         prompt: prompt(sms: sms_prompt("Which is the second perfect number??")),
         store: "Perfect Number",
@@ -462,26 +565,26 @@ defmodule Ask.FlowTest do
           "enabled" => true,
           "responses" => %{
             "sms" => %{
-              "en" => ["skip"],
+              "en" => ["skip"]
             }
           },
-          "skip_logic" => "end",
+          "skip_logic" => "end"
         }
       ),
       multiple_choice_step(
         id: "aaa",
         title: "Title",
-        prompt: %{
-        },
+        prompt: %{},
         store: "Swims",
         choices: []
-      ),
+      )
     ]
 
     {:ok, flow, _} =
       build(:questionnaire, steps: steps)
       |> Flow.start("sms")
       |> test_step("sms")
+
     result = flow |> reply_sms("skip")
 
     assert {:end, _, %{stores: %{"Perfect Number" => "REFUSED"}}} = result
@@ -490,7 +593,7 @@ defmodule Ask.FlowTest do
   test "refusal is stronger than response" do
     steps = [
       numeric_step(
-        id: Ecto.UUID.generate,
+        id: Ecto.UUID.generate(),
         title: "Which is the second perfect number?",
         prompt: prompt(sms: sms_prompt("Which is the second perfect number??")),
         store: "Perfect Number",
@@ -500,26 +603,26 @@ defmodule Ask.FlowTest do
           "enabled" => true,
           "responses" => %{
             "sms" => %{
-              "en" => ["1"],
+              "en" => ["1"]
             }
           },
-          "skip_logic" => "end",
+          "skip_logic" => "end"
         }
       ),
       multiple_choice_step(
         id: "aaa",
         title: "Title",
-        prompt: %{
-        },
+        prompt: %{},
         store: "Swims",
         choices: []
-      ),
+      )
     ]
 
     {:ok, flow, _} =
       build(:questionnaire, steps: steps)
       |> Flow.start("sms")
       |> test_step("sms")
+
     result = flow |> reply_sms("1")
 
     # No stores (because of refusal)
@@ -583,10 +686,11 @@ defmodule Ask.FlowTest do
       prompts = Reply.prompts(reply)
 
       assert flow.retries == 1
+
       assert prompts == [
-        "You have entered an invalid answer",
-        "What is the probability that a number has more prime factors than the sum of its digits?"
-      ]
+               "You have entered an invalid answer",
+               "What is the probability that a number has more prime factors than the sum of its digits?"
+             ]
     end
 
     test "does not accept a string when is close enough to more than one number as an answer (2)" do
@@ -597,10 +701,11 @@ defmodule Ask.FlowTest do
       prompts = Reply.prompts(reply)
 
       assert flow.retries == 1
+
       assert prompts == [
-        "You have entered an invalid answer",
-        "What is the probability that a number has more prime factors than the sum of its digits?"
-      ]
+               "You have entered an invalid answer",
+               "What is the probability that a number has more prime factors than the sum of its digits?"
+             ]
     end
 
     test "does not accept a string when is not close enough to a number as an answer" do
@@ -611,16 +716,17 @@ defmodule Ask.FlowTest do
       prompts = Reply.prompts(reply)
 
       assert flow.retries == 1
+
       assert prompts == [
-        "You have entered an invalid answer",
-        "What is the probability that a number has more prime factors than the sum of its digits?"
-      ]
+               "You have entered an invalid answer",
+               "What is the probability that a number has more prime factors than the sum of its digits?"
+             ]
     end
 
     test "does not match a string when alphabetical_answers is set to false" do
       steps = [
         numeric_step(
-          id: Ecto.UUID.generate,
+          id: Ecto.UUID.generate(),
           title: "Which is the second perfect number?",
           prompt: prompt(sms: sms_prompt("Which is the second perfect number?")),
           store: "Perfect Number",
@@ -633,17 +739,17 @@ defmodule Ask.FlowTest do
         multiple_choice_step(
           id: "aaa",
           title: "Title",
-          prompt: %{
-          },
+          prompt: %{},
           store: "Swims",
           choices: []
-        ),
+        )
       ]
 
       {:ok, flow, _} =
         build(:questionnaire, steps: steps)
         |> Flow.start("sms")
-      |> test_step("sms")
+        |> test_step("sms")
+
       result = flow |> reply_sms("twenty-eight")
 
       assert {:ok, flow, reply} = result
@@ -651,25 +757,29 @@ defmodule Ask.FlowTest do
       prompts = Reply.prompts(reply)
 
       assert flow.retries == 1
+
       assert prompts == [
-        "You have entered an invalid answer",
-        "Which is the second perfect number?"
-      ]
+               "You have entered an invalid answer",
+               "Which is the second perfect number?"
+             ]
     end
 
     test "alphabetical answers works with a questionnaire with more than one language (es)" do
-      steps = [numeric_step(
-        id: Ecto.UUID.generate,
-        title: "Which is the second perfect number?",
-        prompt: prompt(
-          sms: sms_prompt("Which is the second perfect number??"),
-          ivr: tts_prompt("Which is the second perfect number")
-          ),
-        store: "Perfect Number",
-        skip_logic: default_numeric_skip_logic(),
-        alphabetical_answers: true,
-        refusal: nil
-        )]
+      steps = [
+        numeric_step(
+          id: Ecto.UUID.generate(),
+          title: "Which is the second perfect number?",
+          prompt:
+            prompt(
+              sms: sms_prompt("Which is the second perfect number??"),
+              ivr: tts_prompt("Which is the second perfect number")
+            ),
+          store: "Perfect Number",
+          skip_logic: default_numeric_skip_logic(),
+          alphabetical_answers: true,
+          refusal: nil
+        )
+      ]
 
       languageStep = @languageStep
       steps = [languageStep | steps]
@@ -691,18 +801,21 @@ defmodule Ask.FlowTest do
     end
 
     test "alphabetical answers works with a questionnaire with more than one language (en)" do
-      steps = [numeric_step(
-        id: Ecto.UUID.generate,
-        title: "Which is the second perfect number?",
-        prompt: prompt(
-          sms: sms_prompt("Which is the second perfect number??"),
-          ivr: tts_prompt("Which is the second perfect number")
-          ),
-        store: "Perfect Number",
-        skip_logic: default_numeric_skip_logic(),
-        alphabetical_answers: true,
-        refusal: nil
-        )]
+      steps = [
+        numeric_step(
+          id: Ecto.UUID.generate(),
+          title: "Which is the second perfect number?",
+          prompt:
+            prompt(
+              sms: sms_prompt("Which is the second perfect number??"),
+              ivr: tts_prompt("Which is the second perfect number")
+            ),
+          store: "Perfect Number",
+          skip_logic: default_numeric_skip_logic(),
+          alphabetical_answers: true,
+          refusal: nil
+        )
+      ]
 
       languageStep = @languageStep
       steps = [languageStep | steps]
@@ -727,40 +840,49 @@ defmodule Ask.FlowTest do
       numeric_step(
         id: "ddd",
         title:
-        "What is the probability that a number has more prime factors than the sum of its digits?",
-        prompt: prompt(
-          sms: sms_prompt("What is the probability that a number has more prime factors than the sum of its digits?")
-        ),
+          "What is the probability that a number has more prime factors than the sum of its digits?",
+        prompt:
+          prompt(
+            sms:
+              sms_prompt(
+                "What is the probability that a number has more prime factors than the sum of its digits?"
+              )
+          ),
         store: "Probability",
-        skip_logic: numeric_skip_logic(min_value: nil, max_value: nil,
-          ranges_delimiters: "25,75", ranges: [
-            %{
-              "from" => nil,
-              "to" => 24,
-              "skip_logic" => "end"
-            },
-            %{
-              "from" => 25,
-              "to" => 74,
-              "skip_logic" => "end"
-            },
-            %{
-              "from" => 75,
-              "to" => nil,
-              "skip_logic" => "end"
-            }
-          ]
-        ),
+        skip_logic:
+          numeric_skip_logic(
+            min_value: nil,
+            max_value: nil,
+            ranges_delimiters: "25,75",
+            ranges: [
+              %{
+                "from" => nil,
+                "to" => 24,
+                "skip_logic" => "end"
+              },
+              %{
+                "from" => 25,
+                "to" => 74,
+                "skip_logic" => "end"
+              },
+              %{
+                "from" => 75,
+                "to" => nil,
+                "skip_logic" => "end"
+              }
+            ]
+          ),
         alphabetical_answers: false,
         refusal: nil
-      ),
+      )
     ]
 
     test "when value is in the first range and it has no min value it finds it" do
       {:ok, flow, _} =
         build(:questionnaire, steps: @numeric_steps_no_min_max)
         |> Flow.start("sms")
-      |> test_step("sms")
+        |> test_step("sms")
+
       result = flow |> reply_sms("-10")
       assert {:end, _, _} = result
     end
@@ -769,7 +891,8 @@ defmodule Ask.FlowTest do
       {:ok, flow, _} =
         build(:questionnaire, steps: @numeric_steps_no_min_max)
         |> Flow.start("sms")
-      |> test_step("sms")
+        |> test_step("sms")
+
       result = flow |> reply_sms("999")
       assert {:end, _, _} = result
     end
@@ -782,9 +905,9 @@ defmodule Ask.FlowTest do
       prompts = Reply.prompts(reply)
 
       assert prompts == [
-        "You have entered an invalid answer",
-        "What is the probability that a number has more prime factors than the sum of its digits?"
-      ]
+               "You have entered an invalid answer",
+               "What is the probability that a number has more prime factors than the sum of its digits?"
+             ]
     end
 
     test "when value is greater than max" do
@@ -795,9 +918,9 @@ defmodule Ask.FlowTest do
       prompts = Reply.prompts(reply)
 
       assert prompts == [
-        "You have entered an invalid answer",
-        "What is the probability that a number has more prime factors than the sum of its digits?"
-      ]
+               "You have entered an invalid answer",
+               "What is the probability that a number has more prime factors than the sum of its digits?"
+             ]
     end
   end
 
@@ -858,25 +981,21 @@ defmodule Ask.FlowTest do
     step = flow |> reply_sms("text")
     assert {:ok, %Flow{}, reply} = step
     prompts = Reply.prompts(reply)
-    assert prompts == [
-      "You have entered an invalid answer",
-      "1 for English, 2 for Spanish"]
+    assert prompts == ["You have entered an invalid answer", "1 for English, 2 for Spanish"]
   end
 
   test "first step (sms mode) with multiple messages separated by newline" do
     steps = [
       multiple_choice_step(
-        id: Ecto.UUID.generate,
+        id: Ecto.UUID.generate(),
         title: "Do you smoke?",
-        prompt: prompt(
-          sms: sms_prompt("Do you smoke?\u{1E}Reply 1 for YES, 2 for NO")
-        ),
+        prompt: prompt(sms: sms_prompt("Do you smoke?\u{1E}Reply 1 for YES, 2 for NO")),
         store: "Smokes",
         choices: [
           choice(value: "Yes", responses: responses(sms: ["Yes", "Y", "1"], ivr: ["8"])),
           choice(value: "No", responses: responses(sms: ["No", "N", "2"], ivr: ["9"]))
         ]
-      ),
+      )
     ]
 
     quiz = build(:questionnaire, steps: steps)
@@ -896,7 +1015,11 @@ defmodule Ask.FlowTest do
       assert {:ok, flow, reply} = flow_state
       prompts = Reply.prompts(reply)
 
-      assert prompts == ["Is this the last question?", "Do you exercise? Reply 1 for YES, 2 for NO"]
+      assert prompts == [
+               "Is this the last question?",
+               "Do you exercise? Reply 1 for YES, 2 for NO"
+             ]
+
       assert flow.current_step == 1
     end
 
@@ -913,8 +1036,9 @@ defmodule Ask.FlowTest do
   end
 
   describe "sections" do
-    @language_selection [language_selection_step(
-        id: Ecto.UUID.generate,
+    @language_selection [
+      language_selection_step(
+        id: Ecto.UUID.generate(),
         title: "Language Selection",
         prompt: %{
           "sms" => sms_prompt("Reply 1 for English, mande 2 para Español"),
@@ -922,7 +1046,8 @@ defmodule Ask.FlowTest do
         },
         store: "language",
         choices: ["en", "es"]
-      )]
+      )
+    ]
 
     test "performs the first question inside the first section" do
       quiz = build(:questionnaire, steps: @one_section)
@@ -932,8 +1057,11 @@ defmodule Ask.FlowTest do
       assert {:ok, flow, reply} = flow_state
       prompts = Reply.prompts(reply)
 
-      assert prompts == ["Do you smoke? Reply 1 for YES, 2 for NO, 3 for MAYBE, 4 for SOMETIMES, 5 for ALWAYS, 6 for I dont know"]
-      assert flow.current_step == {0,0}
+      assert prompts == [
+               "Do you smoke? Reply 1 for YES, 2 for NO, 3 for MAYBE, 4 for SOMETIMES, 5 for ALWAYS, 6 for I dont know"
+             ]
+
+      assert flow.current_step == {0, 0}
     end
 
     test "accepts an answer for the first question inside the first section and moves to the next step" do
@@ -944,15 +1072,18 @@ defmodule Ask.FlowTest do
       assert {:ok, flow, reply} = flow_state
       prompts = Reply.prompts(reply)
 
-      assert prompts == ["Do you smoke? Reply 1 for YES, 2 for NO, 3 for MAYBE, 4 for SOMETIMES, 5 for ALWAYS, 6 for I dont know"]
-      assert flow.current_step == {0,0}
+      assert prompts == [
+               "Do you smoke? Reply 1 for YES, 2 for NO, 3 for MAYBE, 4 for SOMETIMES, 5 for ALWAYS, 6 for I dont know"
+             ]
+
+      assert flow.current_step == {0, 0}
 
       step = flow |> reply_sms("2")
       assert {:ok, flow, reply} = step
       prompts = Reply.prompts(reply)
 
       assert prompts == ["Do you exercise? Reply 1 for YES, 2 for NO"]
-      assert flow.current_step == {0,1}
+      assert flow.current_step == {0, 1}
     end
 
     test "accepts an answer for the language selection step and then moves inside the first section" do
@@ -966,15 +1097,19 @@ defmodule Ask.FlowTest do
       prompts = Reply.prompts(reply)
 
       assert prompts == ["Reply 1 for English, mande 2 para Español"]
-      assert flow.current_step == {0,0}
+      assert flow.current_step == {0, 0}
 
       step = flow |> reply_sms("2")
       assert {:ok, flow, reply} = step
       prompts = Reply.prompts(reply)
 
       assert flow.language == "es"
-      assert prompts == ["Do you smoke? Reply 1 for YES, 2 for NO, 3 for MAYBE, 4 for SOMETIMES, 5 for ALWAYS, 6 for I dont know (Spanish)"]
-      assert flow.current_step == {1,0}
+
+      assert prompts == [
+               "Do you smoke? Reply 1 for YES, 2 for NO, 3 for MAYBE, 4 for SOMETIMES, 5 for ALWAYS, 6 for I dont know (Spanish)"
+             ]
+
+      assert flow.current_step == {1, 0}
     end
 
     test "accepts an answer for the last question inside the first section and moves to the next section" do
@@ -987,14 +1122,14 @@ defmodule Ask.FlowTest do
       prompts = Reply.prompts(reply)
 
       assert prompts == ["Is this the last question?"]
-      assert flow.current_step == {0,4}
+      assert flow.current_step == {0, 4}
 
       step = flow |> reply_sms("2")
       assert {:ok, flow, reply} = step
       prompts = Reply.prompts(reply)
 
       assert prompts == ["Do you smoke? Reply 1 for YES, 2 for NO"]
-      assert flow.current_step == {1,0}
+      assert flow.current_step == {1, 0}
     end
 
     test "when moving to the next section it updates correctly the current_step for progress" do
@@ -1010,7 +1145,7 @@ defmodule Ask.FlowTest do
       assert reply.current_step == 5
 
       assert prompts == ["Is this the last question?"]
-      assert flow.current_step == {0,4}
+      assert flow.current_step == {0, 4}
 
       step = flow |> reply_sms("2")
       assert {:ok, flow, reply} = step
@@ -1019,7 +1154,7 @@ defmodule Ask.FlowTest do
       assert reply.current_step == 6
 
       assert prompts == ["Do you smoke? Reply 1 for YES, 2 for NO"]
-      assert flow.current_step == {1,0}
+      assert flow.current_step == {1, 0}
     end
 
     test "When skip logic is 'end section', it moves to the next one" do
@@ -1031,14 +1166,14 @@ defmodule Ask.FlowTest do
       prompts = Reply.prompts(reply)
 
       assert prompts == ["Do you want to end this section? Reply 1 for YES, 2 for NO"]
-      assert flow.current_step == {0,0}
+      assert flow.current_step == {0, 0}
 
       step = flow |> reply_sms("1")
       assert {:ok, flow, reply} = step
       prompts = Reply.prompts(reply)
 
       assert prompts == ["Do you smoke? Reply 1 for YES, 2 for NO"]
-      assert flow.current_step == {1,0}
+      assert flow.current_step == {1, 0}
     end
 
     test "When skip logic is an id from a step inside the section, it moves to that one" do
@@ -1050,14 +1185,17 @@ defmodule Ask.FlowTest do
       prompts = Reply.prompts(reply)
 
       assert prompts == ["Do you want to end this section? Reply 1 for YES, 2 for NO"]
-      assert flow.current_step == {0,0}
+      assert flow.current_step == {0, 0}
 
       step = flow |> reply_sms("2")
       assert {:ok, flow, reply} = step
       prompts = Reply.prompts(reply)
 
-      assert prompts == ["What is the probability that a number has more prime factors than the sum of its digits?"]
-      assert flow.current_step == {0,4}
+      assert prompts == [
+               "What is the probability that a number has more prime factors than the sum of its digits?"
+             ]
+
+      assert flow.current_step == {0, 4}
     end
 
     test "When skip logic is an id from a previous step inside the section, it raises an error" do
@@ -1070,7 +1208,7 @@ defmodule Ask.FlowTest do
       prompts = Reply.prompts(reply)
 
       assert prompts == ["Do you exercise? Reply 1 for YES, 2 for NO"]
-      assert flow.current_step == {0,2}
+      assert flow.current_step == {0, 2}
 
       assert_raise RuntimeError, fn ->
         flow |> reply_sms("Yes")
@@ -1087,7 +1225,7 @@ defmodule Ask.FlowTest do
       prompts = Reply.prompts(reply)
 
       assert prompts == ["Do you exercise? Reply 1 for YES, 2 for NO"]
-      assert flow.current_step == {2,1}
+      assert flow.current_step == {2, 1}
 
       flow_state = flow |> reply_sms("2")
       assert {:end, _, reply} = flow_state
@@ -1107,7 +1245,7 @@ defmodule Ask.FlowTest do
 
       assert Enum.at(flow.section_order, 2) == 2
 
-      assert Enum.sort(flow.section_order, &(&1 <= &2)) == [0,1,2,3]
+      assert Enum.sort(flow.section_order, &(&1 <= &2)) == [0, 1, 2, 3]
     end
 
     test "when the flow starts it randomizes all the randomizable sections" do
@@ -1118,11 +1256,13 @@ defmodule Ask.FlowTest do
 
       assert Enum.uniq(flow.section_order) == flow.section_order
 
-      assert Enum.sort(flow.section_order, &(&1 <= &2)) == [0,1,2,3]
+      assert Enum.sort(flow.section_order, &(&1 <= &2)) == [0, 1, 2, 3]
     end
 
     test "when the flow starts it randomizes all the randomizable sections and keeps the last one fixed" do
-      quiz = build(:questionnaire, steps: @language_selection ++ @three_sections_random_except_last_one)
+      quiz =
+        build(:questionnaire, steps: @language_selection ++ @three_sections_random_except_last_one)
+
       flow = Flow.start(quiz, "sms")
 
       assert Enum.at(flow.section_order, 0) == 0
@@ -1131,7 +1271,7 @@ defmodule Ask.FlowTest do
 
       assert Enum.at(flow.section_order, 4) == 4
 
-      assert Enum.sort(flow.section_order, &(&1 <= &2)) == [0,1,2,3,4]
+      assert Enum.sort(flow.section_order, &(&1 <= &2)) == [0, 1, 2, 3, 4]
     end
 
     test "when the skip logic of the last step is 'end_survey', it finishes with the thank you message" do
@@ -1144,34 +1284,37 @@ defmodule Ask.FlowTest do
       prompts = Reply.prompts(reply)
 
       assert prompts == ["Do you exercise? Reply 1 for YES, 2 for NO"]
-      assert flow.current_step == {3,1}
+      assert flow.current_step == {3, 1}
       step = flow |> reply_sms("2")
       assert {:end, _, reply} = step
 
       prompts = Reply.prompts(reply)
 
       assert prompts == ["Thanks for completing this survey"]
-
     end
 
     test "When skip logic is 'end section', it moves to the next one according to the random order" do
       quiz = build(:questionnaire, steps: @three_sections_skip_logic)
       flow = Flow.start(quiz, "sms")
-      flow = %{flow | section_order: [0,2,1]}
+      flow = %{flow | section_order: [0, 2, 1]}
       flow_state = flow |> test_step("sms")
 
       assert {:ok, flow, reply} = flow_state
       prompts = Reply.prompts(reply)
 
       assert prompts == ["Do you want to end this section? Reply 1 for YES, 2 for NO"]
-      assert flow.current_step == {0,0}
+      assert flow.current_step == {0, 0}
 
       step = flow |> reply_sms("1")
       assert {:ok, flow, reply} = step
       prompts = Reply.prompts(reply)
 
-      assert prompts == ["Is this the last question?", "Do you exercise? Reply 1 for YES, 2 for NO"]
-      assert flow.current_step == {2,1}
+      assert prompts == [
+               "Is this the last question?",
+               "Do you exercise? Reply 1 for YES, 2 for NO"
+             ]
+
+      assert flow.current_step == {2, 1}
     end
 
     test "when the section finishes, it follows with the next section by the random order" do
@@ -1184,7 +1327,7 @@ defmodule Ask.FlowTest do
       prompts = Reply.prompts(reply)
 
       assert prompts == ["What's the number of this question??"]
-      assert flow.current_step == {1,3}
+      assert flow.current_step == {1, 3}
       step = flow |> reply_sms("2")
       assert {:ok, flow, _} = step
 
@@ -1201,13 +1344,13 @@ defmodule Ask.FlowTest do
 
       assert {:ok, flow, _} = flow_state
 
-      assert flow.current_step == {Enum.at(flow.section_order,0), 0}
+      assert flow.current_step == {Enum.at(flow.section_order, 0), 0}
     end
 
     test "when there is no language selection step, it starts with the first section according to a given random order" do
       quiz = build(:questionnaire, steps: @three_sections_random)
       flow = Flow.start(quiz, "sms")
-      flow = %{flow | section_order: [2,0,1]}
+      flow = %{flow | section_order: [2, 0, 1]}
       flow_state = flow |> test_step("sms")
 
       assert {:ok, flow, _} = flow_state
@@ -1244,9 +1387,7 @@ defmodule Ask.FlowTest do
         multiple_choice_step(
           id: "aaa",
           title: "Do you exercise?",
-          prompt: prompt(
-            sms: sms_prompt("Do you exercise? Reply 1 for YES, 2 for NO")
-          ),
+          prompt: prompt(sms: sms_prompt("Do you exercise? Reply 1 for YES, 2 for NO")),
           store: "Exercises",
           choices: [
             choice(value: "Yes", responses: responses(sms: ["Yes", "Y", "1"], ivr: ["1"])),
@@ -1262,13 +1403,14 @@ defmodule Ask.FlowTest do
           id: "ccc",
           title: "c",
           disposition: :completed
-        ),
+        )
       ]
 
       {:ok, flow, _} =
         build(:questionnaire, steps: steps)
         |> Flow.start("sms")
         |> test_step("sms")
+
       assert {:end, _, reply} = flow |> reply_sms("1")
       assert Reply.disposition(reply) == :ineligible
     end
@@ -1278,9 +1420,7 @@ defmodule Ask.FlowTest do
         multiple_choice_step(
           id: "aaa",
           title: "Do you exercise?",
-          prompt: prompt(
-            sms: sms_prompt("Do you exercise? Reply 1 for YES, 2 for NO")
-          ),
+          prompt: prompt(sms: sms_prompt("Do you exercise? Reply 1 for YES, 2 for NO")),
           store: "Exercises",
           choices: [
             choice(value: "Yes", responses: responses(sms: ["Yes", "Y", "1"], ivr: ["1"])),
@@ -1296,27 +1436,28 @@ defmodule Ask.FlowTest do
           id: "ccc",
           title: "c",
           disposition: :completed
-        ),
+        )
       ]
 
       {:ok, flow, _} =
         build(:questionnaire, steps: steps)
         |> Flow.start("sms")
         |> test_step("sms")
+
       assert {:end, _, reply} = flow |> reply_sms("1")
       assert Reply.disposition(reply) == :refused
     end
   end
 
-  defp test_start(mode, quiz \\ @quiz), do:
-    Flow.start(quiz, mode)
+  defp test_start(mode, quiz \\ @quiz),
+    do:
+      Flow.start(quiz, mode)
       |> test_step(mode)
 
-  defp test_step(flow, mode), do:
-    Flow.step(flow, test_visitor(mode), :answer, :contacted)
+  defp test_step(flow, mode), do: Flow.step(flow, test_visitor(mode), :answer, :contacted)
 
-  defp test_reply(flow, mode, nil), do:
-    Flow.step(flow, test_visitor(mode), Flow.Message.no_reply, :contacted)
+  defp test_reply(flow, mode, nil),
+    do: Flow.step(flow, test_visitor(mode), Flow.Message.no_reply(), :contacted)
 
   defp reply_sms(flow, reply), do: test_reply(flow, "sms", reply)
 
@@ -1330,8 +1471,8 @@ defmodule Ask.FlowTest do
 
   defp reply_ivr(flow, reply), do: test_reply(flow, "ivr", reply)
 
-  defp test_reply(flow, mode, reply, old_disposition \\ :contacted), do:
-    Flow.step(flow, test_visitor(mode), Flow.Message.reply(reply), old_disposition)
+  defp test_reply(flow, mode, reply, old_disposition \\ :contacted),
+    do: Flow.step(flow, test_visitor(mode), Flow.Message.reply(reply), old_disposition)
 
   defp test_visitor(mode) do
     case mode do

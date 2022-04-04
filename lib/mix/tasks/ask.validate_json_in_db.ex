@@ -7,10 +7,11 @@ defmodule Mix.Tasks.Ask.ValidateJsonInDb do
   Validates that questionnaires the DB conform to the current schema.json definition.
   """
   defp inspect_result([], _), do: []
+
   defp inspect_result(validation_result, id) do
-    Mix.shell.error "######################################################"
-    Mix.shell.error "Validation failed for questionnaire (id: #{id})"
-    validation_result |> inspect |> Mix.shell.error
+    Mix.shell().error("######################################################")
+    Mix.shell().error("Validation failed for questionnaire (id: #{id})")
+    validation_result |> inspect |> Mix.shell().error
   end
 
   defp validate_questionnaire(quiz) do
@@ -25,13 +26,14 @@ defmodule Mix.Tasks.Ask.ValidateJsonInDb do
   end
 
   def run([]), do: run(["schema.json"])
+
   def run([schema_path]) do
-    Mix.Task.run "app.start"
+    Mix.Task.run("app.start")
 
     GenServer.start_link(JsonSchema, [schema_path], name: CustomJsonSchema)
 
     Questionnaire
-    |> Repo.all
+    |> Repo.all()
     |> Enum.each(&validate_questionnaire/1)
 
     Agent.stop(CustomJsonSchema)

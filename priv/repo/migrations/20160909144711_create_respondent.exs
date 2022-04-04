@@ -8,7 +8,7 @@ defmodule Ask.Repo.Migrations.CreateRespondent do
 
       timestamps()
     end
-    create index(:respondents, [:survey_id])
 
+    create index(:respondents, [:survey_id])
   end
 end

@@ -6,7 +6,9 @@ defmodule Ask.SurveyQuestionnaireTest do
   @invalid_attrs %{}
 
   test "valid changeset foreign_key_constraints" do
-    changeset = SurveyQuestionnaire.changeset(%SurveyQuestionnaire{}, %{survey_id: 1, questionnaire_id: 1})
+    changeset =
+      SurveyQuestionnaire.changeset(%SurveyQuestionnaire{}, %{survey_id: 1, questionnaire_id: 1})
+
     assert changeset.valid?
   end
 

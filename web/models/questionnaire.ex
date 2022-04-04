@@ -73,45 +73,53 @@ defmodule Ask.Questionnaire do
 
   def recreate_variables!(questionnaire) do
     # Get existing variables
-    existing_variables = (from v in QuestionnaireVariable,
-      where: v.questionnaire_id == ^questionnaire.id)
-    |> Repo.all
+    existing_variables =
+      from(v in QuestionnaireVariable,
+        where: v.questionnaire_id == ^questionnaire.id
+      )
+      |> Repo.all()
 
     # Get new names
-    new_names = questionnaire
-    |> all_steps
-    |> Enum.map(&Map.get(&1, "store"))
-    |> Enum.reject(fn store -> store == nil end)
-    |> Enum.uniq
+    new_names =
+      questionnaire
+      |> all_steps
+      |> Enum.map(&Map.get(&1, "store"))
+      |> Enum.reject(fn store -> store == nil end)
+      |> Enum.uniq()
 
     # Compute additions
-    additions = new_names
-    |> Enum.reject(fn name ->
-      existing_variables
-      |> Enum.any?(fn var -> var.name == name end)
-    end)
+    additions =
+      new_names
+      |> Enum.reject(fn name ->
+        existing_variables
+        |> Enum.any?(fn var -> var.name == name end)
+      end)
 
     # Compute deletions
-    deletions = existing_variables
-    |> Enum.reject(fn var ->
-      new_names
-      |> Enum.any?(fn name -> name == var.name end)
-    end)
+    deletions =
+      existing_variables
+      |> Enum.reject(fn var ->
+        new_names
+        |> Enum.any?(fn name -> name == var.name end)
+      end)
 
     # Insert additions
-    additions |> Enum.each(fn name ->
+    additions
+    |> Enum.each(fn name ->
       var = %QuestionnaireVariable{
         project_id: questionnaire.project_id,
         questionnaire_id: questionnaire.id,
-        name: name,
+        name: name
       }
-      var |> Repo.insert!
+
+      var |> Repo.insert!()
     end)
 
     # Delete deletions
-    deletions |> Enum.each(fn var ->
+    deletions
+    |> Enum.each(fn var ->
       var
-      |> Repo.delete!
+      |> Repo.delete!()
     end)
 
     questionnaire
@@ -127,7 +135,7 @@ defmodule Ask.Questionnaire do
     steps
     |> Enum.map(&variables/1)
     |> Enum.reject(fn x -> x == nil end)
-    |> Enum.uniq
+    |> Enum.uniq()
   end
 
   def variables(%{"store" => var}) do
@@ -147,13 +155,18 @@ defmodule Ask.Questionnaire do
   end
 
   defp get_steps(steps) do
-    result = steps |> Enum.flat_map(fn (item) ->
-      case item["type"] do
-        "section" ->
-          item["steps"]
-        _ -> [item]
-      end
-    end)
+    result =
+      steps
+      |> Enum.flat_map(fn item ->
+        case item["type"] do
+          "section" ->
+            item["steps"]
+
+          _ ->
+            [item]
+        end
+      end)
+
     result
   end
 
@@ -163,15 +176,29 @@ defmodule Ask.Questionnaire do
 
     multi =
       if Map.has_key?(changeset.changes, :name) do
-        Multi.insert(multi, :rename_log, ActivityLog.rename_questionnaire(project, conn, questionnaire, questionnaire.name, changeset.changes.name))
+        Multi.insert(
+          multi,
+          :rename_log,
+          ActivityLog.rename_questionnaire(
+            project,
+            conn,
+            questionnaire,
+            questionnaire.name,
+            changeset.changes.name
+          )
+        )
       else
         multi
       end
 
-
     multi =
-      if Map.has_key?(changeset.changes, :settings) && (changeset.changes.settings != questionnaire.settings) do
-        Multi.insert(multi, :edit_settings_log, ActivityLog.edit_settings(project, conn, questionnaire))
+      if Map.has_key?(changeset.changes, :settings) &&
+           changeset.changes.settings != questionnaire.settings do
+        Multi.insert(
+          multi,
+          :edit_settings_log,
+          ActivityLog.edit_settings(project, conn, questionnaire)
+        )
       else
         multi
       end
@@ -180,13 +207,38 @@ defmodule Ask.Questionnaire do
       if Map.has_key?(changeset.changes, :modes) do
         added = changeset.changes.modes -- questionnaire.modes
         removed = questionnaire.modes -- changeset.changes.modes
-        multi = added |> Enum.reduce(multi, fn mode, multi ->
-          Multi.insert(multi, {:add_mode_log, mode}, ActivityLog.add_questionnaire_mode(project, conn, questionnaire, questionnaire_name, mode))
-        end)
 
-        multi = removed |> Enum.reduce(multi, fn mode, multi ->
-          Multi.insert(multi, {:remove_mode_log, mode}, ActivityLog.remove_questionnaire_mode(project, conn, questionnaire, questionnaire_name, mode))
-        end)
+        multi =
+          added
+          |> Enum.reduce(multi, fn mode, multi ->
+            Multi.insert(
+              multi,
+              {:add_mode_log, mode},
+              ActivityLog.add_questionnaire_mode(
+                project,
+                conn,
+                questionnaire,
+                questionnaire_name,
+                mode
+              )
+            )
+          end)
+
+        multi =
+          removed
+          |> Enum.reduce(multi, fn mode, multi ->
+            Multi.insert(
+              multi,
+              {:remove_mode_log, mode},
+              ActivityLog.remove_questionnaire_mode(
+                project,
+                conn,
+                questionnaire,
+                questionnaire_name,
+                mode
+              )
+            )
+          end)
 
         multi
       else
@@ -197,13 +249,38 @@ defmodule Ask.Questionnaire do
       if Map.has_key?(changeset.changes, :languages) do
         added = changeset.changes.languages -- questionnaire.languages
         removed = questionnaire.languages -- changeset.changes.languages
-        multi = added |> Enum.reduce(multi, fn language, multi ->
-          Multi.insert(multi, {:add_language_log, language}, ActivityLog.add_questionnaire_language(project, conn, questionnaire, questionnaire_name, language))
-        end)
 
-        multi = removed |> Enum.reduce(multi, fn language, multi ->
-          Multi.insert(multi, {:remove_language_log, language}, ActivityLog.remove_questionnaire_language(project, conn, questionnaire, questionnaire_name, language))
-        end)
+        multi =
+          added
+          |> Enum.reduce(multi, fn language, multi ->
+            Multi.insert(
+              multi,
+              {:add_language_log, language},
+              ActivityLog.add_questionnaire_language(
+                project,
+                conn,
+                questionnaire,
+                questionnaire_name,
+                language
+              )
+            )
+          end)
+
+        multi =
+          removed
+          |> Enum.reduce(multi, fn language, multi ->
+            Multi.insert(
+              multi,
+              {:remove_language_log, language},
+              ActivityLog.remove_questionnaire_language(
+                project,
+                conn,
+                questionnaire,
+                questionnaire_name,
+                language
+              )
+            )
+          end)
 
         multi
       else
@@ -213,7 +290,7 @@ defmodule Ask.Questionnaire do
     multi =
       if Map.has_key?(changeset.changes, :steps) do
         multi
-          |> delta_steps(conn, project, changeset)
+        |> delta_steps(conn, project, changeset)
       else
         multi
       end
@@ -221,7 +298,7 @@ defmodule Ask.Questionnaire do
     multi =
       if Map.has_key?(changeset.changes, :quota_completed_steps) do
         multi
-          |> delta_quota_completed_steps(conn, project, changeset)
+        |> delta_quota_completed_steps(conn, project, changeset)
       else
         multi
       end
@@ -230,8 +307,15 @@ defmodule Ask.Questionnaire do
   end
 
   defp delta_quota_completed_steps(multi, conn, project, changeset) do
-    new_steps = if get_change(changeset, :quota_completed_steps), do: get_change(changeset, :quota_completed_steps) |> Map.new(&{&1["id"], &1}), else: %{}
-    old_steps = if changeset.data.quota_completed_steps, do: changeset.data.quota_completed_steps |> Map.new(&{&1["id"], &1}), else: %{}
+    new_steps =
+      if get_change(changeset, :quota_completed_steps),
+        do: get_change(changeset, :quota_completed_steps) |> Map.new(&{&1["id"], &1}),
+        else: %{}
+
+    old_steps =
+      if changeset.data.quota_completed_steps,
+        do: changeset.data.quota_completed_steps |> Map.new(&{&1["id"], &1}),
+        else: %{}
 
     delta(multi, conn, project, changeset.data, new_steps, old_steps)
   end
@@ -252,66 +336,154 @@ defmodule Ask.Questionnaire do
     # Create steps
     created_step_ids = new_step_ids -- old_step_ids
 
-    multi = created_step_ids |> Enum.reduce(multi, fn step_id, multi ->
-      step = new_steps[step_id]
+    multi =
+      created_step_ids
+      |> Enum.reduce(multi, fn step_id, multi ->
+        step = new_steps[step_id]
 
-      if  step["type"] == "section" do
-        Multi.insert(multi, {:add_section_log, step_id}, ActivityLog.create_questionnaire_section(project, conn, questionnaire, questionnaire_name, step_id, step["title"]))
-      else
-        Multi.insert(multi, {:add_step_log, step_id}, ActivityLog.create_questionnaire_step(project, conn, questionnaire, questionnaire_name, step_id, step["title"], step["type"]))
-      end
-    end)
+        if step["type"] == "section" do
+          Multi.insert(
+            multi,
+            {:add_section_log, step_id},
+            ActivityLog.create_questionnaire_section(
+              project,
+              conn,
+              questionnaire,
+              questionnaire_name,
+              step_id,
+              step["title"]
+            )
+          )
+        else
+          Multi.insert(
+            multi,
+            {:add_step_log, step_id},
+            ActivityLog.create_questionnaire_step(
+              project,
+              conn,
+              questionnaire,
+              questionnaire_name,
+              step_id,
+              step["title"],
+              step["type"]
+            )
+          )
+        end
+      end)
 
     # Delete steps
     deleted_step_ids = old_step_ids -- new_step_ids
 
-    multi = deleted_step_ids |> Enum.reduce(multi, fn step_id, multi ->
-      step = old_steps[step_id]
+    multi =
+      deleted_step_ids
+      |> Enum.reduce(multi, fn step_id, multi ->
+        step = old_steps[step_id]
 
-      if step["type"] == "section" do
-        Multi.insert(multi, {:delete_section_log, step_id}, ActivityLog.delete_questionnaire_section(project, conn, questionnaire, questionnaire_name, step_id, step["title"]))
-      else
-        Multi.insert(multi, {:delete_step_log, step_id}, ActivityLog.delete_questionnaire_step(project, conn, questionnaire, questionnaire_name, step_id, step["title"], step["type"]))
-      end
-    end)
+        if step["type"] == "section" do
+          Multi.insert(
+            multi,
+            {:delete_section_log, step_id},
+            ActivityLog.delete_questionnaire_section(
+              project,
+              conn,
+              questionnaire,
+              questionnaire_name,
+              step_id,
+              step["title"]
+            )
+          )
+        else
+          Multi.insert(
+            multi,
+            {:delete_step_log, step_id},
+            ActivityLog.delete_questionnaire_step(
+              project,
+              conn,
+              questionnaire,
+              questionnaire_name,
+              step_id,
+              step["title"],
+              step["type"]
+            )
+          )
+        end
+      end)
 
     # Rename steps
-    common_step_ids = new_step_ids -- (new_step_ids -- old_step_ids)
+    common_step_ids = new_step_ids -- new_step_ids -- old_step_ids
 
-    multi = common_step_ids |> Enum.reduce(multi, fn step_id, multi ->
-      new_step = new_steps[step_id]
-      old_step = old_steps[step_id]
+    multi =
+      common_step_ids
+      |> Enum.reduce(multi, fn step_id, multi ->
+        new_step = new_steps[step_id]
+        old_step = old_steps[step_id]
 
+        multi =
+          if new_step["title"] != old_step["title"] do
+            if new_step["type"] == "section" do
+              Multi.insert(
+                multi,
+                {:rename_section_log, step_id},
+                ActivityLog.rename_questionnaire_section(
+                  project,
+                  conn,
+                  questionnaire,
+                  questionnaire_name,
+                  step_id,
+                  old_step["title"],
+                  new_step["title"]
+                )
+              )
+            else
+              Multi.insert(
+                multi,
+                {:rename_step_log, step_id},
+                ActivityLog.rename_questionnaire_step(
+                  project,
+                  conn,
+                  questionnaire,
+                  questionnaire_name,
+                  step_id,
+                  old_step["title"],
+                  new_step["title"]
+                )
+              )
+            end
+          else
+            multi
+          end
 
-      multi = if new_step["title"] != old_step["title"] do
-        if new_step["type"] == "section" do
-          Multi.insert(multi, {:rename_section_log, step_id}, ActivityLog.rename_questionnaire_section(project, conn, questionnaire, questionnaire_name, step_id, old_step["title"], new_step["title"]))
+        if Map.delete(new_step, "title") != Map.delete(old_step, "title") do
+          if new_step["type"] == "section" && !is_nil(new_step["steps"]) do
+            current_new_steps = new_step["steps"] |> Map.new(&{&1["id"], &1})
+            current_old_steps = old_step["steps"] |> Map.new(&{&1["id"], &1})
+
+            delta(multi, conn, project, questionnaire, current_new_steps, current_old_steps)
+          else
+            Multi.insert(
+              multi,
+              {:edit_step_log, step_id},
+              ActivityLog.edit_questionnaire_step(
+                project,
+                conn,
+                questionnaire,
+                questionnaire_name,
+                step_id,
+                new_step["title"]
+              )
+            )
+          end
         else
-          Multi.insert(multi, {:rename_step_log, step_id}, ActivityLog.rename_questionnaire_step(project, conn, questionnaire, questionnaire_name, step_id, old_step["title"], new_step["title"]))
+          multi
         end
-      else
-        multi
-      end
-
-      if Map.delete(new_step, "title") != Map.delete(old_step, "title") do
-        if new_step["type"] == "section" && !is_nil(new_step["steps"]) do
-          current_new_steps = new_step["steps"] |> Map.new(&{&1["id"], &1})
-          current_old_steps = old_step["steps"] |> Map.new(&{&1["id"], &1})
-
-          delta(multi, conn, project, questionnaire, current_new_steps, current_old_steps)
-        else
-          Multi.insert(multi, {:edit_step_log, step_id}, ActivityLog.edit_questionnaire_step(project, conn, questionnaire, questionnaire_name, step_id, new_step["title"]))
-        end
-      else
-        multi
-      end
-    end)
+      end)
 
     multi
   end
 
   def ignored_values_from_relevant_steps(questionnaire) do
     not_empty = fn str -> str != "" end
+
     (questionnaire.partial_relevant_config["ignored_values"] || "")
     |> String.split(",")
     |> Enum.map(&String.trim/1)
@@ -320,8 +492,7 @@ defmodule Ask.Questionnaire do
   end
 
   def partial_relevant_enabled?(partial_relevant_config),
-    do:
-      !!partial_relevant_config["enabled"]
+    do: !!partial_relevant_config["enabled"]
 
   def has_related_surveys?(questionnaire_id) do
     Repo.one(

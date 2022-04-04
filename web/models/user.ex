@@ -43,8 +43,9 @@ defmodule Ask.User do
   end
 
   def changeset(model, params, :registration) do
-    changeset = changeset(model, params)
-    |> add_settings_if_needed()
+    changeset =
+      changeset(model, params)
+      |> add_settings_if_needed()
 
     if Config.get(:confirm_email_updates) && Map.get(params, "email", false) && model.id do
       changeset
@@ -57,8 +58,8 @@ defmodule Ask.User do
 
   defp add_settings_if_needed(changeset) do
     if !get_field(changeset, :settings) do
-      changeset |>
-      put_change(:settings, %{})
+      changeset
+      |> put_change(:settings, %{})
     else
       changeset
     end

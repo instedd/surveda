@@ -19,8 +19,7 @@ config :ask, Ask.Repo,
   hostname: System.get_env("DATABASE_HOST") || "localhost",
   pool: Ecto.Adapters.SQL.Sandbox
 
-config :ask, Ask.Runtime.Broker,
-  batch_size: 10
+config :ask, Ask.Runtime.Broker, batch_size: 10
 
 config :ask, :channel,
   providers: %{
@@ -45,8 +44,7 @@ config :ask, Verboice,
     app_id: "AN_APP_ID"
   ]
 
-config :ask, Ask.Mailer,
-  adapter: Ask.Swoosh.Adapters.Test
+config :ask, Ask.Mailer, adapter: Ask.Swoosh.Adapters.Test
 
 config :ask, Ask.Email,
   smtp_from_address: {:system, "SMTP_FROM_ADDRESS", "Test name <test@email>"}

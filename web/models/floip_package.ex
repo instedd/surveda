@@ -83,6 +83,7 @@ defmodule Ask.FloipPackage do
 
   def parse_query_params(query_params) do
     options = %{}
+
     options =
       if query_params["filter"]["end-timestamp"] do
         {:ok, end_timestamp, _} = DateTime.from_iso8601(query_params["filter"]["end-timestamp"])
@@ -93,7 +94,9 @@ defmodule Ask.FloipPackage do
 
     options =
       if query_params["filter"]["start-timestamp"] do
-        {:ok, start_timestamp, _} = DateTime.from_iso8601(query_params["filter"]["start-timestamp"])
+        {:ok, start_timestamp, _} =
+          DateTime.from_iso8601(query_params["filter"]["start-timestamp"])
+
         options |> Map.put(:start_timestamp, start_timestamp)
       else
         options
@@ -101,7 +104,7 @@ defmodule Ask.FloipPackage do
 
     options =
       if query_params["page"]["afterCursor"] do
-        {after_cursor, _} = query_params["page"]["afterCursor"] |> Integer.parse
+        {after_cursor, _} = query_params["page"]["afterCursor"] |> Integer.parse()
         options |> Map.put(:after_cursor, after_cursor)
       else
         options
@@ -109,7 +112,7 @@ defmodule Ask.FloipPackage do
 
     options =
       if query_params["page"]["beforeCursor"] do
-        {before_cursor, _} = query_params["page"]["beforeCursor"] |> Integer.parse
+        {before_cursor, _} = query_params["page"]["beforeCursor"] |> Integer.parse()
         options |> Map.put(:before_cursor, before_cursor)
       else
         options
@@ -117,7 +120,7 @@ defmodule Ask.FloipPackage do
 
     options =
       if query_params["page"]["size"] do
-        {size, _} = query_params["page"]["size"] |> Integer.parse
+        {size, _} = query_params["page"]["size"] |> Integer.parse()
         options |> Map.put(:size, size)
       else
         options
@@ -139,6 +142,7 @@ defmodule Ask.FloipPackage do
   # - before_cursor: The response row_id to request responses prior to this id, when paginating in reverse
   def responses(survey, options \\ %{}) do
     dynamic = true
+
     dynamic =
       if options[:start_timestamp] do
         start_timestamp = options[:start_timestamp]
@@ -171,12 +175,14 @@ defmodule Ask.FloipPackage do
         dynamic
       end
 
-    query = (from r in Response,
-      join: respondent in Respondent, on: r.respondent_id == respondent.id,
-      where: respondent.survey_id == ^survey.id,
-      where: ^dynamic,
-      order_by: r.id,
-      select: {r, respondent})
+    query =
+      from r in Response,
+        join: respondent in Respondent,
+        on: r.respondent_id == respondent.id,
+        where: respondent.survey_id == ^survey.id,
+        where: ^dynamic,
+        order_by: r.id,
+        select: {r, respondent}
 
     query =
       if options[:size] do
@@ -189,24 +195,24 @@ defmodule Ask.FloipPackage do
     first_response =
       query
       |> first
-      |> Repo.one
+      |> Repo.one()
       |> db_response_to_floip_response
 
     # TODO: do this in a sane way
     last_response =
       query
-      |> Repo.all
+      |> Repo.all()
       |> Enum.at(-1)
       |> db_response_to_floip_response
 
     stream =
       query
-      |> Repo.stream
+      |> Repo.stream()
       |> Stream.map(fn {r, respondent} ->
         {r, respondent} |> db_response_to_floip_response
       end)
 
-    {:ok, responses} = Repo.transaction(fn() -> Enum.to_list(stream) end)
+    {:ok, responses} = Repo.transaction(fn -> Enum.to_list(stream) end)
 
     {responses, first_response, last_response}
   end
@@ -224,11 +230,20 @@ defmodule Ask.FloipPackage do
   end
 
   defp db_response_to_floip_response(nil), do: nil
+
   defp db_response_to_floip_response({r, respondent}) do
     timestamp = DateTime.to_iso8601(r.inserted_at, :extended)
     # FLOIP needs us to define a session_id. In Surveda, each survey is only taken by a respondent
     # once, so it's safe to assume session_id == contact_id.
-    [timestamp, r.id, respondent.hashed_number, respondent.hashed_number, r.field_name, r.value, %{}]
+    [
+      timestamp,
+      r.id,
+      respondent.hashed_number,
+      respondent.hashed_number,
+      r.field_name,
+      r.value,
+      %{}
+    ]
   end
 
   # Maps a survey's steps to FLOIP questions.
@@ -238,9 +253,9 @@ defmodule Ask.FloipPackage do
     survey = survey |> Repo.preload(:questionnaires)
 
     survey.questionnaires
-    |> Enum.flat_map(fn(q) -> q.steps end)
+    |> Enum.flat_map(fn q -> q.steps end)
     |> Enum.filter(&floip_question?/1)
-    |> Enum.reduce(%{}, fn(step, acc) -> Map.put(acc, step["store"], to_floip_question(step)) end)
+    |> Enum.reduce(%{}, fn step, acc -> Map.put(acc, step["store"], to_floip_question(step)) end)
   end
 
   # Maps a survey step to a FLOIP question.
@@ -248,8 +263,9 @@ defmodule Ask.FloipPackage do
   # or numeric are supported, calling this with other step types
   # will raise.
   def to_floip_question(step = %{"type" => "multiple-choice"}) do
-    choices = step["choices"]
-    |> Enum.map(fn(choice) -> choice["value"] end)
+    choices =
+      step["choices"]
+      |> Enum.map(fn choice -> choice["value"] end)
 
     %{
       "type" => "select_one",
@@ -289,18 +305,20 @@ defmodule Ask.FloipPackage do
           "id" => id(survey),
           "title" => title(survey),
           "name" => name(survey),
-          "resources" => [%{
-            "api-data-url" => responses_link,
-            "profile" => "data-resource",
-            "encoding" => "utf-8",
-            "mediatype" => "application/json",
-            "name" => "#{name(survey)}-data",
-            "path" => nil,
-            "schema" => %{
-              "fields" => fields(),
-              "questions" => questions(survey)
+          "resources" => [
+            %{
+              "api-data-url" => responses_link,
+              "profile" => "data-resource",
+              "encoding" => "utf-8",
+              "mediatype" => "application/json",
+              "name" => "#{name(survey)}-data",
+              "path" => nil,
+              "schema" => %{
+                "fields" => fields(),
+                "questions" => questions(survey)
+              }
             }
-          }]
+          ]
         }
       }
     }

@@ -114,7 +114,7 @@ defmodule Ask.Runtime.PanelSurveyTest do
       {:ok, %{new_wave: new_wave}} = PanelSurvey.new_wave(panel_survey)
 
       assert new_wave.schedule ==
-        clean_dates(schedule)
+               clean_dates(schedule)
     end
 
     test "errors when the latest wave isn't terminated" do
@@ -131,8 +131,7 @@ defmodule Ask.Runtime.PanelSurveyTest do
     test "with valid data creates a panel_survey" do
       survey = panel_survey_generator_survey()
 
-      {result, panel_survey} =
-        PanelSurvey.create_panel_survey_from_survey(survey)
+      {result, panel_survey} = PanelSurvey.create_panel_survey_from_survey(survey)
 
       assert result == :ok
       assert panel_survey.project_id == survey.project_id
@@ -142,8 +141,7 @@ defmodule Ask.Runtime.PanelSurveyTest do
       survey = panel_survey_generator_survey()
       expected_name = survey.name
 
-      {:ok, panel_survey} =
-        PanelSurvey.create_panel_survey_from_survey(survey)
+      {:ok, panel_survey} = PanelSurvey.create_panel_survey_from_survey(survey)
 
       assert panel_survey.name == expected_name
     end
@@ -151,8 +149,7 @@ defmodule Ask.Runtime.PanelSurveyTest do
     test "it's created from its first wave" do
       survey = panel_survey_generator_survey()
 
-      {:ok, panel_survey} =
-        PanelSurvey.create_panel_survey_from_survey(survey)
+      {:ok, panel_survey} = PanelSurvey.create_panel_survey_from_survey(survey)
 
       waves = Repo.preload(panel_survey, :waves).waves
       assert length(waves) == 1
@@ -167,8 +164,7 @@ defmodule Ask.Runtime.PanelSurveyTest do
       survey = panel_survey_generator_survey()
       expected_wave_name = "2021-06-17"
 
-      {:ok, _panel_survey} =
-        PanelSurvey.create_panel_survey_from_survey(survey)
+      {:ok, _panel_survey} = PanelSurvey.create_panel_survey_from_survey(survey)
 
       survey = Repo.get!(Survey, survey.id)
       assert survey.name == expected_wave_name
@@ -177,8 +173,7 @@ defmodule Ask.Runtime.PanelSurveyTest do
     test "takes the folder from its first wave" do
       survey = panel_survey_generator_survey_in_folder()
 
-      {:ok, panel_survey} =
-        PanelSurvey.create_panel_survey_from_survey(survey)
+      {:ok, panel_survey} = PanelSurvey.create_panel_survey_from_survey(survey)
 
       # Assert the panel survey takes its folder from the survey
       assert panel_survey.folder_id == survey.folder_id
@@ -191,31 +186,32 @@ defmodule Ask.Runtime.PanelSurveyTest do
     test "removes the cutoff and comparisons" do
       survey = panel_survey_generator_survey_with_cutoff_and_comparisons()
 
-      {:ok, panel_survey} =
-        PanelSurvey.create_panel_survey_from_survey(survey)
+      {:ok, panel_survey} = PanelSurvey.create_panel_survey_from_survey(survey)
 
       assert_panel_survey_without_cutoff_and_comparisons(panel_survey)
     end
 
     test "rejects creating a panel survey when the survey generates_panel_survey flag is OFF" do
-      survey = panel_survey_generator_survey()
-      |> Survey.changeset(%{generates_panel_survey: false})
-      |> Repo.update!()
+      survey =
+        panel_survey_generator_survey()
+        |> Survey.changeset(%{generates_panel_survey: false})
+        |> Repo.update!()
 
-      {result, error} =
-        PanelSurvey.create_panel_survey_from_survey(survey)
+      {result, error} = PanelSurvey.create_panel_survey_from_survey(survey)
 
       assert result == :error
-      assert error == "Survey must have generates_panel_survey ON to launch to generate a panel survey"
+
+      assert error ==
+               "Survey must have generates_panel_survey ON to launch to generate a panel survey"
     end
 
     test "rejects creating a panel survey when the survey isn't ready to launch" do
-      survey = panel_survey_generator_survey()
-      |> Survey.changeset(%{state: "not_ready"})
-      |> Repo.update!()
+      survey =
+        panel_survey_generator_survey()
+        |> Survey.changeset(%{state: "not_ready"})
+        |> Repo.update!()
 
-      {result, error} =
-        PanelSurvey.create_panel_survey_from_survey(survey)
+      {result, error} = PanelSurvey.create_panel_survey_from_survey(survey)
 
       assert result == :error
       assert error == "Survey must be ready to launch to generate a panel survey"
@@ -223,12 +219,13 @@ defmodule Ask.Runtime.PanelSurveyTest do
 
     test "rejects creating a panel survey when the survey is a panel survey wave" do
       panel_survey = dummy_panel_survey()
-      survey = panel_survey_generator_survey()
-      |> Survey.changeset(%{panel_survey_id: panel_survey.id})
-      |> Repo.update!()
 
-      {result, error} =
-        PanelSurvey.create_panel_survey_from_survey(survey)
+      survey =
+        panel_survey_generator_survey()
+        |> Survey.changeset(%{panel_survey_id: panel_survey.id})
+        |> Repo.update!()
+
+      {result, error} = PanelSurvey.create_panel_survey_from_survey(survey)
 
       assert result == :error
       assert error == "Survey can't be a panel survey wave to generate a panel survey"
@@ -238,9 +235,12 @@ defmodule Ask.Runtime.PanelSurveyTest do
     test "when the survey doesn't have a name it's named `Panel Survey YYYY-MM-DD`" do
       Timex.parse!("2021-06-17T09:00:00Z", "{ISO:Extended}")
       |> mock_time()
+
       expected_name = "Panel Survey 2021-06-17"
       project = insert(:project)
-      survey = insert(:survey, project: project, generates_panel_survey: true, state: "ready", name: nil)
+
+      survey =
+        insert(:survey, project: project, generates_panel_survey: true, state: "ready", name: nil)
 
       {result, panel_survey} = PanelSurvey.create_panel_survey_from_survey(survey)
 
@@ -254,14 +254,18 @@ defmodule Ask.Runtime.PanelSurveyTest do
       survey
       |> Repo.preload(respondents: [respondent_group: [respondent_group_channels: :channel]])
 
-    respondent_channels = Enum.map(survey.respondents, fn %{ hashed_number: hashed_number, respondent_group: respondent_group } ->
-      respondent_group_channels =
-        Enum.map(respondent_group.respondent_group_channels, fn %{channel: channel, mode: mode} ->
-          %{channel_id: channel.id, mode: mode}
-        end)
+    respondent_channels =
+      Enum.map(survey.respondents, fn %{
+                                        hashed_number: hashed_number,
+                                        respondent_group: respondent_group
+                                      } ->
+        respondent_group_channels =
+          Enum.map(respondent_group.respondent_group_channels, fn %{channel: channel, mode: mode} ->
+            %{channel_id: channel.id, mode: mode}
+          end)
 
-      { hashed_number, respondent_group_channels }
-    end)
+        {hashed_number, respondent_group_channels}
+      end)
 
     # We sort the response by hashed_number so that the function
     # is deterministic enough to be used to compare lists using ==
@@ -286,8 +290,7 @@ defmodule Ask.Runtime.PanelSurveyTest do
   end
 
   defp incentives_disabled_panel_survey() do
-    panel_survey =
-      panel_survey_with_last_wave_terminated()
+    panel_survey = panel_survey_with_last_wave_terminated()
 
     Ask.PanelSurvey.latest_wave(panel_survey)
     |> disable_incentives()
@@ -301,8 +304,11 @@ defmodule Ask.Runtime.PanelSurveyTest do
     latest_wave = Ask.PanelSurvey.latest_wave(panel_survey)
     start_date = ~D[2016-01-01]
     end_date = ~D[2016-02-01]
-    schedule = set_start_date(latest_wave.schedule, start_date)
-    |> set_end_date(end_date)
+
+    schedule =
+      set_start_date(latest_wave.schedule, start_date)
+      |> set_end_date(end_date)
+
     set_schedule(latest_wave, schedule)
 
     # Reload the panel survey. One of its surveys has changed, so it's outdated

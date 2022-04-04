@@ -3,7 +3,14 @@ defmodule Ask.TranslationTest do
 
   alias Ask.Translation
 
-  @valid_attrs %{mode: "some content", scope: "prompt", source_lang: "some content", source_text: "some content", target_lang: "some content", target_text: "some content"}
+  @valid_attrs %{
+    mode: "some content",
+    scope: "prompt",
+    source_lang: "some content",
+    source_text: "some content",
+    target_lang: "some content",
+    target_text: "some content"
+  }
   @invalid_attrs %{}
 
   test "changeset with valid attributes" do

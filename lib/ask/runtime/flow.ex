@@ -1,6 +1,15 @@
 defmodule Ask.Runtime.Flow do
   # current_step: step_index | {section_index, step_index}
-  defstruct current_step: nil, questionnaire: nil, mode: nil, language: nil, retries: 0, in_quota_completed_steps: false, has_sections: false, section_order: nil, ignored_values_from_relevant_steps: []
+  defstruct current_step: nil,
+            questionnaire: nil,
+            mode: nil,
+            language: nil,
+            retries: 0,
+            in_quota_completed_steps: false,
+            has_sections: false,
+            section_order: nil,
+            ignored_values_from_relevant_steps: []
+
   alias Ask.{Repo, Questionnaire, Respondent}
   alias Ask.Runtime.{Reply, Step}
   alias Ask.Runtime.Flow.{Visitor, Message}
@@ -44,7 +53,15 @@ defmodule Ask.Runtime.Flow do
   end
 
   def dump(flow) do
-    %{current_step: dump_current_step(flow.current_step), questionnaire_id: flow.questionnaire.id, mode: flow.mode, language: flow.language, retries: flow.retries, in_quota_completed_steps: flow.in_quota_completed_steps, section_order: flow.section_order}
+    %{
+      current_step: dump_current_step(flow.current_step),
+      questionnaire_id: flow.questionnaire.id,
+      mode: flow.mode,
+      language: flow.language,
+      retries: flow.retries,
+      in_quota_completed_steps: flow.in_quota_completed_steps,
+      section_order: flow.section_order
+    }
   end
 
   def dump_current_step({first, second}) do
@@ -80,11 +97,12 @@ defmodule Ask.Runtime.Flow do
   end
 
   def questionnaire_has_sections(questionnaire) do
-    Enum.any?(questionnaire.steps, fn(step) -> step["type"] == "section" end)
+    Enum.any?(questionnaire.steps, fn step -> step["type"] == "section" end)
   end
 
   defp randomize_sections(questionnaire) do
-    ids_to_randomize = Enum.with_index(questionnaire.steps)
+    ids_to_randomize =
+      Enum.with_index(questionnaire.steps)
       |> Enum.flat_map(fn {step, index} ->
         if step["type"] == "section" && step["randomize"] do
           [index]
@@ -93,14 +111,16 @@ defmodule Ask.Runtime.Flow do
         end
       end)
 
-    {sections, _} = Enum.with_index(questionnaire.steps)
-      |> Enum.flat_map_reduce(ids_to_randomize, fn({step, index}, acc) ->
+    {sections, _} =
+      Enum.with_index(questionnaire.steps)
+      |> Enum.flat_map_reduce(ids_to_randomize, fn {step, index}, acc ->
         if step["type"] == "section" && step["randomize"] do
           extract_random_item(acc)
         else
           {[index], acc}
         end
       end)
+
     sections
   end
 
@@ -126,6 +146,7 @@ defmodule Ask.Runtime.Flow do
   def next_step(nil, %Flow{has_sections: true} = flow), do: advance_step_in_section(flow)
   def next_step(nil, flow), do: flow.current_step + 1
   def next_step("end", flow), do: flow |> end_flow
+
   def next_step("end_section", flow) do
     if flow.section_order do
       {next_section(get_section_index(flow), flow.section_order), 0}
@@ -133,30 +154,34 @@ defmodule Ask.Runtime.Flow do
       {get_section_index(flow) + 1, 0}
     end
   end
+
   def next_step(next_id, %Flow{has_sections: true} = flow) do
     section_index = get_section_index(flow)
+
     {:ok, steps} =
       flow
       |> steps
       |> Enum.at(section_index)
       |> Map.fetch("steps")
 
-    next_step_index = steps
+    next_step_index =
+      steps
       |> Enum.find_index(fn istep -> istep["id"] == next_id end)
 
-    if (!next_step_index || get_step_index(flow) > next_step_index) do
+    if !next_step_index || get_step_index(flow) > next_step_index do
       raise "Skip logic: invalid step id."
     else
       {section_index, next_step_index}
     end
   end
+
   def next_step(next_id, flow) do
     next_step_index =
       flow
       |> steps
       |> Enum.find_index(fn istep -> istep["id"] == next_id end)
 
-    if (!next_step_index || flow.current_step > next_step_index) do
+    if !next_step_index || flow.current_step > next_step_index do
       raise "Skip logic: invalid step id."
     else
       next_step_index
@@ -167,7 +192,8 @@ defmodule Ask.Runtime.Flow do
     section_index = get_section_index(flow)
     step_index = get_step_index(flow)
 
-    section = flow
+    section =
+      flow
       |> steps
       |> Enum.at(section_index)
 
@@ -183,7 +209,7 @@ defmodule Ask.Runtime.Flow do
   end
 
   defp next_section(current_section_index, section_order) do
-    current_index = Enum.find_index(section_order, fn(x) -> x == current_section_index end)
+    current_index = Enum.find_index(section_order, fn x -> x == current_section_index end)
     Enum.at(section_order, current_index + 1)
   end
 
@@ -192,6 +218,7 @@ defmodule Ask.Runtime.Flow do
       cond do
         !reply_value && !(step["type"] == "explanation") ->
           flow.current_step + 1
+
         :else ->
           next_step_by_skip_logic(flow, step, reply_value, mode)
       end
@@ -207,13 +234,18 @@ defmodule Ask.Runtime.Flow do
     length(steps(flow))
   end
 
-  defp accept_reply(%Flow{current_step: nil, has_sections: true, section_order: nil} = flow, :answer, visitor, _mode) do
-    flow = %{flow | current_step: {0,0}}
+  defp accept_reply(
+         %Flow{current_step: nil, has_sections: true, section_order: nil} = flow,
+         :answer,
+         visitor,
+         _mode
+       ) do
+    flow = %{flow | current_step: {0, 0}}
     {flow, %Reply{}, visitor}
   end
 
   defp accept_reply(%Flow{current_step: nil, has_sections: true} = flow, :answer, visitor, _mode) do
-    flow = %{flow | current_step: {Enum.at(flow.section_order, 0),0}}
+    flow = %{flow | current_step: {Enum.at(flow.section_order, 0), 0}}
     {flow, %Reply{}, visitor}
   end
 
@@ -248,9 +280,11 @@ defmodule Ask.Runtime.Flow do
 
   defp accept_reply(flow, {:reply_with_step_id, reply, step_id}, visitor, mode) do
     step = current_step(flow)
+
     case step do
       %{"id" => ^step_id} ->
         accept_reply(flow, {:reply, reply}, visitor, mode)
+
       _ ->
         accept_reply(flow, :answer, visitor, mode)
     end
@@ -274,16 +308,30 @@ defmodule Ask.Runtime.Flow do
         if flow.retries >= @max_retries do
           {:no_retries_left, %{flow | retries: 0}}
         else
-          visitor = visitor |> Visitor.accept_message(flow.questionnaire.settings["error_message"], flow.language, "Error")
+          visitor =
+            visitor
+            |> Visitor.accept_message(
+              flow.questionnaire.settings["error_message"],
+              flow.language,
+              "Error"
+            )
+
           {%{flow | retries: flow.retries + 1}, %Reply{}, visitor}
         end
+
       nil ->
         flow = flow |> advance_current_step(step, reply_value, mode)
         {%{flow | retries: 0}, %Reply{}, visitor}
+
       {:refusal, reply_value} ->
-        advance_after_reply(flow, step, reply_value, visitor, mode, stores: %{step["store"] => "REFUSED"})
+        advance_after_reply(flow, step, reply_value, visitor, mode,
+          stores: %{step["store"] => "REFUSED"}
+        )
+
       reply_value ->
-        advance_after_reply(flow, step, reply_value, visitor, mode, stores: %{step["store"] => reply_value})
+        advance_after_reply(flow, step, reply_value, visitor, mode,
+          stores: %{step["store"] => reply_value}
+        )
     end
   end
 
@@ -293,18 +341,26 @@ defmodule Ask.Runtime.Flow do
   end
 
   if Mix.env() == :prod do
-    def should_update_disposition(old_disposition, new_disposition) when is_binary(old_disposition) do
+    def should_update_disposition(old_disposition, new_disposition)
+        when is_binary(old_disposition) do
       should_update_disposition(String.to_existing_atom(old_disposition), new_disposition)
     end
-    def should_update_disposition(old_disposition, new_disposition) when is_binary(new_disposition) do
+
+    def should_update_disposition(old_disposition, new_disposition)
+        when is_binary(new_disposition) do
       should_update_disposition(old_disposition, String.to_existing_atom(new_disposition))
     end
   else
     def should_update_disposition(old_disposition, _) when is_binary(old_disposition) do
-      raise "Flow.should_update_disposition/2 expected old_disposition to be an Atom but got a String (#{old_disposition})"
+      raise "Flow.should_update_disposition/2 expected old_disposition to be an Atom but got a String (#{
+              old_disposition
+            })"
     end
+
     def should_update_disposition(_, new_disposition) when is_binary(new_disposition) do
-      raise "Flow.should_update_disposition/2 expected new_disposition to be an Atom but got a String (#{new_disposition})"
+      raise "Flow.should_update_disposition/2 expected new_disposition to be an Atom but got a String (#{
+              new_disposition
+            })"
     end
   end
 
@@ -344,7 +400,9 @@ defmodule Ask.Runtime.Flow do
     end
   else
     defp stopped_disposition_from(old_disposition) when is_binary(old_disposition) do
-      raise "Flow.stopped_disposition_from/1 expected old_disposition to be an Atom but got a String (#{old_disposition})"
+      raise "Flow.stopped_disposition_from/1 expected old_disposition to be an Atom but got a String (#{
+              old_disposition
+            })"
     end
   end
 
@@ -363,7 +421,9 @@ defmodule Ask.Runtime.Flow do
     end
   else
     def failed_disposition_from(old_disposition) when is_binary(old_disposition) do
-      raise "Flow.failed_disposition_from/1 expected old_disposition to be an Atom but got a String (#{old_disposition})"
+      raise "Flow.failed_disposition_from/1 expected old_disposition to be an Atom but got a String (#{
+              old_disposition
+            })"
     end
   end
 
@@ -418,15 +478,20 @@ defmodule Ask.Runtime.Flow do
 
   defp eval({flow, state, visitor}, mode, old_disposition) do
     step = current_step(flow)
+
     case step do
       nil ->
         msg = flow.questionnaire.settings["thank_you_message"]
-        visitor = if msg do
-          visitor |> Visitor.accept_message(msg, flow.language, "Thank you")
-        else
-          visitor
-        end
+
+        visitor =
+          if msg do
+            visitor |> Visitor.accept_message(msg, flow.language, "Thank you")
+          else
+            visitor
+          end
+
         {:end, nil, %{state | steps: Visitor.close(visitor)}}
+
       step ->
         case state |> run_step(step) do
           {:ok, state} ->
@@ -434,6 +499,7 @@ defmodule Ask.Runtime.Flow do
               {:continue, visitor} ->
                 flow = %{flow | current_step: next_step_by_skip_logic(flow, step, nil, mode)}
                 eval({flow, state, visitor}, mode, old_disposition)
+
               {:stop, visitor} ->
                 reply(state, visitor, flow)
             end
@@ -446,9 +512,10 @@ defmodule Ask.Runtime.Flow do
   end
 
   defp reply(state, visitor, flow) do
-    reply = %{state | steps: Visitor.close(visitor)}
-    |> add_progress(flow)
-    |> add_error_message(flow)
+    reply =
+      %{state | steps: Visitor.close(visitor)}
+      |> add_progress(flow)
+      |> add_error_message(flow)
 
     {:ok, flow, reply}
   end
@@ -461,9 +528,11 @@ defmodule Ask.Runtime.Flow do
   defp add_error_message(reply, flow) do
     language = flow.language
     mode = flow.mode
+
     case flow.questionnaire.settings["error_message"] do
       %{^language => %{^mode => error_message}} ->
         %{reply | error_message: error_message}
+
       _ ->
         reply
     end
@@ -473,16 +542,18 @@ defmodule Ask.Runtime.Flow do
     current_step_id = current_step(flow)["id"]
     steps = get_filtered_steps(flow)
 
-    current_step_index = steps
-    |> Enum.find_index(fn step -> step["id"] == current_step_id end)
+    current_step_index =
+      steps
+      |> Enum.find_index(fn step -> step["id"] == current_step_id end)
 
     # Add 1 to the current step, because if we have 3 steps and we
     # are in the first one (index 0), we'd like it to be: 1/3, so 33%
-    current_step_index = if current_step_index do
-      current_step_index + 1
-    else
-      1
-    end
+    current_step_index =
+      if current_step_index do
+        current_step_index + 1
+      else
+        1
+      end
 
     total_steps = length(steps)
 
@@ -499,32 +570,41 @@ defmodule Ask.Runtime.Flow do
 
   def get_filtered_steps(%Flow{has_sections: true} = flow) do
     steps = steps(flow)
-    flow.section_order |> Enum.flat_map(fn (index) ->
+
+    flow.section_order
+    |> Enum.flat_map(fn index ->
       item = Enum.at(steps, index)
+
       case item["type"] do
         "section" ->
           item["steps"]
-            |> Enum.reject(fn step -> step["type"] == "flag" end)
-        "flag" -> []
-        _ -> [item]
+          |> Enum.reject(fn step -> step["type"] == "flag" end)
+
+        "flag" ->
+          []
+
+        _ ->
+          [item]
       end
     end)
   end
 
   def get_filtered_steps(flow) do
     flow
-      |> steps
-      |> Enum.reject(fn step -> step["type"] == "flag" end)
+    |> steps
+    |> Enum.reject(fn step -> step["type"] == "flag" end)
   end
 
   def current_step(%Flow{has_sections: true} = flow) do
     case get_section_index(flow) do
-      nil -> nil
+      nil ->
+        nil
+
       section_index ->
         flow
-          |> steps
-          |> Enum.at(section_index)
-          |> get_step_from_section(get_step_index(flow))
+        |> steps
+        |> Enum.at(section_index)
+        |> get_step_from_section(get_step_index(flow))
     end
   end
 
@@ -536,8 +616,8 @@ defmodule Ask.Runtime.Flow do
 
   def get_step_from_section(%{"type" => "section"} = section, index) do
     section
-      |> Map.get("steps")
-      |> Enum.at(index)
+    |> Map.get("steps")
+    |> Enum.at(index)
   end
 
   def get_step_from_section(step, _) do
@@ -547,9 +627,11 @@ defmodule Ask.Runtime.Flow do
   defp has_thank_you_message?(flow) do
     language = flow.language
     mode = flow.mode
+
     case flow.questionnaire.settings do
       %{"thank_you_message" => %{^language => %{^mode => _message}}} ->
         true
+
       _ ->
         false
     end
@@ -593,11 +675,9 @@ defmodule Ask.Runtime.Flow.Message do
     :answer
   end
 
-  def is_stop_reply({:reply, reply}), do:
-    String.downcase(reply) == "stop"
+  def is_stop_reply({:reply, reply}), do: String.downcase(reply) == "stop"
 
   def is_stop_reply(_), do: false
-
 end
 
 defprotocol Ask.Runtime.Flow.Visitor do

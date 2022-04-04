@@ -9,7 +9,7 @@ defmodule Ask.Repo.Migrations.CreateQuestionnaire do
 
       timestamps()
     end
-    create index(:questionnaires, [:project_id])
 
+    create index(:questionnaires, [:project_id])
   end
 end

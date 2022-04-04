@@ -18,11 +18,11 @@ defmodule Ask.Repo.Migrations.ChangeSurveyModesToAraryOfArrays do
 
   def change do
     Survey
-    |> Repo.all
+    |> Repo.all()
     |> Enum.each(fn survey ->
       survey
       |> Survey.changeset(%{mode: [survey.mode || []]})
-      |> Repo.update!
+      |> Repo.update!()
     end)
   end
 end

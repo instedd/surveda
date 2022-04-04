@@ -23,13 +23,17 @@ defmodule Ask.Repo.Migrations.MoveSurveyChannelsToRespondentGroupChannels do
   def up do
     Repo.query!("select survey_id, channel_id from survey_channels").rows
     |> Enum.each(fn [survey_id, channel_id] ->
-      rows = Repo.query!("select id from respondent_groups where survey_id = #{survey_id} limit 1").rows
+      rows =
+        Repo.query!("select id from respondent_groups where survey_id = #{survey_id} limit 1").rows
+
       if length(rows) == 1 do
         respondent_group_id = hd(hd(rows))
+
         %RespondentGroupChannel{
           respondent_group_id: respondent_group_id,
-          channel_id: channel_id,
-        } |> Repo.insert!
+          channel_id: channel_id
+        }
+        |> Repo.insert!()
       end
     end)
   end

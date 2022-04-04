@@ -5,43 +5,43 @@ defmodule Ask.FloipPackageTest do
   test "fields" do
     # The FLOIP spec demands that these fields are printed in
     # every descriptor verbatim.
-    assert FloipPackage.fields == [
-      %{
-        "name" => "timestamp",
-        "title" => "Timestamp",
-        "type" => "datetime"
-      },
-      %{
-        "name" => "row_id",
-        "title" => "Row ID",
-        "type" => "string"
-      },
-      %{
-        "name" => "contact_id",
-        "title" => "Contact ID",
-        "type" => "string"
-      },
-      %{
-        "name" => "session_id",
-        "title" => "Session ID",
-        "type" => "string"
-      },
-      %{
-        "name" => "question_id",
-        "title" => "Question ID",
-        "type" => "string"
-      },
-      %{
-        "name" => "response_id",
-        "title" => "Response ID",
-        "type" => "any"
-      },
-      %{
-        "name" => "response_metadata",
-        "title" => "Response Metadata",
-        "type" => "object"
-      }
-    ]
+    assert FloipPackage.fields() == [
+             %{
+               "name" => "timestamp",
+               "title" => "Timestamp",
+               "type" => "datetime"
+             },
+             %{
+               "name" => "row_id",
+               "title" => "Row ID",
+               "type" => "string"
+             },
+             %{
+               "name" => "contact_id",
+               "title" => "Contact ID",
+               "type" => "string"
+             },
+             %{
+               "name" => "session_id",
+               "title" => "Session ID",
+               "type" => "string"
+             },
+             %{
+               "name" => "question_id",
+               "title" => "Question ID",
+               "type" => "string"
+             },
+             %{
+               "name" => "response_id",
+               "title" => "Response ID",
+               "type" => "any"
+             },
+             %{
+               "name" => "response_metadata",
+               "title" => "Response Metadata",
+               "type" => "object"
+             }
+           ]
   end
 
   # A list of steps to create questionnaire fixtures.
@@ -51,24 +51,32 @@ defmodule Ask.FloipPackageTest do
   def floip_mappable_steps() do
     [
       StepBuilder.multiple_choice_step(
-        id: Ecto.UUID.generate,
+        id: Ecto.UUID.generate(),
         title: "Do you exercise",
-        prompt: StepBuilder.prompt(
-          sms: StepBuilder.sms_prompt("Do you exercise? Reply 1 for YES, 2 for NO"),
-          ivr: StepBuilder.tts_prompt("Do you exercise? Press 1 for YES, 2 for NO")
-        ),
+        prompt:
+          StepBuilder.prompt(
+            sms: StepBuilder.sms_prompt("Do you exercise? Reply 1 for YES, 2 for NO"),
+            ivr: StepBuilder.tts_prompt("Do you exercise? Press 1 for YES, 2 for NO")
+          ),
         store: "Exercises",
         choices: [
-          StepBuilder.choice(value: "Yes", responses: StepBuilder.responses(sms: ["Yes", "Y", "1"], ivr: ["1"])),
-          StepBuilder.choice(value: "No", responses: StepBuilder.responses(sms: ["No", "N", "2"], ivr: ["2"]))
+          StepBuilder.choice(
+            value: "Yes",
+            responses: StepBuilder.responses(sms: ["Yes", "Y", "1"], ivr: ["1"])
+          ),
+          StepBuilder.choice(
+            value: "No",
+            responses: StepBuilder.responses(sms: ["No", "N", "2"], ivr: ["2"])
+          )
         ]
       ),
       StepBuilder.numeric_step(
-        id: Ecto.UUID.generate,
+        id: Ecto.UUID.generate(),
         title: "Which is the second perfect number?",
-        prompt: StepBuilder.prompt(
-          sms: StepBuilder.sms_prompt("Which is the second perfect number??"),
-          ivr: StepBuilder.tts_prompt("Which is the second perfect number")
+        prompt:
+          StepBuilder.prompt(
+            sms: StepBuilder.sms_prompt("Which is the second perfect number??"),
+            ivr: StepBuilder.tts_prompt("Which is the second perfect number")
           ),
         store: "Perfect Number",
         skip_logic: StepBuilder.default_numeric_skip_logic(),
@@ -86,15 +94,14 @@ defmodule Ask.FloipPackageTest do
   def non_floip_mappable_steps() do
     [
       StepBuilder.flag_step(
-          id: Ecto.UUID.generate,
-          title: "Let there be rock",
-          disposition: "interim partial"),
-      StepBuilder.explanation_step(
-        id: Ecto.UUID.generate,
+        id: Ecto.UUID.generate(),
         title: "Let there be rock",
-        prompt: StepBuilder.prompt(
-          sms: StepBuilder.sms_prompt("Is this the last question?")
-        ),
+        disposition: "interim partial"
+      ),
+      StepBuilder.explanation_step(
+        id: Ecto.UUID.generate(),
+        title: "Let there be rock",
+        prompt: StepBuilder.prompt(sms: StepBuilder.sms_prompt("Is this the last question?")),
         skip_logic: nil
       )
     ]
@@ -113,7 +120,7 @@ defmodule Ask.FloipPackageTest do
       questions = FloipPackage.questions(survey)
 
       # Non mappable questions should be left out
-      assert length(questions |> Map.to_list) == length(floip_mappable_steps)
+      assert length(questions |> Map.to_list()) == length(floip_mappable_steps)
 
       # Questions should be indexed by their corresponding "store" name,
       # because Surveda links responses to variables more strongly than
@@ -121,46 +128,58 @@ defmodule Ask.FloipPackageTest do
       # We delegate the details of how they are mapped from steps to
       # FloipPackage.to_floip_question, though.
       floip_mappable_steps
-      |> Enum.each(fn(step) -> assert questions[step["store"]] == FloipPackage.to_floip_question(step) end)
+      |> Enum.each(fn step ->
+        assert questions[step["store"]] == FloipPackage.to_floip_question(step)
+      end)
     end
 
     test "convert multiple choice step to_floip_question" do
-      multiple_choice_step = StepBuilder.multiple_choice_step(
-        id: Ecto.UUID.generate,
-        title: "Do you exercise",
-        prompt: StepBuilder.prompt(
-          sms: StepBuilder.sms_prompt("Do you exercise? Reply 1 for YES, 2 for NO"),
-          ivr: StepBuilder.tts_prompt("Do you exercise? Press 1 for YES, 2 for NO")
-        ),
-        store: "Exercises",
-        choices: [
-          StepBuilder.choice(value: "Yes", responses: StepBuilder.responses(sms: ["Yes", "Y", "1"], ivr: ["1"])),
-          StepBuilder.choice(value: "No", responses: StepBuilder.responses(sms: ["No", "N", "2"], ivr: ["2"]))
-        ]
-      )
+      multiple_choice_step =
+        StepBuilder.multiple_choice_step(
+          id: Ecto.UUID.generate(),
+          title: "Do you exercise",
+          prompt:
+            StepBuilder.prompt(
+              sms: StepBuilder.sms_prompt("Do you exercise? Reply 1 for YES, 2 for NO"),
+              ivr: StepBuilder.tts_prompt("Do you exercise? Press 1 for YES, 2 for NO")
+            ),
+          store: "Exercises",
+          choices: [
+            StepBuilder.choice(
+              value: "Yes",
+              responses: StepBuilder.responses(sms: ["Yes", "Y", "1"], ivr: ["1"])
+            ),
+            StepBuilder.choice(
+              value: "No",
+              responses: StepBuilder.responses(sms: ["No", "N", "2"], ivr: ["2"])
+            )
+          ]
+        )
 
-      floip_question = multiple_choice_step |> FloipPackage.to_floip_question
+      floip_question = multiple_choice_step |> FloipPackage.to_floip_question()
 
       assert floip_question["type"] == "select_one"
       assert floip_question["label"] == "Do you exercise"
-      assert floip_question["type_options"] == %{ "choices" => ["Yes", "No"] }
+      assert floip_question["type_options"] == %{"choices" => ["Yes", "No"]}
     end
 
     test "convert numeric step to_floip_question" do
-      numeric_step = StepBuilder.numeric_step(
-        id: Ecto.UUID.generate,
-        title: "Which is the second perfect number?",
-        prompt: StepBuilder.prompt(
-          sms: StepBuilder.sms_prompt("Which is the second perfect number??"),
-          ivr: StepBuilder.tts_prompt("Which is the second perfect number")
-          ),
-        store: "Perfect Number",
-        skip_logic: StepBuilder.default_numeric_skip_logic(),
-        alphabetical_answers: false,
-        refusal: nil
-      )
+      numeric_step =
+        StepBuilder.numeric_step(
+          id: Ecto.UUID.generate(),
+          title: "Which is the second perfect number?",
+          prompt:
+            StepBuilder.prompt(
+              sms: StepBuilder.sms_prompt("Which is the second perfect number??"),
+              ivr: StepBuilder.tts_prompt("Which is the second perfect number")
+            ),
+          store: "Perfect Number",
+          skip_logic: StepBuilder.default_numeric_skip_logic(),
+          alphabetical_answers: false,
+          refusal: nil
+        )
 
-      floip_question = numeric_step |> FloipPackage.to_floip_question
+      floip_question = numeric_step |> FloipPackage.to_floip_question()
 
       assert floip_question["type"] == "numeric"
       assert floip_question["label"] == "Which is the second perfect number?"
@@ -174,7 +193,7 @@ defmodule Ask.FloipPackageTest do
       other_steps = non_floip_mappable_steps()
       quiz1 = insert(:questionnaire, steps: floip_mappable_steps)
       quiz2 = insert(:questionnaire, steps: other_steps)
-      insert(:survey, questionnaires: [quiz1, quiz2], started_at: DateTime.utc_now)
+      insert(:survey, questionnaires: [quiz1, quiz2], started_at: DateTime.utc_now())
     end
 
     def insert_respondent(survey, number) do
@@ -187,10 +206,12 @@ defmodule Ask.FloipPackageTest do
         field_name: field_name,
         value: response,
         inserted_at: inserted_at,
-        id: id)
+        id: id
+      )
     end
+
     def insert_response(respondent, field_name, response, id \\ nil) do
-      insert_response(respondent, field_name, response, id, DateTime.utc_now)
+      insert_response(respondent, field_name, response, id, DateTime.utc_now())
     end
 
     def assert_same(floip_response, db_response) do
@@ -299,18 +320,46 @@ defmodule Ask.FloipPackageTest do
       # Setup
       survey = insert_survey()
       respondent_1 = insert_respondent(survey, "1234")
-      _db_response_1 = insert_response(respondent_1, "Exercises", "Yes", 1, DateTime.from_iso8601("2000-01-01T01:02:03Z") |> elem(1))
-      respondent_2 = insert_respondent(survey, "5678")
-      db_response_2 = insert_response(respondent_2, "Exercises", "No", 2, DateTime.from_iso8601("2001-01-01T01:02:03Z") |> elem(1))
 
-      june_2000_iso8601 = %DateTime{
-        year: 2000, month: 6, day: 1,
-        zone_abbr: "UTC", hour: 1, minute: 2, second: 3, microsecond: {0, 0},
-        utc_offset: 3600, std_offset: 0, time_zone: "Etc/UTC"
-      } |> DateTime.to_iso8601
+      _db_response_1 =
+        insert_response(
+          respondent_1,
+          "Exercises",
+          "Yes",
+          1,
+          DateTime.from_iso8601("2000-01-01T01:02:03Z") |> elem(1)
+        )
+
+      respondent_2 = insert_respondent(survey, "5678")
+
+      db_response_2 =
+        insert_response(
+          respondent_2,
+          "Exercises",
+          "No",
+          2,
+          DateTime.from_iso8601("2001-01-01T01:02:03Z") |> elem(1)
+        )
+
+      june_2000_iso8601 =
+        %DateTime{
+          year: 2000,
+          month: 6,
+          day: 1,
+          zone_abbr: "UTC",
+          hour: 1,
+          minute: 2,
+          second: 3,
+          microsecond: {0, 0},
+          utc_offset: 3600,
+          std_offset: 0,
+          time_zone: "Etc/UTC"
+        }
+        |> DateTime.to_iso8601()
 
       # Test
-      {responses, only_response, only_response} = FloipPackage.responses(survey, start_timestamp: june_2000_iso8601)
+      {responses, only_response, only_response} =
+        FloipPackage.responses(survey, start_timestamp: june_2000_iso8601)
 
       # Assertions
       assert length(responses) == 1
@@ -321,18 +370,46 @@ defmodule Ask.FloipPackageTest do
       # Setup
       survey = insert_survey()
       respondent_1 = insert_respondent(survey, "1234")
-      db_response_1 = insert_response(respondent_1, "Exercises", "Yes", 1, DateTime.from_iso8601("2000-01-01T01:02:03Z") |> elem(1))
-      respondent_2 = insert_respondent(survey, "5678")
-      _db_response_2 = insert_response(respondent_2, "Exercises", "No", 2, DateTime.from_iso8601("2001-01-01T01:02:03Z") |> elem(1))
 
-      june_2000_iso8601 = %DateTime{
-        year: 2000, month: 6, day: 1,
-        zone_abbr: "UTC", hour: 1, minute: 2, second: 3, microsecond: {0, 0},
-        utc_offset: 3600, std_offset: 0, time_zone: "Etc/UTC"
-      } |> DateTime.to_iso8601
+      db_response_1 =
+        insert_response(
+          respondent_1,
+          "Exercises",
+          "Yes",
+          1,
+          DateTime.from_iso8601("2000-01-01T01:02:03Z") |> elem(1)
+        )
+
+      respondent_2 = insert_respondent(survey, "5678")
+
+      _db_response_2 =
+        insert_response(
+          respondent_2,
+          "Exercises",
+          "No",
+          2,
+          DateTime.from_iso8601("2001-01-01T01:02:03Z") |> elem(1)
+        )
+
+      june_2000_iso8601 =
+        %DateTime{
+          year: 2000,
+          month: 6,
+          day: 1,
+          zone_abbr: "UTC",
+          hour: 1,
+          minute: 2,
+          second: 3,
+          microsecond: {0, 0},
+          utc_offset: 3600,
+          std_offset: 0,
+          time_zone: "Etc/UTC"
+        }
+        |> DateTime.to_iso8601()
 
       # Test
-      {responses, only_response, only_response} = FloipPackage.responses(survey, end_timestamp: june_2000_iso8601)
+      {responses, only_response, only_response} =
+        FloipPackage.responses(survey, end_timestamp: june_2000_iso8601)
 
       # Assertions
       assert length(responses) == 1
@@ -343,27 +420,37 @@ defmodule Ask.FloipPackageTest do
       # Setup
       survey = insert_survey()
       respondent_1 = insert_respondent(survey, "1234")
-      db_responses = for i <- 1..20 do
-        response_minute = String.pad_leading(i |> Integer.to_string, 2, "0")
-        insert_response(respondent_1, "Exercises #{i}", "Yes", i, DateTime.from_iso8601("2000-01-01T01:#{response_minute}:03Z") |> elem(1))
-      end
+
+      db_responses =
+        for i <- 1..20 do
+          response_minute = String.pad_leading(i |> Integer.to_string(), 2, "0")
+
+          insert_response(
+            respondent_1,
+            "Exercises #{i}",
+            "Yes",
+            i,
+            DateTime.from_iso8601("2000-01-01T01:#{response_minute}:03Z") |> elem(1)
+          )
+        end
 
       # Test
       {responses, first_response, last_response} = FloipPackage.responses(survey, size: 15)
 
       # Assertions
       assert length(responses) == 15
+
       for i <- 0..14 do
         floip_response = responses |> Enum.at(i)
         db_response = db_responses |> Enum.at(i)
 
         assert_same(floip_response, db_response)
 
-        if (i == 0) do
+        if i == 0 do
           assert_same(first_response, db_response)
         end
 
-        if (i == 14) do
+        if i == 14 do
           assert_same(last_response, db_response)
         end
       end
@@ -380,16 +467,17 @@ defmodule Ask.FloipPackageTest do
 
       # Assertions
       assert length(responses) == 1000
+
       for i <- 0..999 do
         floip_response = responses |> Enum.at(i)
         db_response = db_responses |> Enum.at(i)
         assert_same(floip_response, db_response)
 
-        if (i == 0) do
+        if i == 0 do
           assert_same(first_response, db_response)
         end
 
-        if (i == 999) do
+        if i == 999 do
           assert_same(last_response, db_response)
         end
       end
@@ -398,26 +486,37 @@ defmodule Ask.FloipPackageTest do
     test "return all responses after an id" do
       survey = insert_survey()
       respondent_1 = insert_respondent(survey, "1234")
-      db_responses = for i <- 1..50 do
-        response_minute = String.pad_leading(i |> Integer.to_string, 2, "0")
-        insert_response(respondent_1, "Exercises #{i}", "Yes", i, DateTime.from_iso8601("2000-01-01T01:#{response_minute}:03Z") |> elem(1))
-      end
+
+      db_responses =
+        for i <- 1..50 do
+          response_minute = String.pad_leading(i |> Integer.to_string(), 2, "0")
+
+          insert_response(
+            respondent_1,
+            "Exercises #{i}",
+            "Yes",
+            i,
+            DateTime.from_iso8601("2000-01-01T01:#{response_minute}:03Z") |> elem(1)
+          )
+        end
 
       # Test
-      {responses, first_response, last_response} = FloipPackage.responses(survey, after_cursor: 10)
+      {responses, first_response, last_response} =
+        FloipPackage.responses(survey, after_cursor: 10)
 
       # Assertions
       assert length(responses) == 40
+
       for i <- 0..39 do
         floip_response = responses |> Enum.at(i)
         db_response = db_responses |> Enum.at(i + 10)
         assert_same(floip_response, db_response)
 
-        if (i == 0) do
+        if i == 0 do
           assert_same(first_response, db_response)
         end
 
-        if (i == 39) do
+        if i == 39 do
           assert_same(last_response, db_response)
         end
       end
@@ -426,26 +525,37 @@ defmodule Ask.FloipPackageTest do
     test "return all responses before an id" do
       survey = insert_survey()
       respondent_1 = insert_respondent(survey, "1234")
-      db_responses = for i <- 1..50 do
-        response_minute = String.pad_leading(i |> Integer.to_string, 2, "0")
-        insert_response(respondent_1, "Exercises #{i}", "Yes", i, DateTime.from_iso8601("2000-01-01T01:#{response_minute}:03Z") |> elem(1))
-      end
+
+      db_responses =
+        for i <- 1..50 do
+          response_minute = String.pad_leading(i |> Integer.to_string(), 2, "0")
+
+          insert_response(
+            respondent_1,
+            "Exercises #{i}",
+            "Yes",
+            i,
+            DateTime.from_iso8601("2000-01-01T01:#{response_minute}:03Z") |> elem(1)
+          )
+        end
 
       # Test
-      {responses, first_response, last_response} = FloipPackage.responses(survey, before_cursor: 10)
+      {responses, first_response, last_response} =
+        FloipPackage.responses(survey, before_cursor: 10)
 
       # Assertions
       assert length(responses) == 9
+
       for i <- 0..8 do
         floip_response = responses |> Enum.at(i)
         db_response = db_responses |> Enum.at(i)
         assert_same(floip_response, db_response)
 
-        if (i == 0) do
+        if i == 0 do
           assert_same(first_response, db_response)
         end
 
-        if (i == 8) do
+        if i == 8 do
           assert_same(last_response, db_response)
         end
       end
@@ -479,12 +589,12 @@ defmodule Ask.FloipPackageTest do
       {:ok, start_timestamp, _} = DateTime.from_iso8601("2015-11-26 04:34:13Z")
 
       assert responses_options == %{
-        end_timestamp: end_timestamp,
-        start_timestamp: start_timestamp,
-        after_cursor: 12,
-        before_cursor: 18,
-        size: 25
-      }
+               end_timestamp: end_timestamp,
+               start_timestamp: start_timestamp,
+               after_cursor: 12,
+               before_cursor: 18,
+               size: 25
+             }
     end
   end
 
@@ -506,7 +616,10 @@ defmodule Ask.FloipPackageTest do
       iso_start_timestamp = DateTime.to_iso8601(responses_options[:start_timestamp], :extended)
       iso_end_timestamp = DateTime.to_iso8601(responses_options[:end_timestamp], :extended)
 
-      assert query_params == "?filter[start-timestamp]=#{iso_start_timestamp}&filter[end-timestamp]=#{iso_end_timestamp}&page[size]=25&page[afterCursor]=12&page[beforeCursor]=18"
+      assert query_params ==
+               "?filter[start-timestamp]=#{iso_start_timestamp}&filter[end-timestamp]=#{
+                 iso_end_timestamp
+               }&page[size]=25&page[afterCursor]=12&page[beforeCursor]=18"
     end
 
     test "generates query params from empty options" do
@@ -521,32 +634,34 @@ defmodule Ask.FloipPackageTest do
       descriptor = FloipPackage.descriptor(survey, "http://gimme.responses")
 
       assert descriptor == %{
-        "data" => %{
-          "type" => "packages",
-          "id" => FloipPackage.id(survey),
-          "attributes" => %{
-            "profile" => "flow-results-package",
-            "flow-results-specification" => "1.0.0-rc1",
-            "created" => FloipPackage.created_at(survey),
-            "modified" => FloipPackage.modified_at(survey),
-            "id" => FloipPackage.id(survey),
-            "title" => FloipPackage.title(survey),
-            "name" => FloipPackage.name(survey),
-            "resources" => [%{
-              "api-data-url" => "http://gimme.responses",
-              "encoding" => "utf-8",
-              "mediatype" => "application/json",
-              "profile" => "data-resource",
-              "path" => nil,
-              "name" => "#{FloipPackage.name(survey)}-data",
-              "schema" => %{
-                "fields" => FloipPackage.fields,
-                "questions" => FloipPackage.questions(survey)
-              }
-            }]
-          }
-        }
-      }
+               "data" => %{
+                 "type" => "packages",
+                 "id" => FloipPackage.id(survey),
+                 "attributes" => %{
+                   "profile" => "flow-results-package",
+                   "flow-results-specification" => "1.0.0-rc1",
+                   "created" => FloipPackage.created_at(survey),
+                   "modified" => FloipPackage.modified_at(survey),
+                   "id" => FloipPackage.id(survey),
+                   "title" => FloipPackage.title(survey),
+                   "name" => FloipPackage.name(survey),
+                   "resources" => [
+                     %{
+                       "api-data-url" => "http://gimme.responses",
+                       "encoding" => "utf-8",
+                       "mediatype" => "application/json",
+                       "profile" => "data-resource",
+                       "path" => nil,
+                       "name" => "#{FloipPackage.name(survey)}-data",
+                       "schema" => %{
+                         "fields" => FloipPackage.fields(),
+                         "questions" => FloipPackage.questions(survey)
+                       }
+                     }
+                   ]
+                 }
+               }
+             }
     end
   end
 end

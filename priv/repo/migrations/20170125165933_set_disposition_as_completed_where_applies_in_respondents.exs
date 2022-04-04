@@ -8,5 +8,4 @@ defmodule Ask.Repo.Migrations.SetDispositionAsCompletedWhereAppliesInRespondents
   def down do
     Ask.Repo.query("UPDATE respondents SET disposition = NULL WHERE state = 'completed'")
   end
-
 end

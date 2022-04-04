@@ -55,12 +55,18 @@ defmodule Ask.Repo.Migrations.PopulateProjectChannels do
   end
 
   def up do
-    Repo.transaction fn ->
-      RespondentGroupChannel |> preload([respondent_group: :survey])|> Repo.all |> Enum.each(fn rgc ->
-        ProjectChannel.changeset(%ProjectChannel{}, %{project_id: rgc.respondent_group.survey.project_id, channel_id: rgc.channel_id})
-          |> Repo.insert(on_conflict: :nothing)
+    Repo.transaction(fn ->
+      RespondentGroupChannel
+      |> preload(respondent_group: :survey)
+      |> Repo.all()
+      |> Enum.each(fn rgc ->
+        ProjectChannel.changeset(%ProjectChannel{}, %{
+          project_id: rgc.respondent_group.survey.project_id,
+          channel_id: rgc.channel_id
+        })
+        |> Repo.insert(on_conflict: :nothing)
       end)
-    end
+    end)
   end
 
   def down do

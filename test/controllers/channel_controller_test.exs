@@ -4,34 +4,40 @@ defmodule Ask.ChannelControllerTest do
 
   setup %{conn: conn} do
     user = insert(:user)
-    conn = conn
+
+    conn =
+      conn
       |> put_private(:test_user, user)
       |> put_req_header("accept", "application/json")
-    {:ok, _} = Ask.Runtime.ChannelStatusServer.start_link
+
+    {:ok, _} = Ask.Runtime.ChannelStatusServer.start_link()
     {:ok, conn: conn, user: user}
   end
 
   describe "index" do
     test "check index response is 200", %{conn: conn} do
-      conn = get conn, channel_path(conn, :index)
+      conn = get(conn, channel_path(conn, :index))
       assert json_response(conn, 200)["data"] == []
     end
 
     test "list only channels from the current user", %{conn: conn, user: user} do
       channel = insert(:channel, user: user)
-      channel_map = %{"id"       => channel.id,
-                      "name"     => channel.name,
-                      "provider" => channel.provider,
-                      "settings" => channel.settings,
-                      "patterns" => [],
-                      "type"     => channel.type,
-                      "user_id"  => channel.user_id,
-                      "projects" => [],
-                      "channelBaseUrl" => channel.base_url,
-                      "status_info" => %{"status" => "unknown"}
-                    }
+
+      channel_map = %{
+        "id" => channel.id,
+        "name" => channel.name,
+        "provider" => channel.provider,
+        "settings" => channel.settings,
+        "patterns" => [],
+        "type" => channel.type,
+        "user_id" => channel.user_id,
+        "projects" => [],
+        "channelBaseUrl" => channel.base_url,
+        "status_info" => %{"status" => "unknown"}
+      }
+
       insert(:channel)
-      conn = get conn, channel_path(conn, :index)
+      conn = get(conn, channel_path(conn, :index))
       assert json_response(conn, 200)["data"] == [channel_map]
     end
 
@@ -80,30 +86,33 @@ defmodule Ask.ChannelControllerTest do
   describe "show" do
     test "shows chosen resource", %{conn: conn, user: user} do
       channel = insert(:channel, user: user)
-      conn = get conn, channel_path(conn, :show, channel)
-      assert json_response(conn, 200)["data"] == %{"id" => channel.id,
-                                                   "user_id" => user.id,
-                                                   "name" => channel.name,
-                                                   "type" => channel.type,
-                                                   "provider" => channel.provider,
-                                                   "settings" => channel.settings,
-                                                   "patterns" => [],
-                                                   "projects" => [],
-                                                   "channelBaseUrl" => channel.base_url,
-                                                   "status_info" => %{"status" => "unknown"}
-                                                 }
+      conn = get(conn, channel_path(conn, :show, channel))
+
+      assert json_response(conn, 200)["data"] == %{
+               "id" => channel.id,
+               "user_id" => user.id,
+               "name" => channel.name,
+               "type" => channel.type,
+               "provider" => channel.provider,
+               "settings" => channel.settings,
+               "patterns" => [],
+               "projects" => [],
+               "channelBaseUrl" => channel.base_url,
+               "status_info" => %{"status" => "unknown"}
+             }
     end
 
     test "renders page not found when id is nonexistent", %{conn: conn} do
       assert_error_sent 404, fn ->
-        get conn, channel_path(conn, :show, -1)
+        get(conn, channel_path(conn, :show, -1))
       end
     end
 
     test "forbid access to channels from other users", %{conn: conn} do
       channel = insert(:channel)
+
       assert_error_sent :forbidden, fn ->
-        get conn, channel_path(conn, :show, channel)
+        get(conn, channel_path(conn, :show, channel))
       end
     end
   end
@@ -115,7 +124,9 @@ defmodule Ask.ChannelControllerTest do
 
       channel = insert(:channel, user: user)
 
-      conn = put conn, channel_path(conn, :update, channel), channel: %{projects: [project1.id, project2.id]}
+      conn =
+        put conn, channel_path(conn, :update, channel),
+          channel: %{projects: [project1.id, project2.id]}
 
       assert json_response(conn, 200)["data"]["projects"] == [project1.id, project2.id]
     end
@@ -129,12 +140,14 @@ defmodule Ask.ChannelControllerTest do
       channel = insert(:channel, user: user)
 
       assert_error_sent :forbidden, fn ->
-        put conn, channel_path(conn, :update, channel), channel: %{projects: [project1.id, project2.id]}
+        put conn, channel_path(conn, :update, channel),
+          channel: %{projects: [project1.id, project2.id]}
       end
     end
 
     test "update patterns", %{conn: conn, user: user} do
       channel = insert(:channel, user: user)
+
       patterns = [
         %{"input" => "123XX", "output" => "0XX"},
         %{"input" => "222XX", "output" => "0XX"}
@@ -150,33 +163,47 @@ defmodule Ask.ChannelControllerTest do
     test "create channel", %{conn: conn, user: user} do
       user_id = user.id
       insert(:oauth_token, user: user)
-      conn = post conn, channel_path(conn, :create), provider: "test", base_url: "http://test.com", channel: %{"id" => 123}
 
-      channel = user
-      |> assoc(:channels)
-      |> Repo.one!()
+      conn =
+        post conn, channel_path(conn, :create),
+          provider: "test",
+          base_url: "http://test.com",
+          channel: %{"id" => 123}
+
+      channel =
+        user
+        |> assoc(:channels)
+        |> Repo.one!()
 
       assert %Ask.Channel{
-        user_id: ^user_id, provider: "test", base_url: "http://test.com", type: "ivr", name: "test", settings: %{"id" => 123}
-      } = channel
+               user_id: ^user_id,
+               provider: "test",
+               base_url: "http://test.com",
+               type: "ivr",
+               name: "test",
+               settings: %{"id" => 123}
+             } = channel
 
       assert json_response(conn, 200)["data"] == %{
-        "id" => channel.id,
-        "user_id" => user.id,
-        "name" => channel.name,
-        "type" => channel.type,
-        "provider" => channel.provider,
-        "settings" => channel.settings,
-        "channelBaseUrl" => channel.base_url,
-        "projects" => [],
-        "patterns" => [],
-        "status_info" => nil
-      }
+               "id" => channel.id,
+               "user_id" => user.id,
+               "name" => channel.name,
+               "type" => channel.type,
+               "provider" => channel.provider,
+               "settings" => channel.settings,
+               "channelBaseUrl" => channel.base_url,
+               "projects" => [],
+               "patterns" => [],
+               "status_info" => nil
+             }
     end
 
     test "cannot create channel if the authorization doesn't exist", %{conn: conn} do
       assert_error_sent :forbidden, fn ->
-        post conn, channel_path(conn, :create), provider: "test", base_url: "http://test.com", channel: %{"id" => 123}
+        post conn, channel_path(conn, :create),
+          provider: "test",
+          base_url: "http://test.com",
+          channel: %{"id" => 123}
       end
     end
   end

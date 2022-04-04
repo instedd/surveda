@@ -7,4 +7,3 @@ defmodule Ask.Repo.Migrations.AddEndedAtToSurveys do
     end
   end
 end
-

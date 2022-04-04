@@ -63,6 +63,7 @@ defmodule Ask.Repo.Migrations.MigrateSessionToCurrentMode do
     end
 
     def load(nil), do: nil
+
     def load(mode_dump) do
       %IVRMode{
         channel: Channel |> Repo.get(mode_dump["channel_id"]),
@@ -89,6 +90,7 @@ defmodule Ask.Repo.Migrations.MigrateSessionToCurrentMode do
     end
 
     def load(nil), do: nil
+
     def load(mode_dump) do
       %MobileWebMode{
         channel: Channel |> Repo.get(mode_dump["channel_id"]),
@@ -113,18 +115,21 @@ defmodule Ask.Repo.Migrations.MigrateSessionToCurrentMode do
     defp mode_provider("mobileweb"), do: MobileWebMode
 
     def new(nil, _channel, _retries), do: nil
+
     def new(mode, channel, retries) when not is_nil(channel) and is_list(retries) do
       mode_provider(mode).new(channel, retries)
     end
 
     def load(nil), do: nil
+
     def load(mode_dump) do
       mode_provider(mode_dump["mode"]).load(mode_dump)
     end
 
     def dump(nil), do: nil
+
     def dump(mode) do
-      mode |> SessionMode.dump
+      mode |> SessionMode.dump()
     end
   end
 
@@ -137,12 +142,13 @@ defmodule Ask.Repo.Migrations.MigrateSessionToCurrentMode do
   end
 
   defp change_respondents(change_function) do
-    Repo.all(from r in Respondent, where: r.state == :active) |> Enum.each(fn respondent ->
+    Repo.all(from r in Respondent, where: r.state == :active)
+    |> Enum.each(fn respondent ->
       respondent
       |> Respondent.changeset(%{
-          session: change_function.(respondent.session)
-        })
-      |> Repo.update!
+        session: change_function.(respondent.session)
+      })
+      |> Repo.update!()
     end)
   end
 
@@ -173,10 +179,14 @@ defmodule Ask.Repo.Migrations.MigrateSessionToCurrentMode do
     }
   end
 
-  defp upgrade_session(%{channel: channel, retries: retries, fallback: {fallback_channel, fallback_retries}} = session) do
+  defp upgrade_session(
+         %{channel: channel, retries: retries, fallback: {fallback_channel, fallback_retries}} =
+           session
+       ) do
     %{
       current_mode: SessionModeProvider.new(channel.type, channel, retries),
-      fallback_mode: SessionModeProvider.new(fallback_channel.type, fallback_channel, fallback_retries),
+      fallback_mode:
+        SessionModeProvider.new(fallback_channel.type, fallback_channel, fallback_retries),
       flow: session.flow,
       respondent: session.respondent,
       token: session.token,
@@ -220,8 +230,8 @@ defmodule Ask.Repo.Migrations.MigrateSessionToCurrentMode do
 
   defp dump_new(session) do
     %{
-      current_mode: (session.current_mode || nil)|> SessionModeProvider.dump,
-      fallback_mode: session.fallback_mode |> SessionModeProvider.dump,
+      current_mode: (session.current_mode || nil) |> SessionModeProvider.dump(),
+      fallback_mode: session.fallback_mode |> SessionModeProvider.dump(),
       flow: session.flow,
       respondent_id: session.respondent,
       token: session.token,
@@ -240,7 +250,7 @@ defmodule Ask.Repo.Migrations.MigrateSessionToCurrentMode do
       token: state["token"],
       fallback_delay: state["fallback_delay"],
       channel_state: state["channel_state"],
-      count_partial_results: state["count_partial_results"],
+      count_partial_results: state["count_partial_results"]
     }
   end
 
@@ -265,11 +275,12 @@ defmodule Ask.Repo.Migrations.MigrateSessionToCurrentMode do
       flow: state["flow"],
       respondent: state["respondent_id"],
       retries: state["retries"],
-      fallback: channel_tuple(fallback_channel(state["fallback_channel_id"]), state["fallback_retries"]),
+      fallback:
+        channel_tuple(fallback_channel(state["fallback_channel_id"]), state["fallback_retries"]),
       token: state["token"],
       fallback_delay: state["fallback_delay"],
       channel_state: state["channel_state"],
-      count_partial_results: state["count_partial_results"],
+      count_partial_results: state["count_partial_results"]
     }
   end
 
@@ -277,6 +288,7 @@ defmodule Ask.Repo.Migrations.MigrateSessionToCurrentMode do
   defp channel_tuple(channel, retries), do: {channel, retries}
 
   defp fallback_channel(nil), do: nil
+
   defp fallback_channel(id) do
     Repo.get(Channel, id)
   end

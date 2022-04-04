@@ -7,15 +7,18 @@ defmodule Ask.RetriesHistogramTest do
   test "flow with no retries" do
     mode = "sms"
     survey = insert(:survey, %{fallback_delay: "10h", mode: [[mode]]})
-    [%{flow: flow}] = survey |> RetriesHistogram.survey_histograms
+    [%{flow: flow}] = survey |> RetriesHistogram.survey_histograms()
     assert flow == [%{type: mode, delay: 0}, %{type: "end", delay: 10, label: "10h"}]
   end
 
   defp flow_with_retries("ivr" = mode) do
     survey =
-      insert(:survey, Map.merge(retry_configuration(mode, "1h 2h 3h"), %{fallback_delay: "5h", mode: [[mode]]}))
+      insert(
+        :survey,
+        Map.merge(retry_configuration(mode, "1h 2h 3h"), %{fallback_delay: "5h", mode: [[mode]]})
+      )
 
-    [%{flow: flow}] = survey |> RetriesHistogram.survey_histograms
+    [%{flow: flow}] = survey |> RetriesHistogram.survey_histograms()
 
     assert flow == [
              %{type: mode, delay: 0},
@@ -27,9 +30,12 @@ defmodule Ask.RetriesHistogramTest do
 
   defp flow_with_retries(mode) do
     survey =
-      insert(:survey, Map.merge(retry_configuration(mode, "1h 2h 3h"), %{fallback_delay: "5h", mode: [[mode]]}))
+      insert(
+        :survey,
+        Map.merge(retry_configuration(mode, "1h 2h 3h"), %{fallback_delay: "5h", mode: [[mode]]})
+      )
 
-    [%{flow: flow}] = survey |> RetriesHistogram.survey_histograms
+    [%{flow: flow}] = survey |> RetriesHistogram.survey_histograms()
 
     assert flow == [
              %{type: mode, delay: 0},
@@ -57,7 +63,7 @@ defmodule Ask.RetriesHistogramTest do
         mode: [mode]
       })
 
-    [%{flow: flow}] = survey |> RetriesHistogram.survey_histograms
+    [%{flow: flow}] = survey |> RetriesHistogram.survey_histograms()
 
     assert flow == [
              %{type: "sms", delay: 0},
@@ -82,7 +88,7 @@ defmodule Ask.RetriesHistogramTest do
         mode: [mode]
       })
 
-    [%{flow: flow}] = survey |> RetriesHistogram.survey_histograms
+    [%{flow: flow}] = survey |> RetriesHistogram.survey_histograms()
 
     assert flow == [
              %{type: "ivr", delay: 0},
@@ -109,7 +115,7 @@ defmodule Ask.RetriesHistogramTest do
         mode: [mode]
       })
 
-    [%{flow: flow}] = survey |> RetriesHistogram.survey_histograms
+    [%{flow: flow}] = survey |> RetriesHistogram.survey_histograms()
 
     assert flow == [
              %{type: "mobileweb", delay: 0},
@@ -134,8 +140,23 @@ defmodule Ask.RetriesHistogramTest do
 
     assert histogram_actives(survey) == []
 
-    {:ok, %{id: stat_id}} = RetryStat.add(%{attempt: 1, mode: [mode], retry_time: retry_time(SystemTime.time.now(), 0), ivr_active: true, survey_id: survey.id})
-    {:ok, %{id: stat_id_2}} = RetryStat.add(%{attempt: 1, mode: [mode], retry_time: retry_time(SystemTime.time.now(), 1), ivr_active: true, survey_id: survey.id})
+    {:ok, %{id: stat_id}} =
+      RetryStat.add(%{
+        attempt: 1,
+        mode: [mode],
+        retry_time: retry_time(SystemTime.time().now(), 0),
+        ivr_active: true,
+        survey_id: survey.id
+      })
+
+    {:ok, %{id: stat_id_2}} =
+      RetryStat.add(%{
+        attempt: 1,
+        mode: [mode],
+        retry_time: retry_time(SystemTime.time().now(), 1),
+        ivr_active: true,
+        survey_id: survey.id
+      })
 
     assert histogram_actives(survey) == [%{hour: 0, respondents: 2}],
            "Histogram must take into account all the respondents that are ivr_active without taking into account the retry_time"
@@ -158,7 +179,14 @@ defmodule Ask.RetriesHistogramTest do
 
     assert histogram_actives(survey) == []
 
-    {:ok, %{id: stat_id}} = RetryStat.add(%{attempt: 1, mode: [mode], retry_time: retry_time(SystemTime.time.now, 2), ivr_active: false, survey_id: survey.id})
+    {:ok, %{id: stat_id}} =
+      RetryStat.add(%{
+        attempt: 1,
+        mode: [mode],
+        retry_time: retry_time(SystemTime.time().now, 2),
+        ivr_active: false,
+        survey_id: survey.id
+      })
 
     assert histogram_actives(survey) == [%{hour: 0, respondents: 1}]
 
@@ -196,7 +224,14 @@ defmodule Ask.RetriesHistogramTest do
 
     assert histogram_actives(survey) == []
 
-    {:ok, %{id: active_stat_id}} = RetryStat.add(%{attempt: 1, mode: [mode], retry_time: retry_time(SystemTime.time.now, 2), ivr_active: true, survey_id: survey.id})
+    {:ok, %{id: active_stat_id}} =
+      RetryStat.add(%{
+        attempt: 1,
+        mode: [mode],
+        retry_time: retry_time(SystemTime.time().now, 2),
+        ivr_active: true,
+        survey_id: survey.id
+      })
 
     assert histogram_actives(survey) == [%{hour: 0, respondents: 1}]
 
@@ -208,13 +243,14 @@ defmodule Ask.RetriesHistogramTest do
 
     {:ok} = RetryStat.subtract(active_stat_id)
 
-    {:ok, %{id: waiting_stat_id}} = RetryStat.add(%{
-      attempt: 1,
-      mode: [mode],
-      retry_time: retry_time(SystemTime.time.now, 2),
-      ivr_active: false,
-      survey_id: survey.id
-    })
+    {:ok, %{id: waiting_stat_id}} =
+      RetryStat.add(%{
+        attempt: 1,
+        mode: [mode],
+        retry_time: retry_time(SystemTime.time().now, 2),
+        ivr_active: false,
+        survey_id: survey.id
+      })
 
     assert histogram_actives(survey) == [%{hour: 0, respondents: 1}]
 
@@ -226,7 +262,14 @@ defmodule Ask.RetriesHistogramTest do
 
     {:ok} = RetryStat.subtract(waiting_stat_id)
 
-    {:ok, %{id: active_stat_id}} = RetryStat.add(%{attempt: 2, mode: [mode], retry_time: retry_time(SystemTime.time.now, 0), ivr_active: true, survey_id: survey.id})
+    {:ok, %{id: active_stat_id}} =
+      RetryStat.add(%{
+        attempt: 2,
+        mode: [mode],
+        retry_time: retry_time(SystemTime.time().now, 0),
+        ivr_active: true,
+        survey_id: survey.id
+      })
 
     assert histogram_actives(survey) == [%{hour: 2, respondents: 1}]
 
@@ -243,17 +286,23 @@ defmodule Ask.RetriesHistogramTest do
 
   defp test_actives_1_retry(mode) do
     set_actual_time()
-    survey = insert(:survey, Map.merge(retry_configuration(mode, "2h"), %{fallback_delay: "3h", mode: [[mode]]}))
+
+    survey =
+      insert(
+        :survey,
+        Map.merge(retry_configuration(mode, "2h"), %{fallback_delay: "3h", mode: [[mode]]})
+      )
 
     assert histogram_actives(survey) == []
 
-    {:ok, %{id: initial_stat_id}} = RetryStat.add(%{
-      attempt: 1,
-      mode: [mode],
-      retry_time: retry_time(SystemTime.time.now, 2),
-      ivr_active: false,
-      survey_id: survey.id
-    })
+    {:ok, %{id: initial_stat_id}} =
+      RetryStat.add(%{
+        attempt: 1,
+        mode: [mode],
+        retry_time: retry_time(SystemTime.time().now, 2),
+        ivr_active: false,
+        survey_id: survey.id
+      })
 
     assert histogram_actives(survey) == [%{hour: 0, respondents: 1}]
     time_passes(hours: 1)
@@ -261,13 +310,14 @@ defmodule Ask.RetriesHistogramTest do
 
     {:ok} = RetryStat.subtract(initial_stat_id)
 
-    {:ok, %{id: last_stat_id}} = RetryStat.add(%{
-      attempt: 2,
-      mode: [mode],
-      retry_time: retry_time(SystemTime.time.now, 3),
-      ivr_active: false,
-      survey_id: survey.id
-    })
+    {:ok, %{id: last_stat_id}} =
+      RetryStat.add(%{
+        attempt: 2,
+        mode: [mode],
+        retry_time: retry_time(SystemTime.time().now, 3),
+        ivr_active: false,
+        survey_id: survey.id
+      })
 
     assert histogram_actives(survey) == [%{hour: 2, respondents: 1}]
 
@@ -296,7 +346,14 @@ defmodule Ask.RetriesHistogramTest do
 
     assert histogram_actives(survey) == []
 
-    {:ok, %{id: ivr_active_stat_id}} = RetryStat.add(%{attempt: 1, mode: mode, retry_time: retry_time(SystemTime.time.now, 2), ivr_active: true, survey_id: survey.id})
+    {:ok, %{id: ivr_active_stat_id}} =
+      RetryStat.add(%{
+        attempt: 1,
+        mode: mode,
+        retry_time: retry_time(SystemTime.time().now, 2),
+        ivr_active: true,
+        survey_id: survey.id
+      })
 
     assert histogram_actives(survey) == [%{hour: 0, respondents: 1}]
 
@@ -305,7 +362,14 @@ defmodule Ask.RetriesHistogramTest do
 
     {:ok} = RetryStat.subtract(ivr_active_stat_id)
 
-    {:ok, %{id: sms_stat_id}} = RetryStat.add(%{attempt: 2, mode: mode, retry_time: retry_time(SystemTime.time.now, 2), ivr_active: false, survey_id: survey.id})
+    {:ok, %{id: sms_stat_id}} =
+      RetryStat.add(%{
+        attempt: 2,
+        mode: mode,
+        retry_time: retry_time(SystemTime.time().now, 2),
+        ivr_active: false,
+        survey_id: survey.id
+      })
 
     assert histogram_actives(survey) == [%{hour: 2, respondents: 1}]
 
@@ -331,7 +395,14 @@ defmodule Ask.RetriesHistogramTest do
 
     assert histogram_actives(survey) == []
 
-    {:ok, %{id: sms_stat_id}} = RetryStat.add(%{attempt: 1, mode: mode, retry_time: retry_time(SystemTime.time.now, 2), ivr_active: false, survey_id: survey.id})
+    {:ok, %{id: sms_stat_id}} =
+      RetryStat.add(%{
+        attempt: 1,
+        mode: mode,
+        retry_time: retry_time(SystemTime.time().now, 2),
+        ivr_active: false,
+        survey_id: survey.id
+      })
 
     assert histogram_actives(survey) == [%{hour: 0, respondents: 1}]
 
@@ -343,7 +414,14 @@ defmodule Ask.RetriesHistogramTest do
 
     {:ok} = RetryStat.subtract(sms_stat_id)
 
-    {:ok, %{id: ivr_active_stat_id}} = RetryStat.add(%{attempt: 2, mode: mode, retry_time: retry_time(SystemTime.time.now, 2), ivr_active: true, survey_id: survey.id})
+    {:ok, %{id: ivr_active_stat_id}} =
+      RetryStat.add(%{
+        attempt: 2,
+        mode: mode,
+        retry_time: retry_time(SystemTime.time().now, 2),
+        ivr_active: true,
+        survey_id: survey.id
+      })
 
     assert histogram_actives(survey) == [%{hour: 2, respondents: 1}]
 
@@ -356,7 +434,7 @@ defmodule Ask.RetriesHistogramTest do
   end
 
   defp histogram_actives(%Survey{} = survey) do
-    [%{actives: actives}] = survey |> RetriesHistogram.survey_histograms
+    [%{actives: actives}] = survey |> RetriesHistogram.survey_histograms()
     actives
   end
 
@@ -370,5 +448,4 @@ defmodule Ask.RetriesHistogramTest do
     do: %{mobileweb_retry_configuration: retry_configuration}
 
   defp retry_time(now, delay), do: now |> Timex.shift(hours: delay) |> RetryStat.retry_time()
-
 end

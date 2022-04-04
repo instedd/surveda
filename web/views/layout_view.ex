@@ -5,23 +5,28 @@ defmodule Ask.LayoutView do
 
   def config(conn) do
     version = Application.get_env(:ask, :version)
-    sentry_dsn = Sentry.Config.dsn
+    sentry_dsn = Sentry.Config.dsn()
 
-    user_email = case current_user(conn) do
-      nil -> nil
-      user -> user.email
-    end
+    user_email =
+      case current_user(conn) do
+        nil -> nil
+        user -> user.email
+      end
 
-    user_settings = case current_user(conn) do
-      nil -> nil
-      user ->
-        db_user = User |> Repo.get(user.id)
-        if db_user do
-          db_user.settings
-        else
+    user_settings =
+      case current_user(conn) do
+        nil ->
           nil
-        end
-    end
+
+        user ->
+          db_user = User |> Repo.get(user.id)
+
+          if db_user do
+            db_user.settings
+          else
+            nil
+          end
+      end
 
     client_config = %{
       version: version,
@@ -35,7 +40,7 @@ defmodule Ask.LayoutView do
       intercom_app_id: Ask.Intercom.intercom_app_id()
     }
 
-    {:ok, config_json} = client_config |> Poison.encode
+    {:ok, config_json} = client_config |> Poison.encode()
     config_json
   end
 

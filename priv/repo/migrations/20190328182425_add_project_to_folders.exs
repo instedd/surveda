@@ -6,7 +6,6 @@ defmodule Ask.Repo.Migrations.AddProjectToFolders do
       add :project_id, references(:projects)
     end
 
-
     create index(:folders, [:project_id])
   end
 end

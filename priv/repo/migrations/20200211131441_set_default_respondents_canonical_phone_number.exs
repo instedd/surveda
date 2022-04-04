@@ -3,7 +3,6 @@ defmodule Ask.Repo.Migrations.SetDefaultRespondentsCanonicalPhoneNumber do
 
   def up do
     execute "UPDATE respondents SET canonical_phone_number = sanitized_phone_number"
-
   end
 
   def down do

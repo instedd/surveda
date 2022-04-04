@@ -18,12 +18,13 @@ defmodule Ask.Coherence.UserEmail do
   use Phoenix.Swoosh,
     view: Ask.Coherence.EmailView,
     layout: {Ask.Coherence.LayoutView, :email}
+
   alias Swoosh.Email
   alias Ask.Logger
   alias Coherence.Config
   import Ask.Gettext
 
-  defp site_name, do: Config.email_from_name
+  defp site_name, do: Config.email_from_name()
 
   @doc """
   Render the reset password email.
@@ -148,12 +149,15 @@ defmodule Ask.Coherence.UserEmail do
         Logger.error(
           ~s|Need to configure :coherence, :email_from_name, "Name", and :email_from_email, "me@example.com"|
         )
+
         nil
+
       {name, email} = email_tuple ->
         if is_nil(name) or is_nil(email) do
           Logger.error(
             ~s|Need to configure :coherence, :email_from_name, "Name", and :email_from_email, "me@example.com"|
           )
+
           nil
         else
           email_tuple

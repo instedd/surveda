@@ -4,7 +4,7 @@ defmodule Ask.Repo.Migrations.MultilingualQuestionnaires do
   defp index_of(enum, field), do: Enum.find_index(enum, fn c -> c == field end)
 
   def change do
-    Ask.Repo.transaction fn ->
+    Ask.Repo.transaction(fn ->
       quizzes = Ask.Repo.query!("select * from questionnaires")
 
       id_index = quizzes.columns |> index_of("id")
@@ -13,16 +13,20 @@ defmodule Ask.Repo.Migrations.MultilingualQuestionnaires do
       quizzes.rows
       |> Enum.each(fn quiz_row ->
         upgraded_steps = upgrade(quiz_row |> Enum.at(steps_index))
-        Ask.Repo.query!("update questionnaires set steps = ? where id = ?", [upgraded_steps, quiz_row |> Enum.at(id_index)])
+
+        Ask.Repo.query!("update questionnaires set steps = ? where id = ?", [
+          upgraded_steps,
+          quiz_row |> Enum.at(id_index)
+        ])
       end)
-    end
+    end)
   end
 
   def upgrade(steps) do
     steps
-    |> Poison.decode!
+    |> Poison.decode!()
     |> Enum.map(&upgrade_step/1)
-    |> Poison.encode!
+    |> Poison.encode!()
   end
 
   def upgrade_step(step) do
@@ -42,23 +46,27 @@ defmodule Ask.Repo.Migrations.MultilingualQuestionnaires do
   def upgrade_prompt(step) do
     prompt = Kernel.get_in(step, ["prompt"])
 
-    new_prompt = prompt
-                |> replace_audio_with_audio_source
-                |> introduce_lang
+    new_prompt =
+      prompt
+      |> replace_audio_with_audio_source
+      |> introduce_lang
 
     Kernel.put_in(step, ["prompt"], new_prompt)
   end
 
   def upgrade_choices(step) do
     case Kernel.get_in(step, ["choices"]) do
-      [] -> step
+      [] ->
+        step
+
       choices ->
-        new_choices = Enum.map(choices, fn(choice) ->
-          choice
-          |> add_skip_logic
-          |> remove_errors
-          |> upgrade_responses
-        end)
+        new_choices =
+          Enum.map(choices, fn choice ->
+            choice
+            |> add_skip_logic
+            |> remove_errors
+            |> upgrade_responses
+          end)
 
         Kernel.put_in(step, ["choices"], new_choices)
     end
@@ -67,10 +75,11 @@ defmodule Ask.Repo.Migrations.MultilingualQuestionnaires do
   def upgrade_responses(choice) do
     responses = Kernel.get_in(choice, ["responses"])
 
-    new_responses = case Kernel.get_in(responses, ["en"]) do
-                      nil -> %{"en" => responses}
-                      _ -> responses
-                    end
+    new_responses =
+      case Kernel.get_in(responses, ["en"]) do
+        nil -> %{"en" => responses}
+        _ -> responses
+      end
 
     Kernel.put_in(choice, ["responses"], new_responses)
   end
@@ -84,7 +93,9 @@ defmodule Ask.Repo.Migrations.MultilingualQuestionnaires do
 
   def remove_errors(choice) do
     case Kernel.get_in(choice, ["errors"]) do
-      nil -> choice
+      nil ->
+        choice
+
       _errors ->
         {_errors, new_choice} = Kernel.pop_in(choice, ["errors"])
         new_choice
@@ -94,25 +105,31 @@ defmodule Ask.Repo.Migrations.MultilingualQuestionnaires do
   def replace_audio_with_audio_source(prompt) do
     case Kernel.get_in(prompt, ["ivr"]) do
       # It is ok for a prompt to not have an IVR prompt
-      nil -> prompt
+      nil ->
+        prompt
 
       # An empty IVR prompt at least has audio_source == "tts" and text == ""
-      "" -> Kernel.put_in(prompt, ["ivr"], %{"audio_source" => "tts", "text" => ""})
+      "" ->
+        Kernel.put_in(prompt, ["ivr"], %{"audio_source" => "tts", "text" => ""})
 
       # At this point IVR should be a map, so we check the structure is sound
       ivr_prompt ->
         case {Map.get(ivr_prompt, "audio"), Map.get(ivr_prompt, "audio_source")} do
           # At the very least, the IVR prompt must have an audio_source == "tts"
-          {nil, nil} -> Kernel.put_in(prompt, ["ivr", "audio_source"], "tts")
+          {nil, nil} ->
+            Kernel.put_in(prompt, ["ivr", "audio_source"], "tts")
 
           # This case is ok
-          {nil, _audio_source} -> prompt
+          {nil, _audio_source} ->
+            prompt
 
           # We must replace audio with audio_source
           {audio, nil} ->
-            {_, new_prompt} = prompt
-                              |> Kernel.put_in(["ivr", "audio_source"], audio)
-                              |> Kernel.pop_in(["ivr", "audio"])
+            {_, new_prompt} =
+              prompt
+              |> Kernel.put_in(["ivr", "audio_source"], audio)
+              |> Kernel.pop_in(["ivr", "audio"])
+
             new_prompt
 
           # Here "audio" is likely a stalled branch of the map, we just drop it

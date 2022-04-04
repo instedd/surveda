@@ -1,4 +1,4 @@
-Code.ensure_loaded Phoenix.Swoosh
+Code.ensure_loaded(Phoenix.Swoosh)
 
 defmodule Ask.Email do
   use Phoenix.Swoosh, view: Ask.EmailView
@@ -16,11 +16,11 @@ defmodule Ask.Email do
     |> from(smtp_from_address())
     |> subject(subject)
     |> render_body(:invite, %{
-        url: invite_url,
-        invited_by: invited_by_name,
-        explanation: explanation(level),
-        project_name: project_name
-      })
+      url: invite_url,
+      invited_by: invited_by_name,
+      explanation: explanation(level),
+      project_name: project_name
+    })
   end
 
   def notify(level, email, invited_by, invite_url, project) do
@@ -34,15 +34,16 @@ defmodule Ask.Email do
     |> from(smtp_from_address())
     |> subject(subject)
     |> render_body(:notify, %{
-        url: invite_url,
-        invited_by: invited_by_name,
-        explanation: explanation_notify(level),
-        project_name: project_name
-      })
+      url: invite_url,
+      invited_by: invited_by_name,
+      explanation: explanation_notify(level),
+      project_name: project_name
+    })
   end
 
   def channel_down(email, channel, messages) do
-    url = Ask.Endpoint.url <> "/channels/#{channel.id}/settings"
+    url = Ask.Endpoint.url() <> "/channels/#{channel.id}/settings"
+
     %Email{}
     |> to({"", email})
     |> from(smtp_from_address())
@@ -55,7 +56,8 @@ defmodule Ask.Email do
   end
 
   def channel_error(email, channel, code) do
-    url = Ask.Endpoint.url <> "/channels/#{channel.id}/settings"
+    url = Ask.Endpoint.url() <> "/channels/#{channel.id}/settings"
+
     %Email{}
     |> to({"", email})
     |> from(smtp_from_address())
@@ -71,11 +73,17 @@ defmodule Ask.Email do
   defp project_name(nil), do: "a Surveda project"
   defp project_name(name), do: "#{name}"
 
-  defp explanation("editor"), do: "You'll be able to manage surveys, questionnaires, content and collaborators."
-  defp explanation(_), do: "You'll be able to browse surveys, questionnaires, content and collaborators."
+  defp explanation("editor"),
+    do: "You'll be able to manage surveys, questionnaires, content and collaborators."
 
-  defp explanation_notify("editor"), do: "You are able to manage surveys, questionnaires, content and collaborators."
-  defp explanation_notify(_), do: "You are able to browse surveys, questionnaires, content and collaborators."
+  defp explanation(_),
+    do: "You'll be able to browse surveys, questionnaires, content and collaborators."
+
+  defp explanation_notify("editor"),
+    do: "You are able to manage surveys, questionnaires, content and collaborators."
+
+  defp explanation_notify(_),
+    do: "You are able to browse surveys, questionnaires, content and collaborators."
 
   defp name_or_email(user) do
     case {user.name, user.email} do

@@ -3,7 +3,8 @@ defmodule Ask.ProjectMembership do
   alias Ask.Repo
 
   schema "project_memberships" do
-    field :level, :string # owner, admin, editor, reader
+    # owner, admin, editor, reader
+    field :level, :string
     belongs_to :user, Ask.User
     belongs_to :project, Ask.Project
 
@@ -74,16 +75,18 @@ defmodule Ask.ProjectMembership do
   def accept_pending_invitations(user) do
     invites = Repo.all(from i in Ask.Invite, where: i.email == ^user.email)
 
-    Enum.each invites, fn(invite) ->
-      membership = changeset(%Ask.ProjectMembership{}, %{
-        "user_id" => user.id,
-        "project_id" => invite.project_id,
-        "level" => invite.level
-      })
-      Repo.transaction fn ->
+    Enum.each(invites, fn invite ->
+      membership =
+        changeset(%Ask.ProjectMembership{}, %{
+          "user_id" => user.id,
+          "project_id" => invite.project_id,
+          "level" => invite.level
+        })
+
+      Repo.transaction(fn ->
         Repo.insert(membership)
         Repo.delete!(invite)
-      end
-    end
+      end)
+    end)
   end
 end

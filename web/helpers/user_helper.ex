@@ -18,12 +18,16 @@ defmodule User.Helper do
   def authorize(project, %{assigns: %{skip_auth: true}}) do
     project
   end
+
   def authorize(project, conn) do
     user_id = current_user(conn).id
-    memberships = project
-                  |> assoc(:project_memberships)
-                  |> where([m], m.user_id == ^user_id)
-                  |> Repo.all
+
+    memberships =
+      project
+      |> assoc(:project_memberships)
+      |> where([m], m.user_id == ^user_id)
+      |> Repo.all()
+
     case memberships do
       [] -> raise UnauthorizedError
       _ -> project
@@ -37,10 +41,17 @@ defmodule User.Helper do
   # that perform a change on a resource related to a project.
   def authorize_change(project, conn) do
     user_id = current_user(conn).id
-    memberships = project
-                  |> assoc(:project_memberships)
-                  |> where([m], m.user_id == ^user_id and (m.level == "owner" or m.level == "editor" or m.level == "admin"))
-                  |> Repo.all
+
+    memberships =
+      project
+      |> assoc(:project_memberships)
+      |> where(
+        [m],
+        m.user_id == ^user_id and
+          (m.level == "owner" or m.level == "editor" or m.level == "admin")
+      )
+      |> Repo.all()
+
     case memberships do
       [] -> raise UnauthorizedError
       _ -> project
@@ -53,10 +64,13 @@ defmodule User.Helper do
 
   def authorize_admin(project, conn) do
     user_id = current_user(conn).id
-    memberships = project
-                  |> assoc(:project_memberships)
-                  |> where([m], m.user_id == ^user_id and (m.level == "owner" or m.level == "admin"))
-                  |> Repo.all
+
+    memberships =
+      project
+      |> assoc(:project_memberships)
+      |> where([m], m.user_id == ^user_id and (m.level == "owner" or m.level == "admin"))
+      |> Repo.all()
+
     case memberships do
       [] -> raise UnauthorizedError
       _ -> project
@@ -99,6 +113,7 @@ defmodule User.Helper do
     if channel.user_id != current_user(conn).id do
       raise UnauthorizedError
     end
+
     channel
   end
 
@@ -110,9 +125,10 @@ defmodule User.Helper do
   end
 
   def user_level(project_id, user_id) do
-    membership = ProjectMembership
-    |> where([m], m.user_id == ^user_id and  m.project_id == ^project_id)
-    |> Repo.one
+    membership =
+      ProjectMembership
+      |> where([m], m.user_id == ^user_id and m.project_id == ^project_id)
+      |> Repo.one()
 
     if membership, do: membership.level, else: nil
   end

@@ -3,7 +3,11 @@ defmodule Ask.UserTest do
 
   alias Ask.{User, Repo}
 
-  @valid_attrs %{email: "some@content", password: "some content", encrypted_password: "some content"}
+  @valid_attrs %{
+    email: "some@content",
+    password: "some content",
+    encrypted_password: "some content"
+  }
   @invalid_email %{email: "some content", encrypted_password: "some content"}
   @invalid_attrs %{}
 
@@ -23,8 +27,8 @@ defmodule Ask.UserTest do
   end
 
   test "can't create two users with same email" do
-    User.changeset(%User{}, @valid_attrs) |> Repo.insert!
-    {:error, _} = User.changeset(%User{}, @valid_attrs) |> Repo.insert
+    User.changeset(%User{}, @valid_attrs) |> Repo.insert!()
+    {:error, _} = User.changeset(%User{}, @valid_attrs) |> Repo.insert()
   end
 
   test "changeset includes settings field" do

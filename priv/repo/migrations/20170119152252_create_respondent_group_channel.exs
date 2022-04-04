@@ -8,8 +8,8 @@ defmodule Ask.Repo.Migrations.CreateRespondentGroupChannel do
 
       timestamps()
     end
+
     create index(:respondent_group_channels, [:respondent_group_id])
     create index(:respondent_group_channels, [:channel_id])
-
   end
 end

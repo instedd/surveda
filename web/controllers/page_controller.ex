@@ -5,18 +5,29 @@ defmodule Ask.PageController do
 
   def index(conn, params = %{"path" => path}) do
     explicit = params["explicit"]
+
     if params["locale"] do
       Gettext.put_locale(Ask.Gettext, params["locale"])
     end
+
     user = conn.assigns[:current_user]
 
     case {path, user, explicit} do
       {_, _, "true"} ->
-        conn |> render("landing.html", current_locale: current_locale_description(Gettext.get_locale(Ask.Gettext)))
+        conn
+        |> render("landing.html",
+          current_locale: current_locale_description(Gettext.get_locale(Ask.Gettext))
+        )
+
       {[], nil, _} ->
-        conn |> render("landing.html", current_locale: current_locale_description(Gettext.get_locale(Ask.Gettext)))
+        conn
+        |> render("landing.html",
+          current_locale: current_locale_description(Gettext.get_locale(Ask.Gettext))
+        )
+
       {_, nil, _} ->
         conn |> redirect(to: session_path(conn, :new, redirect: current_path(conn)))
+
       _ ->
         conn |> render("index.html", user: user, body_class: compute_body_class(path))
     end
@@ -29,13 +40,15 @@ defmodule Ask.PageController do
   # a colour scheme (it's not sensitive data)
   defp compute_body_class(path) do
     case path do
-      ["projects", project_id | _ ] ->
+      ["projects", project_id | _] ->
         project = Repo.get(Ask.Project, project_id)
+
         if project && project.colour_scheme == "better_data_for_health" do
           "bdfh"
         else
           nil
         end
+
       _ ->
         nil
     end

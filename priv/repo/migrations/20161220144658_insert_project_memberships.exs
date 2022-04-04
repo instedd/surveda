@@ -28,11 +28,17 @@ defmodule Ask.Repo.Migrations.InsertProjectMemberships do
   end
 
   def change do
-    Ask.Repo.transaction fn ->
-      Project |> Repo.all |> Enum.each(fn p ->
-        ProjectMembership.changeset(%ProjectMembership{}, %{project_id: p.id, user_id: p.user_id, level: "owner"})
-        |> Repo.insert
+    Ask.Repo.transaction(fn ->
+      Project
+      |> Repo.all()
+      |> Enum.each(fn p ->
+        ProjectMembership.changeset(%ProjectMembership{}, %{
+          project_id: p.id,
+          user_id: p.user_id,
+          level: "owner"
+        })
+        |> Repo.insert()
       end)
-    end
+    end)
   end
 end

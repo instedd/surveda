@@ -12,5 +12,4 @@ defmodule Ask.Repo.Migrations.AddDispositionToRespondents do
       remove :disposition
     end
   end
-
 end

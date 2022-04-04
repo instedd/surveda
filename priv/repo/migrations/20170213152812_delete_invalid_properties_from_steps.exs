@@ -19,13 +19,15 @@ defmodule Ask.Repo.Migrations.DeleteInvalidPropertiesFromSteps do
   def up do
     json_schema =
       File.read!("#{Application.app_dir(:ask)}/priv/schema.json")
-      |> Poison.decode!
-      |> Schema.resolve
+      |> Poison.decode!()
+      |> Schema.resolve()
 
-    Questionnaire |> Repo.all |> Enum.each(fn q ->
+    Questionnaire
+    |> Repo.all()
+    |> Enum.each(fn q ->
       q
       |> Questionnaire.changeset(%{steps: fix_questionnaire(q.steps, json_schema)})
-      |> Repo.update!
+      |> Repo.update!()
     end)
   end
 
@@ -41,7 +43,7 @@ defmodule Ask.Repo.Migrations.DeleteInvalidPropertiesFromSteps do
       json_schema
       |> Schema.get_ref_schema([:root, "definitions", type])
       |> Map.get("properties")
-      |> Map.keys
+      |> Map.keys()
 
     step
     |> Map.take(properties)

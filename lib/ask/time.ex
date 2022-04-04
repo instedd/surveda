@@ -5,6 +5,6 @@ end
 defmodule Ask.RealTime do
   @callback now() :: DateTime
   def now() do
-    DateTime.utc_now
+    DateTime.utc_now()
   end
 end

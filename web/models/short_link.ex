@@ -25,17 +25,19 @@ defmodule Ask.ShortLink do
           target: target,
           hash: random_hash()
         })
-        |> Repo.insert
-      link -> {:ok, link}
+        |> Repo.insert()
+
+      link ->
+        {:ok, link}
     end
   end
 
   def regenerate(%ShortLink{} = link) do
     change(link, %{hash: random_hash()})
-    |> Repo.update
+    |> Repo.update()
   end
 
   defp random_hash do
-    String.slice(:crypto.hash(:md5, Ecto.UUID.generate) |> Base.encode16(case: :lower), -32, 32)
+    String.slice(:crypto.hash(:md5, Ecto.UUID.generate()) |> Base.encode16(case: :lower), -32, 32)
   end
 end

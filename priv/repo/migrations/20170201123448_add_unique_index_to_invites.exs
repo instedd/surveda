@@ -13,5 +13,4 @@ defmodule Ask.Repo.Migrations.AddUniqueIndexToInvites do
   def down do
     Ask.Repo.query!("ALTER TABLE invites DROP INDEX project_id")
   end
-
 end

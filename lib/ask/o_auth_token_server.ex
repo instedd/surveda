@@ -17,20 +17,22 @@ defmodule Ask.OAuthTokenServer do
   end
 
   def handle_call({:get_token, provider, base_url, user_id}, _from, state) do
-    token = OAuthToken
-    |> Repo.get_by(provider: provider, base_url: base_url, user_id: user_id)
+    token =
+      OAuthToken
+      |> Repo.get_by(provider: provider, base_url: base_url, user_id: user_id)
 
-    token = if about_to_expire?(token) do
-      refresh(provider, base_url, token)
-    else
-      token
-    end
+    token =
+      if about_to_expire?(token) do
+        refresh(provider, base_url, token)
+      else
+        token
+      end
 
     {:reply, OAuthToken.access_token(token), state}
   end
 
   defp about_to_expire?(token) do
-    limit = Timex.now |> Timex.add(Timex.Duration.from_minutes(1))
+    limit = Timex.now() |> Timex.add(Timex.Duration.from_minutes(1))
     Timex.before?(token.expires_at, limit)
   end
 
@@ -40,6 +42,6 @@ defmodule Ask.OAuthTokenServer do
 
     token
     |> OAuthToken.from_access_token(access_token)
-    |> Repo.update!
+    |> Repo.update!()
   end
 end

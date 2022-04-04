@@ -22,11 +22,13 @@ defmodule Ask.OAuthToken do
 
   def from_access_token(struct, access_token) do
     expires_at = DateTime.from_unix!(access_token.expires_at)
-    encoded_token = access_token
-    |> Map.from_struct
-    # Stringify keys
-    |> Enum.map(fn {k,v} -> {Atom.to_string(k), v} end)
-    |> Enum.into(%{})
+
+    encoded_token =
+      access_token
+      |> Map.from_struct()
+      # Stringify keys
+      |> Enum.map(fn {k, v} -> {Atom.to_string(k), v} end)
+      |> Enum.into(%{})
 
     struct
     |> changeset(%{access_token: encoded_token, expires_at: expires_at})

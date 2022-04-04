@@ -5,7 +5,7 @@ defmodule Ask.Coherence.RegistrationControllerTest do
   test "new with guisso enabled", %{conn: conn} do
     enable_guisso()
 
-    conn = get conn, session_path(conn, :new)
+    conn = get(conn, session_path(conn, :new))
     location = redirected_to(conn, 302)
     assert location =~ ~r{^http://guisso.localhost/oauth2/authorize}
 
@@ -17,7 +17,7 @@ defmodule Ask.Coherence.RegistrationControllerTest do
   test "new with guisso disabled", %{conn: conn} do
     disable_guisso()
 
-    conn = get conn, session_path(conn, :new)
+    conn = get(conn, session_path(conn, :new))
     assert html_response(conn, 200)
   end
 
@@ -25,26 +25,38 @@ defmodule Ask.Coherence.RegistrationControllerTest do
     project = insert(:project)
     invite = insert(:invite, project: project, email: "someone@ask.dev", level: "admin")
 
-    conn = post conn, registration_path(conn, :create, registration: %{
-      email: "someone@ask.dev",
-      name: "Nobody",
-      password: "secret",
-      password_confirmation: "secret",
-    })
+    conn =
+      post(
+        conn,
+        registration_path(conn, :create,
+          registration: %{
+            email: "someone@ask.dev",
+            name: "Nobody",
+            password: "secret",
+            password_confirmation: "secret"
+          }
+        )
+      )
+
     assert redirected_to(conn, 302) == "/"
 
     assert user = Repo.one(from u in Ask.User, where: u.email == "someone@ask.dev")
-    assert Repo.one(from m in Ask.ProjectMembership, where: m.user_id == ^user.id and m.project_id == ^project.id)
+
+    assert Repo.one(
+             from m in Ask.ProjectMembership,
+               where: m.user_id == ^user.id and m.project_id == ^project.id
+           )
+
     refute Ask.Invite |> Repo.get(invite.id)
   end
 
   test "confirmation_sent", %{conn: conn} do
-    conn = get conn, registration_path(conn, :confirmation_sent)
+    conn = get(conn, registration_path(conn, :confirmation_sent))
     assert html_response(conn, 200)
   end
 
   test "confirmation_expired", %{conn: conn} do
-    conn = get conn, registration_path(conn, :confirmation_expired)
+    conn = get(conn, registration_path(conn, :confirmation_expired))
     assert html_response(conn, 200)
   end
 end

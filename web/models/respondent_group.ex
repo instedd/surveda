@@ -12,7 +12,10 @@ defmodule Ask.RespondentGroup do
     belongs_to :survey, Ask.Survey
     has_many :respondents, Ask.Respondent
     has_many :respondent_group_channels, Ask.RespondentGroupChannel, on_delete: :delete_all
-    many_to_many :channels, Ask.Channel, join_through: Ask.RespondentGroupChannel, on_replace: :delete
+
+    many_to_many :channels, Ask.Channel,
+      join_through: Ask.RespondentGroupChannel,
+      on_replace: :delete
 
     timestamps()
   end

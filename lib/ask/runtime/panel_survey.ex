@@ -20,7 +20,7 @@ defmodule Ask.Runtime.PanelSurvey do
       mode: survey.mode,
       state: "ready",
       started_at: Timex.now(),
-      panel_survey_id: survey.panel_survey_id,
+      panel_survey_id: survey.panel_survey_id
     }
 
     advanced_settings = %{
@@ -47,7 +47,10 @@ defmodule Ask.Runtime.PanelSurvey do
     current_wave = current_wave |> Repo.preload([:respondent_groups])
 
     new_respondent_groups_ids =
-      RespondentGroupAction.clone_respondents_groups_into(current_wave.respondent_groups, new_wave)
+      RespondentGroupAction.clone_respondents_groups_into(
+        current_wave.respondent_groups,
+        new_wave
+      )
       |> Enum.map(& &1.id)
 
     new_wave
@@ -58,28 +61,31 @@ defmodule Ask.Runtime.PanelSurvey do
   end
 
   def create_panel_survey_from_survey(%{
-    generates_panel_survey: generates_panel_survey
-    }) when not generates_panel_survey,
-    do: {
-      :error,
-      "Survey must have generates_panel_survey ON to launch to generate a panel survey"
-    }
+        generates_panel_survey: generates_panel_survey
+      })
+      when not generates_panel_survey,
+      do: {
+        :error,
+        "Survey must have generates_panel_survey ON to launch to generate a panel survey"
+      }
 
   def create_panel_survey_from_survey(%{
-    state: state,
-    }) when state != "ready",
-    do: {
-      :error,
-      "Survey must be ready to launch to generate a panel survey"
-    }
+        state: state
+      })
+      when state != "ready",
+      do: {
+        :error,
+        "Survey must be ready to launch to generate a panel survey"
+      }
 
   def create_panel_survey_from_survey(%{
-    panel_survey_id: panel_survey_id
-    }) when panel_survey_id != nil,
-    do: {
-      :error,
-      "Survey can't be a panel survey wave to generate a panel survey"
-    }
+        panel_survey_id: panel_survey_id
+      })
+      when panel_survey_id != nil,
+      do: {
+        :error,
+        "Survey can't be a panel survey wave to generate a panel survey"
+      }
 
   # A panel survey only can be created based on a survey
   # This function is responsible for the panel survey creation and its first wave
@@ -92,11 +98,13 @@ defmodule Ask.Runtime.PanelSurvey do
   # fields (comparisons, quota_vars, cutoff and count_partial_results) are here set back to their
   # default values, and they won't change again, ever.
   def create_panel_survey_from_survey(survey) do
-    {:ok, panel_survey} = PanelSurvey.create_panel_survey(%{
-      name: PanelSurvey.new_panel_survey_name(survey.name),
-      project_id: survey.project_id,
-      folder_id: survey.folder_id
-    })
+    {:ok, panel_survey} =
+      PanelSurvey.create_panel_survey(%{
+        name: PanelSurvey.new_panel_survey_name(survey.name),
+        project_id: survey.project_id,
+        folder_id: survey.folder_id
+      })
+
     Survey.changeset(survey, %{
       panel_survey_id: panel_survey.id,
       name: PanelSurvey.new_wave_name(),
@@ -107,11 +115,13 @@ defmodule Ask.Runtime.PanelSurvey do
       count_partial_results: false
     })
     |> Repo.update!()
+
     {:ok, Repo.get!(PanelSurvey, panel_survey.id)}
   end
 
   def new_wave(panel_survey) do
-    latest_wave = PanelSurvey.latest_wave(panel_survey)
+    latest_wave =
+      PanelSurvey.latest_wave(panel_survey)
       |> Repo.preload([:project])
       |> Repo.preload([:questionnaires])
       |> Repo.preload([:respondent_groups])
@@ -125,8 +135,9 @@ defmodule Ask.Runtime.PanelSurvey do
   end
 
   defp new_wave_from_latest(latest) do
-    new_wave = new_wave_changeset(latest)
-    |> Repo.insert!()
+    new_wave =
+      new_wave_changeset(latest)
+      |> Repo.insert!()
 
     new_wave = copy_respondents(latest, new_wave)
     new_wave

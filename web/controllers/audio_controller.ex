@@ -6,21 +6,25 @@ defmodule Ask.AudioController do
 
   def create(conn, %{"file" => file_upload}) do
     upload_changeset = Audio.upload_changeset(file_upload)
-    result = if upload_changeset.valid? do
-      new_audio = Audio.params_from_converted_upload(file_upload)
-      changeset = Audio.changeset(%Audio{}, new_audio)
-      Repo.insert(changeset)
-    else
-      {:error, upload_changeset}
-    end
+
+    result =
+      if upload_changeset.valid? do
+        new_audio = Audio.params_from_converted_upload(file_upload)
+        changeset = Audio.changeset(%Audio{}, new_audio)
+        Repo.insert(changeset)
+      else
+        {:error, upload_changeset}
+      end
 
     case result do
       {:ok, audio} ->
         conn
         |> put_status(:created)
         |> render("show.json", audio: %{id: audio.uuid})
+
       {:error, changeset} ->
-        Logger.warn "Error during audio uploading: #{inspect changeset}"
+        Logger.warn("Error during audio uploading: #{inspect(changeset)}")
+
         conn
         |> put_status(:unprocessable_entity)
         |> put_view(Ask.ChangesetView)

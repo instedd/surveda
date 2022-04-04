@@ -9,34 +9,46 @@ defmodule Ask.SurveySimulationControllerTest do
 
   setup %{conn: conn} do
     user = insert(:user)
-    conn = conn
+
+    conn =
+      conn
       |> put_private(:test_user, user)
       |> put_req_header("accept", "application/json")
+
     {:ok, conn: conn, user: user}
   end
 
   describe "simulate" do
     defp create_channel(mode) do
-      channel_type = case mode do
-        "mobileweb" -> "sms"
-        _ -> mode
-      end
+      channel_type =
+        case mode do
+          "mobileweb" -> "sms"
+          _ -> mode
+        end
+
       test_channel = Ask.TestChannel.new(false, mode == "sms")
-      channel = insert(:channel, settings: test_channel |> Ask.TestChannel.settings, type: channel_type)
+
+      channel =
+        insert(:channel, settings: test_channel |> Ask.TestChannel.settings(), type: channel_type)
+
       {test_channel, channel}
     end
 
     defp start_questionnaire_simulation(conn, user, mode) do
       {_, channel} = create_channel(mode)
       project = create_project_for_user(user)
-      questionnaire = insert(:questionnaire, project: project, steps: @dummy_steps, quota_completed_steps: nil)
 
-      conn = post(conn, project_survey_simulation_path(conn, :simulate, project), %{
-        questionnaire_id: to_string(questionnaire.id),
-        phone_number: "0123456789",
-        mode: mode,
-        channel_id: to_string(channel.id),
-      })
+      questionnaire =
+        insert(:questionnaire, project: project, steps: @dummy_steps, quota_completed_steps: nil)
+
+      conn =
+        post(conn, project_survey_simulation_path(conn, :simulate, project), %{
+          questionnaire_id: to_string(questionnaire.id),
+          phone_number: "0123456789",
+          mode: mode,
+          channel_id: to_string(channel.id)
+        })
+
       assert conn.status == 200
 
       survey = Survey |> Repo.get!(json_response(conn, 200)["data"]["id"])
@@ -46,12 +58,12 @@ defmodule Ask.SurveySimulationControllerTest do
       assert survey.simulation == true
 
       assert survey |> assoc(:respondent_groups) |> Repo.aggregate(:count) == 1
-      respondent_group = survey |> assoc(:respondent_groups) |> Repo.one
+      respondent_group = survey |> assoc(:respondent_groups) |> Repo.one()
       assert respondent_group.respondents_count == 1
       assert respondent_group.sample == ["0123456789"]
 
       assert survey |> assoc(:respondents) |> Repo.aggregate(:count) == 1
-      respondent = survey |> assoc(:respondents) |> Repo.one
+      respondent = survey |> assoc(:respondents) |> Repo.one()
       assert respondent.state == :pending
       assert respondent.phone_number == "0123456789"
     end
@@ -82,12 +94,10 @@ defmodule Ask.SurveySimulationControllerTest do
       end
 
       stop_simulation = fn survey ->
-        post conn, project_survey_survey_simulation_path(conn, :stop, survey.project, survey)
+        post(conn, project_survey_survey_simulation_path(conn, :stop, survey.project, survey))
       end
 
-      {:ok,
-        create_running_survey: create_running_survey,
-        stop_simulation: stop_simulation}
+      {:ok, create_running_survey: create_running_survey, stop_simulation: stop_simulation}
     end
 
     test "limits endpoint for survey simulations only", %{
@@ -116,12 +126,11 @@ defmodule Ask.SurveySimulationControllerTest do
       end
 
       get_simulation_status = fn survey ->
-        get conn, project_survey_survey_simulation_path(conn, :status, survey.project, survey)
+        get(conn, project_survey_survey_simulation_path(conn, :status, survey.project, survey))
       end
 
       {:ok,
-        create_running_survey: create_running_survey,
-        get_simulation_status: get_simulation_status}
+       create_running_survey: create_running_survey, get_simulation_status: get_simulation_status}
     end
 
     test "limits endpoint for survey simulations only", %{
@@ -151,7 +160,16 @@ defmodule Ask.SurveySimulationControllerTest do
       end
 
       get_simulation_initial_state = fn survey, mode ->
-        get conn, project_survey_survey_simulation_path(conn, :initial_state, survey.project, survey, mode)
+        get(
+          conn,
+          project_survey_survey_simulation_path(
+            conn,
+            :initial_state,
+            survey.project,
+            survey,
+            mode
+          )
+        )
       end
 
       poll_survey = fn ->
@@ -236,7 +254,7 @@ defmodule Ask.SurveySimulationControllerTest do
       conn = get_simulation_initial_state.(survey, mode)
 
       assert json_response(conn, 200)["data"]["mobile_contact_messages"] ==
-        mobile_contact_messages.(respondent_id)
+               mobile_contact_messages.(respondent_id)
     end
   end
 end

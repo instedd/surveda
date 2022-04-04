@@ -17,20 +17,28 @@ defmodule Ask.Repo.Migrations.MoveUpLanguageSelectionStepPrompt do
   end
 
   def change do
-    Questionnaire |> Repo.all |> Enum.each(fn q ->
-      steps = case q.steps do
-        nil -> []
-        _ ->
-          q.steps |> Enum.map(fn step ->
-            case step do
-              %{"type" => "language-selection", "prompt" => %{"en" => prompt}} ->
-                step |> Map.put("prompt", prompt)
-              _ ->
-                step
-            end
-          end)
-      end
-      q |> Questionnaire.changeset(%{steps: steps}) |> Repo.update
+    Questionnaire
+    |> Repo.all()
+    |> Enum.each(fn q ->
+      steps =
+        case q.steps do
+          nil ->
+            []
+
+          _ ->
+            q.steps
+            |> Enum.map(fn step ->
+              case step do
+                %{"type" => "language-selection", "prompt" => %{"en" => prompt}} ->
+                  step |> Map.put("prompt", prompt)
+
+                _ ->
+                  step
+              end
+            end)
+        end
+
+      q |> Questionnaire.changeset(%{steps: steps}) |> Repo.update()
     end)
   end
 end

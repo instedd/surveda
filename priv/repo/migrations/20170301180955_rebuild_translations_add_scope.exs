@@ -44,32 +44,44 @@ defmodule Ask.Repo.Migrations.RebuildTranslationsAddScope do
 
       # First, collect questionnaire translations as
       # {mode, scope, source_lang, source_text, target_lang, target_text}
-      new_translations = questionnaire.steps
-      |> Enum.flat_map(&collect_step_translations(lang, &1))
-      |> collect_prompt_entry_translations("quota_completed", lang, questionnaire.quota_completed_msg)
-      |> collect_prompt_entry_translations("error", lang, questionnaire.error_msg)
+      new_translations =
+        questionnaire.steps
+        |> Enum.flat_map(&collect_step_translations(lang, &1))
+        |> collect_prompt_entry_translations(
+          "quota_completed",
+          lang,
+          questionnaire.quota_completed_msg
+        )
+        |> collect_prompt_entry_translations("error", lang, questionnaire.error_msg)
 
       # Also collect all source texts, so later we can know which ones
       # don't have a translation yet (so we can still use them for autocomplete)
-      source_texts = questionnaire.steps
-      |> Enum.flat_map(&collect_step_source_texts(lang, &1))
-      |> collect_prompt_entry_source_texts("quota_completed", lang, questionnaire.quota_completed_msg)
-      |> collect_prompt_entry_source_texts("error", lang, questionnaire.error_msg)
+      source_texts =
+        questionnaire.steps
+        |> Enum.flat_map(&collect_step_source_texts(lang, &1))
+        |> collect_prompt_entry_source_texts(
+          "quota_completed",
+          lang,
+          questionnaire.quota_completed_msg
+        )
+        |> collect_prompt_entry_source_texts("error", lang, questionnaire.error_msg)
 
       # Only keep source texts that are not already in `new_translations`
-      source_texts = source_texts
-      |> Enum.reject(fn {mode, scope, text} ->
-        new_translations
-        |> Enum.any?(fn {other_mode, other_scope, other_lang, other_text, _, _} ->
-          mode == other_mode && scope == other_scope && lang == other_lang && text == other_text
+      source_texts =
+        source_texts
+        |> Enum.reject(fn {mode, scope, text} ->
+          new_translations
+          |> Enum.any?(fn {other_mode, other_scope, other_lang, other_text, _, _} ->
+            mode == other_mode && scope == other_scope && lang == other_lang && text == other_text
+          end)
         end)
-      end)
 
       # Now add these source texts as new translations, without a target language/text
-      new_translations = source_texts
-      |> Enum.reduce(new_translations, fn {mode, scope, text}, translations ->
-        [{mode, scope, lang, text, nil, nil} | translations]
-      end)
+      new_translations =
+        source_texts
+        |> Enum.reduce(new_translations, fn {mode, scope, text}, translations ->
+          [{mode, scope, lang, text, nil, nil} | translations]
+        end)
 
       # Next, collect existing translations (for the migration we use the empty list)
       existing_translations = []
@@ -88,22 +100,24 @@ defmodule Ask.Repo.Migrations.RebuildTranslationsAddScope do
           source_lang: source_lang,
           source_text: source_text,
           target_lang: target_lang,
-          target_text: target_text,
-        } |> Repo.insert!
+          target_text: target_text
+        }
+        |> Repo.insert!()
       end)
     end
 
     defp compute_additions(existing_translations, new_translations) do
-      existing_translations = existing_translations
-      |> Enum.map(fn a ->
-        {a.mode, a.scope, a.source_lang, a.source_text, a.target_lang, a.target_text}
-      end)
+      existing_translations =
+        existing_translations
+        |> Enum.map(fn a ->
+          {a.mode, a.scope, a.source_lang, a.source_text, a.target_lang, a.target_text}
+        end)
 
       new_translations
       |> Enum.reject(fn a ->
         existing_translations |> Enum.member?(a)
       end)
-      |> Enum.uniq
+      |> Enum.uniq()
     end
 
     # ------------ #
@@ -121,6 +135,7 @@ defmodule Ask.Repo.Migrations.RebuildTranslationsAddScope do
         %{"prompt" => prompt} ->
           translations
           |> collect_prompt_entry_translations("prompt", lang, prompt)
+
         _ ->
           translations
       end
@@ -132,6 +147,7 @@ defmodule Ask.Repo.Migrations.RebuildTranslationsAddScope do
           translations
           |> collect_prompt_sms_translations(scope, lang, prompt, lang_prompt)
           |> collect_prompt_ivr_translations(scope, lang, prompt, lang_prompt)
+
         _ ->
           translations
       end
@@ -146,11 +162,12 @@ defmodule Ask.Repo.Migrations.RebuildTranslationsAddScope do
               if other_lang != lang do
                 case other_prompt do
                   %{"sms" => other_text} ->
-                    if other_text |> String.trim |> String.length == 0 do
+                    if other_text |> String.trim() |> String.length() == 0 do
                       translations
                     else
                       [{"sms", scope, lang, text, other_lang, other_text} | translations]
                     end
+
                   _ ->
                     translations
                 end
@@ -161,6 +178,7 @@ defmodule Ask.Repo.Migrations.RebuildTranslationsAddScope do
           else
             translations
           end
+
         _ ->
           translations
       end
@@ -180,6 +198,7 @@ defmodule Ask.Repo.Migrations.RebuildTranslationsAddScope do
                     else
                       translations
                     end
+
                   _ ->
                     translations
                 end
@@ -190,6 +209,7 @@ defmodule Ask.Repo.Migrations.RebuildTranslationsAddScope do
           else
             translations
           end
+
         _ ->
           translations
       end
@@ -203,6 +223,7 @@ defmodule Ask.Repo.Migrations.RebuildTranslationsAddScope do
             translations
             |> collect_choice_translations(lang, choice)
           end)
+
         _ ->
           translations
       end
@@ -212,11 +233,13 @@ defmodule Ask.Repo.Migrations.RebuildTranslationsAddScope do
       case choice do
         %{"responses" => %{"sms" => responses = %{^lang => entry}}} ->
           text = entry |> Enum.join(", ")
+
           if text |> present? do
             responses
             |> Enum.reduce(translations, fn {other_lang, other_entry}, translations ->
               if other_lang != lang do
                 other_text = other_entry |> Enum.join(", ")
+
                 if other_text |> present? do
                   [{"sms", "response", lang, text, other_lang, other_text} | translations]
                 else
@@ -229,6 +252,7 @@ defmodule Ask.Repo.Migrations.RebuildTranslationsAddScope do
           else
             translations
           end
+
         _ ->
           translations
       end
@@ -249,6 +273,7 @@ defmodule Ask.Repo.Migrations.RebuildTranslationsAddScope do
         %{"prompt" => prompt} ->
           source_texts
           |> collect_prompt_entry_source_texts("prompt", lang, prompt)
+
         _ ->
           source_texts
       end
@@ -260,6 +285,7 @@ defmodule Ask.Repo.Migrations.RebuildTranslationsAddScope do
           source_texts
           |> collect_prompt_sms_source_texts(scope, lang_prompt)
           |> collect_prompt_ivr_source_texts(scope, lang_prompt)
+
         _ ->
           source_texts
       end
@@ -273,6 +299,7 @@ defmodule Ask.Repo.Migrations.RebuildTranslationsAddScope do
           else
             source_texts
           end
+
         _ ->
           source_texts
       end
@@ -286,6 +313,7 @@ defmodule Ask.Repo.Migrations.RebuildTranslationsAddScope do
           else
             source_texts
           end
+
         _ ->
           source_texts
       end
@@ -299,6 +327,7 @@ defmodule Ask.Repo.Migrations.RebuildTranslationsAddScope do
             source_texts
             |> collect_choice_source_texts(lang, choice)
           end)
+
         _ ->
           source_texts
       end
@@ -308,11 +337,13 @@ defmodule Ask.Repo.Migrations.RebuildTranslationsAddScope do
       case choice do
         %{"responses" => %{"sms" => %{^lang => entry}}} ->
           text = entry |> Enum.join(", ")
+
           if text |> present? do
             [{"sms", "response", text} | source_texts]
           else
             source_texts
           end
+
         _ ->
           source_texts
       end
@@ -323,15 +354,15 @@ defmodule Ask.Repo.Migrations.RebuildTranslationsAddScope do
     # ----- #
 
     defp present?(string) do
-      (string |> String.trim |> String.length) > 0
+      string |> String.trim() |> String.length() > 0
     end
   end
 
   def up do
-    Translation |> Ask.Repo.delete_all
+    Translation |> Ask.Repo.delete_all()
 
     Questionnaire
-    |> Ask.Repo.all
+    |> Ask.Repo.all()
     |> Enum.each(fn questionnaire ->
       Translation.rebuild(questionnaire)
     end)

@@ -23,7 +23,7 @@ defmodule Ask.Response do
   """
   def build_from_reply(reply) do
     reply
-    |> Ask.Runtime.Reply.stores
+    |> Ask.Runtime.Reply.stores()
     |> Enum.map(fn {field_name, value} -> %Ask.Response{field_name: field_name, value: value} end)
   end
 end

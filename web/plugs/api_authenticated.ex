@@ -12,20 +12,23 @@ defmodule Ask.Plugs.ApiAuthenticated do
   end
 
   def call(conn, _) do
-    conn = case Mix.env do
-      :test ->
-        test_user = conn.private[:test_user]
-        conn |> assign(:current_user, test_user)
-      _ ->
-        conn
-    end
+    conn =
+      case Mix.env() do
+        :test ->
+          test_user = conn.private[:test_user]
+          conn |> assign(:current_user, test_user)
+
+        _ ->
+          conn
+      end
 
     case conn.assigns[:current_user] do
-      nil  ->
+      nil ->
         conn
         |> put_status(:unauthorized)
         |> json(%{error: "Unauthorized"})
         |> halt
+
       user ->
         case Repo.get(User, user.id) do
           nil ->
@@ -34,7 +37,9 @@ defmodule Ask.Plugs.ApiAuthenticated do
             |> put_status(:unauthorized)
             |> json(%{error: "Unauthorized"})
             |> halt
-          user -> assign(conn, :current_user, user)
+
+          user ->
+            assign(conn, :current_user, user)
         end
     end
   end

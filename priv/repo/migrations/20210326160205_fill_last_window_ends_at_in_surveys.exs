@@ -6,6 +6,8 @@ defmodule Ask.Repo.Migrations.FillLastWindowEndsAtInSurveys do
   end
 
   def down do
-    Ask.Repo.query("UPDATE surveys SET last_window_ends_at = null WHERE last_window_ends_at IS NOT NULL")
+    Ask.Repo.query(
+      "UPDATE surveys SET last_window_ends_at = null WHERE last_window_ends_at IS NOT NULL"
+    )
   end
 end

@@ -5,17 +5,23 @@ defmodule Ask.RespondentStatsMetrics do
 
   def collect_mf(_registry, callback) do
     respondent_stats = Repo.all(Ask.RespondentStats)
-    callback.(create_gauge(
-      :surveda_respondents,
-      "The respondent stats table metrics",
-      respondent_stats
-             ))
+
+    callback.(
+      create_gauge(
+        :surveda_respondents,
+        "The respondent stats table metrics",
+        respondent_stats
+      )
+    )
+
     :ok
   end
 
   def collect_metrics(:surveda_respondents, data) do
-    result_list = reject_unused_keys(data)
-                  |> format_list
+    result_list =
+      reject_unused_keys(data)
+      |> format_list
+
     Prometheus.Model.gauge_metrics(
       Enum.reject(
         result_list,
@@ -34,12 +40,10 @@ defmodule Ask.RespondentStatsMetrics do
   defp reject_unused_keys(data) do
     for row <- data, into: [] do
       Map.to_list(row)
-      |> Enum.reject(
-           fn element ->
-             {key, _} = element
-             key == :__meta__ || key == :__struct__ || key == :survey
-           end
-         )
+      |> Enum.reject(fn element ->
+        {key, _} = element
+        key == :__meta__ || key == :__struct__ || key == :survey
+      end)
       |> format_row
     end
   end
@@ -53,7 +57,8 @@ defmodule Ask.RespondentStatsMetrics do
 
   defp format_row(row) do
     Enum.map(
-      row, fn (element) ->
+      row,
+      fn element ->
         {key, value} = element
         {key, value} = parse_mode(key, value)
         {key, string_to_charlist(value)}
@@ -71,6 +76,7 @@ defmodule Ask.RespondentStatsMetrics do
     if String.valid?(string) do
       String.to_charlist(string)
     end
+
     string
   end
 end

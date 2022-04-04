@@ -9,6 +9,7 @@ defmodule Ask.PanelSurvey do
     Survey,
     SystemTime
   }
+
   alias Ask.Runtime.SurveyAction
 
   schema "panel_surveys" do
@@ -81,7 +82,7 @@ defmodule Ask.PanelSurvey do
   """
 
   def update_panel_survey(%{project_id: current} = _panel_survey, %{project_id: new} = _attrs)
-    when current != new do
+      when current != new do
     {:error, "Project can't be changed"}
   end
 
@@ -106,6 +107,7 @@ defmodule Ask.PanelSurvey do
   def delete_panel_survey(%PanelSurvey{} = panel_survey) do
     Repo.preload(panel_survey, :waves).waves
     |> Enum.each(fn survey -> SurveyAction.delete(survey, nil) end)
+
     Repo.delete(panel_survey)
   end
 
@@ -133,5 +135,5 @@ defmodule Ask.PanelSurvey do
   def new_panel_survey_name(nil = _survey_name), do: "Panel Survey #{now_yyyy_mm_dd()}"
   def new_panel_survey_name(survey_name), do: survey_name
 
-  defp now_yyyy_mm_dd(), do: SystemTime.time.now |> Timex.format!("{YYYY}-{0M}-{D}")
+  defp now_yyyy_mm_dd(), do: SystemTime.time().now |> Timex.format!("{YYYY}-{0M}-{D}")
 end

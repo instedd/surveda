@@ -112,15 +112,19 @@ defmodule Ask.Runtime.RespondentGroupAction do
     canonical_numbers = Enum.map(phone_numbers, &Respondent.canonicalize_phone_number/1)
 
     # Request in batches to avoid 'Prepared statement contains too many placeholders' errors
-    process_batch = fn (numbers) ->
-      Repo.all(from(r in Respondent,
-        where: r.respondent_group_id == ^group.id and r.canonical_phone_number in ^numbers,
-        select: r.canonical_phone_number))
+    process_batch = fn numbers ->
+      Repo.all(
+        from(r in Respondent,
+          where: r.respondent_group_id == ^group.id and r.canonical_phone_number in ^numbers,
+          select: r.canonical_phone_number
+        )
+      )
     end
 
-    existing_numbers = canonical_numbers
-    |> Enum.chunk_every(64_000)
-    |> Enum.flat_map(process_batch)
+    existing_numbers =
+      canonical_numbers
+      |> Enum.chunk_every(64_000)
+      |> Enum.flat_map(process_batch)
 
     # And then remove them from phone_numbers (because they are duplicates)
     # (no easier way to do this, plus we expect `existing_numbers` to
@@ -332,7 +336,8 @@ defmodule Ask.Runtime.RespondentGroupAction do
     groups_phone_numbers = phone_numbers_by_group_id(respondent_groups)
 
     Enum.map(respondent_groups, fn group ->
-      loaded_phone_numbers = groups_phone_numbers
+      loaded_phone_numbers =
+        groups_phone_numbers
         |> Map.get(group.id)
         |> loaded_phone_numbers()
 
@@ -346,14 +351,16 @@ defmodule Ask.Runtime.RespondentGroupAction do
   defp phone_numbers_by_group_id(respondent_groups) do
     groups_ids = respondent_groups |> Enum.map(& &1.id)
 
-    (from r in Respondent,
+    from(r in Respondent,
       where:
         r.respondent_group_id in ^groups_ids and
-        r.disposition != :refused and
-        r.disposition != :ineligible,
-      select: [r.respondent_group_id, r.phone_number])
-      |> Repo.all()
-      |> Enum.group_by(&List.first/1, &List.last/1) # group phone_numbers by respondent_group_id
+          r.disposition != :refused and
+          r.disposition != :ineligible,
+      select: [r.respondent_group_id, r.phone_number]
+    )
+    |> Repo.all()
+    # group phone_numbers by respondent_group_id
+    |> Enum.group_by(&List.first/1, &List.last/1)
   end
 
   defp copy_respondent_group_channels(respondent_group, new_respondent_group) do

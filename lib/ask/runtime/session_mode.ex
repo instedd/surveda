@@ -5,7 +5,16 @@ defprotocol Ask.Runtime.SessionMode do
 end
 
 defmodule Ask.Runtime.SessionModeProvider do
-  alias Ask.Runtime.{SessionMode, SMSMode, IVRMode, MobileWebMode, SMSSimulatorMode, IVRSimulatorMode, MobileWebSimulatorMode}
+  alias Ask.Runtime.{
+    SessionMode,
+    SMSMode,
+    IVRMode,
+    MobileWebMode,
+    SMSSimulatorMode,
+    IVRSimulatorMode,
+    MobileWebSimulatorMode
+  }
+
   alias Ask.{Repo, Channel}
 
   defp mode_provider("sms"), do: SMSMode
@@ -31,23 +40,27 @@ defmodule Ask.Runtime.SessionModeProvider do
   end
 
   def load(nil), do: nil
+
   def load(mode_dump) do
     mode_provider(mode_dump["mode"]).load(mode_dump)
   end
 
   def dump(nil), do: nil
+
   def dump(mode) do
-    mode |> SessionMode.dump
+    mode |> SessionMode.dump()
   end
 
   def mode(nil), do: nil
+
   def mode(mode) do
-    mode |> SessionMode.mode
+    mode |> SessionMode.mode()
   end
 
   def visitor(nil), do: nil
+
   def visitor(mode) do
-    mode |> SessionMode.visitor
+    mode |> SessionMode.visitor()
   end
 end
 
@@ -63,7 +76,7 @@ defmodule Ask.Runtime.SMSSimulatorMode do
   defimpl Ask.Runtime.SessionMode, for: Ask.Runtime.SMSSimulatorMode do
     def dump(%SMSSimulatorMode{}) do
       %{
-        mode: "sms",
+        mode: "sms"
       }
     end
 
@@ -126,7 +139,7 @@ defmodule Ask.Runtime.IVRSimulatorMode do
   defimpl Ask.Runtime.SessionMode, for: Ask.Runtime.IVRSimulatorMode do
     def dump(%IVRSimulatorMode{}) do
       %{
-        mode: "ivr",
+        mode: "ivr"
       }
     end
 
@@ -152,6 +165,7 @@ defmodule Ask.Runtime.IVRMode do
   end
 
   def load(nil), do: nil
+
   def load(mode_dump) do
     %IVRMode{
       channel: Channel |> Repo.get(mode_dump["channel_id"]),
@@ -190,6 +204,7 @@ defmodule Ask.Runtime.MobileWebMode do
   end
 
   def load(nil), do: nil
+
   def load(mode_dump) do
     %MobileWebMode{
       channel: Channel |> Repo.get(mode_dump["channel_id"]),
@@ -228,7 +243,7 @@ defmodule Ask.Runtime.MobileWebSimulatorMode do
   defimpl Ask.Runtime.SessionMode, for: Ask.Runtime.MobileWebSimulatorMode do
     def dump(%MobileWebSimulatorMode{}) do
       %{
-        mode: "mobileweb",
+        mode: "mobileweb"
       }
     end
 

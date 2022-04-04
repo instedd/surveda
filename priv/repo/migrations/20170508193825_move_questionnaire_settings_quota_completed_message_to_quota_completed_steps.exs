@@ -19,17 +19,22 @@ defmodule Ask.Repo.Migrations.MoveQuestionnaireSettingsQuotaCompletedMessageToQu
   end
 
   def up do
-    Questionnaire |> Repo.all |> Enum.each(fn questionnaire ->
+    Questionnaire
+    |> Repo.all()
+    |> Enum.each(fn questionnaire ->
       quota_completed_message = questionnaire.settings["quota_completed_message"]
+
       quota_completed_steps =
         if quota_completed_message do
-          [%{
-            "id" => Ecto.UUID.generate,
-            "prompt" => quota_completed_message,
-            "skip_logic" => nil,
-            "title" => "Quota completed message",
-            "type" => "explanation",
-            }]
+          [
+            %{
+              "id" => Ecto.UUID.generate(),
+              "prompt" => quota_completed_message,
+              "skip_logic" => nil,
+              "title" => "Quota completed message",
+              "type" => "explanation"
+            }
+          ]
         else
           nil
         end
@@ -37,8 +42,11 @@ defmodule Ask.Repo.Migrations.MoveQuestionnaireSettingsQuotaCompletedMessageToQu
       settings = Map.delete(questionnaire.settings, "quota_completed_message")
 
       questionnaire
-      |> Questionnaire.changeset(%{settings: settings, quota_completed_steps: quota_completed_steps})
-      |> Repo.update!
+      |> Questionnaire.changeset(%{
+        settings: settings,
+        quota_completed_steps: quota_completed_steps
+      })
+      |> Repo.update!()
     end)
   end
 

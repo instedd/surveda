@@ -3,7 +3,9 @@ defmodule Ask.AudioDeliveryControllerTest do
 
   setup %{conn: conn} do
     user = insert(:user)
-    conn = conn
+
+    conn =
+      conn
       |> put_private(:test_user, user)
       |> put_req_header("accept", "application/json")
 
@@ -13,7 +15,7 @@ defmodule Ask.AudioDeliveryControllerTest do
   describe "show" do
     test "returns the audio file with long cache expiry", %{conn: conn} do
       audio = insert(:audio)
-      conn = get conn, audio_path(conn, :show, audio.uuid)
+      conn = get(conn, audio_path(conn, :show, audio.uuid))
 
       assert conn.status == 200
       assert conn.resp_body == File.read!("test/fixtures/audio.mp3")
@@ -22,7 +24,7 @@ defmodule Ask.AudioDeliveryControllerTest do
 
     test "returns 404 when the file doesn't exist", %{conn: conn} do
       assert_error_sent 404, fn ->
-        get conn, audio_path(conn, :show, 1234)
+        get(conn, audio_path(conn, :show, 1234))
       end
     end
   end

@@ -11,32 +11,65 @@ defmodule Ask.Schedule do
   alias __MODULE__
   alias Ask.{DayOfWeek, ScheduleError, SystemTime}
 
-  defstruct [:day_of_week, :start_time, :end_time, :blocked_days, :timezone, :start_date, :end_date]
+  defstruct [
+    :day_of_week,
+    :start_time,
+    :end_time,
+    :blocked_days,
+    :timezone,
+    :start_date,
+    :end_date
+  ]
 
   def type, do: :text
 
   def cast(%Schedule{} = schedule) do
     {:ok, schedule}
   end
+
   def cast(%{start_time: start_time} = schedule) when is_binary(start_time) do
     cast(%{schedule | start_time: Time.from_iso8601!(start_time)})
   end
+
   def cast(%{end_time: end_time} = schedule) when is_binary(end_time) do
     cast(%{schedule | end_time: Time.from_iso8601!(end_time)})
   end
+
   def cast(%{start_date: start_date} = schedule) when is_binary(start_date) do
     cast(%{schedule | start_date: Date.from_iso8601!(start_date)})
   end
+
   def cast(%{end_date: end_date} = schedule) when is_binary(end_date) do
     cast(%{schedule | end_date: Date.from_iso8601!(end_date)})
   end
-  def cast(%{day_of_week: day_of_week, start_time: start_time, end_time: end_time, blocked_days: blocked_days, timezone: timezone, start_date: start_date, end_date: end_date}) do
+
+  def cast(%{
+        day_of_week: day_of_week,
+        start_time: start_time,
+        end_time: end_time,
+        blocked_days: blocked_days,
+        timezone: timezone,
+        start_date: start_date,
+        end_date: end_date
+      }) do
     case DayOfWeek.cast(day_of_week) do
-      :error -> :error
+      :error ->
+        :error
+
       {:ok, dow} ->
-        {:ok, %Schedule{day_of_week: dow, start_time: start_time, end_time: end_time, blocked_days: cast_blocked_days(blocked_days), timezone: timezone, start_date: start_date, end_date: end_date}}
+        {:ok,
+         %Schedule{
+           day_of_week: dow,
+           start_time: start_time,
+           end_time: end_time,
+           blocked_days: cast_blocked_days(blocked_days),
+           timezone: timezone,
+           start_date: start_date,
+           end_date: end_date
+         }}
     end
   end
+
   def cast(%{} = map) do
     cast(%{
       day_of_week: map["day_of_week"],
@@ -48,6 +81,7 @@ defmodule Ask.Schedule do
       end_date: map["end_date"]
     })
   end
+
   def cast(string) when is_binary(string), do: load(string)
   def cast(nil), do: {:ok, default()}
   def cast(_), do: :error
@@ -55,9 +89,11 @@ defmodule Ask.Schedule do
   defp cast_blocked_days([blocked_day | blocked_days]) when is_binary(blocked_day) do
     [Date.from_iso8601!(blocked_day) | cast_blocked_days(blocked_days)]
   end
+
   defp cast_blocked_days([blocked_day | blocked_days]) do
     [blocked_day | cast_blocked_days(blocked_days)]
   end
+
   defp cast_blocked_days(_), do: []
 
   def load(string) when is_binary(string), do: cast(Poison.decode!(string))
@@ -71,14 +107,12 @@ defmodule Ask.Schedule do
     end
   end
 
-  def dump(%Schedule{day_of_week: day_of_week}=schedule) do
-    {:ok, day_of_week}= DayOfWeek.dump(day_of_week)
-    schedule = %{schedule |
-      day_of_week: day_of_week,
-      blocked_days: schedule.blocked_days || []
-    }
+  def dump(%Schedule{day_of_week: day_of_week} = schedule) do
+    {:ok, day_of_week} = DayOfWeek.dump(day_of_week)
+    schedule = %{schedule | day_of_week: day_of_week, blocked_days: schedule.blocked_days || []}
     Poison.encode(schedule)
   end
+
   def dump(_), do: :error
 
   def dump!(schedule) do
@@ -96,23 +130,42 @@ defmodule Ask.Schedule do
     end
   end
 
-  def intersect?(%Schedule{day_of_week: days, start_time: start_time, end_time: end_time, timezone: timezone, blocked_days: blocked_days, start_date: start_date}, %DateTime{} = date_time) do
-    date_time = date_time
-    |> Timex.to_datetime(timezone)
+  def intersect?(
+        %Schedule{
+          day_of_week: days,
+          start_time: start_time,
+          end_time: end_time,
+          timezone: timezone,
+          blocked_days: blocked_days,
+          start_date: start_date
+        },
+        %DateTime{} = date_time
+      ) do
+    date_time =
+      date_time
+      |> Timex.to_datetime(timezone)
 
     time = DateTime.to_time(date_time)
     date = DateTime.to_date(date_time)
 
-    DayOfWeek.intersect?(days, DayOfWeek.from(date_time))
-      && !Enum.member?(blocked_days, date_time |> Timex.to_date)
-      && Time.compare(start_time, time) != :gt
-      && Time.compare(end_time, time) != :lt
-      && (!start_date || Date.compare(start_date, date) != :gt)
+    DayOfWeek.intersect?(days, DayOfWeek.from(date_time)) &&
+      !Enum.member?(blocked_days, date_time |> Timex.to_date()) &&
+      Time.compare(start_time, time) != :gt &&
+      Time.compare(end_time, time) != :lt &&
+      (!start_date || Date.compare(start_date, date) != :gt)
   end
 
-  def business_day(), do:
-    %Schedule{
-      day_of_week: %DayOfWeek{sun: false, mon: true, tue: true, wed: true, thu: true, fri: true, sat: false},
+  def business_day(),
+    do: %Schedule{
+      day_of_week: %DayOfWeek{
+        sun: false,
+        mon: true,
+        tue: true,
+        wed: true,
+        thu: true,
+        fri: true,
+        sat: false
+      },
       start_time: ~T[09:00:00],
       end_time: ~T[18:00:00],
       blocked_days: [],
@@ -144,7 +197,10 @@ defmodule Ask.Schedule do
   end
 
   # Find the beggining of the first active window, going forward
-  def next_available_date_time(%Schedule{end_date: end_date, start_date: start_date} = schedule, %DateTime{} = from_date_time \\ SystemTime.time.now) do
+  def next_available_date_time(
+        %Schedule{end_date: end_date, start_date: start_date} = schedule,
+        %DateTime{} = from_date_time \\ SystemTime.time().now
+      ) do
     from_date_time = select_from_date_time(from_date_time, start_date)
     backward = false
     limit = end_date
@@ -164,6 +220,7 @@ defmodule Ask.Schedule do
 
   # Find the ending of the last active window, going backward from the last minute of the end_date
   def last_window_ends_at(%{end_date: nil} = _schedule), do: nil
+
   def last_window_ends_at(%{end_date: end_date, start_date: start_date} = schedule) do
     backward = true
     limit = start_date
@@ -182,12 +239,13 @@ defmodule Ask.Schedule do
     {erl_date, erl_time} = Timex.to_erl(date_time)
     {:ok, time} = Time.from_erl(erl_time)
 
-    selected_datetime = if day_of_week_available?(schedule, erl_date) && compare_time(schedule, time) == :inside do
-      date_time
-    else
-      selected_date = select_available_date(schedule, erl_date, time, backward, limit)
-      select_time_for_date(schedule, selected_date, backward)
-    end
+    selected_datetime =
+      if day_of_week_available?(schedule, erl_date) && compare_time(schedule, time) == :inside do
+        date_time
+      else
+        selected_date = select_available_date(schedule, erl_date, time, backward, limit)
+        select_time_for_date(schedule, selected_date, backward)
+      end
 
     selected_datetime
     |> Timex.Timezone.convert("Etc/UTC")
@@ -198,11 +256,12 @@ defmodule Ask.Schedule do
   end
 
   def select_available_date(schedule, erl_date, time, backward, limit) do
-    date_to_return = if day_of_week_available?(schedule, erl_date) do
-      pick_date_based_on_time_and_direction(compare_time(schedule, time), backward)
-    else
-      :next_date
-    end
+    date_to_return =
+      if day_of_week_available?(schedule, erl_date) do
+        pick_date_based_on_time_and_direction(compare_time(schedule, time), backward)
+      else
+        :next_date
+      end
 
     case date_to_return do
       :given_date -> erl_date
@@ -211,14 +270,17 @@ defmodule Ask.Schedule do
   end
 
   defp pick_date_based_on_time_and_direction(:before = _time_is, true = _backward), do: :next_date
-  defp pick_date_based_on_time_and_direction(:before = _time_is, false = _backward), do: :given_date
+
+  defp pick_date_based_on_time_and_direction(:before = _time_is, false = _backward),
+    do: :given_date
+
   defp pick_date_based_on_time_and_direction(:after = _time_is, true = _backward), do: :given_date
   defp pick_date_based_on_time_and_direction(:after = _time_is, false = _backward), do: :next_date
 
   def at_end_time(%Schedule{end_time: end_time, timezone: timezone}, %DateTime{} = date_time) do
     {:ok, datetime} = DateTime.shift_zone(date_time, timezone)
     {:ok, naive_datetime} = DateTime.to_date(datetime) |> NaiveDateTime.new(end_time)
-    DateTime.from_naive!(naive_datetime , timezone)
+    DateTime.from_naive!(naive_datetime, timezone)
   end
 
   def remove_start_date(schedule) do
@@ -231,8 +293,12 @@ defmodule Ask.Schedule do
 
   defp compare_time(%Schedule{start_time: start_time, end_time: end_time}, time) do
     case Time.compare(time, start_time) do
-      :lt -> :before
-      :eq -> :inside
+      :lt ->
+        :before
+
+      :eq ->
+        :inside
+
       :gt ->
         case Time.compare(time, end_time) do
           :lt -> :inside
@@ -243,12 +309,12 @@ defmodule Ask.Schedule do
   end
 
   defp at_start_time(schedule, erl_date) do
-    {:ok, naive_datetime} = erl_date |> Date.from_erl! |> NaiveDateTime.new(schedule.start_time)
+    {:ok, naive_datetime} = erl_date |> Date.from_erl!() |> NaiveDateTime.new(schedule.start_time)
     DateTime.from_naive!(naive_datetime, schedule.timezone)
   end
 
   defp at_end_time_erl(schedule, erl_date) do
-    {:ok, naive_datetime} = erl_date |> Date.from_erl! |> NaiveDateTime.new(schedule.end_time)
+    {:ok, naive_datetime} = erl_date |> Date.from_erl!() |> NaiveDateTime.new(schedule.end_time)
     DateTime.from_naive!(naive_datetime, schedule.timezone)
   end
 
@@ -256,7 +322,7 @@ defmodule Ask.Schedule do
     raise_if_date_exceeds_limit(erl_date, backward, limit)
 
     shift_days = if backward, do: -1, else: 1
-    next_date = Date.from_erl!(erl_date) |> Date.add(shift_days) |> Timex.to_erl
+    next_date = Date.from_erl!(erl_date) |> Date.add(shift_days) |> Timex.to_erl()
 
     if day_of_week_available?(schedule, next_date) do
       next_date
@@ -265,20 +331,21 @@ defmodule Ask.Schedule do
     end
   end
 
-  defp raise_if_date_exceeds_limit(date_time, backward, limit), do:
-    if date_exceeds_limit?(date_time, backward, limit), do:
-      raise_date_exceeds_limit(backward)
+  defp raise_if_date_exceeds_limit(date_time, backward, limit),
+    do:
+      if(date_exceeds_limit?(date_time, backward, limit), do: raise_date_exceeds_limit(backward))
 
-  defp raise_date_exceeds_limit(true = _backward), do:
-    raise ScheduleError, "last active window not found"
+  defp raise_date_exceeds_limit(true = _backward),
+    do: raise(ScheduleError, "last active window not found")
 
-  defp raise_date_exceeds_limit(false = _backward), do:
-    raise ScheduleError, "next active window not found"
+  defp raise_date_exceeds_limit(false = _backward),
+    do: raise(ScheduleError, "next active window not found")
 
   defp date_exceeds_limit?(_date_time, _backward, nil = _limit), do: false
 
   defp date_exceeds_limit?(date_time, backward, limit) do
     comparison = Timex.compare(date_time, limit)
+
     if backward do
       # -1 -- date_time comes before the limit
       comparison < 0
@@ -288,9 +355,13 @@ defmodule Ask.Schedule do
     end
   end
 
-  defp day_of_week_available?(%Schedule{day_of_week: day_of_week, blocked_days: blocked_days}, erl_date) do
+  defp day_of_week_available?(
+         %Schedule{day_of_week: day_of_week, blocked_days: blocked_days},
+         erl_date
+       ) do
     date = Date.from_erl!(erl_date)
-    if day_of_week == DayOfWeek.never do
+
+    if day_of_week == DayOfWeek.never() do
       # Just in case a schedule remains empty (can happen in a test)
       true
     else
@@ -317,13 +388,14 @@ defmodule Ask.Schedule do
 
   def timezone_offset_in_seconds(%Schedule{} = schedule) do
     schedule.timezone
-    |> Timex.Timezone.get
-    |> Timex.Timezone.total_offset
+    |> Timex.Timezone.get()
+    |> Timex.Timezone.total_offset()
   end
 
   def timezone_offset(%Schedule{} = schedule) do
     offset = timezone_offset_in_seconds(schedule)
     hours = round(offset / 60 / 60)
+
     cond do
       hours == 0 -> "UTC"
       hours < 0 -> "GMT#{hours}"
