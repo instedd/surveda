@@ -12,20 +12,48 @@ type MessagesListProps = {
   truncateAt: ?number,
 }
 
-type MessagesListState = {
-  toTruncate: Array<boolean>,
+type MessageProps = {
+  message: ChatMessage,
+  truncateAt: ?number,
 }
 
-export class MessagesList extends Component<MessagesListProps, MessagesListState> {
-  messagesBottomDivRef: any
+type MessageState = {
+  truncated: boolean,
+}
 
+class Message extends Component<MessageProps, MessageState> {
   constructor(props) {
     super(props)
 
     this.state = {
-      toTruncate: [],
+      truncated: props.truncateAt && props.message.body.length > props.truncateAt,
     }
   }
+
+  render() {
+    const { message } = this.props
+    const body = this.truncate(message.body.trim())
+
+    return (
+      <li className={`message-bubble ${message.type}-message`} onClick={() => this.expand()}>
+        <div className="content-text" dangerouslySetInnerHTML={{ __html: linkifyStr(body) }} />
+      </li>
+    )
+  }
+
+  truncate(body) {
+    return this.state.truncated === true ? `${body.slice(0, this.props.truncateAt)}…` : body
+  }
+
+  expand() {
+    if (this.state.truncated) {
+      this.setState({ truncated: false })
+    }
+  }
+}
+
+export class MessagesList extends Component<MessagesListProps> {
+  messagesBottomDivRef: any
 
   scrollToBottom = () => {
     if (this.props.scrollToBottom) {
@@ -47,34 +75,14 @@ export class MessagesList extends Component<MessagesListProps, MessagesListState
     }
   }
 
-  mustTruncate() {
-    return this.props.truncateAt && this.props.truncateAt > 0
-  }
-
   render() {
     let { messages } = this.props
-
-    if (this.mustTruncate()) {
-      messages = this.truncate(messages)
-    }
 
     return (
       <div className="chat-window-body">
         <ul>
           {messages.map((message, index) => (
-            <li
-              key={index}
-              className={`message-bubble ${message.type}-message`}
-              data-index={index}
-              onClick={(event) => this.onMessageClick(event)}
-            >
-              <div
-                className="content-text"
-                dangerouslySetInnerHTML={{
-                  __html: linkifyStr(message.body.trim()),
-                }}
-              />
-            </li>
+            <Message message={message} key={index} truncateAt={this.props.truncateAt} />
           ))}
         </ul>
         <div
@@ -85,35 +93,5 @@ export class MessagesList extends Component<MessagesListProps, MessagesListState
         />
       </div>
     )
-  }
-
-  onMessageClick(event) {
-    if (this.mustTruncate()) {
-      const index = parseInt(event.currentTarget.dataset.index, 10)
-      this.expandMessage(index)
-    }
-  }
-
-  truncate(messages: Array<ChatMessage>) {
-    const { truncateAt } = this.props
-    const { toTruncate } = this.state
-
-    return messages.map((message, index) => {
-      if (toTruncate[index] !== false) {
-        toTruncate[index] = message.body.length > truncateAt
-      }
-      return toTruncate[index]
-        ? { ...message, body: `${message.body.slice(0, truncateAt)}…` }
-        : message
-    })
-  }
-
-  expandMessage(index: number) {
-    const { toTruncate } = this.state
-
-    if (toTruncate[index] !== false) {
-      toTruncate[index] = false
-      this.setState({ toTruncate })
-    }
   }
 }
