@@ -6,37 +6,26 @@ export type ChatMessage = {
   body: string,
 }
 
-type MessageBulkProps = {
-  messages: Array<ChatMessage>,
-}
-
 type MessagesListProps = {
   messages: Array<ChatMessage>,
   scrollToBottom: boolean,
+  truncateAt: ?number,
 }
 
-function MessageBulk(props: MessageBulkProps) {
-  const { messages } = props
-  const ATMessage = messages[0].type === "at"
-
-  return (
-    <div className={"message-bubble"}>
-      {messages.map((message, ix) => (
-        <li key={ix} className={ATMessage ? "at-message" : "ao-message"}>
-          <div
-            className="content-text"
-            dangerouslySetInnerHTML={{
-              __html: linkifyStr(message.body.trim()),
-            }}
-          />
-        </li>
-      ))}
-    </div>
-  )
+type MessagesListState = {
+  toTruncate: Array<boolean>,
 }
 
-export class MessagesList extends Component<MessagesListProps> {
+export class MessagesList extends Component<MessagesListProps, MessagesListState> {
   messagesBottomDivRef: any
+
+  constructor(props) {
+    super(props)
+
+    this.state = {
+      toTruncate: [],
+    }
+  }
 
   scrollToBottom = () => {
     if (this.props.scrollToBottom) {
@@ -50,33 +39,42 @@ export class MessagesList extends Component<MessagesListProps> {
     this.scrollToBottom()
   }
 
-  componentDidUpdate() {
-    this.scrollToBottom()
+  componentDidUpdate(prevProps) {
+    // only autoscroll to bottom if the list of messages changed (we assume the
+    // list can only grow or shrink, not changed in place):
+    if (prevProps.messages.length !== this.props.messages.length) {
+      this.scrollToBottom()
+    }
+  }
+
+  mustTruncate() {
+    return this.props.truncateAt && this.props.truncateAt > 0
   }
 
   render() {
-    const groupBy = (elems, func) => {
-      const lastElem = (collection: Array<any>) => collection[collection.length - 1]
+    let { messages } = this.props
 
-      return elems.reduce(function (groups, elem) {
-        const lastGroup = lastElem(groups)
-        if (groups.length == 0 || func(lastElem(lastGroup)) != func(elem)) {
-          groups.push([elem])
-        } else {
-          lastGroup.push(elem)
-        }
-        return groups
-      }, [])
+    if (this.mustTruncate()) {
+      messages = this.truncate(messages)
     }
-
-    const { messages } = this.props
-    const groupedMessages = groupBy(messages, (message: ChatMessage) => message.type)
 
     return (
       <div className="chat-window-body">
         <ul>
-          {groupedMessages.map((messages, ix) => (
-            <MessageBulk key={`msg-bulk-${ix}`} messages={messages} />
+          {messages.map((message, index) => (
+            <li
+              key={index}
+              className={`message-bubble ${message.type}-message`}
+              data-index={index}
+              onClick={(event) => this.onMessageClick(event)}
+            >
+              <div
+                className="content-text"
+                dangerouslySetInnerHTML={{
+                  __html: linkifyStr(message.body.trim()),
+                }}
+              />
+            </li>
           ))}
         </ul>
         <div
@@ -87,5 +85,35 @@ export class MessagesList extends Component<MessagesListProps> {
         />
       </div>
     )
+  }
+
+  onMessageClick(event) {
+    if (this.mustTruncate()) {
+      const index = parseInt(event.currentTarget.dataset.index, 10)
+      this.expandMessage(index)
+    }
+  }
+
+  truncate(messages: Array<ChatMessage>) {
+    const { truncateAt } = this.props
+    const { toTruncate } = this.state
+
+    return messages.map((message, index) => {
+      if (toTruncate[index] !== false) {
+        toTruncate[index] = message.body.length > truncateAt
+      }
+      return toTruncate[index]
+        ? { ...message, body: `${message.body.slice(0, truncateAt)}…` }
+        : message
+    })
+  }
+
+  expandMessage(index: number) {
+    const { toTruncate } = this.state
+
+    if (toTruncate[index] !== false) {
+      toTruncate[index] = false
+      this.setState({ toTruncate })
+    }
   }
 }
