@@ -22,46 +22,43 @@ type MessageState = {
   truncated: boolean,
 }
 
-const Message = translate()(class extends Component<MessageProps, MessageState> {
-  constructor(props) {
-    super(props)
+const Message = translate()(
+  class extends Component<MessageProps, MessageState> {
+    constructor(props) {
+      super(props)
 
-    this.state = {
-      truncated: props.truncateAt && props.message.body.length > props.truncateAt,
-    }
-  }
-
-  render() {
-    const { message, t } = this.props
-    const body = this.truncate(message.body.trim())
-    let expandable, title
-
-    if (this.state.truncated) {
-      expandable = "is-expandable"
-      title = t("Click to expand message")
+      this.state = {
+        truncated: props.truncateAt && props.message.body.length > props.truncateAt,
+      }
     }
 
-    return (
-      <li
-        className={`message-bubble ${message.type}-message ${expandable}`}
-        title={title}
-        onClick={() => this.expand()}
-      >
-        <div className="content-text" dangerouslySetInnerHTML={{ __html: linkifyStr(body) }} />
-      </li>
-    )
-  }
+    render() {
+      const { message, t } = this.props
+      const { truncated } = this.state
+      const body = this.truncate(message.body.trim())
 
-  truncate(body) {
-    return this.state.truncated === true ? `${body.slice(0, this.props.truncateAt)}…` : body
-  }
+      return (
+        <li
+          className={`message-bubble ${message.type}-message ${truncated && "is-expandable"}`}
+          title={truncated && t("Click to expand message")}
+          onClick={() => this.expand()}
+        >
+          <div className="content-text" dangerouslySetInnerHTML={{ __html: linkifyStr(body) }} />
+        </li>
+      )
+    }
 
-  expand() {
-    if (this.state.truncated) {
-      this.setState({ truncated: false })
+    truncate(body) {
+      return this.state.truncated === true ? `${body.slice(0, this.props.truncateAt)}…` : body
+    }
+
+    expand() {
+      if (this.state.truncated) {
+        this.setState({ truncated: false })
+      }
     }
   }
-})
+)
 
 export class MessagesList extends Component<MessagesListProps> {
   messagesBottomDivRef: any
