@@ -4,7 +4,7 @@ defmodule Ask.Repo.Migrations.PopulateSaltFieldInProjects do
   alias Ask.Repo
 
   defmodule Project do
-    use Ask.Web, :model
+    use AskWeb, :model
 
     schema "projects" do
       field :salt, :string

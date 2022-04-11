@@ -1,5 +1,5 @@
-defmodule Ask.SurveyTest do
-  use Ask.ModelCase
+defmodule AskWeb.SurveyTest do
+  use Ask.DataCase
   use Ask.TestHelpers
   use Ask.MockTime
 

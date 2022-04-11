@@ -2,7 +2,7 @@ defmodule Ask.Repo.Migrations.RebuildTranslationsAddScope do
   use Ecto.Migration
 
   defmodule Questionnaire do
-    use Ask.Web, :model
+    use AskWeb, :model
 
     schema "questionnaires" do
       field :name, :string
@@ -16,7 +16,7 @@ defmodule Ask.Repo.Migrations.RebuildTranslationsAddScope do
   end
 
   defmodule Translation do
-    use Ask.Web, :model
+    use AskWeb, :model
 
     alias Ask.{Repo, Translation}
 

@@ -38,5 +38,5 @@ defmodule Ask.Runtime.ChannelHelper do
     end
   end
 
-  def application_endpoint(), do: Ask.Endpoint.url()
+  def application_endpoint(), do: AskWeb.Endpoint.url()
 end

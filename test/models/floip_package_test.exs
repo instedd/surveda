@@ -1,5 +1,5 @@
-defmodule Ask.FloipPackageTest do
-  use Ask.ModelCase
+defmodule AskWeb.FloipPackageTest do
+  use Ask.DataCase
   alias Ask.{StepBuilder, FloipPackage}
 
   test "fields" do

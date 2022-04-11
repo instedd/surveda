@@ -6,7 +6,7 @@ use Mix.Config
 # The watchers configuration can be used to run external
 # watchers to your application. For example, we use it
 # with brunch.io to recompile .js and .css sources.
-config :ask, Ask.Endpoint,
+config :ask, AskWeb.Endpoint,
   http: [port: System.get_env("HTTP_PORT") || 4000],
   debug_errors: true,
   code_reloader: true,
@@ -16,13 +16,13 @@ config :ask, Ask.Endpoint,
 #                   cd: Path.expand("../", __DIR__)]]
 
 # Watch static and templates for browser reloading.
-config :ask, Ask.Endpoint,
+config :ask, AskWeb.Endpoint,
   live_reload: [
     patterns: [
       ~r{priv/static/.*(js|css|png|jpeg|jpg|gif|svg)$},
       ~r{priv/gettext/.*(po)$},
-      ~r{web/views/.*(ex)$},
-      ~r{web/templates/.*(eex)$}
+      ~r{lib/ask_web/views/.*(ex)$},
+      ~r{lib/ask_web/templates/.*(eex)$}
     ]
   ]
 
@@ -45,4 +45,4 @@ config :coherence,
   email_from_name: "Surveda Dev",
   email_from_email: "myname@domain.com"
 
-config :coherence, Ask.Coherence.Mailer, adapter: Swoosh.Adapters.Local
+config :coherence, AskWeb.Coherence.Mailer, adapter: Swoosh.Adapters.Local

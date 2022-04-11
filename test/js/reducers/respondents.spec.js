@@ -1,7 +1,7 @@
 /* eslint-env mocha */
 import expect from 'expect'
-import reducer from '../../../web/static/js/reducers/respondents'
-import * as actions from '../../../web/static/js/actions/respondents'
+import reducer from '../../../assets/js/reducers/respondents'
+import * as actions from '../../../assets/js/actions/respondents'
 
 describe('respondents reducer', () => {
   const initialState = reducer(undefined, {})

@@ -1,5 +1,5 @@
-defmodule Ask.AudioTest do
-  use Ask.ModelCase
+defmodule AskWeb.AudioTest do
+  use Ask.DataCase
 
   alias Ask.Audio
 

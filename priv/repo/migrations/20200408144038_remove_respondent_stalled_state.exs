@@ -5,7 +5,7 @@ defmodule Ask.Repo.Migrations.RemoveRespondentStalledState do
   alias Ask.Repo
 
   defmodule Respondent do
-    use Ask.Web, :model
+    use AskWeb, :model
 
     schema "respondents" do
       field :session, Ask.Ecto.Type.JSON

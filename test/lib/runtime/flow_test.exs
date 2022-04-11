@@ -1,4 +1,4 @@
-defmodule Ask.FlowTest do
+defmodule AskWeb.FlowTest do
   use ExUnit.Case
   use Ask.DummySteps
   import Ask.Factory

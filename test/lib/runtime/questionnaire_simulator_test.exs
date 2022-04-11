@@ -1,5 +1,5 @@
 defmodule QuestionnaireSimulatorTest do
-  use Ask.ModelCase
+  use Ask.DataCase
   use Ask.DummySteps
   import Ask.Factory
 

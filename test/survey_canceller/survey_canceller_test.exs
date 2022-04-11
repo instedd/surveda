@@ -1,5 +1,5 @@
-defmodule Ask.SurveyCancellerTest do
-  use Ask.ConnCase
+defmodule AskWeb.SurveyCancellerTest do
+  use AskWeb.ConnCase
   use Ask.TestHelpers
   use Ask.DummySteps
 

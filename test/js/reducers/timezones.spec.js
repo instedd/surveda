@@ -1,7 +1,7 @@
 /* eslint-env mocha */
 import expect from 'expect'
-import reducer from '../../../web/static/js/reducers/timezones'
-import * as actions from '../../../web/static/js/actions/timezones'
+import reducer from '../../../assets/js/reducers/timezones'
+import * as actions from '../../../assets/js/actions/timezones'
 
 describe('timezones reducer', () => {
   it('should receive timezones', () => {

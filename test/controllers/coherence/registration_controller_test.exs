@@ -1,5 +1,5 @@
-defmodule Ask.Coherence.RegistrationControllerTest do
-  use Ask.ConnCase
+defmodule AskWeb.Coherence.RegistrationControllerTest do
+  use AskWeb.ConnCase
   use Ask.MockGuissoCase
 
   test "new with guisso enabled", %{conn: conn} do

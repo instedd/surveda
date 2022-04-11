@@ -1,5 +1,5 @@
-defmodule Ask.SurveyQuestionnaireTest do
-  use Ask.ModelCase
+defmodule AskWeb.SurveyQuestionnaireTest do
+  use Ask.DataCase
 
   alias Ask.SurveyQuestionnaire
 

@@ -1,5 +1,5 @@
-defmodule Ask.DayOfWeekTest do
-  use Ask.ModelCase
+defmodule AskWeb.DayOfWeekTest do
+  use Ask.DataCase
   alias Ask.DayOfWeek
 
   test "every_day" do

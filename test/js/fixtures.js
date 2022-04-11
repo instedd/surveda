@@ -1,5 +1,5 @@
 // @flow
-import deepFreeze from '../../web/static/vendor/js/deepFreeze'
+import deepFreeze from '../../assets/vendor/js/deepFreeze'
 
 const steps = [
   {

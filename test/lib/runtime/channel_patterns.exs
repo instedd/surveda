@@ -1,4 +1,4 @@
-defmodule Ask.ChannelPatternsTest do
+defmodule AskWeb.ChannelPatternsTest do
   use ExUnit.Case
   alias Ask.Runtime.ChannelPatterns
 

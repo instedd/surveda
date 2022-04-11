@@ -1,5 +1,5 @@
-defmodule Ask.ResponseTest do
-  use Ask.ModelCase
+defmodule AskWeb.ResponseTest do
+  use Ask.DataCase
 
   alias Ask.Response
 

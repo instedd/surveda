@@ -4,12 +4,12 @@ import expect from 'expect'
 import assert from 'assert'
 import { playActionsFromState } from '../spec_helper'
 import find from 'lodash/find'
-import deepFreeze from '../../../web/static/vendor/js/deepFreeze'
-import reducer, { stepStoreValues, csvForTranslation, csvTranslationFilename } from '../../../web/static/js/reducers/questionnaire'
+import deepFreeze from '../../../assets/vendor/js/deepFreeze'
+import reducer, { stepStoreValues, csvForTranslation, csvTranslationFilename } from '../../../assets/js/reducers/questionnaire'
 import { questionnaire, questionnaireWithSection, questionnaireWithLangSelection, questionnaireWith2Sections, questionnaireWith3Sections, questionnaireWith2SectionsAndNoLanguage } from '../fixtures'
-import * as actions from '../../../web/static/js/actions/questionnaire'
+import * as actions from '../../../assets/js/actions/questionnaire'
 import isEqual from 'lodash/isEqual'
-import { smsSplitSeparator } from '../../../web/static/js/step'
+import { smsSplitSeparator } from '../../../assets/js/step'
 
 describe('questionnaire reducer', () => {
   const initialState = reducer(undefined, {})

@@ -1,7 +1,7 @@
 /* eslint-env mocha */
 import expect from 'expect'
-import reducer from '../../../web/static/js/reducers/userSettings'
-import * as actions from '../../../web/static/js/actions/userSettings'
+import reducer from '../../../assets/js/reducers/userSettings'
+import * as actions from '../../../assets/js/actions/userSettings'
 
 describe('user settings reducer', () => {
   const initialState = reducer(undefined, {})

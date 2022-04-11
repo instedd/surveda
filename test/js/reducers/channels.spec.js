@@ -1,8 +1,8 @@
 // @flow
 /* eslint-env mocha */
 import expect from 'expect'
-import reducer from '../../../web/static/js/reducers/channels'
-import * as actions from '../../../web/static/js/actions/channels'
+import reducer from '../../../assets/js/reducers/channels'
+import * as actions from '../../../assets/js/actions/channels'
 import { channel } from '../fixtures'
 
 describe('channels reducer', () => {

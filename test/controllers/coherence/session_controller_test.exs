@@ -1,5 +1,5 @@
-defmodule Ask.Coherence.SessionControllerTest do
-  use Ask.ConnCase
+defmodule AskWeb.Coherence.SessionControllerTest do
+  use AskWeb.ConnCase
   use Ask.MockGuissoCase
 
   alias Ask.User

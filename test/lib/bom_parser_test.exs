@@ -1,4 +1,4 @@
-defmodule Ask.BomParserTest do
+defmodule AskWeb.BomParserTest do
   use ExUnit.Case
   alias Ask.BomParser
 

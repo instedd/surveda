@@ -1,6 +1,6 @@
 defmodule Ask.Runtime.NuntiumChannel do
   @behaviour Ask.Runtime.ChannelProvider
-  use Ask.Web, :model
+  use AskWeb, :model
   alias Ask.Runtime.{Survey, NuntiumChannel, Flow, Reply, ReplyStep}
   alias Ask.{Repo, Respondent, Channel, Stats, SurvedaMetrics}
   import Ecto.Query
@@ -308,7 +308,7 @@ defmodule Ask.Runtime.NuntiumChannel do
       callback_url =
         NuntiumChannel.nuntium_callback(
           channel,
-          Ask.Router.Helpers.callback_path(Ask.Endpoint, :callback, "nuntium")
+          AskWeb.Router.Helpers.callback_path(AskWeb.Endpoint, :callback, "nuntium")
         )
 
       # Update the Nuntium app to setup the callback URL
@@ -324,7 +324,13 @@ defmodule Ask.Runtime.NuntiumChannel do
           url:
             NuntiumChannel.nuntium_callback(
               channel,
-              Ask.Router.Helpers.callback_path(Ask.Endpoint, :callback, "nuntium", ["status"], [])
+              AskWeb.Router.Helpers.callback_path(
+                AskWeb.Endpoint,
+                :callback,
+                "nuntium",
+                ["status"],
+                []
+              )
             )
         }
       }

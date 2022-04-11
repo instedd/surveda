@@ -33,7 +33,7 @@ config :alto_guisso,
   client_id: my_surveda_guisso_client_id,
   client_secret: my_surveda_guisso_client_secret
 
-config :ask, Ask.Endpoint,
+config :ask, AskWeb.Endpoint,
   url: [host: "app.surveda.lvh.me"]
 
 config :ask, Verboice,

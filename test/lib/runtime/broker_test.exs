@@ -1,5 +1,5 @@
-defmodule Ask.Runtime.BrokerTest do
-  use Ask.ModelCase
+defmodule AskWeb.Runtime.BrokerTest do
+  use Ask.DataCase
   use Ask.DummySteps
   use Timex
   use Ask.MockTime
@@ -18,7 +18,7 @@ defmodule Ask.Runtime.BrokerTest do
     RespondentDispositionHistory
   }
 
-  alias Ask.Router.Helpers, as: Routes
+  alias AskWeb.Router.Helpers, as: Routes
   require Ask.Runtime.ReplyHelper
 
   setup do
@@ -185,7 +185,7 @@ defmodule Ask.Runtime.BrokerTest do
 
       assert message ==
                "Please enter #{
-                 Routes.mobile_survey_url(Ask.Endpoint, :index, respondent.id,
+                 Routes.mobile_survey_url(AskWeb.Endpoint, :index, respondent.id,
                    token: Respondent.token(respondent.id)
                  )
                }"
@@ -215,7 +215,7 @@ defmodule Ask.Runtime.BrokerTest do
 
       assert message ==
                "Please enter #{
-                 Routes.mobile_survey_url(Ask.Endpoint, :index, respondent.id,
+                 Routes.mobile_survey_url(AskWeb.Endpoint, :index, respondent.id,
                    token: Respondent.token(respondent.id)
                  )
                }"

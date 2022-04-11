@@ -1,5 +1,5 @@
-defmodule Ask.StepsValidatorTest do
-  use Ask.ModelCase
+defmodule AskWeb.StepsValidatorTest do
+  use Ask.DataCase
 
   alias Ask.JsonSchema
 

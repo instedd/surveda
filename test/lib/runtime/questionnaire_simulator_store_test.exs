@@ -1,5 +1,5 @@
-defmodule Ask.Runtime.QuestionnaireSimulatorStoreTest do
-  use Ask.ModelCase
+defmodule AskWeb.Runtime.QuestionnaireSimulatorStoreTest do
+  use Ask.DataCase
   use Ask.DummySteps
   use Ask.MockTime
   alias Ask.Runtime.QuestionnaireSimulatorStore

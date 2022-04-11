@@ -3,7 +3,7 @@ defmodule Ask.Repo.Migrations.SetDefaultScheduleDayOfWeekForSurveys do
   import Ecto.Query
 
   defmodule Survey do
-    use Ask.Web, :model
+    use AskWeb, :model
 
     schema "surveys" do
       field :schedule_day_of_week, :integer

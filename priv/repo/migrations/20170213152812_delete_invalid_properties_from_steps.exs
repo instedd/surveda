@@ -4,7 +4,7 @@ defmodule Ask.Repo.Migrations.DeleteInvalidPropertiesFromSteps do
   alias ExJsonSchema.Schema
 
   defmodule Questionnaire do
-    use Ask.Web, :model
+    use AskWeb, :model
 
     schema "questionnaires" do
       field :steps, Ask.Ecto.Type.JSON

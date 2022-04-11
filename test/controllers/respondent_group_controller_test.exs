@@ -1,5 +1,5 @@
-defmodule Ask.RespondentGroupControllerTest do
-  use Ask.ConnCase
+defmodule AskWeb.RespondentGroupControllerTest do
+  use AskWeb.ConnCase
   use Ask.TestHelpers
 
   alias Ask.{

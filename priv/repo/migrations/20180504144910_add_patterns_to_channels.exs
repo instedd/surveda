@@ -4,7 +4,7 @@ defmodule Ask.Repo.Migrations.AddPatternsToChannels do
   alias Ask.Repo
 
   defmodule Channel do
-    use Ask.Web, :model
+    use AskWeb, :model
 
     schema "channels" do
       field :patterns, Ask.Ecto.Type.JSON

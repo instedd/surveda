@@ -1,5 +1,5 @@
-defmodule Ask.ChannelTest do
-  use Ask.ModelCase
+defmodule AskWeb.ChannelTest do
+  use Ask.DataCase
 
   alias Ask.Channel
 

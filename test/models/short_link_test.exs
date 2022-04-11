@@ -1,5 +1,5 @@
-defmodule Ask.ShortLinkTest do
-  use Ask.ModelCase
+defmodule AskWeb.ShortLinkTest do
+  use Ask.DataCase
 
   alias Ask.ShortLink
 

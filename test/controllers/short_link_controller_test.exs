@@ -1,5 +1,5 @@
-defmodule Ask.ShortLinkControllerTest do
-  use Ask.ConnCase
+defmodule AskWeb.ShortLinkControllerTest do
+  use AskWeb.ConnCase
   use Ask.TestHelpers
 
   alias Ask.{ShortLink, Survey}

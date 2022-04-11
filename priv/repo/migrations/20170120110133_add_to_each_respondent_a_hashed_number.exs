@@ -4,7 +4,7 @@ defmodule Ask.Repo.Migrations.AddToEachRespondentAHashedNumber do
   alias Ask.Repo
 
   defmodule Respondent do
-    use Ask.Web, :model
+    use AskWeb, :model
 
     def hash_phone_number(phone_number, salt) do
       String.slice(

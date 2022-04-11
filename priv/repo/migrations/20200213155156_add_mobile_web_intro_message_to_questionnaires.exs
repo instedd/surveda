@@ -4,7 +4,7 @@ defmodule Ask.Repo.Migrations.AddMobileWebIntroMessageToQuestionnaires do
   alias Ask.Repo
 
   defmodule Questionnaire do
-    use Ask.Web, :model
+    use AskWeb, :model
 
     schema "questionnaires" do
       field(:name, :string)

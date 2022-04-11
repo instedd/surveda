@@ -3,7 +3,7 @@ defmodule Ask.Repo.Migrations.InsertProjectMemberships do
   alias Ask.Repo
 
   defmodule Project do
-    use Ask.Web, :model
+    use AskWeb, :model
 
     schema "projects" do
       belongs_to :user, Ask.User
@@ -11,7 +11,7 @@ defmodule Ask.Repo.Migrations.InsertProjectMemberships do
   end
 
   defmodule ProjectMembership do
-    use Ask.Web, :model
+    use AskWeb, :model
 
     schema "project_memberships" do
       field :level, :string

@@ -1,7 +1,7 @@
 /* eslint-env mocha */
 // @flow
 import expect from 'expect'
-import * as characterCounter from '../../../web/static/js/characterCounter'
+import * as characterCounter from '../../../assets/js/characterCounter'
 
 describe('characterCounter', () => {
   it('character count is 0 with empty string', () => {

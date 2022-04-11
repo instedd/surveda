@@ -1,5 +1,5 @@
-defmodule Ask.Runtime.PanelSurveyTest do
-  use Ask.ModelCase
+defmodule AskWeb.Runtime.PanelSurveyTest do
+  use Ask.DataCase
   use Ask.TestHelpers
   use Ask.MockTime
   alias Ask.Runtime.PanelSurvey

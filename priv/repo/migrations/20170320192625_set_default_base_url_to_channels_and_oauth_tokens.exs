@@ -4,7 +4,7 @@ defmodule Ask.Repo.Migrations.SetDefaultBaseUrlToChannelsAndOauthTokens do
   alias Ask.Repo
 
   defmodule Channel do
-    use Ask.Web, :model
+    use AskWeb, :model
 
     schema "channels" do
       field :provider, :string
@@ -19,7 +19,7 @@ defmodule Ask.Repo.Migrations.SetDefaultBaseUrlToChannelsAndOauthTokens do
   end
 
   defmodule OAuthToken do
-    use Ask.Web, :model
+    use AskWeb, :model
 
     schema "oauth_tokens" do
       field :provider, :string

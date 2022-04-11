@@ -1,0 +1,15 @@
+<html>
+  <head>
+    <title><%= @email.subject %></title>
+  </head>
+  <body style="background-color: rgba(229, 229, 229, 1);font-family: arial, helvetica, verdana, sans-serif;text-align: center;color: rgba(153, 153, 153, 1);padding: 80px">
+    <img src="<%= static_url(AskWeb.Endpoint, "/images/email-logo@2x.png") %>" alt="Surveda" width="168px" height="60px"/>
+    <div style="background: #fff;padding: 50px 40px;margin: 50px auto;width: 50%;min-width: 500px; max-width: 650px; box-sizing: border-box">
+      <h2 style="font-weight: 300;line-height: 2">
+        <%= @invited_by %> has added you as a collaborator on <b><%= @project_name %></b>.
+      </h2>
+      <p><%= @explanation %></p>
+      <a href="<%= @url %>" style="background: rgba(3, 169, 244, 1);color: rgba(255, 255, 255, 1);text-transform: uppercase;padding: 10px 20px;margin-top: 30px;text-decoration: none;display: inline-block">SEE THE PROJECT</a>
+    </div>
+  </body>
+</html>

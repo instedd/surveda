@@ -1,5 +1,5 @@
-defmodule Ask.UserTest do
-  use Ask.ModelCase
+defmodule AskWeb.UserTest do
+  use Ask.DataCase
 
   alias Ask.{User, Repo}
 

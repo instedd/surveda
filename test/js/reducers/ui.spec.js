@@ -1,9 +1,9 @@
 /* eslint-env mocha */
 import expect from 'expect'
 import assert from 'assert'
-import reducer from '../../../web/static/js/reducers/ui'
+import reducer from '../../../assets/js/reducers/ui'
 import { playActionsFromState } from '../spec_helper'
-import * as actions from '../../../web/static/js/actions/ui'
+import * as actions from '../../../assets/js/actions/ui'
 import { survey } from '../fixtures'
 
 describe('ui reducer', () => {

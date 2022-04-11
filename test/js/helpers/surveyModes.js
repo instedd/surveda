@@ -1,6 +1,6 @@
 /* eslint-env mocha */
 // @flow
-import * as surveyModes from '../../../web/static/js/surveyModes'
+import * as surveyModes from '../../../assets/js/surveyModes'
 import expect from 'expect'
 import each from 'lodash/each'
 

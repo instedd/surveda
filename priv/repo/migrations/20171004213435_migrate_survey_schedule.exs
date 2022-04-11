@@ -231,7 +231,7 @@ defmodule Ask.Repo.Migrations.MigrateSurveySchedule do
   end
 
   defmodule Survey do
-    use Ask.Web, :model
+    use AskWeb, :model
 
     schema "surveys" do
       field :schedule_day_of_week, DayOfWeek, default: DayOfWeek.never()

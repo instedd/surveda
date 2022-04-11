@@ -1,5 +1,5 @@
-defmodule Ask.RespondentDispositionHistoryTest do
-  use Ask.ModelCase
+defmodule AskWeb.RespondentDispositionHistoryTest do
+  use Ask.DataCase
 
   alias Ask.RespondentDispositionHistory
 

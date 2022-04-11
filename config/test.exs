@@ -2,7 +2,7 @@ use Mix.Config
 
 # We don't run a server during test. If one is required,
 # you can enable the server option below.
-config :ask, Ask.Endpoint,
+config :ask, AskWeb.Endpoint,
   http: [port: 4001],
   server: false,
   url: [host: "app.ask.dev", port: 80]
@@ -46,7 +46,7 @@ config :ask, Verboice,
 
 config :ask, Ask.Mailer, adapter: Ask.Swoosh.Adapters.Test
 
-config :ask, Ask.Email,
+config :ask, AskWeb.Email,
   smtp_from_address: {:system, "SMTP_FROM_ADDRESS", "Test name <test@email>"}
 
 # Use mock to enable/disable Guisso for the duration of a test.

@@ -2,8 +2,8 @@
 // @flow
 import expect from 'expect'
 import { playActionsFromState } from '../spec_helper'
-import reducer from '../../../web/static/js/reducers/folder'
-import * as actions from '../../../web/static/js/actions/folder'
+import reducer from '../../../assets/js/reducers/folder'
+import * as actions from '../../../assets/js/actions/folder'
 import { folder } from '../fixtures'
 
 describe('folder reducer', () => {

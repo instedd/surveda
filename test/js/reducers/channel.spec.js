@@ -1,9 +1,9 @@
 // @flow
 /* eslint-env mocha */
 import expect from 'expect'
-import reducer from '../../../web/static/js/reducers/channel'
-import * as actions from '../../../web/static/js/actions/channel'
-import deepFreeze from '../../../web/static/vendor/js/deepFreeze'
+import reducer from '../../../assets/js/reducers/channel'
+import * as actions from '../../../assets/js/actions/channel'
+import deepFreeze from '../../../assets/vendor/js/deepFreeze'
 import { playActionsFromState } from '../spec_helper'
 import { channel } from '../fixtures'
 

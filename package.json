@@ -5,7 +5,7 @@
     "deploy": "webpack -p --devtool source-map",
     "watch": "webpack --watch --progress --color",
     "test": "mocha --opts test/js/mocha.opts",
-    "eslint": "eslint --ext .jsx,.js web/static/js/ test/js"
+    "eslint": "eslint --ext .jsx,.js assets/js/ test/js"
   },
   "dependencies": {
     "d3": "^4.0.0",

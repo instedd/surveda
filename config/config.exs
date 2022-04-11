@@ -23,10 +23,10 @@ if System.get_env("DISABLE_REPO_TIMEOUT") == "true" do
 end
 
 # Configures the endpoint
-config :ask, Ask.Endpoint,
+config :ask, AskWeb.Endpoint,
   url: [host: "localhost"],
   secret_key_base: "Tu6aeyZlhJeiTQDt7AjOIuk2tblnEnGYHyX/VpIcZi3ctSuE0T25j+BZLPiPMFWL",
-  render_errors: [view: Ask.ErrorView, accepts: ~w(html json)],
+  render_errors: [view: AskWeb.ErrorView, accepts: ~w(html json)],
   instrumenters: [Ask.PhoenixInstrumenter],
   pubsub: [name: Ask.PubSub, adapter: Phoenix.PubSub.PG2]
 
@@ -55,7 +55,7 @@ config :ask, Ask.UrlShortener,
 config :ask, Ask.Runtime.QuestionnaireSimulatorStore,
   simulation_ttl: {:system, "SIMULATION_TTL", 5}
 
-config :ask, Ask.Email,
+config :ask, AskWeb.Email,
   smtp_from_address: {:system, "SMTP_FROM_ADDRESS", "InSTEDD Surveda <noreply@instedd.org>"}
 
 # Configures Elixir's Logger
@@ -86,11 +86,10 @@ config :coherence,
   user_schema: Ask.User,
   repo: Ask.Repo,
   module: Ask,
-  # should eventually be: AskWeb
-  web_module: Ask,
-  router: Ask.Router,
+  web_module: AskWeb,
+  router: AskWeb.Router,
   password_hashing_alg: Comeonin.Bcrypt,
-  messages_backend: Ask.Coherence.Messages,
+  messages_backend: AskWeb.Coherence.Messages,
   # registration_permitted_attributes: ["email", "name", "password", "current_password", "password_confirmation"],
   # invitation_permitted_attributes: ["name", "email"],
   # password_reset_permitted_attributes: ["reset_password_token", "password", "password_confirmation"],
@@ -100,7 +99,7 @@ config :coherence,
   email_from_email: "yourname@example.com",
   opts: [:authenticatable, :confirmable, :recoverable, :registerable, :rememberable]
 
-config :coherence, Ask.Coherence.Mailer, adapter: Swoosh.Adapters.Local
+config :coherence, AskWeb.Coherence.Mailer, adapter: Swoosh.Adapters.Local
 # %% End Coherence Configuration %%
 
 config :prometheus, Ask.PrometheusExporter, auth: false
@@ -112,7 +111,7 @@ config :alto_guisso,
   base_url: System.get_env("GUISSO_BASE_URL"),
   client_id: System.get_env("GUISSO_CLIENT_ID"),
   client_secret: System.get_env("GUISSO_CLIENT_SECRET"),
-  session_controller: Ask.Coherence.SessionController
+  session_controller: AskWeb.Coherence.SessionController
 
 # Import environment specific config. This must remain at the bottom
 # of this file so it overrides the configuration defined above.

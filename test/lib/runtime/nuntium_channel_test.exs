@@ -1,5 +1,5 @@
-defmodule Ask.Runtime.NuntiumChannelTest do
-  use Ask.ConnCase
+defmodule AskWeb.Runtime.NuntiumChannelTest do
+  use AskWeb.ConnCase
   use Ask.DummySteps
 
   alias Ask.Respondent

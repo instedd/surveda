@@ -111,7 +111,7 @@ config :alto_guisso,
   client_id: "<your app's client id in guisso>",
   client_secret: "<your app's client secret in guisso>",
 
-config :ask, Ask.Endpoint,
+config :ask, AskWeb.Endpoint,
   url: [host: "app.surveda.lvh.me"] # or "abcd123.ngrok.io" for a cloud GUISSO
 ```
 

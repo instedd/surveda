@@ -1,5 +1,5 @@
-defmodule Ask.OAuthClientControllerTest do
-  use Ask.ConnCase
+defmodule AskWeb.OAuthClientControllerTest do
+  use AskWeb.ConnCase
 
   setup %{conn: conn} do
     user = insert(:user)

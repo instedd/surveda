@@ -1,5 +1,5 @@
-defmodule Ask.SurveyControllerTest do
-  use Ask.ConnCase
+defmodule AskWeb.SurveyControllerTest do
+  use AskWeb.ConnCase
   use Ask.TestHelpers
   use Ask.DummySteps
   use Ask.MockTime
@@ -644,19 +644,19 @@ defmodule Ask.SurveyControllerTest do
                "links" => [
                  %{
                    "name" => "survey/#{survey.id}/results",
-                   "url" => "#{Ask.Endpoint.url()}/link/#{result_link.hash}"
+                   "url" => "#{AskWeb.Endpoint.url()}/link/#{result_link.hash}"
                  },
                  %{
                    "name" => "survey/#{survey.id}/incentives",
-                   "url" => "#{Ask.Endpoint.url()}/link/#{incentives_link.hash}"
+                   "url" => "#{AskWeb.Endpoint.url()}/link/#{incentives_link.hash}"
                  },
                  %{
                    "name" => "survey/#{survey.id}/interactions",
-                   "url" => "#{Ask.Endpoint.url()}/link/#{interactions_link.hash}"
+                   "url" => "#{AskWeb.Endpoint.url()}/link/#{interactions_link.hash}"
                  },
                  %{
                    "name" => "survey/#{survey.id}/disposition_history",
-                   "url" => "#{Ask.Endpoint.url()}/link/#{disposition_history_link.hash}"
+                   "url" => "#{AskWeb.Endpoint.url()}/link/#{disposition_history_link.hash}"
                  }
                ],
                "comparisons" => [],
@@ -732,11 +732,11 @@ defmodule Ask.SurveyControllerTest do
                "links" => [
                  %{
                    "name" => "survey/#{survey.id}/results",
-                   "url" => "#{Ask.Endpoint.url()}/link/#{result_link.hash}"
+                   "url" => "#{AskWeb.Endpoint.url()}/link/#{result_link.hash}"
                  },
                  %{
                    "name" => "survey/#{survey.id}/disposition_history",
-                   "url" => "#{Ask.Endpoint.url()}/link/#{disposition_history_link.hash}"
+                   "url" => "#{AskWeb.Endpoint.url()}/link/#{disposition_history_link.hash}"
                  }
                ],
                "comparisons" => [],

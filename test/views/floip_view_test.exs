@@ -1,6 +1,6 @@
-defmodule Ask.FloipViewTest do
-  use Ask.ConnCase, async: true
-  alias Ask.FloipView
+defmodule AskWeb.FloipViewTest do
+  use AskWeb.ConnCase, async: true
+  alias AskWeb.FloipView
 
   describe "index" do
     test "it renders with no packages" do
