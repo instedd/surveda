@@ -16,6 +16,7 @@ type MessagesListProps = {
 type MessageProps = {
   message: ChatMessage,
   truncateAt: ?number,
+  t: Function,
 }
 
 type MessageState = {
