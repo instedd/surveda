@@ -125,6 +125,8 @@ const VoiceWindow = translate()(
     }
 
     hangUp(): void {
+      this.audio.pause()
+
       if (this.messageTimer) clearTimeout(this.messageTimer)
       this.stopRepeatingLastAudio()
 
@@ -171,6 +173,7 @@ const VoiceWindow = translate()(
 
     render() {
       const { voiceTitle, messages } = this.props
+      const buttons = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "*", "0", "#"]
 
       return (
         <div className="voice-window quex-simulation-voice">
@@ -184,78 +187,16 @@ const VoiceWindow = translate()(
           <MessagesList messages={messages} scrollToBottom />
 
           <div className="voice-keypad">
-            <div
-              onClick={() => this.entered("1")}
-              className="waves-effect waves-circle voice-button"
-            >
-              1
-            </div>
-            <div
-              onClick={() => this.entered("2")}
-              className="waves-effect waves-circle voice-button"
-            >
-              2
-            </div>
-            <div
-              onClick={() => this.entered("3")}
-              className="waves-effect waves-circle voice-button"
-            >
-              3
-            </div>
-            <div
-              onClick={() => this.entered("4")}
-              className="waves-effect waves-circle voice-button"
-            >
-              4
-            </div>
-            <div
-              onClick={() => this.entered("5")}
-              className="waves-effect waves-circle voice-button"
-            >
-              5
-            </div>
-            <div
-              onClick={() => this.entered("6")}
-              className="waves-effect waves-circle voice-button"
-            >
-              6
-            </div>
-            <div
-              onClick={() => this.entered("7")}
-              className="waves-effect waves-circle voice-button"
-            >
-              7
-            </div>
-            <div
-              onClick={() => this.entered("8")}
-              className="waves-effect waves-circle voice-button"
-            >
-              8
-            </div>
-            <div
-              onClick={() => this.entered("9")}
-              className="waves-effect waves-circle voice-button"
-            >
-              9
-            </div>
-            <div
-              onClick={() => this.entered("*")}
-              className="waves-effect waves-circle voice-button"
-            >
-              *
-            </div>
-            <div
-              onClick={() => this.entered("0")}
-              className="waves-effect waves-circle voice-button"
-            >
-              0
-            </div>
-            <div
-              onClick={() => this.entered("#")}
-              className="waves-effect waves-circle voice-button"
-            >
-              #
-            </div>
+            {buttons.map((value) => (
+              <div
+                key={`keypad-button-${value}`}
+                onClick={() => this.entered(value)}
+                className="waves-effect waves-circle voice-button"
+              >
+                {value}
+              </div>
+            ))}
+
             <div
               onClick={() => this.hangUp()}
               className="waves-effect waves-circle voice-button voice-button-end-call red"
@@ -264,12 +205,7 @@ const VoiceWindow = translate()(
             </div>
           </div>
 
-          <audio
-            ref={(audio) => {
-              this.setAudio(audio)
-            }}
-            preload
-          />
+          <audio ref={(audio) => this.setAudio(audio)} preload />
         </div>
       )
     }
