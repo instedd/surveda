@@ -1,5 +1,6 @@
 import React, { Component } from "react"
 import linkifyStr from "linkifyjs/string"
+import { translate } from "react-i18next"
 
 export type ChatMessage = {
   type: string,
@@ -21,7 +22,7 @@ type MessageState = {
   truncated: boolean,
 }
 
-class Message extends Component<MessageProps, MessageState> {
+const Message = translate()(class extends Component<MessageProps, MessageState> {
   constructor(props) {
     super(props)
 
@@ -31,11 +32,21 @@ class Message extends Component<MessageProps, MessageState> {
   }
 
   render() {
-    const { message } = this.props
+    const { message, t } = this.props
     const body = this.truncate(message.body.trim())
+    let expandable, title
+
+    if (this.state.truncated) {
+      expandable = "is-expandable"
+      title = t("Click to expand message")
+    }
 
     return (
-      <li className={`message-bubble ${message.type}-message`} onClick={() => this.expand()}>
+      <li
+        className={`message-bubble ${message.type}-message ${expandable}`}
+        title={title}
+        onClick={() => this.expand()}
+      >
         <div className="content-text" dangerouslySetInnerHTML={{ __html: linkifyStr(body) }} />
       </li>
     )
@@ -50,7 +61,7 @@ class Message extends Component<MessageProps, MessageState> {
       this.setState({ truncated: false })
     }
   }
-}
+})
 
 export class MessagesList extends Component<MessagesListProps> {
   messagesBottomDivRef: any
