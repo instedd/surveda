@@ -110,6 +110,10 @@ $smallChatWindowBodyHeight: $smallSimulationHeight -
       position: relative;
       clear: both; //for maintaining a one bubble per row
 
+      &.is-expandable {
+        cursor: pointer;
+      }
+
       .content-text {
         display: inline-block;
         overflow-wrap: break-word;

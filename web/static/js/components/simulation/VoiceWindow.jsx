@@ -184,7 +184,7 @@ const VoiceWindow = translate()(
               className="voice-spectrum-bands"
             />
           </div>
-          <MessagesList messages={messages} scrollToBottom />
+          <MessagesList messages={messages} truncateAt={140} scrollToBottom />
 
           <div className="voice-keypad">
             {buttons.map((value) => (
