@@ -125,6 +125,8 @@ const VoiceWindow = translate()(
     }
 
     hangUp(): void {
+      this.audio.pause()
+
       if (this.messageTimer) clearTimeout(this.messageTimer)
       this.stopRepeatingLastAudio()
 
