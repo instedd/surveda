@@ -1,5 +1,5 @@
-defmodule Ask.MobileSurveyControllerTest do
-  use Ask.ConnCase
+defmodule AskWeb.MobileSurveyControllerTest do
+  use AskWeb.ConnCase
   use Ask.TestHelpers
   use Ask.DummySteps
   use Timex
@@ -129,7 +129,7 @@ defmodule Ask.MobileSurveyControllerTest do
 
     assert message ==
              "Please enter #{
-               mobile_survey_url(Ask.Endpoint, :index, respondent.id,
+               mobile_survey_url(AskWeb.Endpoint, :index, respondent.id,
                  token: Respondent.token(respondent.id)
                )
              }"
@@ -417,7 +417,7 @@ defmodule Ask.MobileSurveyControllerTest do
 
     assert message ==
              "Please enter #{
-               mobile_survey_url(Ask.Endpoint, :index, respondent.id,
+               mobile_survey_url(AskWeb.Endpoint, :index, respondent.id,
                  token: Respondent.token(respondent.id)
                )
              }"
@@ -586,7 +586,7 @@ defmodule Ask.MobileSurveyControllerTest do
 
     assert message ==
              "Please enter #{
-               mobile_survey_url(Ask.Endpoint, :index, respondent.id,
+               mobile_survey_url(AskWeb.Endpoint, :index, respondent.id,
                  token: Respondent.token(respondent.id)
                )
              }"

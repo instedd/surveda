@@ -1,5 +1,5 @@
-defmodule Ask.RetryStatTest do
-  use Ask.ModelCase
+defmodule AskWeb.RetryStatTest do
+  use Ask.DataCase
 
   alias Ask.{RetryStat}
 

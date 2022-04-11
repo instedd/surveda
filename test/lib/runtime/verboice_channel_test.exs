@@ -1,5 +1,5 @@
-defmodule Ask.Runtime.VerboiceChannelTest do
-  use Ask.ConnCase
+defmodule AskWeb.Runtime.VerboiceChannelTest do
+  use AskWeb.ConnCase
   use Ask.DummySteps
   use Timex
 
@@ -54,21 +54,21 @@ defmodule Ask.Runtime.VerboiceChannelTest do
             {"Hello!", Ask.StepBuilder.tts_prompt("Hello!")},
             {"Do you exercise", Ask.StepBuilder.tts_prompt("Do you exercise?")}
           ]), nil},
-         "<Response><Say>Hello!</Say><Gather action=\"#{Ask.Endpoint.url()}/callbacks/verboice?respondent=#{
+         "<Response><Say>Hello!</Say><Gather action=\"#{AskWeb.Endpoint.url()}/callbacks/verboice?respondent=#{
            respondent.id
-         }\" finishOnKey=\"\"><Say>Do you exercise?</Say></Gather><Redirect>#{Ask.Endpoint.url()}/callbacks/verboice?respondent=#{
-           respondent.id
-         }&amp;Digits=timeout</Redirect></Response>"},
+         }\" finishOnKey=\"\"><Say>Do you exercise?</Say></Gather><Redirect>#{
+           AskWeb.Endpoint.url()
+         }/callbacks/verboice?respondent=#{respondent.id}&amp;Digits=timeout</Redirect></Response>"},
         {Flow.Message.answer(),
          {:reply,
           ReplyHelper.simple(
             "Step",
             Ask.StepBuilder.audio_prompt(uuid: "foo", text: "Do you exercise?")
           ), nil},
-         "<Response><Gather action=\"#{Ask.Endpoint.url()}/callbacks/verboice?respondent=#{
+         "<Response><Gather action=\"#{AskWeb.Endpoint.url()}/callbacks/verboice?respondent=#{
            respondent.id
-         }\" finishOnKey=\"\"><Play>#{Ask.Endpoint.url()}/audio/foo.mp3</Play></Gather><Redirect>#{
-           Ask.Endpoint.url()
+         }\" finishOnKey=\"\"><Play>#{AskWeb.Endpoint.url()}/audio/foo.mp3</Play></Gather><Redirect>#{
+           AskWeb.Endpoint.url()
          }/callbacks/verboice?respondent=#{respondent.id}&amp;Digits=timeout</Redirect></Response>"},
         {Flow.Message.answer(),
          {:reply,
@@ -77,10 +77,10 @@ defmodule Ask.Runtime.VerboiceChannelTest do
             Ask.StepBuilder.audio_prompt(uuid: "foo", text: "Do you exercise?"),
             3
           ), nil},
-         "<Response><Gather action=\"#{Ask.Endpoint.url()}/callbacks/verboice?respondent=#{
+         "<Response><Gather action=\"#{AskWeb.Endpoint.url()}/callbacks/verboice?respondent=#{
            respondent.id
-         }\" finishOnKey=\"\" numDigits=\"3\"><Play>#{Ask.Endpoint.url()}/audio/foo.mp3</Play></Gather><Redirect>#{
-           Ask.Endpoint.url()
+         }\" finishOnKey=\"\" numDigits=\"3\"><Play>#{AskWeb.Endpoint.url()}/audio/foo.mp3</Play></Gather><Redirect>#{
+           AskWeb.Endpoint.url()
          }/callbacks/verboice?respondent=#{respondent.id}&amp;Digits=timeout</Redirect></Response>"},
         {Flow.Message.answer(), {:end, nil}, "<Response><Hangup/></Response>"},
         {Flow.Message.answer(),
@@ -91,13 +91,13 @@ defmodule Ask.Runtime.VerboiceChannelTest do
           ReplyHelper.simple(
             "Step",
             Ask.StepBuilder.audio_prompt(uuid: "foo", text: "Do you exercise?")
-          ), nil}, "<Play>#{Ask.Endpoint.url()}/audio/foo.mp3</Play>"},
+          ), nil}, "<Play>#{AskWeb.Endpoint.url()}/audio/foo.mp3</Play>"},
         {Flow.Message.reply("8"),
          {:reply,
           ReplyHelper.simple(
             "Step",
             Ask.StepBuilder.audio_prompt(uuid: "foo", text: "Do you exercise?")
-          ), nil}, "<Play>#{Ask.Endpoint.url()}/audio/foo.mp3</Play>"}
+          ), nil}, "<Play>#{AskWeb.Endpoint.url()}/audio/foo.mp3</Play>"}
       ]
     }
   end

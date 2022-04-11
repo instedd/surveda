@@ -1,5 +1,5 @@
-defmodule Ask.Runtime.RespondentGroupActionTest do
-  use Ask.ModelCase
+defmodule AskWeb.Runtime.RespondentGroupActionTest do
+  use Ask.DataCase
   alias Ask.Respondent
   alias Ask.Runtime.RespondentGroupAction
 

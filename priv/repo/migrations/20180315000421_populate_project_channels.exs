@@ -4,7 +4,7 @@ defmodule Ask.Repo.Migrations.PopulateProjectChannels do
   import Ecto.Query
 
   defmodule ProjectChannel do
-    use Ask.Web, :model
+    use AskWeb, :model
 
     schema "project_channels" do
       belongs_to :channel, Channel
@@ -21,7 +21,7 @@ defmodule Ask.Repo.Migrations.PopulateProjectChannels do
   end
 
   defmodule Survey do
-    use Ask.Web, :model
+    use AskWeb, :model
 
     schema "surveys" do
       has_many :respondent_groups, RespondentGroup
@@ -32,7 +32,7 @@ defmodule Ask.Repo.Migrations.PopulateProjectChannels do
   end
 
   defmodule RespondentGroup do
-    use Ask.Web, :model
+    use AskWeb, :model
 
     schema "respondent_groups" do
       belongs_to :survey, Survey
@@ -44,7 +44,7 @@ defmodule Ask.Repo.Migrations.PopulateProjectChannels do
   end
 
   defmodule RespondentGroupChannel do
-    use Ask.Web, :model
+    use AskWeb, :model
 
     schema "respondent_group_channels" do
       belongs_to :respondent_group, RespondentGroup

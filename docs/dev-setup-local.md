@@ -147,7 +147,7 @@ services and for services to talk between themselves.
         client_id: "",
         client_secret: ""
 
-      config :ask, Ask.Endpoint,
+      config :ask, AskWeb.Endpoint,
         url: [host: "app.surveda.lvh.me"]
     ```
 
@@ -191,7 +191,7 @@ services and for services to talk between themselves.
         client_id: "",
         client_secret: ""
 
-      config :ask, Ask.Endpoint,
+      config :ask, AskWeb.Endpoint,
         url: [host: "app.surveda.lvh.me"]
 
       config :ask, Verboice,

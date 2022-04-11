@@ -5,10 +5,10 @@ RED='\033[0;31m'
 
 STAGED_FILES="git diff-index --cached HEAD --name-only --diff-filter d"
 STAGED_ELIXIR_FILES=$($STAGED_FILES | egrep '\.(ex|exs|eex|heex)$')
-STAGED_ASSET_FILES=$($STAGED_FILES | egrep '\.(js|css|scss)$' | grep -v web/static/vendor)
+STAGED_ASSET_FILES=$($STAGED_FILES | egrep '\.(js|css|scss)$' | grep -v assets/vendor)
 
-MIX="docker-compose run --rm app mix"
-YARN="docker-compose run --rm webpack yarn"
+MIX="docker-compose run --no-deps --rm app mix"
+YARN="docker-compose run --no-deps --rm webpack yarn"
 
 report() {
   if [ $1 -eq 0 ]; then

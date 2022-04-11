@@ -1,9 +1,9 @@
-defmodule Ask.Runtime.RetriesHistogramTest do
+defmodule AskWeb.Runtime.RetriesHistogramTest do
   import Ecto
   import Ecto.Changeset
   import Ecto.Query
   import Ask.Factory
-  use Ask.ConnCase
+  use AskWeb.ConnCase
   use Timex
   use Ask.MockTime
   use Ask.TestHelpers

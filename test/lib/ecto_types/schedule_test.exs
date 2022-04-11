@@ -1,5 +1,5 @@
-defmodule Ask.ScheduleTest do
-  use Ask.ModelCase
+defmodule AskWeb.ScheduleTest do
+  use Ask.DataCase
   alias Ask.{Schedule, DayOfWeek, ScheduleError}
 
   @default_schedule Schedule.default()

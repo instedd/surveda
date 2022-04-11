@@ -5,7 +5,7 @@
 <PROJECT_ROOT>/node_modules/react-i18next/src/shallowEqual.js
 [include]
 [libs]
-web/static/js/decls/
+assets/js/decls/
 [options]
 munge_underscores=true
 esproposal.optional_chaining=enable

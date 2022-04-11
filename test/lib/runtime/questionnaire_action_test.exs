@@ -1,5 +1,5 @@
 defmodule Ask.Runtime.QuestionnaireExportTest do
-  use Ask.ModelCase
+  use Ask.DataCase
   use Ask.DummyQuestionnaires
   import Ask.DummyQuestionnaireBuilder
   alias Ask.Runtime.{QuestionnaireExport, CleanI18n}

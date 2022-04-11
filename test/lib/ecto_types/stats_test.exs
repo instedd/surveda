@@ -1,5 +1,5 @@
-defmodule Ask.StatsTest do
-  use Ask.ModelCase
+defmodule AskWeb.StatsTest do
+  use Ask.DataCase
   alias Ask.Stats
 
   describe "dump:" do

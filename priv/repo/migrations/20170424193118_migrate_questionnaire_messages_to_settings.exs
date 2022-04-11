@@ -3,7 +3,7 @@ defmodule Ask.Repo.Migrations.MigrateQuestionnaireMessagesToSettings do
   alias Ask.Repo
 
   defmodule Questionnaire do
-    use Ask.Web, :model
+    use AskWeb, :model
 
     schema "questionnaires" do
       field :settings, Ask.Ecto.Type.JSON

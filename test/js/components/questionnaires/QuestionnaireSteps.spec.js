@@ -1,8 +1,8 @@
 /* eslint-env mocha */
 // @flow
 import expect from 'expect'
-import { newLanguageSelectionStep, newMultipleChoiceStep, newSection } from '../../../../web/static/js/reducers/questionnaire'
-import { stepGroups } from '../../../../web/static/js/components/questionnaires/QuestionnaireSteps'
+import { newLanguageSelectionStep, newMultipleChoiceStep, newSection } from '../../../../assets/js/reducers/questionnaire'
+import { stepGroups } from '../../../../assets/js/components/questionnaires/QuestionnaireSteps'
 
 const sectionWithSteps = () => {
   const section = newSection()

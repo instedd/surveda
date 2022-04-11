@@ -1,5 +1,5 @@
-defmodule Ask.ProjectMembershipTest do
-  use Ask.ModelCase
+defmodule AskWeb.ProjectMembershipTest do
+  use Ask.DataCase
 
   alias Ask.ProjectMembership
 
@@ -85,7 +85,7 @@ defmodule Ask.ProjectMembershipTest do
         if @test_case[:allowed] do
           assert ProjectMembership.authorize(changeset, @test_case.user_level) == changeset
         else
-          assert_raise Ask.UnauthorizedError, fn ->
+          assert_raise AskWeb.UnauthorizedError, fn ->
             ProjectMembership.authorize(changeset, @test_case.user_level)
           end
         end

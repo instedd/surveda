@@ -4,7 +4,7 @@ defmodule Ask.Repo.Migrations.ChangeSurveyModesToAraryOfArrays do
   alias Ask.Repo
 
   defmodule Survey do
-    use Ask.Web, :model
+    use AskWeb, :model
 
     schema "surveys" do
       field :mode, Ask.Ecto.Type.JSON

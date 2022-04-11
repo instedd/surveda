@@ -1,6 +1,6 @@
-defmodule Ask.RespondentsFilterTest do
+defmodule AskWeb.RespondentsFilterTest do
   import Ecto.Query, only: [from: 2]
-  use Ask.ConnCase
+  use AskWeb.ConnCase
   alias Ask.RespondentsFilter
   alias Ecto.Adapters.SQL
 

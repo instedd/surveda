@@ -1,5 +1,5 @@
-defmodule Ask.TranslationTest do
-  use Ask.ModelCase
+defmodule AskWeb.TranslationTest do
+  use Ask.DataCase
 
   alias Ask.Translation
 

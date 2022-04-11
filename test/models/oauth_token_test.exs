@@ -1,5 +1,5 @@
-defmodule Ask.OAuthTokenTest do
-  use Ask.ModelCase
+defmodule AskWeb.OAuthTokenTest do
+  use Ask.DataCase
 
   alias Ask.OAuthToken
 

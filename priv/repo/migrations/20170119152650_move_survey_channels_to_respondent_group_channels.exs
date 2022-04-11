@@ -4,7 +4,7 @@ defmodule Ask.Repo.Migrations.MoveSurveyChannelsToRespondentGroupChannels do
   alias Ask.Repo
 
   defmodule RespondentGroupChannel do
-    use Ask.Web, :model
+    use AskWeb, :model
 
     schema "respondent_group_channels" do
       field :respondent_group_id, :integer

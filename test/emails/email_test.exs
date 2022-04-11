@@ -1,7 +1,7 @@
-defmodule Ask.EmailTest do
-  use Ask.ModelCase
+defmodule AskWeb.EmailTest do
+  use Ask.DataCase
   use ExUnit.Case
-  alias Ask.Email
+  alias AskWeb.Email
 
   test "Reads SMTP_FROM_ADDRESS environment variable" do
     assert {"Test name", "test@email"} == Email.smtp_from_address()

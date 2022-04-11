@@ -1,8 +1,8 @@
 // @flow
 /* eslint-env mocha */
 import expect from 'expect'
-import reducer from '../../../web/static/js/reducers/questionnaires'
-import * as actions from '../../../web/static/js/actions/questionnaires'
+import reducer from '../../../assets/js/reducers/questionnaires'
+import * as actions from '../../../assets/js/actions/questionnaires'
 import { questionnaire } from '../fixtures'
 
 describe('questionnaires reducer', () => {

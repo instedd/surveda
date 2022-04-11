@@ -1,5 +1,5 @@
-defmodule Ask.ProjectControllerTest do
-  use Ask.ConnCase
+defmodule AskWeb.ProjectControllerTest do
+  use AskWeb.ConnCase
   use Ask.DummySteps
   use Ask.TestHelpers
 

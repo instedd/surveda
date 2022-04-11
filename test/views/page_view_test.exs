@@ -1,3 +1,3 @@
-defmodule Ask.PageViewTest do
-  use Ask.ConnCase, async: true
+defmodule AskWeb.PageViewTest do
+  use AskWeb.ConnCase, async: true
 end

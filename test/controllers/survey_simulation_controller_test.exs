@@ -1,5 +1,5 @@
-defmodule Ask.SurveySimulationControllerTest do
-  use Ask.ConnCase
+defmodule AskWeb.SurveySimulationControllerTest do
+  use AskWeb.ConnCase
   use Ask.TestHelpers
   use Ask.DummySteps
   use Ask.MockTime

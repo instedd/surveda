@@ -56,7 +56,7 @@ defmodule Ask.Runtime.ChannelStatusServer do
                   nil
 
                 _ ->
-                  Ask.Email.channel_down(c.user.email, c, messages) |> Ask.Mailer.deliver()
+                  AskWeb.Email.channel_down(c.user.email, c, messages) |> Ask.Mailer.deliver()
 
                   update_channel_status(c.id, %{
                     status: :down,
@@ -72,7 +72,7 @@ defmodule Ask.Runtime.ChannelStatusServer do
                   nil
 
                 _ ->
-                  Ask.Email.channel_error(c.user.email, c, code) |> Ask.Mailer.deliver()
+                  AskWeb.Email.channel_error(c.user.email, c, code) |> Ask.Mailer.deliver()
 
                   update_channel_status(c.id, %{
                     status: :error,

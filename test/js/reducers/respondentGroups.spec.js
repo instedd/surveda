@@ -1,7 +1,7 @@
 /* eslint-env mocha */
 import expect from 'expect'
-import reducer from '../../../web/static/js/reducers/respondentGroups'
-import * as actions from '../../../web/static/js/actions/respondentGroups'
+import reducer from '../../../assets/js/reducers/respondentGroups'
+import * as actions from '../../../assets/js/actions/respondentGroups'
 import { playActionsFromState } from '../spec_helper'
 
 describe('respondents reducer', () => {

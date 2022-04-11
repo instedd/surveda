@@ -1,4 +1,4 @@
-defmodule Ask.ConnCase do
+defmodule AskWeb.ConnCase do
   @moduledoc """
   This module defines the test case to be used by
   tests that require setting up a connection.
@@ -25,11 +25,11 @@ defmodule Ask.ConnCase do
       import Ecto.Changeset
       import Ecto.Query
 
-      import Ask.Router.Helpers
+      import AskWeb.Router.Helpers
       import Ask.Factory
 
       # The default endpoint for testing
-      @endpoint Ask.Endpoint
+      @endpoint AskWeb.Endpoint
     end
   end
 

@@ -1,8 +1,9 @@
-defmodule Ask.FloipControllerTest do
-  use Ask.ConnCase
+defmodule AskWeb.FloipControllerTest do
+  use AskWeb.ConnCase
   use Ask.TestHelpers
 
   alias Ask.FloipPackage
+  alias AskWeb.FloipView
 
   setup %{conn: conn} do
     user = insert(:user)
@@ -53,7 +54,7 @@ defmodule Ask.FloipControllerTest do
         get(conn, "#{project_survey_packages_path(conn, :index, project.id, survey.id)}?foo=bar")
 
       assert json_response(conn, 200) ==
-               Ask.FloipView.render("index.json", %{
+               FloipView.render("index.json", %{
                  packages: [survey.floip_package_id],
                  self_link:
                    "#{project_survey_packages_url(conn, :index, project.id, survey.id)}?foo=bar"
@@ -134,7 +135,7 @@ defmodule Ask.FloipControllerTest do
         )
 
       assert json_response(conn, 200) ==
-               Ask.FloipView.render("show.json", %{
+               FloipView.render("show.json", %{
                  self_link:
                    "#{
                      project_survey_package_descriptor_url(
@@ -183,7 +184,7 @@ defmodule Ask.FloipControllerTest do
         )
 
       assert json_response(conn, 200) ==
-               Ask.FloipView.render("show.json", %{
+               FloipView.render("show.json", %{
                  self_link:
                    project_survey_package_descriptor_url(
                      conn,
@@ -230,7 +231,7 @@ defmodule Ask.FloipControllerTest do
       {responses, _, _} = FloipPackage.responses(survey)
 
       assert json_response(conn, 200) ==
-               Ask.FloipView.render("responses.json",
+               FloipView.render("responses.json",
                  descriptor_link: corresponding_descriptor_url,
                  self_link:
                    "#{
@@ -329,7 +330,7 @@ defmodule Ask.FloipControllerTest do
       {responses, _, _} = FloipPackage.responses(survey)
 
       assert json_response(conn, 200) ==
-               Ask.FloipView.render("responses.json",
+               FloipView.render("responses.json",
                  descriptor_link: corresponding_descriptor_url,
                  self_link:
                    project_survey_package_responses_url(

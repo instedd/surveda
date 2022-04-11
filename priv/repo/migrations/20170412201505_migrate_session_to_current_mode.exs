@@ -5,7 +5,7 @@ defmodule Ask.Repo.Migrations.MigrateSessionToCurrentMode do
   alias Ask.Repo
 
   defmodule Channel do
-    use Ask.Web, :model
+    use AskWeb, :model
 
     schema "channels" do
       field :type, :string
@@ -13,7 +13,7 @@ defmodule Ask.Repo.Migrations.MigrateSessionToCurrentMode do
   end
 
   defmodule Respondent do
-    use Ask.Web, :model
+    use AskWeb, :model
 
     schema "respondents" do
       field :session, Ask.Ecto.Type.JSON

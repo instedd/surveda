@@ -1,5 +1,5 @@
-defmodule Ask.FolderControllerTest do
-  use Ask.ConnCase
+defmodule AskWeb.FolderControllerTest do
+  use AskWeb.ConnCase
   use Ask.DummySteps
   use Ask.TestHelpers
 

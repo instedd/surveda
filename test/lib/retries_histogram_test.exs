@@ -1,6 +1,6 @@
-defmodule Ask.RetriesHistogramTest do
+defmodule AskWeb.RetriesHistogramTest do
   use ExUnit.Case
-  use Ask.ModelCase
+  use Ask.DataCase
   use Ask.MockTime
   alias Ask.{RetriesHistogram, Survey, RetryStat}
 

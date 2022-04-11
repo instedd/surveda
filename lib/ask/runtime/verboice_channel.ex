@@ -1,9 +1,9 @@
 defmodule Ask.Runtime.VerboiceChannel do
   alias __MODULE__
-  use Ask.Web, :model
+  use AskWeb, :model
   alias Ask.{Repo, Respondent, Channel, SurvedaMetrics, Stats}
   alias Ask.Runtime.{Survey, Flow, Reply, RetriesHistogram}
-  alias Ask.Router.Helpers
+  alias AskWeb.Router.Helpers
   import Plug.Conn
   import XmlBuilder
   @behaviour Ask.Runtime.ChannelProvider
@@ -107,7 +107,7 @@ defmodule Ask.Runtime.VerboiceChannel do
       "#{
         verboice_callback(
           channel_base_url,
-          Helpers.audio_delivery_path(Ask.Endpoint, :show, audio_id)
+          Helpers.audio_delivery_path(AskWeb.Endpoint, :show, audio_id)
         )
       }.mp3"
     )
@@ -377,7 +377,7 @@ defmodule Ask.Runtime.VerboiceChannel do
   def callback_url(respondent, channel_base_url) do
     verboice_callback(
       channel_base_url,
-      Ask.Router.Helpers.callback_path(Ask.Endpoint, :callback, "verboice",
+      AskWeb.Router.Helpers.callback_path(AskWeb.Endpoint, :callback, "verboice",
         respondent: respondent.id
       )
     )
@@ -386,7 +386,7 @@ defmodule Ask.Runtime.VerboiceChannel do
   def no_reply_callback_url(respondent, channel_base_url) do
     verboice_callback(
       channel_base_url,
-      Ask.Router.Helpers.callback_path(Ask.Endpoint, :callback, "verboice",
+      AskWeb.Router.Helpers.callback_path(AskWeb.Endpoint, :callback, "verboice",
         respondent: respondent.id,
         Digits: "timeout"
       )
@@ -398,8 +398,8 @@ defmodule Ask.Runtime.VerboiceChannel do
 
     verboice_callback(
       channel_base_url,
-      Ask.Router.Helpers.callback_path(
-        Ask.Endpoint,
+      AskWeb.Router.Helpers.callback_path(
+        AskWeb.Endpoint,
         :callback,
         "verboice",
         ["status", respondent_id, token],

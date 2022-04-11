@@ -2,8 +2,8 @@
 import { playActionsFromState } from '../spec_helper'
 import expect from 'expect'
 import assert from 'assert'
-import reducer from '../../../web/static/js/reducers/guest'
-import * as actions from '../../../web/static/js/actions/guest'
+import reducer from '../../../assets/js/reducers/guest'
+import * as actions from '../../../assets/js/actions/guest'
 
 describe('guest reducer', () => {
   const initialState = reducer(undefined, {})

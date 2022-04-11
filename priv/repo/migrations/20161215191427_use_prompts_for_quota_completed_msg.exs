@@ -4,7 +4,7 @@ defmodule Ask.Repo.Migrations.UsePromptsForQuotaCompletedMsg do
   alias Ask.Repo
 
   defmodule Questionnaire do
-    use Ask.Web, :model
+    use AskWeb, :model
 
     schema "questionnaires" do
       field :quota_completed_msg, Ask.Ecto.Type.JSON

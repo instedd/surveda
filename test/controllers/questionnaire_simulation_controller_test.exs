@@ -1,5 +1,5 @@
-defmodule Ask.QuestionnaireSimulationControllerTest do
-  use Ask.ConnCase
+defmodule AskWeb.QuestionnaireSimulationControllerTest do
+  use AskWeb.ConnCase
   use Ask.DummySteps
   use Ask.TestHelpers
   import Ask.StepBuilder

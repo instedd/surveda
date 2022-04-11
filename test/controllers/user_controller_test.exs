@@ -1,8 +1,8 @@
-defmodule Ask.UserControllerTest do
+defmodule AskWeb.UserControllerTest do
   import Ecto.Query
 
   alias Ask.User
-  use Ask.ConnCase
+  use AskWeb.ConnCase
   use Ask.TestHelpers
 
   setup %{conn: conn} do

@@ -1,5 +1,5 @@
 defmodule FloipPusherTest do
-  use Ask.ModelCase
+  use Ask.DataCase
   use Ask.LogHelper
   alias Ask.{Repo, FloipPusher, FloipEndpoint, Response}
 

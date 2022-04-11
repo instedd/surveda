@@ -1,5 +1,5 @@
-defmodule Ask.RespondentTest do
-  use Ask.ModelCase
+defmodule AskWeb.RespondentTest do
+  use Ask.DataCase
   import Ask.Factory
   alias Ask.Schedule
 

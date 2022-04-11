@@ -1,5 +1,5 @@
-defmodule Ask.AudioControllerTest do
-  use Ask.ConnCase
+defmodule AskWeb.AudioControllerTest do
+  use AskWeb.ConnCase
 
   alias Ask.{Audio, AudioChecker}
 

@@ -3,11 +3,11 @@
 import expect from 'expect'
 import assert from 'assert'
 import { playActionsFromState } from '../spec_helper'
-import reducer, {rebuildInputFromQuotaBuckets} from '../../../web/static/js/reducers/survey'
-import { modeLabel } from '../../../web/static/js/questionnaire.mode'
-import * as actions from '../../../web/static/js/actions/survey'
-import * as questionnaireActions from '../../../web/static/js/actions/questionnaire'
-import deepFreeze from '../../../web/static/vendor/js/deepFreeze'
+import reducer, {rebuildInputFromQuotaBuckets} from '../../../assets/js/reducers/survey'
+import { modeLabel } from '../../../assets/js/questionnaire.mode'
+import * as actions from '../../../assets/js/actions/survey'
+import * as questionnaireActions from '../../../assets/js/actions/questionnaire'
+import deepFreeze from '../../../assets/vendor/js/deepFreeze'
 import { survey } from '../fixtures'
 
 describe('survey reducer', () => {

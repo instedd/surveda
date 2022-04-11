@@ -4,14 +4,14 @@ defmodule Ask.Repo.Migrations.MigrateSurveyQuestionnaireIdToSurveyQuestionnaires
   alias Ask.Repo
 
   defmodule Questionnaire do
-    use Ask.Web, :model
+    use AskWeb, :model
 
     schema "questionnaires" do
     end
   end
 
   defmodule Survey do
-    use Ask.Web, :model
+    use AskWeb, :model
 
     schema "surveys" do
       belongs_to :questionnaire, Questionnaire
@@ -19,7 +19,7 @@ defmodule Ask.Repo.Migrations.MigrateSurveyQuestionnaireIdToSurveyQuestionnaires
   end
 
   defmodule SurveyQuestionnaire do
-    use Ask.Web, :model
+    use AskWeb, :model
 
     schema "survey_questionnaires" do
       belongs_to :survey, Survey

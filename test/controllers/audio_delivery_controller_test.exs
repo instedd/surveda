@@ -1,5 +1,5 @@
-defmodule Ask.AudioDeliveryControllerTest do
-  use Ask.ConnCase
+defmodule AskWeb.AudioDeliveryControllerTest do
+  use AskWeb.ConnCase
 
   setup %{conn: conn} do
     user = insert(:user)

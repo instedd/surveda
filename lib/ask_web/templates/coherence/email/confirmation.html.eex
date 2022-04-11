@@ -1,0 +1,9 @@
+<img src="<%= static_url(AskWeb.Endpoint, "/images/email-logo@2x.png") %>" alt="Surveda" width="168px" height="60px"/>
+<div style="background: #fff;padding: 50px 40px;margin: 50px auto;width: 50%;min-width: 500px;max-width: 650px;box-sizing: border-box">
+  <h2 style="font-weight: 300;line-height: 2">Hello <%= @name %>!<h2>
+  <h2  style="font-weight: 300;line-height: 2">
+    Your new Surveda account is almost ready, click the link below to confirm and activate it.
+  </h2>
+  <a href="<%= @url %>" style="background: rgba(3, 169, 244, 1);color: rgba(255, 255, 255, 1);text-transform: uppercase;padding: 10px 20px;margin-top: 30px;text-decoration: none;display: inline-block">Confirm my Surveda Account</a>
+  <p>Thank you!</p>
+</div>

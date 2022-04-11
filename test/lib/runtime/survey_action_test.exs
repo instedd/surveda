@@ -1,5 +1,5 @@
-defmodule Ask.Runtime.SurveyActionTest do
-  use Ask.ModelCase
+defmodule AskWeb.Runtime.SurveyActionTest do
+  use Ask.DataCase
   use Ask.MockTime
   use Ask.TestHelpers
   alias Ask.Runtime.SurveyAction

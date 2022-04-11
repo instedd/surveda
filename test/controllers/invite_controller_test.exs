@@ -1,7 +1,7 @@
-defmodule Ask.InviteControllerTest do
+defmodule AskWeb.InviteControllerTest do
   import Ecto.Query
 
-  use Ask.ConnCase
+  use AskWeb.ConnCase
   use Ask.TestHelpers
 
   alias Ask.{Invite, ProjectMembership, ActivityLog}

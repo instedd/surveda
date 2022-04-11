@@ -9,7 +9,6 @@ defmodule Ask.Runtime.Session do
     Schedule,
     RespondentDispositionHistory,
     Survey,
-    Endpoint,
     UrlShortener
   }
 
@@ -581,7 +580,7 @@ defmodule Ask.Runtime.Session do
   end
 
   defp mobile_web_url(respondent_id) do
-    base_url = System.get_env("MOBILE_WEB_BASE_URL") || Endpoint.url()
+    base_url = System.get_env("MOBILE_WEB_BASE_URL") || AskWeb.Endpoint.url()
 
     UrlShortener.shorten_or_log_error(
       "#{base_url}/mobile/#{respondent_id}?token=#{Respondent.token(respondent_id)}"

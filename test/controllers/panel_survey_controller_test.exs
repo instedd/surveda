@@ -1,5 +1,5 @@
-defmodule Ask.PanelSurveyControllerTest do
-  use Ask.ConnCase
+defmodule AskWeb.PanelSurveyControllerTest do
+  use AskWeb.ConnCase
   use Ask.TestHelpers
   alias Ask.PanelSurvey
 

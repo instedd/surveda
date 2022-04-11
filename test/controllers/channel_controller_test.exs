@@ -1,5 +1,5 @@
-defmodule Ask.ChannelControllerTest do
-  use Ask.ConnCase
+defmodule AskWeb.ChannelControllerTest do
+  use AskWeb.ConnCase
   use Ask.TestHelpers
 
   setup %{conn: conn} do

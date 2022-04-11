@@ -1,4 +1,4 @@
-defmodule Ask.UrlShortenerTest do
+defmodule AskWeb.UrlShortenerTest do
   use ExUnit.Case
   alias Ask.UrlShortener
 

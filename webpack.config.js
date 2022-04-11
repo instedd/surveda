@@ -8,20 +8,20 @@ module.exports = {
   resolve: {
     modules: [
       'node_modules',
-      path.join(__dirname, '/web/static/js')
+      path.join(__dirname, '/assets/js')
     ],
     extensions: ['.js', '.jsx']
   },
   entry: {
     app: [
-      './web/static/vendor/js/materialize.js',
-      './web/static/vendor/js/materialize-dropdown-fix.js',
-      './web/static/js/app.jsx',
-      './web/static/css/app.scss'
+      './assets/vendor/js/materialize.js',
+      './assets/vendor/js/materialize-dropdown-fix.js',
+      './assets/js/app.jsx',
+      './assets/css/app.scss'
     ],
     mobileSurvey: [
-      './web/static/mobile_survey/js/mobileSurvey.jsx',
-      './web/static/mobile_survey/css/mobile.scss'
+      './assets/mobile_survey/js/mobileSurvey.jsx',
+      './assets/mobile_survey/css/mobile.scss'
     ]
   },
 
@@ -60,7 +60,7 @@ module.exports = {
               loader: 'sass-loader?sourceMap',
               options: {
                 includePaths: [
-                  path.join(__dirname, '/web/static/vendor/css'),
+                  path.join(__dirname, '/assets/vendor/css'),
                   path.join(__dirname, '/node_modules')
                 ]
               }
@@ -82,7 +82,7 @@ module.exports = {
 
   plugins: [
     new i18nextWebpackPlugin({ // eslint-disable-line
-      src: path.resolve(__dirname, './web/static/js/**/*.{js,jsx}'),
+      src: path.resolve(__dirname, './assets/js/**/*.{js,jsx}'),
       dest: path.resolve(__dirname, 'locales'),
       options: {
         func: {
@@ -113,7 +113,7 @@ module.exports = {
       }
     }),
     new ExtractTextPlugin('css/[name].css'),
-    new CopyWebpackPlugin([{ from: './web/static/assets' }]),
+    new CopyWebpackPlugin([{ from: './assets/static' }]),
     new webpack.ProvidePlugin({
       'window.jQuery': 'jquery',
       'window.$': 'jquery',

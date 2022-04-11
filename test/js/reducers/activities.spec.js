@@ -1,8 +1,8 @@
 // @flow
 /* eslint-env mocha */
 import expect from 'expect'
-import reducer from '../../../web/static/js/reducers/activities'
-import * as actions from '../../../web/static/js/actions/activities'
+import reducer from '../../../assets/js/reducers/activities'
+import * as actions from '../../../assets/js/actions/activities'
 
 describe('activities reducer', () => {
   const initialState = reducer(undefined, {})

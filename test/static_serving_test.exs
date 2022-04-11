@@ -1,5 +1,5 @@
-defmodule Ask.StaticServingTest do
-  use Ask.ConnCase
+defmodule AskWeb.StaticServingTest do
+  use AskWeb.ConnCase
 
   setup %{conn: conn} do
     {:ok, conn: conn}

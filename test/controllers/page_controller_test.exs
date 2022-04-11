@@ -1,5 +1,5 @@
-defmodule Ask.PageControllerTest do
-  use Ask.ConnCase
+defmodule AskWeb.PageControllerTest do
+  use AskWeb.ConnCase
 
   test "GET /foo", %{conn: conn} do
     conn = get(conn, "/foo")

@@ -4,7 +4,7 @@ defmodule Ask.Repo.Migrations.FillRespondentGroupsSampleAndRespondentsCount do
   alias Ask.Repo
 
   defmodule RespondentGroup do
-    use Ask.Web, :model
+    use AskWeb, :model
 
     schema "respondent_groups" do
       field :sample, Ask.Ecto.Type.JSON

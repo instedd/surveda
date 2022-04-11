@@ -3,7 +3,7 @@ defmodule Ask.Repo.Migrations.SetDefaultSettingsToUsers do
   alias Ask.Repo
 
   defmodule User do
-    use Ask.Web, :model
+    use AskWeb, :model
 
     schema "users" do
       field :settings, Ask.Ecto.Type.JSON

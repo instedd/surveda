@@ -1,7 +1,7 @@
 /* eslint-env mocha */
 import expect from 'expect'
-import reducer from '../../../web/static/js/reducers/authorizations'
-import * as actions from '../../../web/static/js/actions/authorizations'
+import reducer from '../../../assets/js/reducers/authorizations'
+import * as actions from '../../../assets/js/actions/authorizations'
 
 describe('authorizations reducer', () => {
   const initialState = reducer(undefined, {})

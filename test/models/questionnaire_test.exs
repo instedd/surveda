@@ -1,5 +1,5 @@
-defmodule Ask.QuestionnaireTest do
-  use Ask.{ModelCase, DummySteps}
+defmodule AskWeb.QuestionnaireTest do
+  use Ask.{DataCase, DummySteps}
   alias Ask.Questionnaire
 
   @valid_attrs %{

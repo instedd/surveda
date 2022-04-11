@@ -1,5 +1,5 @@
-defmodule Ask.ProjectTest do
-  use Ask.ModelCase
+defmodule AskWeb.ProjectTest do
+  use Ask.DataCase
 
   alias Ask.Project
 

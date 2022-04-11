@@ -1,9 +1,10 @@
 defmodule ChannelStatusServerTest do
-  use Ask.ModelCase
+  use Ask.DataCase
   use Ask.LogHelper
   use Ask.TestHelpers
   alias Ask.TestChannel
   alias Ask.Runtime.ChannelStatusServer
+  alias AskWeb.Email
 
   test "get_channel_status initially returns :unknown" do
     {:ok, _} = ChannelStatusServer.start_link()
@@ -66,7 +67,7 @@ defmodule ChannelStatusServerTest do
     channel =
       TestChannel.create_channel(user, "test", TestChannel.settings(TestChannel.new(), 1, :down))
 
-    email = Ask.Email.channel_down(user.email, channel, [])
+    email = Email.channel_down(user.email, channel, [])
 
     setup_surveys_with_channels([survey], [channel])
     ChannelStatusServer.poll(pid)
@@ -83,7 +84,7 @@ defmodule ChannelStatusServerTest do
     channel =
       TestChannel.create_channel(user, "test", TestChannel.settings(TestChannel.new(), 1, :error))
 
-    email = Ask.Email.channel_error(user.email, channel, "some code")
+    email = Email.channel_error(user.email, channel, "some code")
 
     setup_surveys_with_channels([survey], [channel])
     ChannelStatusServer.poll(pid)
@@ -100,7 +101,7 @@ defmodule ChannelStatusServerTest do
     channel =
       TestChannel.create_channel(user, "test", TestChannel.settings(TestChannel.new(), 1, :down))
 
-    email = Ask.Email.channel_down(user.email, channel, [])
+    email = Email.channel_down(user.email, channel, [])
 
     setup_surveys_with_channels([survey], [channel])
     ChannelStatusServer.poll(pid)
@@ -118,7 +119,7 @@ defmodule ChannelStatusServerTest do
     channel =
       TestChannel.create_channel(user, "test", TestChannel.settings(TestChannel.new(), 1, :error))
 
-    email = Ask.Email.channel_error(user.email, channel, "some code")
+    email = Email.channel_error(user.email, channel, "some code")
 
     setup_surveys_with_channels([survey], [channel])
     ChannelStatusServer.poll(pid)

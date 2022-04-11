@@ -1,5 +1,5 @@
-defmodule Ask.RespondentGroupTest do
-  use Ask.ModelCase
+defmodule AskWeb.RespondentGroupTest do
+  use Ask.DataCase
 
   alias Ask.{RespondentGroup, Channel, RespondentGroupChannel}
 

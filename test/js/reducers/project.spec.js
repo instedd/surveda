@@ -1,8 +1,8 @@
 /* eslint-env mocha */
 import expect from 'expect'
 import { playActionsFromState } from '../spec_helper'
-import reducer from '../../../web/static/js/reducers/project'
-import * as actions from '../../../web/static/js/actions/project'
+import reducer from '../../../assets/js/reducers/project'
+import * as actions from '../../../assets/js/actions/project'
 
 describe('project reducer', () => {
   const initialState = reducer(undefined, {})
