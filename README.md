@@ -81,6 +81,11 @@ and finally run a static analysis/style guide with [ESLint](https://eslint.org/)
 $ yarn eslint
 ```
 
+## NGROK
+
+Ngrok is a service that exposes local servers over secure channels.
+From a Dev perspective, it's very useful avoiding the need of having Guisso, Verboice and Nuntium running locally. That could be inconvenient for the daily work.
+The `docker-compose.yml` has instructions to get the service working. You'll need to have an account and get your auth token to use the service.
 
 ## GUISSO
 
