@@ -1,5 +1,5 @@
 defmodule Ask.RespondentStats do
-  use AskWeb, :model
+  use Ask.Model
 
   @primary_key false
   schema "respondent_stats" do

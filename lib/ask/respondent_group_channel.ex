@@ -1,5 +1,5 @@
 defmodule Ask.RespondentGroupChannel do
-  use AskWeb, :model
+  use Ask.Model
 
   schema "respondent_group_channels" do
     belongs_to :respondent_group, Ask.RespondentGroup

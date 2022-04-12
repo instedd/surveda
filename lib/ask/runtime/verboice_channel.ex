@@ -1,6 +1,6 @@
 defmodule Ask.Runtime.VerboiceChannel do
   alias __MODULE__
-  use AskWeb, :model
+  use Ask.Model
   alias Ask.{Repo, Respondent, Channel, SurvedaMetrics, Stats}
   alias Ask.Runtime.{Survey, Flow, Reply, RetriesHistogram}
   alias AskWeb.Router.Helpers

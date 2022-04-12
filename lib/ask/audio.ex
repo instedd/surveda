@@ -1,5 +1,5 @@
 defmodule Ask.Audio do
-  use AskWeb, :model
+  use Ask.Model
 
   alias Ask.Sox
 

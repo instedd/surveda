@@ -1,5 +1,5 @@
 defmodule Ask.RespondentGroup do
-  use AskWeb, :model
+  use Ask.Model
 
   schema "respondent_groups" do
     field :name, :string

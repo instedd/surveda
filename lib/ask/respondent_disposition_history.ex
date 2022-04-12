@@ -1,5 +1,5 @@
 defmodule Ask.RespondentDispositionHistory do
-  use AskWeb, :model
+  use Ask.Model
   alias Ask.{RespondentDispositionHistory, Repo}
 
   schema "respondent_disposition_history" do

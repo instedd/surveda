@@ -1,5 +1,5 @@
 defmodule Ask.OAuthToken do
-  use AskWeb, :model
+  use Ask.Model
 
   schema "oauth_tokens" do
     field :provider, :string

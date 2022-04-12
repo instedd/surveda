@@ -1,5 +1,5 @@
 defmodule Ask.Channel do
-  use AskWeb, :model
+  use Ask.Model
 
   alias Ask.Repo
   alias Ask.Runtime.ChannelStatusServer

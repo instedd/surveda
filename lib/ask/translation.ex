@@ -1,5 +1,5 @@
 defmodule Ask.Translation do
-  use AskWeb, :model
+  use Ask.Model
 
   alias Ask.{Repo, Translation}
 

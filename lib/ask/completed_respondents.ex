@@ -1,5 +1,5 @@
 defmodule Ask.CompletedRespondents do
-  use AskWeb, :model
+  use Ask.Model
 
   @primary_key false
   schema "completed_respondents" do

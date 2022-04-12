@@ -1,5 +1,5 @@
 defmodule Ask.QuestionnaireVariable do
-  use AskWeb, :model
+  use Ask.Model
 
   schema "questionnaire_variables" do
     field :name, :string

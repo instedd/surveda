@@ -16,20 +16,6 @@ defmodule AskWeb do
   below.
   """
 
-  def model do
-    quote do
-      use Ecto.Schema
-
-      import Ecto
-      import Ecto.Changeset
-      import Ecto.Query
-
-      # Avoid microseconds. Mysql doesn't support them.
-      # See [usec in datetime](https://hexdocs.pm/ecto_sql/Ecto.Adapters.MyXQL.html#module-usec-in-datetime)
-      @timestamps_opts [type: :utc_datetime, usec: false]
-    end
-  end
-
   def controller do
     quote do
       use Phoenix.Controller, namespace: AskWeb

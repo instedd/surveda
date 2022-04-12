@@ -1,5 +1,5 @@
 defmodule Ask.QuotaBucket do
-  use AskWeb, :model
+  use Ask.Model
 
   @max_int 2_147_483_647
 

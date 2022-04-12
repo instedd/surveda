@@ -1,5 +1,5 @@
 defmodule Ask.Respondent do
-  use AskWeb, :model
+  use Ask.Model
   alias Ask.Ecto.Type.JSON
   alias Ask.{Stats, Repo, Respondent, Survey, Questionnaire}
 

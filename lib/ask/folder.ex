@@ -1,5 +1,5 @@
 defmodule Ask.Folder do
-  use AskWeb, :model
+  use Ask.Model
   alias Ask.{PanelSurvey, Project, Survey}
 
   schema "folders" do

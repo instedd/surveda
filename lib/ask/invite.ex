@@ -1,5 +1,5 @@
 defmodule Ask.Invite do
-  use AskWeb, :model
+  use Ask.Model
 
   schema "invites" do
     field :code, :string

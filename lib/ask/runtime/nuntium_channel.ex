@@ -1,6 +1,6 @@
 defmodule Ask.Runtime.NuntiumChannel do
   @behaviour Ask.Runtime.ChannelProvider
-  use AskWeb, :model
+  use Ask.Model
   alias Ask.Runtime.{Survey, NuntiumChannel, Flow, Reply, ReplyStep}
   alias Ask.{Repo, Respondent, Channel, Stats, SurvedaMetrics}
   import Ecto.Query
