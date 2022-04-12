@@ -1,5 +1,5 @@
 defmodule Ask.SurveyLogEntry do
-  use AskWeb, :model
+  use Ask.Model
 
   schema "survey_log_entries" do
     belongs_to :survey, Ask.Survey

@@ -1,5 +1,5 @@
 defmodule Ask.FloipEndpoint do
-  use AskWeb, :model
+  use Ask.Model
 
   schema "floip_endpoints" do
     field :name, :string

@@ -1,5 +1,5 @@
 defmodule Ask.User do
-  use AskWeb, :model
+  use Ask.Model
   use Coherence.Schema
 
   schema "users" do

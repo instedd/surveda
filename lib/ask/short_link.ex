@@ -1,5 +1,5 @@
 defmodule Ask.ShortLink do
-  use AskWeb, :model
+  use Ask.Model
   alias __MODULE__
   alias Ask.Repo
 

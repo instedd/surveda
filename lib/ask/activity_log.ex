@@ -1,5 +1,5 @@
 defmodule Ask.ActivityLog do
-  use AskWeb, :model
+  use Ask.Model
   import User.Helper
 
   alias Ask.{

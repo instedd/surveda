@@ -1,5 +1,5 @@
 defmodule Ask.ProjectChannel do
-  use AskWeb, :model
+  use Ask.Model
 
   schema "project_channels" do
     belongs_to :project, Ask.Project

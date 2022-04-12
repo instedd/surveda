@@ -1,5 +1,5 @@
 defmodule Ask.Response do
-  use AskWeb, :model
+  use Ask.Model
 
   schema "responses" do
     field :field_name, :string

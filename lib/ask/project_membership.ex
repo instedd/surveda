@@ -1,5 +1,5 @@
 defmodule Ask.ProjectMembership do
-  use AskWeb, :model
+  use Ask.Model
   alias Ask.Repo
 
   schema "project_memberships" do

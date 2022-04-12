@@ -1,5 +1,5 @@
 defmodule Ask.SurveyQuestionnaire do
-  use AskWeb, :model
+  use Ask.Model
 
   schema "survey_questionnaires" do
     belongs_to :survey, Ask.Survey

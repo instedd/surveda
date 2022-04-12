@@ -1,5 +1,5 @@
 defmodule Ask.Session do
-  use AskWeb, :model
+  use Ask.Model
 
   schema "sessions" do
     field :token, :string

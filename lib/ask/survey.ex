@@ -1,5 +1,5 @@
 defmodule Ask.Survey do
-  use AskWeb, :model
+  use Ask.Model
 
   alias __MODULE__
 

@@ -1,5 +1,5 @@
 defmodule Ask.Project do
-  use AskWeb, :model
+  use Ask.Model
 
   schema "projects" do
     field :name, :string
