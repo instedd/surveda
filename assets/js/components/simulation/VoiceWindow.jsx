@@ -18,7 +18,7 @@ type VoiceWindowProps = {
   messages: Array<ChatMessage>,
   prompts: Array<IVRPrompt>,
   voiceTitle: string,
-  onSendMessage: (Message) => void,
+  onSendMessage: (Message | string) => void,
   readOnly: boolean,
 }
 
@@ -39,15 +39,12 @@ const VoiceWindow = translate()(
     spectrum: VoiceSpectrum
 
     message: string
-    messageTimer: TimeoutID
-
-    repeatMessageTimer: ?TimeoutID
-    timesRepeated: number
+    messageTimer: ?TimeoutID
+    answerTimeout: ?TimeoutID
 
     constructor(props) {
       super(props)
       this.spectrum = new VoiceSpectrum()
-      this.timesRepeated = 0
     }
 
     componentDidMount() {
@@ -62,13 +59,12 @@ const VoiceWindow = translate()(
     }
 
     componentWillUnmount() {
-      if (this.spectrum) {
-        this.spectrum.stop()
-      }
-
-      this.stopRepeatingLastAudio()
+      if (this.spectrum) this.spectrum.stop()
+      this.stopSimulation()
     }
 
+    // Plays the current prompts in the order the simulator tells us to.
+    // Eventually starts waiting for an answer message to send.
     play() {
       const ivr = this.props.prompts.shift()
       if (ivr) {
@@ -85,19 +81,18 @@ const VoiceWindow = translate()(
       } else {
         this.spectrum.stop()
 
-        // if simulation still active then start repeating the last audio
         if (!this.props.readOnly) {
-          this.startRepeatingLastAudio()
+          this.initAnswerTimeout()
         }
       }
     }
 
+    // Plays a single IVR prompt. Eventually calls `play()` to skip to the next
+    // audio or start waiting for an answer.
     playIVR(ivr) {
       // we may be interrupting an audio prompt here, so we stop any playing
       // audio, before skipping to the next one:
       this.audio.pause()
-      // we also stop any repeating question:
-      this.stopRepeatingLastAudio()
 
       // play the IVR prompt, continuing to the next one when finished:
       this.audio.src = audioURL(ivr)
@@ -109,10 +104,26 @@ const VoiceWindow = translate()(
       this.spectrum.start(this.audio)
     }
 
+    // Starts a timer that will call `noAnswer()`. Must be cancelled if a digit
+    // is pressed.
+    initAnswerTimeout(): void {
+      this.cancelAnswerTimeout()
+      this.answerTimeout = setTimeout(() => this.noAnswer(), 5000)
+    }
+
+    cancelAnswerTimeout(): void {
+      if (this.answerTimeout) {
+        clearTimeout(this.answerTimeout)
+        this.answerTimeout = null
+      }
+    }
+
+    // Appends the typed digit to the current message, then starts a 2s timer to
+    // send the message, unless another digit is pressed.
     entered(character: string): void {
       if (this.props.readOnly) return
-      if (this.messageTimer) clearTimeout(this.messageTimer)
-      this.stopRepeatingLastAudio()
+      this.cancelAnswerTimeout()
+      this.cancelMessageTimer()
 
       this.message += character
 
@@ -124,51 +135,37 @@ const VoiceWindow = translate()(
       }, 2000)
     }
 
-    hangUp(): void {
-      this.audio.pause()
+    cancelMessageTimer(): void {
+      if (this.messageTimer) {
+        clearTimeout(this.messageTimer)
+        this.messageTimer = null
+      }
+    }
 
-      if (this.messageTimer) clearTimeout(this.messageTimer)
-      this.stopRepeatingLastAudio()
+    stopSimulation(): void {
+      this.audio.pause()
+      this.cancelAnswerTimeout()
+      this.cancelMessageTimer()
+    }
+
+    // Simulates a phone hangup by sending a STOP message. This is kinda
+    // hackish, we could probably send a proper hangup message that would be
+    // properly handled by the simulator.
+    hangUp(): void {
+      this.stopSimulation()
 
       if (!this.props.readOnly) {
         this.props.onSendMessage({ body: "stop", type: "at" })
       }
     }
 
-    startRepeatingLastAudio(): void {
-      if (!this.audio) return // no last audio available to repeat
-      if (this.repeatMessageTimer) return // already repeating audio
+    // Reports a timeout while waiting for an answer to the simulator.
+    noAnswer(): void {
+      this.stopSimulation()
 
-      this.initRepeatTimer(() => {
-        if (this.timesRepeated < 3) {
-          this.clearRepeatTimer()
-          this.repeatLastAudio()
-        } else {
-          this.hangUp()
-        }
-      })
-    }
-
-    stopRepeatingLastAudio(): void {
-      this.clearRepeatTimer()
-      this.timesRepeated = 0
-    }
-
-    repeatLastAudio(): void {
-      if (!this.audio) return
-
-      this.timesRepeated += 1
-      this.spectrum.restart()
-      this.audio.play()
-    }
-
-    initRepeatTimer(func): void {
-      this.repeatMessageTimer = setTimeout(func, 5000)
-    }
-
-    clearRepeatTimer(): void {
-      if (this.repeatMessageTimer) clearTimeout(this.repeatMessageTimer)
-      this.repeatMessageTimer = null
+      if (!this.props.readOnly) {
+        this.props.onSendMessage("timeout")
+      }
     }
 
     render() {

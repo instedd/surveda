@@ -92,8 +92,7 @@ defmodule Ask.Runtime.QuestionnaireIvrSimulator do
     end
 
     handle_app_reply = fn simulation, respondent, reply, status ->
-      messages = simulation.messages ++ AOMessage.create_all(reply)
-      simulation = Map.put(simulation, :messages, messages)
+      simulation = append_ao_message(simulation, reply)
 
       sync_build = fn simulation, current_step, status, reply ->
         prompts = IvrPrompt.create_all(reply)
@@ -111,10 +110,7 @@ defmodule Ask.Runtime.QuestionnaireIvrSimulator do
     end
 
     sync_simulation = fn simulation, response ->
-      messages = simulation.messages ++ [ATMessage.new(response)]
-      simulation = %{simulation | messages: messages}
-
-      reply = Flow.Message.reply(response)
+      {simulation, reply} = handle_at_message(simulation, response)
       QuestionnaireSimulator.sync_simulation(simulation, reply, "ivr", handle_app_reply)
     end
 
@@ -124,6 +120,25 @@ defmodule Ask.Runtime.QuestionnaireIvrSimulator do
       build_simulation,
       sync_simulation
     )
+  end
+
+  defp append_ao_message(simulation, nil) do
+    simulation
+  end
+
+  defp append_ao_message(simulation, reply) do
+    messages = simulation.messages ++ AOMessage.create_all(reply)
+    Map.put(simulation, :messages, messages)
+  end
+
+  defp handle_at_message(simulation, "timeout") do
+    {simulation, Flow.Message.no_reply()}
+  end
+
+  defp handle_at_message(simulation, message) do
+    messages = simulation.messages ++ [ATMessage.new(message)]
+    simulation = Map.put(simulation, :messages, messages)
+    {simulation, Flow.Message.reply(message)}
   end
 end
 
