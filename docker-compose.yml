@@ -54,3 +54,5 @@ services:
       - 4040
     environment:
       NGROK_PORT: 'app:80'
+      # Get your Authtoken here: https://dashboard.ngrok.com/get-started/your-authtoken
+      NGROK_AUTH: 'TheActualAuthToken'

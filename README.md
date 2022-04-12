@@ -81,6 +81,11 @@ and finally run a static analysis/style guide with [ESLint](https://eslint.org/)
 $ yarn eslint
 ```
 
+## NGROK
+
+Ngrok is a service that exposes local servers over secure channels.
+From a Dev perspective, it's very useful avoiding the need of having Guisso, Verboice and Nuntium running locally. That could be inconvenient for the daily work.
+The `docker-compose.yml` has instructions to get the service working. You'll need to have an account and get your auth token to use the service.
 
 ## GUISSO
 
@@ -94,6 +99,7 @@ http://app.surveda.lvh.me/oauth_client/callback
 ```
 
 To work with a cloud GUISSO, make sure your `ngrok` service is running (`docker-compose up ngrok`), and get your ngrok domain visiting `http://ngrok.surveda.lvh.me`. Fill the Application information as for the local case, but using the ngrok domain instead. When you restart your `ngrok` service, you will need to update this information before approving new authorizations in GUISSO.
+
 
 On your local surveda directory, create a `config/local.exs` file like below, including the client ID & secret from your Application in GUISSO:
 
