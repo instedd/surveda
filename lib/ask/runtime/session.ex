@@ -610,20 +610,18 @@ defmodule Ask.Runtime.Session do
     canonical_number_as_list = respondent.canonical_phone_number |> String.graphemes()
     matching_patterns = ChannelPatterns.matching_patterns(patterns, canonical_number_as_list)
 
-    case matching_patterns do
-      [] ->
-        respondent
+    sanitized_phone_number =
+      case matching_patterns do
+        [] ->
+          respondent.canonical_phone_number
 
-      [p | _] ->
-        sanitized_phone_number = ChannelPatterns.apply_pattern(p, canonical_number_as_list)
+        [p | _] ->
+          ChannelPatterns.apply_pattern(p, canonical_number_as_list)
+      end
 
-        {:ok, updated_respondent} =
-          respondent
-          |> Respondent.changeset(%{sanitized_phone_number: sanitized_phone_number})
-          |> Repo.update()
-
-        updated_respondent
-    end
+    respondent
+    |> Respondent.changeset(%{sanitized_phone_number: sanitized_phone_number})
+    |> Repo.update!()
   end
 
   defp log_prompts(reply, channel, mode, respondent, force \\ false, persist \\ true) do

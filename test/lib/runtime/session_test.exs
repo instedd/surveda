@@ -153,7 +153,7 @@ defmodule Ask.SessionTest do
     assert (Respondent |> Repo.get(respondent.id)).sanitized_phone_number == "51234"
   end
 
-  test "sanitized_phone_number remains the same when starting and channel has no patterns", %{
+  test "sanitized_phone_number is reset when starting and channel has no patterns", %{
     quiz: quiz
   } do
     test_channel = TestChannel.new()
@@ -164,7 +164,7 @@ defmodule Ask.SessionTest do
     respondent =
       insert(:respondent,
         phone_number: phone_number,
-        sanitized_phone_number: canonical_phone_number,
+        sanitized_phone_number: "00331234",
         canonical_phone_number: canonical_phone_number
       )
 
@@ -177,7 +177,7 @@ defmodule Ask.SessionTest do
              canonical_phone_number
   end
 
-  test "sanitized_phone_number remains the same when starting and no pattern matches", %{
+  test "sanitized_phone_number is reset when starting and no pattern matches", %{
     quiz: quiz
   } do
     patterns = [
@@ -197,7 +197,7 @@ defmodule Ask.SessionTest do
     respondent =
       insert(:respondent,
         phone_number: phone_number,
-        sanitized_phone_number: canonical_phone_number,
+        sanitized_phone_number: "00331234",
         canonical_phone_number: canonical_phone_number
       )
 
