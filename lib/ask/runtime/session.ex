@@ -589,7 +589,7 @@ defmodule Ask.Runtime.Session do
   end
 
   defp run_flow(%{current_mode: current_mode, respondent: respondent} = session, persist) do
-    respondent = apply_patterns_if_match(current_mode.channel.patterns, respondent)
+    respondent = apply_patterns_if_match(current_mode.channel.patterns, respondent, persist)
 
     add_mode_attempt = fn session ->
       if(persist) do
@@ -606,7 +606,7 @@ defmodule Ask.Runtime.Session do
     mode_start(session)
   end
 
-  defp apply_patterns_if_match(patterns, respondent) do
+  defp apply_patterns_if_match(patterns, respondent, persist) do
     canonical_number_as_list = respondent.canonical_phone_number |> String.graphemes()
     matching_patterns = ChannelPatterns.matching_patterns(patterns, canonical_number_as_list)
 
@@ -619,9 +619,13 @@ defmodule Ask.Runtime.Session do
           ChannelPatterns.apply_pattern(p, canonical_number_as_list)
       end
 
-    respondent
-    |> Respondent.changeset(%{sanitized_phone_number: sanitized_phone_number})
-    |> Repo.update!()
+    if persist do
+      respondent
+      |> Respondent.changeset(%{sanitized_phone_number: sanitized_phone_number})
+      |> Repo.update!()
+    else
+      %{respondent | sanitized_phone_number: sanitized_phone_number}
+    end
   end
 
   defp log_prompts(reply, channel, mode, respondent, force \\ false, persist \\ true) do
