@@ -5,7 +5,7 @@ import { MessagesList, ChatMessage } from "./MessagesList"
 
 type Message = {
   body: string,
-  type: string,
+  type?: string,
 }
 
 export type IVRPrompt = {
@@ -18,7 +18,7 @@ type VoiceWindowProps = {
   messages: Array<ChatMessage>,
   prompts: Array<IVRPrompt>,
   voiceTitle: string,
-  onSendMessage: (Message | string) => void,
+  onSendMessage: (Message) => void,
   readOnly: boolean,
 }
 
@@ -155,7 +155,7 @@ const VoiceWindow = translate()(
       this.stopSimulation()
 
       if (!this.props.readOnly) {
-        this.props.onSendMessage({ body: "stop", type: "at" })
+        this.props.onSendMessage({ body: "stop" })
       }
     }
 
@@ -164,7 +164,7 @@ const VoiceWindow = translate()(
       this.stopSimulation()
 
       if (!this.props.readOnly) {
-        this.props.onSendMessage("timeout")
+        this.props.onSendMessage({ body: "timeout" })
       }
     }
 
