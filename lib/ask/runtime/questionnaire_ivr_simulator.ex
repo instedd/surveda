@@ -110,8 +110,12 @@ defmodule Ask.Runtime.QuestionnaireIvrSimulator do
     end
 
     sync_simulation = fn simulation, response ->
-      {simulation, reply} = handle_at_message(simulation, response)
-      QuestionnaireSimulator.sync_simulation(simulation, reply, "ivr", handle_app_reply)
+      if response == "hangup" do
+        QuestionnaireSimulator.stop_simulation(simulation, handle_app_reply)
+      else
+        {simulation, reply} = handle_at_message(simulation, response)
+        QuestionnaireSimulator.sync_simulation(simulation, reply, "ivr", handle_app_reply)
+      end
     end
 
     QuestionnaireSimulator.process_respondent_response(

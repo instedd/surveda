@@ -155,7 +155,7 @@ const VoiceWindow = translate()(
       this.stopSimulation()
 
       if (!this.props.readOnly) {
-        this.props.onSendMessage({ body: "stop" })
+        this.props.onSendMessage({ body: "hangup" })
       }
     }
 

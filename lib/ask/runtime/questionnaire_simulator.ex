@@ -152,6 +152,11 @@ defmodule Ask.Runtime.QuestionnaireSimulator do
     end
   end
 
+  def stop_simulation(simulation, handle_app_reply) do
+    respondent = Runtime.Survey.failed_session(simulation.respondent, false)
+    handle_app_reply.(simulation, respondent, nil, Status.ended())
+  end
+
   defp valid_questionnaire?(quiz, mode), do: quiz.modes |> Enum.member?(mode)
 
   def start(
