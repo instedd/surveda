@@ -442,6 +442,133 @@ defmodule Ask.Runtime.QuestionnaireSimulatorTest do
     end
   end
 
+  defp ivr_questionnaire_with_steps(steps) do
+    questionnaire_with_steps(steps)
+    |> Questionnaire.changeset(%{modes: ["ivr"]})
+    |> Repo.update!()
+  end
+
+  describe "IVR - timeout message" do
+    test "if timeout message on contacted disposition, then final disposition is 'unresponsive'",
+         %{
+           start_simulation: start_simulation
+         } do
+      quiz = ivr_questionnaire_with_steps(@dummy_steps)
+      %{respondent_id: respondent_id} = start_simulation.(quiz, "ivr")
+
+      # repeats twice then gives up:
+      process_respondent_response(respondent_id, "timeout", "ivr")
+      process_respondent_response(respondent_id, "timeout", "ivr")
+
+      %{simulation_status: status, disposition: disposition} =
+        process_respondent_response(respondent_id, "timeout", "ivr")
+
+      assert Simulation.Status.ended() == status
+      assert :unresponsive == disposition
+    end
+
+    test "if timeout message on started disposition, then final disposition is 'breakoff'", %{
+      start_simulation: start_simulation
+    } do
+      quiz = ivr_questionnaire_with_steps(@dummy_steps)
+      %{respondent_id: respondent_id} = start_simulation.(quiz, "ivr")
+
+      # answers first question
+      %{disposition: previous_disposition} =
+        process_respondent_response(respondent_id, "9", "ivr")
+
+      assert :started == previous_disposition
+
+      # repeats twice then gives up:
+      process_respondent_response(respondent_id, "timeout", "ivr")
+      process_respondent_response(respondent_id, "timeout", "ivr")
+
+      %{simulation_status: status, disposition: disposition} =
+        process_respondent_response(respondent_id, "timeout", "ivr")
+
+      assert Simulation.Status.ended() == status
+      assert :breakoff == disposition
+    end
+
+    test "if timeout message on interim-partial disposition, then final disposition is 'partial'",
+         %{
+           start_simulation: start_simulation
+         } do
+      quiz = ivr_questionnaire_with_steps(SimulatorQuestionnaireSteps.with_interim_partial_flag())
+      %{respondent_id: respondent_id} = start_simulation.(quiz, "ivr")
+
+      # reaches interim partial state:
+      process_respondent_response(respondent_id, "8", "ivr")
+      %{disposition: disposition} = process_respondent_response(respondent_id, "1", "ivr")
+      assert :"interim partial" == disposition
+
+      # repeats twice then gives up:
+      process_respondent_response(respondent_id, "timeout", "ivr")
+      process_respondent_response(respondent_id, "timeout", "ivr")
+
+      %{simulation_status: status, disposition: disposition} =
+        process_respondent_response(respondent_id, "timeout", "ivr")
+
+      assert Simulation.Status.ended() == status
+      assert :partial == disposition
+    end
+  end
+
+  describe "IVR - hangup message" do
+    test "if hangup message on contacted disposition, then final disposition is 'unresponsive'",
+         %{
+           start_simulation: start_simulation
+         } do
+      quiz = ivr_questionnaire_with_steps(@dummy_steps)
+      %{respondent_id: respondent_id} = start_simulation.(quiz, "ivr")
+
+      # phone immediately hangs up:
+      %{simulation_status: status, disposition: disposition} =
+        process_respondent_response(respondent_id, "hangup", "ivr")
+
+      assert Simulation.Status.ended() == status
+      assert :unresponsive == disposition
+    end
+
+    test "if hangup message on started disposition, then final disposition is 'breakoff'", %{
+      start_simulation: start_simulation
+    } do
+      quiz = ivr_questionnaire_with_steps(@dummy_steps)
+      %{respondent_id: respondent_id} = start_simulation.(quiz, "ivr")
+
+      # answers first question
+      %{disposition: disposition} = process_respondent_response(respondent_id, "9", "ivr")
+      assert :started == disposition
+
+      # phone hangs up:
+      %{simulation_status: status, disposition: disposition} =
+        process_respondent_response(respondent_id, "hangup", "ivr")
+
+      assert Simulation.Status.ended() == status
+      assert :breakoff == disposition
+    end
+
+    test "if hangup message on interim-partial disposition, then final disposition is 'partial'",
+         %{
+           start_simulation: start_simulation
+         } do
+      quiz = ivr_questionnaire_with_steps(SimulatorQuestionnaireSteps.with_interim_partial_flag())
+      %{respondent_id: respondent_id} = start_simulation.(quiz, "ivr")
+
+      # reaches interim partial state:
+      process_respondent_response(respondent_id, "8", "ivr")
+      %{disposition: disposition} = process_respondent_response(respondent_id, "1", "ivr")
+      assert :"interim partial" == disposition
+
+      # phone hangs up:
+      %{simulation_status: status, disposition: disposition} =
+        process_respondent_response(respondent_id, "hangup", "ivr")
+
+      assert Simulation.Status.ended() == status
+      assert :partial == disposition
+    end
+  end
+
   describe "questionnaire with relevant steps" do
     test "if respondent answers min_relevant_steps, disposition should be 'interim partial'", %{
       start_simulation: start_simulation
