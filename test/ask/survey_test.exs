@@ -207,4 +207,44 @@ defmodule Ask.SurveyTest do
       assert created_survey.panel_survey_id == panel_survey.id
     end
   end
+
+  describe "success_rate_history" do
+    test "reports until today" do
+      started = DateTime.utc_now() |> Timex.shift(days: -5)
+      date = DateTime.to_date(started)
+
+      history =
+        insert(:survey, started_at: started)
+        |> Survey.success_rate_history()
+
+      assert history == [
+               {date, 0.0},
+               {date |> Timex.shift(days: 1), 0.0},
+               {date |> Timex.shift(days: 2), 0.0},
+               {date |> Timex.shift(days: 3), 0.0},
+               {date |> Timex.shift(days: 4), 0.0},
+               {date |> Timex.shift(days: 5), 0.0}
+             ]
+    end
+
+    test "reports until survey ends date" do
+      started = DateTime.utc_now() |> Timex.shift(days: -10)
+      ended = started |> Timex.shift(days: +6)
+      date = DateTime.to_date(started)
+
+      history =
+        insert(:survey, started_at: started, ended_at: ended)
+        |> Survey.success_rate_history()
+
+      assert history == [
+               {date, 0.0},
+               {date |> Timex.shift(days: 1), 0.0},
+               {date |> Timex.shift(days: 2), 0.0},
+               {date |> Timex.shift(days: 3), 0.0},
+               {date |> Timex.shift(days: 4), 0.0},
+               {date |> Timex.shift(days: 5), 0.0},
+               {date |> Timex.shift(days: 6), 0.0}
+             ]
+    end
+  end
 end
