@@ -244,7 +244,7 @@ class SurveyShow extends Component<any, State> {
         { value: attemptedRespondents, label: t("Attempted Respondents") },
       ]
     }
-    let colors = referenceColors((reference || []).length)
+    let colors = referenceColors((reference || []).length - 1)
 
     const hasQuotas = survey.quotas.vars.length > 0
 
@@ -255,7 +255,7 @@ class SurveyShow extends Component<any, State> {
 
       return {
         label: `${name}${separator}${modes}`,
-        color: colors[i],
+        color: r.id == 0 ? "#000000" : colors[i],
         id: r.id,
       }
     })
