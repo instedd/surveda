@@ -220,6 +220,7 @@ defmodule AskWeb.RespondentView do
           id: id,
           reference: buckets,
           respondents_by_disposition: respondents_by_disposition,
+          percentages: percentages,
           cumulative_percentages: cumulative_percentages,
           attempted_respondents: attempted_respondents,
           total_respondents: total_respondents,
@@ -232,15 +233,8 @@ defmodule AskWeb.RespondentView do
         id: id,
         respondents_by_disposition: respondents_by_disposition,
         reference: render_many(buckets, AskWeb.RespondentView, "survey_bucket.json", as: :bucket),
-        cumulative_percentages:
-          cumulative_percentages
-          |> Enum.map(fn {questionnaire_id, date_percentages} ->
-            {to_string(questionnaire_id),
-             render_many(date_percentages, AskWeb.RespondentView, "date_percentages.json",
-               as: :completed
-             )}
-          end)
-          |> Enum.into(%{}),
+        percentages: render_percentages(percentages),
+        cumulative_percentages: render_percentages(cumulative_percentages),
         completion_percentage: completion_percentage,
         attempted_respondents: attempted_respondents,
         total_respondents: total_respondents,

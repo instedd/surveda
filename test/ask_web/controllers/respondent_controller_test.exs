@@ -431,6 +431,15 @@ defmodule AskWeb.RespondentControllerTest do
 
       assert data["total_respondents"] == 15
 
+      assert data["percentages"] == %{
+               "success_rate" => [
+                 %{"date" => "2016-01-01", "percent" => 100.0},
+                 %{"date" => "2016-01-02", "percent" => 100.0},
+                 %{"date" => "2016-01-03", "percent" => 0.0},
+                 %{"date" => Date.utc_today() |> Date.to_string(), "percent" => 0.0}
+               ]
+             }
+
       assert data["cumulative_percentages"] == %{
                to_string(questionnaire.id) => [
                  %{"date" => "2016-01-01", "percent" => 20.0},
@@ -520,8 +529,18 @@ defmodule AskWeb.RespondentControllerTest do
       )
 
       conn = get(conn, project_survey_respondents_stats_path(conn, :stats, project.id, survey.id))
+      %{"data" => data} = json_response(conn, 200)
 
-      assert json_response(conn, 200)["data"]["cumulative_percentages"] == %{
+      assert data["percentages"] == %{
+               "success_rate" => [
+                 %{"date" => "2016-01-01", "percent" => 100.0},
+                 %{"date" => "2016-01-02", "percent" => 100.0},
+                 %{"date" => "2016-01-03", "percent" => 0.0},
+                 %{"date" => Date.utc_today() |> Date.to_string(), "percent" => 0.0}
+               ]
+             }
+
+      assert data["cumulative_percentages"] == %{
                "#{q1.id}sms" => [
                  %{"date" => "2016-01-01", "percent" => 40.0},
                  %{
@@ -606,8 +625,18 @@ defmodule AskWeb.RespondentControllerTest do
       )
 
       conn = get(conn, project_survey_respondents_stats_path(conn, :stats, project.id, survey.id))
+      %{"data" => data} = json_response(conn, 200)
 
-      assert json_response(conn, 200)["data"]["cumulative_percentages"] == %{
+      assert data["percentages"] == %{
+               "success_rate" => [
+                 %{"date" => "2016-01-01", "percent" => 100.0},
+                 %{"date" => "2016-01-02", "percent" => 100.0},
+                 %{"date" => "2016-01-03", "percent" => 0.0},
+                 %{"date" => Date.utc_today() |> Date.to_string(), "percent" => 0.0}
+               ]
+             }
+
+      assert data["cumulative_percentages"] == %{
                "#{q1.id}sms" => [%{"date" => "2016-01-01", "percent" => 40.0}],
                "#{q1.id}ivr" => [%{"date" => "2016-01-01", "percent" => 0.0}],
                "#{q2.id}sms" => [%{"date" => "2016-01-01", "percent" => 40.0}],
@@ -669,8 +698,18 @@ defmodule AskWeb.RespondentControllerTest do
       )
 
       conn = get(conn, project_survey_respondents_stats_path(conn, :stats, project.id, survey.id))
+      %{"data" => data} = json_response(conn, 200)
 
-      assert json_response(conn, 200)["data"]["cumulative_percentages"] ==
+      assert data["percentages"] == %{
+               "success_rate" => [
+                 %{"date" => "2016-01-01", "percent" => 100.0},
+                 %{"date" => "2016-01-02", "percent" => 100.0},
+                 %{"date" => "2016-01-03", "percent" => 0.0},
+                 %{"date" => Date.utc_today() |> Date.to_string(), "percent" => 0.0}
+               ]
+             }
+
+      assert data["cumulative_percentages"] ==
                %{
                  "ivr" => [%{"date" => "2016-01-01", "percent" => 100.0}],
                  "sms" => [
@@ -702,8 +741,17 @@ defmodule AskWeb.RespondentControllerTest do
       )
 
       conn = get(conn, project_survey_respondents_stats_path(conn, :stats, project.id, survey.id))
+      %{"data" => data} = json_response(conn, 200)
 
-      assert json_response(conn, 200)["data"]["cumulative_percentages"] == %{
+      assert data["percentages"] == %{
+               "success_rate" => [
+                 %{"date" => "2016-01-01", "percent" => 100.0},
+                 %{"date" => "2016-01-02", "percent" => 0.0},
+                 %{"date" => Date.utc_today() |> Date.to_string(), "percent" => 0.0}
+               ]
+             }
+
+      assert data["cumulative_percentages"] == %{
                to_string(questionnaire.id) => [%{"date" => "2016-01-01", "percent" => 100.0}]
              }
     end
@@ -819,6 +867,15 @@ defmodule AskWeb.RespondentControllerTest do
              }
 
       assert data["total_respondents"] == 16
+
+      assert data["percentages"] == %{
+               "success_rate" => [
+                 %{"date" => "2016-01-01", "percent" => 100.0},
+                 %{"date" => "2016-01-02", "percent" => 75.0},
+                 %{"date" => "2016-01-03", "percent" => 0.0},
+                 %{"date" => Date.utc_today() |> Date.to_string(), "percent" => 0.0}
+               ]
+             }
 
       assert data["cumulative_percentages"] ==
                %{
@@ -973,6 +1030,14 @@ defmodule AskWeb.RespondentControllerTest do
       assert data["total_respondents"] == 15
       assert data["completion_percentage"] == 20
 
+      assert data["percentages"] == %{
+               "success_rate" => [
+                 %{"date" => "2016-01-01", "percent" => 100.0},
+                 %{"date" => "2016-01-02", "percent" => 0.0},
+                 %{"date" => Date.utc_today() |> Date.to_string(), "percent" => 0.0}
+               ]
+             }
+
       assert data["cumulative_percentages"] == %{
                to_string(questionnaire.id) => [%{"date" => "2016-01-01", "percent" => 10.0}]
              }
@@ -1006,8 +1071,19 @@ defmodule AskWeb.RespondentControllerTest do
       )
 
       conn = get(conn, project_survey_respondents_stats_path(conn, :stats, project.id, survey.id))
+      %{"data" => data} = json_response(conn, 200)
 
-      assert json_response(conn, 200)["data"]["cumulative_percentages"] == %{
+      assert data["percentages"] == %{
+               "success_rate" => [
+                 %{"date" => "2016-01-01", "percent" => 0.0},
+                 %{"date" => "2016-01-04", "percent" => 0.0},
+                 %{"date" => "2016-01-05", "percent" => 100.0},
+                 %{"date" => "2016-01-06", "percent" => 0.0},
+                 %{"date" => Date.utc_today() |> Date.to_string(), "percent" => 0.0}
+               ]
+             }
+
+      assert data["cumulative_percentages"] == %{
                to_string(questionnaire.id) => [
                  %{"date" => "2016-01-01", "percent" => 0.0},
                  %{"date" => "2016-01-04", "percent" => 0.0},
@@ -1036,8 +1112,16 @@ defmodule AskWeb.RespondentControllerTest do
       insert_list(10, :respondent, survey: survey, state: "pending")
 
       conn = get(conn, project_survey_respondents_stats_path(conn, :stats, project.id, survey.id))
+      %{"data" => data} = json_response(conn, 200)
 
-      assert json_response(conn, 200)["data"]["cumulative_percentages"] == %{
+      assert data["percentages"] == %{
+               "success_rate" => [
+                 %{"date" => "2016-01-01", "percent" => 0.0},
+                 %{"date" => Date.utc_today() |> Date.to_string(), "percent" => 0.0}
+               ]
+             }
+
+      assert data["cumulative_percentages"] == %{
                to_string(questionnaire.id) => [
                  %{"date" => "2016-01-01", "percent" => 0.0},
                  %{
@@ -1117,6 +1201,7 @@ defmodule AskWeb.RespondentControllerTest do
       assert data["id"] == nil
       assert data["reference"] == %{}
       assert data["respondents_by_disposition"] == %{}
+      assert data["percentages"] == %{}
       assert data["cumulative_percentages"] == %{}
       assert data["completion_percentage"] == 0
       assert data["attempted_respondents"] == 0
@@ -1175,6 +1260,7 @@ defmodule AskWeb.RespondentControllerTest do
                    }
                  }
                },
+               "percentages" => %{},
                "cumulative_percentages" => %{},
                "total_respondents" => 5,
                "target" => 5,
@@ -1254,6 +1340,12 @@ defmodule AskWeb.RespondentControllerTest do
                  ],
                  "completion_percentage" => 0.0,
                  "attempted_respondents" => 0,
+                 "percentages" => %{
+                   "success_rate" => [
+                     %{"date" => "2016-01-01", "percent" => 0.0},
+                     %{"date" => Date.utc_today() |> Date.to_string(), "percent" => 0.0}
+                   ]
+                 },
                  "cumulative_percentages" => %{
                    to_string(qb1.id) => [%{"date" => "2016-01-01", "percent" => 0.0}],
                    to_string(qb4.id) => [%{"date" => "2016-01-01", "percent" => 0.0}]
@@ -1416,6 +1508,13 @@ defmodule AskWeb.RespondentControllerTest do
                  ],
                  "completion_percentage" => 30.0,
                  "attempted_respondents" => 4,
+                 "percentages" => %{
+                   "success_rate" => [
+                     %{"date" => "2016-01-01", "percent" => 100.0},
+                     %{"date" => "2016-01-02", "percent" => 0.0},
+                     %{"date" => Date.utc_today() |> Date.to_string(), "percent" => 0.0}
+                   ]
+                 },
                  "cumulative_percentages" => %{
                    to_string(qb2.id) => [%{"date" => "2016-01-01", "percent" => 0.0}],
                    to_string(qb4.id) => [%{"date" => "2016-01-01", "percent" => 40.0}]

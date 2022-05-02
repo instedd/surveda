@@ -582,6 +582,7 @@ defmodule Ask.Survey do
 
   def completion_rate(_, nil), do: 0.0
   def completion_rate(_, 0), do: 0.0
+  def completion_rate(nil, _), do: 0.0
   def completion_rate(completed, respondents_target), do: completed / respondents_target
 
   # Calculates the current success rate since the survey was launched.
@@ -596,6 +597,8 @@ defmodule Ask.Survey do
 
   # Calculates the daily sucess rate since the survey was launched until it
   # ended or today if it's running.
+  def success_rate_history(%{started_at: nil}), do: []
+
   def success_rate_history(survey) do
     completed_dispositions = Respondent.completed_dispositions(survey.count_partial_results)
     completed = survey |> respondents_history(completed_dispositions)
@@ -613,8 +616,8 @@ defmodule Ask.Survey do
   defp respondents_history(survey, dispositions) do
     survey
     |> assoc(:respondents)
-    |> select({fragment("DATE(completed_at)"), fragment("COUNT(*)")})
-    |> group_by(fragment("DATE(completed_at)"))
+    |> select({fragment("DATE(COALESCE(completed_at, updated_at))"), fragment("COUNT(*)")})
+    |> group_by(fragment("DATE(COALESCE(completed_at, updated_at))"))
     |> where([r], r.disposition in ^dispositions)
     |> Repo.all()
     |> Enum.into(%{})
