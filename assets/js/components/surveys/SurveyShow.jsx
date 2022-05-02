@@ -50,6 +50,7 @@ class SurveyShow extends Component<any, State> {
     target: PropTypes.number,
     completionPercentage: PropTypes.number,
     cumulativePercentages: PropTypes.object,
+    percentages: PropTypes.object,
     completionRate: PropTypes.number,
     estimatedSuccessRate: PropTypes.number,
     initialSuccessRate: PropTypes.number,
@@ -158,6 +159,7 @@ class SurveyShow extends Component<any, State> {
       reference,
       attemptedRespondents,
       cumulativePercentages,
+      percentages,
       target,
       project,
       t,
@@ -244,7 +246,7 @@ class SurveyShow extends Component<any, State> {
         { value: attemptedRespondents, label: t("Attempted Respondents") },
       ]
     }
-    let colors = referenceColors((reference || []).length - 1)
+    let colors = referenceColors((reference || []).length)
 
     const hasQuotas = survey.quotas.vars.length > 0
 
@@ -255,7 +257,7 @@ class SurveyShow extends Component<any, State> {
 
       return {
         label: `${name}${separator}${modes}`,
-        color: r.id == 0 ? "#000000" : colors[i],
+        color: colors[i],
         id: r.id,
       }
     })
@@ -271,9 +273,17 @@ class SurveyShow extends Component<any, State> {
       ]
     }
 
+    if (percentages) {
+      forecastsReferences.push({
+        label: "Success rate",
+        color: "#000000",
+        id: "successRate",
+      })
+    }
+
     // TODO: we should be doing this when receiving properties, not at render
     let forecasts = forecastsReferences.map((d) => {
-      const values = (cumulativePercentages[d.id] || []).map((v) => ({
+      const values = (cumulativePercentages[d.id] || percentages[d.id] || []).map((v) => ({
         time: new Date(v.date),
         value: Number(v.percent),
       }))
@@ -583,6 +593,7 @@ const mapStateToProps = (state, ownProps) => {
 
   let respondentsByDisposition = null
   let cumulativePercentages = {}
+  let percentages = {}
   let attemptedRespondents = 0
   let totalRespondents = 0
   let target = 0
@@ -592,6 +603,7 @@ const mapStateToProps = (state, ownProps) => {
   if (respondentsStatsRoot) {
     respondentsByDisposition = respondentsStatsRoot.respondentsByDisposition
     cumulativePercentages = respondentsStatsRoot.cumulativePercentages
+    percentages = respondentsStatsRoot.percentages
     attemptedRespondents = respondentsStatsRoot.attemptedRespondents
     totalRespondents = respondentsStatsRoot.totalRespondents
     target = respondentsStatsRoot.target
@@ -607,6 +619,7 @@ const mapStateToProps = (state, ownProps) => {
     questionnaires: !state.survey.data ? {} : state.survey.data.questionnaires,
     respondentsByDisposition: respondentsByDisposition,
     cumulativePercentages: cumulativePercentages,
+    percentages: percentages,
     attemptedRespondents: attemptedRespondents,
     totalRespondents: totalRespondents,
     target: target,

@@ -277,6 +277,9 @@ defmodule AskWeb.RespondentController do
         respondent_counts(respondents_by_disposition, total_respondents),
       cumulative_percentages:
         cumulative_percentages(references, grouped_respondents, survey, target, buckets),
+      percentages: %{
+        "success_rate" => Survey.success_rate_history(survey)
+      },
       completion_percentage: completed_or_partial / target * 100,
       total_respondents: total_respondents,
       target: target,
@@ -292,56 +295,42 @@ defmodule AskWeb.RespondentController do
         id: questionnaire.id,
         name: questionnaire.name,
         modes: modes
-      },
-      success_rate_reference()
+      }
     ]
   end
 
   defp reference([_], mode) do
-    references =
-      mode
-      |> Enum.map(fn modes ->
-        %{
-          id: modes |> Enum.join(""),
-          modes: modes
-        }
-      end)
-
-    references ++ [success_rate_reference()]
+    mode
+    |> Enum.map(fn modes ->
+      %{
+        id: modes |> Enum.join(""),
+        modes: modes
+      }
+    end)
   end
 
   defp reference(questionnaires, [_]) do
-    references =
-      questionnaires
-      |> Enum.map(fn q ->
-        %{id: q.id, name: q.name}
-      end)
-
-    references ++ [success_rate_reference()]
+    questionnaires
+    |> Enum.map(fn q ->
+      %{id: q.id, name: q.name}
+    end)
   end
 
   defp reference(questionnaires, mode) do
-    references =
-      questionnaires
-      |> Enum.reduce([], fn questionnaire, reference ->
-        mode
-        |> Enum.reduce(reference, fn modes, reference ->
-          reference ++
-            [
-              %{
-                id: "#{questionnaire.id}#{modes |> Enum.join("")}",
-                name: questionnaire.name,
-                modes: modes
-              }
-            ]
-        end)
+    questionnaires
+    |> Enum.reduce([], fn questionnaire, reference ->
+      mode
+      |> Enum.reduce(reference, fn modes, reference ->
+        reference ++
+          [
+            %{
+              id: "#{questionnaire.id}#{modes |> Enum.join("")}",
+              name: questionnaire.name,
+              modes: modes
+            }
+          ]
       end)
-
-    references ++ [success_rate_reference()]
-  end
-
-  defp success_rate_reference() do
-    %{id: "0", name: "Success rate"}
+    end)
   end
 
   defp target(survey, buckets, total_respondents) do
@@ -472,7 +461,7 @@ defmodule AskWeb.RespondentController do
   defp cumulative_percentages(
          references,
          grouped_respondents,
-         %{started_at: started_at, comparisons: comparisons, state: state} = survey,
+         %{started_at: started_at, comparisons: comparisons, state: state},
          target,
          buckets
        ) do
@@ -484,7 +473,7 @@ defmodule AskWeb.RespondentController do
 
       percents_by_date =
         if state == "running" do
-          percents_by_date ++ [{Date.utc_today(), 0}]
+          percents_by_date ++ [{DateTime.utc_now() |> DateTime.to_date(), 0}]
         else
           percents_by_date
         end
@@ -496,7 +485,6 @@ defmodule AskWeb.RespondentController do
        )}
     end)
     |> Enum.into(%{})
-    |> Map.put("0", Survey.success_rate_history(survey))
   end
 
   defp cumulative_percents_for_group(
