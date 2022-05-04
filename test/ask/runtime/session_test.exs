@@ -1841,6 +1841,18 @@ defmodule Ask.Runtime.SessionTest do
     assert 1 == respondent.stats |> Stats.attempts(:sms)
   end
 
+  describe "creates survey log entries" do
+    test "logs prompt in mobileweb mode", %{quiz: quiz, respondent: respondent, channel: channel} do
+      {:ok, session, _, _} = Session.start(quiz, respondent, channel, "mobileweb", Schedule.always())
+      {:ok, survey_logger} = SurveyLogger.start_link()
+
+      Session.sync_step(session, Flow.Message.reply("No"))
+
+      survey_logger |> GenServer.stop()
+      assert 1 == Repo.one(from l in SurveyLogEntry, where: l.action_type == "prompt", select: count(l.id))
+    end
+  end
+
   describe "creates survey log entries when disposition changes" do
     test "log disposition_changed after logging the response", %{respondent: respondent} do
       {:ok, survey_logger} = SurveyLogger.start_link()

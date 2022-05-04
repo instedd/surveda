@@ -5,7 +5,7 @@ defmodule AskWeb.QuestionnaireControllerTest do
   import Ask.StepBuilder
 
   alias Ask.{Project, Questionnaire, Translation, JsonSchema, ActivityLog}
-  @valid_attrs %{name: "some content", modes: ["sms", "ivr"], steps: [], settings: %{}}
+  @valid_attrs %{name: "some content", modes: ["sms", "ivr", "mobileweb"], steps: [], settings: %{}}
   @invalid_attrs %{steps: [], settings: %{}}
 
   setup %{conn: conn} do
@@ -130,7 +130,7 @@ defmodule AskWeb.QuestionnaireControllerTest do
                "id" => questionnaire.id,
                "name" => questionnaire.name,
                "project_id" => questionnaire.project_id,
-               "modes" => ["sms", "ivr"],
+               "modes" => ["sms", "ivr", "mobileweb"],
                "steps" => [],
                "quota_completed_steps" => [
                  %{
@@ -138,7 +138,8 @@ defmodule AskWeb.QuestionnaireControllerTest do
                    "prompt" => %{
                      "en" => %{
                        "ivr" => %{"audio_source" => "tts", "text" => "Quota completed (ivr)"},
-                       "sms" => "Quota completed"
+                       "sms" => "Quota completed",
+                       "mobileweb" => "Quota completed"
                      }
                    },
                    "skip_logic" => nil,
@@ -160,7 +161,8 @@ defmodule AskWeb.QuestionnaireControllerTest do
                      "ivr" => %{
                        "audio_source" => "tts",
                        "text" => "You have entered an invalid answer (ivr)"
-                     }
+                     },
+                     "mobileweb" => "You have entered an invalid answer (mobileweb)"
                    }
                  },
                  "mobile_web_sms_message" => "Please enter",

@@ -78,7 +78,7 @@ defmodule Ask.Factory do
     %Ask.Questionnaire{
       project: build(:project),
       name: sequence(:questionnaire, &"Questionnaire #{&1}"),
-      modes: ["sms", "ivr"],
+      modes: ["sms", "ivr", "mobileweb"],
       steps: [],
       quota_completed_steps: [
         %{
@@ -91,7 +91,8 @@ defmodule Ask.Factory do
               "ivr" => %{
                 "audio_source" => "tts",
                 "text" => "Quota completed (ivr)"
-              }
+              },
+              "mobileweb" => "Quota completed",
             }
           },
           "skip_logic" => nil
@@ -105,7 +106,8 @@ defmodule Ask.Factory do
             "ivr" => %{
               "audio_source" => "tts",
               "text" => "You have entered an invalid answer (ivr)"
-            }
+            },
+            "mobileweb" => "You have entered an invalid answer (mobileweb)"
           }
         },
         "mobile_web_sms_message" => "Please enter",
