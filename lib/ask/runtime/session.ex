@@ -831,7 +831,7 @@ defmodule Ask.Runtime.Session do
 
       false ->
         # Forcing logging prompts from here for the mobileweb mode is a workaround added in #2077
-        # to fix #2066. Further comprehension and maybe a re-factor on the implementation of how
+        # to fix #2066. Further comprehension and maybe a refactor on the implementation of how
         # the survey interaction file logs are being generating depending on the mode and channel
         # involved may be a good option for the future.
         force_log = is_mobileweb_mode?(current_mode)
