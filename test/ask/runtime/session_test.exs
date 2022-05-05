@@ -1842,14 +1842,34 @@ defmodule Ask.Runtime.SessionTest do
   end
 
   describe "creates survey log entries" do
-    test "sync_step logs prompts in mobileweb mode", %{quiz: quiz, respondent: respondent, channel: channel} do
-      next_step_prompt = "Do you exercise"
-      {:ok, session, _, _} = Session.start(quiz, respondent, channel, "mobileweb", Schedule.always())
+    defp channel_with_delivery_confirmation(delivery) do
+      # Emulate `channel.has_delivery_confirmation?` result
+      test_channel = TestChannel.new() |> Map.put(:delivery, delivery)
+      insert(:channel, settings: test_channel |> TestChannel.settings())
+    end
+
+    defp run_with_survey_loggging(code) do
       {:ok, survey_logger} = SurveyLogger.start_link()
-
-      Session.sync_step(session, Flow.Message.reply("No"))
-
+      code.()
       survey_logger |> GenServer.stop()
+    end
+
+    defp started_session(quiz, respondent, "mobileweb" = mode) do
+      channel = channel_with_delivery_confirmation(true)
+      {:ok, session, _, _} = Session.start(quiz, respondent, channel, mode, Schedule.always())
+      session
+    end
+
+    test "sync_step logs prompts in mobileweb mode", %{quiz: quiz, respondent: respondent} do
+      # Arrange
+      started_session = started_session(quiz, respondent, "mobileweb")
+      sync_step = fn() -> Session.sync_step(started_session, Flow.Message.reply("No")) end
+
+      # Act
+      run_with_survey_loggging(sync_step)
+
+      # Assert
+      next_step_prompt = "Do you exercise"
       assert Repo.one(
         from l in SurveyLogEntry,
         where: l.action_type == "prompt" and l.action_data == ^next_step_prompt,
