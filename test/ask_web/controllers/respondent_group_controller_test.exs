@@ -110,7 +110,7 @@ defmodule AskWeb.RespondentGroupControllerTest do
       user: user
     } do
       project = create_project_for_user(user)
-      survey = insert(:survey, project: project, state: "running")
+      survey = insert(:survey, project: project, state: :running)
 
       file = %Plug.Upload{
         path: "test/fixtures/respondent_phone_numbers.csv",
@@ -401,7 +401,7 @@ defmodule AskWeb.RespondentGroupControllerTest do
           project: project,
           cutoff: 4,
           questionnaires: [questionnaire],
-          state: "ready",
+          state: :ready,
           schedule: completed_schedule()
         )
 
@@ -448,7 +448,7 @@ defmodule AskWeb.RespondentGroupControllerTest do
           project: project,
           cutoff: 4,
           questionnaires: [questionnaire],
-          state: "running",
+          state: :running,
           schedule: completed_schedule()
         )
 
@@ -485,7 +485,7 @@ defmodule AskWeb.RespondentGroupControllerTest do
           project: project,
           cutoff: 4,
           questionnaires: [questionnaire],
-          state: "ready",
+          state: :ready,
           schedule: completed_schedule()
         )
 
@@ -553,7 +553,7 @@ defmodule AskWeb.RespondentGroupControllerTest do
 
     test "it doesn't deletes a group when the survey is running", %{conn: conn, user: user} do
       project = create_project_for_user(user)
-      survey = insert(:survey, project: project, state: "running")
+      survey = insert(:survey, project: project, state: :running)
       local_time = DateTime.utc_now() |> DateTime.truncate(:second)
       group = insert(:respondent_group, survey: survey)
 
@@ -693,7 +693,7 @@ defmodule AskWeb.RespondentGroupControllerTest do
           project: project,
           cutoff: 4,
           questionnaires: [questionnaire],
-          state: "ready",
+          state: :ready,
           schedule: completed_schedule()
         )
 
@@ -704,7 +704,7 @@ defmodule AskWeb.RespondentGroupControllerTest do
 
       insert(:respondent, phone_number: "12345678", survey: survey, respondent_group: group)
 
-      assert survey.state == "ready"
+      assert survey.state == :ready
 
       conn =
         delete(
@@ -722,7 +722,7 @@ defmodule AskWeb.RespondentGroupControllerTest do
 
       new_survey = Repo.get(Ask.Survey, survey.id)
 
-      assert new_survey.state == "not_ready"
+      assert new_survey.state == :not_ready
     end
   end
 
@@ -740,7 +740,7 @@ defmodule AskWeb.RespondentGroupControllerTest do
       user: user
     } do
       project = create_project_for_user(user)
-      survey = insert(:survey, project: project, state: "running")
+      survey = insert(:survey, project: project, state: :running)
       perform_add_test_for_survey(conn, project, survey)
       # It logs if the survey is running
       assert Repo.get_by(ActivityLog, action: "add_respondents", entity_id: survey.id)
@@ -829,7 +829,7 @@ defmodule AskWeb.RespondentGroupControllerTest do
 
     test "doesn't add more respondents if survey is locked", %{conn: conn, user: user} do
       project = create_project_for_user(user)
-      survey = insert(:survey, project: project, state: "running", locked: true)
+      survey = insert(:survey, project: project, state: :running, locked: true)
 
       group =
         insert(:respondent_group,
@@ -869,7 +869,7 @@ defmodule AskWeb.RespondentGroupControllerTest do
     test "duplicated respondents should be ignored even if the sanitized_phone_number has changed",
          %{conn: conn, user: user} do
       project = create_project_for_user(user)
-      survey = insert(:survey, project: project, state: "running")
+      survey = insert(:survey, project: project, state: :running)
 
       group =
         insert(:respondent_group,

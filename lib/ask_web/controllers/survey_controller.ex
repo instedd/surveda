@@ -31,7 +31,7 @@ defmodule AskWeb.SurveyController do
       if params["state"] do
         if params["state"] == "completed" do
           # Same as Survey.succeeded?(s)
-          dynamic([s], s.state == "terminated" and s.exit_code == 0 and ^dynamic)
+          dynamic([s], s.state == :terminated and s.exit_code == 0 and ^dynamic)
         else
           dynamic([s], s.state == ^params["state"] and ^dynamic)
         end
@@ -432,7 +432,7 @@ defmodule AskWeb.SurveyController do
       |> Survey.with_links(user_level(project_id, current_user(conn).id))
 
     case survey.state do
-      "running" ->
+      :running ->
         [survey_changeset, activity_log] =
           case locked do
             true ->

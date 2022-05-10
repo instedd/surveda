@@ -49,8 +49,8 @@ defmodule Ask.Channel do
   end
 
   # Deletes a channel and:
-  # - marks related "ready" surveys as "not_ready"
-  # - marks related "running" surveys as "terminated" with exit code 3
+  # - marks related :ready" surveys as :not_ready
+  # - marks related :running surveys as :terminated with exit code 3
   def delete(channel) do
     surveys =
       Repo.all(
@@ -64,17 +64,17 @@ defmodule Ask.Channel do
 
     Enum.each(surveys, fn survey ->
       case survey.state do
-        "ready" ->
+        :ready ->
           survey
-          |> Ask.Survey.changeset(%{state: "not_ready"})
+          |> Ask.Survey.changeset(%{state: :not_ready})
           |> Repo.update!()
 
-        "running" ->
+        :running ->
           Ask.Survey.cancel_respondents(survey)
 
           survey
           |> Ask.Survey.changeset(%{
-            state: "terminated",
+            state: :terminated,
             exit_code: 3,
             exit_message: "Channel '#{channel.name}' no longer exists"
           })

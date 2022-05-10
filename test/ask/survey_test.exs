@@ -59,12 +59,12 @@ defmodule Ask.SurveyTest do
   end
 
   test "survey has FLOIP package if it is running" do
-    survey = %Survey{state: "running"}
+    survey = %Survey{state: :running}
     assert length(survey |> Survey.packages()) == 1
   end
 
   test "survey has FLOIP package if it is terminated" do
-    survey = %Survey{state: "terminated"}
+    survey = %Survey{state: :terminated}
     assert length(survey |> Survey.packages()) == 1
   end
 
@@ -92,14 +92,14 @@ defmodule Ask.SurveyTest do
     TimeMock
     |> expect(:now, fn -> test_now end)
 
-    changeset = Survey.changeset(%Survey{state: "terminated"})
+    changeset = Survey.changeset(%Survey{state: :terminated})
     assert get_field(changeset, :ended_at) == test_now
   end
 
   test "enumerates channels of running surveys" do
     surveys = [
-      insert(:survey, state: "pending"),
-      insert(:survey, state: "running")
+      insert(:survey, state: :pending),
+      insert(:survey, state: :running)
     ]
 
     channels = [

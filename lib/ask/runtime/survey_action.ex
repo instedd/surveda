@@ -31,7 +31,7 @@ defmodule Ask.Runtime.SurveyAction do
       |> Repo.preload([:questionnaires])
       |> Repo.preload(respondent_groups: :channels)
 
-    if survey.state == "ready" do
+    if survey.state == :ready do
       channels =
         survey.respondent_groups
         |> Enum.flat_map(& &1.channels)
@@ -68,7 +68,7 @@ defmodule Ask.Runtime.SurveyAction do
     survey = Repo.preload(survey, [:quota_buckets, :project])
 
     case [survey.state, survey.locked] do
-      ["terminated", false] ->
+      [:terminated, false] ->
         # Cancelling a cancelled survey is idempotent.
         # We must not error, because this can happen if a user has the survey
         # UI open with the cancel button, and meanwhile the survey is cancelled
@@ -78,7 +78,7 @@ defmodule Ask.Runtime.SurveyAction do
         # UI open with the cancel button, and meanwhile the survey finished
         {:ok, %{survey: survey}}
 
-      ["running", false] ->
+      [:running, false] ->
         changeset =
           Survey.changeset(survey, %{
             state: "cancelling",
@@ -117,7 +117,7 @@ defmodule Ask.Runtime.SurveyAction do
   defp perform_start(survey) do
     changeset =
       Survey.changeset(survey, %{
-        state: "running",
+        state: :running,
         started_at: SystemTime.time().now,
         last_window_ends_at: Schedule.last_window_ends_at(survey.schedule)
       })

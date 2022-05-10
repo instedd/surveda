@@ -437,7 +437,7 @@ defmodule AskWeb.QuestionnaireControllerTest do
         insert(:survey,
           project: project,
           questionnaires: [questionnaire_with_survey],
-          state: "ready"
+          state: :ready
         )
 
       insert(:survey_questionnaire, survey: survey, questionnaire: questionnaire_with_survey)
@@ -670,25 +670,25 @@ defmodule AskWeb.QuestionnaireControllerTest do
     test "updates survey ready state when valid changes", %{conn: conn, user: user} do
       project = create_project_for_user(user)
       questionnaire = insert(:questionnaire, project: project, valid: true)
-      survey = insert(:survey, project: project, questionnaires: [questionnaire], state: "ready")
+      survey = insert(:survey, project: project, questionnaires: [questionnaire], state: :ready)
 
       put conn, project_questionnaire_path(conn, :update, project, questionnaire),
         questionnaire: %{"valid" => false, steps: [], settings: %{}}
 
       survey = Ask.Survey |> Repo.get!(survey.id)
-      assert survey.state == "not_ready"
+      assert survey.state == :not_ready
     end
 
     test "updates survey ready state when mode changes", %{conn: conn, user: user} do
       project = create_project_for_user(user)
       questionnaire = insert(:questionnaire, project: project)
-      survey = insert(:survey, project: project, questionnaires: [questionnaire], state: "ready")
+      survey = insert(:survey, project: project, questionnaires: [questionnaire], state: :ready)
 
       put conn, project_questionnaire_path(conn, :update, project, questionnaire),
         questionnaire: %{"modes" => ["ivr"], steps: [], settings: %{}}
 
       survey = Ask.Survey |> Repo.get!(survey.id)
-      assert survey.state == "not_ready"
+      assert survey.state == :not_ready
     end
   end
 
@@ -1086,13 +1086,13 @@ defmodule AskWeb.QuestionnaireControllerTest do
     test "remove reference from survey when questionnaire is deleted", %{conn: conn, user: user} do
       project = create_project_for_user(user)
       questionnaire = insert(:questionnaire, project: project)
-      survey = insert(:survey, project: project, questionnaires: [questionnaire], state: "ready")
+      survey = insert(:survey, project: project, questionnaires: [questionnaire], state: :ready)
 
       delete(conn, project_questionnaire_path(conn, :delete, project, questionnaire))
 
       survey = Ask.Survey |> preload(:questionnaires) |> Repo.get!(survey.id)
       assert survey.questionnaires == []
-      assert survey.state == "not_ready"
+      assert survey.state == :not_ready
     end
   end
 

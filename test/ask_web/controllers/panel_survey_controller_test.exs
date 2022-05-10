@@ -103,7 +103,7 @@ defmodule AskWeb.PanelSurveyControllerTest do
         insert(:survey,
           project: project,
           generates_panel_survey: true,
-          state: "ready",
+          state: :ready,
           name: @foo_string
         )
 
@@ -126,7 +126,7 @@ defmodule AskWeb.PanelSurveyControllerTest do
           project: project,
           generates_panel_survey: true,
           folder: folder,
-          state: "ready",
+          state: :ready,
           name: @foo_string
         )
 
@@ -213,7 +213,7 @@ defmodule AskWeb.PanelSurveyControllerTest do
   defp assert_new_wave(response_panel_survey, previous_wave, panel_survey) do
     new_wave = PanelSurvey.latest_wave(panel_survey)
     assert new_wave.id > previous_wave.id
-    assert new_wave.state == "ready"
+    assert new_wave.state == :ready
     assert assert_panel_survey(response_panel_survey, panel_survey)
   end
 

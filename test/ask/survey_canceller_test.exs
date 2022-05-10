@@ -157,9 +157,9 @@ defmodule Ask.SurveyCancellerTest do
     } do
       project = create_project_for_user(user)
       questionnaire = insert(:questionnaire, name: "test", project: project)
-      survey_1 = insert(:survey, project: project, state: "cancelling")
-      survey_2 = insert(:survey, project: project, state: "cancelling")
-      survey_3 = insert(:survey, project: project, state: "running")
+      survey_1 = insert(:survey, project: project, state: :cancelling)
+      survey_2 = insert(:survey, project: project, state: :cancelling)
+      survey_3 = insert(:survey, project: project, state: :running)
       test_channel = TestChannel.new(false)
 
       channel =

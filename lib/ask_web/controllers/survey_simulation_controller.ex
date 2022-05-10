@@ -32,7 +32,7 @@ defmodule AskWeb.SurveySimulationController do
         project_id: project.id,
         name: questionnaire.name,
         mode: [[mode]],
-        state: "ready",
+        state: :ready,
         cutoff: 1,
         schedule: Ask.Schedule.always()
       }

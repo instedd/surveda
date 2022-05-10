@@ -70,7 +70,7 @@ defmodule AskWeb.SurveyControllerTest do
                  "name" => survey.name,
                  "description" => survey.description,
                  "project_id" => project.id,
-                 "state" => "not_ready",
+                 "state" => to_string(:not_ready),
                  "locked" => false,
                  "exit_code" => nil,
                  "exit_message" => nil,
@@ -109,11 +109,11 @@ defmodule AskWeb.SurveyControllerTest do
 
     test "list only running surveys", %{conn: conn, user: user} do
       project = create_project_for_user(user)
-      insert(:survey, project: project, state: "terminated", exit_code: 0)
-      survey = insert(:survey, project: project, state: "running")
+      insert(:survey, project: project, state: :terminated, exit_code: 0)
+      survey = insert(:survey, project: project, state: :running)
       survey = Survey |> Repo.get(survey.id)
 
-      conn = get(conn, project_survey_path(conn, :index, project.id, state: "running"))
+      conn = get(conn, project_survey_path(conn, :index, project.id, state: :running))
 
       assert json_response(conn, 200)["data"] == [
                %{
@@ -123,7 +123,7 @@ defmodule AskWeb.SurveyControllerTest do
                  "name" => survey.name,
                  "description" => nil,
                  "project_id" => project.id,
-                 "state" => "running",
+                 "state" => to_string(:running),
                  "locked" => false,
                  "exit_code" => nil,
                  "exit_message" => nil,
@@ -189,11 +189,11 @@ defmodule AskWeb.SurveyControllerTest do
 
     test "list only completed surveys", %{conn: conn, user: user} do
       project = create_project_for_user(user)
-      insert(:survey, project: project, state: "running")
-      survey = insert(:survey, project: project, state: "terminated", exit_code: 0)
+      insert(:survey, project: project, state: :running)
+      survey = insert(:survey, project: project, state: :terminated, exit_code: 0)
       survey = Survey |> Repo.get(survey.id)
 
-      conn = get(conn, project_survey_path(conn, :index, project.id, state: "completed"))
+      conn = get(conn, project_survey_path(conn, :index, project.id, state: :completed))
 
       assert json_response(conn, 200)["data"] == [
                %{
@@ -203,7 +203,7 @@ defmodule AskWeb.SurveyControllerTest do
                  "name" => survey.name,
                  "description" => nil,
                  "project_id" => project.id,
-                 "state" => "terminated",
+                 "state" => to_string(:terminated),
                  "locked" => false,
                  "exit_code" => 0,
                  "exit_message" => nil,
@@ -248,7 +248,7 @@ defmodule AskWeb.SurveyControllerTest do
         insert(:survey,
           project: project,
           updated_at: Timex.shift(Timex.now(), hours: 2, minutes: 3),
-          state: "running"
+          state: :running
         )
 
       survey = Survey |> Repo.get(survey.id)
@@ -269,7 +269,7 @@ defmodule AskWeb.SurveyControllerTest do
                  "name" => survey.name,
                  "description" => nil,
                  "project_id" => project.id,
-                 "state" => "running",
+                 "state" => to_string(:running),
                  "locked" => false,
                  "exit_code" => nil,
                  "exit_message" => nil,
@@ -311,9 +311,9 @@ defmodule AskWeb.SurveyControllerTest do
       Process.register(self(), :mail_target)
 
       project = create_project_for_user(user)
-      survey_1 = insert(:survey, project: project, state: "running")
-      survey_2 = insert(:survey, project: project, state: "running")
-      survey_3 = insert(:survey, project: project, state: "running")
+      survey_1 = insert(:survey, project: project, state: :running)
+      survey_2 = insert(:survey, project: project, state: :running)
+      survey_3 = insert(:survey, project: project, state: :running)
 
       up_channel =
         TestChannel.create_channel(user, "test", TestChannel.settings(TestChannel.new(), 1))
@@ -381,7 +381,7 @@ defmodule AskWeb.SurveyControllerTest do
         insert(:survey,
           project: project,
           description: "initial survey",
-          state: "terminated",
+          state: :terminated,
           started_at: Timex.now(),
           ended_at: Timex.shift(Timex.now(), days: 1)
         )
@@ -401,7 +401,7 @@ defmodule AskWeb.SurveyControllerTest do
                "questionnaires" => %{},
                "cutoff" => nil,
                "count_partial_results" => false,
-               "state" => "terminated",
+               "state" => to_string(:terminated),
                "locked" => false,
                "exit_code" => nil,
                "exit_message" => nil,
@@ -505,7 +505,7 @@ defmodule AskWeb.SurveyControllerTest do
                "questionnaire_ids" => [],
                "cutoff" => nil,
                "count_partial_results" => false,
-               "state" => "not_ready",
+               "state" => to_string(:not_ready),
                "locked" => false,
                "exit_code" => nil,
                "exit_message" => nil,
@@ -609,7 +609,7 @@ defmodule AskWeb.SurveyControllerTest do
                "questionnaire_ids" => [],
                "cutoff" => nil,
                "count_partial_results" => false,
-               "state" => "not_ready",
+               "state" => to_string(:not_ready),
                "locked" => false,
                "exit_code" => nil,
                "exit_message" => nil,
@@ -697,7 +697,7 @@ defmodule AskWeb.SurveyControllerTest do
                "questionnaire_ids" => [],
                "cutoff" => nil,
                "count_partial_results" => false,
-               "state" => "not_ready",
+               "state" => to_string(:not_ready),
                "locked" => false,
                "exit_code" => nil,
                "exit_message" => nil,
@@ -756,7 +756,7 @@ defmodule AskWeb.SurveyControllerTest do
       Process.register(self(), :mail_target)
 
       project = create_project_for_user(user)
-      survey = insert(:survey, project: project, state: "running")
+      survey = insert(:survey, project: project, state: :running)
       survey = Survey |> Repo.get(survey.id)
 
       up_channel =
@@ -1902,7 +1902,7 @@ defmodule AskWeb.SurveyControllerTest do
 
     test "reject delete if the survey is running", %{conn: conn, user: user} do
       project = create_project_for_user(user)
-      survey = insert(:survey, project: project, state: "running")
+      survey = insert(:survey, project: project, state: :running)
 
       assert_error_sent :conflict, fn ->
         delete(conn, project_survey_path(conn, :delete, survey.project, survey))
@@ -1964,7 +1964,7 @@ defmodule AskWeb.SurveyControllerTest do
       qs = (new_survey |> Repo.preload(:questionnaires)).questionnaires
       assert length(qs) == 1
       assert hd(qs).id == questionnaire.id
-      assert new_survey.state == "ready"
+      assert new_survey.state == :ready
     end
 
     test "updates state when selecting mode", %{conn: conn, user: user} do
@@ -1985,7 +1985,7 @@ defmodule AskWeb.SurveyControllerTest do
 
       assert json_response(conn, 200)["data"]["id"]
       new_survey = Repo.get(Survey, survey.id)
-      assert new_survey.state == "ready"
+      assert new_survey.state == :ready
     end
 
     test "updates state when selecting mode, missing channel", %{conn: conn, user: user} do
@@ -2007,7 +2007,7 @@ defmodule AskWeb.SurveyControllerTest do
 
       assert json_response(conn, 200)["data"]["id"]
       new_survey = Repo.get(Survey, survey.id)
-      assert new_survey.state == "not_ready"
+      assert new_survey.state == :not_ready
     end
 
     test "updates state when selecting mode, missing channel, multiple modes", %{
@@ -2032,7 +2032,7 @@ defmodule AskWeb.SurveyControllerTest do
 
       assert json_response(conn, 200)["data"]["id"]
       new_survey = Repo.get(Survey, survey.id)
-      assert new_survey.state == "not_ready"
+      assert new_survey.state == :not_ready
     end
 
     test "updates state when selecting mode, all channels", %{conn: conn, user: user} do
@@ -2057,7 +2057,7 @@ defmodule AskWeb.SurveyControllerTest do
 
       assert json_response(conn, 200)["data"]["id"]
       new_survey = Repo.get(Survey, survey.id)
-      assert new_survey.state == "ready"
+      assert new_survey.state == :ready
     end
 
     test "updates state when adding cutoff", %{conn: conn, user: user} do
@@ -2077,7 +2077,7 @@ defmodule AskWeb.SurveyControllerTest do
 
       assert json_response(conn, 200)["data"]["id"]
       new_survey = Repo.get(Survey, survey.id)
-      assert new_survey.state == "ready"
+      assert new_survey.state == :ready
     end
 
     test "changes state to not_ready when an invalid retry attempt configuration is passed", %{
@@ -2103,7 +2103,7 @@ defmodule AskWeb.SurveyControllerTest do
 
       assert json_response(conn, 200)["data"]["id"]
       new_survey = Repo.get(Survey, survey.id)
-      assert new_survey.state == "not_ready"
+      assert new_survey.state == :not_ready
     end
 
     test "changes state to not_ready when an invalid fallback delay is passed", %{
@@ -2129,7 +2129,7 @@ defmodule AskWeb.SurveyControllerTest do
 
       assert json_response(conn, 200)["data"]["id"]
       new_survey = Repo.get(Survey, survey.id)
-      assert new_survey.state == "not_ready"
+      assert new_survey.state == :not_ready
     end
 
     test "returns state to ready when a valid retry configuration is passed", %{
@@ -2151,7 +2151,7 @@ defmodule AskWeb.SurveyControllerTest do
       create_group(survey, channel)
       new_survey = Repo.get(Survey, survey.id)
 
-      assert new_survey.state == "not_ready"
+      assert new_survey.state == :not_ready
 
       conn =
         put conn, project_survey_path(conn, :update, project, survey),
@@ -2159,7 +2159,7 @@ defmodule AskWeb.SurveyControllerTest do
 
       assert json_response(conn, 200)["data"]["id"]
       new_survey = Repo.get(Survey, survey.id)
-      assert new_survey.state == "ready"
+      assert new_survey.state == :ready
     end
 
     test "updates state when adding a day in schedule", %{conn: conn, user: user} do
@@ -2184,7 +2184,7 @@ defmodule AskWeb.SurveyControllerTest do
 
       assert json_response(conn, 200)["data"]["id"]
       new_survey = Repo.get(Survey, survey.id)
-      assert new_survey.state == "ready"
+      assert new_survey.state == :ready
     end
 
     test "updates state when removing schedule", %{conn: conn, user: user} do
@@ -2206,7 +2206,7 @@ defmodule AskWeb.SurveyControllerTest do
 
       assert json_response(conn, 200)["data"]["id"]
       new_survey = Repo.get(Survey, survey.id)
-      assert new_survey.state == "not_ready"
+      assert new_survey.state == :not_ready
     end
 
     test "updates state when removing questionnaire", %{conn: conn, user: user} do
@@ -2217,13 +2217,13 @@ defmodule AskWeb.SurveyControllerTest do
           project: project,
           questionnaires: [questionnaire],
           cutoff: 4,
-          state: "ready",
+          state: :ready,
           schedule: completed_schedule()
         )
 
       create_group(survey, channel)
 
-      assert survey.state == "ready"
+      assert survey.state == :ready
 
       conn =
         put conn, project_survey_path(conn, :update, project, survey),
@@ -2233,7 +2233,7 @@ defmodule AskWeb.SurveyControllerTest do
       new_survey = Repo.get(Survey, survey.id)
       qs = (new_survey |> Repo.preload(:questionnaires)).questionnaires
       assert length(qs) == 0
-      assert new_survey.state == "not_ready"
+      assert new_survey.state == :not_ready
     end
 
     test "does not update state when adding cutoff if missing questionnaire", %{
@@ -2243,7 +2243,7 @@ defmodule AskWeb.SurveyControllerTest do
       [project, _, channel] = prepare_for_state_update(user)
       survey = insert(:survey, project: project, schedule: completed_schedule())
 
-      assert survey.state == "not_ready"
+      assert survey.state == :not_ready
 
       create_group(survey, channel)
 
@@ -2251,7 +2251,7 @@ defmodule AskWeb.SurveyControllerTest do
 
       assert json_response(conn, 200)["data"]["id"]
       new_survey = Repo.get(Survey, survey.id)
-      assert new_survey.state == "not_ready"
+      assert new_survey.state == :not_ready
     end
 
     test "does not update state when adding cutoff if missing respondents", %{
@@ -2267,13 +2267,13 @@ defmodule AskWeb.SurveyControllerTest do
           schedule: completed_schedule()
         )
 
-      assert survey.state == "not_ready"
+      assert survey.state == :not_ready
 
       conn = put conn, project_survey_path(conn, :update, project, survey), survey: %{cutoff: 4}
 
       assert json_response(conn, 200)["data"]["id"]
       new_survey = Repo.get(Survey, survey.id)
-      assert new_survey.state == "not_ready"
+      assert new_survey.state == :not_ready
     end
 
     test "does not update state when adding questionnaire if missing channel", %{
@@ -2291,7 +2291,7 @@ defmodule AskWeb.SurveyControllerTest do
 
       assert json_response(conn, 200)["data"]["id"]
       new_survey = Repo.get(Survey, survey.id)
-      assert new_survey.state == "not_ready"
+      assert new_survey.state == :not_ready
     end
 
     test "sets to not ready if comparisons' ratio don't sum 100", %{conn: conn, user: user} do
@@ -2316,7 +2316,7 @@ defmodule AskWeb.SurveyControllerTest do
 
       assert json_response(conn, 200)["data"]["id"]
       new_survey = Repo.get(Survey, survey.id)
-      assert new_survey.state == "not_ready"
+      assert new_survey.state == :not_ready
     end
 
     test "sets to ready if comparisons' ratio sum 100", %{conn: conn, user: user} do
@@ -2341,7 +2341,7 @@ defmodule AskWeb.SurveyControllerTest do
 
       assert json_response(conn, 200)["data"]["id"]
       new_survey = Repo.get(Survey, survey.id)
-      assert new_survey.state == "ready"
+      assert new_survey.state == :ready
     end
 
     test "changes state to not_ready when questionnaire is invalid", %{conn: conn, user: user} do
@@ -2365,7 +2365,7 @@ defmodule AskWeb.SurveyControllerTest do
 
       assert json_response(conn, 200)["data"]["id"]
       new_survey = Repo.get(Survey, survey.id)
-      assert new_survey.state == "not_ready"
+      assert new_survey.state == :not_ready
     end
 
     test "changes state to not_ready when survey mode doesn't match questionnaire mode", %{
@@ -2391,13 +2391,13 @@ defmodule AskWeb.SurveyControllerTest do
 
       assert json_response(conn, 200)["data"]["id"]
       new_survey = Repo.get(Survey, survey.id)
-      assert new_survey.state == "not_ready"
+      assert new_survey.state == :not_ready
     end
   end
 
   test "prevents launching a survey that is not in the ready state", %{conn: conn, user: user} do
     project = create_project_for_user(user)
-    survey = insert(:survey, project: project, state: "not_ready")
+    survey = insert(:survey, project: project, state: :not_ready)
 
     conn = post(conn, project_survey_survey_path(conn, :launch, survey.project, survey))
 
@@ -2406,12 +2406,12 @@ defmodule AskWeb.SurveyControllerTest do
 
   test "when launching a survey, it sets the state to running", %{conn: conn, user: user} do
     project = create_project_for_user(user)
-    survey = insert(:survey, project: project, state: "ready")
+    survey = insert(:survey, project: project, state: :ready)
 
     conn = post(conn, project_survey_survey_path(conn, :launch, survey.project, survey))
 
     assert json_response(conn, 200)
-    assert Repo.get(Survey, survey.id).state == "running"
+    assert Repo.get(Survey, survey.id).state == :running
   end
 
   test "when launching a survey, it creates questionnaire snapshots", %{conn: conn, user: user} do
@@ -2422,7 +2422,7 @@ defmodule AskWeb.SurveyControllerTest do
     survey =
       insert(:survey,
         project: project,
-        state: "ready",
+        state: :ready,
         questionnaires: [questionnaire],
         comparisons: [
           %{"mode" => ["sms"], "questionnaire_id" => questionnaire.id, "one" => 50},
@@ -2465,7 +2465,7 @@ defmodule AskWeb.SurveyControllerTest do
       )
 
     survey_ready =
-      insert(:survey, project: project, state: "ready", questionnaires: [questionnaire])
+      insert(:survey, project: project, state: :ready, questionnaires: [questionnaire])
 
     post(conn, project_survey_survey_path(conn, :launch, survey_ready.project, survey_ready))
     survey_launched = Repo.get(Survey, survey_ready.id)
@@ -2482,7 +2482,7 @@ defmodule AskWeb.SurveyControllerTest do
 
   test "forbids launch for project reader", %{conn: conn, user: user} do
     project = create_project_for_user(user, level: "reader")
-    survey = insert(:survey, project: project, state: "ready")
+    survey = insert(:survey, project: project, state: :ready)
 
     assert_error_sent :forbidden, fn ->
       post(conn, project_survey_survey_path(conn, :launch, survey.project, survey))
@@ -2491,7 +2491,7 @@ defmodule AskWeb.SurveyControllerTest do
 
   test "forbids launch if project is archived", %{conn: conn, user: user} do
     project = create_project_for_user(user, archived: true)
-    survey = insert(:survey, project: project, state: "ready")
+    survey = insert(:survey, project: project, state: :ready)
 
     assert_error_sent :forbidden, fn ->
       post(conn, project_survey_survey_path(conn, :launch, survey.project, survey))
@@ -2500,7 +2500,7 @@ defmodule AskWeb.SurveyControllerTest do
 
   test "launches a survey with channel", %{conn: conn, user: user} do
     project = create_project_for_user(user)
-    survey = insert(:survey, project: project, state: "ready")
+    survey = insert(:survey, project: project, state: :ready)
     test_channel = TestChannel.new()
     channel = insert(:channel, settings: test_channel |> TestChannel.settings(), type: "sms")
     create_group(survey, channel)
@@ -2508,7 +2508,7 @@ defmodule AskWeb.SurveyControllerTest do
     conn = post(conn, project_survey_survey_path(conn, :launch, survey.project, survey))
 
     assert json_response(conn, 200)
-    assert Repo.get(Survey, survey.id).state == "running"
+    assert Repo.get(Survey, survey.id).state == :running
 
     assert_received [:prepare, ^test_channel]
   end
@@ -2519,7 +2519,7 @@ defmodule AskWeb.SurveyControllerTest do
   } do
     now = Timex.now()
     project = create_project_for_user(user)
-    survey = insert(:survey, project: project, state: "ready")
+    survey = insert(:survey, project: project, state: :ready)
 
     post(conn, project_survey_survey_path(conn, :launch, survey.project, survey))
 
@@ -2537,7 +2537,7 @@ defmodule AskWeb.SurveyControllerTest do
     now = Date.add(end_date, -1)
     mock_time(Timex.to_datetime(now))
     schedule = %{completed_schedule() | end_date: end_date}
-    survey = insert(:survey, project: project, state: "ready", schedule: schedule)
+    survey = insert(:survey, project: project, state: :ready, schedule: schedule)
 
     post(conn, project_survey_survey_path(conn, :launch, survey.project, survey))
 
@@ -2550,7 +2550,7 @@ defmodule AskWeb.SurveyControllerTest do
   test "updates project updated_at when a survey is launched", %{conn: conn, user: user} do
     {:ok, datetime, _} = DateTime.from_iso8601("2000-01-01T00:00:00Z")
     project = create_project_for_user(user, updated_at: datetime)
-    survey = insert(:survey, project: project, state: "ready")
+    survey = insert(:survey, project: project, state: :ready)
 
     post(conn, project_survey_survey_path(conn, :launch, survey.project, survey))
 
@@ -2564,7 +2564,7 @@ defmodule AskWeb.SurveyControllerTest do
     test "stops survey", %{conn: conn, user: user} do
       project = create_project_for_user(user)
       questionnaire = insert(:questionnaire, name: "test", project: project)
-      survey = insert(:survey, project: project, state: "running")
+      survey = insert(:survey, project: project, state: :running)
       test_channel = TestChannel.new(false)
       channel = insert(:channel, settings: test_channel |> TestChannel.settings(), type: "sms")
       group = create_group(survey, channel)
@@ -2604,8 +2604,8 @@ defmodule AskWeb.SurveyControllerTest do
     test "stops respondents only for the stopped survey", %{conn: conn, user: user} do
       project = create_project_for_user(user)
       questionnaire = insert(:questionnaire, name: "test", project: project)
-      survey = insert(:survey, project: project, state: "running")
-      survey2 = insert(:survey, project: project, state: "running")
+      survey = insert(:survey, project: project, state: :running)
+      survey2 = insert(:survey, project: project, state: :running)
       test_channel = TestChannel.new(false)
       channel = insert(:channel, settings: test_channel |> TestChannel.settings(), type: "sms")
       group = create_group(survey, channel)
@@ -2637,7 +2637,7 @@ defmodule AskWeb.SurveyControllerTest do
       wait_all_cancellations(conn)
 
       assert json_response(conn, 200)
-      assert Repo.get(Survey, survey2.id).state == "running"
+      assert Repo.get(Survey, survey2.id).state == :running
       assert length(Repo.all(from(r in Ask.Respondent, where: r.state == :active))) == 6
       assert_receive [:cancel_message, ^test_channel, ^channel_state]
     end
@@ -2673,13 +2673,13 @@ defmodule AskWeb.SurveyControllerTest do
 
     test "doesn't stop survey if it is locked", %{conn: conn, user: user} do
       project = create_project_for_user(user)
-      survey = insert(:survey, project: project, state: "running", locked: true)
+      survey = insert(:survey, project: project, state: :running, locked: true)
 
       conn = post(conn, project_survey_survey_path(conn, :stop, project, survey))
 
       assert response(conn, 422)
       survey = Repo.get(Survey, survey.id)
-      assert survey.state == "running"
+      assert survey.state == :running
     end
   end
 
@@ -2691,7 +2691,7 @@ defmodule AskWeb.SurveyControllerTest do
       survey =
         insert(:survey,
           project: project,
-          state: "running",
+          state: :running,
           locked: false,
           questionnaires: [questionnaire]
         )
@@ -2717,7 +2717,7 @@ defmodule AskWeb.SurveyControllerTest do
       survey =
         insert(:survey,
           project: project,
-          state: "running",
+          state: :running,
           locked: false,
           questionnaires: [questionnaire]
         )
@@ -2741,7 +2741,7 @@ defmodule AskWeb.SurveyControllerTest do
       survey =
         insert(:survey,
           project: project,
-          state: "running",
+          state: :running,
           locked: false,
           questionnaires: [questionnaire]
         )
@@ -2766,7 +2766,7 @@ defmodule AskWeb.SurveyControllerTest do
       project = create_project_for_user(user)
       questionnaire = insert(:questionnaire, project: project)
 
-      ["not_ready", "ready", "pending", "terminated"]
+      [:not_ready, :ready, :pending, :terminated]
       |> Enum.each(fn state ->
         survey =
           insert(:survey,
@@ -2855,7 +2855,7 @@ defmodule AskWeb.SurveyControllerTest do
 
     test "generates log after launching a survey", %{conn: conn, user: user} do
       project = create_project_for_user(user)
-      survey = insert(:survey, project: project, state: "ready")
+      survey = insert(:survey, project: project, state: :ready)
 
       post(conn, project_survey_survey_path(conn, :launch, survey.project, survey))
       log = ActivityLog |> Repo.one()
@@ -2873,7 +2873,7 @@ defmodule AskWeb.SurveyControllerTest do
 
     test "generates logs after stopping a survey", %{conn: conn, user: user} do
       project = create_project_for_user(user)
-      survey = insert(:survey, project: project, state: "running")
+      survey = insert(:survey, project: project, state: :running)
 
       post(conn, project_survey_survey_path(conn, :stop, survey.project, survey))
 
@@ -3021,7 +3021,7 @@ defmodule AskWeb.SurveyControllerTest do
       survey =
         insert(:survey,
           project: project,
-          state: "running",
+          state: :running,
           locked: false,
           questionnaires: [questionnaire]
         )
@@ -3050,7 +3050,7 @@ defmodule AskWeb.SurveyControllerTest do
       survey =
         insert(:survey,
           project: project,
-          state: "running",
+          state: :running,
           locked: true,
           questionnaires: [questionnaire]
         )

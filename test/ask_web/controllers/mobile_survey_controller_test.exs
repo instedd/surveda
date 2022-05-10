@@ -37,7 +37,7 @@ defmodule AskWeb.MobileSurveyControllerTest do
       survey =
         insert(:survey, %{
           schedule: Ask.Schedule.always(),
-          state: "running",
+          state: :running,
           questionnaires: [quiz],
           mode: [["mobileweb"]]
         })
@@ -96,7 +96,7 @@ defmodule AskWeb.MobileSurveyControllerTest do
     survey =
       insert(:survey, %{
         schedule: Ask.Schedule.always(),
-        state: "running",
+        state: :running,
         questionnaires: [quiz],
         mode: [["mobileweb"]]
       })
@@ -135,7 +135,7 @@ defmodule AskWeb.MobileSurveyControllerTest do
              }"
 
     survey = Repo.get(Survey, survey.id)
-    assert survey.state == "running"
+    assert survey.state == :running
 
     respondent = Repo.get(Respondent, respondent.id)
     assert respondent.state == :active
@@ -385,7 +385,7 @@ defmodule AskWeb.MobileSurveyControllerTest do
     survey =
       insert(:survey, %{
         schedule: Ask.Schedule.always(),
-        state: "running",
+        state: :running,
         questionnaires: [quiz],
         mode: [["mobileweb"]]
       })
@@ -455,7 +455,7 @@ defmodule AskWeb.MobileSurveyControllerTest do
     survey =
       insert(:survey, %{
         schedule: Ask.Schedule.always(),
-        state: "running",
+        state: :running,
         questionnaires: [quiz],
         mode: [["mobileweb"]]
       })
@@ -502,7 +502,7 @@ defmodule AskWeb.MobileSurveyControllerTest do
     survey =
       insert(:survey, %{
         schedule: Ask.Schedule.always(),
-        state: "running",
+        state: :running,
         questionnaires: [quiz],
         mode: [["mobileweb"]]
       })
@@ -554,7 +554,7 @@ defmodule AskWeb.MobileSurveyControllerTest do
     survey =
       insert(:survey, %{
         schedule: Ask.Schedule.always(),
-        state: "running",
+        state: :running,
         questionnaires: [quiz],
         mode: [["mobileweb"]]
       })
@@ -592,7 +592,7 @@ defmodule AskWeb.MobileSurveyControllerTest do
              }"
 
     survey = Repo.get(Survey, survey.id)
-    assert survey.state == "running"
+    assert survey.state == :running
 
     respondent = Repo.get(Respondent, respondent.id)
     assert respondent.state == :active
@@ -634,7 +634,7 @@ defmodule AskWeb.MobileSurveyControllerTest do
     survey =
       insert(:survey, %{
         schedule: Ask.Schedule.always(),
-        state: "running",
+        state: :running,
         questionnaires: [quiz],
         mode: [["mobileweb"]]
       })

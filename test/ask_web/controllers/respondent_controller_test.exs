@@ -475,7 +475,7 @@ defmodule AskWeb.RespondentControllerTest do
           :survey,
           project: project,
           questionnaires: [q1, q2],
-          state: "running",
+          state: :running,
           cutoff: 10,
           mode: [["sms"], ["ivr"]],
           started_at: t,
@@ -561,7 +561,7 @@ defmodule AskWeb.RespondentControllerTest do
           :survey,
           project: project,
           questionnaires: [q1, q2],
-          state: "terminated",
+          state: :terminated,
           cutoff: 10,
           mode: [["sms"], ["ivr"]],
           started_at: t,
@@ -1029,7 +1029,7 @@ defmodule AskWeb.RespondentControllerTest do
           project: project,
           cutoff: 10,
           started_at: t,
-          state: "running",
+          state: :running,
           questionnaires: [questionnaire]
         )
 
@@ -1560,7 +1560,7 @@ defmodule AskWeb.RespondentControllerTest do
           project: project,
           cutoff: 4,
           questionnaires: [questionnaire],
-          state: "ready",
+          state: :ready,
           schedule: completed_schedule(),
           mode: [["sms", "ivr"], ["mobileweb"], ["sms", "mobileweb"]]
         )
@@ -1603,7 +1603,7 @@ defmodule AskWeb.RespondentControllerTest do
           project: project,
           cutoff: 4,
           questionnaires: [questionnaire],
-          state: "ready",
+          state: :ready,
           schedule: completed_schedule(),
           mode: [["sms", "ivr"], ["mobileweb"], ["sms", "mobileweb"]]
         )
@@ -2125,7 +2125,7 @@ defmodule AskWeb.RespondentControllerTest do
           project: project,
           cutoff: 4,
           questionnaires: [questionnaire],
-          state: "ready",
+          state: :ready,
           schedule: completed_schedule(),
           mode: [["sms", "ivr"], ["mobileweb"], ["sms", "mobileweb"]]
         )
@@ -2263,7 +2263,7 @@ defmodule AskWeb.RespondentControllerTest do
           project: project,
           cutoff: 4,
           questionnaires: [questionnaire],
-          state: "ready",
+          state: :ready,
           schedule: completed_schedule(),
           mode: [["sms", "ivr"], ["mobileweb"], ["sms", "mobileweb"]]
         )
@@ -2324,7 +2324,7 @@ defmodule AskWeb.RespondentControllerTest do
           project: project,
           cutoff: 4,
           questionnaires: [questionnaire],
-          state: "ready",
+          state: :ready,
           schedule: completed_schedule(),
           mode: [["sms", "ivr"], ["mobileweb"], ["sms", "mobileweb"]]
         )
@@ -2461,7 +2461,7 @@ defmodule AskWeb.RespondentControllerTest do
           project: project,
           cutoff: 4,
           questionnaires: [questionnaire],
-          state: "ready",
+          state: :ready,
           schedule: completed_schedule(),
           mode: [["sms", "ivr"], ["mobileweb"], ["sms", "mobileweb"]]
         )
@@ -2573,7 +2573,7 @@ defmodule AskWeb.RespondentControllerTest do
           project: project,
           cutoff: 4,
           questionnaires: [questionnaire],
-          state: "ready",
+          state: :ready,
           schedule: completed_schedule()
         )
 
@@ -2651,7 +2651,7 @@ defmodule AskWeb.RespondentControllerTest do
           project: project,
           cutoff: 4,
           questionnaires: [questionnaire],
-          state: "ready",
+          state: :ready,
           schedule: completed_schedule()
         )
 
@@ -2732,7 +2732,7 @@ defmodule AskWeb.RespondentControllerTest do
           project: project,
           cutoff: 4,
           questionnaires: [questionnaire],
-          state: "ready",
+          state: :ready,
           schedule: completed_schedule()
         )
 
@@ -2814,7 +2814,7 @@ defmodule AskWeb.RespondentControllerTest do
           project: project,
           cutoff: 4,
           questionnaires: [questionnaire],
-          state: "ready",
+          state: :ready,
           schedule: completed_schedule(),
           mode: [["sms", "ivr"], ["mobileweb"], ["sms", "mobileweb"]]
         )
@@ -2997,7 +2997,7 @@ defmodule AskWeb.RespondentControllerTest do
           project: project,
           cutoff: 4,
           questionnaires: [questionnaire],
-          state: "ready",
+          state: :ready,
           schedule: completed_schedule()
         )
 
@@ -3092,7 +3092,7 @@ defmodule AskWeb.RespondentControllerTest do
           project: project,
           cutoff: 4,
           questionnaires: [questionnaire],
-          state: "ready",
+          state: :ready,
           schedule: completed_schedule()
         )
 
@@ -3169,7 +3169,7 @@ defmodule AskWeb.RespondentControllerTest do
           project: project,
           cutoff: 4,
           questionnaires: [questionnaire],
-          state: "ready",
+          state: :ready,
           schedule: completed_schedule()
         )
 
@@ -3239,7 +3239,7 @@ defmodule AskWeb.RespondentControllerTest do
           project: project,
           cutoff: 4,
           questionnaires: [questionnaire],
-          state: "ready",
+          state: :ready,
           schedule: completed_schedule()
         )
 
@@ -3312,7 +3312,7 @@ defmodule AskWeb.RespondentControllerTest do
           project: project,
           cutoff: 4,
           questionnaires: [questionnaire, questionnaire2],
-          state: "ready",
+          state: :ready,
           schedule: completed_schedule(),
           comparisons: [
             %{"mode" => ["sms"], "questionnaire_id" => questionnaire.id, "ratio" => 50},
@@ -3426,7 +3426,7 @@ defmodule AskWeb.RespondentControllerTest do
           project: project,
           cutoff: 4,
           questionnaires: [questionnaire, questionnaire2],
-          state: "ready",
+          state: :ready,
           schedule: completed_schedule(),
           comparisons: [
             %{"mode" => ["sms"], "questionnaire_id" => questionnaire.id, "ratio" => 50},
@@ -3547,7 +3547,7 @@ defmodule AskWeb.RespondentControllerTest do
           project: project,
           cutoff: 4,
           questionnaires: [questionnaire],
-          state: "ready",
+          state: :ready,
           schedule: completed_schedule()
         )
 
@@ -3595,7 +3595,7 @@ defmodule AskWeb.RespondentControllerTest do
           project: project,
           cutoff: 4,
           questionnaires: [questionnaire],
-          state: "ready",
+          state: :ready,
           schedule: completed_schedule()
         )
 
@@ -3674,7 +3674,7 @@ defmodule AskWeb.RespondentControllerTest do
           project: project,
           cutoff: 4,
           questionnaires: [questionnaire],
-          state: "ready",
+          state: :ready,
           schedule: completed_schedule()
         )
 
@@ -3744,7 +3744,7 @@ defmodule AskWeb.RespondentControllerTest do
           project: project,
           cutoff: 4,
           questionnaires: [questionnaire],
-          state: "ready",
+          state: :ready,
           schedule: completed_schedule()
         )
 
@@ -3861,7 +3861,7 @@ defmodule AskWeb.RespondentControllerTest do
           project: project,
           cutoff: 4,
           questionnaires: [questionnaire],
-          state: "ready",
+          state: :ready,
           schedule: completed_schedule()
         )
 
@@ -3965,7 +3965,7 @@ defmodule AskWeb.RespondentControllerTest do
           project: project,
           cutoff: 4,
           questionnaires: [questionnaire],
-          state: "ready",
+          state: :ready,
           schedule: completed_schedule(),
           mode: [["sms", "ivr"], ["mobileweb"], ["sms", "mobileweb"]]
         )
@@ -4003,7 +4003,7 @@ defmodule AskWeb.RespondentControllerTest do
           project: project,
           cutoff: 4,
           questionnaires: [questionnaire],
-          state: "ready",
+          state: :ready,
           schedule: completed_schedule()
         )
 
@@ -4085,7 +4085,7 @@ defmodule AskWeb.RespondentControllerTest do
           project: project,
           cutoff: 4,
           questionnaires: [questionnaire],
-          state: "ready",
+          state: :ready,
           schedule: completed_schedule(),
           mode: [["sms", "ivr"], ["mobileweb"], ["sms", "mobileweb"]]
         )
@@ -4127,7 +4127,7 @@ defmodule AskWeb.RespondentControllerTest do
           project: project,
           cutoff: 4,
           questionnaires: [questionnaire],
-          state: "ready",
+          state: :ready,
           schedule: completed_schedule()
         )
 
@@ -4187,7 +4187,7 @@ defmodule AskWeb.RespondentControllerTest do
           project: project,
           cutoff: 4,
           questionnaires: [questionnaire],
-          state: "ready",
+          state: :ready,
           schedule: completed_schedule()
         )
 
@@ -4224,7 +4224,7 @@ defmodule AskWeb.RespondentControllerTest do
           project: project,
           cutoff: 4,
           questionnaires: [questionnaire],
-          state: "ready",
+          state: :ready,
           schedule: completed_schedule()
         )
 
@@ -4336,7 +4336,7 @@ defmodule AskWeb.RespondentControllerTest do
           project: project,
           cutoff: 4,
           questionnaires: [questionnaire],
-          state: "ready",
+          state: :ready,
           schedule: completed_schedule()
         )
 
@@ -4650,7 +4650,7 @@ defmodule AskWeb.RespondentControllerTest do
       :survey,
       project: project,
       schedule: Schedule.always(),
-      state: "running",
+      state: :running,
       questionnaires: questionnaires,
       mode: [[mode]],
       comparisons: [
@@ -4669,7 +4669,7 @@ defmodule AskWeb.RespondentControllerTest do
       :survey,
       project: project,
       schedule: Schedule.always(),
-      state: "running",
+      state: :running,
       questionnaires: questionnaires,
       mode: [[mode]]
     )

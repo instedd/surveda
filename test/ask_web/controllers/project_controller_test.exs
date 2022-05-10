@@ -139,14 +139,14 @@ defmodule AskWeb.ProjectControllerTest do
     test "shows running survey count", %{conn: conn, user: user} do
       project1 = create_project_for_user(user)
       project1 = Project |> Repo.get(project1.id)
-      insert(:survey, project: project1, state: "running")
-      insert(:survey, project: project1, state: "running")
-      insert(:survey, project: project1, state: "pending")
+      insert(:survey, project: project1, state: :running)
+      insert(:survey, project: project1, state: :running)
+      insert(:survey, project: project1, state: :pending)
 
       project2 = create_project_for_user(user)
       project2 = Project |> Repo.get(project2.id)
-      insert(:survey, project: project2, state: "running")
-      insert(:survey, project: project2, state: "pending")
+      insert(:survey, project: project2, state: :running)
+      insert(:survey, project: project2, state: :pending)
 
       project3 = create_project_for_user(user)
       project3 = Project |> Repo.get(project3.id)

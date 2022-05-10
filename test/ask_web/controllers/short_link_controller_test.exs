@@ -34,7 +34,7 @@ defmodule AskWeb.ShortLinkControllerTest do
                "name" => survey.name,
                "description" => nil,
                "project_id" => project.id,
-               "state" => "not_ready",
+               "state" => to_string(:not_ready),
                "locked" => false,
                "exit_code" => nil,
                "exit_message" => nil,

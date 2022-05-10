@@ -70,8 +70,8 @@ defmodule Ask.FloipPusherTest do
 
   test "writes last successfully pushed response for each endpoint", %{server: server} do
     # 2 running surveys
-    survey1 = insert(:survey, state: "running")
-    survey2 = insert(:survey, state: "running")
+    survey1 = insert(:survey, state: :running)
+    survey2 = insert(:survey, state: :running)
 
     # 2 endpoints per survey
     endpoint_1_survey_1 = insert_endpoint(survey1)
@@ -99,8 +99,8 @@ defmodule Ask.FloipPusherTest do
 
   test "pushes to all endpoints that have new responses", %{server: server} do
     # 2 running surveys
-    survey1 = insert(:survey, state: "running")
-    survey2 = insert(:survey, state: "running")
+    survey1 = insert(:survey, state: :running)
+    survey2 = insert(:survey, state: :running)
 
     # 2 endpoints per survey
     insert_endpoint(survey1, uri: "http://localhost:#{server.port}/1.1")
@@ -126,8 +126,8 @@ defmodule Ask.FloipPusherTest do
 
   test "does not overwrite last_pushed_response_id if push fails", %{server: server} do
     # 2 running surveys
-    survey1 = insert(:survey, state: "running")
-    survey2 = insert(:survey, state: "running")
+    survey1 = insert(:survey, state: :running)
+    survey2 = insert(:survey, state: :running)
 
     # 2 endpoints per survey
     endpoint_1_survey_1 = insert_endpoint(survey1, uri: "http://localhost:#{server.port}/1.1")
@@ -159,8 +159,8 @@ defmodule Ask.FloipPusherTest do
 
   test "does not push to endpoints with no new responses", %{server: server} do
     # 2 running surveys
-    survey1 = insert(:survey, state: "running")
-    survey2 = insert(:survey, state: "running")
+    survey1 = insert(:survey, state: :running)
+    survey2 = insert(:survey, state: :running)
 
     # 2 responses per survey
     insert_response(survey1)
@@ -191,7 +191,7 @@ defmodule Ask.FloipPusherTest do
 
   test "does not send more than 1000 responses per run per endpoint", %{server: server} do
     # 1 running survey
-    survey = insert(:survey, state: "running")
+    survey = insert(:survey, state: :running)
 
     # Add 1 endpoint to the survey
     endpoint = insert_endpoint(survey, uri: "http://localhost:#{server.port}/1.1")
@@ -218,7 +218,7 @@ defmodule Ask.FloipPusherTest do
 
   test "increments endpoint retry counter if push fails", %{server: server} do
     # 1 running survey
-    survey = insert(:survey, state: "running")
+    survey = insert(:survey, state: :running)
 
     # Add 1 endpoint to the survey
     endpoint = insert_endpoint(survey, uri: "http://localhost:#{server.port}/1.1")
@@ -239,7 +239,7 @@ defmodule Ask.FloipPusherTest do
 
   test "resets endpoint retry counter if push succeeds", %{server: server} do
     # Create 1 survey
-    survey = insert(:survey, state: "running")
+    survey = insert(:survey, state: :running)
 
     # Add 1 endpoint to the survey, with retry counter == 8
     endpoint = insert_endpoint(survey, uri: "http://localhost:#{server.port}/1.1", retries: 8)
@@ -262,8 +262,8 @@ defmodule Ask.FloipPusherTest do
     server: server
   } do
     # 2 running surveys
-    survey1 = insert(:survey, state: "running")
-    survey2 = insert(:survey, state: "running")
+    survey1 = insert(:survey, state: :running)
+    survey2 = insert(:survey, state: :running)
 
     # 2 responses per survey
     insert_response(survey1)
@@ -294,7 +294,7 @@ defmodule Ask.FloipPusherTest do
 
   test "ignores disabled endpoints", %{server: server} do
     # 1 survey
-    survey1 = insert(:survey, state: "running")
+    survey1 = insert(:survey, state: :running)
 
     # 1 endpoint in "disabled" state
     insert_endpoint(survey1,
@@ -312,7 +312,7 @@ defmodule Ask.FloipPusherTest do
 
   test "marks endpoint as disabled if it reaches 10 retries", %{server: server} do
     # 1 survey
-    survey1 = insert(:survey, state: "running")
+    survey1 = insert(:survey, state: :running)
 
     # 1 endpoint with 9 retries
     endpoint =
@@ -356,7 +356,7 @@ defmodule Ask.FloipPusherTest do
     server: server
   } do
     # 1 survey terminated
-    survey1 = insert(:survey, state: "terminated")
+    survey1 = insert(:survey, state: :terminated)
 
     # 1 response
     last_response = insert_response(survey1)
@@ -379,7 +379,7 @@ defmodule Ask.FloipPusherTest do
   test "does not mark endpoint as terminated if survey terminated but there still are pending messages to push",
        %{server: server} do
     # 1 survey terminated
-    survey1 = insert(:survey, state: "terminated")
+    survey1 = insert(:survey, state: :terminated)
 
     # 2000 responses
     respondent = insert(:respondent, survey: survey1)
@@ -410,7 +410,7 @@ defmodule Ask.FloipPusherTest do
   # for terminated surveys to which we already pushed all responses.
   test "ignores terminated endpoints", %{server: server} do
     # 1 survey terminated
-    survey1 = insert(:survey, state: "terminated")
+    survey1 = insert(:survey, state: :terminated)
 
     # 1 response
     insert_response(survey1)
@@ -425,7 +425,7 @@ defmodule Ask.FloipPusherTest do
   end
 
   test "sets auth token", %{server: server} do
-    survey1 = insert(:survey, state: "running")
+    survey1 = insert(:survey, state: :running)
     insert_response(survey1)
     insert_endpoint(survey1, uri: "http://localhost:#{server.port}/1.1", auth_token: "IM_A_TOKEN")
 
