@@ -830,7 +830,12 @@ defmodule Ask.Runtime.Session do
         end
 
       false ->
-        log_prompts(reply, current_mode.channel, flow.mode, session.respondent, false, persist)
+        # Forcing logging prompts from here for the mobileweb mode is a workaround added in #2077
+        # to fix #2066. Further comprehension and maybe a refactor on the implementation of how
+        # the survey interaction file logs are being generating depending on the mode and channel
+        # involved may be a good option for the future.
+        force_log = is_mobileweb_mode?(current_mode)
+        log_prompts(reply, current_mode.channel, flow.mode, session.respondent, force_log, persist)
         {:ok, %{session | flow: flow}, reply, current_timeout(session)}
     end
   end
@@ -848,6 +853,9 @@ defmodule Ask.Runtime.Session do
   defp handle_step_answer(session, {:stopped, _, reply}, _current_mode, _) do
     {:stopped, reply, session.respondent}
   end
+
+  defp is_mobileweb_mode?(%MobileWebMode{} = _mode), do: true
+  defp is_mobileweb_mode?(_mode), do: false
 
   defp store_responses_and_assign_bucket(respondent, {_, _, reply}, session, persist) do
     if persist do
