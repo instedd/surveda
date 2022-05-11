@@ -48,14 +48,17 @@ defmodule Ask.Survey do
     #   * 2nd mode sequence: SMS as primary mode, no fallback mode
     field :mode, JSON
     # not_ready, ready, pending, running, terminated, cancelling
-    field :state, Ecto.Enum, values: [
-      :not_ready,
-      :ready,
-      :pending,
-      :running,
-      :terminated,
-      :cancelling,
-    ], default: :not_ready
+    field :state, Ecto.Enum,
+      values: [
+        :not_ready,
+        :ready,
+        :pending,
+        :running,
+        :terminated,
+        :cancelling
+      ],
+      default: :not_ready
+
     field :locked, :boolean, default: false
     field :exit_code, :integer
     field :exit_message, :string

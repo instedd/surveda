@@ -103,7 +103,7 @@ defmodule AskWeb.MobileSurveyController do
           survey = Repo.preload(respondent, :survey).survey
 
           cond do
-            survey.state == "terminated" ->
+            survey.state == :terminated ->
               questionnaires = Repo.preload(survey, :questionnaires).questionnaires
               questionnaire = Enum.random(questionnaires)
 
