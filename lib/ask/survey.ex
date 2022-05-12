@@ -582,8 +582,10 @@ defmodule Ask.Survey do
 
   def completion_rate(_, nil), do: 0.0
   def completion_rate(_, 0), do: 0.0
+  def completion_rate(nil, _), do: 0.0
   def completion_rate(completed, respondents_target), do: completed / respondents_target
 
+  # Calculates the current success rate since the survey was launched.
   def get_success_rate(survey, respondents_by_disposition) do
     completed_respondents = get_completed_respondents(survey, respondents_by_disposition)
 
@@ -591,6 +593,44 @@ defmodule Ask.Survey do
       exhausted_respondents(respondents_by_disposition, survey.count_partial_results)
 
     success_rate(completed_respondents, exhausted_respondents)
+  end
+
+  # Calculates the daily sucess rate since the survey was launched until it
+  # ended or today if it's running.
+  def success_rate_history(%{started_at: nil}), do: []
+
+  def success_rate_history(survey) do
+    completed_dispositions = Respondent.completed_dispositions(survey.count_partial_results)
+    completed = survey |> respondents_history(completed_dispositions)
+
+    exhausted_dispositions = Respondent.metrics_final_dispositions(survey.count_partial_results)
+    exhausted = survey |> respondents_history(exhausted_dispositions)
+
+    running_date_range(survey)
+    |> Enum.map(fn date ->
+      {date, completion_rate(completed[date], exhausted[date]) * 100}
+    end)
+  end
+
+  # Counts respondents with specified dispositions with daily granularity.
+  defp respondents_history(survey, dispositions) do
+    survey
+    |> assoc(:respondents)
+    |> select({fragment("DATE(COALESCE(completed_at, updated_at))"), fragment("COUNT(*)")})
+    |> group_by(fragment("DATE(COALESCE(completed_at, updated_at))"))
+    |> where([r], r.disposition in ^dispositions)
+    |> Repo.all()
+    |> Enum.into(%{})
+  end
+
+  # Generates the actual running date range, from the day the survey started to
+  # the day it ended (or today if it's still running).
+  defp running_date_range(%Survey{started_at: started_at, ended_at: nil}) do
+    Date.range(started_at |> DateTime.to_date(), Date.utc_today())
+  end
+
+  defp running_date_range(%Survey{started_at: started_at, ended_at: ended_at}) do
+    Date.range(started_at |> DateTime.to_date(), ended_at |> DateTime.to_date())
   end
 
   def get_completed_respondents(survey, respondents_by_disposition) do

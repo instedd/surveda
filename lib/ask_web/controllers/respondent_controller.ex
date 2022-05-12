@@ -277,6 +277,7 @@ defmodule AskWeb.RespondentController do
         respondent_counts(respondents_by_disposition, total_respondents),
       cumulative_percentages:
         cumulative_percentages(references, grouped_respondents, survey, target, buckets),
+      percentages: percentages(survey),
       completion_percentage: completed_or_partial / target * 100,
       total_respondents: total_respondents,
       target: target,
@@ -561,6 +562,38 @@ defmodule AskWeb.RespondentController do
   defp add_percent(cumulative_percent, count, percent_provider) do
     (cumulative_percent + percent_provider.(count))
     |> min(100.0)
+  end
+
+  defp percentages(%{started_at: nil}), do: %{}
+
+  defp percentages(survey) do
+    %{
+      success_rate: cleanup_repetitive_percentages(Survey.success_rate_history(survey))
+    }
+  end
+
+  # Cleanup repetitive values, by skipping any repetitive value except for the
+  # first and last, because they don't contribute anything to the graph
+  # (straight line).
+  #
+  # For example take A, B, C, D consecutive dates, each at value 5.0 then we
+  # only keep A and D and skip B and C entirely.
+  #
+  # TODO: consider moving to RespondentView.
+  defp cleanup_repetitive_percentages(percentages, result \\ [])
+  defp cleanup_repetitive_percentages([], result), do: result
+  defp cleanup_repetitive_percentages([a], result), do: result ++ [a]
+  defp cleanup_repetitive_percentages([a, b], result), do: result ++ [a, b]
+
+  defp cleanup_repetitive_percentages(
+         [{_, value_a} = a, {_, value_b} = b, {_, value_c} = c | rest],
+         result
+       ) do
+    if value_a == value_b && value_a == value_c do
+      cleanup_repetitive_percentages([a, c | rest], result)
+    else
+      cleanup_repetitive_percentages([b, c | rest], result ++ [a])
+    end
   end
 
   defp respondents_by_questionnaire_and_disposition(survey) do
