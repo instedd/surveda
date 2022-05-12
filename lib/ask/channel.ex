@@ -49,7 +49,7 @@ defmodule Ask.Channel do
   end
 
   # Deletes a channel and:
-  # - marks related :ready" surveys as :not_ready
+  # - marks related :ready surveys as :not_ready
   # - marks related :running surveys as :terminated with exit code 3
   def delete(channel) do
     surveys =

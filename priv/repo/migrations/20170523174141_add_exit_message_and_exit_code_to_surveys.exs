@@ -12,12 +12,12 @@ defmodule Ask.Repo.Migrations.AddExitMessageAndExitCodeToSurveys do
 
     from(s in "surveys", where: s.state == "completed")
     |> Ask.Repo.update_all(
-      set: [state: "terminated", exit_code: 0, exit_message: "Successfully completed"]
+      set: [state: :terminated, exit_code: 0, exit_message: "Successfully completed"]
     )
 
     from(s in "surveys", where: s.state == "cancelled")
     |> Ask.Repo.update_all(
-      set: [state: "terminated", exit_code: 1, exit_message: "Cancelled by user"]
+      set: [state: :terminated, exit_code: 1, exit_message: "Cancelled by user"]
     )
   end
 
