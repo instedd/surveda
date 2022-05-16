@@ -14,7 +14,7 @@ defmodule Ask.Runtime.PanelSurveyTest do
       assert result == :ok
       new_wave = Map.get(data, :new_wave)
       assert new_wave
-      assert new_wave.state == "ready"
+      assert new_wave.state == :ready
       assert new_wave.panel_survey_id == panel_survey.id
     end
 
@@ -208,7 +208,7 @@ defmodule Ask.Runtime.PanelSurveyTest do
     test "rejects creating a panel survey when the survey isn't ready to launch" do
       survey =
         panel_survey_generator_survey()
-        |> Survey.changeset(%{state: "not_ready"})
+        |> Survey.changeset(%{state: :not_ready})
         |> Repo.update!()
 
       {result, error} = PanelSurvey.create_panel_survey_from_survey(survey)
@@ -240,7 +240,7 @@ defmodule Ask.Runtime.PanelSurveyTest do
       project = insert(:project)
 
       survey =
-        insert(:survey, project: project, generates_panel_survey: true, state: "ready", name: nil)
+        insert(:survey, project: project, generates_panel_survey: true, state: :ready, name: nil)
 
       {result, panel_survey} = PanelSurvey.create_panel_survey_from_survey(survey)
 

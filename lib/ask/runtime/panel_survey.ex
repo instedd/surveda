@@ -18,7 +18,7 @@ defmodule Ask.Runtime.PanelSurvey do
       name: PanelSurvey.new_wave_name(),
       description: survey.description,
       mode: survey.mode,
-      state: "ready",
+      state: :ready,
       started_at: Timex.now(),
       panel_survey_id: survey.panel_survey_id
     }
@@ -72,7 +72,7 @@ defmodule Ask.Runtime.PanelSurvey do
   def create_panel_survey_from_survey(%{
         state: state
       })
-      when state != "ready",
+      when state != :ready,
       do: {
         :error,
         "Survey must be ready to launch to generate a panel survey"

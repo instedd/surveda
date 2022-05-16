@@ -48,7 +48,7 @@ defmodule Ask.Factory do
       schedule: Ask.Schedule.always(),
       name: sequence(:survey, &"Survey #{&1}"),
       mode: [["sms"]],
-      state: "not_ready",
+      state: :not_ready,
       floip_package_id: Ecto.UUID.generate()
     }
   end

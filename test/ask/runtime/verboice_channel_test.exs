@@ -396,7 +396,7 @@ defmodule Ask.Runtime.VerboiceChannelTest do
       survey =
         insert(
           :survey,
-          Map.merge(@survey, %{state: "running", questionnaires: [quiz], mode: [["ivr"]]})
+          Map.merge(@survey, %{state: :running, questionnaires: [quiz], mode: [["ivr"]]})
         )
 
       group =
@@ -416,7 +416,7 @@ defmodule Ask.Runtime.VerboiceChannelTest do
       Broker.poll()
 
       survey = Repo.get(Survey, survey.id)
-      assert survey.state == "running"
+      assert survey.state == :running
 
       respondent = Repo.get(Respondent, respondent.id)
       assert respondent.state == :active
@@ -470,7 +470,7 @@ defmodule Ask.Runtime.VerboiceChannelTest do
       survey =
         insert(
           :survey,
-          Map.merge(@survey, %{state: "running", questionnaires: [quiz], mode: [["ivr"]]})
+          Map.merge(@survey, %{state: :running, questionnaires: [quiz], mode: [["ivr"]]})
         )
 
       group =
@@ -490,7 +490,7 @@ defmodule Ask.Runtime.VerboiceChannelTest do
       Broker.poll()
 
       survey = Repo.get(Survey, survey.id)
-      assert survey.state == "running"
+      assert survey.state == :running
 
       respondent = Repo.get(Respondent, respondent.id)
       assert respondent.state == :active
@@ -521,7 +521,7 @@ defmodule Ask.Runtime.VerboiceChannelTest do
       survey =
         insert(
           :survey,
-          Map.merge(@survey, %{state: "running", questionnaires: [quiz], mode: [["ivr"]]})
+          Map.merge(@survey, %{state: :running, questionnaires: [quiz], mode: [["ivr"]]})
         )
 
       group =
@@ -541,7 +541,7 @@ defmodule Ask.Runtime.VerboiceChannelTest do
       Broker.poll()
 
       survey = Repo.get(Survey, survey.id)
-      assert survey.state == "running"
+      assert survey.state == :running
 
       respondent = Repo.get(Respondent, respondent.id)
       assert respondent.state == :active
@@ -572,7 +572,7 @@ defmodule Ask.Runtime.VerboiceChannelTest do
       survey =
         insert(
           :survey,
-          Map.merge(@survey, %{state: "running", questionnaires: [quiz], mode: [["ivr"]]})
+          Map.merge(@survey, %{state: :running, questionnaires: [quiz], mode: [["ivr"]]})
         )
 
       group =
@@ -592,7 +592,7 @@ defmodule Ask.Runtime.VerboiceChannelTest do
       Broker.poll()
 
       survey = Repo.get(Survey, survey.id)
-      assert survey.state == "running"
+      assert survey.state == :running
 
       respondent = Repo.get(Respondent, respondent.id)
       assert respondent.state == :active
@@ -622,7 +622,7 @@ defmodule Ask.Runtime.VerboiceChannelTest do
       survey =
         insert(
           :survey,
-          Map.merge(@survey, %{state: "running", questionnaires: [quiz], mode: [["ivr"]]})
+          Map.merge(@survey, %{state: :running, questionnaires: [quiz], mode: [["ivr"]]})
         )
 
       group =
@@ -642,7 +642,7 @@ defmodule Ask.Runtime.VerboiceChannelTest do
       Broker.poll()
 
       survey = Repo.get(Survey, survey.id)
-      assert survey.state == "running"
+      assert survey.state == :running
 
       respondent = Repo.get(Respondent, respondent.id)
       assert respondent.state == :active
@@ -674,7 +674,7 @@ defmodule Ask.Runtime.VerboiceChannelTest do
       survey =
         insert(
           :survey,
-          Map.merge(@survey, %{state: "running", questionnaires: [quiz], mode: [["ivr"]]})
+          Map.merge(@survey, %{state: :running, questionnaires: [quiz], mode: [["ivr"]]})
         )
 
       group =
@@ -694,7 +694,7 @@ defmodule Ask.Runtime.VerboiceChannelTest do
       Broker.poll()
 
       survey = Repo.get(Survey, survey.id)
-      assert survey.state == "running"
+      assert survey.state == :running
 
       respondent = Repo.get(Respondent, respondent.id)
       assert respondent.state == :active
@@ -726,7 +726,7 @@ defmodule Ask.Runtime.VerboiceChannelTest do
       survey =
         insert(
           :survey,
-          Map.merge(@survey, %{state: "running", questionnaires: [quiz], mode: [["ivr"]]})
+          Map.merge(@survey, %{state: :running, questionnaires: [quiz], mode: [["ivr"]]})
         )
 
       group =
@@ -750,7 +750,7 @@ defmodule Ask.Runtime.VerboiceChannelTest do
       Broker.handle_info(:poll, nil, Timex.now())
 
       survey = Repo.get(Survey, survey.id)
-      assert survey.state == "running"
+      assert survey.state == :running
 
       %Respondent{mode: mode} = respondent = Repo.get(Respondent, respondent.id)
       assert respondent.state == :active
@@ -831,7 +831,7 @@ defmodule Ask.Runtime.VerboiceChannelTest do
       survey =
         insert(
           :survey,
-          Map.merge(@survey, %{state: "running", questionnaires: [quiz], mode: [["ivr"]]})
+          Map.merge(@survey, %{state: :running, questionnaires: [quiz], mode: [["ivr"]]})
         )
 
       group =

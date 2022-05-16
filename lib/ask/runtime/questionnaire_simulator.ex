@@ -174,7 +174,7 @@ defmodule Ask.Runtime.QuestionnaireSimulator do
       project_id: project.id,
       name: questionnaire.name,
       mode: [[mode]],
-      state: "running",
+      state: :running,
       cutoff: 1,
       schedule: Ask.Schedule.always(),
       started_at: Timex.now()

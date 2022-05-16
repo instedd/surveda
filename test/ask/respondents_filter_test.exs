@@ -425,13 +425,13 @@ defmodule Ask.RespondentsFilterTest do
 
     for _ <- 1..1,
         do:
-          insert(:respondent, disposition: "queued", state: "pending", mode: ["sms", "sms", "ivr"])
+          insert(:respondent, disposition: "queued", state: :pending, mode: ["sms", "sms", "ivr"])
 
     for _ <- 1..2,
         do:
           insert(:respondent,
             disposition: "queued",
-            state: "pending",
+            state: :pending,
             updated_at: two_days_ago,
             mode: ["ivr", "mobileweb", "mobileweb"]
           )

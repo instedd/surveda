@@ -18,7 +18,7 @@ defmodule Ask.RespondentsCancellerProducer do
     query =
       from(
         s in Survey,
-        where: s.state == "cancelling",
+        where: s.state == :cancelling,
         select: s.id
       )
 

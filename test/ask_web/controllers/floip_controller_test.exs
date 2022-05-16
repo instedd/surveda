@@ -46,7 +46,7 @@ defmodule AskWeb.FloipControllerTest do
 
     test "injects a self referential link to the view", %{conn: conn, user: user} do
       project = create_project_for_user(user)
-      survey = insert(:survey, project: project, state: "running")
+      survey = insert(:survey, project: project, state: :running)
 
       conn = conn |> put_req_header("accept", "application/vnd.api+json")
 
@@ -66,7 +66,7 @@ defmodule AskWeb.FloipControllerTest do
     test "does not leak packages that dont belong to user", %{conn: conn, user: _user} do
       user2 = insert(:user)
       project = create_project_for_user(user2)
-      survey = insert(:survey, project: project, state: "running", floip_package_id: "foo")
+      survey = insert(:survey, project: project, state: :running, floip_package_id: "foo")
 
       assert_error_sent :forbidden, fn ->
         get(
@@ -84,7 +84,7 @@ defmodule AskWeb.FloipControllerTest do
 
     test "ensures provided package id is correct", %{conn: conn, user: user} do
       project = create_project_for_user(user)
-      survey = insert(:survey, project: project, state: "running", floip_package_id: "foo")
+      survey = insert(:survey, project: project, state: :running, floip_package_id: "foo")
 
       assert_error_sent :forbidden, fn ->
         get(
@@ -99,7 +99,7 @@ defmodule AskWeb.FloipControllerTest do
       user: user
     } do
       project = create_project_for_user(user)
-      survey = insert(:survey, project: project, state: "not_ready", floip_package_id: "foo")
+      survey = insert(:survey, project: project, state: :not_ready, floip_package_id: "foo")
 
       assert_error_sent :forbidden, fn ->
         get(
@@ -115,7 +115,7 @@ defmodule AskWeb.FloipControllerTest do
       survey =
         insert(:survey,
           project: project,
-          state: "running",
+          state: :running,
           floip_package_id: "foo",
           started_at: DateTime.utc_now()
         )
@@ -166,7 +166,7 @@ defmodule AskWeb.FloipControllerTest do
       survey =
         insert(:survey,
           project: project,
-          state: "running",
+          state: :running,
           floip_package_id: "foo",
           started_at: DateTime.utc_now()
         )
@@ -215,7 +215,7 @@ defmodule AskWeb.FloipControllerTest do
       survey =
         insert(:survey,
           project: project,
-          state: "running",
+          state: :running,
           floip_package_id: "foo",
           started_at: DateTime.utc_now()
         )
@@ -256,7 +256,7 @@ defmodule AskWeb.FloipControllerTest do
       survey =
         insert(:survey,
           project: project,
-          state: "running",
+          state: :running,
           floip_package_id: "foo",
           started_at: DateTime.utc_now()
         )
@@ -314,7 +314,7 @@ defmodule AskWeb.FloipControllerTest do
       survey =
         insert(:survey,
           project: project,
-          state: "running",
+          state: :running,
           floip_package_id: "foo",
           started_at: DateTime.utc_now()
         )
@@ -350,7 +350,7 @@ defmodule AskWeb.FloipControllerTest do
     test "does not leak packages that dont belong to user", %{conn: conn, user: _user} do
       user2 = insert(:user)
       project = create_project_for_user(user2)
-      survey = insert(:survey, project: project, state: "running", floip_package_id: "foo")
+      survey = insert(:survey, project: project, state: :running, floip_package_id: "foo")
 
       assert_error_sent :forbidden, fn ->
         get(
@@ -362,7 +362,7 @@ defmodule AskWeb.FloipControllerTest do
 
     test "ensures provided package id is correct", %{conn: conn, user: user} do
       project = create_project_for_user(user)
-      survey = insert(:survey, project: project, state: "running", floip_package_id: "foo")
+      survey = insert(:survey, project: project, state: :running, floip_package_id: "foo")
 
       assert_error_sent :forbidden, fn ->
         get(
@@ -377,7 +377,7 @@ defmodule AskWeb.FloipControllerTest do
       user: user
     } do
       project = create_project_for_user(user)
-      survey = insert(:survey, project: project, state: "not_ready", floip_package_id: "foo")
+      survey = insert(:survey, project: project, state: :not_ready, floip_package_id: "foo")
 
       assert_error_sent :forbidden, fn ->
         get(

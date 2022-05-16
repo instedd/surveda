@@ -83,7 +83,7 @@ defmodule Ask.Runtime.BrokerTest do
       assert respondent.state == :failed
 
       survey = Repo.get(Survey, survey.id)
-      assert survey.state == "terminated"
+      assert survey.state == :terminated
     end
 
     @tag :time_mock
@@ -162,7 +162,7 @@ defmodule Ask.Runtime.BrokerTest do
       assert respondent.stats.attempts["sms"] == 2
       refute respondent.timeout_at
       survey = Repo.get(Survey, survey.id)
-      assert survey.state == "terminated"
+      assert survey.state == :terminated
     end
 
     test "mobileweb mode" do
@@ -191,7 +191,7 @@ defmodule Ask.Runtime.BrokerTest do
                }"
 
       survey = Repo.get(Survey, survey.id)
-      assert survey.state == "running"
+      assert survey.state == :running
 
       respondent = Repo.get!(Respondent, respondent.id)
       assert respondent.stats.attempts["mobileweb"] == 1
@@ -235,7 +235,7 @@ defmodule Ask.Runtime.BrokerTest do
       refute respondent.timeout_at
 
       survey = Repo.get(Survey, survey.id)
-      assert survey.state == "terminated"
+      assert survey.state == :terminated
 
       :ok = broker |> GenServer.stop()
     end
@@ -349,7 +349,7 @@ defmodule Ask.Runtime.BrokerTest do
       survey =
         insert(:survey, %{
           schedule: Schedule.always(),
-          state: "running",
+          state: :running,
           questionnaires: [quiz],
           mode: [sequence_mode]
         })
@@ -464,7 +464,7 @@ defmodule Ask.Runtime.BrokerTest do
       survey =
         insert(:survey, %{
           schedule: Schedule.always(),
-          state: "running",
+          state: :running,
           questionnaires: [quiz],
           mode: [["ivr", "sms"]]
         })
@@ -599,7 +599,7 @@ defmodule Ask.Runtime.BrokerTest do
 
       survey = Repo.get(Ask.Survey, survey.id)
 
-      assert survey.state == "running"
+      assert survey.state == :running
 
       assert_respondents_by_state(survey, 6, 15)
 
@@ -682,7 +682,7 @@ defmodule Ask.Runtime.BrokerTest do
 
       # In the beginning it shouldn't be completed
       survey = Ask.Survey |> Repo.get(survey.id)
-      assert survey.state == "running"
+      assert survey.state == :running
 
       # Not yet completed: missing fourth bucket
       qb1 |> QuotaBucket.changeset(%{count: 1}) |> Repo.update!()
@@ -692,7 +692,7 @@ defmodule Ask.Runtime.BrokerTest do
       Broker.handle_info(:poll, nil)
 
       survey = Ask.Survey |> Repo.get(survey.id)
-      assert survey.state == "running"
+      assert survey.state == :running
 
       # Now it should be completed
       qb4 |> QuotaBucket.changeset(%{count: 4}) |> Repo.update!()
@@ -769,7 +769,7 @@ defmodule Ask.Runtime.BrokerTest do
       Broker.handle_info(:poll, nil)
 
       survey = Ask.Survey |> Repo.get(survey.id)
-      assert survey.state == "running"
+      assert survey.state == :running
 
       qb1 |> QuotaBucket.changeset(%{count: 1}) |> Repo.update!()
       qb2 |> QuotaBucket.changeset(%{count: 2}) |> Repo.update!()
@@ -805,7 +805,7 @@ defmodule Ask.Runtime.BrokerTest do
     end
 
     test "when there are no respondents" do
-      survey = insert(:survey, %{schedule: Schedule.always(), state: "running"})
+      survey = insert(:survey, %{schedule: Schedule.always(), state: :running})
       Broker.handle_info(:poll, nil)
 
       survey = Repo.get(Ask.Survey, survey.id)
@@ -852,7 +852,7 @@ defmodule Ask.Runtime.BrokerTest do
       # Start date is set for tomorrow, so the survey isn't poll yet.
       start_date = Timex.shift(now, days: 1) |> Timex.to_date()
       schedule = %{Schedule.always() | start_date: start_date}
-      survey = insert(:survey, %{schedule: schedule, state: "running"})
+      survey = insert(:survey, %{schedule: schedule, state: :running})
 
       Broker.handle_info(:poll, nil)
 
@@ -891,13 +891,13 @@ defmodule Ask.Runtime.BrokerTest do
       survey1 =
         insert(:survey, %{
           schedule: Map.merge(Schedule.always(), %{day_of_week: schedule1}),
-          state: "running"
+          state: :running
         })
 
       survey2 =
         insert(:survey, %{
           schedule: Map.merge(Schedule.always(), %{day_of_week: schedule2}),
-          state: "running"
+          state: :running
         })
 
       Broker.handle_info(:poll, nil)
@@ -906,7 +906,7 @@ defmodule Ask.Runtime.BrokerTest do
       survey2 = Repo.get(Ask.Survey, survey2.id)
 
       assert Ask.Survey.completed?(survey1)
-      assert survey2.state == "running"
+      assert survey2.state == :running
 
       # Only polled surveys have first_window_started_at
       assert DateTime.compare(survey1.first_window_started_at, now) == :eq
@@ -922,27 +922,27 @@ defmodule Ask.Runtime.BrokerTest do
       survey =
         insert(:survey, %{
           schedule: schedule,
-          state: "running",
+          state: :running,
           last_window_ends_at: Timex.shift(now, days: -1)
         })
 
       stop_surveys_result = Broker.poll_active_surveys(now)
 
       survey = Repo.get(Ask.Survey, survey.id)
-      assert survey.state == "cancelling"
+      assert survey.state == :cancelling
 
       Enum.each(stop_surveys_result, fn {:ok, %{processes: processes}} ->
         wait_all_cancellations_from_pids(processes)
       end)
 
       survey = Repo.get(Ask.Survey, survey.id)
-      assert survey.state == "terminated"
+      assert survey.state == :terminated
     end
 
     test "doesn't stop the survey if it isn't expired" do
       {:ok, now, _} = DateTime.from_iso8601("2021-02-11T12:00:00Z")
       schedule = %{Schedule.always() | end_date: ~D[2021-02-19]}
-      survey = insert(:survey, %{schedule: schedule, state: "running"})
+      survey = insert(:survey, %{schedule: schedule, state: :running})
 
       Broker.handle_info(:poll, nil, now)
 
@@ -951,12 +951,12 @@ defmodule Ask.Runtime.BrokerTest do
     end
 
     test "only polls surveys if today is not blocked" do
-      survey1 = insert(:survey, %{schedule: Schedule.always(), state: "running"})
+      survey1 = insert(:survey, %{schedule: Schedule.always(), state: :running})
 
       survey2 =
         insert(:survey, %{
           schedule: Map.merge(Schedule.always(), %{blocked_days: [Date.utc_today()]}),
-          state: "running"
+          state: :running
         })
 
       Broker.handle_info(:poll, nil)
@@ -964,7 +964,7 @@ defmodule Ask.Runtime.BrokerTest do
       survey1 = Repo.get(Ask.Survey, survey1.id)
       survey2 = Repo.get(Ask.Survey, survey2.id)
       assert Ask.Survey.completed?(survey1)
-      assert survey2.state == "running"
+      assert survey2.state == :running
     end
 
     test "doesn't poll surveys with a start time schedule greater than the current hour" do
@@ -978,13 +978,13 @@ defmodule Ask.Runtime.BrokerTest do
       survey =
         insert(:survey, %{
           schedule: Map.merge(Schedule.always(), %{start_time: start_time, end_time: end_time}),
-          state: "running"
+          state: :running
         })
 
       Broker.handle_info(:poll, nil, ten_oclock)
 
       survey = Repo.get(Ask.Survey, survey.id)
-      assert survey.state == "running"
+      assert survey.state == :running
     end
 
     test "doesn't poll surveys with an end time schedule smaller than the current hour" do
@@ -998,13 +998,13 @@ defmodule Ask.Runtime.BrokerTest do
       survey =
         insert(:survey, %{
           schedule: Map.merge(Schedule.always(), %{start_time: start_time, end_time: end_time}),
-          state: "running"
+          state: :running
         })
 
       Broker.handle_info(:poll, nil, twelve_oclock)
 
       survey = Repo.get(Ask.Survey, survey.id)
-      assert survey.state == "running"
+      assert survey.state == :running
     end
 
     test "doesn't poll surveys with an end time schedule smaller than the current hour considering timezone" do
@@ -1016,13 +1016,13 @@ defmodule Ask.Runtime.BrokerTest do
               end_time: ~T[12:00:00],
               timezone: "Asia/Shanghai"
             }),
-          state: "running"
+          state: :running
         })
 
       Broker.handle_info(:poll, nil, Timex.parse!("2016-01-01T11:00:00Z", "{ISO:Extended}"))
 
       survey = Repo.get(Ask.Survey, survey.id)
-      assert survey.state == "running"
+      assert survey.state == :running
     end
 
     test "does poll surveys with an end time schedule higher than the current hour considering timezone" do
@@ -1034,7 +1034,7 @@ defmodule Ask.Runtime.BrokerTest do
               end_time: ~T[12:00:00],
               timezone: "America/Buenos_Aires"
             }),
-          state: "running"
+          state: :running
         })
 
       Broker.handle_info(:poll, nil, Timex.parse!("2016-01-01T14:00:00Z", "{ISO:Extended}"))
@@ -1052,7 +1052,7 @@ defmodule Ask.Runtime.BrokerTest do
           end_time: ~T[23:59:00],
           timezone: "America/Mexico_City"
         },
-        state: "running"
+        state: :running
       }
 
       survey = insert(:survey, attrs)
@@ -1076,7 +1076,7 @@ defmodule Ask.Runtime.BrokerTest do
           end_time: ~T[23:59:00],
           timezone: "America/Mexico_City"
         },
-        state: "running"
+        state: :running
       }
 
       survey = insert(:survey, attrs)
@@ -1088,7 +1088,7 @@ defmodule Ask.Runtime.BrokerTest do
 
       # Survey shouldn't have started yet
       survey = Repo.get(Ask.Survey, survey.id)
-      assert survey.state == "running"
+      assert survey.state == :running
     end
 
     test "continue polling respondents when one of the quotas was exceeded " do
@@ -1111,7 +1111,7 @@ defmodule Ask.Runtime.BrokerTest do
       survey =
         insert(:survey, %{
           schedule: Schedule.always(),
-          state: "running",
+          state: :running,
           questionnaires: [quiz],
           mode: [["sms"]]
         })
@@ -1173,7 +1173,7 @@ defmodule Ask.Runtime.BrokerTest do
       ]
 
       survey = Repo.get(Survey, survey.id)
-      assert survey.state == "running"
+      assert survey.state == :running
       respondent = Repo.get(Respondent, respondent.id)
       assert respondent.state == :active
       assert respondent.disposition == :queued
@@ -1218,7 +1218,7 @@ defmodule Ask.Runtime.BrokerTest do
       ]
 
       survey = Repo.get(Ask.Survey, survey.id)
-      assert survey.state == "running"
+      assert survey.state == :running
       respondent = Repo.get(Respondent, respondent.id)
       assert respondent.state == :active
       assert respondent.disposition == :queued
@@ -1268,7 +1268,7 @@ defmodule Ask.Runtime.BrokerTest do
       ]
 
       survey = Repo.get(Ask.Survey, survey.id)
-      assert survey.state == "running"
+      assert survey.state == :running
       respondent = Repo.get(Respondent, respondent.id)
       assert respondent.state == :active
       assert respondent.disposition == :queued
@@ -1383,7 +1383,7 @@ defmodule Ask.Runtime.BrokerTest do
       Broker.handle_info(:poll, nil)
 
       survey = Repo.get(Ask.Survey, survey.id)
-      assert survey.state == "running"
+      assert survey.state == :running
       updated_respondent = Repo.get(Respondent, respondent.id)
       assert updated_respondent.disposition == :queued
     end
@@ -1445,7 +1445,7 @@ defmodule Ask.Runtime.BrokerTest do
       Broker.handle_info(:poll, nil)
 
       survey = Repo.get(Ask.Survey, survey.id)
-      assert survey.state == "running"
+      assert survey.state == :running
       updated_respondent = Repo.get(Respondent, respondent.id)
       assert updated_respondent.state == :active
 
@@ -1476,17 +1476,17 @@ defmodule Ask.Runtime.BrokerTest do
     Broker.handle_info(:poll, nil)
 
     survey = Repo.get(Ask.Survey, survey.id)
-    assert survey.state == "not_ready"
+    assert survey.state == :not_ready
   end
 
   test "does nothing when there are no pending respondents" do
-    survey = insert(:survey, %{schedule: Schedule.always(), state: "running"})
+    survey = insert(:survey, %{schedule: Schedule.always(), state: :running})
     insert(:respondent, survey: survey, state: :active)
 
     Broker.handle_info(:poll, nil)
 
     survey = Repo.get(Ask.Survey, survey.id)
-    assert survey.state == "running"
+    assert survey.state == :running
   end
 
   test "should not keep setting pending to actives when all the quotas are completed" do
@@ -1545,7 +1545,7 @@ defmodule Ask.Runtime.BrokerTest do
     Broker.handle_info(:poll, nil)
 
     survey = Ask.Survey |> Repo.get(survey.id)
-    assert survey.state == "running"
+    assert survey.state == :running
 
     qb1 |> QuotaBucket.changeset(%{count: 1}) |> Repo.update!()
     qb2 |> QuotaBucket.changeset(%{count: 2}) |> Repo.update!()
@@ -1580,7 +1580,7 @@ defmodule Ask.Runtime.BrokerTest do
     Broker.handle_info(:poll, nil)
 
     assert_respondents_by_state(survey, 0, 20)
-    assert survey.state == "running"
+    assert survey.state == :running
   end
 
   test "always keeps batch_size number of respondents running" do
@@ -1591,7 +1591,7 @@ defmodule Ask.Runtime.BrokerTest do
 
     survey = Repo.get(Ask.Survey, survey.id)
 
-    assert survey.state == "running"
+    assert survey.state == :running
 
     assert_respondents_by_state(survey, 10, 11)
 
@@ -1706,7 +1706,7 @@ defmodule Ask.Runtime.BrokerTest do
     survey =
       insert(:survey, %{
         schedule: Schedule.always(),
-        state: "running",
+        state: :running,
         questionnaires: [quiz1, quiz2],
         mode: [["sms"], ["ivr"]],
         comparisons: [
@@ -1755,7 +1755,7 @@ defmodule Ask.Runtime.BrokerTest do
     survey =
       insert(:survey, %{
         schedule: Schedule.always(),
-        state: "running",
+        state: :running,
         questionnaires: [quiz1, quiz2],
         mode: [["sms"], ["ivr"]],
         comparisons: [
@@ -1813,7 +1813,7 @@ defmodule Ask.Runtime.BrokerTest do
       insert(
         :survey,
         schedule: Schedule.always(),
-        state: "running",
+        state: :running,
         questionnaires: [quiz],
         mode: [[mode]],
         count_partial_results: true,

@@ -64,7 +64,7 @@ defmodule Ask.TestHelpers do
 
         survey = %{
           schedule: schedule,
-          state: "running",
+          state: :running,
           questionnaires: [quiz],
           mode: [[mode]],
           fallback_delay: fallback_delay,
@@ -149,7 +149,7 @@ defmodule Ask.TestHelpers do
 
       defp panel_survey_generator_survey(project \\ nil) do
         project = if project, do: project, else: insert(:project)
-        insert(:survey, state: "ready", project: project, generates_panel_survey: true)
+        insert(:survey, state: :ready, project: project, generates_panel_survey: true)
       end
 
       defp panel_survey_generator_survey_with_cutoff_and_comparisons() do

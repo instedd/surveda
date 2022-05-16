@@ -51,7 +51,7 @@ defmodule AskWeb.ProjectController do
         from p in Project,
           join: s in Survey,
           select: {p.id, count(s.id)},
-          where: s.project_id == p.id and s.state == "running",
+          where: s.project_id == p.id and s.state == :running,
           group_by: p.id
       )
       |> Enum.into(%{})

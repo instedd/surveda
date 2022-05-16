@@ -102,7 +102,7 @@ defmodule Ask.Runtime.Broker do
     all_running_surveys =
       Repo.all(
         from(s in Survey,
-          where: s.state == "running",
+          where: s.state == :running,
           preload: [respondent_groups: [respondent_group_channels: :channel]]
         )
       )

@@ -53,7 +53,7 @@ defmodule AskWeb.SurveySimulationControllerTest do
 
       survey = Survey |> Repo.get!(json_response(conn, 200)["data"]["id"])
       assert survey.mode == [[mode]]
-      assert survey.state == "running"
+      assert survey.state == :running
       assert survey.cutoff == 1
       assert survey.simulation == true
 

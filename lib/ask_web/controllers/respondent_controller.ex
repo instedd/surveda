@@ -470,7 +470,7 @@ defmodule AskWeb.RespondentController do
       percents_by_date = [{started_at |> DateTime.to_date(), 0}] ++ percents_by_date
 
       percents_by_date =
-        if state == "running" do
+        if state == :running do
           percents_by_date ++ [{DateTime.utc_now() |> DateTime.to_date(), 0}]
         else
           percents_by_date

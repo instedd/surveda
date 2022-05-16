@@ -99,7 +99,7 @@ defmodule AskWeb.OAuthClientControllerTest do
     insert(:oauth_token, user: user, provider: "provider", base_url: "http://test.com")
     channel = insert(:channel, user: user, provider: "provider", base_url: "http://test.com")
 
-    survey = insert(:survey, state: "ready")
+    survey = insert(:survey, state: :ready)
     respondent_group = insert(:respondent_group, survey: survey)
 
     insert(:respondent_group_channel,
@@ -111,7 +111,7 @@ defmodule AskWeb.OAuthClientControllerTest do
     delete(conn, o_auth_client_path(conn, :delete, "provider", base_url: "http://test.com"))
 
     survey = Repo.get!(Ask.Survey, survey.id)
-    assert survey.state == "not_ready"
+    assert survey.state == :not_ready
 
     refute Ask.Channel |> Repo.get(channel.id)
   end
@@ -123,7 +123,7 @@ defmodule AskWeb.OAuthClientControllerTest do
     insert(:oauth_token, user: user, provider: "provider", base_url: "http://test.com")
     channel = insert(:channel, user: user, provider: "provider", base_url: "http://test.com")
 
-    survey = insert(:survey, state: "running")
+    survey = insert(:survey, state: :running)
     respondent_group = insert(:respondent_group, survey: survey)
 
     respondent =
@@ -138,7 +138,7 @@ defmodule AskWeb.OAuthClientControllerTest do
     delete(conn, o_auth_client_path(conn, :delete, "provider", base_url: "http://test.com"))
 
     survey = Repo.get!(Ask.Survey, survey.id)
-    assert survey.state == "terminated"
+    assert survey.state == :terminated
     assert survey.exit_code == 3
     assert survey.exit_message == "Channel '#{channel.name}' no longer exists"
 

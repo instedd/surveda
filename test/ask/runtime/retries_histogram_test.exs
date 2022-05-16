@@ -409,7 +409,7 @@ defmodule Ask.Runtime.RetriesHistogramTest do
       survey =
         insert(:survey, %{
           schedule: Schedule.always(),
-          state: "running",
+          state: :running,
           questionnaires: [quiz],
           mode: [sequence_mode],
           fallback_delay: "3h"

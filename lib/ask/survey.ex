@@ -48,7 +48,17 @@ defmodule Ask.Survey do
     #   * 2nd mode sequence: SMS as primary mode, no fallback mode
     field :mode, JSON
     # not_ready, ready, pending, running, terminated, cancelling
-    field :state, :string, default: "not_ready"
+    field :state, Ecto.Enum,
+      values: [
+        :not_ready,
+        :ready,
+        :pending,
+        :running,
+        :terminated,
+        :cancelling
+      ],
+      default: :not_ready
+
     field :locked, :boolean, default: false
     field :exit_code, :integer
     field :exit_message, :string
@@ -59,9 +69,9 @@ defmodule Ask.Survey do
     field :cutoff, :integer
     field :count_partial_results, :boolean, default: false
     field :schedule, Schedule, default: Schedule.default()
-    # The moment when the survey changes to %{state: "running"} and the moment when the survey
+    # The moment when the survey changes to %{state: :running} and the moment when the survey
     # becomes actually active may differ because of its schedule configuration.
-    # started_at: the moment when the survey change to %{state: "running"}.
+    # started_at: the moment when the survey change to %{state: :running}.
     field :started_at, :utc_datetime
 
     # first_window_started_at: the moment when the survey becomes actually active for the first time.
@@ -166,7 +176,7 @@ defmodule Ask.Survey do
   end
 
   defp set_ended_at_in_terminated_survey(changeset) do
-    if get_field(changeset, :state) == "terminated" do
+    if get_field(changeset, :state) == :terminated do
       change(changeset, ended_at: SystemTime.time().now |> DateTime.truncate(:second))
     else
       changeset
@@ -207,19 +217,19 @@ defmodule Ask.Survey do
     state = get_field(changeset, :state)
 
     cond do
-      state == "not_ready" && ready ->
-        change(changeset, state: "ready")
+      state == :not_ready && ready ->
+        change(changeset, state: :ready)
 
-      state == "ready" && !ready ->
-        change(changeset, state: "not_ready")
+      state == :ready && !ready ->
+        change(changeset, state: :not_ready)
 
       true ->
         changeset
     end
   end
 
-  def editable?(%{state: "running"}), do: false
-  def editable?(%{state: "terminated"}), do: false
+  def editable?(%{state: :running}), do: false
+  def editable?(%{state: :terminated}), do: false
   def editable?(_), do: true
 
   def validate_from_less_than_to(changeset) do
@@ -426,7 +436,7 @@ defmodule Ask.Survey do
     do: ConfigHelper.get_config(Ask.Runtime.Broker, name, &String.to_integer/1)
 
   def launched?(survey) do
-    survey.state in ["running", "terminated"]
+    survey.state in [:running, :terminated]
   end
 
   def adjust_timezone(date_time, %Survey{} = survey) do
@@ -442,20 +452,20 @@ defmodule Ask.Survey do
   end
 
   def completed?(survey) do
-    survey.state == "terminated" && survey.exit_code == 0
+    survey.state == :terminated && survey.exit_code == 0
   end
 
   def cancelled?(survey) do
-    survey.state == "terminated" && survey.exit_code == 1
+    survey.state == :terminated && survey.exit_code == 1
   end
 
   def has_floip_package?(survey) do
-    survey.state == "running" || survey.state == "terminated"
+    survey.state == :running || survey.state == :terminated
   end
 
   def cancel_respondents(survey) do
     from(r in Respondent, where: r.state == :active and r.survey_id == ^survey.id)
-    |> Repo.update_all(set: [state: "cancelled", session: nil, timeout_at: nil])
+    |> Repo.update_all(set: [state: :cancelled, session: nil, timeout_at: nil])
   end
 
   def with_links(%Survey{} = survey, level \\ "owner") do
@@ -490,7 +500,7 @@ defmodule Ask.Survey do
   def running_channels() do
     query =
       from s in Survey,
-        where: s.state == "running",
+        where: s.state == :running,
         join: group in RespondentGroup,
         on: s.id == group.survey_id,
         join: rgc in RespondentGroupChannel,
@@ -742,7 +752,7 @@ defmodule Ask.Survey do
     end)
   end
 
-  def terminated?(survey), do: survey.state == "terminated"
+  def terminated?(survey), do: survey.state == :terminated
 
   def succeeded?(survey), do: terminated?(survey) and survey.exit_code == 0
 
@@ -805,7 +815,7 @@ defmodule Ask.Survey do
   end
 
   # Running surveys aren't deletable
-  def deletable?(%{state: "running"} = _survey), do: false
+  def deletable?(%{state: :running} = _survey), do: false
   # Only wave of a panel survey isn't deletable (because a panel survey cannot be empty)
   def deletable?(survey), do: not only_wave_of_panel_survey?(survey)
 

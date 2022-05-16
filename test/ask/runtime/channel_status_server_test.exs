@@ -18,10 +18,10 @@ defmodule Ask.Runtime.ChannelStatusServerTest do
     user = insert(:user)
 
     surveys = [
-      insert(:survey, state: "pending"),
-      insert(:survey, state: "running"),
-      insert(:survey, state: "running"),
-      insert(:survey, state: "running")
+      insert(:survey, state: :pending),
+      insert(:survey, state: :running),
+      insert(:survey, state: :running),
+      insert(:survey, state: :running)
     ]
 
     channels = [
@@ -62,7 +62,7 @@ defmodule Ask.Runtime.ChannelStatusServerTest do
     {:ok, pid} = ChannelStatusServer.start_link()
     Process.register(self(), :mail_target)
     user = insert(:user)
-    survey = insert(:survey, state: "running")
+    survey = insert(:survey, state: :running)
 
     channel =
       TestChannel.create_channel(user, "test", TestChannel.settings(TestChannel.new(), 1, :down))
@@ -79,7 +79,7 @@ defmodule Ask.Runtime.ChannelStatusServerTest do
     {:ok, pid} = ChannelStatusServer.start_link()
     Process.register(self(), :mail_target)
     user = insert(:user)
-    survey = insert(:survey, state: "running")
+    survey = insert(:survey, state: :running)
 
     channel =
       TestChannel.create_channel(user, "test", TestChannel.settings(TestChannel.new(), 1, :error))
@@ -96,7 +96,7 @@ defmodule Ask.Runtime.ChannelStatusServerTest do
     {:ok, pid} = ChannelStatusServer.start_link()
     Process.register(self(), :mail_target)
     user = insert(:user)
-    survey = insert(:survey, state: "running")
+    survey = insert(:survey, state: :running)
 
     channel =
       TestChannel.create_channel(user, "test", TestChannel.settings(TestChannel.new(), 1, :down))
@@ -114,7 +114,7 @@ defmodule Ask.Runtime.ChannelStatusServerTest do
     {:ok, pid} = ChannelStatusServer.start_link()
     Process.register(self(), :mail_target)
     user = insert(:user)
-    survey = insert(:survey, state: "running")
+    survey = insert(:survey, state: :running)
 
     channel =
       TestChannel.create_channel(user, "test", TestChannel.settings(TestChannel.new(), 1, :error))

@@ -79,7 +79,7 @@ defmodule Ask.Runtime.SurveyActionTest do
 
   defp ready_survey() do
     project = insert(:project)
-    insert(:survey, state: "ready", project: project)
+    insert(:survey, state: :ready, project: project)
   end
 
   defp ready_survey_in_folder() do

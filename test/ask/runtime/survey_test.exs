@@ -53,7 +53,7 @@ defmodule Ask.Runtime.SurveyTest do
       ]
 
       survey = Repo.get(Ask.Survey, survey.id)
-      assert survey.state == "running"
+      assert survey.state == :running
 
       respondent = Repo.get(Respondent, respondent.id)
       assert respondent.state == :active
@@ -236,7 +236,7 @@ defmodule Ask.Runtime.SurveyTest do
       Broker.poll()
 
       survey = Repo.get(Ask.Survey, survey.id)
-      assert survey.state == "running"
+      assert survey.state == :running
 
       respondent = Repo.get(Respondent, respondent.id)
       assert respondent.state == :active
@@ -408,7 +408,7 @@ defmodule Ask.Runtime.SurveyTest do
                }"
 
       survey = Repo.get(Ask.Survey, survey.id)
-      assert survey.state == "running"
+      assert survey.state == :running
 
       respondent = Repo.get(Respondent, respondent.id)
       assert respondent.state == :active
@@ -531,7 +531,7 @@ defmodule Ask.Runtime.SurveyTest do
       ]
 
       survey = Repo.get(Ask.Survey, survey.id)
-      assert survey.state == "running"
+      assert survey.state == :running
 
       respondent = Repo.get(Respondent, respondent.id)
       assert respondent.state == :active
@@ -713,7 +713,7 @@ defmodule Ask.Runtime.SurveyTest do
       ]
 
       survey = Repo.get(Ask.Survey, survey.id)
-      assert survey.state == "running"
+      assert survey.state == :running
 
       respondent = Repo.get(Respondent, respondent.id)
       assert respondent.state == :active
@@ -882,7 +882,7 @@ defmodule Ask.Runtime.SurveyTest do
       Broker.poll()
 
       survey = Repo.get(Ask.Survey, survey.id)
-      assert survey.state == "running"
+      assert survey.state == :running
 
       respondent = Repo.get(Respondent, respondent.id)
       assert respondent.state == :active
@@ -1157,7 +1157,7 @@ defmodule Ask.Runtime.SurveyTest do
       Survey.delivery_confirm(respondent, "Do you smoke?")
 
       survey = Repo.get(Ask.Survey, survey.id)
-      assert survey.state == "running"
+      assert survey.state == :running
 
       respondent = Repo.get(Respondent, respondent.id)
       assert respondent.state == :active
@@ -1319,7 +1319,7 @@ defmodule Ask.Runtime.SurveyTest do
       Broker.poll()
 
       survey = Repo.get(Ask.Survey, survey.id)
-      assert survey.state == "running"
+      assert survey.state == :running
 
       respondent = Repo.get(Respondent, respondent.id)
       assert respondent.state == :active
@@ -1822,7 +1822,7 @@ defmodule Ask.Runtime.SurveyTest do
       survey =
         insert(:survey, %{
           schedule: Schedule.always(),
-          state: "running",
+          state: :running,
           questionnaires: [quiz],
           mode: [["sms"]],
           count_partial_results: true
@@ -1941,7 +1941,7 @@ defmodule Ask.Runtime.SurveyTest do
       survey =
         insert(:survey, %{
           schedule: Schedule.always(),
-          state: "running",
+          state: :running,
           questionnaires: [quiz],
           mode: [["sms"]],
           count_partial_results: true
@@ -2305,7 +2305,7 @@ defmodule Ask.Runtime.SurveyTest do
     ]
 
     survey = Repo.get(Ask.Survey, survey.id)
-    assert survey.state == "running"
+    assert survey.state == :running
 
     respondent = Repo.get(Respondent, respondent.id)
     assert respondent.state == :active
@@ -2316,7 +2316,7 @@ defmodule Ask.Runtime.SurveyTest do
     assert respondent.state == :active
     assert respondent.disposition == :"interim partial"
     survey = Repo.get(Ask.Survey, survey.id)
-    assert survey.state == "running"
+    assert survey.state == :running
 
     histories = RespondentDispositionHistory |> Repo.all()
     assert length(histories) == 2
@@ -2582,14 +2582,14 @@ defmodule Ask.Runtime.SurveyTest do
     assert respondent.state == :active
     assert respondent.disposition == :"interim partial"
     survey = Repo.get(Ask.Survey, survey.id)
-    assert survey.state == "running"
+    assert survey.state == :running
 
     reply = Survey.sync_step(respondent, Flow.Message.reply("Yes"))
 
     assert {:reply, ReplyHelper.simple("Is this the last question?"), _} = reply
 
     respondent = Repo.get(Respondent, respondent.id) |> Repo.preload(:responses)
-    assert survey.state == "running"
+    assert survey.state == :running
     assert respondent.state == :active
     assert respondent.disposition == :"interim partial"
     assert hd(respondent.responses).value == "Yes"
@@ -3060,7 +3060,7 @@ defmodule Ask.Runtime.SurveyTest do
     # If there's a problem with one respondent, continue the survey with others
     # and mark this one as failed
     survey = Repo.get(Ask.Survey, survey.id)
-    assert survey.state == "running"
+    assert survey.state == :running
 
     respondent = Repo.get(Respondent, respondent.id)
     assert respondent.state == :failed
@@ -3104,7 +3104,7 @@ defmodule Ask.Runtime.SurveyTest do
     Broker.poll()
 
     survey = Repo.get(Ask.Survey, survey.id)
-    assert survey.state == "running"
+    assert survey.state == :running
 
     respondent = Repo.get(Respondent, respondent.id)
     assert respondent.state == :active
@@ -3155,7 +3155,7 @@ defmodule Ask.Runtime.SurveyTest do
     Broker.poll()
 
     survey = Repo.get(Ask.Survey, survey.id)
-    assert survey.state == "running"
+    assert survey.state == :running
 
     respondent = Repo.get(Respondent, respondent.id)
     assert respondent.state == :active
@@ -3212,7 +3212,7 @@ defmodule Ask.Runtime.SurveyTest do
     survey =
       insert(:survey, %{
         schedule: Schedule.always(),
-        state: "running",
+        state: :running,
         questionnaires: [quiz],
         mode: [["ivr", "sms"]]
       })
@@ -3263,7 +3263,7 @@ defmodule Ask.Runtime.SurveyTest do
     survey =
       insert(:survey, %{
         schedule: Schedule.always(),
-        state: "running",
+        state: :running,
         questionnaires: [quiz],
         mode: [["sms", "mobileweb"]]
       })
@@ -3320,7 +3320,7 @@ defmodule Ask.Runtime.SurveyTest do
              }"
 
     survey = Repo.get(Ask.Survey, survey.id)
-    assert survey.state == "running"
+    assert survey.state == :running
 
     respondent = Repo.get(Respondent, respondent.id)
     assert respondent.state == :active

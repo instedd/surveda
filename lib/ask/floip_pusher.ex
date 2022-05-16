@@ -31,7 +31,7 @@ defmodule Ask.FloipPusher do
         from endpoint in FloipEndpoint,
           join: survey in Survey,
           on: endpoint.survey_id == survey.id,
-          where: survey.state == "running" or survey.state == "terminated",
+          where: survey.state == :running or survey.state == :terminated,
           where: endpoint.retries < 10,
           where: endpoint.state == "enabled",
           order_by: endpoint.survey_id
@@ -78,7 +78,7 @@ defmodule Ask.FloipPusher do
               )
           end
         else
-          if endpoint.survey.state == "terminated" do
+          if endpoint.survey.state == :terminated do
             endpoint_change = Ecto.Changeset.change(endpoint, state: "terminated")
             Repo.update!(endpoint_change)
 
