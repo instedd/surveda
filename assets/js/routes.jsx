@@ -22,7 +22,7 @@ import QuestionnaireTitle from "./components/questionnaires/QuestionnaireTitle"
 import CollaboratorIndex from "./components/collaborators/CollaboratorIndex"
 import ActivityIndex from "./components/activity/ActivityIndex"
 import InviteConfirmation from "./components/InviteConfirmation"
-import ChannelEdit from "./components/channels/ChannelEdit"
+import ChannelShare from "./components/channels/ChannelShare"
 import ChannelPatterns from "./components/channels/ChannelPatterns"
 import ChannelTitle from "./components/channels/ChannelTitle"
 import * as questionnaireActions from "./actions/questionnaire"
@@ -104,7 +104,7 @@ export default (
       <Route path="new" component={ChannelNew} title="New Channel" />
       <Route path=":channelId" title={ChannelTitle}>
         <IndexRedirect to="share" />
-        <Route path="share" components={{ body: ChannelEdit, tabs: ChannelTabs }} />
+        <Route path="share" components={{ body: ChannelShare, tabs: ChannelTabs }} />
         <Route path="patterns" components={{ body: ChannelPatterns, tabs: ChannelTabs }} />
         <Route path="settings" components={{ body: ChannelSettings, tabs: ChannelTabs }} />
       </Route>
