@@ -37,6 +37,7 @@ defmodule AskWeb.LayoutView do
       available_languages_for_numbers: Ask.NumberTranslator.langs(),
       nuntium: Config.provider_config(Nuntium) |> guisso_configs,
       verboice: Config.provider_config(Verboice) |> guisso_configs,
+      intercom_app_id: Ask.Intercom.intercom_app_id(),
       default_channel_capacity: Config.default_channel_capacity()
     }
 
