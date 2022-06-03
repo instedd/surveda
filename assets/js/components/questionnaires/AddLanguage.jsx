@@ -33,7 +33,7 @@ class AddLanguage extends Component {
       lang.text.indexOf(value) !== -1 || lang.text.toLowerCase().indexOf(value) !== -1
 
     let languagesOptions = iso6393
-      .filter((lang) => lang.type == "living" && lang.iso6392T != null)
+      .filter((lang) => lang.type == "living")
       .map((lang) => ({ id: idForLanguange(lang), text: lang.name }))
 
     // Don't show languages that are already selected
