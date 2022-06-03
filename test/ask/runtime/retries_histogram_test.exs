@@ -10,7 +10,7 @@ defmodule Ask.Runtime.RetriesHistogramTest do
 
   alias Ask.Runtime.{
     Survey,
-    Broker,
+    SurveyBroker,
     Flow,
     ChannelStatusServer,
     VerboiceChannel,

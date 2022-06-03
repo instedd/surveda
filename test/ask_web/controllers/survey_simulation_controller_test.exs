@@ -173,10 +173,10 @@ defmodule AskWeb.SurveySimulationControllerTest do
       end
 
       poll_survey = fn ->
-        Broker.start_link()
+        SurveyBroker.start_link()
         {:ok, _pid} = ChannelStatusServer.start_link()
         Process.register(self(), :mail_target)
-        Broker.poll()
+        SurveyBroker.poll()
       end
 
       mobile_contact_messages = fn respondent_id ->

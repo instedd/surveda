@@ -17,9 +17,9 @@ The main reason for taking this desition was that [Mutex](https://hexdocs.pm/mut
 
 Below the places where the respondent locks are done
 
-### Broker
+### Survey Broker
 
-Every time the broker is being proactive
+Every time the survey broker is being proactive
 
 * `retry_respondents`
 * `poll_active_surveys`
