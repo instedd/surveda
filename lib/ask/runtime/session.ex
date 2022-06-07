@@ -16,7 +16,7 @@ defmodule Ask.Runtime.Session do
 
   alias Ask.Runtime.{
     Flow,
-    Channel,
+    ChannelBroker,
     Session,
     Reply,
     SurveyLogger,
@@ -96,10 +96,10 @@ defmodule Ask.Runtime.Session do
     runtime_channel = Ask.Channel.runtime_channel(session.current_mode.channel)
 
     cond do
-      Channel.has_queued_message?(runtime_channel, channel_state) ->
+      ChannelBroker.has_queued_message?(runtime_channel, channel_state) ->
         {:ok, session, %Reply{}, current_timeout(session)}
 
-      Channel.message_expired?(runtime_channel, channel_state) ->
+      ChannelBroker.message_expired?(runtime_channel, channel_state) ->
         # do not retry since the respondent was never contacted, thus the retries should not be consumed
         session = contact_respondent(session, runtime_channel)
         {:ok, session, %Reply{}, base_timeout(session) + current_timeout(session)}
@@ -251,7 +251,7 @@ defmodule Ask.Runtime.Session do
     respondent = session.respondent
     {:ok, _flow, reply} = Flow.retry(session.flow, TextVisitor.new("sms"), respondent.disposition)
     log_prompts(reply, session.current_mode.channel, session.flow.mode, respondent)
-    respondent = runtime_channel |> Channel.ask(session.respondent, token, reply)
+    respondent = runtime_channel |> ChannelBroker.ask(session.respondent, token, reply)
     %{session | token: token, respondent: respondent}
   end
 
@@ -271,7 +271,7 @@ defmodule Ask.Runtime.Session do
 
     channel_state =
       runtime_channel
-      |> Channel.setup(session.respondent, token, next_available_date_time, today_end_time)
+      |> ChannelBroker.setup(session.respondent, token, next_available_date_time, today_end_time)
       |> handle_setup_response()
 
     %{session | channel_state: channel_state, token: token}
@@ -282,7 +282,7 @@ defmodule Ask.Runtime.Session do
 
     reply = mobile_contact_reply(session)
     log_prompts(reply, session.current_mode.channel, session.flow.mode, session.respondent)
-    respondent = runtime_channel |> Channel.ask(session.respondent, token, reply)
+    respondent = runtime_channel |> ChannelBroker.ask(session.respondent, token, reply)
     %{session | token: token, respondent: respondent}
   end
 
@@ -318,7 +318,7 @@ defmodule Ask.Runtime.Session do
 
   def cancel(session) do
     Ask.Channel.runtime_channel(session.current_mode.channel)
-    |> Channel.cancel_message(session.channel_state)
+    |> ChannelBroker.cancel_message(session.channel_state)
   end
 
   def dump(session) do
@@ -382,7 +382,7 @@ defmodule Ask.Runtime.Session do
     runtime_channel = Ask.Channel.runtime_channel(channel)
 
     # Is this really necessary?
-    Channel.setup(runtime_channel, respondent, token, nil, nil)
+    ChannelBroker.setup(runtime_channel, respondent, token, nil, nil)
 
     case flow
          |> Flow.step(
@@ -394,7 +394,7 @@ defmodule Ask.Runtime.Session do
         respondent =
           if Reply.prompts(reply) != [] do
             log_prompts(reply, channel, flow.mode, respondent, true)
-            runtime_channel |> Channel.ask(respondent, token, reply)
+            runtime_channel |> ChannelBroker.ask(respondent, token, reply)
           else
             respondent
           end
@@ -413,7 +413,7 @@ defmodule Ask.Runtime.Session do
         end
 
         log_prompts(reply, channel, flow.mode, respondent)
-        respondent = runtime_channel |> Channel.ask(respondent, token, reply)
+        respondent = runtime_channel |> ChannelBroker.ask(respondent, token, reply)
         {:ok, %{session | flow: flow, respondent: respondent}, reply, current_timeout(session)}
     end
   end
@@ -473,7 +473,7 @@ defmodule Ask.Runtime.Session do
     channel_state =
       channel
       |> Ask.Channel.runtime_channel()
-      |> Channel.setup(respondent, token, next_available_date_time, today_end_time)
+      |> ChannelBroker.setup(respondent, token, next_available_date_time, today_end_time)
       |> handle_setup_response
 
     log_contact("Enqueueing call", channel, flow.mode, respondent)
@@ -494,7 +494,7 @@ defmodule Ask.Runtime.Session do
     runtime_channel = Ask.Channel.runtime_channel(channel)
 
     # Is this really necessary?
-    Channel.setup(runtime_channel, respondent, token, nil, nil)
+    ChannelBroker.setup(runtime_channel, respondent, token, nil, nil)
 
     reply = mobile_contact_reply(session)
 
@@ -502,7 +502,7 @@ defmodule Ask.Runtime.Session do
 
     respondent =
       runtime_channel
-      |> Channel.ask(respondent, token, reply)
+      |> ChannelBroker.ask(respondent, token, reply)
 
     {:ok, %{session | flow: flow, respondent: respondent}, reply, current_timeout(session)}
   end
@@ -630,7 +630,7 @@ defmodule Ask.Runtime.Session do
   defp log_prompts(reply, channel, mode, respondent, force \\ false, persist \\ true) do
     if persist do
       if force ||
-           !(channel |> Ask.Channel.runtime_channel() |> Channel.has_delivery_confirmation?()) do
+           !(channel |> Ask.Channel.runtime_channel() |> ChannelBroker.has_delivery_confirmation?()) do
         disposition = Reply.disposition(reply) || respondent.disposition
 
         Enum.each(Reply.steps(reply), fn step ->
@@ -716,7 +716,7 @@ defmodule Ask.Runtime.Session do
         new_state
 
       _ ->
-        # TODO: handle Channel.setup errors
+        # TODO: handle ChannelBroker.setup errors
         nil
     end
   end

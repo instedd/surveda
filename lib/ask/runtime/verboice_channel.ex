@@ -468,8 +468,8 @@ defmodule Ask.Runtime.VerboiceChannel do
         end
 
       channel.client
-      |> Verboice.Client.call(params)
-      |> Ask.Runtime.VerboiceChannel.process_call_response()
+        |> Verboice.Client.call(params)
+        |> VerboiceChannel.process_call_response()
     end
 
     def has_queued_message?(channel, %{"verboice_call_id" => call_id}) do
