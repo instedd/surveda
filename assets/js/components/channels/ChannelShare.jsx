@@ -7,7 +7,7 @@ import * as projectsActions from "../../actions/projects"
 import * as routes from "../../routes"
 import { translate } from "react-i18next"
 
-class ChannelEdit extends Component {
+class ChannelShare extends Component {
   static propTypes = {
     t: PropTypes.func,
     dispatch: PropTypes.func,
@@ -85,4 +85,4 @@ const mapStateToProps = (state, ownProps) => ({
   channel: state.channel.data,
 })
 
-export default translate()(withRouter(connect(mapStateToProps)(ChannelEdit)))
+export default translate()(withRouter(connect(mapStateToProps)(ChannelShare)))

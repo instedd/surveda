@@ -7,6 +7,7 @@ export const CREATE_PATTERN = "CHANNEL_CREATE_PATTERN"
 export const SET_INPUT_PATTERN = "CHANNEL_SET_INPUT_PATTERN"
 export const SET_OUTPUT_PATTERN = "CHANNEL_SET_OUTPUT_PATTERN"
 export const REMOVE_PATTERN = "CHANNEL_REMOVE_PATTERN"
+export const SET_CAPACITY = "CHANNEL_SET_CAPACITY"
 export const FETCH = "CHANNEL_FETCH"
 export const RECEIVE = "CHANNEL_RECEIVE"
 export const SAVING = "CHANNEL_SAVING"
@@ -86,6 +87,11 @@ export const setOutputPattern = (index: number, value: string) => ({
 export const removePattern = (index: number) => ({
   type: REMOVE_PATTERN,
   index,
+})
+
+export const setCapacity = (value: number) => ({
+  type: SET_CAPACITY,
+  value: value,
 })
 
 export const saving = () => ({
