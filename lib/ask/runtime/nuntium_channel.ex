@@ -1,7 +1,7 @@
 defmodule Ask.Runtime.NuntiumChannel do
   @behaviour Ask.Runtime.ChannelProvider
   use Ask.Model
-  alias Ask.Runtime.{Survey, NuntiumChannel, Flow, Reply, ReplyStep}
+  alias Ask.Runtime.{Survey, NuntiumChannel, NuntiumChannelBroker, Flow, Reply, ReplyStep}
   alias Ask.{Repo, Respondent, Channel, Stats, SurvedaMetrics}
   import Ecto.Query
   import Plug.Conn
@@ -370,8 +370,7 @@ defmodule Ask.Runtime.NuntiumChannel do
 
       respondent = NuntiumChannel.update_stats(respondent)
 
-      Nuntium.Client.new(channel.base_url, channel.oauth_token)
-      |> Nuntium.Client.send_ao(channel.settings["nuntium_account"], messages)
+      NuntiumChannelBroker.send_ao(channel, messages)
 
       respondent
     end

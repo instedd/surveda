@@ -2,7 +2,7 @@ defmodule Ask.Runtime.VerboiceChannel do
   alias __MODULE__
   use Ask.Model
   alias Ask.{Repo, Respondent, Channel, SurvedaMetrics, Stats}
-  alias Ask.Runtime.{Survey, Flow, Reply, RetriesHistogram}
+  alias Ask.Runtime.{Survey, Flow, Reply, RetriesHistogram, VerboiceChannelBroker}
   alias AskWeb.Router.Helpers
   import Plug.Conn
   import XmlBuilder
@@ -459,9 +459,7 @@ defmodule Ask.Runtime.VerboiceChannel do
           Keyword.put(params, :channel, channel.channel_name)
         end
 
-      channel.client
-      |> Verboice.Client.call(params)
-      |> Ask.Runtime.VerboiceChannel.process_call_response()
+      VerboiceChannelBroker.call(channel, params)
     end
 
     def has_queued_message?(channel, %{"verboice_call_id" => call_id}) do
