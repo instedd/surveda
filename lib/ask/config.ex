@@ -40,6 +40,10 @@ defmodule Ask.Config do
     {:reply, result, state}
   end
 
+  def default_channel_capacity do
+    System.get_env("DEFAULT_CHANNEL_CAPACITY") || 100
+  end
+
   defp read_config(module_name, env_var_name) do
     config =
       read_config_env_var(env_var_name) ||
