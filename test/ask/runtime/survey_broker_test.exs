@@ -1,11 +1,11 @@
-defmodule Ask.Runtime.BrokerTest do
+defmodule Ask.Runtime.SurveyBrokerTest do
   use Ask.DataCase
   use Ask.DummySteps
   use Timex
   use Ask.MockTime
   use Ask.TestHelpers
 
-  alias Ask.Runtime.{Broker, ReplyHelper, ChannelStatusServer, SurveyLogger, Flow}
+  alias Ask.Runtime.{SurveyBroker, ReplyHelper, ChannelStatusServer, SurveyLogger, Flow}
 
   alias Ask.{
     Repo,
@@ -34,7 +34,7 @@ defmodule Ask.Runtime.BrokerTest do
       survey |> Survey.changeset(%{sms_retry_configuration: "10m"}) |> Repo.update()
 
       # First poll, activate the respondent
-      Broker.handle_info(:poll, nil)
+      SurveyBroker.handle_info(:poll, nil)
 
       assert_received [
         :setup,
@@ -59,7 +59,7 @@ defmodule Ask.Runtime.BrokerTest do
       |> Repo.update()
 
       # Second poll, retry the question
-      Broker.handle_info(:poll, nil)
+      SurveyBroker.handle_info(:poll, nil)
       refute_received [:setup, _, _, _, _]
 
       assert_received [
@@ -77,7 +77,7 @@ defmodule Ask.Runtime.BrokerTest do
       |> Repo.update()
 
       # Third poll, this time it should fail
-      Broker.handle_info(:poll, nil)
+      SurveyBroker.handle_info(:poll, nil)
 
       respondent = Repo.get(Respondent, respondent.id)
       assert respondent.state == :failed
@@ -102,7 +102,7 @@ defmodule Ask.Runtime.BrokerTest do
       mock_time(edge_time)
 
       # First poll, activate the respondent
-      Broker.handle_info(:poll, nil)
+      SurveyBroker.handle_info(:poll, nil)
 
       assert_received [
         :setup,
@@ -131,7 +131,7 @@ defmodule Ask.Runtime.BrokerTest do
       mock_time(timeout_time)
 
       # Second poll, retry the question
-      Broker.handle_info(:poll, nil)
+      SurveyBroker.handle_info(:poll, nil)
       refute_received [:setup, _, _, _, _]
 
       assert_received [
@@ -154,7 +154,7 @@ defmodule Ask.Runtime.BrokerTest do
       mock_time(timeout_time)
 
       # Third poll, this time it should fail
-      Broker.handle_info(:poll, nil)
+      SurveyBroker.handle_info(:poll, nil)
 
       # Assert is failed
       respondent = Repo.get(Respondent, respondent.id)
@@ -172,8 +172,8 @@ defmodule Ask.Runtime.BrokerTest do
       survey |> Survey.changeset(%{mobileweb_retry_configuration: "10m"}) |> Repo.update()
       sequence_mode = ["mobileweb"]
 
-      {:ok, broker} = Broker.start_link()
-      Broker.poll()
+      {:ok, broker} = SurveyBroker.start_link()
+      SurveyBroker.poll()
 
       assert_receive [
         :ask,
@@ -202,7 +202,7 @@ defmodule Ask.Runtime.BrokerTest do
       Respondent.changeset(respondent, %{timeout_at: timeout_at}) |> Repo.update()
 
       # Second poll, retry the question
-      Broker.poll()
+      SurveyBroker.poll()
       refute_received [:setup, _, _, _, _]
 
       assert_receive [
@@ -227,7 +227,7 @@ defmodule Ask.Runtime.BrokerTest do
       Respondent.changeset(respondent, %{timeout_at: timeout_at}) |> Repo.update()
 
       # Third poll, this time it should fail
-      Broker.poll()
+      SurveyBroker.poll()
 
       respondent = Repo.get(Respondent, respondent.id)
 
@@ -248,7 +248,7 @@ defmodule Ask.Runtime.BrokerTest do
       sequence_mode = ["ivr"]
 
       # First poll, activate the respondent
-      Broker.handle_info(:poll, nil)
+      SurveyBroker.handle_info(:poll, nil)
 
       assert_received [
         :setup,
@@ -264,7 +264,7 @@ defmodule Ask.Runtime.BrokerTest do
       |> Repo.update()
 
       # Second poll, retry the question
-      Broker.handle_info(:poll, nil)
+      SurveyBroker.handle_info(:poll, nil)
 
       assert_received [
         :setup,
@@ -280,7 +280,7 @@ defmodule Ask.Runtime.BrokerTest do
       |> Repo.update()
 
       # Third poll, this time it should fail
-      Broker.handle_info(:poll, nil)
+      SurveyBroker.handle_info(:poll, nil)
 
       respondent = Repo.get(Respondent, respondent.id)
       assert respondent.state == :failed
@@ -379,7 +379,7 @@ defmodule Ask.Runtime.BrokerTest do
       survey |> Survey.changeset(%{ivr_retry_configuration: "20m"}) |> Repo.update!()
 
       # First poll, activate the respondent
-      Broker.handle_info(:poll, nil)
+      SurveyBroker.handle_info(:poll, nil)
 
       assert_received [
         :setup,
@@ -403,7 +403,7 @@ defmodule Ask.Runtime.BrokerTest do
       Respondent.changeset(respondent, %{timeout_at: timeout_at}) |> Repo.update()
 
       # Second poll, retry the question
-      Broker.handle_info(:poll, nil)
+      SurveyBroker.handle_info(:poll, nil)
 
       refute_received [:setup, _, _, _, _]
 
@@ -422,7 +422,7 @@ defmodule Ask.Runtime.BrokerTest do
       Respondent.changeset(respondent, %{timeout_at: timeout_at}) |> Repo.update()
 
       # Third poll, retry the question
-      Broker.handle_info(:poll, nil)
+      SurveyBroker.handle_info(:poll, nil)
       refute_received [:setup, _, _, _, _]
 
       assert_received [
@@ -440,7 +440,7 @@ defmodule Ask.Runtime.BrokerTest do
       Respondent.changeset(respondent, %{timeout_at: timeout_at}) |> Repo.update()
 
       # Fourth poll, this time fallback to IVR channel
-      Broker.handle_info(:poll, nil)
+      SurveyBroker.handle_info(:poll, nil)
 
       assert_received [
         :setup,
@@ -494,7 +494,7 @@ defmodule Ask.Runtime.BrokerTest do
       survey |> Survey.changeset(%{ivr_retry_configuration: "2m 20m"}) |> Repo.update!()
 
       # First poll, activate the respondent
-      Broker.handle_info(:poll, nil)
+      SurveyBroker.handle_info(:poll, nil)
 
       assert_received [
         :setup,
@@ -510,7 +510,7 @@ defmodule Ask.Runtime.BrokerTest do
       |> Repo.update()
 
       # Second poll, retry the question
-      Broker.handle_info(:poll, nil)
+      SurveyBroker.handle_info(:poll, nil)
 
       assert_received [
         :setup,
@@ -526,7 +526,7 @@ defmodule Ask.Runtime.BrokerTest do
       |> Repo.update()
 
       # Third poll, this time fallback to SMS channel
-      Broker.handle_info(:poll, nil)
+      SurveyBroker.handle_info(:poll, nil)
 
       assert_received [
         :setup,
@@ -542,7 +542,7 @@ defmodule Ask.Runtime.BrokerTest do
       |> Repo.update()
 
       # Fourth poll, this time fallback to SMS channel
-      Broker.handle_info(:poll, nil)
+      SurveyBroker.handle_info(:poll, nil)
 
       assert_received [
         :setup,
@@ -568,7 +568,7 @@ defmodule Ask.Runtime.BrokerTest do
 
       Repo.update(survey |> change |> Ask.Survey.changeset(%{cutoff: 1}))
 
-      Broker.handle_info(:poll, nil)
+      SurveyBroker.handle_info(:poll, nil)
 
       survey = Repo.get(Ask.Survey, survey.id)
       assert_respondents_by_state(survey, 1, 20)
@@ -581,7 +581,7 @@ defmodule Ask.Runtime.BrokerTest do
         Repo.update(respondent |> change |> Respondent.changeset(%{state: :failed}))
       end)
 
-      Broker.handle_info(:poll, nil)
+      SurveyBroker.handle_info(:poll, nil)
 
       survey = Repo.get(Ask.Survey, survey.id)
 
@@ -595,7 +595,7 @@ defmodule Ask.Runtime.BrokerTest do
 
       Repo.update(survey |> change |> Ask.Survey.changeset(%{cutoff: 6}))
 
-      Broker.handle_info(:poll, nil)
+      SurveyBroker.handle_info(:poll, nil)
 
       survey = Repo.get(Ask.Survey, survey.id)
 
@@ -608,7 +608,7 @@ defmodule Ask.Runtime.BrokerTest do
         Repo.update(respondent |> change |> Respondent.changeset(%{state: :completed}))
       end)
 
-      Broker.handle_info(:poll, nil)
+      SurveyBroker.handle_info(:poll, nil)
 
       assert_respondents_by_state(survey, 1, 15)
 
@@ -617,7 +617,7 @@ defmodule Ask.Runtime.BrokerTest do
         Repo.update(respondent |> change |> Respondent.changeset(%{state: :completed}))
       end)
 
-      Broker.handle_info(:poll, nil)
+      SurveyBroker.handle_info(:poll, nil)
 
       assert_respondents_by_state(survey, 0, 15)
 
@@ -678,7 +678,7 @@ defmodule Ask.Runtime.BrokerTest do
       qb3 = from(q in QuotaBucket, where: q.quota == 3) |> Repo.one()
       qb4 = from(q in QuotaBucket, where: q.quota == 4) |> Repo.one()
 
-      Broker.handle_info(:poll, nil)
+      SurveyBroker.handle_info(:poll, nil)
 
       # In the beginning it shouldn't be completed
       survey = Ask.Survey |> Repo.get(survey.id)
@@ -689,7 +689,7 @@ defmodule Ask.Runtime.BrokerTest do
       qb2 |> QuotaBucket.changeset(%{count: 2}) |> Repo.update!()
       qb3 |> QuotaBucket.changeset(%{count: 3}) |> Repo.update!()
       qb4 |> QuotaBucket.changeset(%{count: 3}) |> Repo.update!()
-      Broker.handle_info(:poll, nil)
+      SurveyBroker.handle_info(:poll, nil)
 
       survey = Ask.Survey |> Repo.get(survey.id)
       assert survey.state == :running
@@ -702,7 +702,7 @@ defmodule Ask.Runtime.BrokerTest do
         Repo.update(respondent |> change |> Respondent.changeset(%{state: :completed}))
       end)
 
-      Broker.handle_info(:poll, nil)
+      SurveyBroker.handle_info(:poll, nil)
 
       survey_id = survey.id
 
@@ -766,7 +766,7 @@ defmodule Ask.Runtime.BrokerTest do
       qb3 = from(q in QuotaBucket, where: q.quota == 3) |> Repo.one()
       qb4 = from(q in QuotaBucket, where: q.quota == 4) |> Repo.one()
 
-      Broker.handle_info(:poll, nil)
+      SurveyBroker.handle_info(:poll, nil)
 
       survey = Ask.Survey |> Repo.get(survey.id)
       assert survey.state == :running
@@ -781,7 +781,7 @@ defmodule Ask.Runtime.BrokerTest do
         Repo.update(respondent |> change |> Respondent.changeset(%{state: :failed}))
       end)
 
-      Broker.handle_info(:poll, nil)
+      SurveyBroker.handle_info(:poll, nil)
 
       survey = Ask.Survey |> Repo.get(survey.id)
       assert_respondents_by_state(survey, 0, 11)
@@ -791,14 +791,14 @@ defmodule Ask.Runtime.BrokerTest do
     test "when there are no more running respondents" do
       [survey, _, _, respondent, _] = create_running_survey_with_channel_and_respondent()
 
-      Broker.handle_info(:poll, nil)
+      SurveyBroker.handle_info(:poll, nil)
 
       assert_respondents_by_state(survey, 1, 0)
 
       respondent = Repo.get(Respondent, respondent.id)
       Repo.update(respondent |> change |> Respondent.changeset(%{state: :failed}))
 
-      Broker.handle_info(:poll, nil)
+      SurveyBroker.handle_info(:poll, nil)
 
       survey = Repo.get(Ask.Survey, survey.id)
       assert Ask.Survey.completed?(survey)
@@ -806,7 +806,7 @@ defmodule Ask.Runtime.BrokerTest do
 
     test "when there are no respondents" do
       survey = insert(:survey, %{schedule: Schedule.always(), state: :running})
-      Broker.handle_info(:poll, nil)
+      SurveyBroker.handle_info(:poll, nil)
 
       survey = Repo.get(Ask.Survey, survey.id)
       assert Ask.Survey.completed?(survey)
@@ -828,7 +828,7 @@ defmodule Ask.Runtime.BrokerTest do
 
     @tag :time_mock
     test "properly sets on the 1st survey poll", %{now: now, survey: survey} do
-      Broker.handle_info(:poll, nil)
+      SurveyBroker.handle_info(:poll, nil)
 
       survey = Repo.get(Ask.Survey, survey.id)
       assert DateTime.compare(survey.first_window_started_at, now)
@@ -836,10 +836,10 @@ defmodule Ask.Runtime.BrokerTest do
 
     @tag :time_mock
     test "doesn't change on the following survey polls", %{now: now, survey: survey} do
-      Broker.handle_info(:poll, nil)
+      SurveyBroker.handle_info(:poll, nil)
 
       time_passes(hours: 1)
-      Broker.handle_info(:poll, nil)
+      SurveyBroker.handle_info(:poll, nil)
 
       survey = Repo.get(Ask.Survey, survey.id)
       # Time passed, so "now" isn't now here.
@@ -854,7 +854,7 @@ defmodule Ask.Runtime.BrokerTest do
       schedule = %{Schedule.always() | start_date: start_date}
       survey = insert(:survey, %{schedule: schedule, state: :running})
 
-      Broker.handle_info(:poll, nil)
+      SurveyBroker.handle_info(:poll, nil)
 
       survey = Repo.get(Ask.Survey, survey.id)
       refute survey.first_window_started_at
@@ -900,7 +900,7 @@ defmodule Ask.Runtime.BrokerTest do
           state: :running
         })
 
-      Broker.handle_info(:poll, nil)
+      SurveyBroker.handle_info(:poll, nil)
 
       survey1 = Repo.get(Ask.Survey, survey1.id)
       survey2 = Repo.get(Ask.Survey, survey2.id)
@@ -926,7 +926,7 @@ defmodule Ask.Runtime.BrokerTest do
           last_window_ends_at: Timex.shift(now, days: -1)
         })
 
-      stop_surveys_result = Broker.poll_active_surveys(now)
+      stop_surveys_result = SurveyBroker.poll_active_surveys(now)
 
       survey = Repo.get(Ask.Survey, survey.id)
       assert survey.state == :cancelling
@@ -944,7 +944,7 @@ defmodule Ask.Runtime.BrokerTest do
       schedule = %{Schedule.always() | end_date: ~D[2021-02-19]}
       survey = insert(:survey, %{schedule: schedule, state: :running})
 
-      Broker.handle_info(:poll, nil, now)
+      SurveyBroker.handle_info(:poll, nil, now)
 
       survey = Repo.get(Ask.Survey, survey.id)
       assert Ask.Survey.completed?(survey)
@@ -959,7 +959,7 @@ defmodule Ask.Runtime.BrokerTest do
           state: :running
         })
 
-      Broker.handle_info(:poll, nil)
+      SurveyBroker.handle_info(:poll, nil)
 
       survey1 = Repo.get(Ask.Survey, survey1.id)
       survey2 = Repo.get(Ask.Survey, survey2.id)
@@ -981,7 +981,7 @@ defmodule Ask.Runtime.BrokerTest do
           state: :running
         })
 
-      Broker.handle_info(:poll, nil, ten_oclock)
+      SurveyBroker.handle_info(:poll, nil, ten_oclock)
 
       survey = Repo.get(Ask.Survey, survey.id)
       assert survey.state == :running
@@ -1001,7 +1001,7 @@ defmodule Ask.Runtime.BrokerTest do
           state: :running
         })
 
-      Broker.handle_info(:poll, nil, twelve_oclock)
+      SurveyBroker.handle_info(:poll, nil, twelve_oclock)
 
       survey = Repo.get(Ask.Survey, survey.id)
       assert survey.state == :running
@@ -1019,7 +1019,7 @@ defmodule Ask.Runtime.BrokerTest do
           state: :running
         })
 
-      Broker.handle_info(:poll, nil, Timex.parse!("2016-01-01T11:00:00Z", "{ISO:Extended}"))
+      SurveyBroker.handle_info(:poll, nil, Timex.parse!("2016-01-01T11:00:00Z", "{ISO:Extended}"))
 
       survey = Repo.get(Ask.Survey, survey.id)
       assert survey.state == :running
@@ -1037,7 +1037,7 @@ defmodule Ask.Runtime.BrokerTest do
           state: :running
         })
 
-      Broker.handle_info(:poll, nil, Timex.parse!("2016-01-01T14:00:00Z", "{ISO:Extended}"))
+      SurveyBroker.handle_info(:poll, nil, Timex.parse!("2016-01-01T14:00:00Z", "{ISO:Extended}"))
 
       survey = Repo.get(Ask.Survey, survey.id)
       assert Ask.Survey.completed?(survey)
@@ -1060,7 +1060,7 @@ defmodule Ask.Runtime.BrokerTest do
       # Now is Thursday 1AM UTC, so in Mexico it's still Wednesday
       mock_now = Timex.parse!("2017-04-27T01:00:00Z", "{ISO:Extended}")
 
-      Broker.handle_info(:poll, nil, mock_now)
+      SurveyBroker.handle_info(:poll, nil, mock_now)
 
       # The survey should have run and be completed (questionnaire is empty)
       survey = Repo.get(Ask.Survey, survey.id)
@@ -1084,7 +1084,7 @@ defmodule Ask.Runtime.BrokerTest do
       # Now is Thursday 6AM UTC, so in Mexico it's now Thursday
       mock_now = Timex.parse!("2017-04-27T06:00:00Z", "{ISO:Extended}")
 
-      Broker.handle_info(:poll, nil, mock_now)
+      SurveyBroker.handle_info(:poll, nil, mock_now)
 
       # Survey shouldn't have started yet
       survey = Repo.get(Ask.Survey, survey.id)
@@ -1098,7 +1098,7 @@ defmodule Ask.Runtime.BrokerTest do
       insert(:quota_bucket, survey: survey, condition: %{gender: "male"}, quota: 1, count: 2)
       insert(:quota_bucket, survey: survey, condition: %{gender: "female"}, quota: 1, count: 0)
 
-      Broker.handle_info(:poll, nil)
+      SurveyBroker.handle_info(:poll, nil)
       assert_respondents_by_state(survey, 1, 10)
     end
 
@@ -1141,9 +1141,9 @@ defmodule Ask.Runtime.BrokerTest do
 
       insert(:respondent_group_channel, channel: channel_2, respondent_group: group_2, mode: "sms")
 
-      {:ok, broker} = Broker.start_link()
+      {:ok, broker} = SurveyBroker.start_link()
       ChannelStatusServer.poll(channel_status_server)
-      Broker.poll()
+      SurveyBroker.poll()
 
       refute_received [:ask, ^test_channel_1, _, _, _]
       refute_received [:ask, ^test_channel_2, _, _, _]
@@ -1160,9 +1160,9 @@ defmodule Ask.Runtime.BrokerTest do
 
       Repo.update(survey |> change |> Survey.changeset(%{cutoff: 1}))
 
-      {:ok, _} = Broker.start_link()
+      {:ok, _} = SurveyBroker.start_link()
       {:ok, _} = SurveyLogger.start_link()
-      Broker.poll()
+      SurveyBroker.poll()
 
       assert_received [
         :ask,
@@ -1184,7 +1184,7 @@ defmodule Ask.Runtime.BrokerTest do
       Respondent.changeset(respondent, %{timeout_at: now |> Timex.shift(minutes: -1)})
       |> Repo.update()
 
-      Broker.handle_info(:poll, nil)
+      SurveyBroker.handle_info(:poll, nil)
 
       respondent = Repo.get(Respondent, respondent.id)
       assert respondent.state == :failed
@@ -1205,9 +1205,9 @@ defmodule Ask.Runtime.BrokerTest do
 
       Repo.update(survey |> change |> Ask.Survey.changeset(%{cutoff: 1}))
 
-      {:ok, _} = Broker.start_link()
+      {:ok, _} = SurveyBroker.start_link()
       {:ok, _} = SurveyLogger.start_link()
-      Broker.poll()
+      SurveyBroker.poll()
 
       assert_received [
         :ask,
@@ -1234,7 +1234,7 @@ defmodule Ask.Runtime.BrokerTest do
       Respondent.changeset(respondent, %{timeout_at: now |> Timex.shift(minutes: -1)})
       |> Repo.update()
 
-      Broker.handle_info(:poll, nil)
+      SurveyBroker.handle_info(:poll, nil)
 
       respondent = Repo.get(Respondent, respondent.id)
       assert respondent.state == :failed
@@ -1255,9 +1255,9 @@ defmodule Ask.Runtime.BrokerTest do
 
       Repo.update(survey |> change |> Ask.Survey.changeset(%{cutoff: 1}))
 
-      {:ok, _} = Broker.start_link()
+      {:ok, _} = SurveyBroker.start_link()
       {:ok, _} = SurveyLogger.start_link()
-      Broker.poll()
+      SurveyBroker.poll()
 
       assert_received [
         :ask,
@@ -1294,7 +1294,7 @@ defmodule Ask.Runtime.BrokerTest do
       Respondent.changeset(respondent, %{timeout_at: now |> Timex.shift(minutes: -1)})
       |> Repo.update()
 
-      Broker.handle_info(:poll, nil)
+      SurveyBroker.handle_info(:poll, nil)
 
       respondent = Repo.get(Respondent, respondent.id)
       assert respondent.state == :failed
@@ -1313,9 +1313,9 @@ defmodule Ask.Runtime.BrokerTest do
       [survey, _, _, respondent, _] =
         create_running_survey_with_channel_and_respondent(@flag_step_after_multiple_choice)
 
-      {:ok, _} = Broker.start_link()
+      {:ok, _} = SurveyBroker.start_link()
       {:ok, _} = SurveyLogger.start_link()
-      Broker.poll()
+      SurveyBroker.poll()
 
       respondent = Repo.get(Respondent, respondent.id)
       assert respondent.state == :active
@@ -1342,7 +1342,7 @@ defmodule Ask.Runtime.BrokerTest do
       Respondent.changeset(respondent, %{timeout_at: now |> Timex.shift(minutes: -1)})
       |> Repo.update()
 
-      Broker.handle_info(:poll, nil)
+      SurveyBroker.handle_info(:poll, nil)
 
       respondent = Repo.get(Respondent, respondent.id)
       assert respondent.state == :failed
@@ -1362,7 +1362,7 @@ defmodule Ask.Runtime.BrokerTest do
     test "set the respondent as completed (disposition) when the questionnaire is empty" do
       [_, _, _, respondent, _] = create_running_survey_with_channel_and_respondent([])
 
-      Broker.handle_info(:poll, nil)
+      SurveyBroker.handle_info(:poll, nil)
 
       respondent = Repo.get(Respondent, respondent.id)
       assert respondent.disposition == :completed
@@ -1371,7 +1371,7 @@ defmodule Ask.Runtime.BrokerTest do
     test "set the respondent as complete (disposition) if disposition is interim partial" do
       [_, _, _, respondent, _] = create_running_survey_with_channel_and_respondent(@partial_step)
 
-      Broker.handle_info(:poll, nil)
+      SurveyBroker.handle_info(:poll, nil)
 
       respondent = Repo.get(Respondent, respondent.id)
       assert respondent.disposition == :completed
@@ -1380,7 +1380,7 @@ defmodule Ask.Runtime.BrokerTest do
     test "set the respondent from registered to queued" do
       [survey, _, _, respondent, _] = create_running_survey_with_channel_and_respondent()
 
-      Broker.handle_info(:poll, nil)
+      SurveyBroker.handle_info(:poll, nil)
 
       survey = Repo.get(Ask.Survey, survey.id)
       assert survey.state == :running
@@ -1392,7 +1392,7 @@ defmodule Ask.Runtime.BrokerTest do
       [_, _, _, respondent, _] =
         create_running_survey_with_channel_and_respondent(@ineligible_step)
 
-      Broker.handle_info(:poll, nil)
+      SurveyBroker.handle_info(:poll, nil)
 
       respondent = Repo.get(Respondent, respondent.id)
       assert respondent.disposition == :ineligible
@@ -1401,7 +1401,7 @@ defmodule Ask.Runtime.BrokerTest do
     test "don't set the respondent as completed (disposition) if disposition is refused" do
       [_, _, _, respondent, _] = create_running_survey_with_channel_and_respondent(@refused_step)
 
-      Broker.handle_info(:poll, nil)
+      SurveyBroker.handle_info(:poll, nil)
 
       respondent = Repo.get(Respondent, respondent.id)
       assert respondent.disposition == :refused
@@ -1411,7 +1411,7 @@ defmodule Ask.Runtime.BrokerTest do
       [_, _, _, respondent, _] =
         create_running_survey_with_channel_and_respondent(@ineligible_step ++ @partial_step)
 
-      Broker.handle_info(:poll, nil)
+      SurveyBroker.handle_info(:poll, nil)
 
       respondent = Repo.get(Respondent, respondent.id)
       assert respondent.disposition == :ineligible
@@ -1421,7 +1421,7 @@ defmodule Ask.Runtime.BrokerTest do
       [_, _, _, respondent, _] =
         create_running_survey_with_channel_and_respondent(@refused_step ++ @partial_step)
 
-      Broker.handle_info(:poll, nil)
+      SurveyBroker.handle_info(:poll, nil)
 
       respondent = Repo.get(Respondent, respondent.id)
       assert respondent.disposition == :refused
@@ -1431,7 +1431,7 @@ defmodule Ask.Runtime.BrokerTest do
       [_, _, _, respondent, _] =
         create_running_survey_with_channel_and_respondent(@completed_step ++ @ineligible_step)
 
-      Broker.handle_info(:poll, nil)
+      SurveyBroker.handle_info(:poll, nil)
 
       respondent = Repo.get(Respondent, respondent.id)
       assert respondent.disposition == :completed
@@ -1442,7 +1442,7 @@ defmodule Ask.Runtime.BrokerTest do
     test "changes the respondent state from pending to running if neccessary" do
       [survey, _, _, respondent, _] = create_running_survey_with_channel_and_respondent()
 
-      Broker.handle_info(:poll, nil)
+      SurveyBroker.handle_info(:poll, nil)
 
       survey = Repo.get(Ask.Survey, survey.id)
       assert survey.state == :running
@@ -1464,7 +1464,7 @@ defmodule Ask.Runtime.BrokerTest do
     test "set the respondent as completed when the questionnaire is empty" do
       [_, _, _, respondent, _] = create_running_survey_with_channel_and_respondent([])
 
-      Broker.handle_info(:poll, nil)
+      SurveyBroker.handle_info(:poll, nil)
 
       respondent = Repo.get(Respondent, respondent.id)
       assert respondent.state == :completed
@@ -1473,7 +1473,7 @@ defmodule Ask.Runtime.BrokerTest do
 
   test "does nothing with 'not_ready' survey" do
     survey = insert(:survey, %{schedule: Schedule.always()})
-    Broker.handle_info(:poll, nil)
+    SurveyBroker.handle_info(:poll, nil)
 
     survey = Repo.get(Ask.Survey, survey.id)
     assert survey.state == :not_ready
@@ -1483,7 +1483,7 @@ defmodule Ask.Runtime.BrokerTest do
     survey = insert(:survey, %{schedule: Schedule.always(), state: :running})
     insert(:respondent, survey: survey, state: :active)
 
-    Broker.handle_info(:poll, nil)
+    SurveyBroker.handle_info(:poll, nil)
 
     survey = Repo.get(Ask.Survey, survey.id)
     assert survey.state == :running
@@ -1542,7 +1542,7 @@ defmodule Ask.Runtime.BrokerTest do
     qb3 = from(q in QuotaBucket, where: q.quota == 3) |> Repo.one()
     qb4 = from(q in QuotaBucket, where: q.quota == 4) |> Repo.one()
 
-    Broker.handle_info(:poll, nil)
+    SurveyBroker.handle_info(:poll, nil)
 
     survey = Ask.Survey |> Repo.get(survey.id)
     assert survey.state == :running
@@ -1557,7 +1557,7 @@ defmodule Ask.Runtime.BrokerTest do
       Repo.update(respondent |> change |> Respondent.changeset(%{state: :completed}))
     end)
 
-    Broker.handle_info(:poll, nil)
+    SurveyBroker.handle_info(:poll, nil)
 
     survey = Ask.Survey |> Repo.get(survey.id)
     assert_respondents_by_state(survey, 5, 11)
@@ -1569,7 +1569,7 @@ defmodule Ask.Runtime.BrokerTest do
 
     Repo.update(survey |> change |> Ask.Survey.changeset(%{cutoff: 1}))
 
-    Broker.handle_info(:poll, nil)
+    SurveyBroker.handle_info(:poll, nil)
 
     survey = Repo.get(Ask.Survey, survey.id)
     assert_respondents_by_state(survey, 1, 20)
@@ -1577,7 +1577,7 @@ defmodule Ask.Runtime.BrokerTest do
     r = Repo.all(from r in Respondent, where: r.state == :active) |> hd
     Repo.update(r |> change |> Respondent.changeset(%{state: :completed}))
 
-    Broker.handle_info(:poll, nil)
+    SurveyBroker.handle_info(:poll, nil)
 
     assert_respondents_by_state(survey, 0, 20)
     assert survey.state == :running
@@ -1587,7 +1587,7 @@ defmodule Ask.Runtime.BrokerTest do
     [survey, group, _, _, _] = create_running_survey_with_channel_and_respondent()
     create_several_respondents(survey, group, 20)
 
-    Broker.handle_info(:poll, nil)
+    SurveyBroker.handle_info(:poll, nil)
 
     survey = Repo.get(Ask.Survey, survey.id)
 
@@ -1603,7 +1603,7 @@ defmodule Ask.Runtime.BrokerTest do
 
     assert_respondents_by_state(survey, 9, 11)
 
-    Broker.handle_info(:poll, nil)
+    SurveyBroker.handle_info(:poll, nil)
 
     assert_respondents_by_state(survey, 10, 10)
   end
@@ -1614,12 +1614,12 @@ defmodule Ask.Runtime.BrokerTest do
     survey |> Ask.Survey.changeset(%{quota_vars: ["gender"]}) |> Repo.update()
     insert(:quota_bucket, survey: survey, condition: %{gender: "male"}, quota: 1, count: 0)
 
-    Broker.handle_info(:poll, nil)
+    SurveyBroker.handle_info(:poll, nil)
     assert_respondents_by_state(survey, 1, 10)
 
     mark_n_active_respondents_as(:completed, 1)
 
-    Broker.handle_info(:poll, nil)
+    SurveyBroker.handle_info(:poll, nil)
     assert_respondents_by_state(survey, 1, 9)
   end
 
@@ -1629,18 +1629,18 @@ defmodule Ask.Runtime.BrokerTest do
 
     Repo.update(survey |> change |> Ask.Survey.changeset(%{cutoff: 50}))
 
-    Broker.handle_info(:poll, nil)
+    SurveyBroker.handle_info(:poll, nil)
     assert_respondents_by_state(survey, 50, 151)
 
     mark_n_active_respondents_as(:failed, 20)
     mark_n_active_respondents_as(:completed, 30)
-    Broker.handle_info(:poll, nil)
+    SurveyBroker.handle_info(:poll, nil)
     assert_respondents_by_state(survey, 20, 131)
 
     # since all the previous ones failed the success rate decreases
     # and the batch size increases
     mark_n_active_respondents_as(:failed, 26)
-    Broker.handle_info(:poll, nil)
+    SurveyBroker.handle_info(:poll, nil)
     assert_respondents_by_state(survey, 20, 111)
   end
 
@@ -1648,8 +1648,8 @@ defmodule Ask.Runtime.BrokerTest do
     [_, _, _, respondent, _] =
       create_running_survey_with_channel_and_respondent(@dummy_steps, "ivr")
 
-    {:ok, broker} = Broker.start_link()
-    Broker.poll()
+    {:ok, broker} = SurveyBroker.start_link()
+    SurveyBroker.poll()
 
     respondent = Repo.get(Respondent, respondent.id)
     assert respondent.disposition == :queued
@@ -1658,7 +1658,7 @@ defmodule Ask.Runtime.BrokerTest do
     Respondent.changeset(respondent, %{timeout_at: Timex.now() |> Timex.shift(minutes: -1)})
     |> Repo.update()
 
-    Broker.handle_info(:poll, nil)
+    SurveyBroker.handle_info(:poll, nil)
 
     respondent = Repo.get(Respondent, respondent.id)
     assert respondent.state == :failed
@@ -1670,7 +1670,7 @@ defmodule Ask.Runtime.BrokerTest do
   test "creates respondent history when the questionnaire is empty" do
     [_, _, _, respondent, _] = create_running_survey_with_channel_and_respondent([])
 
-    Broker.handle_info(:poll, nil)
+    SurveyBroker.handle_info(:poll, nil)
 
     histories = RespondentDispositionHistory |> Repo.all()
     assert length(histories) == 2
@@ -1688,7 +1688,7 @@ defmodule Ask.Runtime.BrokerTest do
     mode = hd(survey.mode)
     questionnaire = hd(survey.questionnaires)
 
-    Broker.handle_info(:poll, nil)
+    SurveyBroker.handle_info(:poll, nil)
 
     respondent = Repo.get(Respondent, respondent.id)
     assert respondent.mode == mode
@@ -1736,7 +1736,7 @@ defmodule Ask.Runtime.BrokerTest do
 
     respondent = insert(:respondent, survey: survey, respondent_group: group)
 
-    Broker.handle_info(:poll, nil)
+    SurveyBroker.handle_info(:poll, nil)
 
     respondent = Repo.get(Respondent, respondent.id)
     assert respondent.mode == ["ivr"]
@@ -1785,7 +1785,7 @@ defmodule Ask.Runtime.BrokerTest do
 
     respondent = insert(:respondent, survey: survey, respondent_group: group)
 
-    Broker.handle_info(:poll, nil)
+    SurveyBroker.handle_info(:poll, nil)
 
     respondent = Repo.get(Respondent, respondent.id)
     assert respondent.mode == ["ivr"]

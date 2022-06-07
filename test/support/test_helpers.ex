@@ -2,7 +2,7 @@ defmodule Ask.TestHelpers do
   defmacro __using__(_) do
     quote do
       use Ask.DummySteps
-      alias Ask.Runtime.{Broker, Flow, RespondentGroupAction}
+      alias Ask.Runtime.{SurveyBroker, Flow, RespondentGroupAction}
       alias Ask.{PanelSurvey, Repo, Respondent, Survey, TestChannel}
 
       @foo_string "foo"
@@ -123,7 +123,7 @@ defmodule Ask.TestHelpers do
         assert p == pending
       end
 
-      defp broker_poll(), do: Broker.handle_info(:poll, nil)
+      defp broker_poll(), do: SurveyBroker.handle_info(:poll, nil)
 
       defp respondent_reply(respondent_id, reply_message, mode) do
         respondent = Repo.get!(Respondent, respondent_id)
