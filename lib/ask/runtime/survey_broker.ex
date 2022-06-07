@@ -1,4 +1,4 @@
-defmodule Ask.Runtime.Broker do
+defmodule Ask.Runtime.SurveyBroker do
   use GenServer
   import Ecto.Query
   import Ecto
@@ -37,7 +37,7 @@ defmodule Ask.Runtime.Broker do
     :timer.send_after(1000, :poll)
 
     Logger.info(
-      "Broker started. Default batch size=#{default_batch_size()}. Limit per minute=#{
+      "SurveyBroker started. Default batch size=#{default_batch_size()}. Limit per minute=#{
         batch_limit_per_minute()
       }."
     )

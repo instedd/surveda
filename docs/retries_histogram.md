@@ -2,7 +2,7 @@
 
 ## Write
 ### Places where RetryStats are modified
- * `Broker.start` -> `handle_session_started`: All respondents are started from here.
+ * `SurveyBroker.start` -> `handle_session_started`: All respondents are started from here.
  This is the only place where respondents are **added** to the histogram.
 
  * `Runtime.Survey.sync_step` -> `handle_next_action`: All respondent interactions go through here.

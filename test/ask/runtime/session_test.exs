@@ -2399,7 +2399,7 @@ defmodule Ask.Runtime.SessionTest do
     end
 
     defp start_session(respondent, quiz, channel) do
-      respondent = Ask.Runtime.Broker.configure_new_respondent(respondent, quiz.id, ["sms"])
+      respondent = Ask.Runtime.SurveyBroker.configure_new_respondent(respondent, quiz.id, ["sms"])
 
       {:ok, started_session, _, _} =
         Session.start(quiz, respondent, channel, "sms", Schedule.always())
@@ -2416,7 +2416,7 @@ defmodule Ask.Runtime.SessionTest do
     case session_started do
       {:ok, session, reply, timeout} ->
         respondent =
-          Ask.Runtime.Broker.configure_new_respondent(
+          Ask.Runtime.SurveyBroker.configure_new_respondent(
             session.respondent,
             questionnaire_id,
             sequence_mode

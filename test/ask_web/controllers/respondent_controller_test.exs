@@ -4668,8 +4668,8 @@ defmodule AskWeb.RespondentControllerTest do
     })
 
     ChannelStatusServer.start_link()
-    Broker.start_link()
-    Broker.poll()
+    SurveyBroker.start_link()
+    SurveyBroker.poll()
 
     insert_partial_relevant_additional_respondents(%{
       survey: survey,

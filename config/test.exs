@@ -19,7 +19,7 @@ config :ask, Ask.Repo,
   hostname: System.get_env("DATABASE_HOST") || "localhost",
   pool: Ecto.Adapters.SQL.Sandbox
 
-config :ask, Ask.Runtime.Broker, batch_size: 10
+config :ask, Ask.Runtime.SurveyBroker, batch_size: 10
 
 config :ask, :channel,
   providers: %{
