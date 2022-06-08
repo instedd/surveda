@@ -356,23 +356,7 @@ defmodule Ask.Runtime.NuntiumChannel do
     def setup(_channel, _respondent, _token, _not_before, _not_after), do: :ok
 
     def ask(channel, respondent, token, reply) do
-      to = "sms://#{respondent.sanitized_phone_number}"
-
-      messages =
-        Ask.Runtime.NuntiumChannel.reply_to_messages(reply, to, respondent.id)
-        |> Enum.map(fn msg ->
-          Map.merge(msg, %{
-            suggested_channel: channel.settings["nuntium_channel"],
-            channel: channel.settings["nuntium_channel"],
-            session_token: token
-          })
-        end)
-
-      respondent = NuntiumChannel.update_stats(respondent)
-
-      NuntiumChannelBroker.send_ao(channel, messages)
-
-      respondent
+      NuntiumChannelBroker.ask(channel, respondent, token, reply)
     end
 
     def check_status(runtime_channel) do
