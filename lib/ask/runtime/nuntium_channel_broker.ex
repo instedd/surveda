@@ -1,24 +1,11 @@
-alias Ask.Runtime.NuntiumChannel
+alias Ask.Runtime.Channel
 
 defmodule Ask.Runtime.NuntiumChannelBroker do
-  def ask(channel, respondent, token, reply) do
-    to = "sms://#{respondent.sanitized_phone_number}"
+  defimpl Ask.Runtime.ChannelBroker, for: Ask.Runtime.NuntiumChannel do
+    def setup(_channel, _respondent, _token, _not_before, _not_after), do: :ok
 
-    messages =
-      NuntiumChannel.reply_to_messages(reply, to, respondent.id)
-      |> Enum.map(fn msg ->
-        Map.merge(msg, %{
-          suggested_channel: channel.settings["nuntium_channel"],
-          channel: channel.settings["nuntium_channel"],
-          session_token: token
-        })
-      end)
-
-    respondent = NuntiumChannel.update_stats(respondent)
-
-    Nuntium.Client.new(channel.base_url, channel.oauth_token)
-    |> Nuntium.Client.send_ao(channel.settings["nuntium_account"], messages)
-
-    respondent
+    def ask(channel, respondent, token, reply) do
+      Channel.ask(channel, respondent, token, reply)
+    end
   end
 end
