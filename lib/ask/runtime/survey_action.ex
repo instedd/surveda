@@ -11,6 +11,7 @@ defmodule Ask.Runtime.SurveyAction do
     Schedule,
     PanelSurvey
   }
+  alias Ask.Runtime.ChannelBroker
 
   alias Ecto.Multi
 
@@ -139,7 +140,7 @@ defmodule Ask.Runtime.SurveyAction do
   defp prepare_channels([channel | rest]) do
     runtime_channel = Ask.Channel.runtime_channel(channel)
 
-    case Ask.Runtime.Channel.prepare(runtime_channel) do
+    case ChannelBroker.prepare(runtime_channel) do
       {:ok, _} -> prepare_channels(rest)
       error -> error
     end

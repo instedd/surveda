@@ -3,6 +3,7 @@ defmodule Ask.Runtime.ChannelStatusServer do
   require Logger
 
   alias Ask.{Repo, Survey}
+  alias Ask.Runtime.ChannelBroker
 
   @server_ref {:global, __MODULE__}
   @poll_interval :timer.minutes(5)
@@ -46,7 +47,7 @@ defmodule Ask.Runtime.ChannelStatusServer do
         previous_status = get_status_from_state(c.id, state)
 
         spawn(fn ->
-          status = Ask.Runtime.Channel.check_status(runtime_channel)
+          status = ChannelBroker.check_status(runtime_channel)
           timestamp = Timex.now()
 
           case status do
