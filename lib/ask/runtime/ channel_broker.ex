@@ -1,6 +1,14 @@
 alias Ask.Runtime.Channel
 
 defmodule Ask.Runtime.ChannelBroker do
+  use Agent
+
+  def start_link(_initial_value, name, value) do
+    {:ok, _} = Registry.start_link(keys: :unique, name: Registry.ViaTest)
+    name = {:via, Registry, {Registry.ViaTest, name, value}}
+    {:ok, _} = Agent.start_link(fn -> 0 end, name: name)
+  end
+
   def prepare(channel) do
     Channel.prepare(channel)
   end
