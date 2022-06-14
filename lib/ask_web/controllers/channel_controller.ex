@@ -9,6 +9,9 @@ defmodule AskWeb.ChannelController do
       |> load_project(project_id)
       |> assoc(:channels)
       |> Repo.all()
+      |> Enum.map(fn channel ->
+        Map.put(channel, :user_email, AskWeb.UserController.email(conn, channel.user_id))
+      end)
 
     render(conn, "index.json", channels: channels |> Repo.preload(:projects))
   end
@@ -21,6 +24,9 @@ defmodule AskWeb.ChannelController do
       |> Repo.all()
       |> Repo.preload(:projects)
       |> Enum.map(&(&1 |> Channel.with_status()))
+      |> Enum.map(fn channel ->
+        Map.put(channel, :user_email, AskWeb.UserController.email(conn, channel.user_id))
+      end)
 
     render(conn, "index.json", channels: channels)
   end

@@ -9,6 +9,16 @@ defmodule AskWeb.UserController do
     render(conn, "settings.json", settings: settings)
   end
 
+  def email(conn, user_id) do
+    user =
+      Repo.one(
+        from u in Ask.User,
+          where: u.id == ^user_id
+      )
+
+    user.email
+  end
+
   def update_settings(conn, user_params) do
     user = conn |> current_user
 
