@@ -10,7 +10,7 @@ defmodule AskWeb.ChannelController do
       |> assoc(:channels)
       |> Repo.all()
       |> Enum.map(fn channel ->
-        Map.put(channel, :user_email, AskWeb.UserController.email(conn, channel.user_id))
+        Map.put(channel, :user_email, AskWeb.UserController.email(channel.user_id))
       end)
 
     render(conn, "index.json", channels: channels |> Repo.preload(:projects))
@@ -25,7 +25,7 @@ defmodule AskWeb.ChannelController do
       |> Repo.preload(:projects)
       |> Enum.map(&(&1 |> Channel.with_status()))
       |> Enum.map(fn channel ->
-        Map.put(channel, :user_email, AskWeb.UserController.email(conn, channel.user_id))
+        Map.put(channel, :user_email, AskWeb.UserController.email(channel.user_id))
       end)
 
     render(conn, "index.json", channels: channels)
@@ -39,6 +39,8 @@ defmodule AskWeb.ChannelController do
       |> Repo.preload(:projects)
       |> Channel.with_status()
 
+    channel = Map.put(channel, :user_email, AskWeb.UserController.email(channel.user_id))
+
     render(conn, "show.json", channel: channel)
   end
 
@@ -48,6 +50,8 @@ defmodule AskWeb.ChannelController do
       |> Repo.get!(id)
       |> authorize_channel(conn)
       |> Repo.preload([:projects])
+
+    channel = Map.put(channel, :user_email, AskWeb.UserController.email(channel.user_id))
 
     changeset =
       channel
@@ -107,6 +111,7 @@ defmodule AskWeb.ChannelController do
 
     provider = Ask.Channel.provider(provider)
     channel = provider.create_channel(user, base_url, api_channel)
+    channel = Map.put(channel, :user_email, AskWeb.UserController.email(channel.user_id))
 
     render(conn, "show.json", channel: channel |> Repo.preload(:projects))
   end

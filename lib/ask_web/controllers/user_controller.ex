@@ -9,7 +9,7 @@ defmodule AskWeb.UserController do
     render(conn, "settings.json", settings: settings)
   end
 
-  def email(conn, user_id) do
+  def email(user_id) do
     user =
       Repo.one(
         from u in Ask.User,
