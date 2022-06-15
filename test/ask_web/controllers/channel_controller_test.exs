@@ -34,7 +34,7 @@ defmodule AskWeb.ChannelControllerTest do
         "projects" => [],
         "channelBaseUrl" => channel.base_url,
         "status_info" => %{"status" => "unknown"},
-        "userEmail" => user.email
+        "user_email" => user.email
       }
 
       insert(:channel)
@@ -64,7 +64,7 @@ defmodule AskWeb.ChannelControllerTest do
         "projects" => [project.id],
         "channelBaseUrl" => channel1.base_url,
         "status_info" => nil,
-        "userEmail" => user.email
+        "user_email" => user.email
       }
 
       channel_map2 = %{
@@ -78,7 +78,7 @@ defmodule AskWeb.ChannelControllerTest do
         "projects" => [project.id],
         "channelBaseUrl" => channel2.base_url,
         "status_info" => nil,
-        "userEmail" => user2.email
+        "user_email" => user2.email
       }
 
       conn = get(conn, project_channel_path(conn, :index, project.id))
@@ -102,7 +102,7 @@ defmodule AskWeb.ChannelControllerTest do
                "projects" => [],
                "channelBaseUrl" => channel.base_url,
                "status_info" => %{"status" => "unknown"},
-               "userEmail" => user.email
+               "user_email" => user.email
              }
     end
 
@@ -199,7 +199,7 @@ defmodule AskWeb.ChannelControllerTest do
                "projects" => [],
                "patterns" => [],
                "status_info" => nil,
-               "userEmail" => user.email
+               "user_email" => user.email
              }
     end
 

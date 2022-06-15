@@ -9,11 +9,10 @@ defmodule AskWeb.ChannelController do
       |> load_project(project_id)
       |> assoc(:channels)
       |> Repo.all()
-      |> Enum.map(fn channel ->
-        Map.put(channel, :user_email, AskWeb.UserController.email(channel.user_id))
-      end)
 
-    render(conn, "index.json", channels: channels |> Repo.preload(:projects))
+    render(conn, "index.json",
+      channels: channels |> Repo.preload(:projects) |> Repo.preload(:user)
+    )
   end
 
   def index(conn, _params) do
@@ -22,11 +21,9 @@ defmodule AskWeb.ChannelController do
       |> current_user
       |> assoc(:channels)
       |> Repo.all()
+      |> Repo.preload(:user)
       |> Repo.preload(:projects)
       |> Enum.map(&(&1 |> Channel.with_status()))
-      |> Enum.map(fn channel ->
-        Map.put(channel, :user_email, AskWeb.UserController.email(channel.user_id))
-      end)
 
     render(conn, "index.json", channels: channels)
   end
@@ -37,9 +34,8 @@ defmodule AskWeb.ChannelController do
       |> Repo.get!(id)
       |> authorize_channel(conn)
       |> Repo.preload(:projects)
+      |> Repo.preload(:user)
       |> Channel.with_status()
-
-    channel = Map.put(channel, :user_email, AskWeb.UserController.email(channel.user_id))
 
     render(conn, "show.json", channel: channel)
   end
@@ -50,8 +46,7 @@ defmodule AskWeb.ChannelController do
       |> Repo.get!(id)
       |> authorize_channel(conn)
       |> Repo.preload([:projects])
-
-    channel = Map.put(channel, :user_email, AskWeb.UserController.email(channel.user_id))
+      |> Repo.preload(:user)
 
     changeset =
       channel
@@ -111,8 +106,7 @@ defmodule AskWeb.ChannelController do
 
     provider = Ask.Channel.provider(provider)
     channel = provider.create_channel(user, base_url, api_channel)
-    channel = Map.put(channel, :user_email, AskWeb.UserController.email(channel.user_id))
 
-    render(conn, "show.json", channel: channel |> Repo.preload(:projects))
+    render(conn, "show.json", channel: channel |> Repo.preload(:projects) |> Repo.preload(:user))
   end
 end

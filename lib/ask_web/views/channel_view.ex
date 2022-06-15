@@ -21,7 +21,7 @@ defmodule AskWeb.ChannelView do
       settings: channel.settings,
       patterns: channel.patterns,
       status_info: channel.status,
-      userEmail: channel.user_email
+      user_email: channel.user.email
     }
   end
 end
