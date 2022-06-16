@@ -154,7 +154,7 @@ const NewRespondentChannel = (
           <option value="">{t("Select a channel...")}</option>
           {channels.map((channel) => (
             <option key={channel.id} value={channel.id}>
-              {channel.name + channelFriendlyName(channel)}
+              {channel.name + channelFriendlyName(channel) + " (" + channel.userEmail + ")"}
             </option>
           ))}
         </Input>

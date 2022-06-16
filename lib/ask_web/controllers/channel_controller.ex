@@ -10,7 +10,7 @@ defmodule AskWeb.ChannelController do
       |> assoc(:channels)
       |> Repo.all()
 
-    render(conn, "index.json", channels: channels |> Repo.preload(:projects))
+    render(conn, "index.json", channels: channels |> Repo.preload([:projects, :user]))
   end
 
   def index(conn, _params) do
@@ -19,7 +19,7 @@ defmodule AskWeb.ChannelController do
       |> current_user
       |> assoc(:channels)
       |> Repo.all()
-      |> Repo.preload(:projects)
+      |> Repo.preload([:projects, :user])
       |> Enum.map(&(&1 |> Channel.with_status()))
 
     render(conn, "index.json", channels: channels)
@@ -30,7 +30,7 @@ defmodule AskWeb.ChannelController do
       Channel
       |> Repo.get!(id)
       |> authorize_channel(conn)
-      |> Repo.preload(:projects)
+      |> Repo.preload([:projects, :user])
       |> Channel.with_status()
 
     render(conn, "show.json", channel: channel)
@@ -41,7 +41,7 @@ defmodule AskWeb.ChannelController do
       Channel
       |> Repo.get!(id)
       |> authorize_channel(conn)
-      |> Repo.preload([:projects])
+      |> Repo.preload([:projects, :user])
 
     changeset =
       channel
@@ -102,6 +102,6 @@ defmodule AskWeb.ChannelController do
     provider = Ask.Channel.provider(provider)
     channel = provider.create_channel(user, base_url, api_channel)
 
-    render(conn, "show.json", channel: channel |> Repo.preload(:projects))
+    render(conn, "show.json", channel: channel |> Repo.preload([:projects, :user]))
   end
 end
