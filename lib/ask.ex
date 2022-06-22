@@ -17,7 +17,7 @@ defmodule Ask do
       # Start the endpoint when the application starts
       supervisor(AskWeb.Endpoint, []),
       supervisor(Ask.MetricsEndpoint, []),
-      {DynamicSupervisor, strategy: :one_for_one, name: Ask.Runtime.ChannelBrokerSupervisor},
+      {Ask.Runtime.ChannelBrokerSupervisor, []},
       {Mutex, name: Ask.Mutex}
       # Start your own worker by calling: Ask.Worker.start_link(arg1, arg2, arg3)
       # worker(Ask.Worker, [arg1, arg2, arg3]),
@@ -44,8 +44,6 @@ defmodule Ask do
     # for other strategies and supported options
     opts = [strategy: :one_for_one, name: Ask.Supervisor]
     {:ok, _} = Logger.add_backend(Sentry.LoggerBackend)
-
-    IO.inspect(children, label: "------------------children")
 
     supervisor_result = Supervisor.start_link(children, opts)
 
