@@ -72,7 +72,7 @@
     "ignore-styles": "^5.0.1",
     "immutable": "^3.8.1",
     "isomorphic-fetch": "^2.2.1",
-    "jsdom": "^9.8.3",
+    "jsdom": "^16.5.0",
     "jsdom-global": "^2.1.0",
     "lodash": "^4.0.0",
     "lodash.flatmapdepth": "^4.10.0",
