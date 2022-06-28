@@ -17,6 +17,8 @@ defmodule Ask do
       # Start the endpoint when the application starts
       supervisor(AskWeb.Endpoint, []),
       supervisor(Ask.MetricsEndpoint, []),
+      supervisor(Registry, [:unique, :channel_broker_registry]),
+      {Ask.Runtime.ChannelBrokerSupervisor, []},
       {Mutex, name: Ask.Mutex}
       # Start your own worker by calling: Ask.Worker.start_link(arg1, arg2, arg3)
       # worker(Ask.Worker, [arg1, arg2, arg3]),
