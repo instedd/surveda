@@ -1,27 +1,28 @@
 defmodule Ask.Runtime.ChannelBrokerSupervisor do
-  alias Ask.Runtime.{ChannelBroker, ChannelBrokerSupervisor}
-  alias Ask.{Channel, Repo}
-  import Ecto.Query
-  use Supervisor
+  alias Ask.Runtime.ChannelBroker
+  use DynamicSupervisor
 
   def start_link() do
-    ChannelBrokerSupervisor.start_link([])
+    start_link([])
   end
 
   def start_link(init_arg) do
-    Supervisor.start_link(__MODULE__, init_arg, name: __MODULE__)
+    DynamicSupervisor.start_link(__MODULE__, init_arg, name: __MODULE__)
+  end
+
+  def start_child(channel_id) do
+    DynamicSupervisor.start_child(__MODULE__, child_spec(channel_id))
+  end
+
+  defp child_spec(channel_id) do
+    %{
+      id: "channel_broker_#{channel_id}",
+      start: {ChannelBroker, :start_link, [channel_id]}
+    }
   end
 
   @impl true
   def init(_init_arg) do
-    query = from ch in Channel,
-      select: ch.id
-    channel_ids = Repo.all(query)
-
-    children = Enum.map(channel_ids, fn channel_id ->
-      Supervisor.child_spec({ChannelBroker, [channel_id]}, id: "channel_broker_#{channel_id}")
-    end)
-
-    Supervisor.init(children, strategy: :one_for_one)
+    DynamicSupervisor.init(strategy: :one_for_one)
   end
 end
