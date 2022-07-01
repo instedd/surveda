@@ -1,6 +1,7 @@
 defmodule Ask.Runtime.SessionTest do
   use AskWeb.ConnCase
   use Ask.DummySteps
+  use Ask.TestHelpers
   import Ask.Factory
   import Ask.StepBuilder
   alias Ask.Runtime.Session
@@ -19,7 +20,7 @@ defmodule Ask.Runtime.SessionTest do
 
     respondent = insert(:respondent)
     test_channel = TestChannel.new()
-    channel = insert(:channel, settings: test_channel |> TestChannel.settings())
+    channel = insert_channel(settings: test_channel |> TestChannel.settings())
     {:ok, quiz: quiz, respondent: respondent, test_channel: test_channel, channel: channel}
   end
 
@@ -134,7 +135,7 @@ defmodule Ask.Runtime.SessionTest do
     test_channel = TestChannel.new()
 
     channel =
-      insert(:channel, settings: test_channel |> TestChannel.settings(), patterns: patterns)
+      insert_channel(settings: test_channel |> TestChannel.settings(), patterns: patterns)
 
     phone_number = "12 34"
     canonical_phone_number = Respondent.canonicalize_phone_number(phone_number)
@@ -157,7 +158,7 @@ defmodule Ask.Runtime.SessionTest do
     quiz: quiz
   } do
     test_channel = TestChannel.new()
-    channel = insert(:channel, settings: test_channel |> TestChannel.settings(), patterns: [])
+    channel = insert_channel(settings: test_channel |> TestChannel.settings(), patterns: [])
     phone_number = "12 34"
     canonical_phone_number = Respondent.canonicalize_phone_number(phone_number)
 
@@ -189,7 +190,7 @@ defmodule Ask.Runtime.SessionTest do
     test_channel = TestChannel.new()
 
     channel =
-      insert(:channel, settings: test_channel |> TestChannel.settings(), patterns: patterns)
+      insert_channel(settings: test_channel |> TestChannel.settings(), patterns: patterns)
 
     phone_number = "12 34"
     canonical_phone_number = Respondent.canonicalize_phone_number(phone_number)
@@ -339,7 +340,7 @@ defmodule Ask.Runtime.SessionTest do
 
   test "start with channel without push", %{quiz: quiz, respondent: respondent} do
     test_channel = TestChannel.new()
-    channel = build(:channel, settings: test_channel |> TestChannel.settings())
+    channel = build_channel(settings: test_channel |> TestChannel.settings())
 
     {:ok, %{respondent: respondent} = session, _, timeout} =
       Session.start(quiz, respondent, channel, "ivr", Schedule.always())
@@ -401,7 +402,7 @@ defmodule Ask.Runtime.SessionTest do
 
   test "retry with IVR channel", %{quiz: quiz, respondent: respondent} do
     test_channel = TestChannel.new()
-    channel = build(:channel, settings: test_channel |> TestChannel.settings())
+    channel = build_channel(settings: test_channel |> TestChannel.settings())
 
     {:ok, session = %Session{token: token, respondent: respondent}, _, 5} =
       handle_session_started(
@@ -446,7 +447,7 @@ defmodule Ask.Runtime.SessionTest do
     quiz = insert(:questionnaire, steps: @dummy_steps)
     respondent = insert(:respondent)
     test_channel = TestChannel.new(true)
-    channel = build(:channel, settings: test_channel |> TestChannel.settings())
+    channel = build_channel(settings: test_channel |> TestChannel.settings())
 
     assert {:ok, session = %Session{token: token, respondent: respondent}, _, 5} =
              Session.start(quiz, respondent, channel, "sms", Schedule.always(), [5])
@@ -468,7 +469,7 @@ defmodule Ask.Runtime.SessionTest do
     quiz = insert(:questionnaire, steps: @dummy_steps)
     respondent = insert(:respondent)
     test_channel = TestChannel.new(true)
-    channel = build(:channel, settings: test_channel |> TestChannel.settings())
+    channel = build_channel(settings: test_channel |> TestChannel.settings())
 
     assert {:ok, session = %Session{token: token, respondent: respondent}, _, 120} =
              Session.start(quiz, respondent, channel, "sms", Schedule.always())
@@ -533,7 +534,7 @@ defmodule Ask.Runtime.SessionTest do
     fallback_runtime_channel = TestChannel.new()
 
     fallback_channel =
-      build(:channel, settings: fallback_runtime_channel |> TestChannel.settings(), type: "ivr")
+      build_channel(settings: fallback_runtime_channel |> TestChannel.settings(), type: "ivr")
 
     fallback_retries = [5]
 
@@ -598,7 +599,7 @@ defmodule Ask.Runtime.SessionTest do
     fallback_runtime_channel = TestChannel.new()
 
     fallback_channel =
-      build(:channel, settings: fallback_runtime_channel |> TestChannel.settings(), type: "ivr")
+      build_channel(settings: fallback_runtime_channel |> TestChannel.settings(), type: "ivr")
 
     fallback_retries = [7]
 
@@ -665,7 +666,7 @@ defmodule Ask.Runtime.SessionTest do
     fallback_runtime_channel = TestChannel.new()
 
     fallback_channel =
-      build(:channel, settings: fallback_runtime_channel |> TestChannel.settings(), type: "ivr")
+      build_channel(settings: fallback_runtime_channel |> TestChannel.settings(), type: "ivr")
 
     fallback_retries = [5]
 
@@ -750,7 +751,7 @@ defmodule Ask.Runtime.SessionTest do
     fallback_runtime_channel = TestChannel.new()
 
     fallback_channel =
-      build(:channel, settings: fallback_runtime_channel |> TestChannel.settings(), type: "ivr")
+      build_channel(settings: fallback_runtime_channel |> TestChannel.settings(), type: "ivr")
 
     fallback_retries = []
     fallback_delay = 15
@@ -889,7 +890,7 @@ defmodule Ask.Runtime.SessionTest do
     fallback_runtime_channel = TestChannel.new()
 
     fallback_channel =
-      build(:channel, settings: fallback_runtime_channel |> TestChannel.settings(), type: "ivr")
+      build_channel(settings: fallback_runtime_channel |> TestChannel.settings(), type: "ivr")
 
     fallback_retries = [8]
     fallback_delay = 15
@@ -982,7 +983,7 @@ defmodule Ask.Runtime.SessionTest do
     fallback_runtime_channel = TestChannel.new()
 
     fallback_channel =
-      build(:channel,
+      build_channel(
         settings: fallback_runtime_channel |> TestChannel.settings(),
         type: "ivr",
         patterns: patterns
@@ -1031,7 +1032,7 @@ defmodule Ask.Runtime.SessionTest do
     fallback_runtime_channel = TestChannel.new()
 
     fallback_channel =
-      build(:channel,
+      build_channel(
         settings: fallback_runtime_channel |> TestChannel.settings(),
         type: "ivr",
         patterns: []
@@ -1085,7 +1086,7 @@ defmodule Ask.Runtime.SessionTest do
     fallback_runtime_channel = TestChannel.new()
 
     fallback_channel =
-      build(:channel,
+      build_channel(
         settings: fallback_runtime_channel |> TestChannel.settings(),
         type: "ivr",
         patterns: patterns
@@ -1123,12 +1124,12 @@ defmodule Ask.Runtime.SessionTest do
     respondent: respondent
   } do
     test_channel = TestChannel.new(true, false)
-    channel = build(:channel, settings: test_channel |> TestChannel.settings())
+    channel = build_channel(settings: test_channel |> TestChannel.settings())
 
     fallback_runtime_channel = TestChannel.new()
 
     fallback_channel =
-      build(:channel, settings: fallback_runtime_channel |> TestChannel.settings(), type: "ivr")
+      build_channel(settings: fallback_runtime_channel |> TestChannel.settings(), type: "ivr")
 
     fallback_retries = [5]
 
@@ -1162,7 +1163,7 @@ defmodule Ask.Runtime.SessionTest do
     quiz = insert(:questionnaire, steps: @dummy_steps)
     respondent = insert(:respondent)
     test_channel = TestChannel.new(:expired)
-    channel = build(:channel, settings: test_channel |> TestChannel.settings())
+    channel = build_channel(settings: test_channel |> TestChannel.settings())
 
     assert {:ok, session = %Session{token: token, respondent: respondent}, _, 5} =
              Session.start(quiz, respondent, channel, "ivr", Schedule.always(), [5])
@@ -1179,7 +1180,7 @@ defmodule Ask.Runtime.SessionTest do
     quiz = insert(:questionnaire, steps: @dummy_steps)
     respondent = insert(:respondent)
     test_channel = TestChannel.new(:expired)
-    channel = build(:channel, settings: test_channel |> TestChannel.settings(), type: "ivr")
+    channel = build_channel(settings: test_channel |> TestChannel.settings(), type: "ivr")
 
     assert {:ok, session = %Session{token: token, respondent: respondent}, _, 120} =
              Session.start(quiz, respondent, channel, "ivr", Schedule.always())
@@ -1197,12 +1198,12 @@ defmodule Ask.Runtime.SessionTest do
     respondent: respondent
   } do
     test_channel = TestChannel.new(:expired)
-    channel = build(:channel, settings: test_channel |> TestChannel.settings())
+    channel = build_channel(settings: test_channel |> TestChannel.settings())
 
     fallback_runtime_channel = TestChannel.new()
 
     fallback_channel =
-      build(:channel, settings: fallback_runtime_channel |> TestChannel.settings(), type: "ivr")
+      build_channel(settings: fallback_runtime_channel |> TestChannel.settings(), type: "ivr")
 
     fallback_retries = [5]
 
@@ -1845,7 +1846,7 @@ defmodule Ask.Runtime.SessionTest do
     defp channel_with_delivery_confirmation(delivery) do
       # Emulate `channel.has_delivery_confirmation?` result
       test_channel = TestChannel.new() |> Map.put(:delivery, delivery)
-      insert(:channel, settings: test_channel |> TestChannel.settings())
+      insert_channel(settings: test_channel |> TestChannel.settings())
     end
 
     defp run_with_survey_loggging(code) do
@@ -1884,7 +1885,7 @@ defmodule Ask.Runtime.SessionTest do
       quiz = insert(:questionnaire, steps: @flag_step_after_multiple_choice)
 
       ivr_channel =
-        insert(:channel, settings: TestChannel.new() |> TestChannel.settings(), type: "ivr")
+        insert_channel(settings: TestChannel.new() |> TestChannel.settings(), type: "ivr")
 
       # respondent is updated to "queued" in order to ensure a valid disposition transition :"queued" -> :"interim partial"
       respondent = respondent |> Respondent.changeset(%{disposition: :started}) |> Repo.update!()
@@ -1919,7 +1920,7 @@ defmodule Ask.Runtime.SessionTest do
       quiz = insert(:questionnaire, steps: @flag_step_after_multiple_choice)
 
       ivr_channel =
-        insert(:channel, settings: TestChannel.new() |> TestChannel.settings(), type: "ivr")
+        insert_channel(settings: TestChannel.new() |> TestChannel.settings(), type: "ivr")
 
       # respondent disposition is updated to :queued,
       # representing a respondent that has already been started.

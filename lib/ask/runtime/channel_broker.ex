@@ -14,8 +14,11 @@ defmodule Ask.Runtime.ChannelBroker do
     Channel.has_delivery_confirmation?(channel)
   end
 
-  def ask(channel, respondent, token, reply) do
-    Channel.ask(channel, respondent, token, reply)
+  # Handle the channels without channel_id (for testing or simulation) in a single process.
+  def ask(nil, channel, respondent, token, reply), do: ask(0, channel, respondent, token, reply)
+
+  def ask(channel_id, channel, respondent, token, reply) do
+    GenServer.call(via_tuple(channel_id), {:ask, channel, respondent, token, reply})
   end
 
   def has_queued_message?(channel, channel_state) do
@@ -36,6 +39,8 @@ defmodule Ask.Runtime.ChannelBroker do
 
   # Client
 
+  def start_link(nil), do: start_link(0)
+
   def start_link(channel_id) do
     name = via_tuple(channel_id)
     GenServer.start_link(__MODULE__, channel_id, name: name)
@@ -46,10 +51,6 @@ defmodule Ask.Runtime.ChannelBroker do
     {:via, Registry, {:channel_broker_registry, channel_id}}
   end
 
-  def foo_call(channel_id) do
-    GenServer.call(via_tuple(channel_id), :foo_call)
-  end
-
   # Server (callbacks)
 
   @impl true
@@ -58,8 +59,8 @@ defmodule Ask.Runtime.ChannelBroker do
   end
 
   @impl true
-  def handle_call(:foo_call, _from, state) do
-    {:reply, :ok, state}
+  def handle_call({:ask, channel, respondent, token, reply}, _from, state) do
+    reply = Channel.ask(channel, respondent, token, reply)
+    {:reply, reply, state}
   end
-
 end

@@ -250,8 +250,9 @@ defmodule Ask.Runtime.Session do
 
     respondent = session.respondent
     {:ok, _flow, reply} = Flow.retry(session.flow, TextVisitor.new("sms"), respondent.disposition)
-    log_prompts(reply, session.current_mode.channel, session.flow.mode, respondent)
-    respondent = runtime_channel |> ChannelBroker.ask(session.respondent, token, reply)
+    channel = session.current_mode.channel
+    log_prompts(reply, channel, session.flow.mode, respondent)
+    respondent = ChannelBroker.ask(channel.id, runtime_channel, session.respondent, token, reply)
     %{session | token: token, respondent: respondent}
   end
 
@@ -281,8 +282,9 @@ defmodule Ask.Runtime.Session do
     token = Ecto.UUID.generate()
 
     reply = mobile_contact_reply(session)
-    log_prompts(reply, session.current_mode.channel, session.flow.mode, session.respondent)
-    respondent = runtime_channel |> ChannelBroker.ask(session.respondent, token, reply)
+    channel = session.current_mode.channel
+    log_prompts(reply, channel, session.flow.mode, session.respondent)
+    respondent = ChannelBroker.ask(channel.id, runtime_channel, session.respondent, token, reply)
     %{session | token: token, respondent: respondent}
   end
 
@@ -394,7 +396,7 @@ defmodule Ask.Runtime.Session do
         respondent =
           if Reply.prompts(reply) != [] do
             log_prompts(reply, channel, flow.mode, respondent, true)
-            runtime_channel |> ChannelBroker.ask(respondent, token, reply)
+            ChannelBroker.ask(channel.id, runtime_channel, respondent, token, reply)
           else
             respondent
           end
@@ -413,7 +415,7 @@ defmodule Ask.Runtime.Session do
         end
 
         log_prompts(reply, channel, flow.mode, respondent)
-        respondent = runtime_channel |> ChannelBroker.ask(respondent, token, reply)
+        respondent = ChannelBroker.ask(channel.id, runtime_channel, respondent, token, reply)
         {:ok, %{session | flow: flow, respondent: respondent}, reply, current_timeout(session)}
     end
   end
@@ -497,12 +499,11 @@ defmodule Ask.Runtime.Session do
     ChannelBroker.setup(runtime_channel, respondent, token, nil, nil)
 
     reply = mobile_contact_reply(session)
+    channel = session.current_mode.channel
 
-    log_prompts(reply, session.current_mode.channel, flow.mode, session.respondent)
+    log_prompts(reply, channel, flow.mode, session.respondent)
 
-    respondent =
-      runtime_channel
-      |> ChannelBroker.ask(respondent, token, reply)
+    respondent = ChannelBroker.ask(channel.id, runtime_channel, respondent, token, reply)
 
     {:ok, %{session | flow: flow, respondent: respondent}, reply, current_timeout(session)}
   end

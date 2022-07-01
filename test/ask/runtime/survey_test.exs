@@ -1816,7 +1816,7 @@ defmodule Ask.Runtime.SurveyTest do
 
     test "when a respondent is flagged as partial" do
       test_channel = TestChannel.new()
-      channel = insert(:channel, settings: test_channel |> TestChannel.settings(), type: "sms")
+      channel = insert_channel(settings: test_channel |> TestChannel.settings(), type: "sms")
       quiz = insert(:questionnaire, steps: @dummy_steps_with_flag)
 
       survey =
@@ -1935,7 +1935,7 @@ defmodule Ask.Runtime.SurveyTest do
 
     test "when a respondent is flagged as partial before being in a bucket" do
       test_channel = TestChannel.new()
-      channel = insert(:channel, settings: test_channel |> TestChannel.settings(), type: "sms")
+      channel = insert_channel(settings: test_channel |> TestChannel.settings(), type: "sms")
       quiz = insert(:questionnaire, steps: @dummy_steps_with_flag)
 
       survey =
@@ -3200,12 +3200,12 @@ defmodule Ask.Runtime.SurveyTest do
     sms_test_channel = TestChannel.new(false, true)
 
     sms_channel =
-      insert(:channel, settings: sms_test_channel |> TestChannel.settings(), type: "sms")
+      insert_channel(settings: sms_test_channel |> TestChannel.settings(), type: "sms")
 
     ivr_test_channel = TestChannel.new(false, false)
 
     ivr_channel =
-      insert(:channel, settings: ivr_test_channel |> TestChannel.settings(), type: "ivr")
+      insert_channel(settings: ivr_test_channel |> TestChannel.settings(), type: "ivr")
 
     quiz = insert(:questionnaire, steps: @dummy_steps)
 
@@ -3251,12 +3251,12 @@ defmodule Ask.Runtime.SurveyTest do
     sms_test_channel = TestChannel.new(false, true)
 
     sms_channel =
-      insert(:channel, settings: sms_test_channel |> TestChannel.settings(), type: "mobileweb")
+      insert_channel(settings: sms_test_channel |> TestChannel.settings(), type: "mobileweb")
 
     ivr_test_channel = TestChannel.new(false, false)
 
     ivr_channel =
-      insert(:channel, settings: ivr_test_channel |> TestChannel.settings(), type: "sms")
+      insert_channel(settings: ivr_test_channel |> TestChannel.settings(), type: "sms")
 
     quiz = insert(:questionnaire, steps: @mobileweb_dummy_steps)
 
