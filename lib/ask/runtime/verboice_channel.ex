@@ -2,7 +2,7 @@ defmodule Ask.Runtime.VerboiceChannel do
   alias __MODULE__
   use Ask.Model
   alias Ask.{Repo, Respondent, Channel, SurvedaMetrics, Stats}
-  alias Ask.Runtime.{Survey, Flow, Reply, RetriesHistogram}
+  alias Ask.Runtime.{Survey, Flow, Reply, RetriesHistogram, ChannelBrokerSupervisor}
   alias AskWeb.Router.Helpers
   import Plug.Conn
   import XmlBuilder
@@ -184,17 +184,25 @@ defmodule Ask.Runtime.VerboiceChannel do
           |> Ecto.build_assoc(:channels)
         end
 
-      channel
+      channel = channel
       |> channel_changeset(base_url, api_channel)
       |> Repo.insert_or_update!()
+
+      {:ok, _pid} = ChannelBrokerSupervisor.start_child(channel.id)
+
+      channel
     end)
   end
 
   def create_channel(user, base_url, api_channel) do
-    user
+    channel = user
     |> Ecto.build_assoc(:channels)
     |> channel_changeset(base_url, api_channel)
     |> Repo.insert!()
+
+    {:ok, _pid} = ChannelBrokerSupervisor.start_child(channel.id)
+
+    channel
   end
 
   defp channel_changeset(channel, base_url, api_channel) do

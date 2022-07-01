@@ -3,7 +3,7 @@ defmodule Ask.Runtime.ChannelBroker do
 
   # Client
 
-  def start_link([channel_id]) do
+  def start_link(channel_id) do
     name = via_tuple(channel_id)
     GenServer.start_link(__MODULE__, channel_id, name: name)
   end
