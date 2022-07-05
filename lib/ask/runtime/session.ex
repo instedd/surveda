@@ -270,9 +270,10 @@ defmodule Ask.Runtime.Session do
       schedule
       |> Schedule.at_end_time(next_available_date_time)
 
+    channel = session.current_mode.channel
+
     channel_state =
-      runtime_channel
-      |> ChannelBroker.setup(session.respondent, token, next_available_date_time, today_end_time)
+      ChannelBroker.setup(channel.id, runtime_channel, session.respondent, token, next_available_date_time, today_end_time)
       |> handle_setup_response()
 
     %{session | channel_state: channel_state, token: token}
@@ -384,7 +385,7 @@ defmodule Ask.Runtime.Session do
     runtime_channel = Ask.Channel.runtime_channel(channel)
 
     # Is this really necessary?
-    ChannelBroker.setup(runtime_channel, respondent, token, nil, nil)
+    ChannelBroker.setup(channel.id, runtime_channel, respondent, token, nil, nil)
 
     case flow
          |> Flow.step(
@@ -472,10 +473,10 @@ defmodule Ask.Runtime.Session do
       schedule
       |> Schedule.at_end_time(next_available_date_time)
 
+    runtime_channel = Ask.Channel.runtime_channel(channel)
+
     channel_state =
-      channel
-      |> Ask.Channel.runtime_channel()
-      |> ChannelBroker.setup(respondent, token, next_available_date_time, today_end_time)
+      ChannelBroker.setup(channel.id, runtime_channel, respondent, token, next_available_date_time, today_end_time)
       |> handle_setup_response
 
     log_contact("Enqueueing call", channel, flow.mode, respondent)
@@ -496,7 +497,7 @@ defmodule Ask.Runtime.Session do
     runtime_channel = Ask.Channel.runtime_channel(channel)
 
     # Is this really necessary?
-    ChannelBroker.setup(runtime_channel, respondent, token, nil, nil)
+    ChannelBroker.setup(channel.id, runtime_channel, respondent, token, nil, nil)
 
     reply = mobile_contact_reply(session)
     channel = session.current_mode.channel

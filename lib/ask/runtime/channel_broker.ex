@@ -2,19 +2,27 @@ defmodule Ask.Runtime.ChannelBroker do
   alias Ask.Runtime.Channel
   use GenServer
 
-  def prepare(channel) do
-    Channel.prepare(channel)
+  # Handle all the channels without channel_id (for testing or simulation) in a single process.
+  def prepare(nil, channel), do: prepare(0, channel)
+
+  def prepare(channel_id, channel) do
+    GenServer.call(via_tuple(channel_id), {:prepare, channel})
   end
 
-  def setup(channel, respondent, token, not_before, not_after) do
-    Channel.setup(channel, respondent, token, not_before, not_after)
+  # Handle all the channels without channel_id (for testing or simulation) in a single process.
+  def setup(nil, channel, respondent, token, not_before, not_after) do
+    setup(0, channel, respondent, token, not_before, not_after)
+  end
+
+  def setup(channel_id, channel, respondent, token, not_before, not_after) do
+    GenServer.call(via_tuple(channel_id), {:setup, channel, respondent, token, not_before, not_after})
   end
 
   def has_delivery_confirmation?(channel) do
     Channel.has_delivery_confirmation?(channel)
   end
 
-  # Handle the channels without channel_id (for testing or simulation) in a single process.
+  # Handle all the channels without channel_id (for testing or simulation) in a single process.
   def ask(nil, channel, respondent, token, reply), do: ask(0, channel, respondent, token, reply)
 
   def ask(channel_id, channel, respondent, token, reply) do
@@ -61,6 +69,18 @@ defmodule Ask.Runtime.ChannelBroker do
   @impl true
   def handle_call({:ask, channel, respondent, token, reply}, _from, state) do
     reply = Channel.ask(channel, respondent, token, reply)
+    {:reply, reply, state}
+  end
+
+  @impl true
+  def handle_call({:setup, channel, respondent, token, not_before, not_after}, _from, state) do
+    reply = Channel.setup(channel, respondent, token, not_before, not_after)
+    {:reply, reply, state}
+  end
+
+  @impl true
+  def handle_call({:prepare, channel}, _from, state) do
+    reply = Channel.prepare(channel)
     {:reply, reply, state}
   end
 end

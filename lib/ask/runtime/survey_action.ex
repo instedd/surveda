@@ -140,7 +140,7 @@ defmodule Ask.Runtime.SurveyAction do
   defp prepare_channels([channel | rest]) do
     runtime_channel = Ask.Channel.runtime_channel(channel)
 
-    case ChannelBroker.prepare(runtime_channel) do
+    case ChannelBroker.prepare(channel.id, runtime_channel) do
       {:ok, _} -> prepare_channels(rest)
       error -> error
     end
