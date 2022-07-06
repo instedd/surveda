@@ -93,13 +93,14 @@ defmodule Ask.Runtime.Session do
       - {:failed, respondent}
   """
   def timeout(%{channel_state: channel_state} = session) do
-    runtime_channel = Ask.Channel.runtime_channel(session.current_mode.channel)
+    channel = session.current_mode.channel
+    runtime_channel = Ask.Channel.runtime_channel(channel)
 
     cond do
-      ChannelBroker.has_queued_message?(runtime_channel, channel_state) ->
+      ChannelBroker.has_queued_message?(channel.id, runtime_channel, channel_state) ->
         {:ok, session, %Reply{}, current_timeout(session)}
 
-      ChannelBroker.message_expired?(runtime_channel, channel_state) ->
+      ChannelBroker.message_expired?(channel.id, runtime_channel, channel_state) ->
         # do not retry since the respondent was never contacted, thus the retries should not be consumed
         session = contact_respondent(session, runtime_channel)
         {:ok, session, %Reply{}, base_timeout(session) + current_timeout(session)}
@@ -320,8 +321,9 @@ defmodule Ask.Runtime.Session do
   end
 
   def cancel(session) do
-    Ask.Channel.runtime_channel(session.current_mode.channel)
-    |> ChannelBroker.cancel_message(session.channel_state)
+    channel = session.current_mode.channel
+    runtime_channel = Ask.Channel.runtime_channel(channel)
+    ChannelBroker.cancel_message(channel.id, runtime_channel, session.channel_state)
   end
 
   def dump(session) do
@@ -631,8 +633,9 @@ defmodule Ask.Runtime.Session do
 
   defp log_prompts(reply, channel, mode, respondent, force \\ false, persist \\ true) do
     if persist do
+      runtime_channel = Ask.Channel.runtime_channel(channel)
       if force ||
-           !(channel |> Ask.Channel.runtime_channel() |> ChannelBroker.has_delivery_confirmation?()) do
+           !(ChannelBroker.has_delivery_confirmation?(channel.id, runtime_channel)) do
         disposition = Reply.disposition(reply) || respondent.disposition
 
         Enum.each(Reply.steps(reply), fn step ->
