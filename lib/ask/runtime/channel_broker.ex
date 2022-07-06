@@ -66,8 +66,12 @@ defmodule Ask.Runtime.ChannelBroker do
     GenServer.call(via_tuple(channel_id), {:message_expired?, channel, channel_state})
   end
 
-  def check_status(channel) do
-    Channel.check_status(channel)
+  def check_status(nil, channel) do
+    check_status(0, channel)
+  end
+
+  def check_status(channel_id, channel) do
+    GenServer.call(via_tuple(channel_id), {:check_status, channel})
   end
 
   # Server (callbacks)
@@ -116,6 +120,12 @@ defmodule Ask.Runtime.ChannelBroker do
   @impl true
   def handle_call({:message_expired?, channel, channel_state}, _from, state) do
     reply = Channel.message_expired?(channel, channel_state)
+    {:reply, reply, state}
+  end
+
+  @impl true
+  def handle_call({:check_status, channel}, _from, state) do
+    reply = Channel.check_status(channel)
     {:reply, reply, state}
   end
 end

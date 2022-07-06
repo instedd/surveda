@@ -47,7 +47,7 @@ defmodule Ask.Runtime.ChannelStatusServer do
         previous_status = get_status_from_state(c.id, state)
 
         spawn(fn ->
-          status = ChannelBroker.check_status(runtime_channel)
+          status = ChannelBroker.check_status(c.id, runtime_channel)
           timestamp = Timex.now()
 
           case status do
