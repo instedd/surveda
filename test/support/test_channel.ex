@@ -87,7 +87,7 @@ defmodule Ask.TestChannel do
     })
     |> Ask.Repo.insert!()
 
-    {:ok, _pid} = ChannelBrokerSupervisor.start_child(channel.id)
+    {:ok, _pid} = ChannelBrokerSupervisor.start_child(channel.id, channel.settings)
 
     channel
   end

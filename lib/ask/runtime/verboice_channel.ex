@@ -188,7 +188,7 @@ defmodule Ask.Runtime.VerboiceChannel do
       |> channel_changeset(base_url, api_channel)
       |> Repo.insert_or_update!()
 
-      case ChannelBrokerSupervisor.start_child(channel.id) do
+      case ChannelBrokerSupervisor.start_child(channel.id, channel.settings) do
         {:ok, _pid} -> nil
         # If it'is an update, the process is expected to be already started
         {:error, {:already_started, _pid}} -> nil
@@ -204,7 +204,7 @@ defmodule Ask.Runtime.VerboiceChannel do
     |> channel_changeset(base_url, api_channel)
     |> Repo.insert!()
 
-    {:ok, _pid} = ChannelBrokerSupervisor.start_child(channel.id)
+    {:ok, _pid} = ChannelBrokerSupervisor.start_child(channel.id, channel.settings)
 
     channel
   end

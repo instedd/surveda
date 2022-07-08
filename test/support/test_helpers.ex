@@ -60,7 +60,7 @@ defmodule Ask.TestHelpers do
             type: channel_type
           )
 
-        {:ok, _pid} = ChannelBrokerSupervisor.start_child(channel.id)
+        {:ok, _pid} = ChannelBrokerSupervisor.start_child(channel.id, channel.settings)
 
         quiz = insert(:questionnaire, steps: steps, quota_completed_steps: nil)
 
@@ -247,14 +247,14 @@ defmodule Ask.TestHelpers do
 
       defp insert_channel(options \\ []) do
         channel = insert(:channel, options)
-        {:ok, _pid} = ChannelBrokerSupervisor.start_child(channel.id)
+        {:ok, _pid} = ChannelBrokerSupervisor.start_child(channel.id, channel.settings)
         channel
       end
 
       defp build_channel(options \\ []) do
         channel = build(:channel, options)
         # Here the channel.id is nil
-        case ChannelBrokerSupervisor.start_child(channel.id) do
+        case ChannelBrokerSupervisor.start_child(channel.id, channel.settings) do
           {:ok, _pid} -> nil
           # All channels without channel id share the same process
           # That's ok, meant only for testing or simulations.

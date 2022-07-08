@@ -1,14 +1,15 @@
 defmodule Ask.Runtime.ChannelBroker do
   alias Ask.Runtime.Channel
+  alias Ask.Config
   use GenServer
 
   # Channels without channel_id (for testing or simulation) share a single process (channel_id: 0)
 
-  def start_link(nil), do: start_link(0)
+  def start_link(nil), do: start_link([0, %{}])
 
-  def start_link(channel_id) do
+  def start_link(channel_id, settings) do
     name = via_tuple(channel_id)
-    GenServer.start_link(__MODULE__, channel_id, name: name)
+    GenServer.start_link(__MODULE__, [channel_id, settings], name: name)
   end
 
   # Inspired by: https://medium.com/elixirlabs/registry-in-elixir-1-4-0-d6750fb5aeb
@@ -77,20 +78,53 @@ defmodule Ask.Runtime.ChannelBroker do
   # Server (callbacks)
 
   @impl true
-  def init(state) do
-    {:ok, state}
+  def init([channel_id, settings]) do
+    {
+      :ok,
+      %{
+        channel_id: channel_id,
+        capacity: Map.get(settings, :capacity, Config.default_channel_capacity()),
+        active_respondents: []
+      }
+    }
   end
 
   @impl true
-  def handle_call({:ask, channel, respondent, token, reply}, _from, state) do
-    reply = Channel.ask(channel, respondent, token, reply)
+  def handle_call({
+    :ask, channel,
+    %{id: respondent_id} = respondent, token, reply},
+    _from,
+    %{active_respondents: active_respondents
+  } = state) do
+    reply = if (respondent_id in active_respondents) do
+      Channel.ask(channel, respondent, token, reply)
+    else
+      {:error, :inactive_respondent}
+    end
     {:reply, reply, state}
   end
 
   @impl true
-  def handle_call({:setup, channel, respondent, token, not_before, not_after}, _from, state) do
-    reply = Channel.setup(channel, respondent, token, not_before, not_after)
-    {:reply, reply, state}
+  def handle_call(
+    {
+      :setup, channel, %{id: respondent_id} = respondent, token, not_before, not_after
+    }, _from,
+    %{
+      capacity: capacity,
+      active_respondents: active_respondents
+    } = state) do
+      {reply, state} = if (length(active_respondents) > capacity) do
+        {
+          {:error, :channel_overloaded},
+          state
+        }
+      else
+        {
+          Channel.setup(channel, respondent, token, not_before, not_after),
+          Map.put(state, :active_respondents, active_respondents ++ [respondent_id])
+        }
+      end
+      {:reply, reply, state}
   end
 
   @impl true

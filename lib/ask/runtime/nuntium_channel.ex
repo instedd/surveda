@@ -205,7 +205,7 @@ defmodule Ask.Runtime.NuntiumChannel do
     |> channel_changeset(base_url, api_channel)
     |> Repo.insert!()
 
-    {:ok, _pid} = ChannelBrokerSupervisor.start_child(channel.id)
+    {:ok, _pid} = ChannelBrokerSupervisor.start_child(channel.id, channel.settings)
 
     channel
   end
@@ -269,7 +269,7 @@ defmodule Ask.Runtime.NuntiumChannel do
       exists = channels |> Enum.any?(&same_channel?(&1, account, nuntium_channel))
 
       if !exists do
-        {:ok, %Channel{id: channel_id}} = user
+        {:ok, %Channel{id: channel_id, settings: settings}} = user
         |> Ecto.build_assoc(:channels)
         |> Channel.changeset(%{
           name: "#{nuntium_channel["name"]} - #{account}",
@@ -283,7 +283,7 @@ defmodule Ask.Runtime.NuntiumChannel do
         })
         |> Repo.insert()
 
-        {:ok, _pid} = ChannelBrokerSupervisor.start_child(channel_id)
+        {:ok, _pid} = ChannelBrokerSupervisor.start_child(channel_id, settings)
       end
     end)
 
