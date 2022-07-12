@@ -29,7 +29,7 @@ defmodule AskWeb.SurveySimulationControllerTest do
       test_channel = Ask.TestChannel.new(false, mode == "sms")
 
       channel =
-        insert(:channel, settings: test_channel |> Ask.TestChannel.settings(), type: channel_type)
+        insert_channel(settings: test_channel |> Ask.TestChannel.settings(), type: channel_type)
 
       {test_channel, channel}
     end

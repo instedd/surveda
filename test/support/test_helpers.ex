@@ -2,7 +2,7 @@ defmodule Ask.TestHelpers do
   defmacro __using__(_) do
     quote do
       use Ask.DummySteps
-      alias Ask.Runtime.{SurveyBroker, Flow, RespondentGroupAction}
+      alias Ask.Runtime.{SurveyBroker, Flow, RespondentGroupAction, ChannelBrokerSupervisor}
       alias Ask.{PanelSurvey, Repo, Respondent, Survey, TestChannel}
 
       @foo_string "foo"
@@ -59,6 +59,8 @@ defmodule Ask.TestHelpers do
             settings: test_channel |> Ask.TestChannel.settings(),
             type: channel_type
           )
+
+        {:ok, _pid} = ChannelBrokerSupervisor.start_child(channel.id)
 
         quiz = insert(:questionnaire, steps: steps, quota_completed_steps: nil)
 
@@ -225,7 +227,7 @@ defmodule Ask.TestHelpers do
 
         insert_respondents = fn mode, phone_numbers ->
           channel = TestChannel.new()
-          channel = insert(:channel, settings: channel |> TestChannel.settings(), type: mode)
+          channel = insert_channel(settings: channel |> TestChannel.settings(), type: mode)
           insert_respondents(latest_wave, channel, mode, phone_numbers)
         end
 
@@ -241,6 +243,24 @@ defmodule Ask.TestHelpers do
         phone_numbers = RespondentGroupAction.loaded_phone_numbers(phone_numbers)
         group = RespondentGroupAction.create(UUID.uuid4(), phone_numbers, survey)
         RespondentGroupAction.update_channels(group.id, [%{"id" => channel.id, "mode" => mode}])
+      end
+
+      defp insert_channel(options \\ []) do
+        channel = insert(:channel, options)
+        {:ok, _pid} = ChannelBrokerSupervisor.start_child(channel.id)
+        channel
+      end
+
+      defp build_channel(options \\ []) do
+        channel = build(:channel, options)
+        # Here the channel.id is nil
+        case ChannelBrokerSupervisor.start_child(channel.id) do
+          {:ok, _pid} -> nil
+          # All channels without channel id share the same process
+          # That's ok, meant only for testing or simulations.
+          {:error, {:already_started, _pid}} -> nil
+        end
+        channel
       end
     end
   end

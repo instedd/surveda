@@ -21,7 +21,7 @@ defmodule AskWeb.MobileSurveyControllerTest do
     setup %{conn: conn} do
       test_channel = TestChannel.new(false, true)
 
-      channel = insert(:channel, settings: test_channel |> TestChannel.settings(), type: "sms")
+      channel = insert_channel(settings: test_channel |> TestChannel.settings(), type: "sms")
 
       quiz =
         insert(:questionnaire,
@@ -82,7 +82,7 @@ defmodule AskWeb.MobileSurveyControllerTest do
   test "respondent flow via mobileweb", %{conn: conn} do
     test_channel = TestChannel.new(false, true)
 
-    channel = insert(:channel, settings: test_channel |> TestChannel.settings(), type: "sms")
+    channel = insert_channel(settings: test_channel |> TestChannel.settings(), type: "sms")
 
     quiz =
       insert(:questionnaire,
@@ -379,7 +379,7 @@ defmodule AskWeb.MobileSurveyControllerTest do
   test "using an invalid token", %{conn: conn} do
     test_channel = TestChannel.new(false, true)
 
-    channel = insert(:channel, settings: test_channel |> TestChannel.settings(), type: "sms")
+    channel = insert_channel(settings: test_channel |> TestChannel.settings(), type: "sms")
     quiz = insert(:questionnaire, steps: @mobileweb_dummy_steps)
 
     survey =
@@ -444,7 +444,7 @@ defmodule AskWeb.MobileSurveyControllerTest do
   } do
     test_channel = TestChannel.new(false, true)
 
-    channel = insert(:channel, settings: test_channel |> TestChannel.settings(), type: "sms")
+    channel = insert_channel(settings: test_channel |> TestChannel.settings(), type: "sms")
 
     quiz =
       insert(:questionnaire,
@@ -491,7 +491,7 @@ defmodule AskWeb.MobileSurveyControllerTest do
   test "respondent flow via mobileweb when survey is over", %{conn: conn} do
     test_channel = TestChannel.new(false, true)
 
-    channel = insert(:channel, settings: test_channel |> TestChannel.settings(), type: "sms")
+    channel = insert_channel(settings: test_channel |> TestChannel.settings(), type: "sms")
 
     quiz =
       insert(:questionnaire,
@@ -543,7 +543,7 @@ defmodule AskWeb.MobileSurveyControllerTest do
   test "respondent flow via mobileweb with refusal + end", %{conn: conn} do
     test_channel = TestChannel.new(false, true)
 
-    channel = insert(:channel, settings: test_channel |> TestChannel.settings(), type: "sms")
+    channel = insert_channel(settings: test_channel |> TestChannel.settings(), type: "sms")
 
     quiz =
       insert(:questionnaire,
@@ -628,7 +628,7 @@ defmodule AskWeb.MobileSurveyControllerTest do
   test "gets 404 when respondent is not found after survey deletion", %{conn: conn} do
     test_channel = TestChannel.new(false, true)
 
-    channel = insert(:channel, settings: test_channel |> TestChannel.settings(), type: "sms")
+    channel = insert_channel(settings: test_channel |> TestChannel.settings(), type: "sms")
     quiz = insert(:questionnaire, steps: @mobileweb_dummy_steps)
 
     survey =

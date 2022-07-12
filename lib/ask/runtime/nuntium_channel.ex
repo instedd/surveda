@@ -365,7 +365,7 @@ defmodule Ask.Runtime.NuntiumChannel do
       to = "sms://#{respondent.sanitized_phone_number}"
 
       messages =
-        Ask.Runtime.NuntiumChannel.reply_to_messages(reply, to, respondent.id)
+        NuntiumChannel.reply_to_messages(reply, to, respondent.id)
         |> Enum.map(fn msg ->
           Map.merge(msg, %{
             suggested_channel: channel.settings["nuntium_channel"],

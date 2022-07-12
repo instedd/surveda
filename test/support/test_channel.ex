@@ -1,4 +1,5 @@
 defmodule Ask.TestChannel do
+  alias Ask.Runtime.ChannelBrokerSupervisor
   @behaviour Ask.Runtime.ChannelProvider
   defstruct [:pid, :has_queued_message, :delivery, :message_expired, :test_id, :status]
 
@@ -75,7 +76,7 @@ defmodule Ask.TestChannel do
   end
 
   def create_channel(user, base_url, api_channel) do
-    user
+    channel = user
     |> Ecto.build_assoc(:channels)
     |> Ask.Channel.changeset(%{
       name: "test",
@@ -85,6 +86,10 @@ defmodule Ask.TestChannel do
       settings: api_channel
     })
     |> Ask.Repo.insert!()
+
+    {:ok, _pid} = ChannelBrokerSupervisor.start_child(channel.id)
+
+    channel
   end
 
   def callback(_conn, _params) do

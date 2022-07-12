@@ -336,12 +336,12 @@ defmodule Ask.Runtime.SurveyBrokerTest do
   describe "fallback respondent" do
     test "fallback respondent (SMS => IVR)" do
       test_channel = TestChannel.new()
-      channel = insert(:channel, settings: test_channel |> TestChannel.settings(), type: "sms")
+      channel = insert_channel(settings: test_channel |> TestChannel.settings(), type: "sms")
 
       test_fallback_channel = TestChannel.new()
 
       fallback_channel =
-        insert(:channel, settings: test_fallback_channel |> TestChannel.settings(), type: "ivr")
+        insert_channel(settings: test_fallback_channel |> TestChannel.settings(), type: "ivr")
 
       quiz = insert(:questionnaire, steps: @dummy_steps)
       sequence_mode = ["sms", "ivr"]
@@ -452,12 +452,12 @@ defmodule Ask.Runtime.SurveyBrokerTest do
 
     test "fallback respondent (IVR => SMS)" do
       test_channel = TestChannel.new()
-      channel = insert(:channel, settings: test_channel |> TestChannel.settings(), type: "ivr")
+      channel = insert_channel(settings: test_channel |> TestChannel.settings(), type: "ivr")
 
       test_fallback_channel = TestChannel.new()
 
       fallback_channel =
-        insert(:channel, settings: test_fallback_channel |> TestChannel.settings(), type: "sms")
+        insert_channel(settings: test_fallback_channel |> TestChannel.settings(), type: "sms")
 
       quiz = insert(:questionnaire, steps: @dummy_steps)
 
@@ -1117,10 +1117,10 @@ defmodule Ask.Runtime.SurveyBrokerTest do
         })
 
       channel_1 =
-        insert(:channel, settings: TestChannel.new() |> TestChannel.settings(1, :up), type: "sms")
+        insert_channel(settings: TestChannel.new() |> TestChannel.settings(1, :up), type: "sms")
 
       channel_2 =
-        insert(:channel,
+        insert_channel(
           settings: TestChannel.new() |> TestChannel.settings(2, :down),
           type: "sms"
         )
@@ -1697,8 +1697,8 @@ defmodule Ask.Runtime.SurveyBrokerTest do
 
   test "set the respondent questionnaire and mode with comparisons" do
     test_channel = TestChannel.new()
-    sms_channel = insert(:channel, settings: test_channel |> TestChannel.settings(), type: "sms")
-    ivr_channel = insert(:channel, settings: test_channel |> TestChannel.settings(), type: "ivr")
+    sms_channel = insert_channel(settings: test_channel |> TestChannel.settings(), type: "sms")
+    ivr_channel = insert_channel(settings: test_channel |> TestChannel.settings(), type: "ivr")
 
     quiz1 = insert(:questionnaire, steps: @dummy_steps)
     quiz2 = insert(:questionnaire, steps: @dummy_steps)
@@ -1746,8 +1746,8 @@ defmodule Ask.Runtime.SurveyBrokerTest do
 
   test "doesn't break with nil as comparison ratio" do
     test_channel = TestChannel.new()
-    sms_channel = insert(:channel, settings: test_channel |> TestChannel.settings(), type: "sms")
-    ivr_channel = insert(:channel, settings: test_channel |> TestChannel.settings(), type: "ivr")
+    sms_channel = insert_channel(settings: test_channel |> TestChannel.settings(), type: "sms")
+    ivr_channel = insert_channel(settings: test_channel |> TestChannel.settings(), type: "ivr")
 
     quiz1 = insert(:questionnaire, steps: @dummy_steps)
     quiz2 = insert(:questionnaire, steps: @dummy_steps)
@@ -1801,7 +1801,7 @@ defmodule Ask.Runtime.SurveyBrokerTest do
 
   defp init_completed_dispositions_shouldnt_be_rejected_tests() do
     insert_channel = fn mode ->
-      insert(:channel, settings: TestChannel.new() |> TestChannel.settings(), type: mode)
+      insert_channel(settings: TestChannel.new() |> TestChannel.settings(), type: mode)
     end
 
     ivr_channel = insert_channel.("ivr")

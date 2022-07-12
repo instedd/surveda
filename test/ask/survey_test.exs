@@ -103,8 +103,8 @@ defmodule Ask.SurveyTest do
     ]
 
     channels = [
-      insert(:channel),
-      insert(:channel)
+      insert_channel(),
+      insert_channel()
     ]
 
     setup_surveys_with_channels(surveys, channels)
@@ -119,9 +119,9 @@ defmodule Ask.SurveyTest do
 
   test "enumerates channels of a survey" do
     survey = insert(:survey)
-    channel_1 = insert(:channel)
-    channel_2 = insert(:channel)
-    channel_3 = insert(:channel)
+    channel_1 = insert_channel()
+    channel_2 = insert_channel()
+    channel_3 = insert_channel()
     group_1 = insert(:respondent_group, survey: survey)
     group_2 = insert(:respondent_group, survey: survey)
     insert(:respondent_group_channel, channel: channel_1, respondent_group: group_1, mode: "sms")
