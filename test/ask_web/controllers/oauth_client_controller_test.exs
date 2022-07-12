@@ -1,5 +1,6 @@
 defmodule AskWeb.OAuthClientControllerTest do
   use AskWeb.ConnCase
+  use Ask.TestHelpers
 
   setup %{conn: conn} do
     user = insert(:user)
@@ -63,7 +64,7 @@ defmodule AskWeb.OAuthClientControllerTest do
 
   test "delete channels when an authorization is deleted", %{conn: conn, user: user} do
     insert(:oauth_token, user: user, provider: "provider", base_url: "http://test.com")
-    channel = insert(:channel, user: user, provider: "provider", base_url: "http://test.com")
+    channel = insert_channel(user: user, provider: "provider", base_url: "http://test.com")
 
     delete(conn, o_auth_client_path(conn, :delete, "provider", base_url: "http://test.com"))
 
@@ -75,7 +76,7 @@ defmodule AskWeb.OAuthClientControllerTest do
     user: user
   } do
     insert(:oauth_token, user: user, provider: "provider", base_url: "http://test.com")
-    channel = insert(:channel, user: user, provider: "provider", base_url: "http://test.com")
+    channel = insert_channel(user: user, provider: "provider", base_url: "http://test.com")
 
     delete conn, o_auth_client_path(conn, :delete, "provider", base_url: "http://test.com"),
       keep_channels: "true"
@@ -85,7 +86,7 @@ defmodule AskWeb.OAuthClientControllerTest do
 
   test "delete channel even if it's being used by a respondent group", %{conn: conn, user: user} do
     insert(:oauth_token, user: user, provider: "provider", base_url: "http://test.com")
-    channel = insert(:channel, user: user, provider: "provider", base_url: "http://test.com")
+    channel = insert_channel(user: user, provider: "provider", base_url: "http://test.com")
     group = insert(:respondent_group)
     insert(:respondent_group_channel, respondent_group: group, channel: channel)
 
@@ -97,7 +98,7 @@ defmodule AskWeb.OAuthClientControllerTest do
 
   test "delete channels and marks related ready surveys as not ready", %{conn: conn, user: user} do
     insert(:oauth_token, user: user, provider: "provider", base_url: "http://test.com")
-    channel = insert(:channel, user: user, provider: "provider", base_url: "http://test.com")
+    channel = insert_channel(user: user, provider: "provider", base_url: "http://test.com")
 
     survey = insert(:survey, state: :ready)
     respondent_group = insert(:respondent_group, survey: survey)
@@ -121,7 +122,7 @@ defmodule AskWeb.OAuthClientControllerTest do
     user: user
   } do
     insert(:oauth_token, user: user, provider: "provider", base_url: "http://test.com")
-    channel = insert(:channel, user: user, provider: "provider", base_url: "http://test.com")
+    channel = insert_channel(user: user, provider: "provider", base_url: "http://test.com")
 
     survey = insert(:survey, state: :running)
     respondent_group = insert(:respondent_group, survey: survey)

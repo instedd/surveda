@@ -188,7 +188,11 @@ defmodule Ask.Runtime.VerboiceChannel do
       |> channel_changeset(base_url, api_channel)
       |> Repo.insert_or_update!()
 
-      {:ok, _pid} = ChannelBrokerSupervisor.start_child(channel.id)
+      case ChannelBrokerSupervisor.start_child(channel.id) do
+        {:ok, _pid} -> nil
+        # If it'is an update, the process is expected to be already started
+        {:error, {:already_started, _pid}} -> nil
+      end
 
       channel
     end)
@@ -468,8 +472,8 @@ defmodule Ask.Runtime.VerboiceChannel do
         end
 
       channel.client
-      |> Verboice.Client.call(params)
-      |> Ask.Runtime.VerboiceChannel.process_call_response()
+        |> Verboice.Client.call(params)
+        |> VerboiceChannel.process_call_response()
     end
 
     def has_queued_message?(channel, %{"verboice_call_id" => call_id}) do
