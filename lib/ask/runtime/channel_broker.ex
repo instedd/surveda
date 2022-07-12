@@ -3,6 +3,9 @@ defmodule Ask.Runtime.ChannelBroker do
   alias Ask.Runtime.ChannelBrokerSupervisor
   use GenServer
 
+  @timeout_minutes 5
+  @timeout @timeout_minutes * 60_000
+
   # Channels without channel_id (for testing or simulation) share a single process (channel_id: 0)
 
   def start_link(nil), do: start_link(0)
@@ -94,54 +97,59 @@ defmodule Ask.Runtime.ChannelBroker do
 
   @impl true
   def init(state) do
-    {:ok, state}
+    {:ok, state, @timeout}
   end
 
   @impl true
   def handle_call({:ask, channel, respondent, token, reply}, _from, state) do
     reply = Channel.ask(channel, respondent, token, reply)
-    {:reply, reply, state}
+    {:reply, reply, state, @timeout}
   end
 
   @impl true
   def handle_call({:setup, channel, respondent, token, not_before, not_after}, _from, state) do
     reply = Channel.setup(channel, respondent, token, not_before, not_after)
-    {:reply, reply, state}
+    {:reply, reply, state, @timeout}
   end
 
   @impl true
   def handle_call({:prepare, channel}, _from, state) do
     reply = Channel.prepare(channel)
-    {:reply, reply, state}
+    {:reply, reply, state, @timeout}
   end
 
   @impl true
   def handle_call({:has_delivery_confirmation?, channel}, _from, state) do
     reply = Channel.has_delivery_confirmation?(channel)
-    {:reply, reply, state}
+    {:reply, reply, state, @timeout}
   end
 
   @impl true
   def handle_call({:has_queued_message?, channel, channel_state}, _from, state) do
     reply = Channel.has_queued_message?(channel, channel_state)
-    {:reply, reply, state}
+    {:reply, reply, state, @timeout}
   end
 
   @impl true
   def handle_call({:cancel_message, channel, channel_state}, _from, state) do
     reply = Channel.cancel_message(channel, channel_state)
-    {:reply, reply, state}
+    {:reply, reply, state, @timeout}
   end
 
   @impl true
   def handle_call({:message_expired?, channel, channel_state}, _from, state) do
     reply = Channel.message_expired?(channel, channel_state)
-    {:reply, reply, state}
+    {:reply, reply, state, @timeout}
   end
 
   @impl true
   def handle_call({:check_status, channel}, _from, state) do
     reply = Channel.check_status(channel)
-    {:reply, reply, state}
+    {:reply, reply, state, @timeout}
+  end
+
+  @impl true
+  def handle_info(:timeout, channel_id) do
+    ChannelBrokerSupervisor.terminate_child(channel_id)
   end
 end
