@@ -1,7 +1,7 @@
 defmodule Ask.Runtime.NuntiumChannel do
   @behaviour Ask.Runtime.ChannelProvider
   use Ask.Model
-  alias Ask.Runtime.{Survey, NuntiumChannel, Flow, Reply, ReplyStep, ChannelBrokerSupervisor}
+  alias Ask.Runtime.{Survey, NuntiumChannel, Flow, Reply, ReplyStep}
   alias Ask.{Repo, Respondent, Channel, Stats, SurvedaMetrics}
   import Ecto.Query
   import Plug.Conn
@@ -200,14 +200,10 @@ defmodule Ask.Runtime.NuntiumChannel do
   end
 
   def create_channel(user, base_url, api_channel) do
-    channel = user
+    user
     |> Ecto.build_assoc(:channels)
     |> channel_changeset(base_url, api_channel)
     |> Repo.insert!()
-
-    {:ok, _pid} = ChannelBrokerSupervisor.start_child(channel.id)
-
-    channel
   end
 
   defp channel_changeset(channel, base_url, api_channel) do
@@ -269,7 +265,7 @@ defmodule Ask.Runtime.NuntiumChannel do
       exists = channels |> Enum.any?(&same_channel?(&1, account, nuntium_channel))
 
       if !exists do
-        {:ok, %Channel{id: channel_id}} = user
+        user
         |> Ecto.build_assoc(:channels)
         |> Channel.changeset(%{
           name: "#{nuntium_channel["name"]} - #{account}",
@@ -282,8 +278,6 @@ defmodule Ask.Runtime.NuntiumChannel do
           }
         })
         |> Repo.insert()
-
-        {:ok, _pid} = ChannelBrokerSupervisor.start_child(channel_id)
       end
     end)
 

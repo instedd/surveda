@@ -397,11 +397,11 @@ defmodule Ask.Runtime.RetriesHistogramTest do
   describe "SMS -> 2h -> IVR with dummy steps" do
     setup do
       test_channel = TestChannel.new()
-      channel = insert_channel(settings: test_channel |> TestChannel.settings(), type: "sms")
+      channel = insert(:channel, settings: test_channel |> TestChannel.settings(), type: "sms")
       test_fallback_channel = TestChannel.new()
 
       fallback_channel =
-        insert_channel(settings: test_fallback_channel |> TestChannel.settings(), type: "ivr")
+        insert(:channel, settings: test_fallback_channel |> TestChannel.settings(), type: "ivr")
 
       quiz = insert(:questionnaire, steps: @dummy_steps)
       sequence_mode = ["sms", "ivr"]

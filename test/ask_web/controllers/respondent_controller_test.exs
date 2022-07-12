@@ -3850,7 +3850,7 @@ defmodule AskWeb.RespondentControllerTest do
 
       respondent_1 = insert(:respondent, survey: survey, hashed_number: "1234")
       respondent_2 = insert(:respondent, survey: survey, hashed_number: "5678")
-      channel = insert_channel(name: "test_channel")
+      channel = insert(:channel, name: "test_channel")
 
       for _ <- 1..200 do
         insert(:survey_log_entry,
@@ -4330,7 +4330,7 @@ defmodule AskWeb.RespondentControllerTest do
 
       respondent_1 = insert(:respondent, survey: survey, hashed_number: "1234")
       respondent_2 = insert(:respondent, survey: survey, hashed_number: "5678")
-      channel = insert_channel(name: "test_channel")
+      channel = insert(:channel, name: "test_channel")
 
       for _ <- 1..200 do
         insert(:survey_log_entry,
@@ -4652,7 +4652,7 @@ defmodule AskWeb.RespondentControllerTest do
       })
 
     channel =
-      insert_channel(
+      insert(:channel,
         settings: TestChannel.new() |> TestChannel.settings(),
         type: mode
       )

@@ -21,7 +21,7 @@ defmodule AskWeb.ChannelControllerTest do
     end
 
     test "list only channels from the current user", %{conn: conn, user: user} do
-      channel = insert_channel(user: user)
+      channel = insert(:channel, user: user)
 
       channel_map = %{
         "id" => channel.id,
@@ -36,7 +36,7 @@ defmodule AskWeb.ChannelControllerTest do
         "status_info" => %{"status" => "unknown"}
       }
 
-      insert_channel()
+      insert(:channel)
       conn = get(conn, channel_path(conn, :index))
       assert json_response(conn, 200)["data"] == [channel_map]
     end
@@ -46,11 +46,11 @@ defmodule AskWeb.ChannelControllerTest do
 
       user2 = insert(:user)
 
-      channel1 = insert_channel(user: user, projects: [project])
-      channel2 = insert_channel(user: user2, projects: [project])
+      channel1 = insert(:channel, user: user, projects: [project])
+      channel2 = insert(:channel, user: user2, projects: [project])
 
-      insert_channel(user: user)
-      insert_channel(user: user2)
+      insert(:channel, user: user)
+      insert(:channel, user: user2)
 
       channel_map1 = %{
         "id" => channel1.id,
@@ -85,7 +85,7 @@ defmodule AskWeb.ChannelControllerTest do
 
   describe "show" do
     test "shows chosen resource", %{conn: conn, user: user} do
-      channel = insert_channel(user: user)
+      channel = insert(:channel, user: user)
       conn = get(conn, channel_path(conn, :show, channel))
 
       assert json_response(conn, 200)["data"] == %{
@@ -109,7 +109,7 @@ defmodule AskWeb.ChannelControllerTest do
     end
 
     test "forbid access to channels from other users", %{conn: conn} do
-      channel = insert_channel()
+      channel = insert(:channel)
 
       assert_error_sent :forbidden, fn ->
         get(conn, channel_path(conn, :show, channel))
@@ -122,7 +122,7 @@ defmodule AskWeb.ChannelControllerTest do
       project1 = create_project_for_user(user)
       project2 = create_project_for_user(user)
 
-      channel = insert_channel(user: user)
+      channel = insert(:channel, user: user)
 
       conn =
         put conn, channel_path(conn, :update, channel),
@@ -137,7 +137,7 @@ defmodule AskWeb.ChannelControllerTest do
       user2 = insert(:user)
       project2 = create_project_for_user(user2)
 
-      channel = insert_channel(user: user)
+      channel = insert(:channel, user: user)
 
       assert_error_sent :forbidden, fn ->
         put conn, channel_path(conn, :update, channel),
@@ -146,7 +146,7 @@ defmodule AskWeb.ChannelControllerTest do
     end
 
     test "update patterns", %{conn: conn, user: user} do
-      channel = insert_channel(user: user)
+      channel = insert(:channel, user: user)
 
       patterns = [
         %{"input" => "123XX", "output" => "0XX"},
