@@ -40,7 +40,7 @@ defmodule Ask.SurveyCancellerTest do
       test_channel = TestChannel.new(false)
 
       channel =
-        insert_channel(
+        insert(:channel,
           settings:
             test_channel
             |> TestChannel.settings(),
@@ -97,7 +97,7 @@ defmodule Ask.SurveyCancellerTest do
       test_channel = TestChannel.new(false)
 
       channel =
-        insert_channel(
+        insert(:channel,
           settings:
             test_channel
             |> TestChannel.settings(),
@@ -161,7 +161,7 @@ defmodule Ask.SurveyCancellerTest do
       test_channel = TestChannel.new(false)
 
       channel =
-        insert_channel(
+        insert(:channel,
           settings:
             test_channel
             |> TestChannel.settings(),

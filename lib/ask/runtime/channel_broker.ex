@@ -1,5 +1,6 @@
 defmodule Ask.Runtime.ChannelBroker do
   alias Ask.Runtime.Channel
+  alias Ask.Runtime.ChannelBrokerSupervisor
   use GenServer
 
   # Channels without channel_id (for testing or simulation) share a single process (channel_id: 0)
@@ -19,7 +20,7 @@ defmodule Ask.Runtime.ChannelBroker do
   def prepare(nil, channel), do: prepare(0, channel)
 
   def prepare(channel_id, channel) do
-    GenServer.call(via_tuple(channel_id), {:prepare, channel})
+    call_gen_server(channel_id, {:prepare, channel})
   end
 
   def setup(nil, channel, respondent, token, not_before, not_after) do
@@ -27,19 +28,19 @@ defmodule Ask.Runtime.ChannelBroker do
   end
 
   def setup(channel_id, channel, respondent, token, not_before, not_after) do
-    GenServer.call(via_tuple(channel_id), {:setup, channel, respondent, token, not_before, not_after})
+    call_gen_server(channel_id, {:setup, channel, respondent, token, not_before, not_after})
   end
 
   def has_delivery_confirmation?(nil, channel), do: has_delivery_confirmation?(0, channel)
 
   def has_delivery_confirmation?(channel_id, channel) do
-    GenServer.call(via_tuple(channel_id), {:has_delivery_confirmation?, channel})
+    call_gen_server(channel_id, {:has_delivery_confirmation?, channel})
   end
 
   def ask(nil, channel, respondent, token, reply), do: ask(0, channel, respondent, token, reply)
 
   def ask(channel_id, channel, respondent, token, reply) do
-    GenServer.call(via_tuple(channel_id), {:ask, channel, respondent, token, reply})
+    call_gen_server(channel_id, {:ask, channel, respondent, token, reply})
   end
 
   def has_queued_message?(nil, channel, channel_state) do
@@ -47,7 +48,7 @@ defmodule Ask.Runtime.ChannelBroker do
   end
 
   def has_queued_message?(channel_id, channel, channel_state) do
-    GenServer.call(via_tuple(channel_id), {:has_queued_message?, channel, channel_state})
+    call_gen_server(channel_id, {:has_queued_message?, channel, channel_state})
   end
 
   def cancel_message(nil, channel, channel_state) do
@@ -55,7 +56,7 @@ defmodule Ask.Runtime.ChannelBroker do
   end
 
   def cancel_message(channel_id, channel, channel_state) do
-    GenServer.call(via_tuple(channel_id), {:cancel_message, channel, channel_state})
+    call_gen_server(channel_id, {:cancel_message, channel, channel_state})
   end
 
   def message_expired?(nil, channel, channel_state) do
@@ -63,7 +64,7 @@ defmodule Ask.Runtime.ChannelBroker do
   end
 
   def message_expired?(channel_id, channel, channel_state) do
-    GenServer.call(via_tuple(channel_id), {:message_expired?, channel, channel_state})
+    call_gen_server(channel_id, {:message_expired?, channel, channel_state})
   end
 
   def check_status(nil, channel) do
@@ -71,7 +72,22 @@ defmodule Ask.Runtime.ChannelBroker do
   end
 
   def check_status(channel_id, channel) do
-    GenServer.call(via_tuple(channel_id), {:check_status, channel})
+    call_gen_server(channel_id, {:check_status, channel})
+  end
+
+  defp call_gen_server(channel_id, message) do
+    pid = find_or_start_process(channel_id)
+    GenServer.call(pid, message)
+  end
+
+  defp find_or_start_process(channel_id) do
+    case Registry.lookup(:channel_broker_registry, channel_id) do
+      [{pid, _}] ->
+        pid
+      [] ->
+        {:ok, pid} = ChannelBrokerSupervisor.start_child(channel_id)
+        pid
+    end
   end
 
   # Server (callbacks)
