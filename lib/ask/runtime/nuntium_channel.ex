@@ -58,6 +58,15 @@ defmodule Ask.Runtime.NuntiumChannel do
     client.token
   end
 
+  defp respondent_channel(respondent) do
+    try do
+      session = respondent.session |> Ask.Runtime.Session.load()
+      session.current_mode.channel
+    rescue
+      _ -> nil
+    end
+  end
+
   def callback(conn, params) do
     callback(conn, params, Survey)
   end
@@ -74,6 +83,16 @@ defmodule Ask.Runtime.NuntiumChannel do
           :ok
 
         respondent ->
+          channel_respondent = respondent_channel(respondent)
+
+          ChannelBroker.callback_recieved(
+            channel_respondent.id,
+            respondent,
+            state,
+            "nuntium",
+            ChannelBrokerSupervisor.lookup_child(channel_respondent.id)
+          )
+
           case state do
             "failed" ->
               survey.channel_failed(respondent)
@@ -200,10 +219,11 @@ defmodule Ask.Runtime.NuntiumChannel do
   end
 
   def create_channel(user, base_url, api_channel) do
-    channel = user
-    |> Ecto.build_assoc(:channels)
-    |> channel_changeset(base_url, api_channel)
-    |> Repo.insert!()
+    channel =
+      user
+      |> Ecto.build_assoc(:channels)
+      |> channel_changeset(base_url, api_channel)
+      |> Repo.insert!()
 
     {:ok, _pid} = ChannelBrokerSupervisor.start_child(channel.id, channel.settings)
 
@@ -269,19 +289,20 @@ defmodule Ask.Runtime.NuntiumChannel do
       exists = channels |> Enum.any?(&same_channel?(&1, account, nuntium_channel))
 
       if !exists do
-        {:ok, %Channel{id: channel_id, settings: settings}} = user
-        |> Ecto.build_assoc(:channels)
-        |> Channel.changeset(%{
-          name: "#{nuntium_channel["name"]} - #{account}",
-          type: "sms",
-          provider: "nuntium",
-          base_url: base_url,
-          settings: %{
-            "nuntium_channel" => nuntium_channel["name"],
-            "nuntium_account" => account
-          }
-        })
-        |> Repo.insert()
+        {:ok, %Channel{id: channel_id, settings: settings}} =
+          user
+          |> Ecto.build_assoc(:channels)
+          |> Channel.changeset(%{
+            name: "#{nuntium_channel["name"]} - #{account}",
+            type: "sms",
+            provider: "nuntium",
+            base_url: base_url,
+            settings: %{
+              "nuntium_channel" => nuntium_channel["name"],
+              "nuntium_account" => account
+            }
+          })
+          |> Repo.insert()
 
         {:ok, _pid} = ChannelBrokerSupervisor.start_child(channel_id, settings)
       end

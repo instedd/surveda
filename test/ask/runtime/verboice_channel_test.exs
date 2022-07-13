@@ -389,8 +389,7 @@ defmodule Ask.Runtime.VerboiceChannelTest do
     test "with code and reason", %{conn: conn} do
       test_channel = Ask.TestChannel.new(false, false)
 
-      channel =
-        insert_channel(settings: test_channel |> Ask.TestChannel.settings(), type: "ivr")
+      channel = insert_channel(settings: test_channel |> Ask.TestChannel.settings(), type: "ivr")
 
       quiz = insert(:questionnaire, steps: @dummy_steps)
 
@@ -463,8 +462,7 @@ defmodule Ask.Runtime.VerboiceChannelTest do
     test "with only code", %{conn: conn} do
       test_channel = Ask.TestChannel.new(false, false)
 
-      channel =
-        insert_channel(settings: test_channel |> Ask.TestChannel.settings(), type: "ivr")
+      channel = insert_channel(settings: test_channel |> Ask.TestChannel.settings(), type: "ivr")
 
       quiz = insert(:questionnaire, steps: @dummy_steps)
 
@@ -514,8 +512,7 @@ defmodule Ask.Runtime.VerboiceChannelTest do
     test "with only reason", %{conn: conn} do
       test_channel = Ask.TestChannel.new(false, false)
 
-      channel =
-        insert_channel(settings: test_channel |> Ask.TestChannel.settings(), type: "ivr")
+      channel = insert_channel(settings: test_channel |> Ask.TestChannel.settings(), type: "ivr")
 
       quiz = insert(:questionnaire, steps: @dummy_steps)
 
@@ -565,8 +562,7 @@ defmodule Ask.Runtime.VerboiceChannelTest do
     test "only failed", %{conn: conn} do
       test_channel = Ask.TestChannel.new(false, false)
 
-      channel =
-        insert_channel(settings: test_channel |> Ask.TestChannel.settings(), type: "ivr")
+      channel = insert_channel(settings: test_channel |> Ask.TestChannel.settings(), type: "ivr")
 
       quiz = insert(:questionnaire, steps: @dummy_steps)
 
@@ -615,8 +611,7 @@ defmodule Ask.Runtime.VerboiceChannelTest do
     test "no-answer with reason and code", %{conn: conn} do
       test_channel = Ask.TestChannel.new(false, false)
 
-      channel =
-        insert_channel(settings: test_channel |> Ask.TestChannel.settings(), type: "ivr")
+      channel = insert_channel(settings: test_channel |> Ask.TestChannel.settings(), type: "ivr")
 
       quiz = insert(:questionnaire, steps: @dummy_steps)
 
@@ -667,8 +662,7 @@ defmodule Ask.Runtime.VerboiceChannelTest do
     test "busy with reason and code", %{conn: conn} do
       test_channel = Ask.TestChannel.new(false, false)
 
-      channel =
-        insert_channel(settings: test_channel |> Ask.TestChannel.settings(), type: "ivr")
+      channel = insert_channel(settings: test_channel |> Ask.TestChannel.settings(), type: "ivr")
 
       quiz = insert(:questionnaire, steps: @dummy_steps)
 
@@ -719,8 +713,7 @@ defmodule Ask.Runtime.VerboiceChannelTest do
     test "call expired", %{conn: conn} do
       test_channel = Ask.TestChannel.new(false, false)
 
-      channel =
-        insert_channel(settings: test_channel |> Ask.TestChannel.settings(), type: "ivr")
+      channel = insert_channel(settings: test_channel |> Ask.TestChannel.settings(), type: "ivr")
 
       quiz = insert(:questionnaire, steps: @dummy_steps)
 
@@ -824,8 +817,7 @@ defmodule Ask.Runtime.VerboiceChannelTest do
     setup %{conn: conn} do
       test_channel = Ask.TestChannel.new(false, false)
 
-      channel =
-        insert_channel(settings: test_channel |> Ask.TestChannel.settings(), type: "ivr")
+      channel = insert_channel(settings: test_channel |> Ask.TestChannel.settings(), type: "ivr")
 
       quiz = insert(:questionnaire, steps: @dummy_steps)
 

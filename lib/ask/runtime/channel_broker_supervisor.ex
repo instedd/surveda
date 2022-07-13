@@ -20,6 +20,7 @@ defmodule Ask.Runtime.ChannelBrokerSupervisor do
 
   def terminate_child(channel_id) do
     pid = lookup_child(channel_id)
+
     if pid do
       DynamicSupervisor.terminate_child(__MODULE__, pid)
     else
@@ -27,10 +28,11 @@ defmodule Ask.Runtime.ChannelBrokerSupervisor do
     end
   end
 
-  defp lookup_child(channel_id) do
+  def lookup_child(channel_id) do
     case Registry.lookup(:channel_broker_registry, channel_id) do
       [{pid, nil}] ->
         pid
+
       _ ->
         nil
     end

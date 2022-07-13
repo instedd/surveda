@@ -260,6 +260,7 @@ defmodule Ask.TestHelpers do
           # That's ok, meant only for testing or simulations.
           {:error, {:already_started, _pid}} -> nil
         end
+
         channel
       end
     end

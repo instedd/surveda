@@ -5,7 +5,13 @@ defmodule AskWeb.QuestionnaireControllerTest do
   import Ask.StepBuilder
 
   alias Ask.{Project, Questionnaire, Translation, JsonSchema, ActivityLog}
-  @valid_attrs %{name: "some content", modes: ["sms", "ivr", "mobileweb"], steps: [], settings: %{}}
+
+  @valid_attrs %{
+    name: "some content",
+    modes: ["sms", "ivr", "mobileweb"],
+    steps: [],
+    settings: %{}
+  }
   @invalid_attrs %{steps: [], settings: %{}}
 
   setup %{conn: conn} do

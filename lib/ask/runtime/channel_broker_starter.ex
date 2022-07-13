@@ -18,9 +18,12 @@ defmodule Ask.Runtime.ChannelBrokerStarter do
     children = [
       supervisor(ChannelBrokerSupervisor, []),
       {
-        Task, fn ->
-          query = from ch in Channel,
-          select: [ch.id, ch.settings]
+        Task,
+        fn ->
+          query =
+            from ch in Channel,
+              select: [ch.id, ch.settings]
+
           channels = Repo.all(query)
 
           Enum.each(channels, fn [channel_id, settings] ->

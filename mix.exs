@@ -78,6 +78,7 @@ defmodule Ask.Mixfile do
       {:deep_merge, "~> 0.1.0"},
       # "~> 0.6"
       {:coherence, github: "smpallen99/coherence", branch: "master", override: true},
+      {:pqueue, "~> 2.0"},
       {:gen_smtp, "~> 0.11"},
       # TODO: update to ~> 2.0
       {:xml_builder, "~> 0.0.9"},

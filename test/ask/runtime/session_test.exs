@@ -134,8 +134,7 @@ defmodule Ask.Runtime.SessionTest do
 
     test_channel = TestChannel.new()
 
-    channel =
-      insert_channel(settings: test_channel |> TestChannel.settings(), patterns: patterns)
+    channel = insert_channel(settings: test_channel |> TestChannel.settings(), patterns: patterns)
 
     phone_number = "12 34"
     canonical_phone_number = Respondent.canonicalize_phone_number(phone_number)
@@ -189,8 +188,7 @@ defmodule Ask.Runtime.SessionTest do
 
     test_channel = TestChannel.new()
 
-    channel =
-      insert_channel(settings: test_channel |> TestChannel.settings(), patterns: patterns)
+    channel = insert_channel(settings: test_channel |> TestChannel.settings(), patterns: patterns)
 
     phone_number = "12 34"
     canonical_phone_number = Respondent.canonicalize_phone_number(phone_number)
@@ -1864,18 +1862,19 @@ defmodule Ask.Runtime.SessionTest do
     test "sync_step logs prompts in mobileweb mode", %{quiz: quiz, respondent: respondent} do
       # Arrange
       started_session = started_session(quiz, respondent, "mobileweb")
-      sync_step = fn() -> Session.sync_step(started_session, Flow.Message.reply("No")) end
+      sync_step = fn -> Session.sync_step(started_session, Flow.Message.reply("No")) end
 
       # Act
       run_with_survey_loggging(sync_step)
 
       # Assert
       next_step_prompt = "Do you exercise"
+
       assert Repo.one(
-        from l in SurveyLogEntry,
-        where: l.action_type == "prompt" and l.action_data == ^next_step_prompt,
-        select: count(l.id)
-      ) == 1
+               from l in SurveyLogEntry,
+                 where: l.action_type == "prompt" and l.action_data == ^next_step_prompt,
+                 select: count(l.id)
+             ) == 1
     end
   end
 

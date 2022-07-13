@@ -274,7 +274,14 @@ defmodule Ask.Runtime.Session do
     channel = session.current_mode.channel
 
     channel_state =
-      ChannelBroker.setup(channel.id, runtime_channel, session.respondent, token, next_available_date_time, today_end_time)
+      ChannelBroker.setup(
+        channel.id,
+        runtime_channel,
+        session.respondent,
+        token,
+        next_available_date_time,
+        today_end_time
+      )
       |> handle_setup_response()
 
     %{session | channel_state: channel_state, token: token}
@@ -478,7 +485,14 @@ defmodule Ask.Runtime.Session do
     runtime_channel = Ask.Channel.runtime_channel(channel)
 
     channel_state =
-      ChannelBroker.setup(channel.id, runtime_channel, respondent, token, next_available_date_time, today_end_time)
+      ChannelBroker.setup(
+        channel.id,
+        runtime_channel,
+        respondent,
+        token,
+        next_available_date_time,
+        today_end_time
+      )
       |> handle_setup_response
 
     log_contact("Enqueueing call", channel, flow.mode, respondent)
@@ -634,8 +648,9 @@ defmodule Ask.Runtime.Session do
   defp log_prompts(reply, channel, mode, respondent, force \\ false, persist \\ true) do
     if persist do
       runtime_channel = Ask.Channel.runtime_channel(channel)
+
       if force ||
-           !(ChannelBroker.has_delivery_confirmation?(channel.id, runtime_channel)) do
+           !ChannelBroker.has_delivery_confirmation?(channel.id, runtime_channel) do
         disposition = Reply.disposition(reply) || respondent.disposition
 
         Enum.each(Reply.steps(reply), fn step ->
@@ -840,7 +855,16 @@ defmodule Ask.Runtime.Session do
         # the survey interaction file logs are being generating depending on the mode and channel
         # involved may be a good option for the future.
         force_log = is_mobileweb_mode?(current_mode)
-        log_prompts(reply, current_mode.channel, flow.mode, session.respondent, force_log, persist)
+
+        log_prompts(
+          reply,
+          current_mode.channel,
+          flow.mode,
+          session.respondent,
+          force_log,
+          persist
+        )
+
         {:ok, %{session | flow: flow}, reply, current_timeout(session)}
     end
   end

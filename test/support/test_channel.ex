@@ -76,16 +76,17 @@ defmodule Ask.TestChannel do
   end
 
   def create_channel(user, base_url, api_channel) do
-    channel = user
-    |> Ecto.build_assoc(:channels)
-    |> Ask.Channel.changeset(%{
-      name: "test",
-      provider: "test",
-      base_url: base_url,
-      type: "ivr",
-      settings: api_channel
-    })
-    |> Ask.Repo.insert!()
+    channel =
+      user
+      |> Ecto.build_assoc(:channels)
+      |> Ask.Channel.changeset(%{
+        name: "test",
+        provider: "test",
+        base_url: base_url,
+        type: "ivr",
+        settings: api_channel
+      })
+      |> Ask.Repo.insert!()
 
     {:ok, _pid} = ChannelBrokerSupervisor.start_child(channel.id, channel.settings)
 

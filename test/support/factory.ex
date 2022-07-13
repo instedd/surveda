@@ -92,7 +92,7 @@ defmodule Ask.Factory do
                 "audio_source" => "tts",
                 "text" => "Quota completed (ivr)"
               },
-              "mobileweb" => "Quota completed",
+              "mobileweb" => "Quota completed"
             }
           },
           "skip_logic" => nil

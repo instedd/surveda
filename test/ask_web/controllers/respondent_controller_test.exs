@@ -2172,7 +2172,6 @@ defmodule AskWeb.RespondentControllerTest do
       survey: survey,
       expected_field_index_on_index: expected_field_index_on_index
     } do
-
       # No answers
       %{
         fields: fields,
