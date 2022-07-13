@@ -2,7 +2,15 @@ defmodule Ask.Runtime.VerboiceChannel do
   alias __MODULE__
   use Ask.Model
   alias Ask.{Repo, Respondent, Channel, SurvedaMetrics, Stats}
-  alias Ask.Runtime.{Survey, Flow, Reply, RetriesHistogram}
+
+  alias Ask.Runtime.{
+    Survey,
+    Flow,
+    Reply,
+    RetriesHistogram,
+    ChannelBroker
+  }
+
   alias AskWeb.Router.Helpers
   import Plug.Conn
   import XmlBuilder
@@ -80,6 +88,15 @@ defmodule Ask.Runtime.VerboiceChannel do
       ]),
       element(:Redirect, no_reply_callback_url(respondent, channel_base_url))
     ]
+  end
+
+  defp respondent_channel(respondent) do
+    try do
+      session = respondent.session |> Ask.Runtime.Session.load()
+      session.current_mode.channel
+    rescue
+      _ -> nil
+    end
   end
 
   defp channel_base_url(respondent) do
@@ -297,6 +314,14 @@ defmodule Ask.Runtime.VerboiceChannel do
 
         respondent ->
           respondent = update_call_time_seconds(respondent, call_sid, call_duration)
+          channel = respondent_channel(respondent)
+          # The respondent has a current_mode, then provider should not be necessary
+          ChannelBroker.callback_recieved(
+            channel.id,
+            respondent,
+            status,
+            "verboice"
+          )
 
           case status do
             "expired" ->

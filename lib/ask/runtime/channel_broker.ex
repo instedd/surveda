@@ -80,6 +80,14 @@ defmodule Ask.Runtime.ChannelBroker do
     call_gen_server(channel_id, {:check_status, channel})
   end
 
+  def check_status(nil, respondent, respondent_state, provider) do
+    check_status(0, respondent, respondent_state, provider)
+  end
+
+  def callback_recieved(channel_id, respondent, respondent_state, provider) do
+    call_gen_server(channel_id, {:callback_recieved, respondent, respondent_state, provider})
+  end
+
   defp call_gen_server(channel_id, message) do
     pid = find_or_start_process(channel_id)
     GenServer.call(pid, message)
@@ -269,6 +277,28 @@ defmodule Ask.Runtime.ChannelBroker do
   def handle_call({:check_status, channel}, _from, state) do
     reply = Channel.check_status(channel)
     {:reply, reply, state, @timeout}
+  end
+
+  @impl true
+  def handle_call({:callback_recieved, _respondent, _respondent_state, _provider}, _from, %{channel_id: _channel_id} = state) do
+    # case provider do
+    #   "verboice" ->
+    #     IO.puts("*******************")
+    #     IO.puts("*******************")
+
+    #     IO.puts(
+    #       "A callback for channel #{channel_id} was recieved from #{provider} for respondent #{
+    #         respondent.id
+    #       }, now state is #{respondent_state}"
+    #     )
+
+    #     IO.puts("*******************")
+    #     IO.puts("*******************")
+
+    #   "nuntium" ->
+    #     IO.puts("I got a nuntium callback")
+    # end
+    {:reply, :ok, state, @timeout}
   end
 
   @impl true

@@ -1,7 +1,7 @@
 defmodule Ask.Runtime.NuntiumChannel do
   @behaviour Ask.Runtime.ChannelProvider
   use Ask.Model
-  alias Ask.Runtime.{Survey, NuntiumChannel, Flow, Reply, ReplyStep}
+  alias Ask.Runtime.{Survey, NuntiumChannel, Flow, Reply, ReplyStep, ChannelBroker}
   alias Ask.{Repo, Respondent, Channel, Stats, SurvedaMetrics}
   import Ecto.Query
   import Plug.Conn
@@ -58,6 +58,15 @@ defmodule Ask.Runtime.NuntiumChannel do
     client.token
   end
 
+  defp respondent_channel(respondent) do
+    try do
+      session = respondent.session |> Ask.Runtime.Session.load()
+      session.current_mode.channel
+    rescue
+      _ -> nil
+    end
+  end
+
   def callback(conn, params) do
     callback(conn, params, Survey)
   end
@@ -74,6 +83,15 @@ defmodule Ask.Runtime.NuntiumChannel do
           :ok
 
         respondent ->
+          channel = respondent_channel(respondent)
+
+          ChannelBroker.callback_recieved(
+            channel.id,
+            respondent,
+            state,
+            "nuntium"
+          )
+
           case state do
             "failed" ->
               survey.channel_failed(respondent)
