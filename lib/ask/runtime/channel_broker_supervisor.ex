@@ -12,8 +12,8 @@ defmodule Ask.Runtime.ChannelBrokerSupervisor do
 
   def start_child(nil), do: start_child(0)
 
-  def start_child(channel_id) do
-    DynamicSupervisor.start_child(__MODULE__, child_spec(channel_id))
+  def start_child(channel_id, settings) do
+    DynamicSupervisor.start_child(__MODULE__, child_spec(channel_id, settings))
   end
 
   def terminate_child(nil), do: terminate_child(0)
@@ -36,10 +36,10 @@ defmodule Ask.Runtime.ChannelBrokerSupervisor do
     end
   end
 
-  defp child_spec(channel_id) do
+  defp child_spec(channel_id, settings) do
     %{
       id: "channel_broker_#{channel_id}",
-      start: {ChannelBroker, :start_link, [channel_id]}
+      start: {ChannelBroker, :start_link, [channel_id, settings]}
     }
   end
 
