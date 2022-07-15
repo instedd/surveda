@@ -386,12 +386,12 @@ defmodule Ask.Runtime.NuntiumChannel do
           })
         end)
 
-      respondent = NuntiumChannel.update_stats(respondent)
+      NuntiumChannel.update_stats(respondent)
 
       Nuntium.Client.new(channel.base_url, channel.oauth_token)
       |> Nuntium.Client.send_ao(channel.settings["nuntium_account"], messages)
 
-      respondent
+      length(messages)
     end
 
     def check_status(runtime_channel) do

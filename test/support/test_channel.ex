@@ -111,7 +111,7 @@ defimpl Ask.Runtime.Channel, for: Ask.TestChannel do
 
   def ask(channel, respondent, token, prompts) do
     send(channel.pid, [:ask, channel, respondent, token, prompts])
-    respondent
+    1
   end
 
   def has_delivery_confirmation?(%{delivery: delivery}), do: delivery
