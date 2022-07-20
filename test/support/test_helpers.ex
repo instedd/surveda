@@ -37,16 +37,20 @@ defmodule Ask.TestHelpers do
         respondent_groups
       end
 
-      defp create_running_survey_with_channel_and_respondent_with_options(options \\ []) do
+      defp create_running_survey_with_channel_and_respondents_with_options(options \\ []) do
         steps = Keyword.get(options, :steps, @dummy_steps)
         mode = Keyword.get(options, :mode, "sms")
         schedule = Keyword.get(options, :schedule, Ask.Schedule.always())
         fallback_delay = Keyword.get(options, :fallback_delay, "10m")
         user = Keyword.get(options, :user, nil)
         simulation = Keyword.get(options, :simulation, false)
+        respondents_quantity = Keyword.get(options, :respondents_quantity, 1)
+        channel_capacity = Keyword.get(options, :channel_capacity, nil)
 
         project = if user, do: create_project_for_user(user), else: nil
+
         test_channel = Ask.TestChannel.new(false, mode == "sms")
+        channel_settings = Map.put(Ask.TestChannel.settings(test_channel), "capacity", channel_capacity)
 
         channel_type =
           case mode do
@@ -55,9 +59,9 @@ defmodule Ask.TestHelpers do
           end
 
         channel = insert(:channel,
-            settings: test_channel |> Ask.TestChannel.settings(),
-            type: channel_type
-          )
+          settings: channel_settings,
+          type: channel_type
+        )
 
         quiz = insert(:questionnaire, steps: steps, quota_completed_steps: nil)
 
@@ -84,8 +88,17 @@ defmodule Ask.TestHelpers do
         })
         |> Ask.Repo.insert()
 
-        respondent = insert(:respondent, survey: survey, respondent_group: group)
-        phone_number = respondent.canonical_phone_number
+        respondents =
+          Enum.map(1..respondents_quantity, fn i ->
+            insert(:respondent, survey: survey, respondent_group: group)
+          end)
+
+        [survey, group, test_channel, respondents]
+      end
+
+      defp create_running_survey_with_channel_and_respondent_with_options(options) do
+        [survey, group, test_channel, [%{canonical_phone_number: phone_number} = respondent]] =
+          create_running_survey_with_channel_and_respondents_with_options(options)
 
         [survey, group, test_channel, respondent, phone_number]
       end
