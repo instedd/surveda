@@ -1,5 +1,5 @@
 defmodule Ask.Runtime.ChannelBroker do
-  alias Ask.Runtime.{Channel, ChannelBrokerSupervisor}
+  alias Ask.Runtime.{Channel, ChannelBrokerSupervisor, NuntiumChannel}
   alias Ask.Config
   import Ecto.Query
   alias Ask.Repo
@@ -84,8 +84,11 @@ defmodule Ask.Runtime.ChannelBroker do
     check_status(0, respondent, respondent_state, provider)
   end
 
-  def callback_recieved(channel_id, respondent, respondent_state, provider) do
-    call_gen_server(channel_id, {:callback_recieved, respondent, respondent_state, provider})
+  def callback_recieved(channel_id, channel, respondent, respondent_state, provider) do
+    call_gen_server(
+      channel_id,
+      {:callback_recieved, channel, respondent, respondent_state, provider}
+    )
   end
 
   defp call_gen_server(channel_id, message) do
@@ -97,6 +100,7 @@ defmodule Ask.Runtime.ChannelBroker do
     case Registry.lookup(:channel_broker_registry, channel_id) do
       [{pid, _}] ->
         pid
+
       [] ->
         {:ok, pid} = ChannelBrokerSupervisor.start_child(channel_id, channel_settings(channel_id))
         pid
@@ -108,10 +112,22 @@ defmodule Ask.Runtime.ChannelBroker do
   defp channel_settings(channel_id) do
     query = from c in "channels", where: c.id == ^channel_id, select: c.settings
     settings = Repo.one(query)
-    if (settings) do
+
+    if settings do
       Poison.decode!(settings)
     else
       %{}
+    end
+  end
+
+  defp channel_provider(channel_id) do
+    query = from c in "channels", where: c.id == ^channel_id, select: c.provider
+    provider = Repo.one(query)
+
+    if provider do
+      provider
+    else
+      ""
     end
   end
 
@@ -124,81 +140,118 @@ defmodule Ask.Runtime.ChannelBroker do
       %{
         channel_id: channel_id,
         capacity: Map.get(settings, :capacity, Config.default_channel_capacity()),
-        active_respondents: Map.new(),
-        respondents_queue: :pqueue.new()
+        active_contacts: 0,
+        contacts_queue: :pqueue.new()
       },
       @timeout
     }
   end
 
-  def queue_respondent(
+  def queue_contact(
         %{
-          respondents_queue: respondents_queue
+          contacts_queue: contacts_queue
         } = state,
-        respondent,
-        token,
-        not_before,
-        not_after
+        contact,
+        size
       ) do
-    new_respondents_queue =
-      :pqueue.in({respondent, token, not_before, not_after}, respondents_queue)
+    new_contacts_queue = :pqueue.in([size, contact], contacts_queue)
 
-    state = Map.put(state, :respondents_queue, new_respondents_queue)
-    state
+    IO.puts(" ************************ ")
+    IO.puts(" ************************ ")
+    IO.puts(" ************************ ")
+    IO.puts(" ******* QUEUEING ******* ")
+    IO.inspect(:pqueue.len(new_contacts_queue), label: "elements")
+    IO.puts(" ************************ ")
+    IO.puts(" ************************ ")
+    IO.puts(" ************************ ")
+
+    new_state = Map.put(state, :contacts_queue, new_contacts_queue)
+    new_state
   end
 
   def can_unqueue(
         %{
           capacity: capacity,
-          active_respondents: active_respondents,
-          respondents_queue: respondents_queue
+          active_contacts: active_contacts,
+          contacts_queue: contacts_queue
         } = _state
       ) do
     cond do
-      :pqueue.is_empty(respondents_queue) -> false
-      length(Map.keys(active_respondents)) >= capacity -> false
+      :pqueue.is_empty(contacts_queue) -> false
+      active_contacts >= 10 -> false
       true -> true
     end
   end
 
-  def activate_respondent(
+  defp channel_setup(channel, respondent, token, not_before, not_after) do
+    try do
+      Ask.Runtime.Channel.setup(channel, respondent, token, not_before, not_after)
+    rescue
+      _ ->
+        Ask.Runtime.Channel.setup(
+          Ask.Channel.runtime_channel(channel),
+          respondent,
+          token,
+          not_before,
+          not_after
+        )
+    end
+  end
+
+  defp channel_ask(channel, respondent, token, reply) do
+    try do
+      Ask.Runtime.Channel.ask(channel, respondent, token, reply)
+    rescue
+      _ -> Ask.Runtime.Channel.ask(Ask.Channel.runtime_channel(channel), respondent, token, reply)
+    end
+  end
+
+  def activate_contact(
         %{
-          active_respondents: active_respondents,
-          respondents_queue: respondents_queue
+          channel_id: channel_id,
+          active_contacts: active_contacts,
+          contacts_queue: contacts_queue
         } = state,
         channel
       ) do
-    {{_unqueue_res, unqueued_item}, new_respondents_queue} = :pqueue.out(respondents_queue)
-    {respondent, token, not_before, not_after} = unqueued_item
+    {{_unqueue_res, [size, unqueued_item]}, new_contacts_queue} = :pqueue.out(contacts_queue)
 
-    new_active_respondents =
-      Map.put(active_respondents, respondent.id, {respondent, token, not_before, not_after})
+    IO.puts(" ************************ ")
+    IO.puts(" ************************ ")
+    IO.puts(" ************************ ")
 
-    state = Map.put(state, :active_respondents, new_active_respondents)
-    state = Map.put(state, :respondents_queue, new_respondents_queue)
-    setup_response = Channel.setup(channel, respondent, token, not_before, not_after)
-    {state, setup_response}
+    IO.puts(" ******* CONTACT ACTIVATED ******* ")
+    IO.puts(" ******** ACTIVE CONTACTS = #{active_contacts + size} ")
+
+    IO.puts(" ************************ ")
+    IO.puts(" ************************ ")
+    IO.puts(" ************************ ")
+
+    state = Map.put(state, :active_contacts, active_contacts + size)
+    state = Map.put(state, :contacts_queue, new_contacts_queue)
+
+    {state, unqueued_item}
   end
 
-  def deactivate_respondent(
+  def deactivate_contact(
         %{
-          active_respondents: active_respondents,
-          respondents_queue: respondents_queue
-        } = state,
-        respondent_id,
-        re_enqueue
+          active_contacts: active_contacts
+        } = state
       ) do
-    if re_enqueue do
-      {respondent, token, not_before, not_after} = Map.get(active_respondents, respondent_id)
+    IO.puts(" ************************ ")
+    IO.puts(" ************************ ")
+    IO.puts(" ************************ ")
 
-      new_respondents_queue =
-        :pqueue.in(respondents_queue, {respondent, token, not_before, not_after})
+    IO.puts(" ******* CONTACT DEACTIVATED ******* ")
+    IO.puts(" ******** ACTIVE CONTACTS = #{active_contacts - 1} ")
 
-      Map.put(state, :respondents_queue, new_respondents_queue)
-    end
+    IO.puts(" ************************ ")
+    IO.puts(" ************************ ")
+    IO.puts(" ************************ ")
 
-    new_active_respondents = Map.delete(active_respondents, respondent_id)
-    state = Map.put(state, :active_respondents, new_active_respondents)
+    # We decrease the counter, leaving it as a separate function just in case 
+    # this could be more sophisticated
+    state = Map.put(state, :active_contacts, active_contacts - 1)
     state
   end
 
@@ -206,17 +259,47 @@ defmodule Ask.Runtime.ChannelBroker do
   def handle_call(
         {:ask, channel, %{id: respondent_id} = respondent, token, reply},
         _from,
-        %{active_respondents: active_respondents} = state
+        %{channel_id: channel_id, active_contacts: active_contacts} = state
       ) do
-    reply =
-      if respondent_id in Map.keys(active_respondents) do
-        Channel.ask(channel, respondent, token, reply)
+    {end_state, reply} =
+      if channel_provider(channel_id) == "nuntium" do
+        IO.puts(" ************************ ")
+        IO.puts(" ************************ ")
+        IO.puts(" ************************ ")
+
+        IO.inspect(reply, label: "reply")
+
+        IO.puts(" ************************ ")
+        IO.puts(" ************************ ")
+        IO.puts(" ************************ ")
+
+        state =
+          queue_contact(
+            state,
+            {respondent, token, reply},
+            length(NuntiumChannel.reply_to_messages(reply, nil, respondent_id))
+          )
+
+        if can_unqueue(state) do
+          {new_state, unqueued_item} = activate_contact(state, channel)
+          {unq_respondent, unq_token, unq_reply} = unqueued_item
+
+          {
+            new_state,
+            channel_ask(channel, unq_respondent, unq_token, unq_reply)
+          }
+        else
+          {state, respondent}
+        end
       else
-        # This should be an error or we should check if it's in the queue?
-        {:error, :inactive_respondent}
+        # No ask will be done for other providers, just in case we bypass the ask
+        {
+          state,
+          channel_ask(channel, respondent, token, reply)
+        }
       end
 
-    {:reply, reply, state, @timeout}
+    {:reply, reply, end_state, @timeout}
   end
 
   @impl true
@@ -230,17 +313,34 @@ defmodule Ask.Runtime.ChannelBroker do
           not_after
         },
         _from,
-        state
+        %{channel_id: channel_id} = state
       ) do
-    state = queue_respondent(state, respondent, token, not_before, not_after)
+    new_state = state
 
-    {state, setup_response} = if can_unqueue(state) do
-      activate_respondent(state, channel)
-    else
-      {state, {:ok, %{verboice_call_id: 9999}}}
-    end
+    {end_state, setup_response} =
+      if channel_provider(channel_id) == "verboice" do
+        new_state = queue_contact(new_state, {respondent, token, not_before, not_after}, 1)
+        # Upon setup, we only setup an active contact for verboice 
+        if can_unqueue(new_state) do
+          {new_state, unqueued_item} = activate_contact(new_state, channel)
+          {unq_respondent, unq_token, unq_not_before, unq_not_after} = unqueued_item
 
-    {:reply, setup_response, state, @timeout}
+          {
+            new_state,
+            channel_setup(channel, unq_respondent, unq_token, unq_not_before, unq_not_after)
+          }
+        else
+          {new_state, {:ok, %{verboice_call_id: 9999}}}
+        end
+      else
+        # In nuntium, we just setup, the active contacts will increase upon :ask
+        {
+          state,
+          channel_setup(channel, respondent, token, not_before, not_after)
+        }
+      end
+
+    {:reply, setup_response, end_state, @timeout}
   end
 
   @impl true
@@ -280,25 +380,53 @@ defmodule Ask.Runtime.ChannelBroker do
   end
 
   @impl true
-  def handle_call({:callback_recieved, _respondent, _respondent_state, _provider}, _from, %{channel_id: _channel_id} = state) do
-    # case provider do
-    #   "verboice" ->
-    #     IO.puts("*******************")
-    #     IO.puts("*******************")
+  def handle_call(
+        {:callback_recieved, channel, respondent, respondent_state, provider},
+        _from,
+        %{channel_id: channel_id, active_contacts: active_contacts} = state
+      ) do
+    {state, setup_response} =
+      case provider do
+        "verboice" ->
+          case respondent_state do
+            rs when rs in ["failed", "busy", "no-answer", "expired", "completed"] ->
+              new_state = deactivate_contact(state)
+              # For the verboice case we will setup the next in the queue
+              # Should we do something with the setup response?
+              # In this case isn't the result of a setup call but a queue processing.
+              if can_unqueue(new_state) do
+                {new_state, unqueued_item} = activate_contact(new_state, channel)
+                {unq_respondent, unq_token, unq_not_before, unq_not_after} = unqueued_item
 
-    #     IO.puts(
-    #       "A callback for channel #{channel_id} was recieved from #{provider} for respondent #{
-    #         respondent.id
-    #       }, now state is #{respondent_state}"
-    #     )
+                {
+                  new_state,
+                  channel_setup(channel, unq_respondent, unq_token, unq_not_before, unq_not_after)
+                }
+              else
+                {new_state, {:error, %{verboice_call_id: -1}}}
+              end
 
-    #     IO.puts("*******************")
-    #     IO.puts("*******************")
+            _ ->
+              {state, {:error, %{verboice_call_id: -1}}}
+          end
 
-    #   "nuntium" ->
-    #     IO.puts("I got a nuntium callback")
-    # end
-    {:reply, :ok, state, @timeout}
+        "nuntium" ->
+          new_state = deactivate_contact(state)
+
+          if can_unqueue(new_state) do
+            {new_state, unqueued_item} = activate_contact(state, channel)
+            {unq_respondent, unq_token, unq_reply} = unqueued_item
+
+            {
+              new_state,
+              channel_ask(channel, unq_respondent, unq_token, unq_reply)
+            }
+          else
+            {new_state, respondent}
+          end
+      end
+
+    {:reply, setup_response, state, @timeout}
   end
 
   @impl true
