@@ -155,16 +155,6 @@ defmodule Ask.Runtime.ChannelBroker do
         size
       ) do
     new_contacts_queue = :pqueue.in([size, contact], contacts_queue)
-
-    IO.puts(" ************************ ")
-    IO.puts(" ************************ ")
-    IO.puts(" ************************ ")
-    IO.puts(" ******* QUEUEING ******* ")
-    IO.inspect(:pqueue.len(new_contacts_queue), label: "elements")
-    IO.puts(" ************************ ")
-    IO.puts(" ************************ ")
-    IO.puts(" ************************ ")
-
     new_state = Map.put(state, :contacts_queue, new_contacts_queue)
     new_state
   end
@@ -178,7 +168,7 @@ defmodule Ask.Runtime.ChannelBroker do
       ) do
     cond do
       :pqueue.is_empty(contacts_queue) -> false
-      active_contacts >= 10 -> false
+      active_contacts >= capacity -> false
       true -> true
     end
   end
@@ -208,25 +198,11 @@ defmodule Ask.Runtime.ChannelBroker do
 
   def activate_contact(
         %{
-          channel_id: channel_id,
           active_contacts: active_contacts,
           contacts_queue: contacts_queue
-        } = state,
-        channel
+        } = state
       ) do
     {{_unqueue_res, [size, unqueued_item]}, new_contacts_queue} = :pqueue.out(contacts_queue)
-
-    IO.puts(" ************************ ")
-    IO.puts(" ************************ ")
-    IO.puts(" ************************ ")
-
-    IO.puts(" ******* CONTACT ACTIVATED ******* ")
-    IO.puts(" ******** ACTIVE CONTACTS = #{active_contacts + size} ")
-
-    IO.puts(" ************************ ")
-    IO.puts(" ************************ ")
-    IO.puts(" ************************ ")
-
     state = Map.put(state, :active_contacts, active_contacts + size)
     state = Map.put(state, :contacts_queue, new_contacts_queue)
 
@@ -238,17 +214,6 @@ defmodule Ask.Runtime.ChannelBroker do
           active_contacts: active_contacts
         } = state
       ) do
-    IO.puts(" ************************ ")
-    IO.puts(" ************************ ")
-    IO.puts(" ************************ ")
-
-    IO.puts(" ******* CONTACT DEACTIVATED ******* ")
-    IO.puts(" ******** ACTIVE CONTACTS = #{active_contacts - 1} ")
-
-    IO.puts(" ************************ ")
-    IO.puts(" ************************ ")
-    IO.puts(" ************************ ")
-
     # We decrease the counter, leaving it as a separate function just in case 
     # this could be more sophisticated
     state = Map.put(state, :active_contacts, active_contacts - 1)
@@ -259,20 +224,10 @@ defmodule Ask.Runtime.ChannelBroker do
   def handle_call(
         {:ask, channel, %{id: respondent_id} = respondent, token, reply},
         _from,
-        %{channel_id: channel_id, active_contacts: active_contacts} = state
+        %{channel_id: channel_id} = state
       ) do
     {end_state, reply} =
       if channel_provider(channel_id) == "nuntium" do
-        IO.puts(" ************************ ")
-        IO.puts(" ************************ ")
-        IO.puts(" ************************ ")
-
-        IO.inspect(reply, label: "reply")
-
-        IO.puts(" ************************ ")
-        IO.puts(" ************************ ")
-        IO.puts(" ************************ ")
-
         state =
           queue_contact(
             state,
@@ -281,7 +236,7 @@ defmodule Ask.Runtime.ChannelBroker do
           )
 
         if can_unqueue(state) do
-          {new_state, unqueued_item} = activate_contact(state, channel)
+          {new_state, unqueued_item} = activate_contact(state)
           {unq_respondent, unq_token, unq_reply} = unqueued_item
 
           {
@@ -322,7 +277,7 @@ defmodule Ask.Runtime.ChannelBroker do
         new_state = queue_contact(new_state, {respondent, token, not_before, not_after}, 1)
         # Upon setup, we only setup an active contact for verboice 
         if can_unqueue(new_state) do
-          {new_state, unqueued_item} = activate_contact(new_state, channel)
+          {new_state, unqueued_item} = activate_contact(new_state)
           {unq_respondent, unq_token, unq_not_before, unq_not_after} = unqueued_item
 
           {
@@ -383,7 +338,7 @@ defmodule Ask.Runtime.ChannelBroker do
   def handle_call(
         {:callback_recieved, channel, respondent, respondent_state, provider},
         _from,
-        %{channel_id: channel_id, active_contacts: active_contacts} = state
+        state
       ) do
     {state, setup_response} =
       case provider do
@@ -395,7 +350,7 @@ defmodule Ask.Runtime.ChannelBroker do
               # Should we do something with the setup response?
               # In this case isn't the result of a setup call but a queue processing.
               if can_unqueue(new_state) do
-                {new_state, unqueued_item} = activate_contact(new_state, channel)
+                {new_state, unqueued_item} = activate_contact(new_state)
                 {unq_respondent, unq_token, unq_not_before, unq_not_after} = unqueued_item
 
                 {
@@ -414,7 +369,7 @@ defmodule Ask.Runtime.ChannelBroker do
           new_state = deactivate_contact(state)
 
           if can_unqueue(new_state) do
-            {new_state, unqueued_item} = activate_contact(state, channel)
+            {new_state, unqueued_item} = activate_contact(state)
             {unq_respondent, unq_token, unq_reply} = unqueued_item
 
             {
