@@ -85,12 +85,22 @@ defmodule Ask.Runtime.NuntiumChannel do
         respondent ->
           channel = respondent_channel(respondent)
 
-          ChannelBroker.callback_recieved(
-            channel.id,
-            respondent,
-            state,
-            "nuntium"
-          )
+          case channel do
+            nil ->
+              # Something needs to be done in case the respondant 
+              # has no session anymore to recover the proper channel
+              IO.puts(" I've received a Nuntium Callback but I have no channel ")
+
+            _ ->
+              # Should check the status value? 
+              ChannelBroker.callback_recieved(
+                channel.id,
+                channel,
+                respondent,
+                state,
+                "nuntium"
+              )
+          end
 
           case state do
             "failed" ->

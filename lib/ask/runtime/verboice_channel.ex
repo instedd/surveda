@@ -318,6 +318,7 @@ defmodule Ask.Runtime.VerboiceChannel do
           # The respondent has a current_mode, then provider should not be necessary
           ChannelBroker.callback_recieved(
             channel.id,
+            channel,
             respondent,
             status,
             "verboice"
@@ -485,8 +486,8 @@ defmodule Ask.Runtime.VerboiceChannel do
         end
 
       channel.client
-        |> Verboice.Client.call(params)
-        |> VerboiceChannel.process_call_response()
+      |> Verboice.Client.call(params)
+      |> VerboiceChannel.process_call_response()
     end
 
     def has_queued_message?(channel, %{"verboice_call_id" => call_id}) do
