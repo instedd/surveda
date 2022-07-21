@@ -1,20 +1,17 @@
 defmodule Ask.Runtime.ChannelBroker do
   alias Ask.Runtime.{Channel, ChannelBrokerSupervisor, NuntiumChannel}
   alias Ask.Config
-  import Ecto.Query
   alias Ask.Repo
   use GenServer
 
   @timeout_minutes 5
   @timeout @timeout_minutes * 60_000
 
-  # Channels without channel_id (for testing or simulation) share a single process (channel_id: 0)
+  # Channels without channel_id (for testing, simulations or corner cases) share a single process (channel_id: 0)
 
-  def start_link(nil), do: start_link([0, %{}])
-
-  def start_link(channel_id, settings) do
+  def start_link(%{id: channel_id} = channel) do
     name = via_tuple(channel_id)
-    GenServer.start_link(__MODULE__, [channel_id, settings], name: name)
+    GenServer.start_link(__MODULE__, channel, name: name)
   end
 
   # Inspired by: https://medium.com/elixirlabs/registry-in-elixir-1-4-0-d6750fb5aeb
@@ -102,43 +99,35 @@ defmodule Ask.Runtime.ChannelBroker do
         pid
 
       [] ->
-        {:ok, pid} = ChannelBrokerSupervisor.start_child(channel_id, channel_settings(channel_id))
+        {:ok, pid} = ChannelBrokerSupervisor.start_child(get_channel(channel_id))
         pid
     end
   end
 
-  defp channel_settings(0), do: %{}
-
-  defp channel_settings(channel_id) do
-    query = from c in "channels", where: c.id == ^channel_id, select: c.settings
-    settings = Repo.one(query)
-
-    if settings do
-      Poison.decode!(settings)
+  defp get_channel(channel_id) do
+    channel = Repo.get(Ask.Channel, channel_id)
+    if (channel) do
+      channel
     else
-      %{}
+      %{id: 0, settings: %{}}
     end
   end
 
-  defp channel_provider(channel_id) do
-    query = from c in "channels", where: c.id == ^channel_id, select: c.provider
-    provider = Repo.one(query)
-
-    if provider do
-      provider
-    else
-      ""
-    end
+  defp channel_provider(%{channel: %{provider: provider}} = _state) do
+    provider
   end
+
+  defp channel_provider(_state), do: ""
 
   # Server (callbacks)
 
   @impl true
-  def init([channel_id, settings]) do
+  def init(%{settings: settings} = channel) do
     {
       :ok,
       %{
-        channel_id: channel_id,
+        channel: channel,
+        # capacity: maximum concurrect SMS or IVR calls supported by the channel
         capacity: Map.get(settings, :capacity, Config.default_channel_capacity()),
         active_contacts: 0,
         contacts_queue: :pqueue.new()
@@ -214,7 +203,7 @@ defmodule Ask.Runtime.ChannelBroker do
           active_contacts: active_contacts
         } = state
       ) do
-    # We decrease the counter, leaving it as a separate function just in case 
+    # We decrease the counter, leaving it as a separate function just in case
     # this could be more sophisticated
     state = Map.put(state, :active_contacts, active_contacts - 1)
     state
@@ -224,7 +213,7 @@ defmodule Ask.Runtime.ChannelBroker do
   def handle_call(
         {:ask, channel, %{id: respondent_id} = respondent, token, reply},
         _from,
-        %{channel_id: channel_id} = state
+        %{channel: %{id: channel_id}} = state
       ) do
     {end_state, reply} =
       if channel_provider(channel_id) == "nuntium" do
@@ -268,14 +257,14 @@ defmodule Ask.Runtime.ChannelBroker do
           not_after
         },
         _from,
-        %{channel_id: channel_id} = state
+        %{channel: %{id: channel_id}} = state
       ) do
     new_state = state
 
     {end_state, setup_response} =
       if channel_provider(channel_id) == "verboice" do
         new_state = queue_contact(new_state, {respondent, token, not_before, not_after}, 1)
-        # Upon setup, we only setup an active contact for verboice 
+        # Upon setup, we only setup an active contact for verboice
         if can_unqueue(new_state) do
           {new_state, unqueued_item} = activate_contact(new_state)
           {unq_respondent, unq_token, unq_not_before, unq_not_after} = unqueued_item
