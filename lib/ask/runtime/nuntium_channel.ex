@@ -95,7 +95,6 @@ defmodule Ask.Runtime.NuntiumChannel do
               # Should check the status value? 
               ChannelBroker.callback_recieved(
                 channel.id,
-                channel,
                 respondent,
                 state,
                 "nuntium"
