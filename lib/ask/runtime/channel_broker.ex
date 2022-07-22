@@ -248,34 +248,45 @@ defmodule Ask.Runtime.ChannelBroker do
           not_after
         },
         _from,
-        %{channel: %{id: channel_id}} = state
+        %{channel: %{id: channel_id, type: "ivr"}} = state
       ) do
-    new_state = state
-
-    {end_state, setup_response} =
+    end_state =
       if channel_provider(channel_id) == "verboice" do
-        new_state = queue_contact(new_state, {respondent, token, not_before, not_after}, 1)
+        new_state = queue_contact(state, {respondent, token, not_before, not_after}, 1)
         # Upon setup, we only setup an active contact for verboice
         if can_unqueue(new_state) do
           {new_state, unqueued_item} = activate_contact(new_state)
           {unq_respondent, unq_token, unq_not_before, unq_not_after} = unqueued_item
 
-          {
-            new_state,
-            channel_setup(channel, unq_respondent, unq_token, unq_not_before, unq_not_after)
-          }
+          channel_setup(channel, unq_respondent, unq_token, unq_not_before, unq_not_after)
         else
-          {new_state, {:ok, %{verboice_call_id: 9999}}}
+          new_state
         end
       else
         # In nuntium, we just setup, the active contacts will increase upon :ask
-        {
-          state,
-          channel_setup(channel, respondent, token, not_before, not_after)
-        }
+        channel_setup(channel, respondent, token, not_before, not_after)
+        state
       end
 
-    {:reply, setup_response, end_state, @timeout}
+    {:reply, :ok, end_state, @timeout}
+  end
+
+  @impl true
+  def handle_call(
+    {
+      :setup,
+      channel,
+      respondent,
+      token,
+      not_before,
+      not_after
+    },
+    _from,
+    state
+  ) do
+    # In nuntium, we just setup, the active contacts will increase upon :ask
+    channel_setup(channel, respondent, token, not_before, not_after)
+    {:reply, :ok, state, @timeout}
   end
 
   @impl true

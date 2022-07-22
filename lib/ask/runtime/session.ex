@@ -273,11 +273,11 @@ defmodule Ask.Runtime.Session do
 
     channel = session.current_mode.channel
 
-    channel_state =
+    :ok =
       ChannelBroker.setup(channel.id, runtime_channel, session.respondent, token, next_available_date_time, today_end_time)
       |> handle_setup_response()
 
-    %{session | channel_state: channel_state, token: token}
+    %{session | token: token}
   end
 
   def contact_respondent(%{current_mode: %MobileWebMode{}} = session, runtime_channel) do
@@ -388,7 +388,7 @@ defmodule Ask.Runtime.Session do
     runtime_channel = Ask.Channel.runtime_channel(channel)
 
     # Is this really necessary?
-    ChannelBroker.setup(channel.id, runtime_channel, respondent, token, nil, nil)
+    :ok = ChannelBroker.setup(channel.id, runtime_channel, respondent, token, nil, nil)
 
     case flow
          |> Flow.step(
@@ -475,13 +475,11 @@ defmodule Ask.Runtime.Session do
 
     runtime_channel = Ask.Channel.runtime_channel(channel)
 
-    channel_state =
+    :ok =
       ChannelBroker.setup(channel.id, runtime_channel, respondent, token, next_available_date_time, today_end_time)
       |> handle_setup_response
 
     log_contact("Enqueueing call", channel, flow.mode, respondent)
-
-    session = %{session | channel_state: channel_state}
 
     {:ok, %{session | respondent: respondent}, %Reply{}, current_timeout(session)}
   end
@@ -496,8 +494,7 @@ defmodule Ask.Runtime.Session do
        ) do
     runtime_channel = Ask.Channel.runtime_channel(channel)
 
-    # Is this really necessary?
-    ChannelBroker.setup(channel.id, runtime_channel, respondent, token, nil, nil)
+    :ok = ChannelBroker.setup(channel.id, runtime_channel, respondent, token, nil, nil)
 
     reply = mobile_contact_reply(session)
     channel = session.current_mode.channel
