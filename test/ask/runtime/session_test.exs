@@ -340,7 +340,7 @@ defmodule Ask.Runtime.SessionTest do
 
   test "start with channel without push", %{quiz: quiz, respondent: respondent} do
     test_channel = TestChannel.new()
-    channel = build(:channel, settings: test_channel |> TestChannel.settings())
+    channel = build(:channel, settings: test_channel |> TestChannel.settings(), type: "ivr")
 
     {:ok, %{respondent: respondent} = session, _, timeout} =
       Session.start(quiz, respondent, channel, "ivr", Schedule.always())

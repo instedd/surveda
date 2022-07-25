@@ -259,7 +259,7 @@ defmodule Ask.Runtime.Session do
 
   def contact_respondent(
         %{schedule: schedule, current_mode: %IVRMode{}} = session,
-        runtime_channel
+        _runtime_channel
       ) do
     token = Ecto.UUID.generate()
 
@@ -274,8 +274,8 @@ defmodule Ask.Runtime.Session do
     channel = session.current_mode.channel
 
     :ok =
-      ChannelBroker.setup(channel.id, runtime_channel, session.respondent, token, next_available_date_time, today_end_time)
-      |> handle_setup_response()
+      ChannelBroker.setup(channel.id, channel, session.respondent, token, next_available_date_time, today_end_time)
+      # |> handle_setup_response()
 
     %{session | token: token}
   end
@@ -388,7 +388,7 @@ defmodule Ask.Runtime.Session do
     runtime_channel = Ask.Channel.runtime_channel(channel)
 
     # Is this really necessary?
-    :ok = ChannelBroker.setup(channel.id, runtime_channel, respondent, token, nil, nil)
+    :ok = ChannelBroker.setup(channel.id, channel, respondent, token, nil, nil)
 
     case flow
          |> Flow.step(
@@ -473,11 +473,9 @@ defmodule Ask.Runtime.Session do
       schedule
       |> Schedule.at_end_time(next_available_date_time)
 
-    runtime_channel = Ask.Channel.runtime_channel(channel)
-
     :ok =
-      ChannelBroker.setup(channel.id, runtime_channel, respondent, token, next_available_date_time, today_end_time)
-      |> handle_setup_response
+      ChannelBroker.setup(channel.id, channel, respondent, token, next_available_date_time, today_end_time)
+      # |> handle_setup_response
 
     log_contact("Enqueueing call", channel, flow.mode, respondent)
 
@@ -494,7 +492,7 @@ defmodule Ask.Runtime.Session do
        ) do
     runtime_channel = Ask.Channel.runtime_channel(channel)
 
-    :ok = ChannelBroker.setup(channel.id, runtime_channel, respondent, token, nil, nil)
+    :ok = ChannelBroker.setup(channel.id, channel, respondent, token, nil, nil)
 
     reply = mobile_contact_reply(session)
     channel = session.current_mode.channel
