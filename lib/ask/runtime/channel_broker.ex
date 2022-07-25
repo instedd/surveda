@@ -188,7 +188,8 @@ defmodule Ask.Runtime.ChannelBroker do
         contact,
         size
       ) do
-    new_contacts_queue = :pqueue.in([size, contact], contacts_queue)
+    priority = if elem(contact, 0).disposition == :queued, do: 2, else: 1
+    new_contacts_queue = :pqueue.in([size, contact], priority, contacts_queue)
     new_state = Map.put(state, :contacts_queue, new_contacts_queue)
     new_state
   end
