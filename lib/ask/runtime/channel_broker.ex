@@ -326,7 +326,7 @@ defmodule Ask.Runtime.ChannelBroker do
         _from,
         state
       ) do
-    {end_state, reply} =
+    {end_state, _reply} =
       if channel_type == "sms" do
         state =
           queue_contact(
@@ -354,7 +354,7 @@ defmodule Ask.Runtime.ChannelBroker do
         }
       end
 
-    {:reply, reply, end_state, @timeout}
+    {:reply, :ok, end_state, @timeout}
   end
 
   @impl true
