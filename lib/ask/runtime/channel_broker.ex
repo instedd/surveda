@@ -14,11 +14,11 @@ defmodule Ask.Runtime.ChannelBroker do
 
   # Channels without channel_id (for testing or simulation) share a single process (channel_id: 0)
 
-  def start_link(nil), do: start_link([0, %{}])
+  # def start_link(nil), do: start_link([0, "sms", %{}])
 
-  def start_link(channel_id, settings) do
+  def start_link(channel_id, channel_type \\ "sms", settings) do
     name = via_tuple(channel_id)
-    GenServer.start_link(__MODULE__, [channel_id, settings], name: name)
+    GenServer.start_link(__MODULE__, [channel_id, channel_type, settings], name: name)
   end
 
   # Inspired by: https://medium.com/elixirlabs/registry-in-elixir-1-4-0-d6750fb5aeb
@@ -32,12 +32,12 @@ defmodule Ask.Runtime.ChannelBroker do
     call_gen_server(channel_id, {:prepare, channel})
   end
 
-  def setup(nil, channel, respondent, token, not_before, not_after) do
-    setup(0, channel, respondent, token, not_before, not_after)
+  def setup(nil, channel_type, channel, respondent, token, not_before, not_after) do
+    setup(0, channel_type, channel, respondent, token, not_before, not_after)
   end
 
-  def setup(channel_id, channel, respondent, token, not_before, not_after) do
-    call_gen_server(channel_id, {:setup, channel, respondent, token, not_before, not_after})
+  def setup(channel_id, channel_type, channel, respondent, token, not_before, not_after) do
+    call_gen_server(channel_id, {:setup, channel_type, channel, respondent, token, not_before, not_after})
   end
 
   def has_delivery_confirmation?(nil, channel), do: has_delivery_confirmation?(0, channel)
@@ -46,10 +46,10 @@ defmodule Ask.Runtime.ChannelBroker do
     call_gen_server(channel_id, {:has_delivery_confirmation?, channel})
   end
 
-  def ask(nil, channel, respondent, token, reply), do: ask(0, channel, respondent, token, reply)
+  def ask(nil, channel_type, channel, respondent, token, reply), do: ask(0, channel_type, channel, respondent, token, reply)
 
-  def ask(channel_id, channel, respondent, token, reply) do
-    call_gen_server(channel_id, {:ask, channel, respondent, token, reply})
+  def ask(channel_id, channel_type, channel, respondent, token, reply) do
+    call_gen_server(channel_id, {:ask, channel_type, channel, respondent, token, reply})
   end
 
   def has_queued_message?(nil, channel, channel_state) do
@@ -106,45 +106,35 @@ defmodule Ask.Runtime.ChannelBroker do
         pid
 
       [] ->
-        {:ok, pid} = ChannelBrokerSupervisor.start_child(channel_id, channel_settings(channel_id))
+        {channel_type, settings} = set_channel(channel_id)
+        {:ok, pid} = ChannelBrokerSupervisor.start_child(channel_id, channel_type, settings)
         pid
     end
   end
 
-  defp channel_settings(0), do: %{}
+  defp set_channel(0), do: {"sms", %{}}
 
-  defp channel_settings(channel_id) do
-    query = from c in "channels", where: c.id == ^channel_id, select: c.settings
-    settings = Repo.one(query)
-
-    if settings do
+  defp set_channel(channel_id) do
+    query = from c in "channels", where: c.id == ^channel_id, select: [c.type, c.settings]
+    [channel_type, settings] = Repo.one(query)
+    settings = if settings do
       Poison.decode!(settings)
     else
       %{}
     end
+    {channel_type, settings}
   end
 
-  defp channel_provider(channel_id) do
-    query = from c in "channels", where: c.id == ^channel_id, select: c.provider
-    provider = Repo.one(query)
-
-    if provider do
-      provider
-    else
-      ""
-    end
-  end
-
-  defp activate_contacts(%{channel_id: channel_id} = state) do
+  defp activate_contacts(channel_type, state) do
     if can_unqueue(state) do
       {new_state, unqueued_item} = activate_contact(state)
 
-      case channel_provider(channel_id) do
-        "nuntium" ->
+      case channel_type do
+        "sms" ->
           {unq_respondent, unq_token, unq_reply, unq_channel} = unqueued_item
           channel_ask(unq_channel, unq_respondent, unq_token, unq_reply)
 
-        "verboice" ->
+        "ivr" ->
           {unq_respondent, unq_token, unq_not_before, unq_not_after, unq_channel} = unqueued_item
           channel_setup(unq_channel, unq_respondent, unq_token, unq_not_before, unq_not_after)
 
@@ -153,21 +143,21 @@ defmodule Ask.Runtime.ChannelBroker do
           IO.puts("Not implemented")
       end
 
-      if can_unqueue(new_state), do: activate_contacts(new_state), else: new_state
+      if can_unqueue(new_state), do: activate_contacts(channel_type, new_state), else: new_state
     else
       state
     end
   end
 
-  defp collect_garbage() do
-    Process.send_after(self(), :collect_garbage, @collect)
+  defp collect_garbage(channel_type) do
+    Process.send_after(self(), {:collect_garbage, channel_type}, @collect)
   end
 
   # Server (callbacks)
 
   @impl true
-  def init([channel_id, settings]) do
-    collect_garbage()
+  def init([channel_id, channel_type, settings]) do
+    collect_garbage(channel_type)
 
     {
       :ok,
@@ -332,12 +322,12 @@ defmodule Ask.Runtime.ChannelBroker do
 
   @impl true
   def handle_call(
-        {:ask, channel, %{id: respondent_id} = respondent, token, reply},
+        {:ask, channel_type, channel, %{id: respondent_id} = respondent, token, reply},
         _from,
-        %{channel_id: channel_id} = state
+        state
       ) do
     {end_state, reply} =
-      if channel_provider(channel_id) == "nuntium" do
+      if channel_type == "sms" do
         state =
           queue_contact(
             state,
@@ -371,6 +361,7 @@ defmodule Ask.Runtime.ChannelBroker do
   def handle_call(
         {
           :setup,
+          channel_type,
           channel,
           respondent,
           token,
@@ -378,16 +369,16 @@ defmodule Ask.Runtime.ChannelBroker do
           not_after
         },
         _from,
-        %{channel_id: channel_id} = state
+        state
       ) do
     new_state = state
 
     {end_state, setup_response} =
-      if channel_provider(channel_id) == "verboice" do
+      if channel_type == "ivr" do
         new_state =
           queue_contact(new_state, {respondent, token, not_before, not_after, channel}, 1)
 
-        # Upon setup, we only setup an active contact for verboice 
+        # Upon setup, we only setup an active contact for verboice
         if can_unqueue(new_state) do
           {new_state, unqueued_item} = activate_contact(new_state)
           {unq_respondent, unq_token, unq_not_before, unq_not_after, unq_channel} = unqueued_item
@@ -511,7 +502,7 @@ defmodule Ask.Runtime.ChannelBroker do
     ChannelBrokerSupervisor.terminate_child(channel_id)
   end
 
-  def handle_info(:collect_garbage, %{contact_timestamps: contact_timestamps} = state) do
+  def handle_info({:collect_garbage, channel_type}, %{contact_timestamps: contact_timestamps} = state) do
     {:ok, now} = DateTime.now("Etc/UTC")
 
     # Remove the garbage contacts from active
@@ -527,10 +518,10 @@ defmodule Ask.Runtime.ChannelBroker do
     new_state = Map.put(state, :contact_timestamps, new_contact_timestamps)
 
     # Activate new ones if possible
-    new_state = activate_contacts(new_state)
+    new_state = activate_contacts(channel_type, new_state)
 
     # schedule next garbage collection
-    collect_garbage()
+    collect_garbage(channel_type)
     {:noreply, new_state}
   end
 end
