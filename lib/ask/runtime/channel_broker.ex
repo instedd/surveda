@@ -322,37 +322,25 @@ defmodule Ask.Runtime.ChannelBroker do
 
   @impl true
   def handle_call(
-        {:ask, channel_type, channel, %{id: respondent_id} = respondent, token, reply},
+        {:ask, "sms" = _channel_type, channel, %{id: respondent_id} = respondent, token, reply},
         _from,
         state
       ) do
-    {end_state, _reply} =
-      if channel_type == "sms" do
-        state =
-          queue_contact(
-            state,
-            {respondent, token, reply, channel},
-            length(NuntiumChannel.reply_to_messages(reply, nil, respondent_id))
-          )
+    new_state =
+      queue_contact(
+        state,
+        {respondent, token, reply, channel},
+        length(NuntiumChannel.reply_to_messages(reply, nil, respondent_id))
+      )
 
-        if can_unqueue(state) do
-          {new_state, unqueued_item} = activate_contact(state)
-          {unq_respondent, unq_token, unq_reply, unq_channel} = unqueued_item
-
-          {
-            new_state,
-            channel_ask(unq_channel, unq_respondent, unq_token, unq_reply)
-          }
-        else
-          {state, respondent}
-        end
-      else
-        # No ask will be done for other providers, just in case we bypass the ask
-        {
-          state,
-          channel_ask(channel, respondent, token, reply)
-        }
-      end
+    end_state = if can_unqueue(new_state) do
+      {new_state, unqueued_item} = activate_contact(new_state)
+      {unq_respondent, unq_token, unq_reply, unq_channel} = unqueued_item
+      channel_ask(unq_channel, unq_respondent, unq_token, unq_reply)
+      new_state
+    else
+      new_state
+    end
 
     {:reply, :ok, end_state, @timeout}
   end
