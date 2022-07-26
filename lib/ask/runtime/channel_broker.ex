@@ -361,7 +361,7 @@ defmodule Ask.Runtime.ChannelBroker do
       ) do
     new_state = state
 
-    {end_state, _setup_response} =
+    end_state =
       if channel_type == "ivr" do
         new_state =
           queue_contact(new_state, {respondent, token, not_before, not_after, channel}, 1)
@@ -371,19 +371,15 @@ defmodule Ask.Runtime.ChannelBroker do
           {new_state, unqueued_item} = activate_contact(new_state)
           {unq_respondent, unq_token, unq_not_before, unq_not_after, unq_channel} = unqueued_item
 
-          {
-            new_state,
-            channel_setup(unq_channel, unq_respondent, unq_token, unq_not_before, unq_not_after)
-          }
+          channel_setup(unq_channel, unq_respondent, unq_token, unq_not_before, unq_not_after)
+          new_state
         else
-          {new_state, {:ok, %{verboice_call_id: 9999}}}
+          new_state
         end
       else
         # In nuntium, we just setup, the active contacts will increase upon :ask
-        {
-          state,
-          channel_setup(channel, respondent, token, not_before, not_after)
-        }
+        channel_setup(channel, respondent, token, not_before, not_after)
+        new_state
       end
 
     {:reply, :ok, end_state, @timeout}
