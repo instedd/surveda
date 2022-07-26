@@ -361,7 +361,7 @@ defmodule Ask.Runtime.ChannelBroker do
       ) do
     new_state = state
 
-    {end_state, setup_response} =
+    {end_state, _setup_response} =
       if channel_type == "ivr" do
         new_state =
           queue_contact(new_state, {respondent, token, not_before, not_after, channel}, 1)
@@ -386,7 +386,7 @@ defmodule Ask.Runtime.ChannelBroker do
         }
       end
 
-    {:reply, setup_response, end_state, @timeout}
+    {:reply, :ok, end_state, @timeout}
   end
 
   @impl true

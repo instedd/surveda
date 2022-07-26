@@ -351,8 +351,6 @@ defmodule Ask.Runtime.SessionTest do
 
     assert_receive [:setup, ^test_channel, ^respondent, ^token]
     refute_receive _
-
-    assert session.channel_state == 0
   end
 
   test "retry question", %{
