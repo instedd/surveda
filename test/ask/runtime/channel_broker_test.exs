@@ -20,7 +20,6 @@ defmodule Ask.Runtime.ChannelBrokerTest do
       assert_made_calls(@respondents_quantity, test_channel)
     end
 
-    @tag :skip
     test "Calls aren't made while the channel capacity is full", %{} do
       channel_capacity = 5
       test_channel = initialize_survey("ivr", channel_capacity)
