@@ -427,7 +427,7 @@ defmodule Ask.Runtime.ChannelBroker do
         _from,
         state
       ) do
-    {end_state, setup_response} =
+    end_state =
       case provider do
         "verboice" ->
           case respondent_state do
@@ -442,24 +442,21 @@ defmodule Ask.Runtime.ChannelBroker do
                 {unq_respondent, unq_token, unq_not_before, unq_not_after, unq_channel} =
                   unqueued_item
 
-                {
-                  new_state,
-                  channel_setup(
-                    unq_channel,
-                    unq_respondent,
-                    unq_token,
-                    unq_not_before,
-                    unq_not_after
-                  )
-                }
+                channel_setup(
+                  unq_channel,
+                  unq_respondent,
+                  unq_token,
+                  unq_not_before,
+                  unq_not_after
+                )
+                new_state
               else
-                {new_state, {:ok, %{verboice_call_id: -1}}}
+                new_state
               end
 
             _ ->
               # If the callback tells something else, we update respondant last notice time
-              new_state = update_last_contact(state, respondent.id)
-              {new_state, {:ok, %{verboice_call_id: -1}}}
+              update_last_contact(state, respondent.id)
           end
 
         "nuntium" ->
@@ -478,7 +475,7 @@ defmodule Ask.Runtime.ChannelBroker do
           end
       end
 
-    {:reply, setup_response, end_state, @timeout}
+    {:reply, :ok, end_state, @timeout}
   end
 
   @impl true
