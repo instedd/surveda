@@ -164,7 +164,7 @@ defmodule Ask.Runtime.ChannelBroker do
       %{
         channel_id: channel_id,
         capacity: Map.get(settings, "capacity", Config.default_channel_capacity()),
-        contact_timestamps: Map.new(),
+        active_contacts: Map.new(),
         contacts_queue: :pqueue.new()
       },
       @timeout
@@ -186,10 +186,10 @@ defmodule Ask.Runtime.ChannelBroker do
 
   def active_contacts(
         %{
-          contact_timestamps: contact_timestamps
+          active_contacts: active_contacts
         } = _state
       ) do
-    Enum.reduce(contact_timestamps, 0, fn {_r, {c, _d}}, acc -> c + acc end)
+    Enum.reduce(active_contacts, 0, fn {_r, %{contacts: contacts}}, acc -> contacts + acc end)
   end
 
   def can_unqueue(
@@ -231,7 +231,7 @@ defmodule Ask.Runtime.ChannelBroker do
   def activate_contact(
         %{
           contacts_queue: contacts_queue,
-          contact_timestamps: contact_timestamps
+          active_contacts: active_contacts
         } = state
       ) do
     {{_unqueue_res, [size, unqueued_item]}, new_contacts_queue} = :pqueue.out(contacts_queue)
@@ -242,81 +242,119 @@ defmodule Ask.Runtime.ChannelBroker do
     respondent_id = elem(unqueued_item, 0).id
 
     respondent_contacts =
-      if respondent_id in Map.keys(contact_timestamps) do
-        elem(Map.get(contact_timestamps, respondent_id), 0)
+      if respondent_id in Map.keys(active_contacts) do
+        %{contacts: contacts} = Map.get(active_contacts, respondent_id)
+        contacts
       else
         0
       end
 
-    new_contact_timestamps =
+    new_active_contacts =
       Map.put(
-        contact_timestamps,
+        active_contacts,
         respondent_id,
-        {
-          respondent_contacts + size,
-          elem(DateTime.now("Etc/UTC"), 1)
+        %{
+          contacts: respondent_contacts + size,
+          last_contact: elem(DateTime.now("Etc/UTC"), 1)
         }
       )
 
-    state = Map.put(state, :contact_timestamps, new_contact_timestamps)
+    state = Map.put(state, :active_contacts, new_active_contacts)
 
     {state, unqueued_item}
   end
 
   def update_last_contact(
         %{
-          contact_timestamps: contact_timestamps
+          active_contacts: active_contacts
         } = state,
         respondent_id
       ) do
-    new_contact_timestamps =
-      if respondent_id in Map.keys(contact_timestamps) do
-        respondent_contacts = elem(Map.get(contact_timestamps, respondent_id), 0)
+    new_active_contacts =
+      if respondent_id in Map.keys(active_contacts) do
+        active_contact = Map.get(active_contacts, respondent_id)
+          |> Map.put(:last_contact, DateTime.now("Etc/UTC"))
 
         Map.put(
-          contact_timestamps,
+          active_contacts,
           respondent_id,
-          {
-            respondent_contacts,
-            elem(DateTime.now("Etc/UTC"), 1)
-          }
+          active_contact
         )
       else
-        contact_timestamps
+        active_contacts
       end
 
-    state = Map.put(state, :contact_timestamps, new_contact_timestamps)
+    state = Map.put(state, :active_contacts, new_active_contacts)
     state
+  end
+
+  defp set_verboice_call_id(
+        %{
+          active_contacts: active_contacts
+        } = state,
+        respondent_id,
+        verboice_call_id
+      ) do
+    new_active_contacts =
+      if respondent_id in Map.keys(active_contacts) do
+        active_contact = Map.get(active_contacts, respondent_id)
+        |> Map.put(:verboice_call_id, verboice_call_id)
+
+        Map.put(
+          active_contacts,
+          respondent_id,
+          active_contact
+        )
+      else
+        active_contacts
+      end
+
+    Map.put(state, :active_contacts, new_active_contacts)
+  end
+
+  defp get_verboice_call_id(
+    %{
+      active_contacts: active_contacts
+    } = _state,
+    respondent_id
+  ) do
+    if respondent_id in Map.keys(active_contacts) do
+      active_contact = Map.get(active_contacts, respondent_id)
+      Map.get(active_contact, :verboice_call_id)
+    else
+      nil
+    end
   end
 
   def deactivate_contact(
         %{
-          contact_timestamps: contact_timestamps
+          active_contacts: active_contacts
         } = state,
         respondent_id
       ) do
     respondent_contacts =
-      if respondent_id in Map.keys(contact_timestamps) do
-        elem(Map.get(contact_timestamps, respondent_id), 0)
+      if respondent_id in Map.keys(active_contacts) do
+        %{contacts: contacts} = Map.get(active_contacts, respondent_id)
+        contacts
       else
         0
       end
 
-    new_contact_timestamps =
+    new_active_contacts =
       if respondent_contacts > 1 do
+        active_contact = Map.get(active_contacts, respondent_id)
+          |> Map.put(:contacts, respondent_contacts - 1)
+          |> Map.put(:timestamp, elem(DateTime.now("Etc/UTC"), 1))
         Map.put(
-          contact_timestamps,
+          active_contacts,
           respondent_id,
-          {
-            respondent_contacts - 1,
-            elem(DateTime.now("Etc/UTC"), 1)
-          }
+          active_contact
         )
       else
-        Map.delete(contact_timestamps, respondent_id)
+        Map.delete(active_contacts, respondent_id)
       end
 
-    new_state = Map.put(state, :contact_timestamps, new_contact_timestamps)
+    new_state = Map.put(state, :active_contacts, new_active_contacts)
     new_state
   end
 
@@ -371,8 +409,8 @@ defmodule Ask.Runtime.ChannelBroker do
           {new_state, unqueued_item} = activate_contact(new_state)
           {unq_respondent, unq_token, unq_not_before, unq_not_after, unq_channel} = unqueued_item
 
-          channel_setup(unq_channel, unq_respondent, unq_token, unq_not_before, unq_not_after)
-          new_state
+          {:ok, verboice_call_id} = channel_setup(unq_channel, unq_respondent, unq_token, unq_not_before, unq_not_after)
+          set_verboice_call_id(new_state, unq_respondent.id, verboice_call_id)
         else
           new_state
         end
@@ -442,13 +480,9 @@ defmodule Ask.Runtime.ChannelBroker do
                 {unq_respondent, unq_token, unq_not_before, unq_not_after, unq_channel} =
                   unqueued_item
 
-                channel_setup(
-                  unq_channel,
-                  unq_respondent,
-                  unq_token,
-                  unq_not_before,
-                  unq_not_after
-                )
+                {:ok, verboice_call_id} = channel_setup(unq_channel, unq_respondent, unq_token, unq_not_before, unq_not_after)
+                set_verboice_call_id(new_state, unq_respondent.id, verboice_call_id)
+
                 new_state
               else
                 new_state
@@ -483,20 +517,20 @@ defmodule Ask.Runtime.ChannelBroker do
     ChannelBrokerSupervisor.terminate_child(channel_id)
   end
 
-  def handle_info({:collect_garbage, channel_type}, %{contact_timestamps: contact_timestamps} = state) do
+  def handle_info({:collect_garbage, channel_type}, %{active_contacts: active_contacts} = state) do
     {:ok, now} = DateTime.now("Etc/UTC")
 
     # Remove the garbage contacts from active
     # New versions of elixir has Maps.filter, replace when possible
-    new_contact_timestamps =
+    new_active_contacts =
       :maps.filter(
-        fn _, {_, last_contact} ->
+        fn _, %{last_contact: last_contact} ->
           DateTime.diff(now, last_contact, :second) < @collect_timeout
         end,
-        contact_timestamps
+        active_contacts
       )
 
-    new_state = Map.put(state, :contact_timestamps, new_contact_timestamps)
+    new_state = Map.put(state, :active_contacts, new_active_contacts)
 
     # Activate new ones if possible
     new_state = activate_contacts(channel_type, new_state)
