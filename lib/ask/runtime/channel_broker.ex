@@ -52,12 +52,12 @@ defmodule Ask.Runtime.ChannelBroker do
     call_gen_server(channel_id, {:ask, channel_type, channel, respondent, token, reply})
   end
 
-  def has_queued_message?(nil, channel, channel_state) do
-    has_queued_message?(0, channel, channel_state)
+  def has_queued_message?(nil, channel_type, channel, respondent_id) do
+    has_queued_message?(0, channel_type, channel, respondent_id)
   end
 
-  def has_queued_message?(channel_id, channel, channel_state) do
-    call_gen_server(channel_id, {:has_queued_message?, channel, channel_state})
+  def has_queued_message?(channel_id, channel_type, channel, respondent_id) do
+    call_gen_server(channel_id, {:has_queued_message?, channel_type, channel, respondent_id})
   end
 
   def cancel_message(nil, channel, channel_state) do
@@ -205,6 +205,26 @@ defmodule Ask.Runtime.ChannelBroker do
     end
   end
 
+  defp is_queued(
+    %{
+      contacts_queue: contacts_queue
+    } = _state,
+    respondent_id
+  ) do
+    contacts_list = :pqueue.to_list(contacts_queue)
+    ids = Enum.map(contacts_list, fn queued_item -> queued_respondent_id(queued_item) end)
+    respondent_id in ids
+  end
+
+  defp is_active(
+    %{
+      active_contacts: active_contacts
+    } = _state,
+    respondent_id
+  ) do
+    respondent_id in Map.keys(active_contacts)
+  end
+
   defp channel_setup(channel, respondent, token, not_before, not_after) do
     try do
       Ask.Runtime.Channel.setup(channel, respondent, token, not_before, not_after)
@@ -228,6 +248,12 @@ defmodule Ask.Runtime.ChannelBroker do
     end
   end
 
+  defp queued_respondent_id(queued_item) do
+    # No matter the contact type, the first element of the
+    # unqueued item is the respondent
+    elem(queued_item, 0).id
+  end
+
   def activate_contact(
         %{
           contacts_queue: contacts_queue,
@@ -237,9 +263,7 @@ defmodule Ask.Runtime.ChannelBroker do
     {{_unqueue_res, [size, unqueued_item]}, new_contacts_queue} = :pqueue.out(contacts_queue)
     state = Map.put(state, :contacts_queue, new_contacts_queue)
 
-    # No matter the contact type, the first element of the
-    # unqueued item is the respondent
-    respondent_id = elem(unqueued_item, 0).id
+    respondent_id = queued_respondent_id(unqueued_item)
 
     respondent_contacts =
       if respondent_id in Map.keys(active_contacts) do
@@ -435,9 +459,15 @@ defmodule Ask.Runtime.ChannelBroker do
     {:reply, reply, state, @timeout}
   end
 
+  # TODO: Without this clause, many tests (~33) fail. They should be fixed in the future.
+  # @impl true
+  def handle_call({:has_queued_message?, _channel_type, %{has_queued_message: has_queued_message}, _respondent_id}, _from, state) do
+    {:reply, has_queued_message, state, @timeout}
+  end
+
   @impl true
-  def handle_call({:has_queued_message?, channel, channel_state}, _from, state) do
-    reply = Channel.has_queued_message?(channel, channel_state)
+  def handle_call({:has_queued_message?, _channel_type, _channel, respondent_id}, _from, state) do
+    reply = is_active(state, respondent_id) || is_queued(state, respondent_id)
     {:reply, reply, state, @timeout}
   end
 

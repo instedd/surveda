@@ -97,7 +97,7 @@ defmodule Ask.Runtime.Session do
     runtime_channel = Ask.Channel.runtime_channel(channel)
 
     cond do
-      ChannelBroker.has_queued_message?(channel.id, runtime_channel, channel_state) ->
+      ChannelBroker.has_queued_message?(channel.id, channel.type, runtime_channel, session.respondent.id) ->
         {:ok, session, %Reply{}, current_timeout(session)}
 
       ChannelBroker.message_expired?(channel.id, runtime_channel, channel_state) ->
