@@ -163,7 +163,7 @@ defmodule Ask.Runtime.ChannelBroker do
       :ok,
       %{
         channel_id: channel_id,
-        capacity: Map.get(settings, :capacity, Config.default_channel_capacity()),
+        capacity: Map.get(settings, "capacity", Config.default_channel_capacity()),
         contact_timestamps: Map.new(),
         contacts_queue: :pqueue.new()
       },
