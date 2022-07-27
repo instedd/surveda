@@ -40,7 +40,6 @@ defmodule Ask.Runtime.ChannelBrokerTest do
       assert_sent_smss(@respondents_quantity, test_channel)
     end
 
-    @tag :skip
     test "SMS aren't sent while the channel capacity is full", %{} do
       channel_capacity = 5
       test_channel = initialize_survey("sms", channel_capacity)
