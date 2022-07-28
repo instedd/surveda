@@ -1,5 +1,5 @@
 defmodule Ask.Runtime.ChannelBroker do
-  alias Ask.Runtime.{Channel, ChannelBrokerSupervisor, NuntiumChannel}
+  alias Ask.Runtime.{Channel, ChannelBrokerAgent, ChannelBrokerSupervisor, NuntiumChannel}
   alias Ask.Config
   import Ecto.Query
   alias Ask.Repo
@@ -173,6 +173,7 @@ defmodule Ask.Runtime.ChannelBroker do
 
   def queue_contact(
         %{
+          channel_id: channel_id,
           contacts_queue: contacts_queue
         } = state,
         contact,
@@ -181,6 +182,8 @@ defmodule Ask.Runtime.ChannelBroker do
     priority = if elem(contact, 0).disposition == :queued, do: 2, else: 1
     new_contacts_queue = :pqueue.in([size, contact], priority, contacts_queue)
     new_state = Map.put(state, :contacts_queue, new_contacts_queue)
+
+    ChannelBrokerAgent.save_channel_state(channel_id, new_state)
     new_state
   end
 
@@ -256,6 +259,7 @@ defmodule Ask.Runtime.ChannelBroker do
 
   def activate_contact(
         %{
+          channel_id: channel_id,
           contacts_queue: contacts_queue,
           active_contacts: active_contacts
         } = state
@@ -285,6 +289,7 @@ defmodule Ask.Runtime.ChannelBroker do
 
     state = Map.put(state, :active_contacts, new_active_contacts)
 
+    ChannelBrokerAgent.save_channel_state(channel_id, state)
     {state, unqueued_item}
   end
 
@@ -352,7 +357,8 @@ defmodule Ask.Runtime.ChannelBroker do
 
   def deactivate_contact(
         %{
-          active_contacts: active_contacts
+          active_contacts: active_contacts,
+          channel_id: channel_id
         } = state,
         respondent_id
       ) do
@@ -379,6 +385,8 @@ defmodule Ask.Runtime.ChannelBroker do
       end
 
     new_state = Map.put(state, :active_contacts, new_active_contacts)
+
+    ChannelBrokerAgent.save_channel_state(channel_id, new_state)
     new_state
   end
 
