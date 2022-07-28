@@ -1,5 +1,5 @@
 defmodule Ask.Runtime.ChannelBrokerSupervisor do
-  alias Ask.Runtime.ChannelBroker
+  alias Ask.Runtime.{ChannelBroker, ChannelBrokerAgent}
   use DynamicSupervisor
 
   def start_link() do
@@ -10,7 +10,7 @@ defmodule Ask.Runtime.ChannelBrokerSupervisor do
     DynamicSupervisor.start_link(__MODULE__, init_arg, name: __MODULE__)
   end
 
-  def start_child(nil), do: start_child(0)
+  def start_child(nil), do: start_child(0, %{})
 
   def start_child(channel_id, settings) do
     DynamicSupervisor.start_child(__MODULE__, child_spec(channel_id, settings))
@@ -47,6 +47,7 @@ defmodule Ask.Runtime.ChannelBrokerSupervisor do
 
   @impl true
   def init(_init_arg) do
+    ChannelBrokerAgent.start_link()
     DynamicSupervisor.init(strategy: :one_for_one)
   end
 end

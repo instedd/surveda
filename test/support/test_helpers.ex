@@ -54,7 +54,8 @@ defmodule Ask.TestHelpers do
             _ -> mode
           end
 
-        channel = insert(:channel,
+        channel =
+          insert(:channel,
             settings: test_channel |> Ask.TestChannel.settings(),
             type: channel_type
           )
