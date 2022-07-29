@@ -60,12 +60,12 @@ defmodule Ask.Runtime.ChannelBroker do
     call_gen_server(channel_id, {:has_queued_message?, channel_type, channel, respondent_id})
   end
 
-  def cancel_message(nil, channel, channel_state) do
-    cancel_message(0, channel, channel_state)
+  def cancel_message(nil, channel, channel_type, respondent_id) do
+    cancel_message(0, channel, channel_type, respondent_id)
   end
 
-  def cancel_message(channel_id, channel, channel_state) do
-    call_gen_server(channel_id, {:cancel_message, channel, channel_state})
+  def cancel_message(channel_id, channel_type, channel, respondent_id) do
+    call_gen_server(channel_id, {:cancel_message, channel_type, channel, respondent_id})
   end
 
   def message_expired?(nil, channel, channel_state) do
@@ -382,6 +382,33 @@ defmodule Ask.Runtime.ChannelBroker do
     new_state
   end
 
+  def remove_from_queue(
+    %{
+      contacts_queue: contacts_queue
+    } = state,
+    respondent_id
+  ) do
+    new_contacts_queue = :pqueue.new()
+    n = :pqueue.len(contacts_queue)
+    new_contacts_queue = remove_r_contacts(contacts_queue, respondent_id, new_contacts_queue, n)
+    new_state = Map.put(state, :contacts_queue, new_contacts_queue)
+    new_state
+  end
+
+  defp remove_r_contacts(contacts_queue, respondent_id, new_contacts_queue, n) when n > 0 do
+    {{:value, [size, unqueued_item], priority}, contacts_queue} = :pqueue.pout(contacts_queue)
+    new_contacts_queue = if respondent_id == queued_respondent_id(unqueued_item) do
+      new_contacts_queue
+    else
+      :pqueue.in([size, unqueued_item], priority, new_contacts_queue)
+    end
+    remove_r_contacts(contacts_queue, respondent_id, new_contacts_queue, n - 1)
+  end
+
+  defp remove_r_contacts(_contacts_queue, _respondent_id, new_contacts_queue, 0) do
+    new_contacts_queue
+  end
+
   @impl true
   def handle_call(
         {:ask, "sms" = _channel_type, channel, %{id: respondent_id} = respondent, token, reply},
@@ -472,9 +499,17 @@ defmodule Ask.Runtime.ChannelBroker do
   end
 
   @impl true
-  def handle_call({:cancel_message, channel, channel_state}, _from, state) do
-    reply = Channel.cancel_message(channel, channel_state)
-    {:reply, reply, state, @timeout}
+  def handle_call({:cancel_message, channel_type, channel, respondent_id}, _from, state) do
+    channel_state = if channel_type == "ivr" and is_active(state, respondent_id) do
+      verboice_call_id = get_verboice_call_id(state, respondent_id)
+      %{"verboice_call_id" => verboice_call_id}
+    else
+      %{}
+    end
+    Channel.cancel_message(channel, channel_state)
+    state = deactivate_contact(state, respondent_id)
+    state = remove_from_queue(state, respondent_id)
+    {:reply, :ok, state, @timeout}
   end
 
   @impl true

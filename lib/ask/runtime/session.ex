@@ -322,7 +322,7 @@ defmodule Ask.Runtime.Session do
   def cancel(session) do
     channel = session.current_mode.channel
     runtime_channel = Ask.Channel.runtime_channel(channel)
-    ChannelBroker.cancel_message(channel.id, runtime_channel, session.channel_state)
+    ChannelBroker.cancel_message(channel.id, channel.type, runtime_channel, session.respondent.id)
   end
 
   def dump(session) do

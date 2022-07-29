@@ -2571,11 +2571,9 @@ defmodule AskWeb.SurveyControllerTest do
       insert_list(10, :respondent, survey: survey, state: "pending")
       r1 = insert(:respondent, survey: survey, state: "active", respondent_group: group)
       insert_list(3, :respondent, survey: survey, state: "active", timeout_at: Timex.now())
-      channel_state = %{"call_id" => 123}
 
       session = %Session{
         current_mode: SessionModeProvider.new("sms", channel, []),
-        channel_state: channel_state,
         respondent: r1,
         flow: %Flow{questionnaire: questionnaire},
         schedule: survey.schedule
@@ -2598,7 +2596,7 @@ defmodule AskWeb.SurveyControllerTest do
                )
              ) == 4
 
-      assert_receive [:cancel_message, ^test_channel, ^channel_state]
+      assert_receive [:cancel_message, ^test_channel, %{}]
     end
 
     test "stops respondents only for the stopped survey", %{conn: conn, user: user} do
@@ -2620,11 +2618,9 @@ defmodule AskWeb.SurveyControllerTest do
 
       insert_list(4, :respondent, survey: survey2, state: "active", session: %{})
       insert_list(2, :respondent, survey: survey2, state: "active", timeout_at: Timex.now())
-      channel_state = %{"call_id" => 123}
 
       session = %Session{
         current_mode: SessionModeProvider.new("sms", channel, []),
-        channel_state: channel_state,
         respondent: r1,
         flow: %Flow{questionnaire: questionnaire},
         schedule: survey.schedule
@@ -2639,7 +2635,7 @@ defmodule AskWeb.SurveyControllerTest do
       assert json_response(conn, 200)
       assert Repo.get(Survey, survey2.id).state == :running
       assert length(Repo.all(from(r in Ask.Respondent, where: r.state == :active))) == 6
-      assert_receive [:cancel_message, ^test_channel, ^channel_state]
+      assert_receive [:cancel_message, ^test_channel, %{}]
     end
 
     test "stopping completed survey still works (#736)", %{conn: conn, user: user} do
