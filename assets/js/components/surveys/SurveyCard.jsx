@@ -107,8 +107,8 @@ class _SurveyCard extends Component<any> {
     const { survey, t, dispatch } = this.props
 
     let actions = []
-    if (this.movable()) actions.push({ name: t("Move to"), func: this.askMoveSurvey })
-    if (this.deletable()) actions.push({ name: t("Delete"), func: this.askDeleteSurvey })
+    if (this.movable()) actions.push({ name: t("Move to"), icon: "folder", func: this.askMoveSurvey })
+    if (this.deletable()) actions.push({ name: t("Delete"), icon: "delete", func: this.askDeleteSurvey })
 
     return (
       <div className="col s12 m6 l4">
@@ -376,7 +376,7 @@ const ActionMenu = (props) => {
       {actions.map((action, index) => (
         <DropdownItem key={index}>
           <a onClick={(e) => action.func()}>
-            <i className="material-icons">folder</i>
+            <i className="material-icons">{action.icon}</i>
             {action.name}
           </a>
         </DropdownItem>
