@@ -100,7 +100,7 @@ defmodule Ask.Runtime.Session do
       ChannelBroker.has_queued_message?(channel.id, channel.type, runtime_channel, session.respondent.id) ->
         {:ok, session, %Reply{}, current_timeout(session)}
 
-      ChannelBroker.message_expired?(channel.id, runtime_channel, channel_state) ->
+      ChannelBroker.message_expired?(channel.id, channel.type, runtime_channel, channel_state) ->
         # do not retry since the respondent was never contacted, thus the retries should not be consumed
         session = contact_respondent(session, runtime_channel)
         {:ok, session, %Reply{}, base_timeout(session) + current_timeout(session)}
