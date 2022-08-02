@@ -42,7 +42,6 @@ defmodule Ask.Runtime.Session do
     :respondent,
     :token,
     :fallback_delay,
-    :channel_state,
     :count_partial_results,
     :schedule
   ]
@@ -92,7 +91,7 @@ defmodule Ask.Runtime.Session do
       - {:stalled, session, respondent}
       - {:failed, respondent}
   """
-  def timeout(%{channel_state: channel_state} = session) do
+  def timeout(session) do
     channel = session.current_mode.channel
     runtime_channel = Ask.Channel.runtime_channel(channel)
 
@@ -100,7 +99,7 @@ defmodule Ask.Runtime.Session do
       ChannelBroker.has_queued_message?(channel.id, channel.type, runtime_channel, session.respondent.id) ->
         {:ok, session, %Reply{}, current_timeout(session)}
 
-      ChannelBroker.message_expired?(channel.id, runtime_channel, channel_state) ->
+      ChannelBroker.message_expired?(channel.id, channel.type, runtime_channel, session.respondent.id) ->
         # do not retry since the respondent was never contacted, thus the retries should not be consumed
         session = contact_respondent(session, runtime_channel)
         {:ok, session, %Reply{}, base_timeout(session) + current_timeout(session)}
@@ -333,7 +332,6 @@ defmodule Ask.Runtime.Session do
       respondent_id: session.respondent.id,
       token: session.token,
       fallback_delay: session.fallback_delay,
-      channel_state: session.channel_state,
       count_partial_results: session.count_partial_results,
       schedule: session.schedule |> Schedule.dump!()
     }
@@ -347,7 +345,6 @@ defmodule Ask.Runtime.Session do
       respondent: Repo.get(Ask.Respondent, state["respondent_id"]),
       token: state["token"],
       fallback_delay: state["fallback_delay"],
-      channel_state: state["channel_state"],
       count_partial_results: state["count_partial_results"],
       schedule: state["schedule"] |> Schedule.load!()
     }
@@ -739,7 +736,6 @@ defmodule Ask.Runtime.Session do
           session
           | current_mode: fallback_mode,
             fallback_mode: nil,
-            channel_state: nil,
             flow: %{
               flow
               | mode: fallback_mode |> SessionMode.mode()

@@ -66,12 +66,12 @@ defmodule Ask.Runtime.ChannelBroker do
     call_gen_server(channel_id, {:cancel_message, channel_type, channel, respondent_id})
   end
 
-  def message_expired?(nil, channel, channel_state) do
-    message_expired?(0, channel, channel_state)
+  def message_expired?(nil, channel_type, channel, respondent_id) do
+    message_expired?(0, channel_type, channel, respondent_id)
   end
 
-  def message_expired?(channel_id, channel, channel_state) do
-    call_gen_server(channel_id, {:message_expired?, channel, channel_state})
+  def message_expired?(channel_id, channel_type, channel, respondent_id) do
+    call_gen_server(channel_id, {:message_expired?, channel_type, channel, respondent_id})
   end
 
   def check_status(nil, channel) do
@@ -407,6 +407,15 @@ defmodule Ask.Runtime.ChannelBroker do
     new_contacts_queue
   end
 
+  defp get_channel_state(channel_type, state, respondent_id) do
+    if channel_type == "ivr" and is_active(state, respondent_id) do
+      verboice_call_id = get_verboice_call_id(state, respondent_id)
+      %{"verboice_call_id" => verboice_call_id}
+    else
+      %{}
+    end
+  end
+
   @impl true
   def handle_call(
         {:ask, "sms" = _channel_type, channel, %{id: respondent_id} = respondent, token, reply},
@@ -497,12 +506,7 @@ defmodule Ask.Runtime.ChannelBroker do
 
   @impl true
   def handle_call({:cancel_message, channel_type, channel, respondent_id}, _from, state) do
-    channel_state = if channel_type == "ivr" and is_active(state, respondent_id) do
-      verboice_call_id = get_verboice_call_id(state, respondent_id)
-      %{"verboice_call_id" => verboice_call_id}
-    else
-      %{}
-    end
+    channel_state = get_channel_state(channel_type, state, respondent_id)
     Channel.cancel_message(channel, channel_state)
     state = deactivate_contact(state, respondent_id)
     state = remove_from_queue(state, respondent_id)
@@ -510,7 +514,8 @@ defmodule Ask.Runtime.ChannelBroker do
   end
 
   @impl true
-  def handle_call({:message_expired?, channel, channel_state}, _from, state) do
+  def handle_call({:message_expired?, channel_type, channel, respondent_id}, _from, state) do
+    channel_state = get_channel_state(channel_type, state, respondent_id)
     reply = Channel.message_expired?(channel, channel_state)
     {:reply, reply, state, @timeout}
   end
