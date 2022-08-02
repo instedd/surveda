@@ -1,12 +1,12 @@
 defmodule Ask.Runtime.ChannelBrokerTest do
-  use Ask.DataCase
+  use AskWeb.ConnCase
   use Ask.TestHelpers
-  alias Ask.Runtime.{ChannelStatusServer, ChannelBroker, ChannelBrokerAgent}
+  alias Ask.Runtime.{ChannelStatusServer, ChannelBroker, ChannelBrokerAgent, VerboiceChannel, NuntiumChannel}
 
-  setup do
+  setup %{conn: conn} do
     {:ok, _} = ChannelStatusServer.start_link()
     {:ok, _} = ChannelBrokerAgent.start_link()
-    :ok
+    {:ok, conn: conn}
   end
 
   @respondents_quantity 10
@@ -14,40 +14,46 @@ defmodule Ask.Runtime.ChannelBrokerTest do
   describe "Verboice" do
     test "Every Call is made when capacity isn't set", %{} do
       channel_capacity = nil
-      test_channel = initialize_survey("ivr", channel_capacity)
+      [test_channel, _respondents] = initialize_survey("ivr", channel_capacity)
 
       broker_poll()
 
       assert_made_calls(@respondents_quantity, test_channel)
     end
 
-    test "Calls aren't made while the channel capacity is full", %{} do
+    test "Calls aren't made while the channel capacity is full", %{conn: conn} do
       channel_capacity = 5
-      test_channel = initialize_survey("ivr", channel_capacity)
+      [test_channel, respondents] = initialize_survey("ivr", channel_capacity)
 
       broker_poll()
-
       assert_made_calls(channel_capacity, test_channel)
+
+      callbacks = 2
+      callback_n_respondents(conn, respondents, callbacks, "verboice")
+      assert_made_calls(callbacks, test_channel)
     end
   end
 
   describe "Nuntium" do
     test "Every SMS is sent when capacity isn't set", %{} do
       channel_capacity = nil
-      test_channel = initialize_survey("sms", channel_capacity)
+      [test_channel, _respondents] = initialize_survey("sms", channel_capacity)
 
       broker_poll()
 
       assert_sent_smss(@respondents_quantity, test_channel)
     end
 
-    test "SMS aren't sent while the channel capacity is full", %{} do
+    test "SMS aren't sent while the channel capacity is full", %{conn: conn} do
       channel_capacity = 5
-      test_channel = initialize_survey("sms", channel_capacity)
+      [test_channel, respondents] = initialize_survey("sms", channel_capacity)
 
       broker_poll()
-
       assert_sent_smss(channel_capacity, test_channel)
+
+      callbacks = 2
+      callback_n_respondents(conn, respondents, callbacks, "nuntium")
+      assert_sent_smss(callbacks, test_channel)
     end
   end
 
@@ -130,12 +136,33 @@ defmodule Ask.Runtime.ChannelBrokerTest do
   end
 
   defp initialize_survey(mode, channel_capacity) do
-    [_survey, _group, test_channel, _respondents] =
+    [_survey, _group, test_channel, respondents] =
       create_running_survey_with_channel_and_respondents_with_options(
         mode: mode,
         respondents_quantity: @respondents_quantity,
         channel_capacity: channel_capacity
       )
-    test_channel
+    [test_channel, respondents]
+  end
+
+  defp callback_n_respondents(conn, respondents, n, "nuntium" = _provider) do
+    for i <- 1..n do
+      NuntiumChannel.callback(conn, %{
+        "path" => ["status"],
+        "respondent_id" => "#{Enum.at(respondents, i).id}",
+        "state" => "delivered"
+      })
+    end
+  end
+
+  defp callback_n_respondents(conn, respondents, n, "verboice" = _provider) do
+    for i <- 1..n do
+      VerboiceChannel.callback(conn, %{
+        "path" => ["status", Enum.at(respondents, i).id, "token"],
+        "CallStatus" => "completed",
+        "CallDuration" => "15",
+        "CallSid" => "1",
+      })
+    end
   end
 end

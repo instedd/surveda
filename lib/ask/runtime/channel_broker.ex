@@ -436,7 +436,7 @@ defmodule Ask.Runtime.ChannelBroker do
     end
   end
 
-  def deactivate_contact(
+  defp deactivate_contact(
         %{
           active_contacts: active_contacts
         } = state,
@@ -656,12 +656,10 @@ defmodule Ask.Runtime.ChannelBroker do
             {new_state, unqueued_item} = activate_contact(new_state)
             {unq_respondent, unq_token, unq_reply, unq_channel} = unqueued_item
 
-            {
-              new_state,
-              channel_ask(unq_channel, unq_respondent, unq_token, unq_reply)
-            }
+            channel_ask(unq_channel, unq_respondent, unq_token, unq_reply)
+            new_state
           else
-            {new_state, respondent}
+            new_state
           end
       end
 
