@@ -12,9 +12,7 @@ defmodule Ask.Runtime.ChannelBroker do
   # consider garbage contacts with more than one day
   @collect_timeout 24 * 60 * 60
 
-  # Channels without channel_id (for testing or simulation) share a single process (channel_id: 0)
-
-  # def start_link(nil), do: start_link([0, "sms", %{}])
+  # Channels without channel_id (for testing) share a single process (channel_id: 0)
 
   def start_link(channel_id, channel_type \\ "sms", settings) do
     name = via_tuple(channel_id)
@@ -486,7 +484,6 @@ defmodule Ask.Runtime.ChannelBroker do
     {:reply, reply, state, @timeout}
   end
 
-  # TODO: Without this clause, many tests (~33) fail. They should be fixed in the future.
   # @impl true
   def handle_call({:has_queued_message?, _channel_type, %{has_queued_message: has_queued_message}, _respondent_id}, _from, state) do
     {:reply, has_queued_message, state, @timeout}
