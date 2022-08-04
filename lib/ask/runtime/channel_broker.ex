@@ -5,10 +5,12 @@ defmodule Ask.Runtime.ChannelBroker do
   alias Ask.Repo
   use GenServer
 
+  # TODO: Let's make all these values configurable
   @timeout_minutes 5
   @timeout @timeout_minutes * 60_000
   # collect garbage every hour
-  @collect 60 * 60
+  @collect_interval_minutes 60
+  @collect_interval @collect_interval_minutes * 60_000
   # consider garbage contacts with more than one day
   @collect_timeout 24 * 60 * 60
 
@@ -148,7 +150,7 @@ defmodule Ask.Runtime.ChannelBroker do
   end
 
   defp collect_garbage(channel_type) do
-    Process.send_after(self(), {:collect_garbage, channel_type}, @collect)
+    Process.send_after(self(), {:collect_garbage, channel_type}, @collect_interval)
   end
 
   # Server (callbacks)
@@ -295,7 +297,7 @@ defmodule Ask.Runtime.ChannelBroker do
     new_active_contacts =
       if respondent_id in Map.keys(active_contacts) do
         active_contact = Map.get(active_contacts, respondent_id)
-          |> Map.put(:last_contact, DateTime.now("Etc/UTC"))
+          |> Map.put(:last_contact, elem(DateTime.now("Etc/UTC"), 1))
 
         Map.put(
           active_contacts,
