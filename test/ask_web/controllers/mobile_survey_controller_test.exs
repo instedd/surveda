@@ -3,7 +3,7 @@ defmodule AskWeb.MobileSurveyControllerTest do
   use Ask.TestHelpers
   use Ask.DummySteps
   use Timex
-  alias Ask.Runtime.{SurveyBroker, ReplyHelper, ChannelStatusServer}
+  alias Ask.Runtime.{SurveyBroker, ReplyHelper, ChannelStatusServer, ChannelBrokerAgent}
   alias Ask.{Repo, Survey, Respondent, TestChannel, RespondentGroupChannel}
   require Ask.Runtime.ReplyHelper
 
@@ -12,7 +12,8 @@ defmodule AskWeb.MobileSurveyControllerTest do
       conn
       |> put_req_header("accept", "application/json")
 
-    ChannelStatusServer.start_link()
+    {:ok, _} = ChannelStatusServer.start_link()
+    {:ok, _} = ChannelBrokerAgent.start_link()
 
     {:ok, conn: conn}
   end

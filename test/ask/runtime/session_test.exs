@@ -8,11 +8,13 @@ defmodule Ask.Runtime.SessionTest do
   alias Ask.Runtime.SessionModeProvider
   alias Ask.TestChannel
   alias Ask.QuestionnaireRelevantSteps
-  alias Ask.Runtime.{Flow, Reply, ReplyHelper, SurveyLogger}
+  alias Ask.Runtime.{Flow, Reply, ReplyHelper, SurveyLogger, ChannelBrokerAgent}
   alias Ask.{Survey, SurveyLogEntry, Respondent, QuotaBucket, Questionnaire, Schedule, Stats}
   require Ask.Runtime.ReplyHelper
 
   setup do
+    {:ok, _} = ChannelBrokerAgent.start_link()
+
     quiz =
       insert(:questionnaire, steps: @dummy_steps)
       |> Questionnaire.changeset(%{settings: %{"thank_you_message" => nil}})

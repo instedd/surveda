@@ -4,11 +4,13 @@ defmodule Ask.SurveyCancellerTest do
   use Ask.DummySteps
 
   alias Ask.{Survey, RespondentGroup, Channel, TestChannel, RespondentGroupChannel}
-  alias Ask.Runtime.{Flow, Session}
+  alias Ask.Runtime.{Flow, Session, ChannelBrokerAgent}
   alias Ask.Runtime.SessionModeProvider
 
   setup %{conn: conn} do
     user = insert(:user)
+
+    {:ok, _} = ChannelBrokerAgent.start_link()
 
     conn =
       conn

@@ -41,11 +41,10 @@ defmodule Ask.Runtime.ChannelBrokerAgent do
     new_active_contacts =
       Enum.map(
         Map.get(channel_state, :active_contacts),
-        fn {k, [c, d]} -> {k, [c, DateTime.to_string(d)]} end
-      )
-      |> Map.new()
+        fn {k, dict} -> {k, Map.put(dict, :last_contact, DateTime.to_string(Map.get(dict, :last_contact)))} end
+      ) |> Map.new()
 
-    contacts_queue_ids =
+      contacts_queue_ids =
       Enum.map(
         :pqueue.to_list(Map.get(channel_state, :contacts_queue)),
         fn [_, c] ->
@@ -84,21 +83,21 @@ defmodule Ask.Runtime.ChannelBrokerAgent do
     cts =
       Enum.map(
         Map.get(query_res, :active_contacts),
-        fn {k, [c, d]} ->
-          new_d =
+        fn {k, dict} ->
+          new_dict = dict |> Map.new(fn {k, v} -> {String.to_atom(k), v} end)
+          new_lc =
             try do
-              {:ok, new_d} = Jason.decode(d)
-              new_d
+              {:ok, new_lc} = Jason.decode(Map.get(new_dict, :last_contact))
+              new_lc
             rescue
-              _ -> d
+              _ -> Map.get(new_dict, :last_contact)
             end
 
           {new_k, _} = Integer.parse(k)
-          {:ok, new_d_decoded, 0} = DateTime.from_iso8601(new_d)
-          {new_k, [c, new_d_decoded]}
+          {:ok, new_lc_decoded, 0} = DateTime.from_iso8601(new_lc)
+          {new_k, Map.put(new_dict, :last_contact, new_lc_decoded)}
         end
-      )
-      |> Map.new()
+      ) |> Map.new()
 
     %{active_contacts: cts, contacts_queue_ids: cqi}
   end

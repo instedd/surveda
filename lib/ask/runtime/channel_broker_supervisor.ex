@@ -92,7 +92,6 @@ defmodule Ask.Runtime.ChannelBrokerSupervisor do
 
   @impl true
   def init(_init_arg) do
-    ChannelBrokerAgent.start_link()
     DynamicSupervisor.init(strategy: :one_for_one)
   end
 end

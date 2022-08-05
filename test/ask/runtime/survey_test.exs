@@ -4,7 +4,7 @@ defmodule Ask.Runtime.SurveyTest do
   use Timex
   use Ask.MockTime
   use Ask.TestHelpers
-  alias Ask.Runtime.{Survey, SurveyBroker, Flow, SurveyLogger, ReplyHelper, ChannelStatusServer}
+  alias Ask.Runtime.{Survey, SurveyBroker, Flow, SurveyLogger, ReplyHelper, ChannelStatusServer, ChannelBrokerAgent}
 
   alias Ask.{
     Repo,
@@ -24,8 +24,9 @@ defmodule Ask.Runtime.SurveyTest do
   require Ask.Runtime.ReplyHelper
 
   setup do
-    {:ok, channel_status_server} = ChannelStatusServer.start_link()
-    {:ok, channel_status_server: channel_status_server}
+    {:ok, _} = ChannelStatusServer.start_link()
+    {:ok, _} = ChannelBrokerAgent.start_link()
+    :ok
   end
 
   @tag :time_mock

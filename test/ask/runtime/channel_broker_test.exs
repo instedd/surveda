@@ -1,10 +1,11 @@
 defmodule Ask.Runtime.ChannelBrokerTest do
   use Ask.DataCase
   use Ask.TestHelpers
-  alias Ask.Runtime.{ChannelStatusServer, ChannelBroker}
+  alias Ask.Runtime.{ChannelStatusServer, ChannelBroker, ChannelBrokerAgent}
 
   setup do
     {:ok, _} = ChannelStatusServer.start_link()
+    {:ok, _} = ChannelBrokerAgent.start_link()
     :ok
   end
 
@@ -58,7 +59,9 @@ defmodule Ask.Runtime.ChannelBrokerTest do
       {
         :ok,
         state: %{
-          contacts_queue: :pqueue.new()
+          contacts_queue: :pqueue.new(),
+          channel_id: 1,
+          op_count: 2
         },
         mock_queued_contact: mock_queued_contact
       }

@@ -13,7 +13,8 @@ defmodule Ask.Runtime.VerboiceChannelTest do
     SurveyLogger,
     SurveyBroker,
     ChannelStatusServer,
-    SurveyStub
+    SurveyStub,
+    ChannelBrokerAgent
   }
 
   require Ask.Runtime.ReplyHelper
@@ -26,7 +27,8 @@ defmodule Ask.Runtime.VerboiceChannelTest do
 
   setup %{conn: conn} do
     GenServer.start_link(SurveyStub, [], name: SurveyStub.server_ref())
-    ChannelStatusServer.start_link()
+    {:ok, _} = ChannelStatusServer.start_link()
+    {:ok, _} = ChannelBrokerAgent.start_link()
     Ask.Config.start_link()
 
     respondent =
