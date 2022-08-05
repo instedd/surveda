@@ -1,6 +1,6 @@
 defmodule Ask.Runtime.ChannelBroker do
   alias Ask.Runtime.{Channel, ChannelBrokerAgent, ChannelBrokerSupervisor, NuntiumChannel}
-  alias Ask.Config
+  alias Ask.{Config, Respondent}
   import Ecto.Query
   alias Ask.Repo
   use GenServer
@@ -11,10 +11,16 @@ defmodule Ask.Runtime.ChannelBroker do
   @collect 60 * 60
   # consider garbage contacts with more than one day
   @collect_timeout 24 * 60 * 60
+  # how many operations have to happen to persist to db
+  @operations_count 10
 
   # Channels without channel_id (for testing or simulation) share a single process (channel_id: 0)
-
   def start_link(nil), do: start_link([0, %{}])
+
+  def start_link(channel_id, settings, status) do
+    name = via_tuple(channel_id)
+    GenServer.start_link(__MODULE__, [channel_id, settings, status], name: name)
+  end
 
   def start_link(channel_id, settings) do
     name = via_tuple(channel_id)
@@ -175,26 +181,22 @@ defmodule Ask.Runtime.ChannelBroker do
         channel_id: channel_id,
         capacity: Map.get(settings, :capacity, Config.default_channel_capacity()),
         contact_timestamps: Map.new(),
-        contacts_queue: :pqueue.new()
+        contacts_queue: :pqueue.new(),
+        op_count: @operations_count
       },
       @timeout
     }
   end
 
-  def queue_contact(
-        %{
-          channel_id: channel_id,
-          contacts_queue: contacts_queue
-        } = state,
-        contact,
-        size
-      ) do
-    priority = if elem(contact, 0).disposition == :queued, do: 2, else: 1
-    new_contacts_queue = :pqueue.in([size, contact], priority, contacts_queue)
-    new_state = Map.put(state, :contacts_queue, new_contacts_queue)
+  @impl true
+  def init([_channel_id, _settings, status]) do
+    collect_garbage()
 
-    ChannelBrokerAgent.save_channel_state(channel_id, new_state)
-    new_state
+    {
+      :ok,
+      status,
+      @timeout
+    }
   end
 
   def active_contacts(
@@ -202,7 +204,7 @@ defmodule Ask.Runtime.ChannelBroker do
           contact_timestamps: contact_timestamps
         } = _state
       ) do
-    Enum.reduce(contact_timestamps, 0, fn {_r, {c, _d}}, acc -> c + acc end)
+    Enum.reduce(contact_timestamps, 0, fn {_r, [c, _d]}, acc -> c + acc end)
   end
 
   def can_unqueue(
@@ -241,9 +243,96 @@ defmodule Ask.Runtime.ChannelBroker do
     end
   end
 
-  def activate_contact(
+  def update_last_contact(
+        %{
+          contact_timestamps: contact_timestamps
+        } = state,
+        respondent_id
+      ) do
+    new_contact_timestamps =
+      if respondent_id in Map.keys(contact_timestamps) do
+        respondent_contacts = Enum.at(Map.get(contact_timestamps, respondent_id), 0)
+
+        Map.put(
+          contact_timestamps,
+          respondent_id,
+          [
+            respondent_contacts,
+            DateTime.utc_now()
+          ]
+        )
+      else
+        contact_timestamps
+      end
+
+    state = Map.put(state, :contact_timestamps, new_contact_timestamps)
+    state
+  end
+
+  def clean_inexistent_respondents(state) do
+    # Respondents that failed could have active contacts waiting and don't exists anymore
+    new_contact_timestamps =
+      :maps.filter(
+        fn respondent_id, _ ->
+          respondent = Respondent |> Repo.get(respondent_id)
+
+          case respondent do
+            nil ->
+              false
+
+            _ ->
+              if respondent.state == :failed do
+                false
+              else
+                true
+              end
+          end
+        end,
+        Map.get(state, :contact_timestamps)
+      )
+
+    new_state = Map.put(state, :contact_timestamps, new_contact_timestamps)
+    new_state
+  end
+
+  def save_to_agent(
         %{
           channel_id: channel_id,
+          op_count: op_count
+        } = state
+      ) do
+    new_op_count =
+      if op_count <= 1 do
+        # If counter reached, persist
+        ChannelBrokerAgent.save_channel_state(channel_id, state, true)
+        @operations_count
+      else
+        # else, just save in memory
+        ChannelBrokerAgent.save_channel_state(channel_id, state, false)
+        op_count - 1
+      end
+
+    Map.put(state, :op_count, new_op_count)
+  end
+
+  def queue_contact(
+        %{
+          contacts_queue: contacts_queue
+        } = state,
+        contact,
+        size
+      ) do
+    priority = if elem(contact, 0).disposition == :queued, do: 2, else: 1
+    new_contacts_queue = :pqueue.in([size, contact], priority, contacts_queue)
+    new_state = Map.put(state, :contacts_queue, new_contacts_queue)
+    new_state = clean_inexistent_respondents(new_state)
+    new_state = save_to_agent(new_state)
+
+    new_state
+  end
+
+  def activate_contact(
+        %{
           contacts_queue: contacts_queue,
           contact_timestamps: contact_timestamps
         } = state
@@ -257,7 +346,7 @@ defmodule Ask.Runtime.ChannelBroker do
 
     respondent_contacts =
       if respondent_id in Map.keys(contact_timestamps) do
-        elem(Map.get(contact_timestamps, respondent_id), 0)
+        Enum.at(Map.get(contact_timestamps, respondent_id), 0)
       else
         0
       end
@@ -266,54 +355,28 @@ defmodule Ask.Runtime.ChannelBroker do
       Map.put(
         contact_timestamps,
         respondent_id,
-        {
+        [
           respondent_contacts + size,
-          elem(DateTime.now("Etc/UTC"), 1)
-        }
+          DateTime.utc_now()
+        ]
       )
 
     state = Map.put(state, :contact_timestamps, new_contact_timestamps)
+    state = clean_inexistent_respondents(state)
+    state = save_to_agent(state)
 
-    ChannelBrokerAgent.save_channel_state(channel_id, state)
     {state, unqueued_item}
-  end
-
-  def update_last_contact(
-        %{
-          contact_timestamps: contact_timestamps
-        } = state,
-        respondent_id
-      ) do
-    new_contact_timestamps =
-      if respondent_id in Map.keys(contact_timestamps) do
-        respondent_contacts = elem(Map.get(contact_timestamps, respondent_id), 0)
-
-        Map.put(
-          contact_timestamps,
-          respondent_id,
-          {
-            respondent_contacts,
-            elem(DateTime.now("Etc/UTC"), 1)
-          }
-        )
-      else
-        contact_timestamps
-      end
-
-    state = Map.put(state, :contact_timestamps, new_contact_timestamps)
-    state
   end
 
   def deactivate_contact(
         %{
-          channel_id: channel_id,
           contact_timestamps: contact_timestamps
         } = state,
         respondent_id
       ) do
     respondent_contacts =
       if respondent_id in Map.keys(contact_timestamps) do
-        elem(Map.get(contact_timestamps, respondent_id), 0)
+        Enum.at(Map.get(contact_timestamps, respondent_id), 0)
       else
         0
       end
@@ -323,18 +386,18 @@ defmodule Ask.Runtime.ChannelBroker do
         Map.put(
           contact_timestamps,
           respondent_id,
-          {
+          [
             respondent_contacts - 1,
-            elem(DateTime.now("Etc/UTC"), 1)
-          }
+            DateTime.utc_now()
+          ]
         )
       else
         Map.delete(contact_timestamps, respondent_id)
       end
 
     new_state = Map.put(state, :contact_timestamps, new_contact_timestamps)
-
-    ChannelBrokerAgent.save_channel_state(channel_id, new_state)
+    new_state = clean_inexistent_respondents(new_state)
+    new_state = save_to_agent(new_state)
     new_state
   end
 
@@ -526,7 +589,7 @@ defmodule Ask.Runtime.ChannelBroker do
     # New versions of elixir has Maps.filter, replace when possible
     new_contact_timestamps =
       :maps.filter(
-        fn _, {_, last_contact} ->
+        fn _, [_, last_contact] ->
           DateTime.diff(now, last_contact, :second) < @collect_timeout
         end,
         contact_timestamps

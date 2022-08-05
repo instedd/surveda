@@ -222,7 +222,26 @@ defmodule Ask.Runtime.SurveyBroker do
     )
   end
 
-  defp retry_respondents(now) do
+  def recontact_queued_respondents(respondent_ids) do
+    # We're recontacting respondants that were queued
+    # in channel broker after it fails
+    Repo.all(
+      from r in Respondent,
+        select: r.id,
+        where: r.id in ^respondent_ids,
+        limit: ^batch_limit_per_minute()
+    )
+    |> Enum.each(fn respondent_id ->
+      respondent = Respondent |> Repo.get(respondent_id)
+      session = respondent.session |> Session.load()
+      channel = session.current_mode.channel
+      runtime_channel = Ask.Channel.runtime_channel(channel)
+      # We have loaded everything neccesary, now contact them without consuming a retry
+      Ask.Runtime.Session.contact_respondent(session, runtime_channel)
+    end)
+  end
+
+  def retry_respondents(now) do
     Repo.all(
       from r in Respondent,
         select: r.id,

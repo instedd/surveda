@@ -1,5 +1,6 @@
 defmodule Ask.Runtime.ChannelBrokerSupervisor do
-  alias Ask.Runtime.{ChannelBroker, ChannelBrokerAgent}
+  alias Ask.Runtime.{ChannelBroker, ChannelBrokerAgent, SurveyBroker}
+  alias Ask.Config
   use DynamicSupervisor
 
   def start_link() do
@@ -13,7 +14,45 @@ defmodule Ask.Runtime.ChannelBrokerSupervisor do
   def start_child(nil), do: start_child(0, %{})
 
   def start_child(channel_id, settings) do
-    DynamicSupervisor.start_child(__MODULE__, child_spec(channel_id, settings))
+    cond do
+      channel_id in Map.keys(ChannelBrokerAgent.get()) ->
+        # If channel state is stored in the agent, recover it from there
+        DynamicSupervisor.start_child(
+          __MODULE__,
+          child_spec(
+            channel_id,
+            settings,
+            ChannelBrokerAgent.get_channel_state(channel_id)
+          )
+        )
+
+      ChannelBrokerAgent.is_in_db(channel_id) ->
+        # If channel state is stored in the db, recover it from there
+        cb_db = ChannelBrokerAgent.recover_from_db(channel_id)
+
+        channel_state = %{
+          channel_id: channel_id,
+          capacity: Map.get(settings, :capacity, Config.default_channel_capacity()),
+          contacts_queue: :pqueue.new(),
+          contact_timestamps: Map.get(cb_db, :contact_timestamps),
+          # We save to db again inmediately on restart.
+          op_count: 1
+        }
+
+        res =
+          DynamicSupervisor.start_child(
+            __MODULE__,
+            child_spec(channel_id, settings, channel_state)
+          )
+
+        # recontact contacts in the queue
+        SurveyBroker.recontact_queued_respondents(Map.get(cb_db, :contacts_queue_ids))
+        res
+
+      true ->
+        # Else, start the broker from scratch
+        DynamicSupervisor.start_child(__MODULE__, child_spec(channel_id, settings))
+    end
   end
 
   def terminate_child(nil), do: terminate_child(0)
@@ -42,6 +81,13 @@ defmodule Ask.Runtime.ChannelBrokerSupervisor do
     %{
       id: "channel_broker_#{channel_id}",
       start: {ChannelBroker, :start_link, [channel_id, settings]}
+    }
+  end
+
+  defp child_spec(channel_id, settings, state) do
+    %{
+      id: "channel_broker_#{channel_id}",
+      start: {ChannelBroker, :start_link, [channel_id, settings, state]}
     }
   end
 
