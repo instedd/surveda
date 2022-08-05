@@ -262,7 +262,7 @@ defmodule Ask.Runtime.ChannelBroker do
 
   def clean_inexistent_respondents(state) do
     # Respondents that failed could have active contacts waiting and don't exists anymore
-    new_contact_timestamps =
+    new_active_contacts =
       :maps.filter(
         fn respondent_id, _ ->
           respondent = Respondent |> Repo.get(respondent_id)
@@ -279,10 +279,10 @@ defmodule Ask.Runtime.ChannelBroker do
               end
           end
         end,
-        Map.get(state, :contact_timestamps)
+        Map.get(state, :active_contacts)
       )
 
-    new_state = Map.put(state, :contact_timestamps, new_contact_timestamps)
+    new_state = Map.put(state, :active_contacts, new_active_contacts)
     new_state
   end
 

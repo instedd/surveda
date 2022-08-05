@@ -2,9 +2,9 @@ defmodule Ask.Repo.Migrations.CreateChannelBrokerInfo do
   use Ecto.Migration
 
   def change do
-    create table(:channel_broker_info) do
+    create table(:channel_broker_recovery) do
       add :channel_id, references(:channels)
-      add :contact_timestamps, :map
+      add :active_contacts, :map
       add :contacts_queue_ids, :json
 
       timestamps()

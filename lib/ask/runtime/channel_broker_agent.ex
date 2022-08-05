@@ -4,9 +4,9 @@ defmodule Ask.Runtime.ChannelBrokerAgent do
   use Agent
   use Ask.Model
 
-  schema "channel_broker_info" do
+  schema "channel_broker_recovery" do
     belongs_to(:channel, Ask.Channel)
-    field(:contact_timestamps, :map)
+    field(:active_contacts, :map)
 
     timestamps()
   end
@@ -38,9 +38,9 @@ defmodule Ask.Runtime.ChannelBrokerAgent do
   def persist_to_db(channel_id) do
     channel_state = get_channel_state(channel_id)
 
-    new_contact_timestamps =
+    new_active_contacts =
       Enum.map(
-        Map.get(channel_state, :contact_timestamps),
+        Map.get(channel_state, :active_contacts),
         fn {k, [c, d]} -> {k, [c, DateTime.to_string(d)]} end
       )
       |> Map.new()
@@ -53,15 +53,15 @@ defmodule Ask.Runtime.ChannelBrokerAgent do
         end
       )
 
-    from(cbi in "channel_broker_info", where: cbi.channel_id == ^channel_id) |> Repo.delete_all()
+    from(cbi in "channel_broker_recovery", where: cbi.channel_id == ^channel_id) |> Repo.delete_all()
 
     if channel_id in Map.keys(get()) do
       Repo.insert_all(
-        "channel_broker_info",
+        "channel_broker_recovery",
         [
           %{
             channel_id: channel_id,
-            contact_timestamps: new_contact_timestamps,
+            active_contacts: new_active_contacts,
             contacts_queue_ids: contacts_queue_ids,
             inserted_at: DateTime.utc_now(),
             updated_at: DateTime.utc_now()
@@ -73,9 +73,9 @@ defmodule Ask.Runtime.ChannelBrokerAgent do
 
   def recover_from_db(channel_id) do
     query_res =
-      from(cbi in "channel_broker_info",
+      from(cbi in "channel_broker_recovery",
         where: cbi.channel_id == ^channel_id,
-        select: [:contact_timestamps, :contacts_queue_ids]
+        select: [:active_contacts, :contacts_queue_ids]
       )
       |> Repo.one()
 
@@ -83,7 +83,7 @@ defmodule Ask.Runtime.ChannelBrokerAgent do
 
     cts =
       Enum.map(
-        Map.get(query_res, :contact_timestamps),
+        Map.get(query_res, :active_contacts),
         fn {k, [c, d]} ->
           new_d =
             try do
@@ -100,12 +100,12 @@ defmodule Ask.Runtime.ChannelBrokerAgent do
       )
       |> Map.new()
 
-    %{contact_timestamps: cts, contacts_queue_ids: cqi}
+    %{active_contacts: cts, contacts_queue_ids: cqi}
   end
 
   def is_in_db(channel_id) do
     count =
-      from(cbi in "channel_broker_info", where: cbi.channel_id == ^channel_id, select: count("*"))
+      from(cbi in "channel_broker_recovery", where: cbi.channel_id == ^channel_id, select: count("*"))
       |> Repo.one()
 
     count != 0
