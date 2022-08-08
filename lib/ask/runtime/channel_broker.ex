@@ -319,8 +319,8 @@ defmodule Ask.Runtime.ChannelBroker do
     priority = if elem(contact, 0).disposition == :queued, do: 2, else: 1
     new_contacts_queue = :pqueue.in([size, contact], priority, contacts_queue)
     new_state = Map.put(state, :contacts_queue, new_contacts_queue)
-    new_state = clean_inexistent_respondents(new_state)
-    # new_state = save_to_agent(new_state)
+    # new_state = clean_inexistent_respondents(new_state)
+    new_state = save_to_agent(new_state)
 
     new_state
   end
@@ -355,8 +355,8 @@ defmodule Ask.Runtime.ChannelBroker do
       )
 
     state = Map.put(state, :active_contacts, new_active_contacts)
-    state = clean_inexistent_respondents(state)
-    # state = save_to_agent(state)
+    # state = clean_inexistent_respondents(state)
+    state = save_to_agent(state)
 
     {state, unqueued_item}
   end
@@ -453,7 +453,7 @@ defmodule Ask.Runtime.ChannelBroker do
 
     new_state = Map.put(state, :active_contacts, new_active_contacts)
     # new_state = clean_inexistent_respondents(new_state)
-    # new_state = save_to_agent(new_state)
+    new_state = save_to_agent(new_state)
     new_state
   end
 
