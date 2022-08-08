@@ -1,6 +1,6 @@
 defmodule Ask.Runtime.ChannelBroker do
   alias Ask.Runtime.{Channel, ChannelBrokerAgent, ChannelBrokerSupervisor, NuntiumChannel}
-  alias Ask.{Config, Respondent}
+  alias Ask.Config
   import Ecto.Query
   alias Ask.Repo
   use GenServer
@@ -260,24 +260,22 @@ defmodule Ask.Runtime.ChannelBroker do
     elem(queued_item, 0).id
   end
 
-  def clean_inexistent_respondents(state) do
+  def clean_inexistent_respondents(
+    %{
+      active_contacts: active_contacts
+    } = state) do
     # Respondents that failed could have active contacts waiting and don't exists anymore
+
+    query = from r in "respondents",
+              where: r.id in ^Map.keys(active_contacts) and r.state != "failed",
+              select: r.id
+
+    active_respondents = Repo.all(query)
+
     new_active_contacts =
       :maps.filter(
         fn respondent_id, _ ->
-          respondent = Respondent |> Repo.get(respondent_id)
-
-          case respondent do
-            nil ->
-              false
-
-            _ ->
-              if respondent.state == :failed do
-                false
-              else
-                true
-              end
-          end
+          respondent_id in active_respondents
         end,
         Map.get(state, :active_contacts)
       )
@@ -321,7 +319,7 @@ defmodule Ask.Runtime.ChannelBroker do
     priority = if elem(contact, 0).disposition == :queued, do: 2, else: 1
     new_contacts_queue = :pqueue.in([size, contact], priority, contacts_queue)
     new_state = Map.put(state, :contacts_queue, new_contacts_queue)
-    # new_state = clean_inexistent_respondents(new_state)
+    new_state = clean_inexistent_respondents(new_state)
     # new_state = save_to_agent(new_state)
 
     new_state
@@ -357,7 +355,7 @@ defmodule Ask.Runtime.ChannelBroker do
       )
 
     state = Map.put(state, :active_contacts, new_active_contacts)
-    # state = clean_inexistent_respondents(state)
+    state = clean_inexistent_respondents(state)
     # state = save_to_agent(state)
 
     {state, unqueued_item}

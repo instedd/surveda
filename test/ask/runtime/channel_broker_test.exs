@@ -60,6 +60,7 @@ defmodule Ask.Runtime.ChannelBrokerTest do
         :ok,
         state: %{
           contacts_queue: :pqueue.new(),
+          active_contacts: Map.new(),
           channel_id: 1,
           op_count: 2
         },
