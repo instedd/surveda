@@ -8,8 +8,8 @@ defmodule Ask.Runtime.ChannelBroker do
   # TODO: Let's make all these values configurable
   @timeout_minutes 5
   @timeout @timeout_minutes * 60_000
-  # collect garbage every hour
-  @collect_interval_minutes 60
+  # collect garbage every 10 minutes
+  @collect_interval_minutes 10
   @collect_interval @collect_interval_minutes * 60_000
   # consider garbage contacts with more than one day
   @collect_timeout 24 * 60 * 60
@@ -284,6 +284,21 @@ defmodule Ask.Runtime.ChannelBroker do
     new_state
   end
 
+  defp clean_outdated_respondents(%{active_contacts: active_contacts} = state) do
+    {:ok, now} = DateTime.now("Etc/UTC")
+
+    new_active_contacts =
+      :maps.filter(
+        fn _, %{last_contact: last_contact} ->
+          DateTime.diff(now, last_contact, :second) < @collect_timeout
+        end,
+        active_contacts
+      )
+
+    new_state = Map.put(state, :active_contacts, new_active_contacts)
+    new_state
+  end
+
   # Don't save for unit tests
   def save_to_agent(%{channel_id: 0} = state) do
     state
@@ -319,7 +334,6 @@ defmodule Ask.Runtime.ChannelBroker do
     priority = if elem(contact, 0).disposition == :queued, do: 2, else: 1
     new_contacts_queue = :pqueue.in([size, contact], priority, contacts_queue)
     new_state = Map.put(state, :contacts_queue, new_contacts_queue)
-    # new_state = clean_inexistent_respondents(new_state)
     new_state = save_to_agent(new_state)
 
     new_state
@@ -355,7 +369,6 @@ defmodule Ask.Runtime.ChannelBroker do
       )
 
     state = Map.put(state, :active_contacts, new_active_contacts)
-    # state = clean_inexistent_respondents(state)
     state = save_to_agent(state)
 
     {state, unqueued_item}
@@ -452,7 +465,6 @@ defmodule Ask.Runtime.ChannelBroker do
       end
 
     new_state = Map.put(state, :active_contacts, new_active_contacts)
-    # new_state = clean_inexistent_respondents(new_state)
     new_state = save_to_agent(new_state)
     new_state
   end
@@ -661,24 +673,14 @@ defmodule Ask.Runtime.ChannelBroker do
     ChannelBrokerSupervisor.terminate_child(channel_id)
   end
 
-  def handle_info({:collect_garbage, channel_type}, %{active_contacts: active_contacts} = state) do
-    {:ok, now} = DateTime.now("Etc/UTC")
-
+  def handle_info({:collect_garbage, channel_type} = state) do
     # Remove the garbage contacts from active
     # New versions of elixir has Maps.filter, replace when possible
-    new_active_contacts =
-      :maps.filter(
-        fn _, %{last_contact: last_contact} ->
-          DateTime.diff(now, last_contact, :second) < @collect_timeout
-        end,
-        active_contacts
-      )
-
-    new_state = Map.put(state, :active_contacts, new_active_contacts)
+    new_state = clean_inexistent_respondents(state)
+      |> clean_outdated_respondents()
 
     # Activate new ones if possible
     new_state = activate_contacts(channel_type, new_state)
-
     # schedule next garbage collection
     collect_garbage(channel_type)
     {:noreply, new_state}
