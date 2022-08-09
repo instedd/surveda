@@ -30,6 +30,7 @@ defmodule Ask.Runtime.ChannelBrokerTest do
       broker_poll()
 
       # Assert
+      verify_state(respondents, :active)
       assert_made_calls(Enum.take(respondents, channel_capacity), test_channel)
 
       # Arrange
@@ -64,6 +65,7 @@ defmodule Ask.Runtime.ChannelBrokerTest do
       broker_poll()
 
       # Assert
+      verify_state(respondents, :active)
       assert_sent_smss(Enum.take(respondents, channel_capacity), test_channel)
 
       # Arrange
@@ -185,6 +187,12 @@ defmodule Ask.Runtime.ChannelBrokerTest do
         "CallDuration" => "15",
         "CallSid" => "1"
       })
+    end)
+  end
+
+  defp verify_state(respondents, state) do
+    Enum.each(respondents, fn %{id: id} ->
+      assert Repo.get(Respondent, id).state == state
     end)
   end
 end
