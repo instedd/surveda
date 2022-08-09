@@ -638,8 +638,6 @@ defmodule Ask.Runtime.ChannelBroker do
 
                 {:ok, verboice_call_id} = channel_setup(unq_channel, unq_respondent, unq_token, unq_not_before, unq_not_after)
                 set_verboice_call_id(new_state, unq_respondent.id, verboice_call_id)
-
-                new_state
               else
                 new_state
               end
