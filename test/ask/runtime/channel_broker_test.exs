@@ -14,46 +14,68 @@ defmodule Ask.Runtime.ChannelBrokerTest do
   describe "Verboice" do
     test "Every Call is made when capacity isn't set", %{} do
       channel_capacity = nil
-      [test_channel, _respondents] = initialize_survey("ivr", channel_capacity)
-
-      broker_poll()
-
-      assert_made_calls(@respondents_quantity, test_channel)
-    end
-
-    test "Calls aren't made while the channel capacity is full", %{conn: conn} do
-      channel_capacity = 5
       [test_channel, respondents] = initialize_survey("ivr", channel_capacity)
 
       broker_poll()
-      assert_made_calls(channel_capacity, test_channel)
 
+      assert_made_calls(respondents, test_channel)
+    end
+
+    test "Calls aren't made while the channel capacity is full", %{conn: conn} do
+      # Arrange
+      channel_capacity = 5
+      [test_channel, respondents] = initialize_survey("ivr", channel_capacity)
+
+      # Act
+      broker_poll()
+
+      # Assert
+      assert_made_calls(Enum.take(respondents, channel_capacity), test_channel)
+
+      # Arrange
       callbacks = 2
-      callback_n_respondents(conn, respondents, callbacks, "verboice")
-      assert_made_calls(callbacks, test_channel)
+      release_respondents = Enum.take(respondents, callbacks)
+
+      # Act
+      callback_respondents(conn, release_respondents, "verboice")
+
+      # Assert
+      released_respondents = Enum.take(respondents, channel_capacity + callbacks) |> Enum.take(-callbacks)
+      assert_made_calls(released_respondents, test_channel)
     end
   end
 
   describe "Nuntium" do
     test "Every SMS is sent when capacity isn't set", %{} do
       channel_capacity = nil
-      [test_channel, _respondents] = initialize_survey("sms", channel_capacity)
-
-      broker_poll()
-
-      assert_sent_smss(@respondents_quantity, test_channel)
-    end
-
-    test "SMS aren't sent while the channel capacity is full", %{conn: conn} do
-      channel_capacity = 5
       [test_channel, respondents] = initialize_survey("sms", channel_capacity)
 
       broker_poll()
-      assert_sent_smss(channel_capacity, test_channel)
 
-      callbacks = 2
-      callback_n_respondents(conn, respondents, callbacks, "nuntium")
-      assert_sent_smss(callbacks, test_channel)
+      assert_sent_smss(respondents, test_channel)
+    end
+
+    test "SMS aren't sent while the channel capacity is full", %{conn: conn} do
+      # Arrange
+      channel_capacity = 4
+      [test_channel, respondents] = initialize_survey("sms", channel_capacity)
+
+      # Act
+      broker_poll()
+
+      # Assert
+      assert_sent_smss(Enum.take(respondents, channel_capacity), test_channel)
+
+      # Arrange
+      callbacks = 4
+      release_respondents = Enum.take(respondents, callbacks)
+
+      # Act
+      callback_respondents(conn, release_respondents, "nuntium")
+
+      # Assert
+      released_respondents = Enum.take(respondents, channel_capacity + callbacks) |> Enum.take(-callbacks)
+      assert_sent_smss(released_respondents, test_channel)
     end
   end
 
@@ -121,17 +143,17 @@ defmodule Ask.Runtime.ChannelBrokerTest do
     end
   end
 
-  defp assert_made_calls(n, test_channel) do
-    for _ <- 1..n do
-      assert_received [:setup, ^test_channel, _respondent, _token]
-    end
+  defp assert_made_calls(respondents, test_channel) do
+    Enum.each(respondents, fn %{id: id} ->
+      assert_received [:setup, ^test_channel, %{id: ^id}, _token]
+    end)
     refute_received [:setup, ^test_channel, _respondent, _token]
   end
 
-  defp assert_sent_smss(n, test_channel) do
-    for _ <- 1..n do
-      assert_received [:ask, ^test_channel, _respondent, _token, _reply]
-    end
+  defp assert_sent_smss(respondents, test_channel) do
+    Enum.each(respondents, fn %{id: id} ->
+      assert_received [:ask, ^test_channel, %{id: ^id}, _token, _reply]
+    end)
     refute_received [:ask, ^test_channel, _respondent, _token, _reply]
   end
 
@@ -145,24 +167,24 @@ defmodule Ask.Runtime.ChannelBrokerTest do
     [test_channel, respondents]
   end
 
-  defp callback_n_respondents(conn, respondents, n, "nuntium" = _provider) do
-    for i <- 1..n do
+  defp callback_respondents(conn, respondents, "nuntium" = _provider) do
+    Enum.each(respondents, fn %{id: id} ->
       NuntiumChannel.callback(conn, %{
         "path" => ["status"],
-        "respondent_id" => "#{Enum.at(respondents, i).id}",
+        "respondent_id" => "#{id}",
         "state" => "delivered"
       })
-    end
+    end)
   end
 
-  defp callback_n_respondents(conn, respondents, n, "verboice" = _provider) do
-    for i <- 1..n do
+  defp callback_respondents(conn, respondents, "verboice" = _provider) do
+    Enum.each(respondents, fn %{id: id} ->
       VerboiceChannel.callback(conn, %{
-        "path" => ["status", Enum.at(respondents, i).id, "token"],
+        "path" => ["status", id, "token"],
         "CallStatus" => "completed",
         "CallDuration" => "15",
-        "CallSid" => "1",
+        "CallSid" => "1"
       })
-    end
+    end)
   end
 end
