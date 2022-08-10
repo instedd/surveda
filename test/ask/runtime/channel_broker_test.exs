@@ -2,6 +2,7 @@ defmodule Ask.Runtime.ChannelBrokerTest do
   use AskWeb.ConnCase
   use Ask.TestHelpers
   alias Ask.Runtime.{ChannelStatusServer, ChannelBroker, ChannelBrokerAgent, VerboiceChannel, NuntiumChannel}
+  alias Ask.Config
 
   setup %{conn: conn} do
     {:ok, _} = ChannelStatusServer.start_link()
@@ -92,7 +93,8 @@ defmodule Ask.Runtime.ChannelBrokerTest do
           contacts_queue: :pqueue.new(),
           active_contacts: Map.new(),
           channel_id: 1,
-          op_count: 2
+          op_count: 2,
+          config: Config.channel_broker_config()
         },
         mock_queued_contact: mock_queued_contact
       }

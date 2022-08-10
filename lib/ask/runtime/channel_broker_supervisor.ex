@@ -34,6 +34,7 @@ defmodule Ask.Runtime.ChannelBrokerSupervisor do
           capacity: Map.get(settings, "capacity", Config.default_channel_capacity()),
           contacts_queue: :pqueue.new(),
           active_contacts: Map.get(cb_db, :active_contacts),
+          config: Config.channel_broker_config(),
           # We save to db again inmediately on restart.
           op_count: 1
         }

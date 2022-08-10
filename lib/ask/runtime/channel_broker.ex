@@ -5,17 +5,6 @@ defmodule Ask.Runtime.ChannelBroker do
   alias Ask.Repo
   use GenServer
 
-  # TODO: Let's make all these values configurable
-  @timeout_minutes 5
-  @timeout @timeout_minutes * 60_000
-  # collect garbage every 10 minutes
-  @collect_interval_minutes 10
-  @collect_interval @collect_interval_minutes * 60_000
-  # consider garbage contacts with more than one day
-  @collect_timeout 24 * 60 * 60
-  # how many operations have to happen to persist to db
-  @operations_count 10
-
   # Channels without channel_id (for testing) share a single process (channel_id: 0)
 
   def start_link(channel_id, channel_type, settings) do
@@ -156,16 +145,29 @@ defmodule Ask.Runtime.ChannelBroker do
     end
   end
 
-  defp collect_garbage(channel_type) do
-    Process.send_after(self(), {:collect_garbage, channel_type}, @collect_interval)
+  defp collect_garbage(channel_type, interval) do
+    Process.send_after(self(), {:collect_garbage, channel_type}, interval)
+  end
+
+  defp timeout_from_config(%{shut_down_minutes: timeout_minutes} = _config) do
+    timeout_minutes * 60_000
+  end
+
+  defp gc_interval_from_config(%{gc_interval_minutes: gc_interval_minutes} = _config) do
+    gc_interval_minutes * 60_000
+  end
+
+  defp gc_timeout_from_config(%{gc_outdate_hours: gc_outdate_hours} = _config) do
+    gc_outdate_hours * 60 * 60
   end
 
   # Server (callbacks)
 
   @impl true
   def init([channel_id, channel_type, settings]) do
-    collect_garbage(channel_type)
-
+    %{to_db_operations: op_count} = config = Config.channel_broker_config()
+    gc_interval = gc_interval_from_config(config)
+    collect_garbage(channel_type, gc_interval)
     {
       :ok,
       %{
@@ -173,20 +175,22 @@ defmodule Ask.Runtime.ChannelBroker do
         capacity: Map.get(settings, "capacity", Config.default_channel_capacity()),
         active_contacts: Map.new(),
         contacts_queue: :pqueue.new(),
-        op_count: @operations_count
+        config: config,
+        op_count: op_count
       },
-      @timeout
+      timeout_from_config(config)
     }
   end
 
   @impl true
-  def init([_channel_id, channel_type, _settings, status]) do
-    collect_garbage(channel_type)
+  def init([_channel_id, channel_type, _settings, %{config: config} = status]) do
+    gc_interval = gc_interval_from_config(config)
+    collect_garbage(channel_type, gc_interval)
 
     {
       :ok,
       status,
-      @timeout
+      timeout_from_config(config)
     }
   end
 
@@ -284,13 +288,13 @@ defmodule Ask.Runtime.ChannelBroker do
     new_state
   end
 
-  defp clean_outdated_respondents(%{active_contacts: active_contacts} = state) do
+  defp clean_outdated_respondents(%{active_contacts: active_contacts, config: config} = state) do
     {:ok, now} = DateTime.now("Etc/UTC")
 
     new_active_contacts =
       :maps.filter(
         fn _, %{last_contact: last_contact} ->
-          DateTime.diff(now, last_contact, :second) < @collect_timeout
+          DateTime.diff(now, last_contact, :second) < gc_timeout_from_config(config)
         end,
         active_contacts
       )
@@ -307,14 +311,15 @@ defmodule Ask.Runtime.ChannelBroker do
   def save_to_agent(
         %{
           channel_id: channel_id,
-          op_count: op_count
+          op_count: op_count,
+          config: %{to_db_operations: to_db_operations}
         } = state
       ) do
     new_op_count =
       if op_count <= 1 do
         # If counter reached, persist
         ChannelBrokerAgent.save_channel_state(channel_id, state, true)
-        @operations_count
+        to_db_operations
       else
         # else, just save in memory
         ChannelBrokerAgent.save_channel_state(channel_id, state, false)
@@ -509,7 +514,7 @@ defmodule Ask.Runtime.ChannelBroker do
   def handle_call(
         {:ask, "sms" = _channel_type, channel, %{id: respondent_id} = respondent, token, reply},
         _from,
-        state
+        %{config: config} = state
       ) do
     new_state =
       queue_contact(
@@ -527,7 +532,7 @@ defmodule Ask.Runtime.ChannelBroker do
       new_state
     end
 
-    {:reply, :ok, end_state, @timeout}
+    {:reply, :ok, end_state, timeout_from_config(config)}
   end
 
   @impl true
@@ -542,7 +547,7 @@ defmodule Ask.Runtime.ChannelBroker do
           not_after
         },
         _from,
-        state
+        %{config: config} = state
       ) do
     new_state = state
 
@@ -567,59 +572,59 @@ defmodule Ask.Runtime.ChannelBroker do
         new_state
       end
 
-    {:reply, :ok, end_state, @timeout}
+    {:reply, :ok, end_state, timeout_from_config(config)}
   end
 
   @impl true
-  def handle_call({:prepare, channel}, _from, state) do
+  def handle_call({:prepare, channel}, _from, %{config: config} = state) do
     reply = Channel.prepare(channel)
-    {:reply, reply, state, @timeout}
+    {:reply, reply, state, timeout_from_config(config)}
   end
 
   @impl true
-  def handle_call({:has_delivery_confirmation?, channel}, _from, state) do
+  def handle_call({:has_delivery_confirmation?, channel}, _from, %{config: config} = state) do
     reply = Channel.has_delivery_confirmation?(channel)
-    {:reply, reply, state, @timeout}
+    {:reply, reply, state, timeout_from_config(config)}
   end
 
   # @impl true
-  def handle_call({:has_queued_message?, _channel_type, %{has_queued_message: has_queued_message}, _respondent_id}, _from, state) do
-    {:reply, has_queued_message, state, @timeout}
+  def handle_call({:has_queued_message?, _channel_type, %{has_queued_message: has_queued_message}, _respondent_id}, _from, %{config: config} = state) do
+    {:reply, has_queued_message, state, timeout_from_config(config)}
   end
 
   @impl true
-  def handle_call({:has_queued_message?, _channel_type, _channel, respondent_id}, _from, state) do
+  def handle_call({:has_queued_message?, _channel_type, _channel, respondent_id}, _from, %{config: config} = state) do
     reply = is_active(state, respondent_id) || is_queued(state, respondent_id)
-    {:reply, reply, state, @timeout}
+    {:reply, reply, state, timeout_from_config(config)}
   end
 
   @impl true
-  def handle_call({:cancel_message, channel_type, channel, respondent_id}, _from, state) do
+  def handle_call({:cancel_message, channel_type, channel, respondent_id}, _from, %{config: config} = state) do
     channel_state = get_channel_state(channel_type, state, respondent_id)
     Channel.cancel_message(channel, channel_state)
     state = deactivate_contact(state, respondent_id)
     state = remove_from_queue(state, respondent_id)
-    {:reply, :ok, state, @timeout}
+    {:reply, :ok, state, timeout_from_config(config)}
   end
 
   @impl true
-  def handle_call({:message_expired?, channel_type, channel, respondent_id}, _from, state) do
+  def handle_call({:message_expired?, channel_type, channel, respondent_id}, _from, %{config: config} = state) do
     channel_state = get_channel_state(channel_type, state, respondent_id)
     reply = Channel.message_expired?(channel, channel_state)
-    {:reply, reply, state, @timeout}
+    {:reply, reply, state, timeout_from_config(config)}
   end
 
   @impl true
-  def handle_call({:check_status, channel}, _from, state) do
+  def handle_call({:check_status, channel}, _from, %{config: config} = state) do
     reply = Channel.check_status(channel)
-    {:reply, reply, state, @timeout}
+    {:reply, reply, state, timeout_from_config(config)}
   end
 
   @impl true
   def handle_call(
         {:callback_recieved, respondent, respondent_state, provider},
         _from,
-        state
+        %{config: config} = state
       ) do
     end_state =
       case provider do
@@ -661,7 +666,7 @@ defmodule Ask.Runtime.ChannelBroker do
           end
       end
 
-    {:reply, :ok, end_state, @timeout}
+    {:reply, :ok, end_state, timeout_from_config(config)}
   end
 
   @impl true
@@ -669,7 +674,7 @@ defmodule Ask.Runtime.ChannelBroker do
     ChannelBrokerSupervisor.terminate_child(channel_id)
   end
 
-  def handle_info({:collect_garbage, channel_type} = state) do
+  def handle_info({:collect_garbage, channel_type}, %{config: config} = state) do
     # Remove the garbage contacts from active
     # New versions of elixir has Maps.filter, replace when possible
     new_state = clean_inexistent_respondents(state)
@@ -678,7 +683,8 @@ defmodule Ask.Runtime.ChannelBroker do
     # Activate new ones if possible
     new_state = activate_contacts(channel_type, new_state)
     # schedule next garbage collection
-    collect_garbage(channel_type)
+    gc_interval = gc_interval_from_config(config)
+    collect_garbage(channel_type, gc_interval)
     {:noreply, new_state}
   end
 end
