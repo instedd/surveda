@@ -49,24 +49,26 @@ defmodule Ask.Runtime.SessionTest do
     test_channel: test_channel,
     channel: channel
   } do
-    {:ok, %{respondent: respondent} = session, _, timeout} =
+    {:ok, %{respondent: %{id: respondent_id}} = session, _, timeout} =
       Session.start(quiz, respondent, channel, "sms", Schedule.always())
 
     assert %Session{token: token} = session
     assert 120 = timeout
     assert token != nil
 
-    assert_receive [:setup, ^test_channel, ^respondent, ^token]
+    assert_receive [:setup, ^test_channel, respondent, ^token]
+    assert respondent.id == respondent_id
 
     assert_receive [
       :ask,
       ^test_channel,
-      ^respondent,
+      respondent,
       ^token,
       ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO")
     ]
+    assert respondent.id == respondent_id
 
-    assert 1 == respondent.stats |> Stats.attempts(:sms)
+    assert 1 == session.respondent.stats |> Stats.attempts(:sms)
   end
 
   describe "sections" do
@@ -322,22 +324,24 @@ defmodule Ask.Runtime.SessionTest do
     test_channel: test_channel,
     channel: channel
   } do
-    {:ok, %{respondent: respondent} = session, _, timeout} =
+    {:ok, %{respondent: %{id: respondent_id}} = session, _, timeout} =
       Session.start(quiz, respondent, channel, "sms", Schedule.always(), [], nil, nil, nil, 123)
 
     assert %Session{token: token} = session
     assert 123 = timeout
     assert token != nil
 
-    assert_receive [:setup, ^test_channel, ^respondent, ^token]
+    assert_receive [:setup, ^test_channel, respondent, ^token]
+    assert respondent.id == respondent_id
 
     assert_receive [
       :ask,
       ^test_channel,
-      ^respondent,
+      respondent,
       ^token,
       ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO")
     ]
+    assert respondent.id == respondent_id
   end
 
   test "start with channel without push", %{quiz: quiz, respondent: respondent} do
@@ -426,18 +430,20 @@ defmodule Ask.Runtime.SessionTest do
     test_channel: test_channel,
     channel: channel
   } do
-    {:ok, session = %Session{token: token, respondent: respondent}, _, 120} =
+    {:ok, session = %Session{token: token, respondent: %{id: respondent_id}}, _, 120} =
       Session.start(quiz, respondent, channel, "sms", Schedule.always())
 
-    assert_receive [:setup, ^test_channel, ^respondent, ^token]
+    assert_receive [:setup, ^test_channel, respondent, ^token]
+    assert respondent.id == respondent_id
 
     assert_receive [
       :ask,
       ^test_channel,
-      ^respondent,
+      respondent,
       ^token,
       ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO")
     ]
+    assert respondent.id == respondent_id
 
     result = Session.timeout(session)
     assert elem(result, 0) == :failed
@@ -449,18 +455,20 @@ defmodule Ask.Runtime.SessionTest do
     test_channel = TestChannel.new(true)
     channel = build(:channel, settings: test_channel |> TestChannel.settings())
 
-    assert {:ok, session = %Session{token: token, respondent: respondent}, _, 5} =
+    assert {:ok, session = %Session{token: token, respondent: %{id: respondent_id}}, _, 5} =
              Session.start(quiz, respondent, channel, "sms", Schedule.always(), [5])
 
-    assert_receive [:setup, ^test_channel, ^respondent, ^token]
+    assert_receive [:setup, ^test_channel, respondent, ^token]
+    assert respondent.id == respondent_id
 
     assert_receive [
       :ask,
       ^test_channel,
-      ^respondent,
+      respondent,
       ^token,
       ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO")
     ]
+    assert respondent.id == respondent_id
 
     assert {:ok, ^session, %Reply{}, 5} = Session.timeout(session)
   end
@@ -471,18 +479,20 @@ defmodule Ask.Runtime.SessionTest do
     test_channel = TestChannel.new(true)
     channel = build(:channel, settings: test_channel |> TestChannel.settings())
 
-    assert {:ok, session = %Session{token: token, respondent: respondent}, _, 120} =
+    assert {:ok, session = %Session{token: token, respondent: %{id: respondent_id}}, _, 120} =
              Session.start(quiz, respondent, channel, "sms", Schedule.always())
 
-    assert_receive [:setup, ^test_channel, ^respondent, ^token]
+    assert_receive [:setup, ^test_channel, respondent, ^token]
+    assert respondent.id == respondent_id
 
     assert_receive [
       :ask,
       ^test_channel,
-      ^respondent,
+      respondent,
       ^token,
       ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO")
     ]
+    assert respondent.id == respondent_id
 
     assert {:ok, ^session, %Reply{}, 120} = Session.timeout(session)
   end
@@ -1133,7 +1143,7 @@ defmodule Ask.Runtime.SessionTest do
 
     fallback_retries = [5]
 
-    {:ok, session = %Session{token: token, respondent: respondent}, _, 120} =
+    {:ok, session = %Session{token: token, respondent: %{id: respondent_id}}, _, 120} =
       Session.start(
         quiz,
         respondent,
@@ -1146,15 +1156,17 @@ defmodule Ask.Runtime.SessionTest do
         fallback_retries
       )
 
-    assert_receive [:setup, ^test_channel, ^respondent, ^token]
+    assert_receive [:setup, ^test_channel, respondent, ^token]
+    assert respondent.id == respondent_id
 
     assert_receive [
       :ask,
       ^test_channel,
-      ^respondent,
+      respondent,
       ^token,
       ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO")
     ]
+    assert respondent.id == respondent_id
 
     assert {:ok, ^session, %Reply{}, 120} = Session.timeout(session)
   end
@@ -1343,26 +1355,28 @@ defmodule Ask.Runtime.SessionTest do
 
     respondent = Respondent |> Repo.get(respondent.id)
 
-    {:ok, session = %Session{token: token, respondent: respondent}, _, _} =
+    {:ok, session = %Session{token: token, respondent: %{id: respondent_id}}, _, _} =
       Session.start(quiz, respondent, channel, "sms", Schedule.always())
 
-    assert_receive [:setup, ^test_channel, ^respondent, ^token]
+    assert_receive [:setup, ^test_channel, respondent, ^token]
+    assert respondent.id == respondent_id
 
     {:ok, session, _, _} = Session.sync_step(session, Flow.Message.reply("N"))
 
     assert_receive [
       :ask,
       ^test_channel,
-      ^respondent,
+      respondent,
       ^token,
       ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO")
     ]
+    assert respondent.id == respondent_id
 
     assert {:rejected, %{steps: [%{prompts: ["Quota completed"]}]}, _} =
              Session.sync_step(session, Flow.Message.reply("N"))
 
     # The session won't update the respondent, the broker will
-    respondent = Respondent |> Repo.get(respondent.id)
+    respondent = Respondent |> Repo.get(respondent_id)
     assert respondent.state == :pending
     assert respondent.disposition == :registered
     assert 1 == respondent.stats |> Stats.attempts(:sms)
