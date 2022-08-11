@@ -44,6 +44,24 @@ defmodule Ask.Config do
     System.get_env("DEFAULT_CHANNEL_CAPACITY") || 100
   end
 
+  def channel_broker_config do
+    %{
+      shut_down_minutes: env_to_int("SHUT_DOWN_MINUTES", 30),
+      to_db_operations: env_to_int("CHNL_BKR_TO_DB_OPERATIONS", 100),
+      gc_interval_minutes: env_to_int("CHNL_BKR_GC_INTERVAL_MINUTES", 10),
+      gc_outdate_hours: env_to_int("CHNL_BKR_GC_OUTDATE_HOURS", 24)
+    }
+  end
+
+  defp env_to_int(name, default) do
+    env = System.get_env(name)
+    if (env == nil) do
+      default
+    else
+      String.to_integer(env)
+    end
+  end
+
   defp read_config(module_name, env_var_name) do
     config =
       read_config_env_var(env_var_name) ||

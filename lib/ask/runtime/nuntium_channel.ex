@@ -1,7 +1,7 @@
 defmodule Ask.Runtime.NuntiumChannel do
   @behaviour Ask.Runtime.ChannelProvider
   use Ask.Model
-  alias Ask.Runtime.{Survey, NuntiumChannel, Flow, Reply, ReplyStep, ChannelBrokerSupervisor}
+  alias Ask.Runtime.{Survey, NuntiumChannel, Flow, Reply, ReplyStep, ChannelBroker}
   alias Ask.{Repo, Respondent, Channel, Stats, SurvedaMetrics}
   import Ecto.Query
   import Plug.Conn
@@ -58,6 +58,15 @@ defmodule Ask.Runtime.NuntiumChannel do
     client.token
   end
 
+  defp respondent_channel(respondent) do
+    try do
+      session = respondent.session |> Ask.Runtime.Session.load()
+      session.current_mode.channel
+    rescue
+      _ -> nil
+    end
+  end
+
   def callback(conn, params) do
     callback(conn, params, Survey)
   end
@@ -74,6 +83,24 @@ defmodule Ask.Runtime.NuntiumChannel do
           :ok
 
         respondent ->
+          channel = respondent_channel(respondent)
+
+          case channel do
+            nil ->
+              # Something needs to be done in case the respondant 
+              # has no session anymore to recover the proper channel
+              IO.puts(" I've received a Nuntium Callback but I have no channel ")
+
+            _ ->
+              # Should check the status value? 
+              ChannelBroker.callback_recieved(
+                channel.id,
+                respondent,
+                state,
+                "nuntium"
+              )
+          end
+
           case state do
             "failed" ->
               survey.channel_failed(respondent)
@@ -200,14 +227,10 @@ defmodule Ask.Runtime.NuntiumChannel do
   end
 
   def create_channel(user, base_url, api_channel) do
-    channel = user
+    user
     |> Ecto.build_assoc(:channels)
     |> channel_changeset(base_url, api_channel)
     |> Repo.insert!()
-
-    {:ok, _pid} = ChannelBrokerSupervisor.start_child(channel.id)
-
-    channel
   end
 
   defp channel_changeset(channel, base_url, api_channel) do
@@ -269,7 +292,7 @@ defmodule Ask.Runtime.NuntiumChannel do
       exists = channels |> Enum.any?(&same_channel?(&1, account, nuntium_channel))
 
       if !exists do
-        {:ok, %Channel{id: channel_id}} = user
+        user
         |> Ecto.build_assoc(:channels)
         |> Channel.changeset(%{
           name: "#{nuntium_channel["name"]} - #{account}",
@@ -282,8 +305,6 @@ defmodule Ask.Runtime.NuntiumChannel do
           }
         })
         |> Repo.insert()
-
-        {:ok, _pid} = ChannelBrokerSupervisor.start_child(channel_id)
       end
     end)
 
@@ -373,8 +394,6 @@ defmodule Ask.Runtime.NuntiumChannel do
             session_token: token
           })
         end)
-
-      respondent = NuntiumChannel.update_stats(respondent)
 
       Nuntium.Client.new(channel.base_url, channel.oauth_token)
       |> Nuntium.Client.send_ao(channel.settings["nuntium_account"], messages)

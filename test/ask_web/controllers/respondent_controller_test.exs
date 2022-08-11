@@ -17,7 +17,12 @@ defmodule AskWeb.RespondentControllerTest do
     TestChannel
   }
 
-  alias Ask.Runtime.ChannelStatusServer
+  alias Ask.Runtime.{ChannelStatusServer, ChannelBrokerAgent, ChannelBrokerAgent}
+
+  setup do
+    ChannelBrokerAgent.start_link()
+    :ok
+  end
 
   @empty_stats %{
     "attempts" => nil,
@@ -2172,7 +2177,6 @@ defmodule AskWeb.RespondentControllerTest do
       survey: survey,
       expected_field_index_on_index: expected_field_index_on_index
     } do
-
       # No answers
       %{
         fields: fields,
@@ -3850,7 +3854,7 @@ defmodule AskWeb.RespondentControllerTest do
 
       respondent_1 = insert(:respondent, survey: survey, hashed_number: "1234")
       respondent_2 = insert(:respondent, survey: survey, hashed_number: "5678")
-      channel = insert_channel(name: "test_channel")
+      channel = insert(:channel, name: "test_channel")
 
       for _ <- 1..200 do
         insert(:survey_log_entry,
@@ -4330,7 +4334,7 @@ defmodule AskWeb.RespondentControllerTest do
 
       respondent_1 = insert(:respondent, survey: survey, hashed_number: "1234")
       respondent_2 = insert(:respondent, survey: survey, hashed_number: "5678")
-      channel = insert_channel(name: "test_channel")
+      channel = insert(:channel, name: "test_channel")
 
       for _ <- 1..200 do
         insert(:survey_log_entry,
@@ -4652,7 +4656,7 @@ defmodule AskWeb.RespondentControllerTest do
       })
 
     channel =
-      insert_channel(
+      insert(:channel,
         settings: TestChannel.new() |> TestChannel.settings(),
         type: mode
       )

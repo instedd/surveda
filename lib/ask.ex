@@ -18,7 +18,7 @@ defmodule Ask do
       supervisor(AskWeb.Endpoint, []),
       supervisor(Ask.MetricsEndpoint, []),
       supervisor(Registry, [:unique, :channel_broker_registry]),
-      supervisor(Ask.Runtime.ChannelBrokerStarter, []),
+      supervisor(Ask.Runtime.ChannelBrokerSupervisor, []),
       supervisor(Ask.Runtime.SurveyCancellerSupervisor, []),
       {Mutex, name: Ask.Mutex}
       # Start your own worker by calling: Ask.Worker.start_link(arg1, arg2, arg3)
@@ -34,6 +34,7 @@ defmodule Ask do
           worker(Ask.FloipPusher, []),
           worker(Ask.JsonSchema, []),
           worker(Ask.Runtime.ChannelStatusServer, []),
+          worker(Ask.Runtime.ChannelBrokerAgent, []),
           worker(Ask.Config, []),
           worker(Ask.Runtime.QuestionnaireSimulatorStore, [])
           | children

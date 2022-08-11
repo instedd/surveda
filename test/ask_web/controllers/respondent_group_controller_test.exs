@@ -39,7 +39,7 @@ defmodule AskWeb.RespondentGroupControllerTest do
       group =
         insert(:respondent_group, survey: survey, sample: ["12345", "23456"], respondents_count: 3)
 
-      channel = insert_channel(name: "test")
+      channel = insert(:channel, name: "test")
       add_channel_to(group, channel)
 
       sample = group.sample |> Enum.map(&Respondent.mask_phone_number/1)
@@ -406,7 +406,7 @@ defmodule AskWeb.RespondentGroupControllerTest do
         )
 
       group = insert(:respondent_group, survey: survey, respondents_count: 1)
-      channel = insert_channel(name: "test")
+      channel = insert(:channel, name: "test")
 
       attrs = %{channels: [%{id: channel.id, mode: channel.type}]}
 
@@ -453,7 +453,7 @@ defmodule AskWeb.RespondentGroupControllerTest do
         )
 
       group = insert(:respondent_group, survey: survey, respondents_count: 1)
-      channel = insert_channel(name: "test")
+      channel = insert(:channel, name: "test")
 
       attrs = %{channels: [%{id: channel.id, mode: channel.type}]}
 
@@ -490,7 +490,7 @@ defmodule AskWeb.RespondentGroupControllerTest do
         )
 
       group = insert(:respondent_group, survey: survey, respondents_count: 1)
-      channel = insert_channel(name: "test")
+      channel = insert(:channel, name: "test")
 
       attrs = %{channels: [%{id: channel.id, mode: channel.type}]}
 
@@ -699,7 +699,7 @@ defmodule AskWeb.RespondentGroupControllerTest do
 
       group = insert(:respondent_group, survey: survey, respondents_count: 1)
 
-      channel = insert_channel(name: "test")
+      channel = insert(:channel, name: "test")
       add_channel_to(group, channel)
 
       insert(:respondent, phone_number: "12345678", survey: survey, respondent_group: group)

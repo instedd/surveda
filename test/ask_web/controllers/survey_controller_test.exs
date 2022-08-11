@@ -19,13 +19,14 @@ defmodule AskWeb.SurveyControllerTest do
     ActivityLog
   }
 
-  alias Ask.Runtime.{Flow, Session, ChannelStatusServer}
+  alias Ask.Runtime.{Flow, Session, ChannelStatusServer, ChannelBrokerAgent}
   alias Ask.Runtime.SessionModeProvider
 
   @valid_attrs %{name: "some content", description: "initial survey"}
   @invalid_attrs %{cutoff: -1}
 
   setup %{conn: conn} do
+    ChannelBrokerAgent.start_link()
     user = insert(:user)
 
     conn =
@@ -1927,7 +1928,7 @@ defmodule AskWeb.SurveyControllerTest do
     test "delete survey and all contents", %{conn: conn, user: user} do
       project = create_project_for_user(user)
       survey = insert(:survey, project: project)
-      channel = insert_channel(user: user)
+      channel = insert(:channel, user: user)
       group = create_group(survey, channel)
       respondent = add_respondent_to(group)
       response = insert(:response, respondent: respondent)
@@ -2047,7 +2048,7 @@ defmodule AskWeb.SurveyControllerTest do
         )
 
       group = create_group(survey)
-      channel2 = insert_channel(user: user, type: "ivr")
+      channel2 = insert(:channel, user: user, type: "ivr")
       add_channel_to(group, channel)
       add_channel_to(group, channel2)
 
@@ -2502,7 +2503,7 @@ defmodule AskWeb.SurveyControllerTest do
     project = create_project_for_user(user)
     survey = insert(:survey, project: project, state: :ready)
     test_channel = TestChannel.new()
-    channel = insert_channel(settings: test_channel |> TestChannel.settings(), type: "sms")
+    channel = insert(:channel, settings: test_channel |> TestChannel.settings(), type: "sms")
     create_group(survey, channel)
 
     conn = post(conn, project_survey_survey_path(conn, :launch, survey.project, survey))
@@ -2566,16 +2567,14 @@ defmodule AskWeb.SurveyControllerTest do
       questionnaire = insert(:questionnaire, name: "test", project: project)
       survey = insert(:survey, project: project, state: :running)
       test_channel = TestChannel.new(false)
-      channel = insert_channel(settings: test_channel |> TestChannel.settings(), type: "sms")
+      channel = insert(:channel, settings: test_channel |> TestChannel.settings(), type: "sms")
       group = create_group(survey, channel)
       insert_list(10, :respondent, survey: survey, state: "pending")
       r1 = insert(:respondent, survey: survey, state: "active", respondent_group: group)
       insert_list(3, :respondent, survey: survey, state: "active", timeout_at: Timex.now())
-      channel_state = %{"call_id" => 123}
 
       session = %Session{
         current_mode: SessionModeProvider.new("sms", channel, []),
-        channel_state: channel_state,
         respondent: r1,
         flow: %Flow{questionnaire: questionnaire},
         schedule: survey.schedule
@@ -2598,7 +2597,7 @@ defmodule AskWeb.SurveyControllerTest do
                )
              ) == 4
 
-      assert_receive [:cancel_message, ^test_channel, ^channel_state]
+      assert_receive [:cancel_message, ^test_channel, %{}]
     end
 
     test "stops respondents only for the stopped survey", %{conn: conn, user: user} do
@@ -2607,7 +2606,7 @@ defmodule AskWeb.SurveyControllerTest do
       survey = insert(:survey, project: project, state: :running)
       survey2 = insert(:survey, project: project, state: :running)
       test_channel = TestChannel.new(false)
-      channel = insert_channel(settings: test_channel |> TestChannel.settings(), type: "sms")
+      channel = insert(:channel, settings: test_channel |> TestChannel.settings(), type: "sms")
       group = create_group(survey, channel)
       r1 = insert(:respondent, survey: survey, state: "active", respondent_group: group)
 
@@ -2620,11 +2619,9 @@ defmodule AskWeb.SurveyControllerTest do
 
       insert_list(4, :respondent, survey: survey2, state: "active", session: %{})
       insert_list(2, :respondent, survey: survey2, state: "active", timeout_at: Timex.now())
-      channel_state = %{"call_id" => 123}
 
       session = %Session{
         current_mode: SessionModeProvider.new("sms", channel, []),
-        channel_state: channel_state,
         respondent: r1,
         flow: %Flow{questionnaire: questionnaire},
         schedule: survey.schedule
@@ -2639,7 +2636,7 @@ defmodule AskWeb.SurveyControllerTest do
       assert json_response(conn, 200)
       assert Repo.get(Survey, survey2.id).state == :running
       assert length(Repo.all(from(r in Ask.Respondent, where: r.state == :active))) == 6
-      assert_receive [:cancel_message, ^test_channel, ^channel_state]
+      assert_receive [:cancel_message, ^test_channel, %{}]
     end
 
     test "stopping completed survey still works (#736)", %{conn: conn, user: user} do
@@ -3100,7 +3097,7 @@ defmodule AskWeb.SurveyControllerTest do
   def prepare_for_state_update(user) do
     project = create_project_for_user(user)
     questionnaire = insert(:questionnaire, name: "test", project: project)
-    channel = insert_channel(name: "test")
+    channel = insert(:channel, name: "test")
     [project, questionnaire, channel]
   end
 

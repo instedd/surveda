@@ -13,7 +13,8 @@ defmodule Ask.Runtime.VerboiceChannelTest do
     SurveyLogger,
     SurveyBroker,
     ChannelStatusServer,
-    SurveyStub
+    SurveyStub,
+    ChannelBrokerAgent
   }
 
   require Ask.Runtime.ReplyHelper
@@ -26,7 +27,8 @@ defmodule Ask.Runtime.VerboiceChannelTest do
 
   setup %{conn: conn} do
     GenServer.start_link(SurveyStub, [], name: SurveyStub.server_ref())
-    ChannelStatusServer.start_link()
+    {:ok, _} = ChannelStatusServer.start_link()
+    {:ok, _} = ChannelBrokerAgent.start_link()
     Ask.Config.start_link()
 
     respondent =
@@ -238,7 +240,7 @@ defmodule Ask.Runtime.VerboiceChannelTest do
       user = insert(:user)
 
       channel =
-        insert_channel(
+        insert(:channel,
           user: user,
           provider: "verboice",
           base_url: "http://test.com",
@@ -254,7 +256,7 @@ defmodule Ask.Runtime.VerboiceChannelTest do
       user = insert(:user)
 
       channel =
-        insert_channel(user: user, provider: "other", base_url: "http://test.com", name: "foo")
+        insert(:channel, user: user, provider: "other", base_url: "http://test.com", name: "foo")
 
       VerboiceChannel.sync_channels(user.id, "http://test.com", [])
       assert Ask.Channel |> Repo.get(channel.id)
@@ -265,7 +267,7 @@ defmodule Ask.Runtime.VerboiceChannelTest do
       user_id = user.id
 
       channel =
-        insert_channel(
+        insert(:channel,
           user: user,
           provider: "verboice",
           base_url: "http://test.com",
@@ -295,7 +297,7 @@ defmodule Ask.Runtime.VerboiceChannelTest do
       user_id = user.id
 
       channel =
-        insert_channel(
+        insert(:channel,
           user: user,
           provider: "verboice",
           type: "ivr",
@@ -326,7 +328,7 @@ defmodule Ask.Runtime.VerboiceChannelTest do
       user_id = user.id
 
       channel =
-        insert_channel(
+        insert(:channel,
           user: user,
           provider: "verboice",
           type: "ivr",
@@ -390,7 +392,7 @@ defmodule Ask.Runtime.VerboiceChannelTest do
       test_channel = Ask.TestChannel.new(false, false)
 
       channel =
-        insert_channel(settings: test_channel |> Ask.TestChannel.settings(), type: "ivr")
+        insert(:channel, settings: test_channel |> Ask.TestChannel.settings(), type: "ivr")
 
       quiz = insert(:questionnaire, steps: @dummy_steps)
 
@@ -464,7 +466,7 @@ defmodule Ask.Runtime.VerboiceChannelTest do
       test_channel = Ask.TestChannel.new(false, false)
 
       channel =
-        insert_channel(settings: test_channel |> Ask.TestChannel.settings(), type: "ivr")
+        insert(:channel, settings: test_channel |> Ask.TestChannel.settings(), type: "ivr")
 
       quiz = insert(:questionnaire, steps: @dummy_steps)
 
@@ -515,7 +517,7 @@ defmodule Ask.Runtime.VerboiceChannelTest do
       test_channel = Ask.TestChannel.new(false, false)
 
       channel =
-        insert_channel(settings: test_channel |> Ask.TestChannel.settings(), type: "ivr")
+        insert(:channel, settings: test_channel |> Ask.TestChannel.settings(), type: "ivr")
 
       quiz = insert(:questionnaire, steps: @dummy_steps)
 
@@ -566,7 +568,7 @@ defmodule Ask.Runtime.VerboiceChannelTest do
       test_channel = Ask.TestChannel.new(false, false)
 
       channel =
-        insert_channel(settings: test_channel |> Ask.TestChannel.settings(), type: "ivr")
+        insert(:channel, settings: test_channel |> Ask.TestChannel.settings(), type: "ivr")
 
       quiz = insert(:questionnaire, steps: @dummy_steps)
 
@@ -616,7 +618,7 @@ defmodule Ask.Runtime.VerboiceChannelTest do
       test_channel = Ask.TestChannel.new(false, false)
 
       channel =
-        insert_channel(settings: test_channel |> Ask.TestChannel.settings(), type: "ivr")
+        insert(:channel, settings: test_channel |> Ask.TestChannel.settings(), type: "ivr")
 
       quiz = insert(:questionnaire, steps: @dummy_steps)
 
@@ -668,7 +670,7 @@ defmodule Ask.Runtime.VerboiceChannelTest do
       test_channel = Ask.TestChannel.new(false, false)
 
       channel =
-        insert_channel(settings: test_channel |> Ask.TestChannel.settings(), type: "ivr")
+        insert(:channel, settings: test_channel |> Ask.TestChannel.settings(), type: "ivr")
 
       quiz = insert(:questionnaire, steps: @dummy_steps)
 
@@ -720,7 +722,7 @@ defmodule Ask.Runtime.VerboiceChannelTest do
       test_channel = Ask.TestChannel.new(false, false)
 
       channel =
-        insert_channel(settings: test_channel |> Ask.TestChannel.settings(), type: "ivr")
+        insert(:channel, settings: test_channel |> Ask.TestChannel.settings(), type: "ivr")
 
       quiz = insert(:questionnaire, steps: @dummy_steps)
 
@@ -825,7 +827,7 @@ defmodule Ask.Runtime.VerboiceChannelTest do
       test_channel = Ask.TestChannel.new(false, false)
 
       channel =
-        insert_channel(settings: test_channel |> Ask.TestChannel.settings(), type: "ivr")
+        insert(:channel, settings: test_channel |> Ask.TestChannel.settings(), type: "ivr")
 
       quiz = insert(:questionnaire, steps: @dummy_steps)
 

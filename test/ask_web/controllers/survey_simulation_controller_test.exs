@@ -5,9 +5,11 @@ defmodule AskWeb.SurveySimulationControllerTest do
   use Ask.MockTime
 
   alias Ask.Respondent
-  alias Ask.Runtime.{Session, ChannelStatusServer}
+  alias Ask.Runtime.{Session, ChannelStatusServer, ChannelBrokerAgent}
 
   setup %{conn: conn} do
+    {:ok, _} = ChannelBrokerAgent.start_link()
+
     user = insert(:user)
 
     conn =
@@ -29,7 +31,7 @@ defmodule AskWeb.SurveySimulationControllerTest do
       test_channel = Ask.TestChannel.new(false, mode == "sms")
 
       channel =
-        insert_channel(settings: test_channel |> Ask.TestChannel.settings(), type: channel_type)
+        insert(:channel, settings: test_channel |> Ask.TestChannel.settings(), type: channel_type)
 
       {test_channel, channel}
     end
