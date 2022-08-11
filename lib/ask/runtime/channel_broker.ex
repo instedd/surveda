@@ -5,7 +5,7 @@ defmodule Ask.Runtime.ChannelBroker do
   alias Ask.Repo
   use GenServer
 
-  # Channels without channel_id (for testing) share a single process (channel_id: 0)
+  # Channels without channel_id (used in some unit tests) share a single process (channel_id: 0)
 
   def start_link(channel_id, channel_type, settings) do
     name = via_tuple(channel_id)
@@ -301,11 +301,6 @@ defmodule Ask.Runtime.ChannelBroker do
 
     new_state = Map.put(state, :active_contacts, new_active_contacts)
     new_state
-  end
-
-  # Don't save for unit tests
-  def save_to_agent(%{channel_id: 0} = state) do
-    state
   end
 
   def save_to_agent(
