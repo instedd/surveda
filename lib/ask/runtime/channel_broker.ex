@@ -665,7 +665,8 @@ defmodule Ask.Runtime.ChannelBroker do
   end
 
   @impl true
-  def handle_info(:timeout, channel_id) do
+  def handle_info(:timeout, %{channel_id: channel_id} = state) do
+    ChannelBrokerAgent.save_channel_state(channel_id, state, true)
     ChannelBrokerSupervisor.terminate_child(channel_id)
   end
 
