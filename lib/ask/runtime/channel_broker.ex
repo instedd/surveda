@@ -84,10 +84,10 @@ defmodule Ask.Runtime.ChannelBroker do
     check_status(0, respondent, respondent_state, provider)
   end
 
-  def callback_recieved(channel_id, respondent, respondent_state, provider) do
+  def callback_received(channel_id, respondent, respondent_state, provider) do
     call_gen_server(
       channel_id,
-      {:callback_recieved, respondent, respondent_state, provider}
+      {:callback_received, respondent, respondent_state, provider}
     )
   end
 
@@ -617,7 +617,7 @@ defmodule Ask.Runtime.ChannelBroker do
 
   @impl true
   def handle_call(
-        {:callback_recieved, respondent, respondent_state, provider},
+        {:callback_received, respondent, respondent_state, provider},
         _from,
         %{config: config} = state
       ) do

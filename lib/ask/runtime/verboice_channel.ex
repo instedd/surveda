@@ -316,7 +316,7 @@ defmodule Ask.Runtime.VerboiceChannel do
           respondent = update_call_time_seconds(respondent, call_sid, call_duration)
           channel = respondent_channel(respondent)
           # The respondent has a current_mode, then provider should not be necessary
-          ChannelBroker.callback_recieved(
+          ChannelBroker.callback_received(
             channel.id,
             respondent,
             status,

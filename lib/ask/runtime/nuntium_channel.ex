@@ -87,13 +87,13 @@ defmodule Ask.Runtime.NuntiumChannel do
 
           case channel do
             nil ->
-              # Something needs to be done in case the respondant 
+              # Something needs to be done in case the respondant
               # has no session anymore to recover the proper channel
               IO.puts(" I've received a Nuntium Callback but I have no channel ")
 
             _ ->
-              # Should check the status value? 
-              ChannelBroker.callback_recieved(
+              # Should check the status value?
+              ChannelBroker.callback_received(
                 channel.id,
                 respondent,
                 state,
