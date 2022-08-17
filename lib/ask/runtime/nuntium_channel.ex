@@ -93,7 +93,7 @@ defmodule Ask.Runtime.NuntiumChannel do
                 # Tackled by the channel broker garbage collector.
               nil
             _ ->
-              # Should check the status value?
+              # Should check the state value?
               ChannelBroker.callback_received(
                 channel.id,
                 respondent,
