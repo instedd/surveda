@@ -87,10 +87,11 @@ defmodule Ask.Runtime.NuntiumChannel do
 
           case channel do
             nil ->
-              # Something needs to be done in case the respondant
-              # has no session anymore to recover the proper channel
-              IO.puts(" I've received a Nuntium Callback but I have no channel ")
-
+              # A contact ended, but the channel is missing.
+                # The corresponding ChannelBroker process can't be reached.
+                # This situation occurs when the respondent.session is lost.
+                # Tackled by the channel broker garbage collector.
+              nil
             _ ->
               # Should check the status value?
               ChannelBroker.callback_received(
