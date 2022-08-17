@@ -170,12 +170,30 @@ defmodule Ask.Runtime.ChannelBroker do
     collect_garbage(channel_type, gc_interval)
     {
       :ok,
+      # The internal logic of the ChannelBroker relies on a state with the following shape:
       %{
+        # Each ChannelBroker process manage the load of a single channel.
         channel_id: channel_id,
+        # The maximum parallel contacts this channel shouldn't exceded.
         capacity: Map.get(settings, "capacity", Config.default_channel_capacity()),
+        # A dictionary of active contacts with the following shape:
+        #   %{respondent_id: active_contact}
+        #     active_contact is a Map with the following keys:
+        #      - contacts: quantity of contactas being currently managed by the channel
+        #      - last_contact: timestamp of the last contact made
+        #      - verboice_call_id: an external id provided by Verboice to allow following up the
+        #         requested call.
         active_contacts: Map.new(),
+        # A priority queue implemented using pqueue (https://github.com/okeuday/pqueue/).
+        #   When a contact is queued, the received params are stored to be used when the time
+        #     to make the contact comes.
+        #   Each element has one of the following shape:
+        #    - Verboice: {respondent, token, not_before, not_after, channel}
+        #    - Nuntium: {respondent, token, reply, channel}
         contacts_queue: :pqueue.new(),
+        # See Config.channel_broker_config() comments
         config: config,
+        # Counter of how many internal operations left until this state will be saved to the DB
         op_count: op_count
       },
       timeout_from_config(config)
