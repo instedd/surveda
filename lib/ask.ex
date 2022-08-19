@@ -34,7 +34,6 @@ defmodule Ask do
           worker(Ask.FloipPusher, []),
           worker(Ask.JsonSchema, []),
           worker(Ask.Runtime.ChannelStatusServer, []),
-          worker(Ask.Runtime.ChannelBrokerAgent, []),
           worker(Ask.Config, []),
           worker(Ask.Runtime.QuestionnaireSimulatorStore, [])
           | children

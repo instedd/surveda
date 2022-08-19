@@ -19,14 +19,13 @@ defmodule AskWeb.SurveyControllerTest do
     ActivityLog
   }
 
-  alias Ask.Runtime.{Flow, Session, ChannelStatusServer, ChannelBrokerAgent}
+  alias Ask.Runtime.{Flow, Session, ChannelStatusServer}
   alias Ask.Runtime.SessionModeProvider
 
   @valid_attrs %{name: "some content", description: "initial survey"}
   @invalid_attrs %{cutoff: -1}
 
   setup %{conn: conn} do
-    ChannelBrokerAgent.start_link()
     user = insert(:user)
 
     conn =

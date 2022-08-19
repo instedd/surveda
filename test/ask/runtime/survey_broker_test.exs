@@ -5,7 +5,7 @@ defmodule Ask.Runtime.SurveyBrokerTest do
   use Ask.MockTime
   use Ask.TestHelpers
 
-  alias Ask.Runtime.{SurveyBroker, ReplyHelper, ChannelStatusServer, SurveyLogger, Flow, ChannelBrokerAgent}
+  alias Ask.Runtime.{SurveyBroker, ReplyHelper, ChannelStatusServer, SurveyLogger, Flow}
 
   alias Ask.{
     Repo,
@@ -22,7 +22,6 @@ defmodule Ask.Runtime.SurveyBrokerTest do
   require Ask.Runtime.ReplyHelper
 
   setup do
-    {:ok, _} = ChannelBrokerAgent.start_link()
     {:ok, channel_status_server} = ChannelStatusServer.start_link()
     {:ok, channel_status_server: channel_status_server}
   end

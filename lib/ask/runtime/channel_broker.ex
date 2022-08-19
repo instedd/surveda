@@ -1,5 +1,5 @@
 defmodule Ask.Runtime.ChannelBroker do
-  alias Ask.Runtime.{Channel, ChannelBrokerAgent, ChannelBrokerSupervisor, NuntiumChannel}
+  alias Ask.Runtime.{Channel, ChannelBrokerRecovery, ChannelBrokerSupervisor, NuntiumChannel}
   alias Ask.Config
   import Ecto.Query
   alias Ask.Repo
@@ -103,7 +103,8 @@ defmodule Ask.Runtime.ChannelBroker do
 
       [] ->
         {channel_type, settings} = set_channel(channel_id)
-        {:ok, pid} = ChannelBrokerSupervisor.start_child(channel_id, channel_type, settings)
+        IO.puts "-----------------------------------HERE!!!!!!!!!!!!!!!!!!"
+        {:ok, pid} = ChannelBrokerSupervisor.start_child(channel_id, channel_type, settings) |> IO.inspect(label: "---------PID")
         pid
     end
   end
@@ -321,27 +322,6 @@ defmodule Ask.Runtime.ChannelBroker do
     new_state
   end
 
-  def save_to_agent(
-        %{
-          channel_id: channel_id,
-          op_count: op_count,
-          config: %{to_db_operations: to_db_operations}
-        } = state
-      ) do
-    new_op_count =
-      if op_count <= 1 do
-        # If counter reached, persist
-        ChannelBrokerAgent.save_channel_state(channel_id, state, true)
-        to_db_operations
-      else
-        # else, just save in memory
-        ChannelBrokerAgent.save_channel_state(channel_id, state, false)
-        op_count - 1
-      end
-
-    Map.put(state, :op_count, new_op_count)
-  end
-
   def queue_contact(
         %{
           contacts_queue: contacts_queue
@@ -352,7 +332,7 @@ defmodule Ask.Runtime.ChannelBroker do
     priority = if elem(contact, 0).disposition == :queued, do: 2, else: 1
     new_contacts_queue = :pqueue.in([size, contact], priority, contacts_queue)
     new_state = Map.put(state, :contacts_queue, new_contacts_queue)
-    new_state = save_to_agent(new_state)
+    new_state = ChannelBrokerRecovery.save(new_state)
 
     new_state
   end
@@ -387,7 +367,7 @@ defmodule Ask.Runtime.ChannelBroker do
       )
 
     state = Map.put(state, :active_contacts, new_active_contacts)
-    state = save_to_agent(state)
+    state = ChannelBrokerRecovery.save(state)
 
     {state, unqueued_item}
   end
@@ -483,7 +463,7 @@ defmodule Ask.Runtime.ChannelBroker do
       end
 
     new_state = Map.put(state, :active_contacts, new_active_contacts)
-    new_state = save_to_agent(new_state)
+    new_state = ChannelBrokerRecovery.save(new_state)
     new_state
   end
 
@@ -684,7 +664,7 @@ defmodule Ask.Runtime.ChannelBroker do
 
   @impl true
   def handle_info(:timeout, %{channel_id: channel_id} = state) do
-    ChannelBrokerAgent.save_channel_state(channel_id, state, true)
+    ChannelBrokerRecovery.save(state)
     ChannelBrokerSupervisor.terminate_child(channel_id)
   end
 

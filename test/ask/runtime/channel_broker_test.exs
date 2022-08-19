@@ -1,12 +1,11 @@
 defmodule Ask.Runtime.ChannelBrokerTest do
   use AskWeb.ConnCase
   use Ask.TestHelpers
-  alias Ask.Runtime.{ChannelStatusServer, ChannelBroker, ChannelBrokerAgent, VerboiceChannel, NuntiumChannel}
+  alias Ask.Runtime.{ChannelStatusServer, ChannelBroker, VerboiceChannel, NuntiumChannel}
   alias Ask.Config
 
   setup %{conn: conn} do
     {:ok, _} = ChannelStatusServer.start_link()
-    {:ok, _} = ChannelBrokerAgent.start_link()
     {:ok, conn: conn}
   end
 
