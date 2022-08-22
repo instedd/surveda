@@ -93,13 +93,14 @@ defmodule Ask.Runtime.NuntiumChannel do
                 # Tackled by the channel broker garbage collector.
               nil
             _ ->
-              # Should check the state value?
-              ChannelBroker.callback_received(
-                channel.id,
-                respondent,
-                state,
-                "nuntium"
-              )
+              if (state in ["failed", "delivered"]) do
+                ChannelBroker.callback_received(
+                  channel.id,
+                  respondent,
+                  state,
+                  "nuntium"
+                )
+              end
           end
 
           case state do
