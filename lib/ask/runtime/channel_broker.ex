@@ -112,7 +112,7 @@ defmodule Ask.Runtime.ChannelBroker do
 
   defp set_channel(channel_id) do
     query = from c in "channels", where: c.id == ^channel_id, select: [c.type, c.settings]
-    [channel_type, settings] = Repo.one(query)
+    [channel_type, settings] = Repo.one!(query)
     settings = if settings do
       Poison.decode!(settings)
     else
