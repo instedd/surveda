@@ -59,9 +59,7 @@ defmodule Ask.Mixfile do
       # {:plug, "~> 1.8"},        # held until ... ?
       # {:plug_crypto, "~> 1.1.1"}, # held until Phoenix 1.5
       {:plug_cowboy, "~> 2.0"},
-      {:phoenix_ecto, "~> 4.0"},
-      {:ecto_sql, "~> 3.7"},
-      {:myxql, ">= 0.0.0"},
+      {:phoenix_ecto, "~> 3.0"},
       {:phoenix_pubsub, "~> 1.0"},
       {:phoenix_html, "~> 2.10"},
       {:phoenix_live_reload, "~> 1.2.0", only: :dev},
