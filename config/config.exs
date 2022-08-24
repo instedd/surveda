@@ -19,7 +19,7 @@ config :ask,
   ecto_repos: [Ask.Repo]
 
 if System.get_env("DISABLE_REPO_TIMEOUT") == "true" do
-  config :ask, Ask.Repo, timeout: :infinity
+  config :ask, Ask.Repo, timeout: :infinity, pool_timeout: :infinity
 end
 
 # Configures the endpoint
