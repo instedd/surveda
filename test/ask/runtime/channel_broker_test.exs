@@ -2,7 +2,7 @@ defmodule Ask.Runtime.ChannelBrokerTest do
   use AskWeb.ConnCase
   use Ask.TestHelpers
   alias Ask.Runtime.{ChannelStatusServer, ChannelBroker, ChannelBrokerAgent, VerboiceChannel, NuntiumChannel}
-  alias Ask.Config
+  alias Ask.{Config, Channel}
 
   setup %{conn: conn} do
     {:ok, _} = ChannelStatusServer.start_link()
@@ -144,6 +144,24 @@ defmodule Ask.Runtime.ChannelBrokerTest do
       new_state = ChannelBroker.remove_from_queue(state, 6)
 
       assert new_state == state
+    end
+  end
+
+  describe "on_channel_settings_change" do
+    test "capacity is updated" do
+      # Arrange
+      first_capacity = 4
+      [test_channel, respondents] = initialize_survey("sms", first_capacity)
+      channel = Repo.one(Channel)
+      updated_capacity = 6
+      new_settings = Map.put(channel.settings, "capacity", updated_capacity)
+
+      # Act
+      ChannelBroker.on_channel_settings_change(channel.id, new_settings)
+      broker_poll()
+
+      # Assert
+      assert_sent_smss(Enum.take(respondents, updated_capacity), test_channel)
     end
   end
 

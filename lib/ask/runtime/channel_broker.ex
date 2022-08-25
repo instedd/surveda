@@ -84,6 +84,13 @@ defmodule Ask.Runtime.ChannelBroker do
     check_status(0, respondent, respondent_state, provider)
   end
 
+  def on_channel_settings_change(channel_id, settings) do
+    call_gen_server(
+      channel_id,
+      {:on_channel_settings_change, settings}
+    )
+  end
+
   def callback_received(channel_id, respondent, respondent_state, provider) do
     call_gen_server(
       channel_id,
@@ -681,6 +688,18 @@ defmodule Ask.Runtime.ChannelBroker do
 
     {:reply, :ok, end_state, timeout_from_config(config)}
   end
+
+  @impl true
+  def handle_call(
+        {:on_channel_settings_change, settings},
+        _from,
+        %{config: config} = state
+      ) do
+    new_capacity = Map.get(settings, "capacity", Config.default_channel_capacity())
+    new_state = Map.put(state, :capacity, new_capacity)
+    {:reply, :ok, new_state, timeout_from_config(config)}
+  end
+
 
   @impl true
   def handle_info(:timeout, %{channel_id: channel_id} = state) do
