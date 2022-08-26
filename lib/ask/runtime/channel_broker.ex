@@ -132,7 +132,7 @@ defmodule Ask.Runtime.ChannelBroker do
 
         "ivr" ->
           {unq_respondent, unq_token, unq_not_before, unq_not_after, unq_channel} = unqueued_item
-          channel_setup(unq_channel, unq_respondent, unq_token, unq_not_before, unq_not_after)
+          ivr_call(new_state, unq_channel, unq_respondent, unq_token, unq_not_before, unq_not_after)
 
         _ ->
           # TODO: test channels?
@@ -142,6 +142,15 @@ defmodule Ask.Runtime.ChannelBroker do
       if can_unqueue(new_state), do: activate_contacts(channel_type, new_state), else: new_state
     else
       state
+    end
+  end
+
+  defp ivr_call(state, channel, respondent, token, not_before, not_after) do
+    case channel_setup(channel, respondent, token, not_before, not_after) do
+      {:ok, verboice_call_id} ->
+        set_verboice_call_id(state, respondent.id, verboice_call_id)
+      _ ->
+        state
     end
   end
 
@@ -574,8 +583,7 @@ defmodule Ask.Runtime.ChannelBroker do
           {new_state, unqueued_item} = activate_contact(new_state)
           {unq_respondent, unq_token, unq_not_before, unq_not_after, unq_channel} = unqueued_item
 
-          {:ok, verboice_call_id} = channel_setup(unq_channel, unq_respondent, unq_token, unq_not_before, unq_not_after)
-          set_verboice_call_id(new_state, unq_respondent.id, verboice_call_id)
+          ivr_call(new_state, unq_channel, unq_respondent, unq_token, unq_not_before, unq_not_after)
         else
           new_state
         end
@@ -654,8 +662,7 @@ defmodule Ask.Runtime.ChannelBroker do
                 {unq_respondent, unq_token, unq_not_before, unq_not_after, unq_channel} =
                   unqueued_item
 
-                {:ok, verboice_call_id} = channel_setup(unq_channel, unq_respondent, unq_token, unq_not_before, unq_not_after)
-                set_verboice_call_id(new_state, unq_respondent.id, verboice_call_id)
+                ivr_call(new_state, unq_channel, unq_respondent, unq_token, unq_not_before, unq_not_after)
               else
                 new_state
               end
