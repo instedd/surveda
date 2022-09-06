@@ -142,8 +142,7 @@ defmodule Ask.Runtime.ChannelBroker do
           ivr_call(new_state, unq_channel, unq_respondent, unq_token, unq_not_before, unq_not_after)
 
         _ ->
-          # TODO: test channels?
-          IO.puts("Not implemented")
+          raise ArgumentError, message: "Unknown channel type: #{channel_type}."
       end
 
       if can_unqueue(new_state), do: activate_contacts(channel_type, new_state), else: new_state
@@ -255,9 +254,8 @@ defmodule Ask.Runtime.ChannelBroker do
     } = _state,
     respondent_id
   ) do
-    contacts_list = :pqueue.to_list(contacts_queue)
-    ids = Enum.map(contacts_list, fn queued_item -> queued_respondent_id(queued_item) end)
-    respondent_id in ids
+    :pqueue.to_list(contacts_queue)
+    |> Enum.any?(fn queued_item -> queued_respondent_id(queued_item) == respondent_id end)
   end
 
   defp is_active(
@@ -284,12 +282,11 @@ defmodule Ask.Runtime.ChannelBroker do
     end
   end
 
-  defp channel_ask(channel, respondent, token, reply) do
-    try do
-      Ask.Runtime.Channel.ask(channel, respondent, token, reply)
-    rescue
-      _ -> Ask.Runtime.Channel.ask(Ask.Channel.runtime_channel(channel), respondent, token, reply)
-    end
+  defp channel_ask(%Ask.Channel{} = channel, respondent, token, reply) do
+    channel_ask(Ask.Channel.runtime_channel(channel), respondent, token, reply)
+  end
+  defp channel_ask(runtime_channel, respondent, token, reply) do
+    Ask.Runtime.Channel.ask(runtime_channel, respondent, token, reply)
   end
 
   defp queued_respondent_id(queued_item) do
@@ -367,10 +364,9 @@ defmodule Ask.Runtime.ChannelBroker do
       ) do
     priority = if elem(contact, 0).disposition == :queued, do: 2, else: 1
     new_contacts_queue = :pqueue.in([size, contact], priority, contacts_queue)
-    new_state = Map.put(state, :contacts_queue, new_contacts_queue)
-    new_state = save_to_agent(new_state)
-
-    new_state
+    state
+    |> Map.put(:contacts_queue, new_contacts_queue)
+    |> save_to_agent()
   end
 
   def activate_contact(
@@ -385,11 +381,9 @@ defmodule Ask.Runtime.ChannelBroker do
     respondent_id = queued_respondent_id(unqueued_item)
 
     respondent_contacts =
-      if respondent_id in Map.keys(active_contacts) do
-        %{contacts: contacts} = Map.get(active_contacts, respondent_id)
-        contacts
-      else
-        0
+      case Map.get(active_contacts, respondent_id) do
+        %{contacts: contacts} -> contacts
+        _ -> 0
       end
 
     new_active_contacts =

@@ -415,11 +415,7 @@ defmodule Ask.Runtime.Session do
 
   def update_stats(respondent) do
     respondent = Repo.get(Respondent, respondent.id)
-    stats = respondent.stats
-
-    stats =
-      stats
-      |> Stats.add_received_sms()
+    stats = Stats.add_received_sms(respondent.stats)
 
     respondent
     |> Respondent.changeset(%{stats: stats})
