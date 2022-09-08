@@ -2,7 +2,7 @@ defmodule Ask.Runtime.NuntiumChannel do
   @behaviour Ask.Runtime.ChannelProvider
   use Ask.Model
   alias Ask.Runtime.{Survey, NuntiumChannel, Flow, Reply, ReplyStep, ChannelBroker}
-  alias Ask.{Repo, Respondent, Channel, Stats, SurvedaMetrics}
+  alias Ask.{Repo, Respondent, Channel, Stats, SurvedaMetrics, Logger}
   import Ecto.Query
   import Plug.Conn
   defstruct [:oauth_token, :name, :base_url, :settings]
@@ -71,6 +71,11 @@ defmodule Ask.Runtime.NuntiumChannel do
     callback(conn, params, Survey)
   end
 
+  @doc """
+  Endpoint that handles the AO message status updates from Nuntium
+  This callback will be invoked when an AO message's state changes to either 'failed', 'delivered' or 'confirmed'.
+  https://app.surveda.lvh.me//callbacks/nuntium
+  """
   def callback(
         conn,
         %{"path" => ["status"], "respondent_id" => respondent_id, "state" => state} = args,
@@ -83,19 +88,18 @@ defmodule Ask.Runtime.NuntiumChannel do
           :ok
 
         respondent ->
-          channel = respondent_channel(respondent)
-
-          case channel do
+          channel_id = args["channel_id"]
+          case channel_id do
             nil ->
-              # A contact ended, but the channel is missing.
-                # The corresponding ChannelBroker process can't be reached.
-                # This situation occurs when the respondent.session is lost.
-                # Tackled by the channel broker garbage collector.
+              # For backward compatibility only
+              # From the moment the ChannelBroker go live to production, every AO message will
+              # include the channel_id. Only older messages should reach this chunk of code.
+              Logger.warn("Missing channel_id in Nuntium status callback. respondent_id: #{respondent_id}")
               nil
             _ ->
-              if (state in ["failed", "delivered"]) do
+              if (state in ["failed", "confirmed"]) do
                 ChannelBroker.callback_received(
-                  channel.id,
+                  channel_id,
                   respondent,
                   state,
                   "nuntium"
@@ -121,6 +125,9 @@ defmodule Ask.Runtime.NuntiumChannel do
     conn |> send_resp(200, "")
   end
 
+  @doc """
+  Endpoint that handles the AT messages received from Nuntium
+  """
   def callback(conn, %{"from" => from, "body" => body}, survey) do
     %URI{host: phone_number} = URI.parse(from)
 
@@ -133,36 +140,44 @@ defmodule Ask.Runtime.NuntiumChannel do
           limit: 1
       )
 
-    reply =
+    {reply, channel_id} =
       case respondent_id do
         nil ->
-          nil
+          {nil, nil}
 
         _ ->
           Respondent.with_lock(respondent_id, fn respondent ->
             case respondent do
               %Respondent{session: %{"current_mode" => %{"mode" => "sms"}}} ->
-                case survey.sync_step(respondent, Flow.Message.reply(body), "sms") do
-                  {:reply, reply, respondent} ->
-                    update_stats(respondent, reply)
-                    reply
+                channel = respondent_channel(respondent)
+                case channel do
+                  nil ->
+                    # If there's a living session, it should have a channel
+                    Logger.error("Missing channel_id in Nuntium AT callback. respondent_id: #{respondent_id}")
+                    {nil, nil}
+                  _ ->
+                    case survey.sync_step(respondent, Flow.Message.reply(body), "sms") do
+                      {:reply, reply, respondent} ->
+                        update_stats(respondent, reply)
+                        {reply, channel.id}
 
-                  {:end, {:reply, reply}, respondent} ->
-                    update_stats(respondent, reply)
-                    reply
+                      {:end, {:reply, reply}, respondent} ->
+                        update_stats(respondent, reply)
+                        {reply, channel.id}
 
-                  {:end, respondent} ->
-                    update_stats(respondent)
-                    nil
+                      {:end, respondent} ->
+                        update_stats(respondent)
+                        {nil, nil}
+                    end
                 end
 
               _ ->
-                nil
+                {nil, nil}
             end
           end)
       end
 
-    json_reply = reply_to_messages(reply, from, respondent_id)
+    json_reply = reply_to_messages(reply, from, respondent_id, channel_id)
     SurvedaMetrics.increment_counter(:surveda_nuntium_incoming)
     Phoenix.Controller.json(conn, json_reply)
   end
@@ -172,15 +187,19 @@ defmodule Ask.Runtime.NuntiumChannel do
     conn |> send_resp(200, "OK")
   end
 
-  def reply_to_messages(nil, _to, _respondent_id) do
+  def reply_to_messages(nil, _to, _respondent_id, _channel_id) do
     []
   end
 
-  def reply_to_messages(_reply, _to, nil) do
+  def reply_to_messages(_reply, _to, nil, _channel_id) do
     []
   end
 
-  def reply_to_messages(reply, to, respondent_id) do
+  def reply_to_messages(_reply, _to, _respondent_id, nil) do
+    []
+  end
+
+  def reply_to_messages(reply, to, respondent_id, channel_id) do
     Enum.flat_map(Reply.steps(reply), fn step ->
       step.prompts
       |> Enum.with_index()
@@ -189,7 +208,8 @@ defmodule Ask.Runtime.NuntiumChannel do
           to: to,
           body: prompt,
           respondent_id: respondent_id,
-          step_title: ReplyStep.title_with_index(step, index + 1)
+          step_title: ReplyStep.title_with_index(step, index + 1),
+          channel_id: channel_id
         }
       end)
     end)
@@ -384,11 +404,11 @@ defmodule Ask.Runtime.NuntiumChannel do
 
     def setup(_channel, _respondent, _token, _not_before, _not_after), do: :ok
 
-    def ask(channel, respondent, token, reply) do
+    def ask(channel, respondent, token, reply, channel_id) do
       to = "sms://#{respondent.sanitized_phone_number}"
 
       messages =
-        NuntiumChannel.reply_to_messages(reply, to, respondent.id)
+        NuntiumChannel.reply_to_messages(reply, to, respondent.id, channel_id)
         |> Enum.map(fn msg ->
           Map.merge(msg, %{
             suggested_channel: channel.settings["nuntium_channel"],

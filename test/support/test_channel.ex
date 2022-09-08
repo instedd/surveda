@@ -111,8 +111,8 @@ defimpl Ask.Runtime.Channel, for: Ask.TestChannel do
     {:ok, 0}
   end
 
-  def ask(channel, respondent, token, prompts) do
-    send(channel.pid, [:ask, channel, respondent, token, prompts])
+  def ask(channel, respondent, token, prompts, channel_id) do
+    send(channel.pid, [:ask, channel, respondent, token, prompts, channel_id])
     respondent
   end
 

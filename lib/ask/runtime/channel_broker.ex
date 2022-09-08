@@ -128,14 +128,14 @@ defmodule Ask.Runtime.ChannelBroker do
     {channel_type, settings}
   end
 
-  defp activate_contacts(channel_type, state) do
+  defp activate_contacts(channel_type, %{channel_id: channel_id} = state) do
     if can_unqueue(state) do
       {new_state, unqueued_item} = activate_contact(state)
 
       case channel_type do
         "sms" ->
           {unq_respondent, unq_token, unq_reply, unq_channel} = unqueued_item
-          channel_ask(unq_channel, unq_respondent, unq_token, unq_reply)
+          channel_ask(unq_channel, unq_respondent, unq_token, unq_reply, channel_id)
 
         "ivr" ->
           {unq_respondent, unq_token, unq_not_before, unq_not_after, unq_channel} = unqueued_item
@@ -282,11 +282,11 @@ defmodule Ask.Runtime.ChannelBroker do
     end
   end
 
-  defp channel_ask(%Ask.Channel{} = channel, respondent, token, reply) do
-    channel_ask(Ask.Channel.runtime_channel(channel), respondent, token, reply)
+  defp channel_ask(%Ask.Channel{} = channel, respondent, token, reply, channel_id) do
+    channel_ask(Ask.Channel.runtime_channel(channel), respondent, token, reply, channel_id)
   end
-  defp channel_ask(runtime_channel, respondent, token, reply) do
-    Ask.Runtime.Channel.ask(runtime_channel, respondent, token, reply)
+  defp channel_ask(runtime_channel, %{id: respondent_id} = respondent, token, reply, channel_id) do
+    %{id: ^respondent_id} = Ask.Runtime.Channel.ask(runtime_channel, respondent, token, reply, channel_id)
   end
 
   defp queued_respondent_id(queued_item) do
@@ -537,19 +537,19 @@ defmodule Ask.Runtime.ChannelBroker do
   def handle_call(
         {:ask, "sms" = _channel_type, channel, %{id: respondent_id} = respondent, token, reply},
         _from,
-        %{config: config} = state
+        %{config: config, channel_id: channel_id} = state
       ) do
     new_state =
       queue_contact(
         state,
         {respondent, token, reply, channel},
-        length(NuntiumChannel.reply_to_messages(reply, nil, respondent_id))
+        length(NuntiumChannel.reply_to_messages(reply, nil, respondent_id, channel_id))
       )
 
     end_state = if can_unqueue(new_state) do
       {new_state, unqueued_item} = activate_contact(new_state)
       {unq_respondent, unq_token, unq_reply, unq_channel} = unqueued_item
-      channel_ask(unq_channel, unq_respondent, unq_token, unq_reply)
+      channel_ask(unq_channel, unq_respondent, unq_token, unq_reply, channel_id)
       new_state
     else
       new_state
@@ -646,7 +646,7 @@ defmodule Ask.Runtime.ChannelBroker do
   def handle_call(
         {:callback_received, respondent, respondent_state, provider},
         _from,
-        %{config: config} = state
+        %{config: config, channel_id: channel_id} = state
       ) do
     end_state =
       case provider do
@@ -680,7 +680,7 @@ defmodule Ask.Runtime.ChannelBroker do
             {new_state, unqueued_item} = activate_contact(new_state)
             {unq_respondent, unq_token, unq_reply, unq_channel} = unqueued_item
 
-            channel_ask(unq_channel, unq_respondent, unq_token, unq_reply)
+            channel_ask(unq_channel, unq_respondent, unq_token, unq_reply, channel_id)
             new_state
           else
             new_state
