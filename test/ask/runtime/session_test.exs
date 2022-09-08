@@ -47,7 +47,7 @@ defmodule Ask.Runtime.SessionTest do
     quiz: quiz,
     respondent: respondent,
     test_channel: test_channel,
-    channel: channel
+    channel: %{id: channel_id} = channel
   } do
     {:ok, %{respondent: %{id: respondent_id}} = session, _, timeout} =
       Session.start(quiz, respondent, channel, "sms", Schedule.always())
@@ -64,7 +64,8 @@ defmodule Ask.Runtime.SessionTest do
       ^test_channel,
       respondent,
       ^token,
-      ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO")
+      ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO"),
+      ^channel_id
     ]
     assert respondent.id == respondent_id
 
@@ -116,7 +117,8 @@ defmodule Ask.Runtime.SessionTest do
       ^test_channel,
       ^respondent,
       ^token,
-      ReplyHelper.simple("Contact", message)
+      ReplyHelper.simple("Contact", message),
+      _channel_id
     ]
 
     assert message ==
@@ -237,7 +239,8 @@ defmodule Ask.Runtime.SessionTest do
       ^test_channel,
       ^respondent,
       ^token,
-      ReplyHelper.simple("Contact", message)
+      ReplyHelper.simple("Contact", message),
+      _channel_id
     ]
 
     assert message ==
@@ -339,7 +342,8 @@ defmodule Ask.Runtime.SessionTest do
       ^test_channel,
       respondent,
       ^token,
-      ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO")
+      ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO"),
+      _channel_id
     ]
     assert respondent.id == respondent_id
   end
@@ -381,7 +385,8 @@ defmodule Ask.Runtime.SessionTest do
       ^test_channel,
       ^respondent_received,
       ^token,
-      ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO")
+      ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO"),
+      _channel_id
     ]
 
     assert {:ok, session = %Session{token: token2, respondent: respondent}, _, 5} =
@@ -395,7 +400,8 @@ defmodule Ask.Runtime.SessionTest do
       ^test_channel,
       respondent_received,
       ^token2,
-      ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO")
+      ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO"),
+      _channel_id
     ]
 
     assert respondent.id == respondent_received.id
@@ -441,7 +447,8 @@ defmodule Ask.Runtime.SessionTest do
       ^test_channel,
       respondent,
       ^token,
-      ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO")
+      ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO"),
+      _channel_id
     ]
     assert respondent.id == respondent_id
 
@@ -466,7 +473,8 @@ defmodule Ask.Runtime.SessionTest do
       ^test_channel,
       respondent,
       ^token,
-      ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO")
+      ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO"),
+      _channel_id
     ]
     assert respondent.id == respondent_id
 
@@ -490,7 +498,8 @@ defmodule Ask.Runtime.SessionTest do
       ^test_channel,
       respondent,
       ^token,
-      ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO")
+      ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO"),
+      _channel_id
     ]
     assert respondent.id == respondent_id
 
@@ -573,7 +582,8 @@ defmodule Ask.Runtime.SessionTest do
       ^test_channel,
       ^respondent_received,
       ^token,
-      ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO")
+      ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO"),
+      _channel_id
     ]
 
     expected_session = %Session{
@@ -638,7 +648,8 @@ defmodule Ask.Runtime.SessionTest do
       ^test_channel,
       ^respondent_received,
       ^token,
-      ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO")
+      ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO"),
+      _channel_id
     ]
 
     expected_session = %Session{
@@ -705,7 +716,8 @@ defmodule Ask.Runtime.SessionTest do
       ^test_channel,
       ^respondent_received,
       ^token,
-      ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO")
+      ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO"),
+      _channel_id
     ]
 
     expected_session = %Session{
@@ -730,7 +742,8 @@ defmodule Ask.Runtime.SessionTest do
       ^test_channel,
       respondent_received,
       ^token,
-      ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO")
+      ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO"),
+      _channel_id
     ]
 
     assert respondent.id == respondent_received.id
@@ -792,7 +805,8 @@ defmodule Ask.Runtime.SessionTest do
       ^test_channel,
       ^respondent_received,
       ^token,
-      ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO")
+      ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO"),
+      _channel_id
     ]
 
     assert 1 == respondent_received.stats |> Stats.attempts(:sms)
@@ -825,7 +839,8 @@ defmodule Ask.Runtime.SessionTest do
       ^test_channel,
       ^respondent_received,
       ^token,
-      ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO")
+      ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO"),
+      _channel_id
     ]
 
     assert 1 == respondent_received.stats |> Stats.attempts(:sms)
@@ -841,7 +856,8 @@ defmodule Ask.Runtime.SessionTest do
       ^test_channel,
       respondent_received,
       ^token,
-      ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO")
+      ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO"),
+      _channel_id
     ]
 
     assert respondent.id == respondent_received.id
@@ -858,7 +874,8 @@ defmodule Ask.Runtime.SessionTest do
       ^test_channel,
       respondent_received,
       ^token,
-      ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO")
+      ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO"),
+      _channel_id
     ]
 
     assert respondent.id == respondent_received.id
@@ -931,7 +948,8 @@ defmodule Ask.Runtime.SessionTest do
       ^test_channel,
       ^respondent_received,
       ^token,
-      ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO")
+      ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO"),
+      _channel_id
     ]
 
     assert 1 == respondent_received.stats |> Stats.attempts(:sms)
@@ -946,7 +964,8 @@ defmodule Ask.Runtime.SessionTest do
       ^test_channel,
       respondent_received,
       ^token,
-      ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO")
+      ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO"),
+      _channel_id
     ]
 
     assert respondent.id == respondent_received.id
@@ -955,7 +974,7 @@ defmodule Ask.Runtime.SessionTest do
     {:ok, session, _, received_fallback_delay} = Session.timeout(session)
 
     refute_receive [:setup, _, _, _, _]
-    assert_receive [:ask, ^test_channel, respondent_received, _, _]
+    assert_receive [:ask, ^test_channel, respondent_received, _, _, _channel_id]
     assert respondent.id == respondent_received.id
     assert 3 == respondent_received.stats |> Stats.attempts(:sms)
     assert fallback_delay == received_fallback_delay
@@ -1164,7 +1183,8 @@ defmodule Ask.Runtime.SessionTest do
       ^test_channel,
       respondent,
       ^token,
-      ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO")
+      ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO"),
+      _channel_id
     ]
     assert respondent.id == respondent_id
 
@@ -1368,7 +1388,8 @@ defmodule Ask.Runtime.SessionTest do
       ^test_channel,
       respondent,
       ^token,
-      ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO")
+      ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO"),
+      _channel_id
     ]
     assert respondent.id == respondent_id
 
