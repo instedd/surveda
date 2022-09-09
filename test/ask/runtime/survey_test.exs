@@ -25,7 +25,7 @@ defmodule Ask.Runtime.SurveyTest do
 
   setup do
     {:ok, _} = ChannelStatusServer.start_link()
-    {:ok, _} = ChannelBrokerAgent.start_link()
+    ChannelBrokerAgent.start_link()
     :ok
   end
 
