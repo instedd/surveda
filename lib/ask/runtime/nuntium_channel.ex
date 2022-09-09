@@ -97,7 +97,11 @@ defmodule Ask.Runtime.NuntiumChannel do
               Logger.warn("Missing channel_id in Nuntium status callback. respondent_id: #{respondent_id}")
               nil
             _ ->
-              if (state in ["failed", "confirmed"]) do
+              # Ideally, only "failed" and "confirmed" status should be filtered. But testing this
+              # in STG Surveda only receives the delivered status. We should understand why and
+              # fix it if needed.
+              # In the meantime, we accept both "confirmed" and "delivered" status.
+              if (state in ["failed", "confirmed", "delivered"]) do
                 ChannelBroker.callback_received(
                   channel_id,
                   respondent,
