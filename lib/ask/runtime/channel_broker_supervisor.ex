@@ -13,18 +13,6 @@ defmodule Ask.Runtime.ChannelBrokerSupervisor do
 
   def start_child(channel_id, channel_type, settings) do
     cond do
-      channel_id in Map.keys(ChannelBrokerAgent.get()) ->
-        # If channel state is stored in the agent, recover it from there
-        DynamicSupervisor.start_child(
-          __MODULE__,
-          child_spec(
-            channel_id,
-            channel_type,
-            settings,
-            ChannelBrokerAgent.get_channel_state(channel_id)
-          )
-        )
-
       ChannelBrokerAgent.is_in_db(channel_id) ->
         # If channel state is stored in the db, recover it from there
         cb_db = ChannelBrokerAgent.recover_from_db(channel_id)
