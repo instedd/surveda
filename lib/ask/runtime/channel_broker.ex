@@ -160,7 +160,7 @@ defmodule Ask.Runtime.ChannelBroker do
     end
   end
 
-  defp collect_garbage(channel_type, interval) do
+  defp schedule_GC(channel_type, interval) do
     Process.send_after(self(), {:collect_garbage, channel_type}, interval)
   end
 
@@ -182,7 +182,7 @@ defmodule Ask.Runtime.ChannelBroker do
   def init([channel_id, channel_type, settings]) do
     %{to_db_operations: op_count} = config = Config.channel_broker_config()
     gc_interval = gc_interval_from_config(config)
-    collect_garbage(channel_type, gc_interval)
+    schedule_GC(channel_type, gc_interval)
     {
       :ok,
       # The internal logic of the ChannelBroker relies on a state with the following shape:
@@ -218,8 +218,7 @@ defmodule Ask.Runtime.ChannelBroker do
   @impl true
   def init([_channel_id, channel_type, _settings, %{config: config} = status]) do
     gc_interval = gc_interval_from_config(config)
-    collect_garbage(channel_type, gc_interval)
-
+    schedule_GC(channel_type, gc_interval)
     {
       :ok,
       status,
@@ -295,14 +294,14 @@ defmodule Ask.Runtime.ChannelBroker do
     elem(queued_item, 0).id
   end
 
-  def clean_inexistent_respondents(
+  def clean_non_active_respondents(
     %{
       active_contacts: active_contacts
     } = state) do
     # Respondents that failed could have active contacts waiting and don't exists anymore
 
     query = from r in "respondents",
-              where: r.id in ^Map.keys(active_contacts) and r.state != "failed",
+              where: r.id in ^Map.keys(active_contacts) and r.state == "active",
               select: r.id
 
     active_respondents = Repo.all(query)
@@ -315,8 +314,8 @@ defmodule Ask.Runtime.ChannelBroker do
         Map.get(state, :active_contacts)
       )
 
-    new_state = Map.put(state, :active_contacts, new_active_contacts)
-    new_state
+    Map.put(state, :active_contacts, new_active_contacts)
+    |> save_to_agent()
   end
 
   defp clean_outdated_respondents(%{active_contacts: active_contacts, config: config} = state) do
@@ -330,8 +329,8 @@ defmodule Ask.Runtime.ChannelBroker do
         active_contacts
       )
 
-    new_state = Map.put(state, :active_contacts, new_active_contacts)
-    new_state
+    Map.put(state, :active_contacts, new_active_contacts)
+    |> save_to_agent()
   end
 
   def save_to_agent(
@@ -397,7 +396,7 @@ defmodule Ask.Runtime.ChannelBroker do
       )
 
     state = Map.put(state, :active_contacts, new_active_contacts)
-    state = save_to_agent(state)
+    |> save_to_agent()
 
     {state, unqueued_item}
   end
@@ -492,9 +491,8 @@ defmodule Ask.Runtime.ChannelBroker do
         Map.delete(active_contacts, respondent_id)
       end
 
-    new_state = Map.put(state, :active_contacts, new_active_contacts)
-    new_state = save_to_agent(new_state)
-    new_state
+    Map.put(state, :active_contacts, new_active_contacts)
+    |> save_to_agent()
   end
 
   def remove_from_queue(
@@ -711,14 +709,14 @@ defmodule Ask.Runtime.ChannelBroker do
   def handle_info({:collect_garbage, channel_type}, %{config: config} = state) do
     # Remove the garbage contacts from active
     # New versions of elixir has Maps.filter, replace when possible
-    new_state = clean_inexistent_respondents(state)
+    new_state = clean_non_active_respondents(state)
       |> clean_outdated_respondents()
 
     # Activate new ones if possible
     new_state = activate_contacts(channel_type, new_state)
     # schedule next garbage collection
     gc_interval = gc_interval_from_config(config)
-    collect_garbage(channel_type, gc_interval)
+    schedule_GC(channel_type, gc_interval)
     {:noreply, new_state}
   end
 end
