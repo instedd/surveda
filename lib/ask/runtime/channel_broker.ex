@@ -99,7 +99,7 @@ defmodule Ask.Runtime.ChannelBroker do
   end
 
   defp call_gen_server(channel_id, message) do
-    channel_id = if is_integer(channel_id), do: channel_id, else: Integer.parse(channel_id)
+    {channel_id, _} = if is_integer(channel_id), do: {channel_id, nil}, else: Integer.parse(channel_id)
     pid = find_or_start_process(channel_id)
     GenServer.call(pid, message)
   end
