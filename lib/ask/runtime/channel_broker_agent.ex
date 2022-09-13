@@ -8,7 +8,7 @@ defmodule Ask.Runtime.ChannelBrokerAgent do
   end
 
   def save_channel_state(state) do
-    IO.inspect(state, "**************************** save_channel_state **************************")
+    IO.inspect(state, label: "**************************** save_channel_state **************************")
     ChannelBrokerRecovery.save(state)
   end
 
