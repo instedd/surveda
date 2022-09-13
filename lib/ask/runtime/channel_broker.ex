@@ -641,6 +641,7 @@ defmodule Ask.Runtime.ChannelBroker do
         _from,
         %{config: config, channel_id: channel_id} = state
       ) do
+    IO.inspect(binding(), label: "**************** callback_received ********************")
     end_state =
       case provider do
         "verboice" ->
@@ -702,6 +703,7 @@ defmodule Ask.Runtime.ChannelBroker do
   end
 
   def handle_info({:collect_garbage, channel_type}, %{config: config} = state) do
+    IO.inspect(binding(), label: "********************** collect_garbage 1 ********************")
     # Remove the garbage contacts from active
     # New versions of elixir has Maps.filter, replace when possible
     new_state = clean_non_active_respondents(state)
@@ -712,6 +714,7 @@ defmodule Ask.Runtime.ChannelBroker do
     # schedule next garbage collection
     gc_interval = gc_interval_from_config(config)
     schedule_GC(channel_type, gc_interval)
+    IO.inspect(new_state, label: "********************** collect_garbage 2 ********************")
     {:noreply, new_state}
   end
 end
