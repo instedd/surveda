@@ -356,6 +356,7 @@ defmodule Ask.Runtime.ChannelBroker do
 
   def save_to_agent(
         %{
+          channel_id: channel_id,
           op_count: op_count,
           config: %{to_db_operations: to_db_operations}
         } = state
@@ -364,8 +365,12 @@ defmodule Ask.Runtime.ChannelBroker do
       new_op_count =
       if op_count <= 1 do
         # If counter reached, persist
-        ChannelBrokerAgent.save_channel_state(state)
+        ChannelBrokerAgent.save_channel_state(channel_id, state, true)
         to_db_operations
+      else
+        # else, just save in memory
+        ChannelBrokerAgent.save_channel_state(channel_id, state, false)
+        op_count - 1
       end
 
     state = Map.put(state, :op_count, new_op_count)
@@ -759,7 +764,7 @@ defmodule Ask.Runtime.ChannelBroker do
   @impl true
   def handle_info(:timeout, %{channel_id: channel_id} = state) do
     Logger.debug("CHN_BRK timeout: #{inspect(binding())}")
-    ChannelBrokerAgent.save_channel_state(state)
+    ChannelBrokerAgent.save_channel_state(channel_id, state, true)
     ChannelBrokerSupervisor.terminate_child(channel_id)
     Logger.debug("CHNL_BRK state: #{inspect(state)}")
   end
