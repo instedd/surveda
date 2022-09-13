@@ -101,6 +101,7 @@ defmodule Ask.Runtime.NuntiumChannel do
               # in STG Surveda only receives the delivered status. We should understand why and
               # fix it if needed.
               # In the meantime, we accept both "confirmed" and "delivered" status.
+              channel_id = String.to_integer(channel_id)
               if (state in ["failed", "confirmed", "delivered"]) do
                 ChannelBroker.callback_received(
                   channel_id,
