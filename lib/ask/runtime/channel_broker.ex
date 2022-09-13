@@ -1,6 +1,6 @@
 defmodule Ask.Runtime.ChannelBroker do
   alias Ask.Runtime.{Channel, ChannelBrokerAgent, ChannelBrokerSupervisor, NuntiumChannel}
-  alias Ask.Config
+  alias Ask.{Config, Logger}
   import Ecto.Query
   alias Ask.Repo
   use GenServer
@@ -129,7 +129,9 @@ defmodule Ask.Runtime.ChannelBroker do
   end
 
   defp activate_contacts(channel_type, %{channel_id: channel_id} = state) do
-    if can_unqueue(state) do
+    Logger.debug("CHNL_BRK activate_contacts: #{inspect(binding())}")
+
+    state = if can_unqueue(state) do
       {new_state, unqueued_item} = activate_contact(state)
 
       case channel_type do
@@ -149,6 +151,9 @@ defmodule Ask.Runtime.ChannelBroker do
     else
       state
     end
+
+    Logger.debug("CHNL_BRK state: #{inspect(state)}")
+    state
   end
 
   defp ivr_call(state, channel, respondent, token, not_before, not_after) do
@@ -161,6 +166,7 @@ defmodule Ask.Runtime.ChannelBroker do
   end
 
   defp schedule_GC(channel_type, interval) do
+    Logger.debug("CHNL_BRK schedule_GC: #{inspect(binding())}")
     Process.send_after(self(), {:collect_garbage, channel_type}, interval)
   end
 
@@ -180,10 +186,12 @@ defmodule Ask.Runtime.ChannelBroker do
 
   @impl true
   def init([channel_id, channel_type, settings]) do
+    Logger.debug("CHNL_BRK init: #{inspect(binding())}")
+
     %{to_db_operations: op_count} = config = Config.channel_broker_config()
     gc_interval = gc_interval_from_config(config)
     schedule_GC(channel_type, gc_interval)
-    {
+    state = {
       :ok,
       # The internal logic of the ChannelBroker relies on a state with the following shape:
       %{
@@ -213,6 +221,9 @@ defmodule Ask.Runtime.ChannelBroker do
       },
       timeout_from_config(config)
     }
+
+    Logger.debug("CHNL_BRK state: #{inspect(state)}")
+    state
   end
 
   @impl true
@@ -298,6 +309,8 @@ defmodule Ask.Runtime.ChannelBroker do
     %{
       active_contacts: active_contacts
     } = state) do
+    Logger.debug("CHNL_BRK clean_non_active_respondents: #{inspect(binding())}")
+
     # Respondents that failed could have active contacts waiting and don't exists anymore
 
     query = from r in "respondents",
@@ -314,11 +327,15 @@ defmodule Ask.Runtime.ChannelBroker do
         Map.get(state, :active_contacts)
       )
 
-    Map.put(state, :active_contacts, new_active_contacts)
-    |> save_to_agent()
+      state = Map.put(state, :active_contacts, new_active_contacts)
+      |> save_to_agent()
+
+      Logger.debug("CHNL_BRK state: #{inspect(state)}")
+      state
   end
 
   defp clean_outdated_respondents(%{active_contacts: active_contacts, config: config} = state) do
+    Logger.debug("CHNL_BRK clean_outdated_respondents: #{inspect(binding())}")
     {:ok, now} = DateTime.now("Etc/UTC")
 
     new_active_contacts =
@@ -329,8 +346,11 @@ defmodule Ask.Runtime.ChannelBroker do
         active_contacts
       )
 
-    Map.put(state, :active_contacts, new_active_contacts)
+    state = Map.put(state, :active_contacts, new_active_contacts)
     |> save_to_agent()
+
+    Logger.debug("CHNL_BRK state: #{inspect(state)}")
+    state
   end
 
   def save_to_agent(
@@ -339,14 +359,17 @@ defmodule Ask.Runtime.ChannelBroker do
           config: %{to_db_operations: to_db_operations}
         } = state
       ) do
-    new_op_count =
+      Logger.debug("CHNL_BRK save_to_agent: #{inspect(binding())}")
+      new_op_count =
       if op_count <= 1 do
         # If counter reached, persist
         ChannelBrokerAgent.save_channel_state(state)
         to_db_operations
       end
 
-    Map.put(state, :op_count, new_op_count)
+    state = Map.put(state, :op_count, new_op_count)
+    Logger.debug("CHNL_BRK state: #{inspect(state)}")
+    state
   end
 
   def queue_contact(
@@ -356,11 +379,15 @@ defmodule Ask.Runtime.ChannelBroker do
         contact,
         size
       ) do
+    Logger.debug("CHNL_BRK queue_contact: #{inspect(binding())}")
     priority = if elem(contact, 0).disposition == :queued, do: 2, else: 1
     new_contacts_queue = :pqueue.in([size, contact], priority, contacts_queue)
-    state
-    |> Map.put(:contacts_queue, new_contacts_queue)
+
+    state = Map.put(state, :contacts_queue, new_contacts_queue)
     |> save_to_agent()
+
+    Logger.debug("CHNL_BRK state: #{inspect(state)}")
+    state
   end
 
   def activate_contact(
@@ -369,6 +396,7 @@ defmodule Ask.Runtime.ChannelBroker do
           active_contacts: active_contacts
         } = state
       ) do
+    Logger.debug("CHNL_BRK activate_contact: #{inspect(binding())}")
     {{_unqueue_res, [size, unqueued_item]}, new_contacts_queue} = :pqueue.out(contacts_queue)
     state = Map.put(state, :contacts_queue, new_contacts_queue)
 
@@ -392,7 +420,7 @@ defmodule Ask.Runtime.ChannelBroker do
 
     state = Map.put(state, :active_contacts, new_active_contacts)
     |> save_to_agent()
-
+    Logger.debug("CHNL_BRK state: #{inspect(state)}")
     {state, unqueued_item}
   end
 
@@ -402,7 +430,8 @@ defmodule Ask.Runtime.ChannelBroker do
         } = state,
         respondent_id
       ) do
-    new_active_contacts =
+      Logger.debug("CHNL_BRK update_last_contact: #{inspect(binding())}")
+      new_active_contacts =
       if respondent_id in Map.keys(active_contacts) do
         active_contact = Map.get(active_contacts, respondent_id)
           |> Map.put(:last_contact, elem(DateTime.now("Etc/UTC"), 1))
@@ -417,6 +446,7 @@ defmodule Ask.Runtime.ChannelBroker do
       end
 
     state = Map.put(state, :active_contacts, new_active_contacts)
+    Logger.debug("CHNL_BRK state: #{inspect(state)}")
     state
   end
 
@@ -427,6 +457,7 @@ defmodule Ask.Runtime.ChannelBroker do
         respondent_id,
         verboice_call_id
       ) do
+    Logger.debug("CHNL_BRK set_verboice_call_id: #{inspect(binding())}")
     new_active_contacts =
       if respondent_id in Map.keys(active_contacts) do
         active_contact = Map.get(active_contacts, respondent_id)
@@ -441,7 +472,9 @@ defmodule Ask.Runtime.ChannelBroker do
         active_contacts
       end
 
-    Map.put(state, :active_contacts, new_active_contacts)
+    state = Map.put(state, :active_contacts, new_active_contacts)
+    Logger.debug("CHNL_BRK state: #{inspect(state)}")
+    state
   end
 
   defp get_verboice_call_id(
@@ -464,6 +497,7 @@ defmodule Ask.Runtime.ChannelBroker do
         } = state,
         respondent_id
       ) do
+    Logger.debug("CHNL_BRK deactivate_contact: #{inspect(binding())}")
     respondent_contacts =
       if respondent_id in Map.keys(active_contacts) do
         %{contacts: contacts} = Map.get(active_contacts, respondent_id)
@@ -486,8 +520,10 @@ defmodule Ask.Runtime.ChannelBroker do
         Map.delete(active_contacts, respondent_id)
       end
 
-    Map.put(state, :active_contacts, new_active_contacts)
+    state = Map.put(state, :active_contacts, new_active_contacts)
     |> save_to_agent()
+    Logger.debug("CHNL_BRK state: #{inspect(state)}")
+    state
   end
 
   def remove_from_queue(
@@ -496,10 +532,12 @@ defmodule Ask.Runtime.ChannelBroker do
     } = state,
     respondent_id
   ) do
+    Logger.debug("CHNL_BRK remove_from_queue: #{inspect(binding())}")
     new_contacts_queue = :pqueue.new()
     n = :pqueue.len(contacts_queue)
     new_contacts_queue = remove_r_contacts(contacts_queue, respondent_id, new_contacts_queue, n)
     new_state = Map.put(state, :contacts_queue, new_contacts_queue)
+    Logger.debug("CHNL_BRK state: #{inspect(new_state)}")
     new_state
   end
 
@@ -532,7 +570,7 @@ defmodule Ask.Runtime.ChannelBroker do
         _from,
         %{config: config, channel_id: channel_id} = state
       ) do
-    IO.inspect(binding(), label: "**************** ask ********************")
+    Logger.debug("CHNL_BRK ask: #{inspect(binding())}")
     new_state =
       queue_contact(
         state,
@@ -549,6 +587,7 @@ defmodule Ask.Runtime.ChannelBroker do
       new_state
     end
 
+    Logger.debug("CHNL_BRK state: #{inspect(end_state)}")
     {:reply, :ok, end_state, timeout_from_config(config)}
   end
 
@@ -566,7 +605,7 @@ defmodule Ask.Runtime.ChannelBroker do
         _from,
         %{config: config} = state
       ) do
-    IO.inspect(binding(), label: "**************** setup ********************")
+    Logger.debug("CHNL_BRK setup: #{inspect(binding())}")
     new_state = state
 
     end_state =
@@ -589,58 +628,66 @@ defmodule Ask.Runtime.ChannelBroker do
         new_state
       end
 
+    Logger.debug("CHNL_BRK state: #{inspect(end_state)}")
     {:reply, :ok, end_state, timeout_from_config(config)}
   end
 
   @impl true
   def handle_call({:prepare, channel}, _from, %{config: config} = state) do
-    IO.inspect(binding(), label: "**************** prepare ********************")
+    Logger.debug("CHNL_BRK prepare: #{inspect(binding())}")
     reply = Channel.prepare(channel)
+    Logger.debug("CHNL_BRK state: #{inspect(state)}")
     {:reply, reply, state, timeout_from_config(config)}
   end
 
   @impl true
   def handle_call({:has_delivery_confirmation?, channel}, _from, %{config: config} = state) do
-    IO.inspect(binding(), label: "**************** has_delivery_confirmation ********************")
+    Logger.debug("CHNL_BRK has_delivery_confirmation?: #{inspect(binding())}")
     reply = Channel.has_delivery_confirmation?(channel)
+    Logger.debug("CHNL_BRK state: #{inspect(state)}")
     {:reply, reply, state, timeout_from_config(config)}
   end
 
   # @impl true
   def handle_call({:has_queued_message?, _channel_type, %{has_queued_message: has_queued_message}, _respondent_id}, _from, %{config: config} = state) do
-    IO.inspect(binding(), label: "**************** has_queued_message ********************")
+    Logger.debug("CHNL_BRK has_queued_message?: #{inspect(binding())}")
+    Logger.debug("CHNL_BRK state: #{inspect(state)}")
     {:reply, has_queued_message, state, timeout_from_config(config)}
   end
 
   @impl true
   def handle_call({:has_queued_message?, _channel_type, _channel, respondent_id}, _from, %{config: config} = state) do
-    IO.inspect(binding(), label: "**************** has_queued_message ********************")
+    Logger.debug("CHNL_BRK has_queued_message?: #{inspect(binding())}")
     reply = is_active(state, respondent_id) || is_queued(state, respondent_id)
+    Logger.debug("CHNL_BRK state: #{inspect(state)}")
     {:reply, reply, state, timeout_from_config(config)}
   end
 
   @impl true
   def handle_call({:cancel_message, channel_type, channel, respondent_id}, _from, %{config: config} = state) do
-    IO.inspect(binding(), label: "**************** cancel_message ********************")
+    Logger.debug("CHNL_BRK cancel_message: #{inspect(binding())}")
     channel_state = get_channel_state(channel_type, state, respondent_id)
     Channel.cancel_message(channel, channel_state)
     state = deactivate_contact(state, respondent_id)
     state = remove_from_queue(state, respondent_id)
+    Logger.debug("CHNL_BRK state: #{inspect(state)}")
     {:reply, :ok, state, timeout_from_config(config)}
   end
 
   @impl true
   def handle_call({:message_expired?, channel_type, channel, respondent_id}, _from, %{config: config} = state) do
-    IO.inspect(binding(), label: "**************** message_expired ********************")
+    Logger.debug("CHNL_BRK message_expired?: #{inspect(binding())}")
     channel_state = get_channel_state(channel_type, state, respondent_id)
     reply = Channel.message_expired?(channel, channel_state)
+    Logger.debug("CHNL_BRK state: #{inspect(state)}")
     {:reply, reply, state, timeout_from_config(config)}
   end
 
   @impl true
   def handle_call({:check_status, channel}, _from, %{config: config} = state) do
-    IO.inspect(binding(), label: "**************** check_status ********************")
+    Logger.debug("CHNL_BRK check_status: #{inspect(binding())}")
     reply = Channel.check_status(channel)
+    Logger.debug("CHNL_BRK state: #{inspect(state)}")
     {:reply, reply, state, timeout_from_config(config)}
   end
 
@@ -650,7 +697,7 @@ defmodule Ask.Runtime.ChannelBroker do
         _from,
         %{config: config, channel_id: channel_id} = state
       ) do
-    IO.inspect(binding(), label: "**************** callback_received ********************")
+    Logger.debug("CHN_BRK callback_received: #{inspect(binding())}")
     end_state =
       case provider do
         "verboice" ->
@@ -690,6 +737,7 @@ defmodule Ask.Runtime.ChannelBroker do
           end
       end
 
+    Logger.debug("CHNL_BRK state: #{inspect(end_state)}")
     {:reply, :ok, end_state, timeout_from_config(config)}
   end
 
@@ -699,22 +747,24 @@ defmodule Ask.Runtime.ChannelBroker do
         _from,
         %{config: config} = state
       ) do
-    IO.inspect(binding(), label: "**************** on_channel_settings_change ********************")
+    Logger.debug("CHN_BRK on_channel_settings_change: #{inspect(binding())}")
     new_capacity = Map.get(settings, "capacity", Config.default_channel_capacity())
     new_state = Map.put(state, :capacity, new_capacity)
+    Logger.debug("CHNL_BRK state: #{inspect(new_state)}")
     {:reply, :ok, new_state, timeout_from_config(config)}
   end
 
 
   @impl true
   def handle_info(:timeout, %{channel_id: channel_id} = state) do
-    IO.inspect(binding(), label: "**************** timeout ********************")
+    Logger.debug("CHN_BRK timeout: #{inspect(binding())}")
     ChannelBrokerAgent.save_channel_state(state)
     ChannelBrokerSupervisor.terminate_child(channel_id)
+    Logger.debug("CHNL_BRK state: #{inspect(state)}")
   end
 
   def handle_info({:collect_garbage, channel_type}, %{config: config} = state) do
-    IO.inspect(binding(), label: "********************** collect_garbage 1 ********************")
+    Logger.debug("CHN_BRK collect_garbage: #{inspect(binding())}")
     # Remove the garbage contacts from active
     # New versions of elixir has Maps.filter, replace when possible
     new_state = clean_non_active_respondents(state)
@@ -725,7 +775,7 @@ defmodule Ask.Runtime.ChannelBroker do
     # schedule next garbage collection
     gc_interval = gc_interval_from_config(config)
     schedule_GC(channel_type, gc_interval)
-    IO.inspect(new_state, label: "********************** collect_garbage 2 ********************")
+    Logger.debug("CHNL_BRK state: #{inspect(new_state)}")
     {:noreply, new_state}
   end
 end
