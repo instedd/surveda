@@ -532,6 +532,7 @@ defmodule Ask.Runtime.ChannelBroker do
         _from,
         %{config: config, channel_id: channel_id} = state
       ) do
+    IO.inspect(binding(), label: "**************** ask ********************")
     new_state =
       queue_contact(
         state,
@@ -565,6 +566,7 @@ defmodule Ask.Runtime.ChannelBroker do
         _from,
         %{config: config} = state
       ) do
+    IO.inspect(binding(), label: "**************** setup ********************")
     new_state = state
 
     end_state =
@@ -592,29 +594,34 @@ defmodule Ask.Runtime.ChannelBroker do
 
   @impl true
   def handle_call({:prepare, channel}, _from, %{config: config} = state) do
+    IO.inspect(binding(), label: "**************** prepare ********************")
     reply = Channel.prepare(channel)
     {:reply, reply, state, timeout_from_config(config)}
   end
 
   @impl true
   def handle_call({:has_delivery_confirmation?, channel}, _from, %{config: config} = state) do
+    IO.inspect(binding(), label: "**************** has_delivery_confirmation ********************")
     reply = Channel.has_delivery_confirmation?(channel)
     {:reply, reply, state, timeout_from_config(config)}
   end
 
   # @impl true
   def handle_call({:has_queued_message?, _channel_type, %{has_queued_message: has_queued_message}, _respondent_id}, _from, %{config: config} = state) do
+    IO.inspect(binding(), label: "**************** has_queued_message ********************")
     {:reply, has_queued_message, state, timeout_from_config(config)}
   end
 
   @impl true
   def handle_call({:has_queued_message?, _channel_type, _channel, respondent_id}, _from, %{config: config} = state) do
+    IO.inspect(binding(), label: "**************** has_queued_message ********************")
     reply = is_active(state, respondent_id) || is_queued(state, respondent_id)
     {:reply, reply, state, timeout_from_config(config)}
   end
 
   @impl true
   def handle_call({:cancel_message, channel_type, channel, respondent_id}, _from, %{config: config} = state) do
+    IO.inspect(binding(), label: "**************** cancel_message ********************")
     channel_state = get_channel_state(channel_type, state, respondent_id)
     Channel.cancel_message(channel, channel_state)
     state = deactivate_contact(state, respondent_id)
@@ -624,6 +631,7 @@ defmodule Ask.Runtime.ChannelBroker do
 
   @impl true
   def handle_call({:message_expired?, channel_type, channel, respondent_id}, _from, %{config: config} = state) do
+    IO.inspect(binding(), label: "**************** message_expired ********************")
     channel_state = get_channel_state(channel_type, state, respondent_id)
     reply = Channel.message_expired?(channel, channel_state)
     {:reply, reply, state, timeout_from_config(config)}
@@ -631,6 +639,7 @@ defmodule Ask.Runtime.ChannelBroker do
 
   @impl true
   def handle_call({:check_status, channel}, _from, %{config: config} = state) do
+    IO.inspect(binding(), label: "**************** check_status ********************")
     reply = Channel.check_status(channel)
     {:reply, reply, state, timeout_from_config(config)}
   end
@@ -690,6 +699,7 @@ defmodule Ask.Runtime.ChannelBroker do
         _from,
         %{config: config} = state
       ) do
+    IO.inspect(binding(), label: "**************** on_channel_settings_change ********************")
     new_capacity = Map.get(settings, "capacity", Config.default_channel_capacity())
     new_state = Map.put(state, :capacity, new_capacity)
     {:reply, :ok, new_state, timeout_from_config(config)}
@@ -698,6 +708,7 @@ defmodule Ask.Runtime.ChannelBroker do
 
   @impl true
   def handle_info(:timeout, %{channel_id: channel_id} = state) do
+    IO.inspect(binding(), label: "**************** timeout ********************")
     ChannelBrokerAgent.save_channel_state(state)
     ChannelBrokerSupervisor.terminate_child(channel_id)
   end
