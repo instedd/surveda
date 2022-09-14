@@ -2,7 +2,7 @@ defmodule Ask.Runtime.NuntiumChannel do
   @behaviour Ask.Runtime.ChannelProvider
   use Ask.Model
   alias Ask.Runtime.{Survey, NuntiumChannel, Flow, Reply, ReplyStep, ChannelBroker}
-  alias Ask.{Repo, Respondent, Channel, Stats, SurvedaMetrics, Logger}
+  alias Ask.{Repo, Respondent, Channel, SurvedaMetrics, Logger}
   import Ecto.Query
   import Plug.Conn
   defstruct [:oauth_token, :name, :base_url, :settings]
@@ -162,15 +162,15 @@ defmodule Ask.Runtime.NuntiumChannel do
                   _ ->
                     case survey.sync_step(respondent, Flow.Message.reply(body), "sms") do
                       {:reply, reply, respondent} ->
-                        update_stats(respondent, reply, true)
+                        update_stats(respondent.id, reply)
                         {reply, channel.id}
 
                       {:end, {:reply, reply}, respondent} ->
-                        update_stats(respondent, reply, true)
+                        update_stats(respondent.id, reply)
                         {reply, channel.id}
 
                       {:end, respondent} ->
-                        update_stats(respondent, true)
+                        update_stats(respondent.id)
                         {nil, nil}
                     end
                 end
@@ -219,19 +219,8 @@ defmodule Ask.Runtime.NuntiumChannel do
     end)
   end
 
-  def update_stats(respondent, reply \\ %Reply{}, received_sms \\ false) do
-    respondent = Repo.get(Respondent, respondent.id)
-    stats = respondent.stats
-
-    stats =
-      stats
-      |> Stats.add_sent_sms(Enum.count(Reply.prompts(reply)))
-
-    stats = if received_sms, do: Stats.add_received_sms(stats), else: stats
-
-    respondent
-    |> Respondent.changeset(%{stats: stats})
-    |> Repo.update!()
+  def update_stats(respondent, reply \\ %Reply{}) do
+    Respondent.update_stats(respondent, reply, true)
   end
 
   def sync_channels(user_id, base_url) do

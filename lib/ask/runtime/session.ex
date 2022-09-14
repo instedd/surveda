@@ -9,7 +9,6 @@ defmodule Ask.Runtime.Session do
     Schedule,
     RespondentDispositionHistory,
     Respondent,
-    Stats,
     Survey,
     UrlShortener
   }
@@ -275,7 +274,7 @@ defmodule Ask.Runtime.Session do
         reply
       )
 
-    respondent = update_stats(respondent)
+    respondent = Respondent.update_stats(respondent.id, reply)
     %{session | token: token, respondent: respondent}
   end
 
@@ -326,7 +325,8 @@ defmodule Ask.Runtime.Session do
         reply
       )
 
-    %{session | token: token}
+    respondent = Respondent.update_stats(session.respondent.id, reply)
+    %{session | token: token, respondent: respondent}
   end
 
   def channel_failed(%Session{current_mode: %{retries: []}, fallback_mode: nil} = session, reason) do
@@ -413,15 +413,6 @@ defmodule Ask.Runtime.Session do
     end
   end
 
-  def update_stats(respondent) do
-    respondent = Repo.get(Respondent, respondent.id)
-    stats = Stats.add_received_sms(respondent.stats)
-
-    respondent
-    |> Respondent.changeset(%{stats: stats})
-    |> Repo.update!()
-  end
-
   defp mode_start(
          %Session{
            flow: flow,
@@ -449,7 +440,7 @@ defmodule Ask.Runtime.Session do
           :ok =
             ChannelBroker.ask(channel.id, channel.type, runtime_channel, respondent, token, reply)
 
-          respondent = update_stats(respondent)
+          respondent = Respondent.update_stats(respondent.id, reply)
           {:end, reply, respondent}
         else
           {:end, reply, respondent}
@@ -471,7 +462,7 @@ defmodule Ask.Runtime.Session do
         :ok =
           ChannelBroker.ask(channel.id, channel.type, runtime_channel, respondent, token, reply)
 
-        respondent = update_stats(respondent)
+        respondent = Respondent.update_stats(respondent.id, reply)
         {:ok, %{session | flow: flow, respondent: respondent}, reply, current_timeout(session)}
     end
   end
@@ -566,6 +557,7 @@ defmodule Ask.Runtime.Session do
     log_prompts(reply, channel, flow.mode, session.respondent)
 
     :ok = ChannelBroker.ask(channel.id, channel.type, runtime_channel, respondent, token, reply)
+    respondent = Respondent.update_stats(respondent.id, reply)
 
     {:ok, %{session | flow: flow, respondent: respondent}, reply, current_timeout(session)}
   end

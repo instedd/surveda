@@ -64,7 +64,7 @@ defmodule Ask.Runtime.NuntiumChannelTest do
     assert Repo.get(Respondent, respondent.id).stats == %Ask.Stats{
              attempts: %{"sms" => 1},
              total_received_sms: 1,
-             total_sent_sms: 2
+             total_sent_sms: 3
            }
   end
 
@@ -159,11 +159,11 @@ defmodule Ask.Runtime.NuntiumChannelTest do
   end
 
   test "update stats", %{respondent: respondent} do
-    NuntiumChannel.update_stats(respondent, ReplyHelper.multiple(["Hello!", "Do you exercise?"]))
+    NuntiumChannel.update_stats(respondent.id, ReplyHelper.multiple(["Hello!", "Do you exercise?"]))
 
     assert Repo.get(Respondent, respondent.id).stats == %Ask.Stats{
              total_received_sms: 1,
-             total_sent_sms: 2,
+             total_sent_sms: 3,
              attempts: %{"sms" => 1}
            }
   end
