@@ -162,15 +162,15 @@ defmodule Ask.Runtime.NuntiumChannel do
                   _ ->
                     case survey.sync_step(respondent, Flow.Message.reply(body), "sms") do
                       {:reply, reply, respondent} ->
-                        update_stats(respondent, reply)
+                        update_stats(respondent, reply, true)
                         {reply, channel.id}
 
                       {:end, {:reply, reply}, respondent} ->
-                        update_stats(respondent, reply)
+                        update_stats(respondent, reply, true)
                         {reply, channel.id}
 
                       {:end, respondent} ->
-                        update_stats(respondent)
+                        update_stats(respondent, true)
                         {nil, nil}
                     end
                 end
@@ -219,14 +219,15 @@ defmodule Ask.Runtime.NuntiumChannel do
     end)
   end
 
-  def update_stats(respondent, reply \\ %Reply{}) do
+  def update_stats(respondent, reply \\ %Reply{}, received_sms \\ false) do
     respondent = Repo.get(Respondent, respondent.id)
     stats = respondent.stats
 
     stats =
       stats
-      |> Stats.add_received_sms()
       |> Stats.add_sent_sms(Enum.count(Reply.prompts(reply)))
+
+    stats = if received_sms, do: Stats.add_received_sms(stats), else: stats
 
     respondent
     |> Respondent.changeset(%{stats: stats})
