@@ -15,7 +15,7 @@ defmodule Ask.Runtime.ChannelBrokerTest do
   describe "Verboice" do
     test "Every Call is made when capacity isn't set", %{} do
       channel_capacity = nil
-      [test_channel, respondents] = initialize_survey("ivr", channel_capacity)
+      [test_channel, respondents, _channel] = initialize_survey("ivr", channel_capacity)
 
       broker_poll()
 
@@ -25,7 +25,7 @@ defmodule Ask.Runtime.ChannelBrokerTest do
     test "Calls aren't made while the channel capacity is full", %{conn: conn} do
       # Arrange
       channel_capacity = 5
-      [test_channel, respondents] = initialize_survey("ivr", channel_capacity)
+      [test_channel, respondents, _channel] = initialize_survey("ivr", channel_capacity)
 
       # Act
       broker_poll()
@@ -50,18 +50,17 @@ defmodule Ask.Runtime.ChannelBrokerTest do
   describe "Nuntium" do
     test "Every SMS is sent when capacity isn't set", %{} do
       channel_capacity = nil
-      [test_channel, respondents] = initialize_survey("sms", channel_capacity)
+      [test_channel, respondents, _channel] = initialize_survey("sms", channel_capacity)
 
       broker_poll()
 
       assert_sent_smss(respondents, test_channel)
     end
 
-    @tag :skip
     test "SMS aren't sent while the channel capacity is full", %{conn: conn} do
       # Arrange
       channel_capacity = 4
-      [test_channel, respondents] = initialize_survey("sms", channel_capacity)
+      [test_channel, respondents, channel] = initialize_survey("sms", channel_capacity)
 
       # Act
       broker_poll()
@@ -75,7 +74,7 @@ defmodule Ask.Runtime.ChannelBrokerTest do
       release_respondents = Enum.take(respondents, callbacks)
 
       # Act
-      callback_respondents(conn, release_respondents, "nuntium")
+      callback_respondents(conn, release_respondents, "nuntium", channel.id)
 
       # Assert
       released_respondents = Enum.take(respondents, channel_capacity + callbacks) |> Enum.take(-callbacks)
@@ -152,7 +151,7 @@ defmodule Ask.Runtime.ChannelBrokerTest do
     test "capacity is updated" do
       # Arrange
       first_capacity = 4
-      [test_channel, respondents] = initialize_survey("sms", first_capacity)
+      [test_channel, respondents, _channel] = initialize_survey("sms", first_capacity)
       channel = Repo.one(Channel)
       updated_capacity = 6
       new_settings = Map.put(channel.settings, "capacity", updated_capacity)
@@ -181,21 +180,22 @@ defmodule Ask.Runtime.ChannelBrokerTest do
   end
 
   defp initialize_survey(mode, channel_capacity) do
-    [_survey, _group, test_channel, respondents] =
+    [_survey, _group, test_channel, respondents, channel] =
       create_running_survey_with_channel_and_respondents_with_options(
         mode: mode,
         respondents_quantity: @respondents_quantity,
         channel_capacity: channel_capacity
       )
-    [test_channel, respondents]
+    [test_channel, respondents, channel]
   end
 
-  defp callback_respondents(conn, respondents, "nuntium" = _provider) do
+  defp callback_respondents(conn, respondents, "nuntium" = _provider, channel_id) do
     Enum.each(respondents, fn %{id: id} ->
       NuntiumChannel.callback(conn, %{
         "path" => ["status"],
         "respondent_id" => "#{id}",
-        "state" => "delivered"
+        "state" => "delivered",
+        "channel_id" => "#{channel_id}"
       })
     end)
   end
