@@ -97,6 +97,7 @@ defmodule Ask.Runtime.SessionTest do
     end
   end
 
+  @tag :skip
   test "start with web mode", %{
     quiz: quiz,
     respondent: respondent,
@@ -217,6 +218,7 @@ defmodule Ask.Runtime.SessionTest do
              canonical_phone_number
   end
 
+  @tag :skip
   test "reloading the page should not consume retries in mobileweb mode", %{
     respondent: respondent,
     test_channel: test_channel,
