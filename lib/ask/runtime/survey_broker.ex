@@ -228,8 +228,7 @@ defmodule Ask.Runtime.SurveyBroker do
     Repo.all(
       from r in Respondent,
         select: r.id,
-        where: r.id in ^respondent_ids,
-        limit: ^batch_limit_per_minute()
+        where: r.id in ^respondent_ids
     )
     |> Enum.each(fn respondent_id ->
       respondent = Respondent |> Repo.get(respondent_id)
