@@ -93,11 +93,11 @@ defmodule Ask.TestHelpers do
             insert(:respondent, survey: survey, respondent_group: group)
           end)
 
-        [survey, group, test_channel, respondents]
+        [survey, group, test_channel, respondents, channel]
       end
 
       defp create_running_survey_with_channel_and_respondent_with_options(options) do
-        [survey, group, test_channel, [%{canonical_phone_number: phone_number} = respondent]] =
+        [survey, group, test_channel, [%{canonical_phone_number: phone_number} = respondent], _channel] =
           create_running_survey_with_channel_and_respondents_with_options(options)
 
         [survey, group, test_channel, respondent, phone_number]

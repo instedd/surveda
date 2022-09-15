@@ -83,7 +83,7 @@ defmodule AskWeb.MobileSurveyControllerTest do
   test "respondent flow via mobileweb", %{conn: conn} do
     test_channel = TestChannel.new(false, true)
 
-    channel = insert(:channel, settings: test_channel |> TestChannel.settings(), type: "sms")
+    %{id: channel_id} = channel = insert(:channel, settings: test_channel |> TestChannel.settings(), type: "sms")
 
     quiz =
       insert(:questionnaire,
@@ -125,7 +125,8 @@ defmodule AskWeb.MobileSurveyControllerTest do
       ^test_channel,
       %Respondent{sanitized_phone_number: ^phone_number},
       _,
-      ReplyHelper.simple("Contact", message)
+      ReplyHelper.simple("Contact", message),
+      ^channel_id
     ]
 
     assert message ==
@@ -380,7 +381,7 @@ defmodule AskWeb.MobileSurveyControllerTest do
   test "using an invalid token", %{conn: conn} do
     test_channel = TestChannel.new(false, true)
 
-    channel = insert(:channel, settings: test_channel |> TestChannel.settings(), type: "sms")
+    %{id: channel_id} = channel = insert(:channel, settings: test_channel |> TestChannel.settings(), type: "sms")
     quiz = insert(:questionnaire, steps: @mobileweb_dummy_steps)
 
     survey =
@@ -413,7 +414,8 @@ defmodule AskWeb.MobileSurveyControllerTest do
       ^test_channel,
       %Respondent{sanitized_phone_number: ^phone_number},
       _,
-      ReplyHelper.simple("Contact", message)
+      ReplyHelper.simple("Contact", message),
+      ^channel_id
     ]
 
     assert message ==
@@ -544,7 +546,7 @@ defmodule AskWeb.MobileSurveyControllerTest do
   test "respondent flow via mobileweb with refusal + end", %{conn: conn} do
     test_channel = TestChannel.new(false, true)
 
-    channel = insert(:channel, settings: test_channel |> TestChannel.settings(), type: "sms")
+    %{id: channel_id} = channel = insert(:channel, settings: test_channel |> TestChannel.settings(), type: "sms")
 
     quiz =
       insert(:questionnaire,
@@ -582,7 +584,8 @@ defmodule AskWeb.MobileSurveyControllerTest do
       ^test_channel,
       %Respondent{sanitized_phone_number: ^phone_number},
       _,
-      ReplyHelper.simple("Contact", message)
+      ReplyHelper.simple("Contact", message),
+      ^channel_id
     ]
 
     assert message ==

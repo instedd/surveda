@@ -25,7 +25,7 @@ defmodule Ask.Runtime.SurveyTest do
 
   setup do
     {:ok, _} = ChannelStatusServer.start_link()
-    {:ok, _} = ChannelBrokerAgent.start_link()
+    ChannelBrokerAgent.start_link()
     :ok
   end
 
@@ -50,7 +50,8 @@ defmodule Ask.Runtime.SurveyTest do
         ^test_channel,
         %Respondent{sanitized_phone_number: ^phone_number, mode: ^sequence_mode},
         _,
-        ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO")
+        ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO"),
+        _channel_id
       ]
 
       survey = Repo.get(Ask.Survey, survey.id)
@@ -398,7 +399,8 @@ defmodule Ask.Runtime.SurveyTest do
         ^test_channel,
         %Respondent{sanitized_phone_number: ^phone_number},
         _,
-        ReplyHelper.simple("Contact", message)
+        ReplyHelper.simple("Contact", message),
+        _channel_id
       ]
 
       assert message ==
@@ -528,7 +530,8 @@ defmodule Ask.Runtime.SurveyTest do
         ^test_channel,
         %Respondent{sanitized_phone_number: ^phone_number},
         _,
-        ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO")
+        ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO"),
+        _channel_id
       ]
 
       survey = Repo.get(Ask.Survey, survey.id)
@@ -710,7 +713,8 @@ defmodule Ask.Runtime.SurveyTest do
         ^test_channel,
         %Respondent{sanitized_phone_number: ^phone_number},
         _,
-        ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO")
+        ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO"),
+        _channel_id
       ]
 
       survey = Repo.get(Ask.Survey, survey.id)
@@ -1042,7 +1046,8 @@ defmodule Ask.Runtime.SurveyTest do
         ^test_channel,
         %Respondent{sanitized_phone_number: ^phone_number},
         _,
-        %Ask.Runtime.Reply{steps: [step]}
+        %Ask.Runtime.Reply{steps: [step]},
+        _channel_id
       ]
 
       assert step ==
@@ -1151,7 +1156,8 @@ defmodule Ask.Runtime.SurveyTest do
         ^test_channel,
         %Respondent{sanitized_phone_number: ^phone_number},
         _token,
-        ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO")
+        ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO"),
+        _channel_id
       ]
 
       respondent = Repo.get(Respondent, respondent.id)
@@ -1463,7 +1469,8 @@ defmodule Ask.Runtime.SurveyTest do
         ^test_channel,
         %Respondent{sanitized_phone_number: ^phone_number},
         _token,
-        ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO")
+        ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO"),
+        _channel_id
       ]
 
       respondent = Repo.get(Respondent, respondent.id)
@@ -1556,7 +1563,8 @@ defmodule Ask.Runtime.SurveyTest do
         ^test_channel,
         %Respondent{sanitized_phone_number: ^phone_number},
         _token,
-        ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO")
+        ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO"),
+        _channel_id
       ]
 
       respondent = Repo.get(Respondent, respondent.id)
@@ -1648,7 +1656,8 @@ defmodule Ask.Runtime.SurveyTest do
         ^test_channel,
         %Respondent{sanitized_phone_number: ^phone_number},
         _token,
-        ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO")
+        ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO"),
+        _channel_id
       ]
 
       respondent = Repo.get(Respondent, respondent.id)
@@ -1766,7 +1775,8 @@ defmodule Ask.Runtime.SurveyTest do
         ^test_channel,
         %Respondent{sanitized_phone_number: ^phone_number},
         _token,
-        ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO")
+        ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO"),
+        _channel_id
       ]
 
       respondent = Repo.get(Respondent, respondent.id)
@@ -1857,7 +1867,8 @@ defmodule Ask.Runtime.SurveyTest do
         ^test_channel,
         %Respondent{sanitized_phone_number: ^phone_number},
         _token,
-        ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO")
+        ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO"),
+        _channel_id
       ]
 
       respondent = Repo.get(Respondent, respondent.id)
@@ -1976,7 +1987,8 @@ defmodule Ask.Runtime.SurveyTest do
         ^test_channel,
         %Respondent{sanitized_phone_number: ^phone_number},
         _token,
-        ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO")
+        ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO"),
+        _channel_id
       ]
 
       respondent = Repo.get(Respondent, respondent.id)
@@ -2141,7 +2153,8 @@ defmodule Ask.Runtime.SurveyTest do
       ^test_channel,
       %Respondent{sanitized_phone_number: ^phone_number},
       _,
-      ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO")
+      ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO"),
+      _channel_id
     ]
 
     respondent = Repo.get(Respondent, respondent.id)
@@ -2190,7 +2203,8 @@ defmodule Ask.Runtime.SurveyTest do
       ^test_channel,
       %Respondent{sanitized_phone_number: ^phone_number},
       _,
-      ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO")
+      ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO"),
+      _channel_id
     ]
 
     respondent = Repo.get(Respondent, respondent.id)
@@ -2302,7 +2316,8 @@ defmodule Ask.Runtime.SurveyTest do
       ^test_channel,
       ^respondent,
       ^token,
-      ReplyHelper.simple("Do you exercise?", "Do you exercise? Reply 1 for YES, 2 for NO")
+      ReplyHelper.simple("Do you exercise?", "Do you exercise? Reply 1 for YES, 2 for NO"),
+      _channel_id
     ]
 
     survey = Repo.get(Ask.Survey, survey.id)
@@ -2366,7 +2381,8 @@ defmodule Ask.Runtime.SurveyTest do
       ^test_channel,
       ^respondent,
       ^token,
-      ReplyHelper.simple("Do you exercise?", "Do you exercise? Reply 1 for YES, 2 for NO")
+      ReplyHelper.simple("Do you exercise?", "Do you exercise? Reply 1 for YES, 2 for NO"),
+      _channel_id
     ]
 
     respondent = Repo.get!(Respondent, respondent.id)
@@ -2407,7 +2423,8 @@ defmodule Ask.Runtime.SurveyTest do
       ^test_channel,
       ^respondent,
       ^token,
-      ReplyHelper.simple("Do you exercise?", "Do you exercise? Reply 1 for YES, 2 for NO")
+      ReplyHelper.simple("Do you exercise?", "Do you exercise? Reply 1 for YES, 2 for NO"),
+      _channel_id
     ]
 
     respondent = Repo.get!(Respondent, respondent.id)
@@ -2536,7 +2553,8 @@ defmodule Ask.Runtime.SurveyTest do
       ^test_channel,
       ^respondent,
       ^token,
-      ReplyHelper.simple("Do you exercise?", "Do you exercise? Reply 1 for YES, 2 for NO")
+      ReplyHelper.simple("Do you exercise?", "Do you exercise? Reply 1 for YES, 2 for NO"),
+      _channel_id
     ]
 
     respondent = Repo.get!(Respondent, respondent.id)
@@ -2576,7 +2594,8 @@ defmodule Ask.Runtime.SurveyTest do
       ^test_channel,
       ^respondent,
       ^token,
-      ReplyHelper.simple("Do you exercise?", "Do you exercise? Reply 1 for YES, 2 for NO")
+      ReplyHelper.simple("Do you exercise?", "Do you exercise? Reply 1 for YES, 2 for NO"),
+      _channel_id
     ]
 
     respondent = Repo.get(Respondent, respondent.id)
@@ -2991,7 +3010,8 @@ defmodule Ask.Runtime.SurveyTest do
       ^test_channel,
       %Respondent{sanitized_phone_number: ^phone_number},
       _token,
-      ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO")
+      ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO"),
+      _channel_id
     ]
 
     respondent = Repo.get(Respondent, respondent.id)
@@ -3050,7 +3070,8 @@ defmodule Ask.Runtime.SurveyTest do
       ^test_channel,
       %Respondent{sanitized_phone_number: ^phone_number},
       _token,
-      ReplyHelper.simple("Do you exercise", "Do you exercise? Reply 1 for YES, 2 for NO")
+      ReplyHelper.simple("Do you exercise", "Do you exercise? Reply 1 for YES, 2 for NO"),
+      _channel_id
     ]
 
     respondent = Repo.get(Respondent, respondent.id)
@@ -3310,7 +3331,8 @@ defmodule Ask.Runtime.SurveyTest do
       ^test_channel,
       %Respondent{sanitized_phone_number: ^phone_number},
       _,
-      ReplyHelper.simple("Contact", message)
+      ReplyHelper.simple("Contact", message),
+      _channel_id
     ]
 
     assert message ==
@@ -3344,7 +3366,8 @@ defmodule Ask.Runtime.SurveyTest do
       ^test_channel,
       %Respondent{sanitized_phone_number: ^phone_number},
       _,
-      ReplyHelper.simple("Contact", message)
+      ReplyHelper.simple("Contact", message),
+      _channel_id
     ]
 
     assert message ==

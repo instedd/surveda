@@ -49,7 +49,8 @@ defmodule Ask.Runtime.SurveyBrokerTest do
         ^test_channel,
         ^respondent,
         ^token,
-        ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO")
+        ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO"),
+        _channel_id
       ]
 
       # Set for immediate timeout
@@ -68,7 +69,8 @@ defmodule Ask.Runtime.SurveyBrokerTest do
         ^test_channel,
         %Respondent{sanitized_phone_number: ^phone_number},
         _token,
-        ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO")
+        ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO"),
+        _channel_id
       ]
 
       # Set for immediate timeout
@@ -117,7 +119,8 @@ defmodule Ask.Runtime.SurveyBrokerTest do
         ^test_channel,
         ^respondent,
         ^token,
-        ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO")
+        ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO"),
+        _channel_id
       ]
 
       # Assert activation
@@ -140,7 +143,8 @@ defmodule Ask.Runtime.SurveyBrokerTest do
         ^test_channel,
         %Respondent{sanitized_phone_number: ^phone_number},
         _token,
-        ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO")
+        ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO"),
+        _channel_id
       ]
 
       # Assert first retry
@@ -181,7 +185,8 @@ defmodule Ask.Runtime.SurveyBrokerTest do
         ^test_channel,
         %Respondent{sanitized_phone_number: ^phone_number, mode: ^sequence_mode},
         _,
-        ReplyHelper.simple("Contact", message)
+        ReplyHelper.simple("Contact", message),
+        _channel_id
       ]
 
       assert message ==
@@ -211,7 +216,8 @@ defmodule Ask.Runtime.SurveyBrokerTest do
         ^test_channel,
         %Respondent{sanitized_phone_number: ^phone_number},
         _,
-        ReplyHelper.simple("Contact", message)
+        ReplyHelper.simple("Contact", message),
+        _channel_id
       ]
 
       assert message ==
@@ -394,7 +400,8 @@ defmodule Ask.Runtime.SurveyBrokerTest do
         ^test_channel,
         ^respondent,
         ^token,
-        ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO")
+        ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO"),
+        _channel_id
       ]
 
       respondent = Repo.get(Respondent, respondent.id)
@@ -413,7 +420,8 @@ defmodule Ask.Runtime.SurveyBrokerTest do
         ^test_channel,
         %Respondent{sanitized_phone_number: ^phone_number},
         _token,
-        ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO")
+        ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO"),
+        _channel_id
       ]
 
       respondent = Repo.get(Respondent, respondent.id)
@@ -431,7 +439,8 @@ defmodule Ask.Runtime.SurveyBrokerTest do
         ^test_channel,
         %Respondent{sanitized_phone_number: ^phone_number},
         _token,
-        ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO")
+        ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO"),
+        _channel_id
       ]
 
       respondent = Repo.get(Respondent, respondent.id)
@@ -557,7 +566,8 @@ defmodule Ask.Runtime.SurveyBrokerTest do
         ^test_fallback_channel,
         ^respondent,
         ^token,
-        ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO")
+        ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO"),
+        _channel_id
       ]
     end
   end
@@ -1146,8 +1156,8 @@ defmodule Ask.Runtime.SurveyBrokerTest do
       ChannelStatusServer.poll(channel_status_server)
       SurveyBroker.poll()
 
-      refute_received [:ask, ^test_channel_1, _, _, _]
-      refute_received [:ask, ^test_channel_2, _, _, _]
+      refute_received [:ask, ^test_channel_1, _, _, _, _channel_id]
+      refute_received [:ask, ^test_channel_2, _, _, _, _channel_id]
 
       :ok = broker |> GenServer.stop()
       :ok = channel_status_server |> GenServer.stop()
@@ -1170,7 +1180,8 @@ defmodule Ask.Runtime.SurveyBrokerTest do
         ^test_channel,
         %Respondent{sanitized_phone_number: ^phone_number},
         _,
-        ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO")
+        ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO"),
+        _channel_id
       ]
 
       survey = Repo.get(Survey, survey.id)
@@ -1215,7 +1226,8 @@ defmodule Ask.Runtime.SurveyBrokerTest do
         ^test_channel,
         %Respondent{sanitized_phone_number: ^phone_number},
         _,
-        ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO")
+        ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO"),
+        _channel_id
       ]
 
       survey = Repo.get(Ask.Survey, survey.id)
@@ -1265,7 +1277,8 @@ defmodule Ask.Runtime.SurveyBrokerTest do
         ^test_channel,
         %Respondent{sanitized_phone_number: ^phone_number},
         _,
-        ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO")
+        ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO"),
+        _channel_id
       ]
 
       survey = Repo.get(Ask.Survey, survey.id)
