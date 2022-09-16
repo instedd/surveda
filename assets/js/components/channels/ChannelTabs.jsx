@@ -28,9 +28,9 @@ class ChannelTabs extends Component {
       return <div />
     }
 
-    const settingsTab = this.activeChannelUI(channel) ? (
-      <TabLink key="settings" tabId="channel_tabs" to={routes.channelSettings(channelId)}>
-        {t("Settings")}
+    const capacityTab = this.activeChannelUI(channel) ? (
+      <TabLink key="settings" tabId="channel_tabs" to={routes.channelCapacity(channelId)}>
+        {t("Capacity")}
       </TabLink>
     ) : null
 
@@ -42,7 +42,7 @@ class ChannelTabs extends Component {
         <TabLink key="patterns" tabId="channel_tabs" to={routes.channelPatterns(channelId)}>
           {t("Patterns")}
         </TabLink>
-        {settingsTab}
+        {capacityTab}
       </Tabs>
     )
   }

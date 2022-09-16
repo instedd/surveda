@@ -106,11 +106,13 @@ defimpl Ask.Runtime.Channel, for: Ask.TestChannel do
 
   def setup(channel, respondent, token, _not_before, _not_after) do
     send(channel.pid, [:setup, channel, respondent, token])
+    # TODO: Mock this response to test error scenarios.
+    # Real answers like this should be tested: `{:error, {:error, 400}}`
     {:ok, 0}
   end
 
-  def ask(channel, respondent, token, prompts) do
-    send(channel.pid, [:ask, channel, respondent, token, prompts])
+  def ask(channel, respondent, token, prompts, channel_id) do
+    send(channel.pid, [:ask, channel, respondent, token, prompts, channel_id])
     respondent
   end
 

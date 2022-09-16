@@ -433,7 +433,7 @@ defmodule Ask.Survey do
   end
 
   def environment_variable_named(name),
-    do: ConfigHelper.get_config(Ask.Runtime.Broker, name, &String.to_integer/1)
+    do: ConfigHelper.get_config(Ask.Runtime.SurveyBroker, name, &String.to_integer/1)
 
   def launched?(survey) do
     survey.state in [:running, :terminated]

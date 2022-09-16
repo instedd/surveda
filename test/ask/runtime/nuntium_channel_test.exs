@@ -1,58 +1,71 @@
 defmodule Ask.Runtime.NuntiumChannelTest do
   use AskWeb.ConnCase
   use Ask.DummySteps
+  use Ask.TestHelpers
 
   alias Ask.Respondent
-  alias Ask.Runtime.{NuntiumChannel, ReplyHelper, SurveyStub}
+  alias Ask.Runtime.{NuntiumChannel, ReplyHelper, SurveyStub, ChannelStatusServer, ChannelBrokerAgent}
 
   require Ask.Runtime.ReplyHelper
 
   setup %{conn: conn} do
     GenServer.start_link(SurveyStub, [], name: SurveyStub.server_ref())
+    ChannelStatusServer.start_link()
+    ChannelBrokerAgent.start_link()
 
-    respondent =
-      insert(:respondent,
-        phone_number: "123 456",
-        sanitized_phone_number: "123456",
-        canonical_phone_number: "123456",
-        state: "active",
-        session: %{"current_mode" => %{"mode" => "sms"}}
+    [_survey, _group, _test_channel, [respondent], channel] =
+      create_running_survey_with_channel_and_respondents_with_options(
+        mode: "sms",
+        respondents_quantity: 1
       )
+    broker_poll()
+    # After the broker poll the respondent is active and already received 1 AO message (total_sent_sms = 1)
+    respondent = Repo.get!(Respondent, respondent.id)
 
-    {:ok, conn: conn, respondent: respondent}
+    {:ok, conn: conn, respondent: respondent, channel: channel}
   end
 
-  test "callback with :prompts", %{conn: conn, respondent: respondent} do
+  test "callback with :prompts", %{conn: conn, respondent: respondent, channel: channel} do
     respondent_id = respondent.id
 
     GenServer.cast(
       SurveyStub.server_ref(),
       {:expects,
-       fn
-         {:sync_step, %Respondent{id: ^respondent_id}, {:reply, "yes"}, "sms"} ->
-           {:reply, ReplyHelper.multiple(["Hello!", "Do you exercise?"]), respondent}
-       end}
-    )
+      fn
+        {:sync_step, %Respondent{id: ^respondent_id}, {:reply, "yes"}, "sms"} ->
+          {:reply, ReplyHelper.multiple(["Hello!", "Do you exercise?"]), respondent}
+        end}
+        )
 
     conn =
       NuntiumChannel.callback(
         conn,
-        %{"channel" => "chan1", "from" => "sms://123456", "body" => "yes"},
+        %{"channel" => "chan1", "from" => "sms://#{respondent.sanitized_phone_number}", "body" => "yes"},
         SurveyStub
       )
 
+    channel_id = channel.id
+    to = "sms://#{respondent.sanitized_phone_number}"
+
     assert [
-             %{"to" => "sms://123456", "body" => "Hello!", "step_title" => "Hello!"},
              %{
-               "to" => "sms://123456",
+               "to" => ^to,
+               "body" => "Hello!",
+               "step_title" => "Hello!",
+               "channel_id" => ^channel_id
+             },
+             %{
+               "to" => ^to,
                "body" => "Do you exercise?",
-               "step_title" => "Do you exercise?"
+               "step_title" => "Do you exercise?",
+               "channel_id" => ^channel_id
              }
            ] = json_response(conn, 200)
 
     assert Repo.get(Respondent, respondent.id).stats == %Ask.Stats{
+             attempts: %{"sms" => 1},
              total_received_sms: 1,
-             total_sent_sms: 2
+             total_sent_sms: 3
            }
   end
 
@@ -71,15 +84,16 @@ defmodule Ask.Runtime.NuntiumChannelTest do
     conn =
       NuntiumChannel.callback(
         conn,
-        %{"channel" => "chan1", "from" => "sms://123456", "body" => "yes"},
+        %{"channel" => "chan1", "from" => "sms://#{respondent.sanitized_phone_number}", "body" => "yes"},
         SurveyStub
       )
 
     assert json_response(conn, 200) == []
 
     assert Repo.get(Respondent, respondent.id).stats == %Ask.Stats{
+             attempts: %{"sms" => 1},
              total_received_sms: 1,
-             total_sent_sms: 0
+             total_sent_sms: 1
            }
   end
 
@@ -98,16 +112,19 @@ defmodule Ask.Runtime.NuntiumChannelTest do
     conn =
       NuntiumChannel.callback(
         conn,
-        %{"channel" => "chan1", "from" => "sms://123456", "body" => "yes"},
+        %{"channel" => "chan1", "from" => "sms://#{respondent.sanitized_phone_number}", "body" => "yes"},
         SurveyStub
       )
 
-    assert [%{"body" => "Bye!", "to" => "sms://123456", "step_title" => "Quota completed"}] =
+    to = "sms://#{respondent.sanitized_phone_number}"
+
+    assert [%{"body" => "Bye!", "to" => ^to, "step_title" => "Quota completed"}] =
              json_response(conn, 200)
 
     assert Repo.get(Respondent, respondent.id).stats == %Ask.Stats{
+             attempts: %{"sms" => 1},
              total_received_sms: 1,
-             total_sent_sms: 1
+             total_sent_sms: 2
            }
   end
 
@@ -145,11 +162,12 @@ defmodule Ask.Runtime.NuntiumChannelTest do
   end
 
   test "update stats", %{respondent: respondent} do
-    NuntiumChannel.update_stats(respondent, ReplyHelper.multiple(["Hello!", "Do you exercise?"]))
+    NuntiumChannel.update_stats(respondent.id, ReplyHelper.multiple(["Hello!", "Do you exercise?"]))
 
     assert Repo.get(Respondent, respondent.id).stats == %Ask.Stats{
              total_received_sms: 1,
-             total_sent_sms: 2
+             total_sent_sms: 3,
+             attempts: %{"sms" => 1}
            }
   end
 
@@ -161,7 +179,7 @@ defmodule Ask.Runtime.NuntiumChannelTest do
     conn =
       NuntiumChannel.callback(
         conn,
-        %{"channel" => "foo", "from" => "sms://123456", "body" => "yes"},
+        %{"channel" => "foo", "from" => "sms://#{respondent.sanitized_phone_number}", "body" => "yes"},
         SurveyStub
       )
 
@@ -173,13 +191,13 @@ defmodule Ask.Runtime.NuntiumChannelTest do
   @base_url "http://test.com"
 
   describe "channel sync" do
-    test "create channels" do
+    test "create channels", %{channel: %{id: channel_id} = _channel} do
       user = insert(:user)
       user_id = user.id
       account = "test_account"
       nuntium_channels = [{account, @channel_foo}, {account, @channel_bar}]
       NuntiumChannel.sync_channels(user_id, @base_url, nuntium_channels)
-      channels = Ask.Channel |> order_by([c], c.name) |> Repo.all()
+      channels = Ask.Channel |> order_by([c], c.name) |> where([c], c.id != ^channel_id) |> Repo.all()
 
       assert [
                %Ask.Channel{
@@ -209,7 +227,7 @@ defmodule Ask.Runtime.NuntiumChannelTest do
   end
 
   describe "create channel" do
-    test "create channel" do
+    test "create channel", %{channel: %{id: channel_id} = _channel} do
       user = insert(:user)
       user_id = user.id
 
@@ -219,7 +237,7 @@ defmodule Ask.Runtime.NuntiumChannelTest do
         Map.put(@channel_foo, "account", "test_account")
       )
 
-      channels = Ask.Channel |> Repo.all()
+      channels = Ask.Channel |> where([c], c.id != ^channel_id) |> Repo.all()
 
       assert [
                %Ask.Channel{

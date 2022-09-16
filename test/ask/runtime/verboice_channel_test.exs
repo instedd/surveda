@@ -1,6 +1,7 @@
 defmodule Ask.Runtime.VerboiceChannelTest do
   use AskWeb.ConnCase
   use Ask.DummySteps
+  use Ask.TestHelpers
   use Timex
 
   alias Ask.{Respondent, Survey, RetryStat, Stats}
@@ -10,9 +11,10 @@ defmodule Ask.Runtime.VerboiceChannelTest do
     Flow,
     ReplyHelper,
     SurveyLogger,
-    Broker,
+    SurveyBroker,
     ChannelStatusServer,
-    SurveyStub
+    SurveyStub,
+    ChannelBrokerAgent
   }
 
   require Ask.Runtime.ReplyHelper
@@ -25,7 +27,8 @@ defmodule Ask.Runtime.VerboiceChannelTest do
 
   setup %{conn: conn} do
     GenServer.start_link(SurveyStub, [], name: SurveyStub.server_ref())
-    ChannelStatusServer.start_link()
+    {:ok, _} = ChannelStatusServer.start_link()
+    {:ok, _} = ChannelBrokerAgent.start_link()
     Ask.Config.start_link()
 
     respondent =
@@ -412,8 +415,8 @@ defmodule Ask.Runtime.VerboiceChannelTest do
       respondent = insert(:respondent, survey: survey, respondent_group: group)
 
       {:ok, logger} = SurveyLogger.start_link()
-      {:ok, broker} = Broker.start_link()
-      Broker.poll()
+      {:ok, broker} = SurveyBroker.start_link()
+      SurveyBroker.poll()
 
       survey = Repo.get(Survey, survey.id)
       assert survey.state == :running
@@ -486,8 +489,8 @@ defmodule Ask.Runtime.VerboiceChannelTest do
       respondent = insert(:respondent, survey: survey, respondent_group: group)
 
       {:ok, logger} = SurveyLogger.start_link()
-      {:ok, broker} = Broker.start_link()
-      Broker.poll()
+      {:ok, broker} = SurveyBroker.start_link()
+      SurveyBroker.poll()
 
       survey = Repo.get(Survey, survey.id)
       assert survey.state == :running
@@ -537,8 +540,8 @@ defmodule Ask.Runtime.VerboiceChannelTest do
       respondent = insert(:respondent, survey: survey, respondent_group: group)
 
       {:ok, logger} = SurveyLogger.start_link()
-      {:ok, broker} = Broker.start_link()
-      Broker.poll()
+      {:ok, broker} = SurveyBroker.start_link()
+      SurveyBroker.poll()
 
       survey = Repo.get(Survey, survey.id)
       assert survey.state == :running
@@ -588,8 +591,8 @@ defmodule Ask.Runtime.VerboiceChannelTest do
       respondent = insert(:respondent, survey: survey, respondent_group: group)
 
       {:ok, logger} = SurveyLogger.start_link()
-      {:ok, broker} = Broker.start_link()
-      Broker.poll()
+      {:ok, broker} = SurveyBroker.start_link()
+      SurveyBroker.poll()
 
       survey = Repo.get(Survey, survey.id)
       assert survey.state == :running
@@ -638,8 +641,8 @@ defmodule Ask.Runtime.VerboiceChannelTest do
       respondent = insert(:respondent, survey: survey, respondent_group: group)
 
       {:ok, logger} = SurveyLogger.start_link()
-      {:ok, broker} = Broker.start_link()
-      Broker.poll()
+      {:ok, broker} = SurveyBroker.start_link()
+      SurveyBroker.poll()
 
       survey = Repo.get(Survey, survey.id)
       assert survey.state == :running
@@ -690,8 +693,8 @@ defmodule Ask.Runtime.VerboiceChannelTest do
       respondent = insert(:respondent, survey: survey, respondent_group: group)
 
       {:ok, logger} = SurveyLogger.start_link()
-      {:ok, broker} = Broker.start_link()
-      Broker.poll()
+      {:ok, broker} = SurveyBroker.start_link()
+      SurveyBroker.poll()
 
       survey = Repo.get(Survey, survey.id)
       assert survey.state == :running
@@ -747,7 +750,7 @@ defmodule Ask.Runtime.VerboiceChannelTest do
         )
 
       {:ok, logger} = SurveyLogger.start_link()
-      Broker.handle_info(:poll, nil, Timex.now())
+      SurveyBroker.handle_info(:poll, nil, Timex.now())
 
       survey = Repo.get(Survey, survey.id)
       assert survey.state == :running
@@ -847,8 +850,8 @@ defmodule Ask.Runtime.VerboiceChannelTest do
       respondent = insert(:respondent, survey: survey, respondent_group: group)
 
       {:ok, logger} = SurveyLogger.start_link()
-      {:ok, broker} = Broker.start_link()
-      Broker.poll()
+      {:ok, broker} = SurveyBroker.start_link()
+      SurveyBroker.poll()
 
       respondent = Repo.get(Respondent, respondent.id)
       assert respondent.state == :active

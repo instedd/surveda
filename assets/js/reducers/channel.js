@@ -23,6 +23,8 @@ export const dataReducer = (state: Channel, action: any): Channel => {
       return setOutputPattern(state, action)
     case actions.REMOVE_PATTERN:
       return removePattern(state, action)
+    case actions.SET_CAPACITY:
+      return setCapacity(state, action)
     default:
       return state
   }
@@ -98,6 +100,16 @@ const removePattern = (state, action) => {
   const patterns = [...state.patterns]
   const newPatterns = [...patterns.slice(0, action.index), ...patterns.slice(action.index + 1)]
   return { ...state, patterns: newPatterns }
+}
+
+const setCapacity = (state, action) => {
+  return {
+    ...state,
+    settings: {
+      ...state.settings,
+      capacity: action.value,
+    }
+  }
 }
 
 const validate = (state: any) => {
