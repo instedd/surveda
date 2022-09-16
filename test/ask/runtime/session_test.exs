@@ -97,21 +97,21 @@ defmodule Ask.Runtime.SessionTest do
     end
   end
 
-  @tag :skip
   test "start with web mode", %{
     quiz: quiz,
     respondent: respondent,
     test_channel: test_channel,
     channel: channel
   } do
-    {:ok, %{respondent: respondent} = session, _, timeout} =
+    {:ok, %{respondent: session_respondent} = session, _, timeout} =
       Session.start(quiz, respondent, channel, "mobileweb", Schedule.always())
 
     assert %Session{token: token} = session
     assert 120 = timeout
     assert token != nil
 
-    assert_receive [:setup, ^test_channel, ^respondent, ^token]
+    assert_receive [:setup, ^test_channel, respondent, ^token]
+    assert session_respondent.id == respondent.id
 
     assert_receive [
       :ask,
@@ -218,7 +218,6 @@ defmodule Ask.Runtime.SessionTest do
              canonical_phone_number
   end
 
-  @tag :skip
   test "reloading the page should not consume retries in mobileweb mode", %{
     respondent: respondent,
     test_channel: test_channel,
@@ -227,14 +226,15 @@ defmodule Ask.Runtime.SessionTest do
     quiz = insert(:questionnaire, steps: @mobileweb_dummy_steps)
     retries = [1, 2, 3]
 
-    {:ok, %{respondent: respondent} = session, _, _} =
+    {:ok, %{respondent: session_respondent} = session, _, _} =
       Session.start(quiz, respondent, channel, "mobileweb", Schedule.always(), retries)
 
-    assert 1 == respondent.stats |> Stats.attempts(:mobileweb)
+    assert 1 == session_respondent.stats |> Stats.attempts(:mobileweb)
     assert %Session{token: token} = session
     assert token != nil
 
-    assert_receive [:setup, ^test_channel, ^respondent, ^token]
+    assert_receive [:setup, ^test_channel, respondent, ^token]
+    assert session_respondent.id == respondent.id
 
     assert_receive [
       :ask,
