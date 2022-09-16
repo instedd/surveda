@@ -39,7 +39,7 @@ CREATE TABLE `activity_log` (
   KEY `activity_log_user_id_fkey` (`user_id`),
   CONSTRAINT `activity_log_project_id_fkey` FOREIGN KEY (`project_id`) REFERENCES `projects` (`id`),
   CONSTRAINT `activity_log_user_id_fkey` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=608 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=66 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -60,7 +60,7 @@ CREATE TABLE `audios` (
   `updated_at` datetime NOT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `id` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=92 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -78,8 +78,8 @@ CREATE TABLE `channel_broker_recovery` (
   `inserted_at` datetime NOT NULL,
   `updated_at` datetime NOT NULL,
   PRIMARY KEY (`id`),
-  KEY `channel_broker_recovery_channel_id_fkey` (`channel_id`),
-  CONSTRAINT `channel_broker_recovery_channel_id_fkey` FOREIGN KEY (`channel_id`) REFERENCES `channels` (`id`)
+  UNIQUE KEY `channel_broker_recovery_channel_id_index` (`channel_id`),
+  CONSTRAINT `channel_broker_recovery_channel_id_fkey` FOREIGN KEY (`channel_id`) REFERENCES `channels` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -105,7 +105,7 @@ CREATE TABLE `channels` (
   UNIQUE KEY `id` (`id`),
   KEY `channels_user_id_index` (`user_id`),
   CONSTRAINT `channels_user_id_fkey` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=189 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=13 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -173,7 +173,7 @@ CREATE TABLE `folders` (
   UNIQUE KEY `folders_name_project_id_index` (`name`,`project_id`),
   KEY `folders_project_id_index` (`project_id`),
   CONSTRAINT `folders_project_id_fkey` FOREIGN KEY (`project_id`) REFERENCES `projects` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -217,7 +217,7 @@ CREATE TABLE `oauth_tokens` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `id` (`id`),
   UNIQUE KEY `oauth_tokens_user_id_provider_base_url_index` (`user_id`,`provider`,`base_url`)
-) ENGINE=InnoDB AUTO_INCREMENT=33 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -262,7 +262,7 @@ CREATE TABLE `project_channels` (
   KEY `project_channels_project_id_fkey` (`project_id`),
   CONSTRAINT `project_channels_channel_id_fkey` FOREIGN KEY (`channel_id`) REFERENCES `channels` (`id`) ON DELETE CASCADE,
   CONSTRAINT `project_channels_project_id_fkey` FOREIGN KEY (`project_id`) REFERENCES `projects` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -285,7 +285,7 @@ CREATE TABLE `project_memberships` (
   KEY `project_memberships_project_id_fkey` (`project_id`),
   CONSTRAINT `project_memberships_project_id_fkey` FOREIGN KEY (`project_id`) REFERENCES `projects` (`id`) ON DELETE CASCADE,
   CONSTRAINT `project_memberships_user_id_fkey` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -305,7 +305,7 @@ CREATE TABLE `projects` (
   `archived` tinyint(1) DEFAULT '0',
   PRIMARY KEY (`id`),
   UNIQUE KEY `id` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -328,7 +328,7 @@ CREATE TABLE `questionnaire_variables` (
   KEY `questionnaire_variables_questionnaire_id_index` (`questionnaire_id`),
   CONSTRAINT `questionnaire_variables_project_id_fkey` FOREIGN KEY (`project_id`) REFERENCES `projects` (`id`),
   CONSTRAINT `questionnaire_variables_questionnaire_id_fkey` FOREIGN KEY (`questionnaire_id`) REFERENCES `questionnaires` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=877 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=24 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -362,7 +362,7 @@ CREATE TABLE `questionnaires` (
   KEY `questionnaires_snapshot_of_fkey` (`snapshot_of`),
   CONSTRAINT `questionnaires_project_id_fkey` FOREIGN KEY (`project_id`) REFERENCES `projects` (`id`),
   CONSTRAINT `questionnaires_snapshot_of_fkey` FOREIGN KEY (`snapshot_of`) REFERENCES `questionnaires` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=43 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=12 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -434,7 +434,7 @@ CREATE TABLE `respondent_disposition_history` (
   KEY `respondent_disposition_history_survey_id_id_index` (`survey_id`,`id`),
   CONSTRAINT `respondent_disposition_history_respondent_id_fkey` FOREIGN KEY (`respondent_id`) REFERENCES `respondents` (`id`) ON DELETE CASCADE,
   CONSTRAINT `respondent_disposition_history_survey_id_fkey` FOREIGN KEY (`survey_id`) REFERENCES `surveys` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=1236 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=1036 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -457,7 +457,7 @@ CREATE TABLE `respondent_group_channels` (
   KEY `respondent_group_channels_channel_id_index` (`channel_id`),
   CONSTRAINT `respondent_group_channels_channel_id_fkey` FOREIGN KEY (`channel_id`) REFERENCES `channels` (`id`),
   CONSTRAINT `respondent_group_channels_respondent_group_id_fkey` FOREIGN KEY (`respondent_group_id`) REFERENCES `respondent_groups` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=40 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=10 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -479,7 +479,7 @@ CREATE TABLE `respondent_groups` (
   UNIQUE KEY `id` (`id`),
   KEY `respondent_groups_survey_id_fkey` (`survey_id`),
   CONSTRAINT `respondent_groups_survey_id_fkey` FOREIGN KEY (`survey_id`) REFERENCES `surveys` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=44 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=11 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -551,7 +551,7 @@ CREATE TABLE `respondents` (
   CONSTRAINT `respondents_respondent_group_id_fkey` FOREIGN KEY (`respondent_group_id`) REFERENCES `respondent_groups` (`id`) ON DELETE CASCADE,
   CONSTRAINT `respondents_retry_stat_id_fkey` FOREIGN KEY (`retry_stat_id`) REFERENCES `retry_stats` (`id`) ON DELETE CASCADE,
   CONSTRAINT `respondents_survey_id_fkey` FOREIGN KEY (`survey_id`) REFERENCES `surveys` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=1478 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=806 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 /*!50003 SET @saved_cs_client      = @@character_set_client */ ;
 /*!50003 SET @saved_cs_results     = @@character_set_results */ ;
@@ -752,7 +752,7 @@ CREATE TABLE `responses` (
   UNIQUE KEY `id` (`id`),
   KEY `responses_respondent_id_index` (`respondent_id`),
   CONSTRAINT `responses_respondent_id_fkey` FOREIGN KEY (`respondent_id`) REFERENCES `respondents` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=30 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=181 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -777,7 +777,7 @@ CREATE TABLE `retry_stats` (
   UNIQUE KEY `retry_stats_mode_attempt_retry_time_ivr_active_survey_id_index` (`mode`,`attempt`,`retry_time`,`ivr_active`,`survey_id`),
   KEY `retry_stats_survey_id_fkey` (`survey_id`),
   CONSTRAINT `retry_stats_survey_id_fkey` FOREIGN KEY (`survey_id`) REFERENCES `surveys` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=440 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=488 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -812,7 +812,7 @@ CREATE TABLE `sessions` (
   UNIQUE KEY `id` (`id`),
   UNIQUE KEY `sessions_token_index` (`token`),
   KEY `sessions_user_id_index` (`user_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=15 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -857,7 +857,7 @@ CREATE TABLE `survey_log_entries` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `id` (`id`),
   KEY `survey_log_entries_survey_id_respondent_hashed_number_id_index` (`survey_id`,`respondent_hashed_number`,`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=421 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=1107 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -879,7 +879,7 @@ CREATE TABLE `survey_questionnaires` (
   KEY `survey_questionnaires_questionnaire_id_index` (`questionnaire_id`),
   CONSTRAINT `survey_questionnaires_questionnaire_id_fkey` FOREIGN KEY (`questionnaire_id`) REFERENCES `questionnaires` (`id`),
   CONSTRAINT `survey_questionnaires_survey_id_fkey` FOREIGN KEY (`survey_id`) REFERENCES `surveys` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=93 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=20 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -929,7 +929,7 @@ CREATE TABLE `surveys` (
   CONSTRAINT `surveys_folder_id_fkey` FOREIGN KEY (`folder_id`) REFERENCES `folders` (`id`),
   CONSTRAINT `surveys_panel_survey_id_fkey` FOREIGN KEY (`panel_survey_id`) REFERENCES `panel_surveys` (`id`),
   CONSTRAINT `surveys_project_id_fkey` FOREIGN KEY (`project_id`) REFERENCES `projects` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=46 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=10 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -957,7 +957,7 @@ CREATE TABLE `translations` (
   KEY `translations_questionnaire_id_index` (`questionnaire_id`),
   CONSTRAINT `translations_project_id_fkey` FOREIGN KEY (`project_id`) REFERENCES `projects` (`id`),
   CONSTRAINT `translations_questionnaire_id_fkey` FOREIGN KEY (`questionnaire_id`) REFERENCES `questionnaires` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=15 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -1002,7 +1002,7 @@ CREATE TABLE `users` (
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2022-08-05 15:22:00
+-- Dump completed on 2022-09-16 13:05:23
 INSERT INTO `schema_migrations` (version) VALUES (20160812145257);
 INSERT INTO `schema_migrations` (version) VALUES (20160816183915);
 INSERT INTO `schema_migrations` (version) VALUES (20160830200454);
@@ -1216,3 +1216,5 @@ INSERT INTO `schema_migrations` (version) VALUES (20211125141835);
 INSERT INTO `schema_migrations` (version) VALUES (20211213094856);
 INSERT INTO `schema_migrations` (version) VALUES (20220131103226);
 INSERT INTO `schema_migrations` (version) VALUES (20220801181201);
+INSERT INTO `schema_migrations` (version) VALUES (20220819144948);
+INSERT INTO `schema_migrations` (version) VALUES (20220916123648);
