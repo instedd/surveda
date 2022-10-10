@@ -291,18 +291,21 @@ defmodule Ask.Runtime.RespondentGroupAction do
     end
 
     respondent_ids = Enum.filter(entries, fn entry -> String.starts_with?(entry, "r") end)
-    phone_numbers = Enum.filter(entries, fn entry -> not String.starts_with?(entry, "r") end)
     phone_numbers_from_respondent_ids = phone_numbers_from_respondent_ids(survey, respondent_ids)
 
-    loaded_entries =
-      Enum.map(phone_numbers, fn phone_number -> %{phone_number: phone_number} end)
-      |> Enum.concat(phone_numbers_from_respondent_ids)
-
-    # Restore the initial entries order
+    # keeps the initial entries array in order
+    # OPTIMIZE: is it required to keep the order? it would be magnitudes faster if we didn't have to
     Enum.map(entries, fn entry ->
-      Enum.find(loaded_entries, fn %{phone_number: phone_number} = loaded_entry ->
-        entry == phone_number or entry == Map.get(loaded_entry, :hashed_number)
-      end)
+      if String.starts_with?(entry, "r") do
+        Enum.find(phone_numbers_from_respondent_ids, fn %{
+                                                          phone_number: phone_number,
+                                                          hashed_number: hashed_number
+                                                        } ->
+          entry == phone_number or entry == hashed_number
+        end)
+      else
+        %{phone_number: entry}
+      end
     end)
     |> Enum.filter(&(!is_nil(&1)))
     |> Enum.uniq_by(fn %{phone_number: phone_number} -> keep_digits.(phone_number) end)
