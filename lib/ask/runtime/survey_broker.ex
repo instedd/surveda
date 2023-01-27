@@ -345,8 +345,11 @@ defmodule Ask.Runtime.SurveyBroker do
     )
   end
 
-  defp start_some(survey, count) do
-    count = Enum.min([batch_limit_per_minute(), count])
+  defp start_some(survey, original_count) do
+    count = Enum.min([batch_limit_per_minute(), original_count])
+    if count != original_count do
+      Logger.info("Survey #{survey.id}. Starting up to #{count} respondents due to batch limit per minute.")
+    end
 
     from(r in assoc(survey, :respondents),
       select: r.id,
