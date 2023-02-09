@@ -8,9 +8,10 @@ volumes:
 
 services:
   db:
-    image: instedd/ask-mysql:5.7
+    image: mysql:5.7
+    command: --max_allowed_packet=1G
     volumes:
-      - 'db:/var/lib/mysql'
+      - db:/var/lib/mysql
     environment:
       MYSQL_ALLOW_EMPTY_PASSWORD: 'true'
 
@@ -18,14 +19,15 @@ services:
     command: elixir --sname server -S mix phx.server
     build:
       context: ./
-      dockerfile: Dockerfile.dev
+      dockerfile: Dockerfile
+      target: dev
     working_dir: /app
     depends_on:
       - db
     volumes:
-      - './:/app'
-      - 'deps:/deps'
-      - 'build:/_build'
+      - ./:/app
+      - deps:/deps
+      - build:/_build
     environment:
       DATABASE_HOST: db
       HTTP_PORT: 80
@@ -36,17 +38,15 @@ services:
       - 9980:9980
 
   webpack:
-    build:
-      context: ./
-      dockerfile: Dockerfile.webpack
+    image: node:10
     command: /bin/sh -c 'yarn install && yarn run watch'
     working_dir: /app
     stop_signal: SIGKILL
     volumes:
-      - './:/app'
-      - 'deps:/deps'
-      - 'node_modules:/app/node_modules'
-      - 'yarn-cache:/usr/local/share/.cache/yarn'
+      - ./:/app
+      - deps:/deps
+      - node_modules:/app/node_modules
+      - yarn-cache:/usr/local/share/.cache/yarn
 
   ngrok:
     image: wernight/ngrok
