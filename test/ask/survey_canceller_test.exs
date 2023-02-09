@@ -4,13 +4,11 @@ defmodule Ask.SurveyCancellerTest do
   use Ask.DummySteps
 
   alias Ask.{Survey, RespondentGroup, Channel, TestChannel, RespondentGroupChannel}
-  alias Ask.Runtime.{Flow, Session, ChannelBrokerAgent}
+  alias Ask.Runtime.{Flow, Session}
   alias Ask.Runtime.SessionModeProvider
 
   setup %{conn: conn} do
     user = insert(:user)
-
-    {:ok, _} = ChannelBrokerAgent.start_link()
 
     conn =
       conn
@@ -42,7 +40,8 @@ defmodule Ask.SurveyCancellerTest do
       test_channel = TestChannel.new(false)
 
       channel =
-        insert(:channel,
+        insert(
+          :channel,
           settings:
             test_channel
             |> TestChannel.settings(),
@@ -52,9 +51,11 @@ defmodule Ask.SurveyCancellerTest do
       group = create_group(survey_1, channel)
       r1 = insert(:respondent, survey: survey_1, state: "active", respondent_group: group)
       insert_list(3, :respondent, survey: survey_1, state: "active", timeout_at: Timex.now())
+      channel_state = %{"call_id" => 123}
 
       session = %Session{
         current_mode: SessionModeProvider.new("sms", channel, []),
+        channel_state: channel_state,
         respondent: r1,
         flow: %Flow{
           questionnaire: questionnaire
@@ -86,7 +87,7 @@ defmodule Ask.SurveyCancellerTest do
                )
              ) == 4
 
-      assert_receive [:cancel_message, ^test_channel, %{}]
+      assert_receive [:cancel_message, ^test_channel, ^channel_state]
     end
 
     test "stops multiple survey in cancelling status", %{user: user} do
@@ -97,7 +98,8 @@ defmodule Ask.SurveyCancellerTest do
       test_channel = TestChannel.new(false)
 
       channel =
-        insert(:channel,
+        insert(
+          :channel,
           settings:
             test_channel
             |> TestChannel.settings(),
@@ -108,9 +110,11 @@ defmodule Ask.SurveyCancellerTest do
       r1 = insert(:respondent, survey: survey_1, state: "active", respondent_group: group)
       insert_list(3, :respondent, survey: survey_1, state: "active", timeout_at: Timex.now())
       insert_list(3, :respondent, survey: survey_2, state: "active", timeout_at: Timex.now())
+      channel_state = %{"call_id" => 123}
 
       session = %Session{
         current_mode: SessionModeProvider.new("sms", channel, []),
+        channel_state: channel_state,
         respondent: r1,
         flow: %Flow{
           questionnaire: questionnaire
@@ -144,7 +148,7 @@ defmodule Ask.SurveyCancellerTest do
                )
              ) == 7
 
-      assert_receive [:cancel_message, ^test_channel, %{}]
+      assert_receive [:cancel_message, ^test_channel, ^channel_state]
     end
 
     test "stops multiple surveys from canceller and from controller simultaneously", %{
@@ -159,7 +163,8 @@ defmodule Ask.SurveyCancellerTest do
       test_channel = TestChannel.new(false)
 
       channel =
-        insert(:channel,
+        insert(
+          :channel,
           settings:
             test_channel
             |> TestChannel.settings(),
@@ -171,9 +176,11 @@ defmodule Ask.SurveyCancellerTest do
       insert_list(3, :respondent, survey: survey_1, state: "active", timeout_at: Timex.now())
       insert_list(4, :respondent, survey: survey_2, state: "active", timeout_at: Timex.now())
       insert_list(3, :respondent, survey: survey_3, state: "active", timeout_at: Timex.now())
+      channel_state = %{"call_id" => 123}
 
       session = %Session{
         current_mode: SessionModeProvider.new("sms", channel, []),
+        channel_state: channel_state,
         respondent: r1,
         flow: %Flow{
           questionnaire: questionnaire
@@ -211,7 +218,7 @@ defmodule Ask.SurveyCancellerTest do
                )
              ) == 11
 
-      assert_receive [:cancel_message, ^test_channel, %{}]
+      assert_receive [:cancel_message, ^test_channel, ^channel_state]
     end
 
     defp create_group(survey, channel) do

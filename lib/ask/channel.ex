@@ -1,9 +1,8 @@
 defmodule Ask.Channel do
   use Ask.Model
 
-  alias Ask.Channel
   alias Ask.Repo
-  alias Ask.Runtime.{ChannelStatusServer, ChannelBrokerSupervisor}
+  alias Ask.Runtime.ChannelStatusServer
 
   schema "channels" do
     field :name, :string
@@ -86,8 +85,7 @@ defmodule Ask.Channel do
       end
     end)
 
-    {:ok, %Channel{id: channel_id}} = Repo.delete(channel)
-    :ok = ChannelBrokerSupervisor.terminate_child(channel_id)
+    Repo.delete(channel)
   end
 
   def with_status(channel) do

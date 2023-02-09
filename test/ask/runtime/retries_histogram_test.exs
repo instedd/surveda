@@ -10,13 +10,12 @@ defmodule Ask.Runtime.RetriesHistogramTest do
 
   alias Ask.Runtime.{
     Survey,
-    SurveyBroker,
+    Broker,
     Flow,
     ChannelStatusServer,
     VerboiceChannel,
     RetriesHistogram,
-    Session,
-    ChannelBrokerAgent
+    Session
   }
 
   alias Ask.{Repo, Survey, Respondent, Stats}
@@ -26,7 +25,6 @@ defmodule Ask.Runtime.RetriesHistogramTest do
 
   setup do
     {:ok, _} = ChannelStatusServer.start_link()
-    {:ok, _} = ChannelBrokerAgent.start_link()
     :ok
   end
 

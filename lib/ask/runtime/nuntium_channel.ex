@@ -1,8 +1,8 @@
 defmodule Ask.Runtime.NuntiumChannel do
   @behaviour Ask.Runtime.ChannelProvider
   use Ask.Model
-  alias Ask.Runtime.{Survey, NuntiumChannel, Flow, Reply, ReplyStep, ChannelBroker}
-  alias Ask.{Repo, Respondent, Channel, SurvedaMetrics, Logger}
+  alias Ask.Runtime.{Survey, NuntiumChannel, Flow, Reply, ReplyStep}
+  alias Ask.{Repo, Respondent, Channel, Stats, SurvedaMetrics}
   import Ecto.Query
   import Plug.Conn
   defstruct [:oauth_token, :name, :base_url, :settings]
@@ -58,24 +58,10 @@ defmodule Ask.Runtime.NuntiumChannel do
     client.token
   end
 
-  defp respondent_channel(respondent) do
-    try do
-      session = respondent.session |> Ask.Runtime.Session.load()
-      session.current_mode.channel
-    rescue
-      _ -> nil
-    end
-  end
-
   def callback(conn, params) do
     callback(conn, params, Survey)
   end
 
-  @doc """
-  Endpoint that handles the AO message status updates from Nuntium
-  This callback will be invoked when an AO message's state changes to either 'failed', 'delivered' or 'confirmed'.
-  https://app.surveda.lvh.me//callbacks/nuntium
-  """
   def callback(
         conn,
         %{"path" => ["status"], "respondent_id" => respondent_id, "state" => state} = args,
@@ -88,29 +74,6 @@ defmodule Ask.Runtime.NuntiumChannel do
           :ok
 
         respondent ->
-          channel_id = args["channel_id"]
-          case channel_id do
-            nil ->
-              # For backward compatibility only
-              # From the moment the ChannelBroker go live to production, every AO message will
-              # include the channel_id. Only older messages should reach this chunk of code.
-              Logger.warn("Missing channel_id in Nuntium status callback. respondent_id: #{respondent_id}")
-              nil
-            _ ->
-              # Ideally, only "failed" and "confirmed" status should be filtered. But testing this
-              # in STG Surveda only receives the delivered status. We should understand why and
-              # fix it if needed.
-              # In the meantime, we accept both "confirmed" and "delivered" status.
-              if (state in ["failed", "confirmed", "delivered"]) do
-                ChannelBroker.callback_received(
-                  channel_id,
-                  respondent,
-                  state,
-                  "nuntium"
-                )
-              end
-          end
-
           case state do
             "failed" ->
               survey.channel_failed(respondent)
@@ -129,9 +92,6 @@ defmodule Ask.Runtime.NuntiumChannel do
     conn |> send_resp(200, "")
   end
 
-  @doc """
-  Endpoint that handles the AT messages received from Nuntium
-  """
   def callback(conn, %{"from" => from, "body" => body}, survey) do
     %URI{host: phone_number} = URI.parse(from)
 
@@ -144,44 +104,36 @@ defmodule Ask.Runtime.NuntiumChannel do
           limit: 1
       )
 
-    {reply, channel_id} =
+    reply =
       case respondent_id do
         nil ->
-          {nil, nil}
+          nil
 
         _ ->
           Respondent.with_lock(respondent_id, fn respondent ->
             case respondent do
               %Respondent{session: %{"current_mode" => %{"mode" => "sms"}}} ->
-                channel = respondent_channel(respondent)
-                case channel do
-                  nil ->
-                    # If there's a living session, it should have a channel
-                    Logger.error("Missing channel_id in Nuntium AT callback. respondent_id: #{respondent_id}")
-                    {nil, nil}
-                  _ ->
-                    case survey.sync_step(respondent, Flow.Message.reply(body), "sms") do
-                      {:reply, reply, respondent} ->
-                        update_stats(respondent.id, reply)
-                        {reply, channel.id}
+                case survey.sync_step(respondent, Flow.Message.reply(body), "sms") do
+                  {:reply, reply, respondent} ->
+                    update_stats(respondent, reply)
+                    reply
 
-                      {:end, {:reply, reply}, respondent} ->
-                        update_stats(respondent.id, reply)
-                        {reply, channel.id}
+                  {:end, {:reply, reply}, respondent} ->
+                    update_stats(respondent, reply)
+                    reply
 
-                      {:end, respondent} ->
-                        update_stats(respondent.id)
-                        {nil, nil}
-                    end
+                  {:end, respondent} ->
+                    update_stats(respondent)
+                    nil
                 end
 
               _ ->
-                {nil, nil}
+                nil
             end
           end)
       end
 
-    json_reply = reply_to_messages(reply, from, respondent_id, channel_id)
+    json_reply = reply_to_messages(reply, from, respondent_id)
     SurvedaMetrics.increment_counter(:surveda_nuntium_incoming)
     Phoenix.Controller.json(conn, json_reply)
   end
@@ -191,19 +143,15 @@ defmodule Ask.Runtime.NuntiumChannel do
     conn |> send_resp(200, "OK")
   end
 
-  def reply_to_messages(nil, _to, _respondent_id, _channel_id) do
+  def reply_to_messages(nil, _to, _respondent_id) do
     []
   end
 
-  def reply_to_messages(_reply, _to, nil, _channel_id) do
+  def reply_to_messages(_reply, _to, nil) do
     []
   end
 
-  def reply_to_messages(_reply, _to, _respondent_id, nil) do
-    []
-  end
-
-  def reply_to_messages(reply, to, respondent_id, channel_id) do
+  def reply_to_messages(reply, to, respondent_id) do
     Enum.flat_map(Reply.steps(reply), fn step ->
       step.prompts
       |> Enum.with_index()
@@ -212,15 +160,24 @@ defmodule Ask.Runtime.NuntiumChannel do
           to: to,
           body: prompt,
           respondent_id: respondent_id,
-          step_title: ReplyStep.title_with_index(step, index + 1),
-          channel_id: channel_id
+          step_title: ReplyStep.title_with_index(step, index + 1)
         }
       end)
     end)
   end
 
   def update_stats(respondent, reply \\ %Reply{}) do
-    Respondent.update_stats(respondent, reply, true)
+    respondent = Repo.get(Respondent, respondent.id)
+    stats = respondent.stats
+
+    stats =
+      stats
+      |> Stats.add_received_sms()
+      |> Stats.add_sent_sms(Enum.count(Reply.prompts(reply)))
+
+    respondent
+    |> Respondent.changeset(%{stats: stats})
+    |> Repo.update!()
   end
 
   def sync_channels(user_id, base_url) do
@@ -398,11 +355,11 @@ defmodule Ask.Runtime.NuntiumChannel do
 
     def setup(_channel, _respondent, _token, _not_before, _not_after), do: :ok
 
-    def ask(channel, respondent, token, reply, channel_id) do
+    def ask(channel, respondent, token, reply) do
       to = "sms://#{respondent.sanitized_phone_number}"
 
       messages =
-        NuntiumChannel.reply_to_messages(reply, to, respondent.id, channel_id)
+        Ask.Runtime.NuntiumChannel.reply_to_messages(reply, to, respondent.id)
         |> Enum.map(fn msg ->
           Map.merge(msg, %{
             suggested_channel: channel.settings["nuntium_channel"],
@@ -410,6 +367,8 @@ defmodule Ask.Runtime.NuntiumChannel do
             session_token: token
           })
         end)
+
+      respondent = NuntiumChannel.update_stats(respondent)
 
       Nuntium.Client.new(channel.base_url, channel.oauth_token)
       |> Nuntium.Client.send_ao(channel.settings["nuntium_account"], messages)

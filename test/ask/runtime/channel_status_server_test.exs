@@ -5,12 +5,6 @@ defmodule Ask.Runtime.ChannelStatusServerTest do
   alias Ask.TestChannel
   alias Ask.Runtime.ChannelStatusServer
   alias AskWeb.Email
-  alias Ask.Runtime.ChannelBrokerAgent
-
-  setup do
-    {:ok, _} = ChannelBrokerAgent.start_link()
-    :ok
-  end
 
   test "get_channel_status initially returns :unknown" do
     {:ok, _} = ChannelStatusServer.start_link()

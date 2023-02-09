@@ -2,7 +2,7 @@ defprotocol Ask.Runtime.Channel do
   def prepare(channel)
   def setup(channel, respondent, token, not_before, not_after)
   def has_delivery_confirmation?(channel)
-  def ask(channel, respondent, token, prompts, channel_id)
+  def ask(channel, respondent, token, prompts)
   def has_queued_message?(channel, channel_state)
   def cancel_message(channel, channel_state)
   def message_expired?(channel, channel_state)

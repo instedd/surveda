@@ -17,12 +17,7 @@ defmodule AskWeb.RespondentControllerTest do
     TestChannel
   }
 
-  alias Ask.Runtime.{ChannelStatusServer, ChannelBrokerAgent, ChannelBrokerAgent}
-
-  setup do
-    ChannelBrokerAgent.start_link()
-    :ok
-  end
+  alias Ask.Runtime.ChannelStatusServer
 
   @empty_stats %{
     "attempts" => nil,
@@ -4656,7 +4651,8 @@ defmodule AskWeb.RespondentControllerTest do
       })
 
     channel =
-      insert(:channel,
+      insert(
+        :channel,
         settings: TestChannel.new() |> TestChannel.settings(),
         type: mode
       )
@@ -4672,8 +4668,8 @@ defmodule AskWeb.RespondentControllerTest do
     })
 
     ChannelStatusServer.start_link()
-    SurveyBroker.start_link()
-    SurveyBroker.poll()
+    Broker.start_link()
+    Broker.poll()
 
     insert_partial_relevant_additional_respondents(%{
       survey: survey,

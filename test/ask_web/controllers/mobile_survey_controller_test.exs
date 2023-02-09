@@ -3,7 +3,7 @@ defmodule AskWeb.MobileSurveyControllerTest do
   use Ask.TestHelpers
   use Ask.DummySteps
   use Timex
-  alias Ask.Runtime.{SurveyBroker, ReplyHelper, ChannelStatusServer, ChannelBrokerAgent}
+  alias Ask.Runtime.{Broker, ReplyHelper, ChannelStatusServer}
   alias Ask.{Repo, Survey, Respondent, TestChannel, RespondentGroupChannel}
   require Ask.Runtime.ReplyHelper
 
@@ -12,8 +12,7 @@ defmodule AskWeb.MobileSurveyControllerTest do
       conn
       |> put_req_header("accept", "application/json")
 
-    {:ok, _} = ChannelStatusServer.start_link()
-    {:ok, _} = ChannelBrokerAgent.start_link()
+    ChannelStatusServer.start_link()
 
     {:ok, conn: conn}
   end
@@ -55,9 +54,9 @@ defmodule AskWeb.MobileSurveyControllerTest do
 
       respondent = insert(:respondent, survey: survey, respondent_group: group)
 
-      SurveyBroker.start_link()
+      Broker.start_link()
       Ask.Config.start_link()
-      SurveyBroker.poll()
+      Broker.poll()
 
       {:ok, conn: conn, respondent: respondent}
     end
@@ -83,7 +82,7 @@ defmodule AskWeb.MobileSurveyControllerTest do
   test "respondent flow via mobileweb", %{conn: conn} do
     test_channel = TestChannel.new(false, true)
 
-    %{id: channel_id} = channel = insert(:channel, settings: test_channel |> TestChannel.settings(), type: "sms")
+    channel = insert(:channel, settings: test_channel |> TestChannel.settings(), type: "sms")
 
     quiz =
       insert(:questionnaire,
@@ -117,16 +116,15 @@ defmodule AskWeb.MobileSurveyControllerTest do
     token = Respondent.token(respondent.id)
     cookie_name = Respondent.mobile_web_cookie_name(respondent.id)
 
-    {:ok, broker} = SurveyBroker.start_link()
-    SurveyBroker.poll()
+    {:ok, broker} = Broker.start_link()
+    Broker.poll()
 
     assert_receive [
       :ask,
       ^test_channel,
       %Respondent{sanitized_phone_number: ^phone_number},
       _,
-      ReplyHelper.simple("Contact", message),
-      ^channel_id
+      ReplyHelper.simple("Contact", message)
     ]
 
     assert message ==
@@ -381,7 +379,7 @@ defmodule AskWeb.MobileSurveyControllerTest do
   test "using an invalid token", %{conn: conn} do
     test_channel = TestChannel.new(false, true)
 
-    %{id: channel_id} = channel = insert(:channel, settings: test_channel |> TestChannel.settings(), type: "sms")
+    channel = insert(:channel, settings: test_channel |> TestChannel.settings(), type: "sms")
     quiz = insert(:questionnaire, steps: @mobileweb_dummy_steps)
 
     survey =
@@ -405,17 +403,16 @@ defmodule AskWeb.MobileSurveyControllerTest do
     respondent = insert(:respondent, survey: survey, respondent_group: group)
     phone_number = respondent.sanitized_phone_number
 
-    {:ok, broker} = SurveyBroker.start_link()
+    {:ok, broker} = Broker.start_link()
     {:ok, config} = Ask.Config.start_link()
-    SurveyBroker.poll()
+    Broker.poll()
 
     assert_receive [
       :ask,
       ^test_channel,
       %Respondent{sanitized_phone_number: ^phone_number},
       _,
-      ReplyHelper.simple("Contact", message),
-      ^channel_id
+      ReplyHelper.simple("Contact", message)
     ]
 
     assert message ==
@@ -476,8 +473,8 @@ defmodule AskWeb.MobileSurveyControllerTest do
     respondent = insert(:respondent, survey: survey, respondent_group: group)
     token = Respondent.token(respondent.id)
 
-    {:ok, _} = SurveyBroker.start_link()
-    SurveyBroker.poll()
+    {:ok, _} = Broker.start_link()
+    Broker.poll()
 
     respondent = Repo.get(Respondent, respondent.id)
     respondent |> Respondent.changeset(%{"state" => "completed"}) |> Repo.update!()
@@ -523,8 +520,8 @@ defmodule AskWeb.MobileSurveyControllerTest do
     respondent = insert(:respondent, survey: survey, respondent_group: group)
     token = Respondent.token(respondent.id)
 
-    {:ok, _} = SurveyBroker.start_link()
-    SurveyBroker.poll()
+    {:ok, _} = Broker.start_link()
+    Broker.poll()
 
     survey
     |> Survey.changeset(%{
@@ -546,7 +543,7 @@ defmodule AskWeb.MobileSurveyControllerTest do
   test "respondent flow via mobileweb with refusal + end", %{conn: conn} do
     test_channel = TestChannel.new(false, true)
 
-    %{id: channel_id} = channel = insert(:channel, settings: test_channel |> TestChannel.settings(), type: "sms")
+    channel = insert(:channel, settings: test_channel |> TestChannel.settings(), type: "sms")
 
     quiz =
       insert(:questionnaire,
@@ -576,16 +573,15 @@ defmodule AskWeb.MobileSurveyControllerTest do
     phone_number = respondent.sanitized_phone_number
     token = Respondent.token(respondent.id)
 
-    {:ok, broker} = SurveyBroker.start_link()
-    SurveyBroker.poll()
+    {:ok, broker} = Broker.start_link()
+    Broker.poll()
 
     assert_receive [
       :ask,
       ^test_channel,
       %Respondent{sanitized_phone_number: ^phone_number},
       _,
-      ReplyHelper.simple("Contact", message),
-      ^channel_id
+      ReplyHelper.simple("Contact", message)
     ]
 
     assert message ==
@@ -655,9 +651,9 @@ defmodule AskWeb.MobileSurveyControllerTest do
 
     respondent = insert(:respondent, survey: survey, respondent_group: group)
 
-    SurveyBroker.start_link()
+    Broker.start_link()
     Ask.Config.start_link()
-    SurveyBroker.poll()
+    Broker.poll()
 
     Survey |> Repo.get(survey.id) |> Repo.delete()
 
