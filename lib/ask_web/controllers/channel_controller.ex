@@ -2,6 +2,7 @@ defmodule AskWeb.ChannelController do
   use AskWeb, :api_controller
 
   alias Ask.{Channel, Project, Logger}
+  alias Ask.Runtime.ChannelBroker
 
   def index(conn, %{"project_id" => project_id}) do
     channels =
@@ -50,6 +51,7 @@ defmodule AskWeb.ChannelController do
 
     case Repo.update(changeset, force: Map.has_key?(changeset.changes, :projects)) do
       {:ok, channel} ->
+        ChannelBroker.on_channel_settings_change(channel.id, channel.settings)
         render(conn, "show.json", channel: channel |> Repo.preload(:projects))
 
       {:error, changeset} ->
