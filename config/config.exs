@@ -39,7 +39,7 @@ config :ask, :channel,
 config :ask, Ask.FloipPusher,
   poll_interval_in_minutes: {:system, "FLOIP_PUSHER_POLL_INTERVAL_IN_MINUTES", 15}
 
-config :ask, Ask.Runtime.Broker,
+config :ask, Ask.Runtime.SurveyBroker,
   batch_size: {:system, "BROKER_BATCH_SIZE", 10000},
   batch_limit_per_minute: {:system, "BROKER_BATCH_LIMIT_PER_MINUTE", 100},
   initial_valid_respondent_rate: {:system, "INITIAL_VALID_RESPONDENT_RATE", 100},

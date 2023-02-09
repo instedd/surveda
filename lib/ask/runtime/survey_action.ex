@@ -12,6 +12,8 @@ defmodule Ask.Runtime.SurveyAction do
     PanelSurvey
   }
 
+  alias Ask.Runtime.ChannelBroker
+
   alias Ecto.Multi
 
   def delete(survey, conn) do
@@ -139,7 +141,7 @@ defmodule Ask.Runtime.SurveyAction do
   defp prepare_channels([channel | rest]) do
     runtime_channel = Ask.Channel.runtime_channel(channel)
 
-    case Ask.Runtime.Channel.prepare(runtime_channel) do
+    case ChannelBroker.prepare(channel.id, runtime_channel) do
       {:ok, _} -> prepare_channels(rest)
       error -> error
     end

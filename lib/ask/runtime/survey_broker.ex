@@ -1,4 +1,4 @@
-defmodule Ask.Runtime.Broker do
+defmodule Ask.Runtime.SurveyBroker do
   use GenServer
   import Ecto.Query
   import Ecto
@@ -38,7 +38,7 @@ defmodule Ask.Runtime.Broker do
     :timer.send_after(1000, :poll)
 
     Logger.info(
-      "Broker started. Default batch size=#{default_batch_size()}. Limit per minute=#{
+      "SurveyBroker started. Default batch size=#{default_batch_size()}. Limit per minute=#{
         default_batch_limit_per_minute()
       }."
     )
@@ -224,6 +224,24 @@ defmodule Ask.Runtime.Broker do
       stacktrace: stacktrace,
       extra: %{survey_id: survey.id}
     )
+  end
+
+  def recontact_queued_respondents(respondent_ids) do
+    # We're recontacting respondants that were queued
+    # in channel broker after it fails
+    Repo.all(
+      from r in Respondent,
+        select: r.id,
+        where: r.id in ^respondent_ids
+    )
+    |> Enum.each(fn respondent_id ->
+      respondent = Respondent |> Repo.get(respondent_id)
+      session = respondent.session |> Session.load()
+      channel = session.current_mode.channel
+      runtime_channel = Ask.Channel.runtime_channel(channel)
+      # We have loaded everything neccesary, now contact them without consuming a retry
+      Ask.Runtime.Session.contact_respondent(session, runtime_channel)
+    end)
   end
 
   defp retry_respondents(now) do
