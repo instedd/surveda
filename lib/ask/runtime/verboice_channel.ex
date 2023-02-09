@@ -214,8 +214,11 @@ defmodule Ask.Runtime.VerboiceChannel do
     |> Repo.insert!()
   end
 
-  defp channel_changeset(%{settings: settings} = channel, base_url, api_channel) do
-    settings = update_settings(settings, api_channel)
+  defp channel_changeset(channel, base_url, api_channel) do
+    settings = %{
+      "verboice_channel" => api_channel["name"],
+      "verboice_channel_id" => api_channel["id"]
+    }
 
     settings =
       if api_channel["shared_by"] do
@@ -231,18 +234,6 @@ defmodule Ask.Runtime.VerboiceChannel do
       base_url: base_url,
       settings: settings
     })
-  end
-
-  defp update_settings(nil = _settings, api_channel) do
-    %{
-      "verboice_channel" => api_channel["name"],
-      "verboice_channel_id" => api_channel["id"]
-    }
-  end
-
-  defp update_settings(settings, api_channel) do
-    Map.put(settings, "verboice_channel", api_channel["name"])
-    |> Map.put("verboice_channel_id", api_channel["id"])
   end
 
   defp match_channel(%{settings: %{"verboice_channel_id" => id}}, %{"id" => id}), do: true
