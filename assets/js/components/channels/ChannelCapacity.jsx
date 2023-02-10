@@ -19,7 +19,7 @@ class ChannelCapacityForm extends Component {
     super(props)
     const { initialValue } = props
     this.state = {
-      inputValue: initialValue
+      inputValue: initialValue,
     }
   }
 
@@ -126,7 +126,9 @@ const mapStateToProps = (state, ownProps) => ({
 
 const mapDispatchToProps = (dispatch) => ({
   actions: bindActionCreators(actions, dispatch),
-  dispatch
+  dispatch,
 })
 
-export default translate()(withRouter(connect(mapStateToProps, mapDispatchToProps)(ChannelCapacity)))
+export default translate()(
+  withRouter(connect(mapStateToProps, mapDispatchToProps)(ChannelCapacity))
+)
