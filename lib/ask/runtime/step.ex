@@ -279,9 +279,13 @@ defmodule Ask.Runtime.Step do
   end
 
   defp is_numeric_permissive(str, language, step) do
-    case Integer.parse(String.trim(str)) do
+    case Float.parse(String.trim(str)) do
       {num, _} ->
-        num
+        if Float.parse(String.trim(str)) == Integer.parse(String.trim(str)) do
+          round(num)
+        else
+          false
+        end
 
       :error ->
         if step["alphabetical_answers"] do
