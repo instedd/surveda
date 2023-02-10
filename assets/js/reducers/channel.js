@@ -108,7 +108,7 @@ const setCapacity = (state, action) => {
     settings: {
       ...state.settings,
       capacity: action.value,
-    }
+    },
   }
 }
 
