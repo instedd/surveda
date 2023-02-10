@@ -2,15 +2,7 @@ defmodule Ask.Runtime.VerboiceChannel do
   alias __MODULE__
   use Ask.Model
   alias Ask.{Repo, Respondent, Channel, SurvedaMetrics, Stats}
-
-  alias Ask.Runtime.{
-    Survey,
-    Flow,
-    Reply,
-    RetriesHistogram,
-    ChannelBroker
-  }
-
+  alias Ask.Runtime.{Survey, Flow, Reply, RetriesHistogram}
   alias AskWeb.Router.Helpers
   import Plug.Conn
   import XmlBuilder
@@ -88,15 +80,6 @@ defmodule Ask.Runtime.VerboiceChannel do
       ]),
       element(:Redirect, no_reply_callback_url(respondent, channel_base_url))
     ]
-  end
-
-  defp respondent_channel(respondent) do
-    try do
-      session = respondent.session |> Ask.Runtime.Session.load()
-      session.current_mode.channel
-    rescue
-      _ -> nil
-    end
   end
 
   defp channel_base_url(respondent) do
@@ -214,8 +197,11 @@ defmodule Ask.Runtime.VerboiceChannel do
     |> Repo.insert!()
   end
 
-  defp channel_changeset(%{settings: settings} = channel, base_url, api_channel) do
-    settings = update_settings(settings, api_channel)
+  defp channel_changeset(channel, base_url, api_channel) do
+    settings = %{
+      "verboice_channel" => api_channel["name"],
+      "verboice_channel_id" => api_channel["id"]
+    }
 
     settings =
       if api_channel["shared_by"] do
@@ -231,18 +217,6 @@ defmodule Ask.Runtime.VerboiceChannel do
       base_url: base_url,
       settings: settings
     })
-  end
-
-  defp update_settings(nil = _settings, api_channel) do
-    %{
-      "verboice_channel" => api_channel["name"],
-      "verboice_channel_id" => api_channel["id"]
-    }
-  end
-
-  defp update_settings(settings, api_channel) do
-    Map.put(settings, "verboice_channel", api_channel["name"])
-    |> Map.put("verboice_channel_id", api_channel["id"])
   end
 
   defp match_channel(%{settings: %{"verboice_channel_id" => id}}, %{"id" => id}), do: true
@@ -323,14 +297,6 @@ defmodule Ask.Runtime.VerboiceChannel do
 
         respondent ->
           respondent = update_call_time_seconds(respondent, call_sid, call_duration)
-          channel = respondent_channel(respondent)
-          # The respondent has a current_mode, then provider should not be necessary
-          ChannelBroker.callback_received(
-            channel.id,
-            respondent,
-            status,
-            "verboice"
-          )
 
           case status do
             "expired" ->
@@ -470,7 +436,7 @@ defmodule Ask.Runtime.VerboiceChannel do
 
   defimpl Ask.Runtime.Channel, for: Ask.Runtime.VerboiceChannel do
     def has_delivery_confirmation?(_), do: false
-    def ask(_, _, _, _, _), do: throw(:not_implemented)
+    def ask(_, _, _, _), do: throw(:not_implemented)
     def prepare(_), do: :ok
 
     def setup(channel, respondent, token, not_before, not_after) do
@@ -495,7 +461,7 @@ defmodule Ask.Runtime.VerboiceChannel do
 
       channel.client
       |> Verboice.Client.call(params)
-      |> VerboiceChannel.process_call_response()
+      |> Ask.Runtime.VerboiceChannel.process_call_response()
     end
 
     def has_queued_message?(channel, %{"verboice_call_id" => call_id}) do

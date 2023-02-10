@@ -5,11 +5,9 @@ defmodule AskWeb.SurveySimulationControllerTest do
   use Ask.MockTime
 
   alias Ask.Respondent
-  alias Ask.Runtime.{Session, ChannelStatusServer, ChannelBrokerAgent}
+  alias Ask.Runtime.{Session, ChannelStatusServer}
 
   setup %{conn: conn} do
-    {:ok, _} = ChannelBrokerAgent.start_link()
-
     user = insert(:user)
 
     conn =
@@ -175,10 +173,10 @@ defmodule AskWeb.SurveySimulationControllerTest do
       end
 
       poll_survey = fn ->
-        SurveyBroker.start_link()
+        Broker.start_link()
         {:ok, _pid} = ChannelStatusServer.start_link()
         Process.register(self(), :mail_target)
-        SurveyBroker.poll()
+        Broker.poll()
       end
 
       mobile_contact_messages = fn respondent_id ->

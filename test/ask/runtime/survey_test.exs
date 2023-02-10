@@ -4,7 +4,7 @@ defmodule Ask.Runtime.SurveyTest do
   use Timex
   use Ask.MockTime
   use Ask.TestHelpers
-  alias Ask.Runtime.{Survey, SurveyBroker, Flow, SurveyLogger, ReplyHelper, ChannelStatusServer, ChannelBrokerAgent}
+  alias Ask.Runtime.{Survey, Broker, Flow, SurveyLogger, ReplyHelper, ChannelStatusServer}
 
   alias Ask.{
     Repo,
@@ -24,9 +24,8 @@ defmodule Ask.Runtime.SurveyTest do
   require Ask.Runtime.ReplyHelper
 
   setup do
-    {:ok, _} = ChannelStatusServer.start_link()
-    ChannelBrokerAgent.start_link()
-    :ok
+    {:ok, channel_status_server} = ChannelStatusServer.start_link()
+    {:ok, channel_status_server: channel_status_server}
   end
 
   @tag :time_mock
@@ -40,8 +39,8 @@ defmodule Ask.Runtime.SurveyTest do
         create_running_survey_with_channel_and_respondent()
 
       {:ok, logger} = SurveyLogger.start_link()
-      {:ok, broker} = SurveyBroker.start_link()
-      SurveyBroker.poll()
+      {:ok, broker} = Broker.start_link()
+      Broker.poll()
 
       sequence_mode = ["sms"]
 
@@ -50,8 +49,7 @@ defmodule Ask.Runtime.SurveyTest do
         ^test_channel,
         %Respondent{sanitized_phone_number: ^phone_number, mode: ^sequence_mode},
         _,
-        ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO"),
-        _channel_id
+        ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO")
       ]
 
       survey = Repo.get(Ask.Survey, survey.id)
@@ -234,8 +232,8 @@ defmodule Ask.Runtime.SurveyTest do
         create_running_survey_with_channel_and_respondent(@dummy_steps, "ivr")
 
       {:ok, logger} = SurveyLogger.start_link()
-      {:ok, broker} = SurveyBroker.start_link()
-      SurveyBroker.poll()
+      {:ok, broker} = Broker.start_link()
+      Broker.poll()
 
       survey = Repo.get(Ask.Survey, survey.id)
       assert survey.state == :running
@@ -390,17 +388,16 @@ defmodule Ask.Runtime.SurveyTest do
       [survey, _group, test_channel, respondent, phone_number] =
         create_running_survey_with_channel_and_respondent(@mobileweb_dummy_steps, "mobileweb")
 
-      {:ok, broker} = SurveyBroker.start_link()
+      {:ok, broker} = Broker.start_link()
       {:ok, logger} = SurveyLogger.start_link()
-      SurveyBroker.poll()
+      Broker.poll()
 
       assert_receive [
         :ask,
         ^test_channel,
         %Respondent{sanitized_phone_number: ^phone_number},
         _,
-        ReplyHelper.simple("Contact", message),
-        _channel_id
+        ReplyHelper.simple("Contact", message)
       ]
 
       assert message ==
@@ -522,16 +519,15 @@ defmodule Ask.Runtime.SurveyTest do
       |> Repo.update!()
 
       {:ok, logger} = SurveyLogger.start_link()
-      {:ok, broker} = SurveyBroker.start_link()
-      SurveyBroker.poll()
+      {:ok, broker} = Broker.start_link()
+      Broker.poll()
 
       assert_received [
         :ask,
         ^test_channel,
         %Respondent{sanitized_phone_number: ^phone_number},
         _,
-        ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO"),
-        _channel_id
+        ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO")
       ]
 
       survey = Repo.get(Ask.Survey, survey.id)
@@ -705,16 +701,15 @@ defmodule Ask.Runtime.SurveyTest do
       |> Repo.update!()
 
       {:ok, logger} = SurveyLogger.start_link()
-      {:ok, broker} = SurveyBroker.start_link()
-      SurveyBroker.poll()
+      {:ok, broker} = Broker.start_link()
+      Broker.poll()
 
       assert_received [
         :ask,
         ^test_channel,
         %Respondent{sanitized_phone_number: ^phone_number},
         _,
-        ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO"),
-        _channel_id
+        ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO")
       ]
 
       survey = Repo.get(Ask.Survey, survey.id)
@@ -883,8 +878,8 @@ defmodule Ask.Runtime.SurveyTest do
       |> Repo.update!()
 
       {:ok, logger} = SurveyLogger.start_link()
-      {:ok, broker} = SurveyBroker.start_link()
-      SurveyBroker.poll()
+      {:ok, broker} = Broker.start_link()
+      Broker.poll()
 
       survey = Repo.get(Ask.Survey, survey.id)
       assert survey.state == :running
@@ -1038,16 +1033,15 @@ defmodule Ask.Runtime.SurveyTest do
       })
       |> Repo.update!()
 
-      {:ok, _} = SurveyBroker.start_link()
-      SurveyBroker.poll()
+      {:ok, _} = Broker.start_link()
+      Broker.poll()
 
       assert_receive [
         :ask,
         ^test_channel,
         %Respondent{sanitized_phone_number: ^phone_number},
         _,
-        %Ask.Runtime.Reply{steps: [step]},
-        _channel_id
+        %Ask.Runtime.Reply{steps: [step]}
       ]
 
       assert step ==
@@ -1148,16 +1142,15 @@ defmodule Ask.Runtime.SurveyTest do
       |> Repo.update!()
 
       {:ok, logger} = SurveyLogger.start_link()
-      {:ok, broker} = SurveyBroker.start_link()
-      SurveyBroker.poll()
+      {:ok, broker} = Broker.start_link()
+      Broker.poll()
 
       assert_received [
         :ask,
         ^test_channel,
         %Respondent{sanitized_phone_number: ^phone_number},
         _token,
-        ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO"),
-        _channel_id
+        ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO")
       ]
 
       respondent = Repo.get(Respondent, respondent.id)
@@ -1322,8 +1315,8 @@ defmodule Ask.Runtime.SurveyTest do
       |> Repo.update!()
 
       {:ok, logger} = SurveyLogger.start_link()
-      {:ok, broker} = SurveyBroker.start_link()
-      SurveyBroker.poll()
+      {:ok, broker} = Broker.start_link()
+      Broker.poll()
 
       survey = Repo.get(Ask.Survey, survey.id)
       assert survey.state == :running
@@ -1461,16 +1454,15 @@ defmodule Ask.Runtime.SurveyTest do
         count: 0
       )
 
-      {:ok, broker} = SurveyBroker.start_link()
-      SurveyBroker.poll()
+      {:ok, broker} = Broker.start_link()
+      Broker.poll()
 
       assert_received [
         :ask,
         ^test_channel,
         %Respondent{sanitized_phone_number: ^phone_number},
         _token,
-        ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO"),
-        _channel_id
+        ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO")
       ]
 
       respondent = Repo.get(Respondent, respondent.id)
@@ -1555,16 +1547,15 @@ defmodule Ask.Runtime.SurveyTest do
         count: 0
       )
 
-      {:ok, broker} = SurveyBroker.start_link()
-      SurveyBroker.poll()
+      {:ok, broker} = Broker.start_link()
+      Broker.poll()
 
       assert_received [
         :ask,
         ^test_channel,
         %Respondent{sanitized_phone_number: ^phone_number},
         _token,
-        ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO"),
-        _channel_id
+        ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO")
       ]
 
       respondent = Repo.get(Respondent, respondent.id)
@@ -1648,16 +1639,15 @@ defmodule Ask.Runtime.SurveyTest do
         count: 0
       )
 
-      {:ok, broker} = SurveyBroker.start_link()
-      SurveyBroker.poll()
+      {:ok, broker} = Broker.start_link()
+      Broker.poll()
 
       assert_received [
         :ask,
         ^test_channel,
         %Respondent{sanitized_phone_number: ^phone_number},
         _token,
-        ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO"),
-        _channel_id
+        ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO")
       ]
 
       respondent = Repo.get(Respondent, respondent.id)
@@ -1767,16 +1757,15 @@ defmodule Ask.Runtime.SurveyTest do
         count: 0
       )
 
-      {:ok, broker} = SurveyBroker.start_link()
-      SurveyBroker.poll()
+      {:ok, broker} = Broker.start_link()
+      Broker.poll()
 
       assert_received [
         :ask,
         ^test_channel,
         %Respondent{sanitized_phone_number: ^phone_number},
         _token,
-        ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO"),
-        _channel_id
+        ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO")
       ]
 
       respondent = Repo.get(Respondent, respondent.id)
@@ -1859,16 +1848,15 @@ defmodule Ask.Runtime.SurveyTest do
 
       insert(:quota_bucket, survey: survey, condition: %{Smokes: "Yes"}, quota: 10, count: 0)
 
-      {:ok, broker} = SurveyBroker.start_link()
-      SurveyBroker.poll()
+      {:ok, broker} = Broker.start_link()
+      Broker.poll()
 
       assert_received [
         :ask,
         ^test_channel,
         %Respondent{sanitized_phone_number: ^phone_number},
         _token,
-        ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO"),
-        _channel_id
+        ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO")
       ]
 
       respondent = Repo.get(Respondent, respondent.id)
@@ -1979,16 +1967,15 @@ defmodule Ask.Runtime.SurveyTest do
 
       insert(:quota_bucket, survey: survey, condition: %{Exercises: "No"}, quota: 10, count: 0)
 
-      {:ok, broker} = SurveyBroker.start_link()
-      SurveyBroker.poll()
+      {:ok, broker} = Broker.start_link()
+      Broker.poll()
 
       assert_received [
         :ask,
         ^test_channel,
         %Respondent{sanitized_phone_number: ^phone_number},
         _token,
-        ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO"),
-        _channel_id
+        ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO")
       ]
 
       respondent = Repo.get(Respondent, respondent.id)
@@ -2070,8 +2057,8 @@ defmodule Ask.Runtime.SurveyTest do
       )
 
     {:ok, logger} = SurveyLogger.start_link()
-    {:ok, broker} = SurveyBroker.start_link()
-    SurveyBroker.poll()
+    {:ok, broker} = Broker.start_link()
+    Broker.poll()
 
     respondent = Repo.get(Respondent, respondent.id)
     Survey.delivery_confirm(respondent, "Do you exercise?")
@@ -2126,9 +2113,9 @@ defmodule Ask.Runtime.SurveyTest do
     [_, _, _, respondent, _] =
       create_running_survey_with_channel_and_respondent(@invalid_ineligible_after_partial_steps)
 
-    {:ok, _} = SurveyBroker.start_link()
+    {:ok, _} = Broker.start_link()
 
-    SurveyBroker.handle_info(:poll, nil)
+    Broker.handle_info(:poll, nil)
 
     respondent = Repo.get(Respondent, respondent.id)
     assert respondent.disposition == :"interim partial"
@@ -2145,16 +2132,15 @@ defmodule Ask.Runtime.SurveyTest do
     [_survey, _group, test_channel, respondent, phone_number] =
       create_running_survey_with_channel_and_respondent()
 
-    {:ok, broker} = SurveyBroker.start_link()
-    SurveyBroker.poll()
+    {:ok, broker} = Broker.start_link()
+    Broker.poll()
 
     assert_received [
       :ask,
       ^test_channel,
       %Respondent{sanitized_phone_number: ^phone_number},
       _,
-      ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO"),
-      _channel_id
+      ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO")
     ]
 
     respondent = Repo.get(Respondent, respondent.id)
@@ -2173,8 +2159,8 @@ defmodule Ask.Runtime.SurveyTest do
     [_survey, _group, _test_channel, respondent, _phone_number] =
       create_running_survey_with_channel_and_respondent(@dummy_steps, "ivr")
 
-    {:ok, broker} = SurveyBroker.start_link()
-    SurveyBroker.poll()
+    {:ok, broker} = Broker.start_link()
+    Broker.poll()
 
     respondent = Repo.get(Respondent, respondent.id)
     assert respondent.disposition == :queued
@@ -2195,16 +2181,15 @@ defmodule Ask.Runtime.SurveyTest do
     [_survey, _group, test_channel, respondent, phone_number] =
       create_running_survey_with_channel_and_respondent()
 
-    {:ok, broker} = SurveyBroker.start_link()
-    SurveyBroker.poll()
+    {:ok, broker} = Broker.start_link()
+    Broker.poll()
 
     assert_received [
       :ask,
       ^test_channel,
       %Respondent{sanitized_phone_number: ^phone_number},
       _,
-      ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO"),
-      _channel_id
+      ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO")
     ]
 
     respondent = Repo.get(Respondent, respondent.id)
@@ -2229,8 +2214,8 @@ defmodule Ask.Runtime.SurveyTest do
     [survey, _, _, respondent, _] = create_running_survey_with_channel_and_respondent()
     survey |> Ask.Survey.changeset(%{sms_retry_configuration: "2m"}) |> Repo.update!()
 
-    {:ok, broker} = SurveyBroker.start_link()
-    SurveyBroker.handle_info(:poll, nil)
+    {:ok, broker} = Broker.start_link()
+    Broker.handle_info(:poll, nil)
     respondent = Repo.get(Respondent, respondent.id)
     Survey.sync_step(respondent, Flow.Message.reply("Yes"))
 
@@ -2266,8 +2251,8 @@ defmodule Ask.Runtime.SurveyTest do
   test "set timeout_at according to retries, taking survey schedule into account" do
     [survey, _, _, respondent, _] = create_running_survey_with_channel_and_respondent()
 
-    {:ok, _} = SurveyBroker.start_link()
-    SurveyBroker.handle_info(:poll, nil)
+    {:ok, _} = Broker.start_link()
+    Broker.handle_info(:poll, nil)
 
     survey
     |> Ask.Survey.changeset(%{
@@ -2298,11 +2283,11 @@ defmodule Ask.Runtime.SurveyTest do
     [survey, _group, test_channel, _respondent, phone_number] =
       create_running_survey_with_channel_and_respondent(@flag_steps)
 
-    {:ok, broker} = SurveyBroker.start_link()
+    {:ok, broker} = Broker.start_link()
     {:ok, logger} = SurveyLogger.start_link()
 
     # First poll, activate the respondent
-    SurveyBroker.handle_info(:poll, nil)
+    Broker.handle_info(:poll, nil)
 
     assert_received [
       :setup,
@@ -2316,8 +2301,7 @@ defmodule Ask.Runtime.SurveyTest do
       ^test_channel,
       ^respondent,
       ^token,
-      ReplyHelper.simple("Do you exercise?", "Do you exercise? Reply 1 for YES, 2 for NO"),
-      _channel_id
+      ReplyHelper.simple("Do you exercise?", "Do you exercise? Reply 1 for YES, 2 for NO")
     ]
 
     survey = Repo.get(Ask.Survey, survey.id)
@@ -2364,10 +2348,10 @@ defmodule Ask.Runtime.SurveyTest do
     [_survey, _group, test_channel, _respondent, phone_number] =
       create_running_survey_with_channel_and_respondent(@flag_steps_ineligible_skip_logic)
 
-    {:ok, _} = SurveyBroker.start_link()
+    {:ok, _} = Broker.start_link()
 
     # First poll, activate the respondent
-    SurveyBroker.handle_info(:poll, nil)
+    Broker.handle_info(:poll, nil)
 
     assert_received [
       :setup,
@@ -2381,8 +2365,7 @@ defmodule Ask.Runtime.SurveyTest do
       ^test_channel,
       ^respondent,
       ^token,
-      ReplyHelper.simple("Do you exercise?", "Do you exercise? Reply 1 for YES, 2 for NO"),
-      _channel_id
+      ReplyHelper.simple("Do you exercise?", "Do you exercise? Reply 1 for YES, 2 for NO")
     ]
 
     respondent = Repo.get!(Respondent, respondent.id)
@@ -2405,11 +2388,11 @@ defmodule Ask.Runtime.SurveyTest do
     [survey, _group, test_channel, _respondent, phone_number] =
       create_running_survey_with_channel_and_respondent(@flag_steps_refused_skip_logic)
 
-    {:ok, broker} = SurveyBroker.start_link()
+    {:ok, broker} = Broker.start_link()
     {:ok, logger} = SurveyLogger.start_link()
 
     # First poll, activate the respondent
-    SurveyBroker.handle_info(:poll, nil)
+    Broker.handle_info(:poll, nil)
 
     assert_received [
       :setup,
@@ -2423,8 +2406,7 @@ defmodule Ask.Runtime.SurveyTest do
       ^test_channel,
       ^respondent,
       ^token,
-      ReplyHelper.simple("Do you exercise?", "Do you exercise? Reply 1 for YES, 2 for NO"),
-      _channel_id
+      ReplyHelper.simple("Do you exercise?", "Do you exercise? Reply 1 for YES, 2 for NO")
     ]
 
     respondent = Repo.get!(Respondent, respondent.id)
@@ -2536,10 +2518,10 @@ defmodule Ask.Runtime.SurveyTest do
     [_survey, _group, test_channel, _respondent, phone_number] =
       create_running_survey_with_channel_and_respondent(@flag_steps_partial_skip_logic)
 
-    {:ok, _} = SurveyBroker.start_link()
+    {:ok, _} = Broker.start_link()
 
     # First poll, activate the respondent
-    SurveyBroker.handle_info(:poll, nil)
+    Broker.handle_info(:poll, nil)
 
     assert_received [
       :setup,
@@ -2553,8 +2535,7 @@ defmodule Ask.Runtime.SurveyTest do
       ^test_channel,
       ^respondent,
       ^token,
-      ReplyHelper.simple("Do you exercise?", "Do you exercise? Reply 1 for YES, 2 for NO"),
-      _channel_id
+      ReplyHelper.simple("Do you exercise?", "Do you exercise? Reply 1 for YES, 2 for NO")
     ]
 
     respondent = Repo.get!(Respondent, respondent.id)
@@ -2577,10 +2558,10 @@ defmodule Ask.Runtime.SurveyTest do
     [survey, _group, test_channel, _respondent, phone_number] =
       create_running_survey_with_channel_and_respondent(@flag_steps)
 
-    {:ok, _} = SurveyBroker.start_link()
+    {:ok, _} = Broker.start_link()
 
     # First poll, activate the respondent
-    SurveyBroker.handle_info(:poll, nil)
+    Broker.handle_info(:poll, nil)
 
     assert_received [
       :setup,
@@ -2594,8 +2575,7 @@ defmodule Ask.Runtime.SurveyTest do
       ^test_channel,
       ^respondent,
       ^token,
-      ReplyHelper.simple("Do you exercise?", "Do you exercise? Reply 1 for YES, 2 for NO"),
-      _channel_id
+      ReplyHelper.simple("Do you exercise?", "Do you exercise? Reply 1 for YES, 2 for NO")
     ]
 
     respondent = Repo.get(Respondent, respondent.id)
@@ -2622,8 +2602,8 @@ defmodule Ask.Runtime.SurveyTest do
     survey |> Ask.Survey.changeset(%{ivr_retry_configuration: "10m"}) |> Repo.update()
     right_first_answer = "8"
 
-    {:ok, broker} = SurveyBroker.start_link()
-    SurveyBroker.poll()
+    {:ok, broker} = Broker.start_link()
+    Broker.poll()
 
     respondent = Repo.get(Respondent, respondent.id)
 
@@ -2675,8 +2655,8 @@ defmodule Ask.Runtime.SurveyTest do
     right_first_answer = "8"
     wrong_second_answer = "16"
 
-    {:ok, broker} = SurveyBroker.start_link()
-    SurveyBroker.poll()
+    {:ok, broker} = Broker.start_link()
+    Broker.poll()
 
     respondent = Repo.get(Respondent, respondent.id)
 
@@ -2721,9 +2701,9 @@ defmodule Ask.Runtime.SurveyTest do
     [survey, _, _, respondent, _] =
       create_running_survey_with_channel_and_respondent(@dummy_steps, "ivr")
 
-    {:ok, broker} = SurveyBroker.start_link()
+    {:ok, broker} = Broker.start_link()
     {:ok, logger} = SurveyLogger.start_link()
-    SurveyBroker.poll()
+    Broker.poll()
 
     respondent = Repo.get(Respondent, respondent.id)
     assert respondent.state == :active
@@ -2748,7 +2728,7 @@ defmodule Ask.Runtime.SurveyTest do
     Respondent.changeset(respondent, %{timeout_at: Timex.now() |> Timex.shift(minutes: -1)})
     |> Repo.update()
 
-    SurveyBroker.handle_info(:poll, nil)
+    Broker.handle_info(:poll, nil)
 
     respondent = Repo.get(Respondent, respondent.id)
     assert respondent.state == :failed
@@ -2771,9 +2751,9 @@ defmodule Ask.Runtime.SurveyTest do
     [survey, _, _, respondent, _] =
       create_running_survey_with_channel_and_respondent(@dummy_steps_with_flag, "ivr")
 
-    {:ok, broker} = SurveyBroker.start_link()
+    {:ok, broker} = Broker.start_link()
     {:ok, logger} = SurveyLogger.start_link()
-    SurveyBroker.poll()
+    Broker.poll()
 
     respondent = Repo.get(Respondent, respondent.id)
     assert respondent.state == :active
@@ -2798,7 +2778,7 @@ defmodule Ask.Runtime.SurveyTest do
     Respondent.changeset(respondent, %{timeout_at: Timex.now() |> Timex.shift(minutes: -1)})
     |> Repo.update()
 
-    SurveyBroker.handle_info(:poll, nil)
+    Broker.handle_info(:poll, nil)
 
     respondent = Repo.get(Respondent, respondent.id)
     assert respondent.state == :failed
@@ -2821,8 +2801,8 @@ defmodule Ask.Runtime.SurveyTest do
     [_, _, _, respondent, _] =
       create_running_survey_with_channel_and_respondent(@dummy_steps_with_flag, "ivr")
 
-    {:ok, broker} = SurveyBroker.start_link()
-    SurveyBroker.poll()
+    {:ok, broker} = Broker.start_link()
+    Broker.poll()
 
     respondent = Repo.get(Respondent, respondent.id)
     assert respondent.state == :active
@@ -2853,7 +2833,7 @@ defmodule Ask.Runtime.SurveyTest do
     Respondent.changeset(respondent, %{timeout_at: Timex.now() |> Timex.shift(minutes: -1)})
     |> Repo.update()
 
-    SurveyBroker.handle_info(:poll, nil)
+    Broker.handle_info(:poll, nil)
 
     respondent = Repo.get(Respondent, respondent.id)
     assert respondent.state == :failed
@@ -2866,9 +2846,9 @@ defmodule Ask.Runtime.SurveyTest do
     [survey, _, _, respondent, _] =
       create_running_survey_with_channel_and_respondent(@dummy_steps, "ivr")
 
-    {:ok, broker} = SurveyBroker.start_link()
+    {:ok, broker} = Broker.start_link()
     {:ok, logger} = SurveyLogger.start_link()
-    SurveyBroker.poll()
+    Broker.poll()
 
     respondent = Repo.get(Respondent, respondent.id)
     assert respondent.state == :active
@@ -2886,7 +2866,7 @@ defmodule Ask.Runtime.SurveyTest do
     Respondent.changeset(respondent, %{timeout_at: Timex.now() |> Timex.shift(minutes: -1)})
     |> Repo.update()
 
-    SurveyBroker.handle_info(:poll, nil)
+    Broker.handle_info(:poll, nil)
 
     respondent = Repo.get(Respondent, respondent.id)
     assert respondent.state == :failed
@@ -2909,9 +2889,9 @@ defmodule Ask.Runtime.SurveyTest do
     [_, _, _, respondent, _] =
       create_running_survey_with_channel_and_respondent(@dummy_steps, "ivr")
 
-    {:ok, broker} = SurveyBroker.start_link()
+    {:ok, broker} = Broker.start_link()
     {:ok, logger} = SurveyLogger.start_link()
-    SurveyBroker.poll()
+    Broker.poll()
 
     respondent = Repo.get(Respondent, respondent.id)
     Survey.sync_step(respondent, Flow.Message.answer())
@@ -2941,8 +2921,8 @@ defmodule Ask.Runtime.SurveyTest do
     [_, _, _, respondent, _] =
       create_running_survey_with_channel_and_respondent(@dummy_steps, "ivr")
 
-    {:ok, broker} = SurveyBroker.start_link()
-    SurveyBroker.poll()
+    {:ok, broker} = Broker.start_link()
+    Broker.poll()
 
     respondent = Repo.get(Respondent, respondent.id)
     reply = Survey.sync_step(respondent, Flow.Message.answer())
@@ -2961,7 +2941,7 @@ defmodule Ask.Runtime.SurveyTest do
     })
     |> Repo.update!()
 
-    SurveyBroker.handle_info(:poll, nil)
+    Broker.handle_info(:poll, nil)
 
     respondent = Repo.get(Respondent, respondent.id)
     assert respondent.state == :failed
@@ -2975,7 +2955,7 @@ defmodule Ask.Runtime.SurveyTest do
       create_running_survey_with_channel_and_respondent(@dummy_steps, "ivr")
 
     # First poll, activate the respondent
-    SurveyBroker.handle_info(:poll, nil)
+    Broker.handle_info(:poll, nil)
 
     assert_received [
       :setup,
@@ -3002,16 +2982,15 @@ defmodule Ask.Runtime.SurveyTest do
 
     insert(:quota_bucket, survey: survey, condition: %{:Exercises => "No"}, quota: 10, count: 0)
 
-    {:ok, broker} = SurveyBroker.start_link()
-    SurveyBroker.poll()
+    {:ok, broker} = Broker.start_link()
+    Broker.poll()
 
     assert_received [
       :ask,
       ^test_channel,
       %Respondent{sanitized_phone_number: ^phone_number},
       _token,
-      ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO"),
-      _channel_id
+      ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO")
     ]
 
     respondent = Repo.get(Respondent, respondent.id)
@@ -3062,16 +3041,15 @@ defmodule Ask.Runtime.SurveyTest do
     [survey, _group, test_channel, respondent, phone_number] =
       create_running_survey_with_channel_and_respondent([step])
 
-    {:ok, broker} = SurveyBroker.start_link()
-    SurveyBroker.poll()
+    {:ok, broker} = Broker.start_link()
+    Broker.poll()
 
     assert_received [
       :ask,
       ^test_channel,
       %Respondent{sanitized_phone_number: ^phone_number},
       _token,
-      ReplyHelper.simple("Do you exercise", "Do you exercise? Reply 1 for YES, 2 for NO"),
-      _channel_id
+      ReplyHelper.simple("Do you exercise", "Do you exercise? Reply 1 for YES, 2 for NO")
     ]
 
     respondent = Repo.get(Respondent, respondent.id)
@@ -3094,12 +3072,12 @@ defmodule Ask.Runtime.SurveyTest do
     [survey, _, _, respondent, _] = create_running_survey_with_channel_and_respondent()
     survey |> Ask.Survey.changeset(%{sms_retry_configuration: "2m"}) |> Repo.update!()
 
-    {:ok, _} = SurveyBroker.start_link()
-    SurveyBroker.handle_info(:poll, nil)
+    {:ok, _} = Broker.start_link()
+    Broker.handle_info(:poll, nil)
 
     respondent = Repo.get(Respondent, respondent.id)
     session = respondent.session |> Ask.Runtime.Session.load()
-    SurveyBroker.retry_respondent(respondent)
+    Broker.retry_respondent(respondent)
 
     Survey.sync_step_internal(session, Flow.Message.reply("Yes"))
 
@@ -3122,8 +3100,8 @@ defmodule Ask.Runtime.SurveyTest do
     [survey, _, _, respondent, _] =
       create_running_survey_with_channel_and_respondent(@dummy_steps, "ivr")
 
-    {:ok, broker} = SurveyBroker.start_link()
-    SurveyBroker.poll()
+    {:ok, broker} = Broker.start_link()
+    Broker.poll()
 
     survey = Repo.get(Ask.Survey, survey.id)
     assert survey.state == :running
@@ -3173,8 +3151,8 @@ defmodule Ask.Runtime.SurveyTest do
 
     survey |> Ask.Survey.changeset(%{ivr_retry_configuration: "10m"}) |> Repo.update!()
 
-    {:ok, broker} = SurveyBroker.start_link()
-    SurveyBroker.poll()
+    {:ok, broker} = Broker.start_link()
+    Broker.poll()
 
     survey = Repo.get(Ask.Survey, survey.id)
     assert survey.state == :running
@@ -3258,8 +3236,8 @@ defmodule Ask.Runtime.SurveyTest do
 
     respondent = insert(:respondent, survey: survey, respondent_group: group)
 
-    {:ok, _} = SurveyBroker.start_link()
-    SurveyBroker.handle_info(:poll, nil)
+    {:ok, _} = Broker.start_link()
+    Broker.handle_info(:poll, nil)
 
     respondent = Repo.get(Respondent, respondent.id)
     reply = Survey.sync_step(respondent, Flow.Message.reply("Yes"), "sms")
@@ -3309,8 +3287,8 @@ defmodule Ask.Runtime.SurveyTest do
 
     respondent = insert(:respondent, survey: survey, respondent_group: group)
 
-    {:ok, _} = SurveyBroker.start_link()
-    SurveyBroker.handle_info(:poll, nil)
+    {:ok, _} = Broker.start_link()
+    Broker.handle_info(:poll, nil)
 
     respondent = Repo.get(Respondent, respondent.id)
     reply = Survey.sync_step(respondent, Flow.Message.reply("Yes"), "mobileweb")
@@ -3323,16 +3301,15 @@ defmodule Ask.Runtime.SurveyTest do
 
     survey |> Ask.Survey.changeset(%{mobileweb_retry_configuration: "10m"}) |> Repo.update()
 
-    {:ok, broker} = SurveyBroker.start_link()
-    SurveyBroker.poll()
+    {:ok, broker} = Broker.start_link()
+    Broker.poll()
 
     assert_receive [
       :ask,
       ^test_channel,
       %Respondent{sanitized_phone_number: ^phone_number},
       _,
-      ReplyHelper.simple("Contact", message),
-      _channel_id
+      ReplyHelper.simple("Contact", message)
     ]
 
     assert message ==
@@ -3358,16 +3335,15 @@ defmodule Ask.Runtime.SurveyTest do
     [_survey, _group, test_channel, respondent, phone_number] =
       create_running_survey_with_channel_and_respondent(@mobileweb_dummy_steps, "mobileweb")
 
-    {:ok, _broker} = SurveyBroker.start_link()
-    SurveyBroker.poll()
+    {:ok, _broker} = Broker.start_link()
+    Broker.poll()
 
     assert_receive [
       :ask,
       ^test_channel,
       %Respondent{sanitized_phone_number: ^phone_number},
       _,
-      ReplyHelper.simple("Contact", message),
-      _channel_id
+      ReplyHelper.simple("Contact", message)
     ]
 
     assert message ==
@@ -3393,9 +3369,9 @@ defmodule Ask.Runtime.SurveyTest do
     [survey, _group, _test_channel, respondent, _phone_number] =
       create_running_survey_with_channel_and_respondent(@dummy_steps, "ivr")
 
-    {:ok, broker} = SurveyBroker.start_link()
+    {:ok, broker} = Broker.start_link()
     {:ok, logger} = SurveyLogger.start_link()
-    SurveyBroker.poll()
+    Broker.poll()
 
     respondent = Repo.get(Respondent, respondent.id)
 
@@ -3447,8 +3423,8 @@ defmodule Ask.Runtime.SurveyTest do
       )
 
     {:ok, logger} = SurveyLogger.start_link()
-    {:ok, broker} = SurveyBroker.start_link()
-    SurveyBroker.poll()
+    {:ok, broker} = Broker.start_link()
+    Broker.poll()
 
     Survey.delivery_confirm(Repo.get(Respondent, respondent.id), "Do you smoke?")
 
@@ -3612,7 +3588,7 @@ defmodule Ask.Runtime.SurveyTest do
     |> Repo.update!()
 
     {:ok, survey_logger} = SurveyLogger.start_link()
-    {:ok, broker} = SurveyBroker.start_link()
+    {:ok, broker} = Broker.start_link()
     poll_survey()
 
     _reply = Survey.sync_step(Repo.get(Respondent, respondent.id), Flow.Message.reply("2"))
@@ -3648,11 +3624,11 @@ defmodule Ask.Runtime.SurveyTest do
 
   defp start_test(steps) do
     create_running_survey_with_channel_and_respondent(steps)
-    SurveyBroker.start_link()
+    Broker.start_link()
     SurveyLogger.start_link()
   end
 
-  defp poll_survey(), do: SurveyBroker.handle_info(:poll, nil)
+  defp poll_survey(), do: Broker.handle_info(:poll, nil)
 
   defp respondent_answers(message) do
     respondent = Repo.one!(Respondent)

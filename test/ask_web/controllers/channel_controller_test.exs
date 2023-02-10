@@ -1,7 +1,6 @@
 defmodule AskWeb.ChannelControllerTest do
   use AskWeb.ConnCase
   use Ask.TestHelpers
-  alias Ask.Runtime.ChannelBrokerAgent
 
   setup %{conn: conn} do
     user = insert(:user)
@@ -12,7 +11,6 @@ defmodule AskWeb.ChannelControllerTest do
       |> put_req_header("accept", "application/json")
 
     {:ok, _} = Ask.Runtime.ChannelStatusServer.start_link()
-    {:ok, _} = ChannelBrokerAgent.start_link()
     {:ok, conn: conn, user: user}
   end
 

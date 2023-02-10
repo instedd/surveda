@@ -2,7 +2,6 @@ defmodule Ask.Respondent do
   use Ask.Model
   alias Ask.Ecto.Type.JSON
   alias Ask.{Stats, Repo, Respondent, Survey, Questionnaire}
-  alias Ask.Runtime.Reply
 
   schema "respondents" do
     # phone_number as-it-is in the respondents_list
@@ -428,30 +427,4 @@ defmodule Ask.Respondent do
     not_ignored = fn value -> String.upcase(value) not in ignored_values end
     quiz_step["relevant"] && not_ignored.(response.value)
   end
-
-
-  @doc """
-  Updates the respondent stats
-
-  ## Parameters
-
-    - respondent: the respondent being updated
-    - reply: the reply to extract the stats
-    - received_sms?: if true, both stats (sent and received) are updated
-  """
-  def update_stats(respondent_id, reply \\ %Reply{}, received_sms? \\ false) do
-    respondent = Repo.get(Respondent, respondent_id)
-    stats = respondent.stats
-
-    stats =
-      stats
-      |> Stats.add_sent_sms(Enum.count(Reply.prompts(reply)))
-
-    stats = if received_sms?, do: Stats.add_received_sms(stats), else: stats
-
-    respondent
-    |> Respondent.changeset(%{stats: stats})
-    |> Repo.update!()
-  end
-
 end

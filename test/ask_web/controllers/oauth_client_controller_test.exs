@@ -1,6 +1,5 @@
 defmodule AskWeb.OAuthClientControllerTest do
   use AskWeb.ConnCase
-  use Ask.TestHelpers
 
   setup %{conn: conn} do
     user = insert(:user)
