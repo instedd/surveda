@@ -1,7 +1,15 @@
 defmodule Ask.Runtime.ChannelBrokerTest do
   use AskWeb.ConnCase
   use Ask.TestHelpers
-  alias Ask.Runtime.{ChannelStatusServer, ChannelBroker, ChannelBrokerAgent, VerboiceChannel, NuntiumChannel}
+
+  alias Ask.Runtime.{
+    ChannelStatusServer,
+    ChannelBroker,
+    ChannelBrokerAgent,
+    VerboiceChannel,
+    NuntiumChannel
+  }
+
   alias Ask.{Config, Channel}
 
   setup %{conn: conn} do
@@ -42,7 +50,9 @@ defmodule Ask.Runtime.ChannelBrokerTest do
       callback_respondents(conn, release_respondents, "verboice")
 
       # Assert
-      released_respondents = Enum.take(respondents, channel_capacity + callbacks) |> Enum.take(-callbacks)
+      released_respondents =
+        Enum.take(respondents, channel_capacity + callbacks) |> Enum.take(-callbacks)
+
       assert_made_calls(released_respondents, test_channel)
     end
   end
@@ -77,7 +87,9 @@ defmodule Ask.Runtime.ChannelBrokerTest do
       callback_respondents(conn, release_respondents, "nuntium", channel.id)
 
       # Assert
-      released_respondents = Enum.take(respondents, channel_capacity + callbacks) |> Enum.take(-callbacks)
+      released_respondents =
+        Enum.take(respondents, channel_capacity + callbacks) |> Enum.take(-callbacks)
+
       assert_sent_smss(released_respondents, test_channel)
     end
   end
@@ -87,6 +99,7 @@ defmodule Ask.Runtime.ChannelBrokerTest do
       mock_queued_contact = fn respondent_id, params, disposition ->
         {%{id: respondent_id, disposition: disposition}, params}
       end
+
       {
         :ok,
         state: %{
@@ -102,7 +115,7 @@ defmodule Ask.Runtime.ChannelBrokerTest do
 
     test "queues contact", %{
       state: s,
-      mock_queued_contact: mqc,
+      mock_queued_contact: mqc
     } do
       respondent_id = 2
       params = 3
@@ -130,7 +143,6 @@ defmodule Ask.Runtime.ChannelBrokerTest do
 
       assert :pqueue.is_empty(q)
     end
-
 
     test "doesn't removes other respondent", %{
       state: s,
@@ -169,6 +181,7 @@ defmodule Ask.Runtime.ChannelBrokerTest do
     Enum.each(respondents, fn %{id: id} ->
       assert_received [:setup, ^test_channel, %{id: ^id}, _token]
     end)
+
     refute_received [:setup, ^test_channel, _respondent, _token]
   end
 
@@ -176,6 +189,7 @@ defmodule Ask.Runtime.ChannelBrokerTest do
     Enum.each(respondents, fn %{id: id} ->
       assert_received [:ask, ^test_channel, %{id: ^id}, _token, _reply, _channel_id]
     end)
+
     refute_received [:ask, ^test_channel, _respondent, _token, _reply, _channel_id]
   end
 
@@ -186,6 +200,7 @@ defmodule Ask.Runtime.ChannelBrokerTest do
         respondents_quantity: @respondents_quantity,
         channel_capacity: channel_capacity
       )
+
     [test_channel, respondents, channel]
   end
 

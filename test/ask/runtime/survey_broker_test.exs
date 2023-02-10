@@ -5,7 +5,14 @@ defmodule Ask.Runtime.SurveyBrokerTest do
   use Ask.MockTime
   use Ask.TestHelpers
 
-  alias Ask.Runtime.{SurveyBroker, ReplyHelper, ChannelStatusServer, SurveyLogger, Flow, ChannelBrokerAgent}
+  alias Ask.Runtime.{
+    SurveyBroker,
+    ReplyHelper,
+    ChannelStatusServer,
+    SurveyLogger,
+    Flow,
+    ChannelBrokerAgent
+  }
 
   alias Ask.{
     Repo,

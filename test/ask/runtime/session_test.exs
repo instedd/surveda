@@ -67,6 +67,7 @@ defmodule Ask.Runtime.SessionTest do
       ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO"),
       ^channel_id
     ]
+
     assert respondent.id == respondent_id
 
     assert 1 == session.respondent.stats |> Stats.attempts(:sms)
@@ -347,6 +348,7 @@ defmodule Ask.Runtime.SessionTest do
       ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO"),
       _channel_id
     ]
+
     assert respondent.id == respondent_id
   end
 
@@ -452,6 +454,7 @@ defmodule Ask.Runtime.SessionTest do
       ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO"),
       _channel_id
     ]
+
     assert respondent.id == respondent_id
 
     result = Session.timeout(session)
@@ -478,6 +481,7 @@ defmodule Ask.Runtime.SessionTest do
       ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO"),
       _channel_id
     ]
+
     assert respondent.id == respondent_id
 
     assert {:ok, ^session, %Reply{}, 5} = Session.timeout(session)
@@ -503,6 +507,7 @@ defmodule Ask.Runtime.SessionTest do
       ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO"),
       _channel_id
     ]
+
     assert respondent.id == respondent_id
 
     assert {:ok, ^session, %Reply{}, 120} = Session.timeout(session)
@@ -1188,6 +1193,7 @@ defmodule Ask.Runtime.SessionTest do
       ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO"),
       _channel_id
     ]
+
     assert respondent.id == respondent_id
 
     assert {:ok, ^session, %Reply{}, 120} = Session.timeout(session)
@@ -1393,6 +1399,7 @@ defmodule Ask.Runtime.SessionTest do
       ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO"),
       _channel_id
     ]
+
     assert respondent.id == respondent_id
 
     assert {:rejected, %{steps: [%{prompts: ["Quota completed"]}]}, _} =

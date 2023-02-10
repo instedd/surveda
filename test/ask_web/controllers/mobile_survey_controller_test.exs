@@ -83,7 +83,8 @@ defmodule AskWeb.MobileSurveyControllerTest do
   test "respondent flow via mobileweb", %{conn: conn} do
     test_channel = TestChannel.new(false, true)
 
-    %{id: channel_id} = channel = insert(:channel, settings: test_channel |> TestChannel.settings(), type: "sms")
+    %{id: channel_id} =
+      channel = insert(:channel, settings: test_channel |> TestChannel.settings(), type: "sms")
 
     quiz =
       insert(:questionnaire,
@@ -381,7 +382,9 @@ defmodule AskWeb.MobileSurveyControllerTest do
   test "using an invalid token", %{conn: conn} do
     test_channel = TestChannel.new(false, true)
 
-    %{id: channel_id} = channel = insert(:channel, settings: test_channel |> TestChannel.settings(), type: "sms")
+    %{id: channel_id} =
+      channel = insert(:channel, settings: test_channel |> TestChannel.settings(), type: "sms")
+
     quiz = insert(:questionnaire, steps: @mobileweb_dummy_steps)
 
     survey =
@@ -546,7 +549,8 @@ defmodule AskWeb.MobileSurveyControllerTest do
   test "respondent flow via mobileweb with refusal + end", %{conn: conn} do
     test_channel = TestChannel.new(false, true)
 
-    %{id: channel_id} = channel = insert(:channel, settings: test_channel |> TestChannel.settings(), type: "sms")
+    %{id: channel_id} =
+      channel = insert(:channel, settings: test_channel |> TestChannel.settings(), type: "sms")
 
     quiz =
       insert(:questionnaire,
