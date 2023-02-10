@@ -89,19 +89,24 @@ defmodule Ask.Runtime.NuntiumChannel do
 
         respondent ->
           channel_id = args["channel_id"]
+
           case channel_id do
             nil ->
               # For backward compatibility only
               # From the moment the ChannelBroker go live to production, every AO message will
               # include the channel_id. Only older messages should reach this chunk of code.
-              Logger.warn("Missing channel_id in Nuntium status callback. respondent_id: #{respondent_id}")
+              Logger.warn(
+                "Missing channel_id in Nuntium status callback. respondent_id: #{respondent_id}"
+              )
+
               nil
+
             _ ->
               # Ideally, only "failed" and "confirmed" status should be filtered. But testing this
               # in STG Surveda only receives the delivered status. We should understand why and
               # fix it if needed.
               # In the meantime, we accept both "confirmed" and "delivered" status.
-              if (state in ["failed", "confirmed", "delivered"]) do
+              if state in ["failed", "confirmed", "delivered"] do
                 ChannelBroker.callback_received(
                   channel_id,
                   respondent,
@@ -154,11 +159,16 @@ defmodule Ask.Runtime.NuntiumChannel do
             case respondent do
               %Respondent{session: %{"current_mode" => %{"mode" => "sms"}}} ->
                 channel = respondent_channel(respondent)
+
                 case channel do
                   nil ->
                     # If there's a living session, it should have a channel
-                    Logger.error("Missing channel_id in Nuntium AT callback. respondent_id: #{respondent_id}")
+                    Logger.error(
+                      "Missing channel_id in Nuntium AT callback. respondent_id: #{respondent_id}"
+                    )
+
                     {nil, nil}
+
                   _ ->
                     case survey.sync_step(respondent, Flow.Message.reply(body), "sms") do
                       {:reply, reply, respondent} ->

@@ -49,48 +49,49 @@ defmodule Ask.Config do
       # How many minutes will the ChannelBroker process be idle. Default: 30 minutes.
       # When the process shuts down because of timeout its state is saved to the DB.
       # Low values: the proccess we'll be idle for less time. Less processes will be running
-        # concurrently. A too low value could lead to unexpected errors produced by too many
-        # unnecessary starts and shutdowns.
+      # concurrently. A too low value could lead to unexpected errors produced by too many
+      # unnecessary starts and shutdowns.
       # High values: the process we'll be idle for more time. More processes will be running
-        # concurrently. A too high value could lead to a potential (but not expected) risk of
-        # overloading the server load.
+      # concurrently. A too high value could lead to a potential (but not expected) risk of
+      # overloading the server load.
       shut_down_minutes: env_to_int("SHUT_DOWN_MINUTES", 30),
       # How many ChannelBroker internal operations (like queueing or activating a respondent)
-        # wait until the state is saved to the DB. Default: 100 operations.
+      # wait until the state is saved to the DB. Default: 100 operations.
       # When a proccess inits (it may be because of a crash) it uses the last saved state.
       # Low values: the state of the process will be saved more frequently. Less contacts can be
-        # lost in case of errors or unexpected resets. A too low value could lead to server
-        # overload and unexpected errors because of race conditions.
+      # lost in case of errors or unexpected resets. A too low value could lead to server
+      # overload and unexpected errors because of race conditions.
       # High values: the state of the process will be save less frequently. More contacts can be
-        # lost in case of errors or unexpected resets. A too high value risks too many contacts
-        # lost.
+      # lost in case of errors or unexpected resets. A too high value risks too many contacts
+      # lost.
       to_db_operations: env_to_int("CHNL_BKR_TO_DB_OPERATIONS", 100),
       # How many minutes the ChannelBroker garbage collector will wait between rounds. Default: 10
-        # minutes.
+      # minutes.
       # Two situations brings the need of running the GC frequently:
-        # 1. When the callback are lost, Surveda receives no callbacks after a contact is done.
-        # 2. When the callback arrives but the respondent is already deleted or failed.
+      # 1. When the callback are lost, Surveda receives no callbacks after a contact is done.
+      # 2. When the callback arrives but the respondent is already deleted or failed.
       # Low values: the GC will run more frequently. A too low value could lead to unnecessary
-        # runs of the GC and its corresponding server overload.
+      # runs of the GC and its corresponding server overload.
       # High values: the GC will run less frequently. A too high value could lead to unnecessary
-        # stops of the survey by reaching the channel capacity because of failed contacts or
-        # callback losses.
+      # stops of the survey by reaching the channel capacity because of failed contacts or
+      # callback losses.
       gc_interval_minutes: env_to_int("CHNL_BKR_GC_INTERVAL_MINUTES", 10),
       # How many hours after the last contact the ChannelBroker waits until a contact is discarded
-        # because it's considered outdated. Default: 24 h.
+      # because it's considered outdated. Default: 24 h.
       # Low values: the GC will discard younger contacts. A too low value could lead to discard
-        # contacts that aren't really finished. In that scenario, the actual channel capacity
-        # wouldn't be honored and the channel could be overloaded.
+      # contacts that aren't really finished. In that scenario, the actual channel capacity
+      # wouldn't be honored and the channel could be overloaded.
       # High values: the GC will discard older contacts. A too high value could lead to keep
-        # contacts that actually finished, wasting the channel capacity and slowing-down the
-        # contact rate.
+      # contacts that actually finished, wasting the channel capacity and slowing-down the
+      # contact rate.
       gc_outdate_hours: env_to_int("CHNL_BKR_GC_OUTDATE_HOURS", 24)
     }
   end
 
   defp env_to_int(name, default) do
     env = System.get_env(name)
-    if (env == nil) do
+
+    if env == nil do
       default
     else
       String.to_integer(env)

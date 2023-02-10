@@ -4,7 +4,16 @@ defmodule Ask.Runtime.SurveyTest do
   use Timex
   use Ask.MockTime
   use Ask.TestHelpers
-  alias Ask.Runtime.{Survey, SurveyBroker, Flow, SurveyLogger, ReplyHelper, ChannelStatusServer, ChannelBrokerAgent}
+
+  alias Ask.Runtime.{
+    Survey,
+    SurveyBroker,
+    Flow,
+    SurveyLogger,
+    ReplyHelper,
+    ChannelStatusServer,
+    ChannelBrokerAgent
+  }
 
   alias Ask.{
     Repo,
