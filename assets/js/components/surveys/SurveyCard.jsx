@@ -107,8 +107,10 @@ class _SurveyCard extends Component<any> {
     const { survey, t, dispatch } = this.props
 
     let actions = []
-    if (this.movable()) actions.push({ name: t("Move to"), icon: "folder", func: this.askMoveSurvey })
-    if (this.deletable()) actions.push({ name: t("Delete"), icon: "delete", func: this.askDeleteSurvey })
+    if (this.movable())
+      actions.push({ name: t("Move to"), icon: "folder", func: this.askMoveSurvey })
+    if (this.deletable())
+      actions.push({ name: t("Delete"), icon: "delete", func: this.askDeleteSurvey })
 
     return (
       <div className="col s12 m6 l4">
