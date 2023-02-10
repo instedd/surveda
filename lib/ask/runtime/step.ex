@@ -281,7 +281,7 @@ defmodule Ask.Runtime.Step do
   defp is_numeric_permissive(str, language, step) do
     case Float.parse(String.trim(str)) do
       {num, _} ->
-        if round(num) == num do
+        if Float.parse(String.trim(str)) == Integer.parse(String.trim(str)) do
           round(num)
         else
           false
