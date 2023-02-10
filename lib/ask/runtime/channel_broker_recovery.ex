@@ -22,23 +22,34 @@ defmodule Ask.Runtime.ChannelBrokerRecovery do
       active_contacts: active_contacts,
       contacts_queue_ids: contacts_queue_ids
     }
+
     changeset = changeset(%ChannelBrokerRecovery{}, params)
-    Repo.insert!(changeset, on_conflict: [set: [
-      active_contacts: active_contacts,
-      contacts_queue_ids: contacts_queue_ids
-    ]])
+
+    Repo.insert!(changeset,
+      on_conflict: [
+        set: [
+          active_contacts: active_contacts,
+          contacts_queue_ids: contacts_queue_ids
+        ]
+      ]
+    )
   end
 
-  def save(%{
-      channel_id: channel_id,
-      active_contacts: active_contacts,
-      contacts_queue: contacts_queue
-    } = state) do
+  def save(
+        %{
+          channel_id: channel_id,
+          active_contacts: active_contacts,
+          contacts_queue: contacts_queue
+        } = state
+      ) do
     new_active_contacts =
       Enum.map(
         active_contacts,
-        fn {k, dict} -> {k, Map.put(dict, :last_contact, DateTime.to_string(Map.get(dict, :last_contact)))} end
-      ) |> Map.new()
+        fn {k, dict} ->
+          {k, Map.put(dict, :last_contact, DateTime.to_string(Map.get(dict, :last_contact)))}
+        end
+      )
+      |> Map.new()
 
     contacts_queue_ids =
       Enum.map(
@@ -68,6 +79,7 @@ defmodule Ask.Runtime.ChannelBrokerRecovery do
         Map.get(query_res, :active_contacts),
         fn {k, dict} ->
           new_dict = dict |> Map.new(fn {k, v} -> {String.to_atom(k), v} end)
+
           new_lc =
             try do
               {:ok, new_lc} = Jason.decode(Map.get(new_dict, :last_contact))
@@ -80,7 +92,8 @@ defmodule Ask.Runtime.ChannelBrokerRecovery do
           {:ok, new_lc_decoded, 0} = DateTime.from_iso8601(new_lc)
           {new_k, Map.put(new_dict, :last_contact, new_lc_decoded)}
         end
-      ) |> Map.new()
+      )
+      |> Map.new()
 
     %{active_contacts: cts, contacts_queue_ids: cqi}
   end

@@ -429,7 +429,6 @@ defmodule Ask.Respondent do
     quiz_step["relevant"] && not_ignored.(response.value)
   end
 
-
   @doc """
   Updates the respondent stats
 
@@ -453,5 +452,4 @@ defmodule Ask.Respondent do
     |> Respondent.changeset(%{stats: stats})
     |> Repo.update!()
   end
-
 end

@@ -50,7 +50,9 @@ defmodule Ask.TestHelpers do
         project = if user, do: create_project_for_user(user), else: nil
 
         test_channel = Ask.TestChannel.new(false, mode == "sms")
-        channel_settings = Map.put(Ask.TestChannel.settings(test_channel), "capacity", channel_capacity)
+
+        channel_settings =
+          Map.put(Ask.TestChannel.settings(test_channel), "capacity", channel_capacity)
 
         channel_type =
           case mode do
@@ -58,10 +60,11 @@ defmodule Ask.TestHelpers do
             _ -> mode
           end
 
-        channel = insert(:channel,
-          settings: channel_settings,
-          type: channel_type
-        )
+        channel =
+          insert(:channel,
+            settings: channel_settings,
+            type: channel_type
+          )
 
         quiz = insert(:questionnaire, steps: steps, quota_completed_steps: nil)
 
@@ -97,8 +100,13 @@ defmodule Ask.TestHelpers do
       end
 
       defp create_running_survey_with_channel_and_respondent_with_options(options) do
-        [survey, group, test_channel, [%{canonical_phone_number: phone_number} = respondent], _channel] =
-          create_running_survey_with_channel_and_respondents_with_options(options)
+        [
+          survey,
+          group,
+          test_channel,
+          [%{canonical_phone_number: phone_number} = respondent],
+          _channel
+        ] = create_running_survey_with_channel_and_respondents_with_options(options)
 
         [survey, group, test_channel, respondent, phone_number]
       end
