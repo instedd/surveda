@@ -636,10 +636,40 @@ defmodule Ask.Runtime.FlowTest do
       assert {:end, _, %Ask.Runtime.Reply{stores: %{"Probability" => "50"}}} = result
     end
 
+    test "does not accept floating point value" do
+      {:ok, flow, _} = init_quiz_and_send_response("S")
+      result = flow |> reply_sms(" 50.7 ")
+
+      assert {:ok, flow, reply} = result
+      prompts = Reply.prompts(reply)
+
+      assert flow.retries == 1
+
+      assert prompts == [
+               "You have entered an invalid answer",
+               "What is the probability that a number has more prime factors than the sum of its digits?"
+             ]
+    end
+
     test "when value is in a middle range it finds it, permissive" do
       {:ok, flow, _} = init_quiz_and_send_response("S")
       result = flow |> reply_sms(" 50 units ")
       assert {:end, _, %Ask.Runtime.Reply{stores: %{"Probability" => "50"}}} = result
+    end
+
+    test "does not accept a string with a floating point value, permissive" do
+      {:ok, flow, _} = init_quiz_and_send_response("S")
+      result = flow |> reply_sms(" 50.7 units ")
+
+      assert {:ok, flow, reply} = result
+      prompts = Reply.prompts(reply)
+
+      assert flow.retries == 1
+
+      assert prompts == [
+               "You have entered an invalid answer",
+               "What is the probability that a number has more prime factors than the sum of its digits?"
+             ]
     end
 
     test "accepts a string as an answer" do
