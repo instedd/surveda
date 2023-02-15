@@ -270,7 +270,7 @@ defmodule Ask.Runtime.Step do
   end
 
   defp is_numeric(str) do
-    case Float.parse(str) do
+    case Integer.parse(str) do
       {num, ""} -> num
       # _r : remainder_of_bianry
       {_num, _r} -> false
@@ -279,12 +279,14 @@ defmodule Ask.Runtime.Step do
   end
 
   defp is_numeric_permissive(str, language, step) do
-    case Float.parse(String.trim(str)) do
-      {num, _} ->
-        if round(num) == num do
+    str = String.trim(str)
+
+    case Float.parse(str) do
+      {num, rest} ->
+        if Integer.parse(str) == {num, rest} do
           round(num)
         else
-          num
+          false
         end
 
       :error ->
