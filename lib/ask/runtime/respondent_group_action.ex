@@ -260,20 +260,16 @@ defmodule Ask.Runtime.RespondentGroupAction do
 
   defp validate_loaded_entries(loaded_entries, entries) do
     loaded_respondent_ids =
-      Enum.filter(loaded_entries, fn loaded_entry ->
-        Map.has_key?(loaded_entry, :hashed_number)
-      end)
-      |> Enum.map(fn %{hashed_number: hashed_number} -> hashed_number end)
+      loaded_entries
+      |> Stream.filter(fn loaded_entry -> Map.has_key?(loaded_entry, :hashed_number) end)
+      |> Stream.map(fn %{hashed_number: hashed_number} -> hashed_number end)
+      |> Enum.to_list()
 
     invalid_entries =
       entries
       |> Stream.with_index()
-      |> Stream.filter(fn {entry, _} ->
-        Respondent.is_respondent_id?(entry) and not (entry in loaded_respondent_ids)
-      end)
-      |> Stream.map(fn {entry, index} ->
-        %{entry: entry, line_number: index + 1, type: "invalid-respondent-id"}
-      end)
+      |> Stream.filter(fn {entry, _} -> Respondent.is_respondent_id?(entry) and not (entry in loaded_respondent_ids) end)
+      |> Stream.map(fn {entry, index} -> %{entry: entry, line_number: index + 1, type: "invalid-respondent-id"} end)
       |> Enum.to_list()
 
     case invalid_entries do
@@ -289,26 +285,21 @@ defmodule Ask.Runtime.RespondentGroupAction do
     keep_digits = fn phone_number ->
       Regex.replace(~r/\D/, phone_number, "", [:global])
     end
+    {phone_numbers, respondent_ids} = partition_entries(entries)
 
-    respondent_ids = Enum.filter(entries, fn entry -> String.starts_with?(entry, "r") end)
-    phone_numbers_from_respondent_ids = phone_numbers_from_respondent_ids(survey, respondent_ids)
-
-    # keeps the initial entries array in order
-    # OPTIMIZE: is it required to keep the order? it would be magnitudes faster if we didn't have to
-    Enum.map(entries, fn entry ->
-      if String.starts_with?(entry, "r") do
-        Enum.find(phone_numbers_from_respondent_ids, fn %{
-                                                          phone_number: phone_number,
-                                                          hashed_number: hashed_number
-                                                        } ->
-          entry == phone_number or entry == hashed_number
-        end)
-      else
-        %{phone_number: entry}
-      end
-    end)
+    phone_numbers
+    |> Enum.map(fn phone_number -> %{phone_number: phone_number} end)
+    |> Enum.concat(phone_numbers_from_respondent_ids(survey, respondent_ids))
     |> Enum.filter(&(!is_nil(&1)))
     |> Enum.uniq_by(fn %{phone_number: phone_number} -> keep_digits.(phone_number) end)
+  end
+
+  defp partition_entries(entries) do
+    case Enum.group_by(entries, fn entry -> String.starts_with?(entry, "r") end) do
+      %{false => phone_numbers, true => respondent_ids} -> {phone_numbers, respondent_ids}
+      %{false => phone_numbers} -> {phone_numbers, []}
+      %{true => respondent_ids} -> {[], respondent_ids}
+    end
   end
 
   defp phone_numbers_from_respondent_ids(survey, respondent_ids) do
