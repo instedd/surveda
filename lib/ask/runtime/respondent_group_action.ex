@@ -268,8 +268,12 @@ defmodule Ask.Runtime.RespondentGroupAction do
     invalid_entries =
       entries
       |> Stream.with_index()
-      |> Stream.filter(fn {entry, _} -> Respondent.is_respondent_id?(entry) and not (entry in loaded_respondent_ids) end)
-      |> Stream.map(fn {entry, index} -> %{entry: entry, line_number: index + 1, type: "invalid-respondent-id"} end)
+      |> Stream.filter(fn {entry, _} ->
+        Respondent.is_respondent_id?(entry) and not (entry in loaded_respondent_ids)
+      end)
+      |> Stream.map(fn {entry, index} ->
+        %{entry: entry, line_number: index + 1, type: "invalid-respondent-id"}
+      end)
       |> Enum.to_list()
 
     case invalid_entries do
@@ -285,6 +289,7 @@ defmodule Ask.Runtime.RespondentGroupAction do
     keep_digits = fn phone_number ->
       Regex.replace(~r/\D/, phone_number, "", [:global])
     end
+
     {phone_numbers, respondent_ids} = partition_entries(entries)
 
     phone_numbers
