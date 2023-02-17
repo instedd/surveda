@@ -126,12 +126,28 @@ defmodule Ask.Runtime.RespondentGroupAction do
       |> Enum.chunk_every(64_000)
       |> Enum.flat_map(process_batch)
 
-    # And then remove them from phone_numbers (because they are duplicates)
-    # (no easier way to do this, plus we expect `existing_numbers` to
-    # be empty or near empty)
-    Enum.reject(phone_numbers, fn num ->
-      Respondent.canonicalize_phone_number(num) in existing_numbers
-    end)
+    if Enum.empty?(existing_numbers) do
+      # no duplicates
+      phone_numbers
+    else
+      # And then remove them from phone_numbers (because they are duplicates)
+
+      # the following is basically doing this, but optimized (to handle large
+      # lists of respondents):
+      # Enum.reject(phone_numbers, fn num ->
+      #   Respondent.canonicalize_phone_number(num) in existing_numbers
+      # end)
+
+      # zip into map %{ canonical_number => phone_number }
+      zip =
+        canonical_numbers
+        |> Enum.zip(phone_numbers)
+        |> List.foldl(%{}, fn ({k, v}, zip) -> Map.put(zip, k, v) end)
+
+      existing_numbers
+      |> List.foldl(zip, fn (n, zip) -> Map.delete(zip, n) end) # remove duplicates (using canonical number)
+      |> Map.values() # return the de-duplicated list of phone numbers
+    end
   end
 
   def take_sample(loaded_entries) do
@@ -261,9 +277,8 @@ defmodule Ask.Runtime.RespondentGroupAction do
   defp validate_loaded_entries(loaded_entries, entries) do
     loaded_respondent_ids =
       loaded_entries
-      |> Stream.filter(fn loaded_entry -> Map.has_key?(loaded_entry, :hashed_number) end)
-      |> Stream.map(fn %{hashed_number: hashed_number} -> hashed_number end)
-      |> Enum.to_list()
+      |> Enum.filter(fn loaded_entry -> Map.has_key?(loaded_entry, :hashed_number) end)
+      |> Enum.map(fn %{hashed_number: hashed_number} -> hashed_number end)
 
     invalid_entries =
       entries
