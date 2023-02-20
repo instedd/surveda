@@ -24,11 +24,8 @@ defmodule AskWeb.AudioControllerTest do
 
     test "MP3: when data is valid saves the audio", %{conn: conn} do
       file = %Plug.Upload{path: "test/fixtures/audio.mp3", filename: "test1.mp3"}
-      audio_count = Audio |> Repo.all() |> Enum.count()
-      assert audio_count == 0
       post conn, audio_path(conn, :create), file: file
-      audio_count = Audio |> Repo.all() |> Enum.count()
-      assert audio_count == 1
+      assert Repo.one(from p in Audio, select: count()) == 1
 
       audio = Repo.one(Audio)
       assert audio.filename == "test1.mp3"
@@ -43,13 +40,22 @@ defmodule AskWeb.AudioControllerTest do
       assert json_response(conn, 201)["data"] == %{"id" => uuid}
     end
 
+    test "MP3 with WAV extension: saves as MP3", %{conn: conn} do
+      File.copy("test/fixtures/audio.mp3", "test/fixtures/mpeg.wav")
+      try do
+        file = %Plug.Upload{path: "test/fixtures/mpeg.wav", filename: "mpeg.wav"}
+        conn = post conn, audio_path(conn, :create), file: file
+        assert conn.status == 201
+      after
+        File.rm("test/fixtures/mpeg.wav")
+      end
+      %{filename: "mpeg.mp3"} = Repo.one(Audio)
+    end
+
     test "WAV: when data is valid saves the audio as MP3", %{conn: conn} do
       file = %Plug.Upload{path: "test/fixtures/audio.wav", filename: "test1.wav"}
-      audio_count = Audio |> Repo.all() |> Enum.count()
-      assert audio_count == 0
       post conn, audio_path(conn, :create), file: file
-      audio_count = Audio |> Repo.all() |> Enum.count()
-      assert audio_count == 1
+      assert Repo.one(from p in Audio, select: count()) == 1
 
       audio = Repo.one(Audio)
       assert audio.filename == "test1.mp3"
@@ -64,28 +70,34 @@ defmodule AskWeb.AudioControllerTest do
       assert json_response(conn, 201)["data"] == %{"id" => uuid}
     end
 
-    test "when the data is invalid it returns a 422", %{conn: conn} do
-      file = %Plug.Upload{path: "test/fixtures/invalid_audio.csv", filename: "test1.csv"}
-      conn = post conn, audio_path(conn, :create), file: file
-
-      assert conn.status == 422
-    end
-
-    test "doesn't save if the file is of an invalid type", %{conn: conn} do
-      file = %Plug.Upload{path: "test/fixtures/invalid_audio.csv", filename: "test1.csv"}
-      audio_count = Audio |> Repo.all() |> Enum.count()
-      assert audio_count == 0
-      post conn, audio_path(conn, :create), file: file
-      audio_count = Audio |> Repo.all() |> Enum.count()
-      assert audio_count == 0
+    test "WAV with MP3 extension: saves as MP3", %{conn: conn} do
+      File.copy("test/fixtures/audio.wav", "test/fixtures/wave.mp3")
+      try do
+        file = %Plug.Upload{path: "test/fixtures/wave.mp3", filename: "wave.mp3"}
+        conn = post conn, audio_path(conn, :create), file: file
+        assert conn.status == 201
+      after
+        File.rm("test/fixtures/wave.mp3")
+      end
+      %{filename: "wave.mp3"} = Repo.one(Audio)
     end
 
     test "returns a validation error if the file is of an invalid type", %{conn: conn} do
       file = %Plug.Upload{path: "test/fixtures/invalid_audio.csv", filename: "test1.csv"}
       conn = post conn, audio_path(conn, :create), file: file
 
-      assert Enum.at(json_response(conn, 422)["errors"]["filename"], 0) ==
-               "Invalid file type. Allowed types are MP3 and WAV."
+      %{"errors" => errors} = json_response(conn, 422)
+      assert errors["filename"] == ["Invalid file. Allowed types are MP3 and WAV."]
+      assert Repo.one(from p in Audio, select: count()) == 0
+    end
+
+    test "returns a validation error if the file has invalid audio contents", %{conn: conn} do
+      file = %Plug.Upload{path: "test/fixtures/invalid.mp3", filename: "invalid.mp3"}
+      conn = post conn, audio_path(conn, :create), file: file
+
+      %{"errors" => errors} = json_response(conn, 422)
+      assert errors["filename"] == ["Invalid file. Allowed types are MP3 and WAV."]
+      assert Repo.one(from p in Audio, select: count()) == 0
     end
   end
 

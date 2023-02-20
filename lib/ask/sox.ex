@@ -1,18 +1,14 @@
 defmodule Ask.Sox do
-  def convert(from_type, from_filename, to_type) do
+  def convert(from_filename, to_type) do
     try do
       case System.cmd(sox_executable(), [
              "-V1",
-             "-t",
-             from_type,
+             "--magic",
              from_filename,
-             "-e",
-             "signed-integer",
-             "-r",
-             "44100",
-             "-t",
-             to_type,
-             "-c1",
+             "--encoding", "signed-integer",
+             "--channels", "1",
+             "--rate", "44100",
+             "--type", to_type,
              "-"
            ]) do
         {output, 0} -> {:ok, output}

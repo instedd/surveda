@@ -14,7 +14,7 @@ defmodule Mix.Tasks.Ask.ConvertWavFilesToMp3InDb do
     File.write(path, audio.data, [:binary])
     mp3_filename = "#{Path.basename(audio.filename, ".wav")}.mp3"
 
-    case Sox.convert("wav", path, "mp3") do
+    case Sox.convert(path, "mp3") do
       {:ok, mp3} ->
         case Repo.update(Audio.changeset(audio, %{"data" => mp3, "filename" => mp3_filename})) do
           {:ok, _} ->
