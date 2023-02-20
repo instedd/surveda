@@ -42,6 +42,7 @@ defmodule AskWeb.AudioControllerTest do
 
     test "MP3 with WAV extension: saves as MP3", %{conn: conn} do
       File.copy("test/fixtures/audio.mp3", "test/fixtures/mpeg.wav")
+
       try do
         file = %Plug.Upload{path: "test/fixtures/mpeg.wav", filename: "mpeg.wav"}
         conn = post conn, audio_path(conn, :create), file: file
@@ -49,6 +50,7 @@ defmodule AskWeb.AudioControllerTest do
       after
         File.rm("test/fixtures/mpeg.wav")
       end
+
       %{filename: "mpeg.mp3"} = Repo.one(Audio)
     end
 
@@ -72,6 +74,7 @@ defmodule AskWeb.AudioControllerTest do
 
     test "WAV with MP3 extension: saves as MP3", %{conn: conn} do
       File.copy("test/fixtures/audio.wav", "test/fixtures/wave.mp3")
+
       try do
         file = %Plug.Upload{path: "test/fixtures/wave.mp3", filename: "wave.mp3"}
         conn = post conn, audio_path(conn, :create), file: file
@@ -79,6 +82,7 @@ defmodule AskWeb.AudioControllerTest do
       after
         File.rm("test/fixtures/wave.mp3")
       end
+
       %{filename: "wave.mp3"} = Repo.one(Audio)
     end
 

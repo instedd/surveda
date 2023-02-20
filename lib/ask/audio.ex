@@ -46,7 +46,6 @@ defmodule Ask.Audio do
 
     {%{}, types}
     |> cast(data, Map.keys(types))
-    #|> validate_change(:filename, &validate_file_type/2)
     |> validate_change(:mime_type, &validate_mime_type/2)
     |> validate_change(:size, &validate_size/2)
   end

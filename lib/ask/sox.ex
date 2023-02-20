@@ -5,10 +5,14 @@ defmodule Ask.Sox do
              "-V1",
              "--magic",
              from_filename,
-             "--encoding", "signed-integer",
-             "--channels", "1",
-             "--rate", "44100",
-             "--type", to_type,
+             "--encoding",
+             "signed-integer",
+             "--channels",
+             "1",
+             "--rate",
+             "44100",
+             "--type",
+             to_type,
              "-"
            ]) do
         {output, 0} -> {:ok, output}
