@@ -17,8 +17,22 @@ defmodule Ask.Audio do
     timestamps()
   end
 
-  @valid_extensions ~w(.mp3 .wav)
-  @valid_mime_types ~w(audio/mpeg audio/wave audio/wav audio/x-wav audio/x-pn-wav)
+  @valid_extensions ~w(
+    .mp3
+    .wav
+    .m4a .mp4
+    .aac
+  )
+  @valid_mime_types ~w(
+    audio/mpeg
+    audio/wave audio/wav audio/x-wav audio/x-pn-wav
+    audio/mp4 video/mp4
+    audio/aac audio/x-hx-aac-adts
+  )
+  @aac_mime_types ~w(
+    audio/mp4 video/mp4
+    audio/aac audio/x-hx-aac-adts
+  )
   @stored_audio_extension "mp3"
 
   def exported_audio_file_name(uuid), do: uuid <> ".#{@stored_audio_extension()}"
@@ -56,10 +70,10 @@ defmodule Ask.Audio do
   files will be transcoded to avoid issues with invalid or broken MP3 in
   production.
   """
-  def params_from_converted_upload(upload) do
+  def params_from_converted_upload(upload, mime_type) do
     basename = Path.basename(upload.filename, Path.extname(upload.filename))
 
-    case Sox.convert(upload.path, @stored_audio_extension) do
+    case convert(upload.path, mime_type) do
       {:ok, data} ->
         %{
           "uuid" => Ecto.UUID.generate(),
@@ -70,6 +84,14 @@ defmodule Ask.Audio do
       {:error, error} ->
         Logger.warn("Error converting file #{upload.path}: #{error}")
         params_from_upload(upload)
+    end
+  end
+
+  defp convert(path, mime_type) do
+    if Enum.member?(@aac_mime_types, mime_type) do
+      Sox.convert_aac(path, @stored_audio_extension)
+    else
+      Sox.convert(path, @stored_audio_extension)
     end
   end
 

@@ -9,7 +9,7 @@ defmodule AskWeb.AudioController do
 
     result =
       if upload_changeset.valid? do
-        new_audio = Audio.params_from_converted_upload(file_upload)
+        new_audio = Audio.params_from_converted_upload(file_upload, upload_changeset.changes.mime_type)
         changeset = Audio.changeset(%Audio{}, new_audio)
         Repo.insert(changeset)
       else

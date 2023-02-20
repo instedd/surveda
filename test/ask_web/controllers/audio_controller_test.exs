@@ -86,6 +86,24 @@ defmodule AskWeb.AudioControllerTest do
       %{filename: "wave.mp3"} = Repo.one(Audio)
     end
 
+    test "AAC: saves as MP3", %{conn: conn} do
+      file = %Plug.Upload{path: "test/fixtures/audio.aac", filename: "audio.aac"}
+      conn = post conn, audio_path(conn, :create), file: file
+      assert conn.status == 201
+
+      %{filename: "audio.mp3", data: data} = Repo.one(Audio)
+      assert AudioChecker.get_audio_format(data, "mp3") == "mp3"
+    end
+
+    test "M4A: saves as MP3", %{conn: conn} do
+      file = %Plug.Upload{path: "test/fixtures/audio.m4a", filename: "audio.m4a"}
+      conn = post conn, audio_path(conn, :create), file: file
+      assert conn.status == 201
+
+      %{filename: "audio.mp3", data: data} = Repo.one(Audio)
+      assert AudioChecker.get_audio_format(data, "mp3") == "mp3"
+    end
+
     test "returns a validation error if the file is of an invalid type", %{conn: conn} do
       file = %Plug.Upload{path: "test/fixtures/invalid_audio.csv", filename: "test1.csv"}
       conn = post conn, audio_path(conn, :create), file: file

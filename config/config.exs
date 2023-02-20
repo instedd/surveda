@@ -47,6 +47,7 @@ config :ask, Ask.Runtime.Broker,
   initial_response_rate: {:system, "INITIAL_RESPONSE_RATE", 100}
 
 config :ask, :sox, bin: System.get_env("SOX_BINARY") || "sox"
+config :ask, :ffmpeg, bin: System.get_env("FFMPEG_BINARY") || "ffmpeg"
 
 config :ask, Ask.UrlShortener,
   url_shortener_api_key: {:system, "URL_SHORTENER_API_KEY"},
