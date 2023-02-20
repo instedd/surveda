@@ -29,12 +29,15 @@ defmodule Ask.Sox do
   # channels or rate in ffmpeg.
   def convert_aac(from_filename, to_type) do
     wav_filename = tmp_filename(from_filename, ".wav")
+
     try do
       case System.cmd(ffmpeg_executable(), [
              "-hide_banner",
-             "-loglevel", "error",
-             "-i", from_filename,
-             wav_filename,
+             "-loglevel",
+             "error",
+             "-i",
+             from_filename,
+             wav_filename
            ]) do
         {_, 0} -> convert(wav_filename, to_type)
         {_, code} -> {:error, code}
