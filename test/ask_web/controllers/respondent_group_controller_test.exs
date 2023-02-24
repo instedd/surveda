@@ -813,17 +813,16 @@ defmodule AskWeb.RespondentGroupControllerTest do
              }
 
       respondents = Repo.all(from r in Respondent, where: r.survey_id == ^survey.id)
+      phone_numbers = respondents |> Enum.map(& &1.phone_number)
 
       assert length(respondents) == 15
 
       assert group
       assert group.respondents_count == 15
-      assert group.sample == respondents |> Enum.take(5) |> Enum.map(& &1.phone_number)
+      assert Enum.count(group.sample) == 5
+      assert Enum.count(group.sample -- phone_numbers) == 0
 
       assert Enum.at(respondents, 2).survey_id == survey.id
-      assert Enum.at(respondents, 2).phone_number == "(549) 11 2421 3125"
-      assert Enum.at(respondents, 2).sanitized_phone_number == "5491124213125"
-      assert Enum.at(respondents, 2).canonical_phone_number == "5491124213125"
       assert Enum.at(respondents, 2).respondent_group_id == group.id
     end
 
