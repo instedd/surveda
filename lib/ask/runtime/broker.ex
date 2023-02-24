@@ -113,7 +113,10 @@ defmodule Ask.Runtime.Broker do
     Enum.filter(all_running_surveys, fn survey ->
       survey.id not in expired_surveys_ids and Schedule.intersect?(survey.schedule, now)
     end)
-    |> Enum.each(fn survey -> poll_survey(survey, now) end)
+    |> Enum.each(fn survey ->
+      survey = survey |> Repo.preload(:project)
+      poll_survey(survey, now)
+    end)
 
     stop_surveys(expired_surveys)
   end
@@ -421,7 +424,7 @@ defmodule Ask.Runtime.Broker do
       Survey.get_completion_rate(survey, respondents_by_disposition, respondents_target)
 
     current_success_rate = Survey.get_success_rate(survey, respondents_by_disposition)
-    initial_success_rate = Survey.initial_success_rate()
+    initial_success_rate = Survey.initial_success_rate(survey.project)
     Survey.estimated_success_rate(initial_success_rate, current_success_rate, completion_rate)
   end
 end
