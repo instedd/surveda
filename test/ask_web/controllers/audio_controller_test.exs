@@ -29,7 +29,7 @@ defmodule AskWeb.AudioControllerTest do
 
       audio = Repo.one(Audio)
       assert audio.filename == "test1.mp3"
-      assert AudioChecker.get_audio_format(audio.data, "mp3") == "mp3"
+      assert AudioChecker.get_audio_format(audio.data, "mp3") == "audio/mpeg"
     end
 
     test "MP3: when data is valid returns its uuid", %{conn: conn} do
@@ -61,7 +61,7 @@ defmodule AskWeb.AudioControllerTest do
 
       audio = Repo.one(Audio)
       assert audio.filename == "test1.mp3"
-      assert AudioChecker.get_audio_format(audio.data, "mp3") == "mp3"
+      assert AudioChecker.get_audio_format(audio.data, "mp3") == "audio/mpeg"
     end
 
     test "WAV: when data is valid returns its uuid", %{conn: conn} do
