@@ -36,39 +36,31 @@ class ProjectTabs extends Component {
 
   render() {
     const { projectId, project, readOnly, t, fetchedProject } = this.props
-    const changeColorScheme = !readOnly ? (
-      <DropdownItem>
-        <a onClick={(e) => this.openColorSchemePopup(e)}>
-          <i className="material-icons">palette</i>
-          {t("Change color scheme")}
-        </a>
-      </DropdownItem>
-    ) : null
 
     // Nothing to display in 'more' tab if user is owner and project is archived
     let more =
       !fetchedProject || (fetchedProject && project.owner && readOnly) ? null : (
         <div className="col">
-          <Dropdown
-            className="options"
-            dataBelowOrigin={false}
-            label={<i className="material-icons">more_vert</i>}
-          >
-            <DropdownItem className="dots">
-              <i className="material-icons">more_vert</i>
-            </DropdownItem>
-            {changeColorScheme}
-            {fetchedProject && !project.owner ? (
+          {fetchedProject && !project.owner ? (
+            <Dropdown
+              className="options"
+              dataBelowOrigin={false}
+              label={<i className="material-icons">more_vert</i>}
+            >
+              <DropdownItem className="dots">
+                <i className="material-icons">more_vert</i>
+              </DropdownItem>
               <DropdownItem>
                 <a onClick={(e) => this.leaveProject(e, projectId)}>
                   <i className="material-icons">exit_to_app</i>
                   {t("Leave project")}
                 </a>
               </DropdownItem>
-            ) : (
-              ""
-            )}
-          </Dropdown>
+              )
+            </Dropdown>
+          ) : (
+            ""
+          )}
         </div>
       )
 
@@ -87,8 +79,10 @@ class ProjectTabs extends Component {
           <TabLink tabId="project_tabs" to={routes.activityIndex(projectId)}>
             {t("Activity")}
           </TabLink>
+          <TabLink tabId="project_tabs" to={routes.projectSettings(projectId)}>
+            {t("Settings")}
+          </TabLink>
         </Tabs>
-        <ColourSchemeModal modalId="colourSchemeModal" />
         <ConfirmationModal
           modalId="leave_project"
           ref="leaveConfirmationModal"

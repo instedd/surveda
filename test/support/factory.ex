@@ -38,7 +38,13 @@ defmodule Ask.Factory do
     %Ask.Project{
       name: sequence(:project, &"Project #{&1}"),
       salt: Ecto.UUID.generate(),
-      colour_scheme: "default"
+      colour_scheme: "default",
+      timezone: nil,
+      initial_success_rate: nil,
+      eligibility_rate: nil,
+      response_rate: nil,
+      valid_respondent_rate: nil,
+      archived: false
     }
   end
 

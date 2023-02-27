@@ -91,7 +91,12 @@ defmodule AskWeb.ProjectView do
       id: project.id,
       name: project.name,
       updated_at: project.updated_at,
-      colour_scheme: project.colour_scheme
+      colour_scheme: project.colour_scheme,
+      timezone: project.timezone,
+      initial_success_rate: project.initial_success_rate,
+      eligibility_rate: project.eligibility_rate,
+      response_rate: project.response_rate,
+      valid_respondent_rate: project.valid_respondent_rate
     }
   end
 end

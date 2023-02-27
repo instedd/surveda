@@ -21,6 +21,7 @@ import SurveyTitle from "./components/surveys/SurveyTitle"
 import QuestionnaireTitle from "./components/questionnaires/QuestionnaireTitle"
 import CollaboratorIndex from "./components/collaborators/CollaboratorIndex"
 import ActivityIndex from "./components/activity/ActivityIndex"
+import ProjectSettings from "./components/projects/ProjectSettings"
 import InviteConfirmation from "./components/InviteConfirmation"
 import ChannelEdit from "./components/channels/ChannelEdit"
 import ChannelPatterns from "./components/channels/ChannelPatterns"
@@ -91,6 +92,10 @@ export default (
         <Route path="activity">
           <IndexRoute components={{ body: ActivityIndex, tabs: ProjectTabs }} />
         </Route>
+
+        <Route path="settings">
+          <IndexRoute components={{ body: ProjectSettings, tabs: ProjectTabs }} />
+        </Route>
       </Route>
     </Route>
 
@@ -142,6 +147,7 @@ export const surveyFolderNew = (projectId, surveyId) => `${survey(projectId, sur
 export const questionnaireIndex = (projectId) => `${project(projectId)}/questionnaires`
 export const collaboratorIndex = (projectId) => `${project(projectId)}/collaborators`
 export const activityIndex = (projectId) => `${project(projectId)}/activity`
+export const projectSettings = (projectId) => `${project(projectId)}/settings`
 export const questionnaire = (projectId, questionnaireId) =>
   `${questionnaireIndex(projectId)}/${questionnaireId}`
 export const questionnaireSimulation = (projectId, questionnaireId, mode) =>

@@ -5,6 +5,11 @@ defmodule Ask.Project do
     field :name, :string
     field :salt, :string
     field :colour_scheme, :string
+    field :timezone, :string
+    field :initial_success_rate, :float
+    field :eligibility_rate, :float
+    field :response_rate, :float
+    field :valid_respondent_rate, :float
     field :archived, :boolean, default: false
 
     has_many :questionnaires, Ask.Questionnaire
@@ -25,7 +30,17 @@ defmodule Ask.Project do
   """
   def changeset(struct, params \\ %{}) do
     struct
-    |> cast(params, [:name, :salt, :colour_scheme, :archived])
+    |> cast(params, [
+      :name,
+      :salt,
+      :colour_scheme,
+      :timezone,
+      :archived,
+      :initial_success_rate,
+      :eligibility_rate,
+      :response_rate,
+      :valid_respondent_rate
+    ])
     |> validate_colour_scheme
   end
 

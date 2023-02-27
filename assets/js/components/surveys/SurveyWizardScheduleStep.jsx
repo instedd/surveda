@@ -99,6 +99,10 @@ class SurveyWizardScheduleStep extends Component {
 
     const { startDate, endDate } = survey.schedule
 
+    const changeTimezone = (timezone) => {
+      dispatch(actions.setTimezone(timezone))
+    }
+
     return (
       <div>
         <div className="row">
@@ -219,7 +223,11 @@ class SurveyWizardScheduleStep extends Component {
         )}
         <div className="row">
           <div className="col s12 m6">
-            <TimezoneAutocomplete selectedTz={survey.schedule.timezone} readOnly={readOnly} />
+            <TimezoneAutocomplete
+              selectedTz={survey.schedule.timezone}
+              readOnly={readOnly}
+              onChange={changeTimezone}
+            />
           </div>
         </div>
         <SurveyWizardRetryAttempts readOnly={readOnly} />
