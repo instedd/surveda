@@ -67,7 +67,7 @@ defmodule Ask.Audio do
   def params_from_converted_upload(upload) do
     basename = Path.basename(upload.filename, Path.extname(upload.filename))
 
-    case convert(upload.path) do
+    case Ask.FFmpeg.convert(upload.path, @stored_audio_extension) do
       {:ok, data} ->
         %{
           "uuid" => Ecto.UUID.generate(),
@@ -79,10 +79,6 @@ defmodule Ask.Audio do
         Logger.warn("Error converting file #{upload.path}: #{error}")
         params_from_upload(upload)
     end
-  end
-
-  defp convert(path) do
-    Ask.FFmpeg.convert(path, @stored_audio_extension)
   end
 
   defp params_from_upload(upload) do
