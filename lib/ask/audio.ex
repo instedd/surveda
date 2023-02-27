@@ -1,8 +1,6 @@
 defmodule Ask.Audio do
   use Ask.Model
 
-  alias Ask.Sox
-
   require Logger
 
   schema "audios" do
@@ -26,10 +24,6 @@ defmodule Ask.Audio do
   @valid_mime_types ~w(
     audio/mpeg
     audio/wave audio/wav audio/x-wav audio/x-pn-wav
-    audio/mp4 video/mp4
-    audio/aac audio/x-hx-aac-adts
-  )
-  @aac_mime_types ~w(
     audio/mp4 video/mp4
     audio/aac audio/x-hx-aac-adts
   )
@@ -70,10 +64,10 @@ defmodule Ask.Audio do
   files will be transcoded to avoid issues with invalid or broken MP3 in
   production.
   """
-  def params_from_converted_upload(upload, mime_type) do
+  def params_from_converted_upload(upload) do
     basename = Path.basename(upload.filename, Path.extname(upload.filename))
 
-    case convert(upload.path, mime_type) do
+    case convert(upload.path) do
       {:ok, data} ->
         %{
           "uuid" => Ecto.UUID.generate(),
@@ -87,12 +81,8 @@ defmodule Ask.Audio do
     end
   end
 
-  defp convert(path, mime_type) do
-    if Enum.member?(@aac_mime_types, mime_type) do
-      Sox.convert_aac(path, @stored_audio_extension)
-    else
-      Sox.convert(path, @stored_audio_extension)
-    end
+  defp convert(path) do
+    Ask.FFmpeg.convert(path, @stored_audio_extension)
   end
 
   defp params_from_upload(upload) do

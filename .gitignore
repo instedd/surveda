@@ -40,7 +40,3 @@ yarn-error.log
 /integration_tests/cypress/screenshots
 /integration_tests/cypress/videos
 /integration_tests/output
-
-# test artefacts
-/test/fixtures/mpeg.wav
-/test/fixtures/wave.mp3

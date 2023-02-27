@@ -46,7 +46,6 @@ config :ask, Ask.Runtime.Broker,
   initial_eligibility_rate: {:system, "INITIAL_ELIGIBILITY_RATE", 100},
   initial_response_rate: {:system, "INITIAL_RESPONSE_RATE", 100}
 
-config :ask, :sox, bin: System.get_env("SOX_BINARY") || "sox"
 config :ask, :ffmpeg, bin: System.get_env("FFMPEG_BINARY") || "ffmpeg"
 
 config :ask, Ask.UrlShortener,

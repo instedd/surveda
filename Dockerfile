@@ -4,7 +4,7 @@ FROM elixir:1.8 AS dev
 RUN sed -i '/^mozilla\/DST_Root_CA_X3/s/^/!/' /etc/ca-certificates.conf && update-ca-certificates -f
 
 RUN apt -q update && \
-    apt -q install -y default-mysql-client inotify-tools sox libsox-fmt-mp3 festival && \
+    apt -q install -y default-mysql-client inotify-tools festival && \
     apt -q install -y --no-install-recommends ffmpeg libaacs0 && \
     apt -q clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
