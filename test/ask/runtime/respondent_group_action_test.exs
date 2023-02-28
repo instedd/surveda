@@ -58,8 +58,8 @@ defmodule Ask.Runtime.RespondentGroupActionTest do
       assert result == :ok
 
       assert loaded_entries == [
-               %{phone_number: phone_number_1, hashed_number: respondent_id},
-               %{phone_number: phone_number_2}
+               %{phone_number: phone_number_2},
+               %{phone_number: phone_number_1, hashed_number: respondent_id}
              ]
     end
 

@@ -49,9 +49,10 @@ defmodule Ask.Factory do
   end
 
   def survey_factory do
+    project = build(:project)
     %Ask.Survey{
-      project: build(:project),
-      schedule: Ask.Schedule.always(),
+      project: project,
+      schedule: Ask.Schedule.always(project),
       name: sequence(:survey, &"Survey #{&1}"),
       mode: [["sms"]],
       state: :not_ready,

@@ -126,12 +126,28 @@ defmodule Ask.Runtime.RespondentGroupAction do
       |> Enum.chunk_every(64_000)
       |> Enum.flat_map(process_batch)
 
-    # And then remove them from phone_numbers (because they are duplicates)
-    # (no easier way to do this, plus we expect `existing_numbers` to
-    # be empty or near empty)
-    Enum.reject(phone_numbers, fn num ->
-      Respondent.canonicalize_phone_number(num) in existing_numbers
-    end)
+    if Enum.empty?(existing_numbers) do
+      # no duplicates
+      phone_numbers
+    else
+      # And then remove them from phone_numbers (because they are duplicates)
+
+      # the following is basically doing this, but optimized (to handle large
+      # lists of respondents):
+      # Enum.reject(phone_numbers, fn num ->
+      #   Respondent.canonicalize_phone_number(num) in existing_numbers
+      # end)
+
+      # zip into map %{ canonical_number => phone_number }
+      zip =
+        canonical_numbers
+        |> Enum.zip(phone_numbers)
+        |> List.foldl(%{}, fn ({k, v}, zip) -> Map.put(zip, k, v) end)
+
+      existing_numbers
+      |> List.foldl(zip, fn (n, zip) -> Map.delete(zip, n) end) # remove duplicates (using canonical number)
+      |> Map.values() # return the de-duplicated list of phone numbers
+    end
   end
 
   def take_sample(loaded_entries) do
@@ -260,9 +276,8 @@ defmodule Ask.Runtime.RespondentGroupAction do
 
   defp validate_loaded_entries(loaded_entries, entries) do
     loaded_respondent_ids =
-      Enum.filter(loaded_entries, fn loaded_entry ->
-        Map.has_key?(loaded_entry, :hashed_number)
-      end)
+      loaded_entries
+      |> Enum.filter(fn loaded_entry -> Map.has_key?(loaded_entry, :hashed_number) end)
       |> Enum.map(fn %{hashed_number: hashed_number} -> hashed_number end)
 
     invalid_entries =
@@ -290,22 +305,21 @@ defmodule Ask.Runtime.RespondentGroupAction do
       Regex.replace(~r/\D/, phone_number, "", [:global])
     end
 
-    respondent_ids = Enum.filter(entries, fn entry -> String.starts_with?(entry, "r") end)
-    phone_numbers = Enum.filter(entries, fn entry -> not String.starts_with?(entry, "r") end)
-    phone_numbers_from_respondent_ids = phone_numbers_from_respondent_ids(survey, respondent_ids)
+    {phone_numbers, respondent_ids} = partition_entries(entries)
 
-    loaded_entries =
-      Enum.map(phone_numbers, fn phone_number -> %{phone_number: phone_number} end)
-      |> Enum.concat(phone_numbers_from_respondent_ids)
-
-    # Restore the initial entries order
-    Enum.map(entries, fn entry ->
-      Enum.find(loaded_entries, fn %{phone_number: phone_number} = loaded_entry ->
-        entry == phone_number or entry == Map.get(loaded_entry, :hashed_number)
-      end)
-    end)
+    phone_numbers
+    |> Enum.map(fn phone_number -> %{phone_number: phone_number} end)
+    |> Enum.concat(phone_numbers_from_respondent_ids(survey, respondent_ids))
     |> Enum.filter(&(!is_nil(&1)))
     |> Enum.uniq_by(fn %{phone_number: phone_number} -> keep_digits.(phone_number) end)
+  end
+
+  defp partition_entries(entries) do
+    case Enum.group_by(entries, fn entry -> String.starts_with?(entry, "r") end) do
+      %{false => phone_numbers, true => respondent_ids} -> {phone_numbers, respondent_ids}
+      %{false => phone_numbers} -> {phone_numbers, []}
+      %{true => respondent_ids} -> {[], respondent_ids}
+    end
   end
 
   defp phone_numbers_from_respondent_ids(survey, respondent_ids) do

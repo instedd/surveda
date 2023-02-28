@@ -173,25 +173,6 @@ defmodule Ask.Survey do
     |> validate_number(:cutoff, greater_than_or_equal_to: 0, less_than: @max_int)
     |> translate_quotas
     |> set_ended_at_in_terminated_survey
-    |> set_schedule_timezone
-  end
-
-  defp set_schedule_timezone(changeset) do
-    project_id = get_field(changeset, :project_id)
-    schedule = get_field(changeset, :schedule)
-
-    if project_id && schedule do
-      project = Repo.get(Project, project_id)
-
-      if project && project.timezone do
-        schedule = Map.put(schedule, :timezone, project.timezone)
-        change(changeset, schedule: schedule)
-      else
-        changeset
-      end
-    else
-      changeset
-    end
   end
 
   defp set_ended_at_in_terminated_survey(changeset) do

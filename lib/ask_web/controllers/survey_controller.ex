@@ -61,8 +61,8 @@ defmodule AskWeb.SurveyController do
     project = load_project_for_change(conn, project_id)
 
     survey_params = Map.get(params, "survey", %{})
-    timezone = Map.get(survey_params, "timezone", Ask.Schedule.default_timezone())
-    schedule = Map.merge(Ask.Schedule.default(), %{timezone: timezone})
+    timezone = Map.get(survey_params, "timezone", Ask.Schedule.default_timezone(project))
+    schedule = Map.merge(Ask.Schedule.default(project), %{timezone: timezone})
     generates_panel_survey = Map.get(survey_params, "generates_panel_survey", false)
 
     props = %{

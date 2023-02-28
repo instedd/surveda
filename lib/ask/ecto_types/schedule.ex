@@ -155,7 +155,7 @@ defmodule Ask.Schedule do
       (!start_date || Date.compare(start_date, date) != :gt)
   end
 
-  def business_day(),
+  def business_day(project \\ nil),
     do: %Schedule{
       day_of_week: %DayOfWeek{
         sun: false,
@@ -169,31 +169,35 @@ defmodule Ask.Schedule do
       start_time: ~T[09:00:00],
       end_time: ~T[18:00:00],
       blocked_days: [],
-      timezone: default_timezone()
+      timezone: default_timezone(project)
     }
 
-  def default() do
+  def default(project \\ nil) do
     %Schedule{
       day_of_week: DayOfWeek.never(),
       start_time: ~T[09:00:00],
       end_time: ~T[18:00:00],
       blocked_days: [],
-      timezone: default_timezone()
+      timezone: default_timezone(project)
     }
   end
 
-  def always() do
+  def always(project \\ nil) do
     %Schedule{
       day_of_week: DayOfWeek.every_day(),
       start_time: ~T[00:00:00],
       end_time: ~T[23:59:59],
       blocked_days: [],
-      timezone: default_timezone()
+      timezone: default_timezone(project)
     }
   end
 
-  def default_timezone() do
-    "Etc/UTC"
+  def default_timezone(project \\ nil) do
+    if project do
+      project.timezone || "Etc/UTC"
+    else
+      "Etc/UTC"
+    end
   end
 
   # Find the beggining of the first active window, going forward
