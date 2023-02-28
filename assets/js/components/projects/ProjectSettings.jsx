@@ -168,13 +168,9 @@ class ProjectSettings extends Component {
       timezone,
       colourScheme,
       initialSuccessRate,
-      eligibilityRate,
-      responseRate,
-      validRespondentRate,
       detailedRates,
       archiveAction,
       readOnly,
-      errors,
     } = this.state
 
     const { t } = this.props
@@ -345,6 +341,7 @@ ProjectSettings.propTypes = {
   project: PropTypes.object,
   fetchedProject: PropTypes.bool,
   readOnly: PropTypes.bool,
+  dispatch: PropTypes.func,
 }
 
 const mapStateToProps = (state, ownProps) => ({
