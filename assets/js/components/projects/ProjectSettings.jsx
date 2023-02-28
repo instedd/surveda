@@ -5,6 +5,7 @@ import TimezoneAutocomplete from "../timezones/TimezoneAutocomplete"
 import * as projectActions from "../../actions/project"
 import { updateProject, fetchProject, updateProjectArchived } from "../../api"
 import merge from "lodash/merge"
+import pick from "lodash/pick"
 import { translate } from "react-i18next"
 import { isProjectReadOnly } from "../../reducers/project"
 
@@ -291,8 +292,8 @@ class ProjectSettings extends Component {
             disabled={
               readOnly ||
               this.initialState == null ||
-              JSON.stringify(_.pick(this.state, fieldsToSave)) ===
-                JSON.stringify(_.pick(this.initialState, fieldsToSave))
+              JSON.stringify(pick(this.state, fieldsToSave)) ===
+                JSON.stringify(pick(this.initialState, fieldsToSave))
             }
             onClick={() => this.saveProjectSettings()}
           />
