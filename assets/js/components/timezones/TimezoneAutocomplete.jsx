@@ -14,6 +14,7 @@ class TimezoneAutocomplete extends Component {
     timezones: PropTypes.object,
     readOnly: PropTypes.bool,
     i18n: PropTypes.object,
+    onChange: PropTypes.func,
   }
 
   constructor(props) {
@@ -71,7 +72,7 @@ class TimezoneAutocomplete extends Component {
   }
 
   autocompleteOnSelect(timezone) {
-    const { dispatch, onChange } = this.props
+    const { onChange } = this.props
     this.setState({ timezone: timezone })
     onChange(timezone.id)
   }
