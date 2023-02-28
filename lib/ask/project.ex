@@ -42,6 +42,10 @@ defmodule Ask.Project do
       :valid_respondent_rate
     ])
     |> validate_colour_scheme
+    |> validate_rate(:initial_success_rate)
+    |> validate_rate(:eligibility_rate)
+    |> validate_rate(:response_rate)
+    |> validate_rate(:valid_respondent_rate)
   end
 
   def touch!(project) do
@@ -60,6 +64,18 @@ defmodule Ask.Project do
           :colour_scheme,
           "value has to be either default or better_data_for_health"
         )
+
+      true ->
+        changeset
+    end
+  end
+
+  defp validate_rate(changeset, rate) do
+    rate_field = get_field(changeset, rate)
+
+    cond do
+      rate_field && (rate_field < 0 || rate_field > 1) ->
+        add_error(changeset, rate, "value has to be between 0 and 1")
 
       true ->
         changeset

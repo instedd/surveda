@@ -28,6 +28,7 @@ class ProjectSettings extends Component {
       validRespondentRate: 0,
       detailedRates: false,
       archiveAction: "archive",
+      errors: {},
     }
   }
 
@@ -48,7 +49,6 @@ class ProjectSettings extends Component {
         readOnly: !project.owner,
       })
       this.initialState = this.state
-      this.configureRates(this.state.detailedRates)
       this.project = project
     })
   }
@@ -66,35 +66,13 @@ class ProjectSettings extends Component {
     const { projectId } = this.props
     const { detailedRates } = this.state
     this.setState({ detailedRates: !detailedRates })
-    this.configureRates(!detailedRates)
-  }
-
-  configureRates(detailedRates) {
-    if (detailedRates) {
-      document.getElementById("initialSuccessRate").getElementsByTagName("input")[0].disabled = true
-      document.getElementById("eligibilityRate").style.display = "block"
-      document.getElementById("responseRate").style.display = "block"
-      document.getElementById("validRespondentRate").style.display = "block"
-      this.updateInitialSuccessRate()
-    } else {
-      document
-        .getElementById("initialSuccessRate")
-        .getElementsByTagName("input")[0].disabled = false
-      document.getElementById("eligibilityRate").style.display = "none"
-      document.getElementById("responseRate").style.display = "none"
-      document.getElementById("validRespondentRate").style.display = "none"
-      document.getElementById("eligibilityRate").getElementsByTagName("input")[0].value = ""
-      document.getElementById("responseRate").getElementsByTagName("input")[0].value = ""
-      document.getElementById("validRespondentRate").getElementsByTagName("input")[0].value = ""
-      this.setState({ eligibilityRate: null, responseRate: null, validRespondentRate: null })
-    }
   }
 
   saveProjectSettings() {
     const { dispatch, project } = this.props
     const newValues = {
       name: this.state.name,
-      timezone: document.getElementsByName("timezone_id")[0].value,
+      timezone: this.state.timezone,
       colourScheme: this.state.colourScheme,
       initialSuccessRate: parseFloat(this.state.initialSuccessRate),
       eligibilityRate: parseFloat(this.state.eligibilityRate),
@@ -102,9 +80,15 @@ class ProjectSettings extends Component {
       validRespondentRate: parseFloat(this.state.validRespondentRate),
     }
     const newProject = merge({}, project, newValues)
-    updateProject(newProject).then((response) =>
-      dispatch(projectActions.updateProject(response.entities.projects[response.result]))
-    )
+    updateProject(newProject)
+      .then((response) => {
+        this.initialState = this.state
+        dispatch(projectActions.updateProject(response.entities.projects[response.result]))
+      })
+      .catch(async (response) => {
+        const body = await response.json()
+        this.setState({ errors: body.errors })
+      })
   }
 
   updateInitialSuccessRate() {
@@ -123,6 +107,74 @@ class ProjectSettings extends Component {
     this.setState({ archiveAction: archiveAction == "archive" ? "unarchive" : "archive" })
   }
 
+  spanErrors(field) {
+    if (this.state.errors && this.state.errors[field]) {
+      return (
+        <span className="error">
+          {this.state.errors[field].map((error) => (
+            <div key={error}>{error}</div>
+          ))}
+        </span>
+      )
+    } else {
+      return null
+    }
+  }
+
+  updateRate(newRate) {
+    this.setState(newRate)
+    this.updateInitialSuccessRate()
+  }
+
+  renderDetailedRates() {
+    return (
+      <div>
+        <div className="col s3" id="eligibilityRate">
+          <label className="gray-text">Elegibility rate</label>
+          <input
+            type="number"
+            step="0.01"
+            min="0"
+            max="1"
+            value={this.state.eligibilityRate}
+            disabled={this.state.readOnly}
+            onInput={(e) => this.updateRate({ eligibilityRate: e.target.value })}
+            onChange={(e) => this.updateRate({ eligibilityRate: e.target.value })}
+          />
+          {this.spanErrors("eligibility_rate")}
+        </div>
+        <div className="col s3" id="responseRate">
+          <label className="gray-text">Response rate</label>
+          <input
+            type="number"
+            step="0.01"
+            min="0"
+            max="1"
+            value={this.state.responseRate}
+            disabled={this.state.readOnly}
+            onInput={(e) => this.updateRate({ responseRate: e.target.value })}
+            onChange={(e) => this.updateRate({ responseRate: e.target.value })}
+          />
+          {this.spanErrors("response_rate")}
+        </div>
+        <div className="col s3" id="validRespondentRate">
+          <label className="gray-text">Valid respondent rate</label>
+          <input
+            type="number"
+            step="0.01"
+            min="0"
+            max="1"
+            value={this.state.validRespondentRate}
+            disabled={this.state.readOnly}
+            onInput={(e) => this.updateRate({ validRespondentRate: e.target.value })}
+            onChange={(e) => this.updateRate({ validRespondentRate: e.target.value })}
+          />
+          {this.spanErrors("valid_respondent_rate")}
+        </div>
+      </div>
+    )
+  }
+
   render() {
     const {
       name,
@@ -135,6 +187,7 @@ class ProjectSettings extends Component {
       detailedRates,
       archiveAction,
       readOnly,
+      errors,
     } = this.state
 
     const { t } = this.props
@@ -147,14 +200,18 @@ class ProjectSettings extends Component {
       "validRespondentRate",
       "detailedRates",
     ]
-    const errors = {} //this.isNew() ? {} : this.props.errors
 
     const setTimezone = (timezone) => this.setState({ timezone: timezone })
 
     const inputProjectName = (
       <div>
         <label className="gray-text">Name</label>
-        <input type="text" value={name} />
+        <input
+          type="text"
+          value={name}
+          readOnly={readOnly}
+          onChange={(e) => this.setState({ name: e.target.value })}
+        />
       </div>
     )
 
@@ -206,7 +263,7 @@ class ProjectSettings extends Component {
       </div>
     )
 
-    const inputInitialSuccessRate = (
+    const inputRates = (
       <div>
         <div className="row">
           <div className="col s3" id="initialSuccessRate">
@@ -217,68 +274,13 @@ class ProjectSettings extends Component {
               min="0"
               max="1"
               value={initialSuccessRate}
-              disabled={readOnly}
+              disabled={readOnly || detailedRates}
               onInput={(e) => this.setState({ initialSuccessRate: e.target.value })}
               onChange={(e) => this.setState({ initialSuccessRate: e.target.value })}
             />
+            {this.spanErrors("initial_success_rate")}
           </div>
-          <div className="col s3" id="eligibilityRate">
-            <label className="gray-text">Elegibility rate</label>
-            <input
-              type="number"
-              step="0.01"
-              min="0"
-              max="1"
-              value={eligibilityRate}
-              disabled={readOnly}
-              onInput={(e) => {
-                this.setState({ eligibilityRate: e.target.value })
-                this.updateInitialSuccessRate()
-              }}
-              onChange={(e) => {
-                this.setState({ eligibilityRate: e.target.value })
-                this.updateInitialSuccessRate()
-              }}
-            />
-          </div>
-          <div className="col s3" id="responseRate">
-            <label className="gray-text">Response rate</label>
-            <input
-              type="number"
-              step="0.01"
-              min="0"
-              max="1"
-              value={responseRate}
-              disabled={readOnly}
-              onInput={(e) => {
-                this.setState({ responseRate: e.target.value })
-                this.updateInitialSuccessRate()
-              }}
-              onChange={(e) => {
-                this.setState({ responseRate: e.target.value })
-                this.updateInitialSuccessRate()
-              }}
-            />
-          </div>
-          <div className="col s3" id="validRespondentRate">
-            <label className="gray-text">Valid respondent rate</label>
-            <input
-              type="number"
-              step="0.01"
-              min="0"
-              max="1"
-              value={validRespondentRate}
-              disabled={readOnly}
-              onInput={(e) => {
-                this.setState({ validRespondentRate: e.target.value })
-                this.updateInitialSuccessRate()
-              }}
-              onChange={(e) => {
-                this.setState({ validRespondentRate: e.target.value })
-                this.updateInitialSuccessRate()
-              }}
-            />
-          </div>
+          {detailedRates && this.renderDetailedRates()}
         </div>
         <div className="row">
           <div>
@@ -305,6 +307,7 @@ class ProjectSettings extends Component {
             className="btn blue"
             disabled={
               readOnly ||
+              this.initialState == null ||
               JSON.stringify(_.pick(this.state, fieldsToSave)) ===
                 JSON.stringify(_.pick(this.initialState, fieldsToSave))
             }
@@ -316,7 +319,7 @@ class ProjectSettings extends Component {
             type="button"
             value="Cancel"
             className="btn-flat"
-            onClick={() => window.location.reload(false)}
+            onClick={() => this.setState(this.initialState)}
           />
         </div>
         <div>
@@ -339,7 +342,7 @@ class ProjectSettings extends Component {
             {inputProjectName}
             {inputTimeZone}
             {inputColourScheme}
-            {inputInitialSuccessRate}
+            {inputRates}
             {actionsButtons}
           </div>
         </div>

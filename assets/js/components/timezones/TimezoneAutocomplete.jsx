@@ -131,7 +131,6 @@ class TimezoneAutocomplete extends Component {
               })}
             </span>
           )}
-          <input type="hidden" name="timezone_id" value={this.state.timezone.id} />
         </div>
       )
     }
