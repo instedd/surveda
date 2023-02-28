@@ -8,10 +8,6 @@ import { translate } from "react-i18next"
 import { isProjectReadOnly } from "../../reducers/project"
 
 class ProjectTabs extends Component {
-  openColorSchemePopup(e) {
-    $("#colourSchemeModal").modal("open")
-  }
-
   leaveProject(event, projectId) {
     const { router, t } = this.props
     event.preventDefault()
