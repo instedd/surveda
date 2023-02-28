@@ -44,7 +44,7 @@ class ProjectSettings extends Component {
     this.setState(state)
   }
 
-  toggleDetailedRates(toggle) {
+  toggleDetailedRates() {
     const { detailedRates } = this.state
     this.setState({ detailedRates: !detailedRates })
   }
@@ -249,11 +249,13 @@ class ProjectSettings extends Component {
           <div>
             <input
               type="checkbox"
+              id="projectDetailedRates"
               label={this.props.t("Detailed rates")}
               checked={detailedRates}
               disabled={readOnly}
+              onChange={(e) => this.toggleDetailedRates()}
             />
-            <label onClick={(e) => this.toggleDetailedRates(detailedRates)}>
+            <label htmlFor="projectDetailedRates">
               Enter detailed values
             </label>
           </div>
