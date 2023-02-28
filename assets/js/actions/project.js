@@ -50,8 +50,12 @@ export const createProject = (project) => ({
   project,
 })
 
+export const saving = (project) => ({
+  type: SAVING_PROJECT,
+})
+
 export const updateProject = (project) => (dispatch, getState) => {
-  dispatch({ type: SAVING_PROJECT })
+  dispatch(saving(project))
 
   api
     .updateProject(project)
@@ -67,7 +71,7 @@ export const updateProject = (project) => (dispatch, getState) => {
     })
 }
 
-const notSavedProject = (errors) => ({
+export const notSavedProject = (errors) => ({
   type: NOT_SAVED_PROJECT,
   errors,
 })

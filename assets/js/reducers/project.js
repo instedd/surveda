@@ -1,5 +1,6 @@
 import * as actions from "../actions/project"
 import { camelizeKeys } from "humps"
+import omit from "lodash/omit"
 
 const initialState = {
   fetching: false,
@@ -58,12 +59,10 @@ const savingProject = (state) => ({
 })
 
 const createOrUpdateProject = (state, action) => ({
-  ...state,
+  ...omit(state, "saving", "errors"),
   fetching: false,
-  saving: false,
   projectId: action.project.id,
   data: action.project,
-  errors: null,
 })
 
 const notSavedProject = (state, action) => ({
@@ -73,12 +72,10 @@ const notSavedProject = (state, action) => ({
 })
 
 const clearProject = (state, action) => ({
-  ...state,
+  ...omit(state, "saving", "errors"),
   fetching: false,
-  saving: false,
   projectId: null,
   data: null,
-  errors: null,
 })
 
 export const isProjectReadOnly = (state) =>
