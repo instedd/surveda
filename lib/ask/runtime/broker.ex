@@ -113,8 +113,8 @@ defmodule Ask.Runtime.Broker do
     Enum.filter(all_running_surveys, fn survey ->
       survey.id not in expired_surveys_ids and Schedule.intersect?(survey.schedule, now)
     end)
+    |> Repo.preload(:project)
     |> Enum.each(fn survey ->
-      survey = survey |> Repo.preload(:project)
       poll_survey(survey, now)
     end)
 
