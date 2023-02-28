@@ -11,10 +11,7 @@ export class ColourSchemeModal extends Component {
     const { dispatch, project } = this.props
     if (project.colourScheme == colourScheme) return
     const newProject = merge({}, project, { colourScheme: colourScheme })
-    dispatch(projectActions.updateProject(newProject)) // Optimistic update
-    updateProject(newProject).then((response) =>
-      dispatch(projectActions.updateProject(response.entities.projects[response.result]))
-    )
+    dispatch(projectActions.updateProject(newProject))
   }
 
   render() {

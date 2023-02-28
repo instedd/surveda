@@ -2,53 +2,46 @@ import React, { Component, PropTypes } from "react"
 import { connect } from "react-redux"
 import { withRouter } from "react-router"
 import TimezoneAutocomplete from "../timezones/TimezoneAutocomplete"
+import * as actions from "../../actions/projects"
 import * as projectActions from "../../actions/project"
-import { updateProject, fetchProject, updateProjectArchived } from "../../api"
+import { updateProject } from "../../api"
 import merge from "lodash/merge"
 import pick from "lodash/pick"
 import { translate } from "react-i18next"
 import { isProjectReadOnly } from "../../reducers/project"
 
 class ProjectSettings extends Component {
-  constructor(props) {
-    super(props)
-    this.state = {
-      name: "",
-      timezone: "",
-      colourScheme: "default",
-      initialSuccessRate: 0,
-      eligibilityRate: 0,
-      responseRate: 0,
-      validRespondentRate: 0,
-      detailedRates: false,
-      archiveAction: "archive",
-      errors: {},
+  componentDidMount() {
+    if (!this.props.isLoading) {
+      this.setStateFromProject()
     }
   }
 
-  fetchProjectAndSetState() {
-    const { projectId } = this.props
-    fetchProject(projectId).then((response) => {
-      const project = response.entities.projects[response.result]
-      var state = {
-        name: project.name,
-        timezone: project.timezone,
-        colourScheme: project.colourScheme,
-        initialSuccessRate: project.initialSuccessRate || "",
-        eligibilityRate: project.eligibilityRate || "",
-        responseRate: project.responseRate || "",
-        validRespondentRate: project.validRespondentRate || "",
-        detailedRates: project.eligibilityRate != null,
-        archiveAction: project.readOnly ? "unarchive" : "archive",
-        readOnly: !project.owner,
-      }
-      this.setState(state)
-      this.initialState = JSON.parse(JSON.stringify(state))
-    })
+  componentDidUpdate(prevProps) {
+    if (prevProps.isLoading && !this.props.isLoading) {
+      this.setStateFromProject()
+    }
+    if (prevProps.isSaving && !this.props.isSaving && Object.keys(this.props.errors).length == 0) {
+      this.initialState = JSON.parse(JSON.stringify(this.state))
+      this.forceUpdate() // because we didn't touch the state
+    }
   }
 
-  componentDidMount() {
-    this.fetchProjectAndSetState()
+  setStateFromProject() {
+    const { project } = this.props
+    var state = {
+      name: project.name,
+      timezone: project.timezone,
+      colourScheme: project.colourScheme,
+      initialSuccessRate: project.initialSuccessRate || "",
+      eligibilityRate: project.eligibilityRate || "",
+      responseRate: project.responseRate || "",
+      validRespondentRate: project.validRespondentRate || "",
+      detailedRates: project.eligibilityRate != null,
+      archiveAction: project.readOnly ? "unarchive" : "archive",
+    }
+    this.initialState = JSON.parse(JSON.stringify(state))
+    this.setState(state)
   }
 
   toggleDetailedRates(toggle) {
@@ -58,7 +51,7 @@ class ProjectSettings extends Component {
 
   saveProjectSettings() {
     const { dispatch, project } = this.props
-    const newValues = {
+    const changes = merge({}, project, {
       name: this.state.name,
       timezone: this.state.timezone,
       colourScheme: this.state.colourScheme,
@@ -66,17 +59,8 @@ class ProjectSettings extends Component {
       eligibilityRate: parseFloat(this.state.eligibilityRate, 10) || null,
       responseRate: parseFloat(this.state.responseRate, 10) || null,
       validRespondentRate: parseFloat(this.state.validRespondentRate, 10) || null,
-    }
-    const newProject = merge({}, project, newValues)
-    updateProject(newProject)
-      .then((response) => {
-        this.initialState = this.state
-        dispatch(projectActions.updateProject(response.entities.projects[response.result]))
-      })
-      .catch(async (response) => {
-        const body = await response.json()
-        this.setState({ errors: body.errors })
-      })
+    })
+    dispatch(projectActions.updateProject(changes))
   }
 
   updateInitialSuccessRate() {
@@ -91,19 +75,19 @@ class ProjectSettings extends Component {
   }
 
   archiveOrUnarchive(archived: boolean) {
+    const { dispatch, project } = this.state
     const { archiveAction } = this.state
-    const newProject = merge({}, this.project, { archived: archiveAction == "archive" })
-    updateProjectArchived(newProject)
+    dispatch(actions.archiveOrUnarchive(project, archiveAction))
     this.setState({ archiveAction: archiveAction == "archive" ? "unarchive" : "archive" })
   }
 
   spanErrors(field) {
-    if (this.state.errors && this.state.errors[field]) {
+    const { errors } = this.props
+
+    if (errors[field]) {
       return (
         <span className="error">
-          {this.state.errors[field].map((error) => (
-            <div key={error}>{error}</div>
-          ))}
+          {errors[field].map((error) => (<div key={error}>{error}</div>))}
         </span>
       )
     } else {
@@ -112,8 +96,7 @@ class ProjectSettings extends Component {
   }
 
   updateRate(newRate) {
-    this.setState(newRate)
-    this.updateInitialSuccessRate()
+    this.setState(newRate, () => this.updateInitialSuccessRate())
   }
 
   renderDetailedRates() {
@@ -127,11 +110,11 @@ class ProjectSettings extends Component {
             min="0"
             max="1"
             value={this.state.eligibilityRate}
-            disabled={this.state.readOnly}
+            disabled={this.props.readOnly}
             onInput={(e) => this.updateRate({ eligibilityRate: e.target.value })}
             onChange={(e) => this.updateRate({ eligibilityRate: e.target.value })}
           />
-          {this.spanErrors("eligibility_rate")}
+          {this.spanErrors("eligibilityRate")}
         </div>
         <div className="col s3" id="responseRate">
           <label className="gray-text">Response rate</label>
@@ -141,11 +124,11 @@ class ProjectSettings extends Component {
             min="0"
             max="1"
             value={this.state.responseRate}
-            disabled={this.state.readOnly}
+            disabled={this.props.readOnly}
             onInput={(e) => this.updateRate({ responseRate: e.target.value })}
             onChange={(e) => this.updateRate({ responseRate: e.target.value })}
           />
-          {this.spanErrors("response_rate")}
+          {this.spanErrors("responseRate")}
         </div>
         <div className="col s3" id="validRespondentRate">
           <label className="gray-text">Valid respondent rate</label>
@@ -155,17 +138,23 @@ class ProjectSettings extends Component {
             min="0"
             max="1"
             value={this.state.validRespondentRate}
-            disabled={this.state.readOnly}
+            disabled={this.props.readOnly}
             onInput={(e) => this.updateRate({ validRespondentRate: e.target.value })}
             onChange={(e) => this.updateRate({ validRespondentRate: e.target.value })}
           />
-          {this.spanErrors("valid_respondent_rate")}
+          {this.spanErrors("validRespondentRate")}
         </div>
       </div>
     )
   }
 
   render() {
+    const { t, readOnly, isLoading } = this.props
+
+    if (isLoading || !this.state) {
+      return ( <div>{t("Loading project...")}</div> )
+    }
+
     const {
       name,
       timezone,
@@ -173,10 +162,7 @@ class ProjectSettings extends Component {
       initialSuccessRate,
       detailedRates,
       archiveAction,
-      readOnly,
     } = this.state
-
-    const { t } = this.props
 
     const inputProjectName = (
       <div>
@@ -250,11 +236,12 @@ class ProjectSettings extends Component {
               min="0"
               max="1"
               value={initialSuccessRate}
-              disabled={readOnly || detailedRates}
+              disabled={readOnly}
+              readOnly={detailedRates}
               onInput={(e) => this.setState({ initialSuccessRate: e.target.value })}
               onChange={(e) => this.setState({ initialSuccessRate: e.target.value })}
             />
-            {this.spanErrors("initial_success_rate")}
+            {this.spanErrors("initialSuccessRate")}
           </div>
           {detailedRates && this.renderDetailedRates()}
         </div>
@@ -281,7 +268,7 @@ class ProjectSettings extends Component {
             type="button"
             value="Save"
             className="btn blue"
-            disabled={readOnly || !this.hasChanged()}
+            disabled={readOnly || !this.hasChanged() || this.props.isSaving}
             onClick={() => this.saveProjectSettings()}
           />
         </div>
@@ -331,7 +318,7 @@ class ProjectSettings extends Component {
       "validRespondentRate",
       "detailedRates",
     ]
-    JSON.stringify(pick(this.state, fields)) === JSON.stringify(pick(this.initialState, fields))
+    return JSON.stringify(_.pick(this.state, fields)) !== JSON.stringify(_.pick(this.initialState, fields))
   }
 }
 
@@ -340,15 +327,22 @@ ProjectSettings.propTypes = {
   projectId: PropTypes.any.isRequired,
   router: PropTypes.object.isRequired,
   project: PropTypes.object,
-  fetchedProject: PropTypes.bool,
   readOnly: PropTypes.bool,
+  isLoading: PropTypes.bool,
+  isSaving: PropTypes.bool,
   dispatch: PropTypes.func,
+  errors: PropTypes.object,
 }
 
-const mapStateToProps = (state, ownProps) => ({
-  projectId: ownProps.params.projectId,
-  project: state.project.data,
-  readOnly: isProjectReadOnly(state),
-})
+const mapStateToProps = (state, ownProps) => {
+  return {
+    projectId: ownProps.params.projectId,
+    project: state.project.data,
+    errors: state.project.errors || {},
+    readOnly: isProjectReadOnly(state),
+    isLoading: state.project.fetching,
+    isSaving: state.project.saving,
+  }
+}
 
 export default translate()(withRouter(connect(mapStateToProps)(ProjectSettings)))
