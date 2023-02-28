@@ -51,13 +51,14 @@ export const createProject = (project) => ({
 })
 
 export const updateProject = (project) => (dispatch, getState) => {
-  dispatch({ type: SAVING_PROJECT, })
+  dispatch({ type: SAVING_PROJECT })
 
-  api.updateProject(project)
+  api
+    .updateProject(project)
     .then((response) => {
       dispatch({
         type: UPDATE_PROJECT,
-        project: response.entities.projects[response.result]
+        project: response.entities.projects[response.result],
       })
     })
     .catch(async (response) => {
@@ -68,7 +69,7 @@ export const updateProject = (project) => (dispatch, getState) => {
 
 const notSavedProject = (errors) => ({
   type: NOT_SAVED_PROJECT,
-  errors
+  errors,
 })
 
 export const clearProject = () => ({

@@ -4,7 +4,6 @@ import { withRouter } from "react-router"
 import TimezoneAutocomplete from "../timezones/TimezoneAutocomplete"
 import * as actions from "../../actions/projects"
 import * as projectActions from "../../actions/project"
-import { updateProject } from "../../api"
 import merge from "lodash/merge"
 import pick from "lodash/pick"
 import { translate } from "react-i18next"
@@ -87,7 +86,9 @@ class ProjectSettings extends Component {
     if (errors[field]) {
       return (
         <span className="error">
-          {errors[field].map((error) => (<div key={error}>{error}</div>))}
+          {errors[field].map((error) => (
+            <div key={error}>{error}</div>
+          ))}
         </span>
       )
     } else {
@@ -152,17 +153,11 @@ class ProjectSettings extends Component {
     const { t, readOnly, isLoading } = this.props
 
     if (isLoading || !this.state) {
-      return ( <div>{t("Loading project...")}</div> )
+      return <div>{t("Loading project...")}</div>
     }
 
-    const {
-      name,
-      timezone,
-      colourScheme,
-      initialSuccessRate,
-      detailedRates,
-      archiveAction,
-    } = this.state
+    const { name, timezone, colourScheme, initialSuccessRate, detailedRates, archiveAction } =
+      this.state
 
     const inputProjectName = (
       <div>
@@ -178,8 +173,11 @@ class ProjectSettings extends Component {
 
     const inputTimeZone = (
       <div>
-        <TimezoneAutocomplete selectedTz={timezone} readOnly={readOnly}
-          onChange={(timezone) => this.setState({ timezone: timezone })} />
+        <TimezoneAutocomplete
+          selectedTz={timezone}
+          readOnly={readOnly}
+          onChange={(timezone) => this.setState({ timezone: timezone })}
+        />
       </div>
     )
 
@@ -255,9 +253,7 @@ class ProjectSettings extends Component {
               disabled={readOnly}
               onChange={(e) => this.toggleDetailedRates()}
             />
-            <label htmlFor="projectDetailedRates">
-              Enter detailed values
-            </label>
+            <label htmlFor="projectDetailedRates">Enter detailed values</label>
           </div>
         </div>
       </div>
@@ -320,7 +316,9 @@ class ProjectSettings extends Component {
       "validRespondentRate",
       "detailedRates",
     ]
-    return JSON.stringify(pick(this.state, fields)) !== JSON.stringify(pick(this.initialState, fields))
+    return (
+      JSON.stringify(pick(this.state, fields)) !== JSON.stringify(pick(this.initialState, fields))
+    )
   }
 }
 

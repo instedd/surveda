@@ -69,7 +69,7 @@ const createOrUpdateProject = (state, action) => ({
 const notSavedProject = (state, action) => ({
   ...state,
   saving: false,
-  errors: camelizeKeys(action.errors)
+  errors: camelizeKeys(action.errors),
 })
 
 const clearProject = (state, action) => ({
