@@ -1,19 +1,12 @@
 import React, { Component, PropTypes } from "react"
 import { connect } from "react-redux"
-import { bindActionCreators } from "redux"
 import { withRouter } from "react-router"
-import { orderedItems } from "../../reducers/collection"
-import { InputWithLabel } from "../ui"
-import ColourSchemeModal from "./ColourSchemeModal"
 import TimezoneAutocomplete from "../timezones/TimezoneAutocomplete"
-import * as actions from "../../actions/projects"
 import * as projectActions from "../../actions/project"
 import { updateProject, fetchProject, updateProjectArchived } from "../../api"
 import merge from "lodash/merge"
-import dateformat from "dateformat"
 import { translate } from "react-i18next"
 import { isProjectReadOnly } from "../../reducers/project"
-import { ArchiveIcon } from "../ui"
 
 class ProjectSettings extends Component {
   constructor(props) {
@@ -33,7 +26,7 @@ class ProjectSettings extends Component {
   }
 
   fetchProjectAndSetState() {
-    const { projectId, t } = this.props
+    const { projectId } = this.props
     fetchProject(projectId).then((response) => {
       const project = response.entities.projects[response.result]
       this.setState({
@@ -54,16 +47,10 @@ class ProjectSettings extends Component {
   }
 
   componentDidMount() {
-    const { projectId, t } = this.props
     this.fetchProjectAndSetState()
   }
 
-  changePageSize(pageSize) {
-    const { projectId } = this.props
-  }
-
   toggleDetailedRates(toggle) {
-    const { projectId } = this.props
     const { detailedRates } = this.state
     this.setState({ detailedRates: !detailedRates })
   }
