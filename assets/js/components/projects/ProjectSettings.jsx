@@ -30,20 +30,20 @@ class ProjectSettings extends Component {
     const { projectId } = this.props
     fetchProject(projectId).then((response) => {
       const project = response.entities.projects[response.result]
-      this.setState({
+      var state = {
         name: project.name,
         timezone: project.timezone,
         colourScheme: project.colourScheme,
-        initialSuccessRate: project.initialSuccessRate,
-        eligibilityRate: project.eligibilityRate,
-        responseRate: project.responseRate,
-        validRespondentRate: project.validRespondentRate,
+        initialSuccessRate: project.initialSuccessRate || "",
+        eligibilityRate: project.eligibilityRate || "",
+        responseRate: project.responseRate || "",
+        validRespondentRate: project.validRespondentRate || "",
         detailedRates: project.eligibilityRate != null,
         archiveAction: project.readOnly ? "unarchive" : "archive",
         readOnly: !project.owner,
-      })
-      this.initialState = this.state
-      this.project = project
+      }
+      this.setState(state)
+      this.initialState = JSON.parse(JSON.stringify(state))
     })
   }
 
@@ -62,10 +62,10 @@ class ProjectSettings extends Component {
       name: this.state.name,
       timezone: this.state.timezone,
       colourScheme: this.state.colourScheme,
-      initialSuccessRate: parseFloat(this.state.initialSuccessRate),
-      eligibilityRate: parseFloat(this.state.eligibilityRate),
-      responseRate: parseFloat(this.state.responseRate),
-      validRespondentRate: parseFloat(this.state.validRespondentRate),
+      initialSuccessRate: parseFloat(this.state.initialSuccessRate, 10) || null,
+      eligibilityRate: parseFloat(this.state.eligibilityRate, 10) || null,
+      responseRate: parseFloat(this.state.responseRate, 10) || null,
+      validRespondentRate: parseFloat(this.state.validRespondentRate, 10) || null,
     }
     const newProject = merge({}, project, newValues)
     updateProject(newProject)
@@ -80,18 +80,20 @@ class ProjectSettings extends Component {
   }
 
   updateInitialSuccessRate() {
-    const isr = (
-      this.state.eligibilityRate *
-      this.state.responseRate *
-      this.state.validRespondentRate
-    ).toFixed(4)
-    this.setState({ initialSuccessRate: isr })
+    const { eligibilityRate, responseRate, validRespondentRate } = this.state
+
+    if (eligibilityRate && responseRate && validRespondentRate) {
+      const isr = (eligibilityRate * responseRate * validRespondentRate).toFixed(4)
+      this.setState({ initialSuccessRate: isr })
+    } else {
+      this.setState({ initialSuccessRate: "" })
+    }
   }
 
   archiveOrUnarchive(archived: boolean) {
     const { archiveAction } = this.state
-    this.project = merge({}, this.project, { archived: archiveAction == "archive" })
-    updateProjectArchived(this.project)
+    const newProject = merge({}, this.project, { archived: archiveAction == "archive" })
+    updateProjectArchived(newProject)
     this.setState({ archiveAction: archiveAction == "archive" ? "unarchive" : "archive" })
   }
 
@@ -175,17 +177,6 @@ class ProjectSettings extends Component {
     } = this.state
 
     const { t } = this.props
-    const fieldsToSave = [
-      "name",
-      "timezone",
-      "colourScheme",
-      "initialSuccessRate",
-      "eligibilityRate",
-      "validRespondentRate",
-      "detailedRates",
-    ]
-
-    const setTimezone = (timezone) => this.setState({ timezone: timezone })
 
     const inputProjectName = (
       <div>
@@ -201,7 +192,8 @@ class ProjectSettings extends Component {
 
     const inputTimeZone = (
       <div>
-        <TimezoneAutocomplete selectedTz={timezone} readOnly={readOnly} onChange={setTimezone} />
+        <TimezoneAutocomplete selectedTz={timezone} readOnly={readOnly}
+          onChange={(timezone) => this.setState({ timezone: timezone })} />
       </div>
     )
 
@@ -289,12 +281,7 @@ class ProjectSettings extends Component {
             type="button"
             value="Save"
             className="btn blue"
-            disabled={
-              readOnly ||
-              this.initialState == null ||
-              JSON.stringify(pick(this.state, fieldsToSave)) ===
-                JSON.stringify(pick(this.initialState, fieldsToSave))
-            }
+            disabled={readOnly || !this.hasChanged()}
             onClick={() => this.saveProjectSettings()}
           />
         </div>
@@ -332,6 +319,19 @@ class ProjectSettings extends Component {
         </div>
       </div>
     )
+  }
+
+  hasChanged() {
+    const fields = [
+      "name",
+      "timezone",
+      "colourScheme",
+      "initialSuccessRate",
+      "eligibilityRate",
+      "validRespondentRate",
+      "detailedRates",
+    ]
+    JSON.stringify(pick(this.state, fields)) === JSON.stringify(pick(this.initialState, fields))
   }
 }
 
