@@ -320,7 +320,7 @@ class ProjectSettings extends Component {
       "validRespondentRate",
       "detailedRates",
     ]
-    return JSON.stringify(_.pick(this.state, fields)) !== JSON.stringify(_.pick(this.initialState, fields))
+    return JSON.stringify(pick(this.state, fields)) !== JSON.stringify(pick(this.initialState, fields))
   }
 }
 
