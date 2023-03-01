@@ -97,7 +97,7 @@ class ProjectSettings extends Component {
   }
 
   updateRate(newRate) {
-    this.setState(newRate, () => this.updateInitialSuccessRate())
+    this.setState(newRate, this.updateInitialSuccessRate)
   }
 
   renderDetailedRates() {
