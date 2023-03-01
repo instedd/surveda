@@ -222,14 +222,6 @@ export const deletePanelSurvey = (projectId, panelSurvey) => {
   return apiDelete(`projects/${projectId}/panel_surveys/${panelSurvey.id}`)
 }
 
-const getTimezone = () => {
-  try {
-    return Intl.DateTimeFormat().resolvedOptions().timeZone
-  } catch (ex) {
-    return null
-  }
-}
-
 export const createAudio = (files) => {
   return apiPostFile("audios", audioSchema, files[0])
 }
