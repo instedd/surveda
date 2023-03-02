@@ -208,15 +208,10 @@ export const renameFolder = (projectId, folderId, name) => {
 }
 
 export const createSurvey = (projectId, folderId, generatesPanelSurvey = false) => {
-  const timezone = getTimezone()
-  let data
-  if (timezone) {
-    data = { survey: { timezone, generatesPanelSurvey } }
-  } else {
-    data = { survey: { generatesPanelSurvey } }
-  }
   let folderPath = folderId ? `/folders/${folderId}` : ""
-  return apiPostJSON(`projects/${projectId}${folderPath}/surveys`, surveySchema, data)
+  return apiPostJSON(`projects/${projectId}${folderPath}/surveys`, surveySchema, {
+    survey: { generatesPanelSurvey },
+  })
 }
 
 export const deleteSurvey = (projectId, survey) => {
@@ -225,14 +220,6 @@ export const deleteSurvey = (projectId, survey) => {
 
 export const deletePanelSurvey = (projectId, panelSurvey) => {
   return apiDelete(`projects/${projectId}/panel_surveys/${panelSurvey.id}`)
-}
-
-const getTimezone = () => {
-  try {
-    return Intl.DateTimeFormat().resolvedOptions().timeZone
-  } catch (ex) {
-    return null
-  }
 }
 
 export const createAudio = (files) => {

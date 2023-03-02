@@ -34,7 +34,7 @@ defmodule AskWeb.SurveySimulationController do
         mode: [[mode]],
         state: :ready,
         cutoff: 1,
-        schedule: Ask.Schedule.always()
+        schedule: Ask.Schedule.always(project)
       }
       |> Ecto.Changeset.change()
       |> Repo.insert!()

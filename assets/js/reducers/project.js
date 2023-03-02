@@ -1,4 +1,6 @@
 import * as actions from "../actions/project"
+import { camelizeKeys } from "humps"
+import omit from "lodash/omit"
 
 const initialState = {
   fetching: false,
@@ -16,6 +18,10 @@ export default (state = initialState, action) => {
       return createOrUpdateProject(state, action)
     case actions.UPDATE_PROJECT:
       return createOrUpdateProject(state, action)
+    case actions.SAVING_PROJECT:
+      return savingProject(state)
+    case actions.NOT_SAVED_PROJECT:
+      return notSavedProject(state, action)
     case actions.CLEAR_PROJECT:
       return clearProject(state, action)
     default:
@@ -47,15 +53,26 @@ const receiveProject = (state, action) => {
   }
 }
 
-const createOrUpdateProject = (state, action) => ({
+const savingProject = (state) => ({
   ...state,
+  saving: true,
+})
+
+const createOrUpdateProject = (state, action) => ({
+  ...omit(state, "saving", "errors"),
   fetching: false,
   projectId: action.project.id,
   data: action.project,
 })
 
-const clearProject = (state, action) => ({
+const notSavedProject = (state, action) => ({
   ...state,
+  saving: false,
+  errors: camelizeKeys(action.errors),
+})
+
+const clearProject = (state, action) => ({
+  ...omit(state, "saving", "errors"),
   fetching: false,
   projectId: null,
   data: null,

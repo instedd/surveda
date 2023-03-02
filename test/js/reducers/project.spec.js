@@ -91,29 +91,33 @@ describe('project reducer', () => {
     expect(state).toEqual({fetching: false, projectId: 1, data: project})
   })
 
-  it('should update project', () => {
+  it('should be saving', () => {
     const project = {id: 1, name: 'p1'}
     const project2 = {id: 1, name: 'p2'}
 
     const state = playActions([
       actions.startFetchingProject(1),
       actions.receiveProject(project),
-      actions.updateProject(project2)
+      actions.saving(project2),
     ])
 
-    expect(state).toEqual({fetching: false, projectId: 1, data: project2})
+    expect(state).toEqual({fetching: false, saving: true, projectId: 1, data: project})
   })
 
-  it('should update project with colourScheme', () => {
+
+  it('should not be saved', () => {
     const project = {id: 1, name: 'p1'}
-    const project2 = {id: 1, name: 'p2', colourScheme: 'default'}
+    const project2 = {id: 1, name: 'p2'}
+    const errors = { field: "message" }
 
     const state = playActions([
       actions.startFetchingProject(1),
       actions.receiveProject(project),
-      actions.updateProject(project2)
+      actions.saving(project2),
+      actions.notSavedProject(errors)
     ])
 
-    expect(state).toEqual({fetching: false, projectId: 1, data: project2})
+    expect(state).toEqual({fetching: false, saving: false, projectId: 1, data: project, errors: errors})
   })
+
 })

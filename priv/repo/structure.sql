@@ -283,6 +283,11 @@ CREATE TABLE `projects` (
   `salt` varchar(255) DEFAULT NULL,
   `colour_scheme` varchar(255) DEFAULT 'default',
   `archived` tinyint(1) DEFAULT '0',
+  `timezone` varchar(255) DEFAULT NULL,
+  `initial_success_rate` double DEFAULT NULL,
+  `eligibility_rate` double DEFAULT NULL,
+  `response_rate` double DEFAULT NULL,
+  `valid_respondent_rate` double DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `id` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
@@ -982,7 +987,7 @@ CREATE TABLE `users` (
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2023-02-27 11:22:23
+-- Dump completed on 2023-02-27 13:27:15
 INSERT INTO `schema_migrations` (version) VALUES (20160812145257);
 INSERT INTO `schema_migrations` (version) VALUES (20160816183915);
 INSERT INTO `schema_migrations` (version) VALUES (20160830200454);
@@ -1195,3 +1200,4 @@ INSERT INTO `schema_migrations` (version) VALUES (20210629170410);
 INSERT INTO `schema_migrations` (version) VALUES (20211125141835);
 INSERT INTO `schema_migrations` (version) VALUES (20211213094856);
 INSERT INTO `schema_migrations` (version) VALUES (20220131103226);
+INSERT INTO `schema_migrations` (version) VALUES (20230217143550);

@@ -3,7 +3,6 @@ import { fetchTimezones } from "../../actions/timezones"
 import { connect } from "react-redux"
 import { translate } from "react-i18next"
 import { Autocomplete, InputWithLabel } from "../ui"
-import * as actions from "../../actions/survey"
 import { formatTimezone } from "./util"
 import "materialize-autocomplete"
 
@@ -15,6 +14,7 @@ class TimezoneAutocomplete extends Component {
     timezones: PropTypes.object,
     readOnly: PropTypes.bool,
     i18n: PropTypes.object,
+    onChange: PropTypes.func,
   }
 
   constructor(props) {
@@ -35,6 +35,13 @@ class TimezoneAutocomplete extends Component {
 
   componentDidMount() {
     const { dispatch, selectedTz } = this.props
+    const timezone = { id: selectedTz, text: formatTimezone(selectedTz) }
+    this.setState({ timezone: timezone })
+    dispatch(fetchTimezones())
+  }
+
+  componentWillReceiveProps(nextProps) {
+    const { dispatch, selectedTz } = nextProps
     const timezone = { id: selectedTz, text: formatTimezone(selectedTz) }
     this.setState({ timezone: timezone })
     dispatch(fetchTimezones())
@@ -65,9 +72,9 @@ class TimezoneAutocomplete extends Component {
   }
 
   autocompleteOnSelect(timezone) {
-    const { dispatch } = this.props
+    const { onChange } = this.props
     this.setState({ timezone: timezone })
-    dispatch(actions.setTimezone(timezone.id))
+    onChange(timezone.id)
   }
 
   getTimeForTimezone(timezone, locale) {
@@ -93,6 +100,7 @@ class TimezoneAutocomplete extends Component {
       try {
         timeAtSelectedTz = this.getTimeForTimezone(canonicalTz, currentLanguage)
       } catch (e) {}
+
       return (
         <div className="input-field timezone-selection">
           <InputWithLabel value={this.state.timezone.text} label={t("Timezone")}>

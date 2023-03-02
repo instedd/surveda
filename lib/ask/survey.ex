@@ -543,9 +543,11 @@ defmodule Ask.Survey do
       |> completed_respondents_needed_by
       |> respondents_target(respondents_total)
 
+    survey = survey |> Repo.preload(:project)
+
     completion_rate = get_completion_rate(survey, respondents_by_disposition, respondents_target)
     current_success_rate = get_success_rate(survey, respondents_by_disposition)
-    initial_success_rate = initial_success_rate()
+    initial_success_rate = initial_success_rate(survey.project)
     completed_respondents = get_completed_respondents(survey, respondents_by_disposition)
     additional_completes = respondents_target - completed_respondents
 
@@ -657,14 +659,18 @@ defmodule Ask.Survey do
   defp respondents_target(:all, respondents_total), do: respondents_total
   defp respondents_target(completed_respondents_needed, _), do: completed_respondents_needed
 
-  def initial_success_rate() do
-    %{
-      :valid_respondent_rate => initial_valid_respondent_rate,
-      :eligibility_rate => initial_eligibility_rate,
-      :response_rate => initial_response_rate
-    } = config_rates()
+  def initial_success_rate(project) do
+    if project.initial_success_rate == nil do
+      %{
+        :valid_respondent_rate => initial_valid_respondent_rate,
+        :eligibility_rate => initial_eligibility_rate,
+        :response_rate => initial_response_rate
+      } = config_rates()
 
-    initial_valid_respondent_rate * initial_eligibility_rate * initial_response_rate
+      initial_valid_respondent_rate * initial_eligibility_rate * initial_response_rate
+    else
+      project.initial_success_rate
+    end
   end
 
   def estimated_success_rate(initial_success_rate, current_success_rate, completion_rate),

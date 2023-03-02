@@ -50,7 +50,12 @@ defmodule AskWeb.ProjectControllerTest do
                  "read_only" => false,
                  "colour_scheme" => "default",
                  "owner" => true,
-                 "level" => "owner"
+                 "level" => "owner",
+                 "eligibility_rate" => nil,
+                 "initial_success_rate" => nil,
+                 "response_rate" => nil,
+                 "timezone" => nil,
+                 "valid_respondent_rate" => nil
                },
                %{
                  "id" => project2.id,
@@ -60,7 +65,12 @@ defmodule AskWeb.ProjectControllerTest do
                  "read_only" => true,
                  "colour_scheme" => "default",
                  "owner" => false,
-                 "level" => "reader"
+                 "level" => "reader",
+                 "eligibility_rate" => nil,
+                 "initial_success_rate" => nil,
+                 "response_rate" => nil,
+                 "timezone" => nil,
+                 "valid_respondent_rate" => nil
                }
              ]
     end
@@ -81,7 +91,12 @@ defmodule AskWeb.ProjectControllerTest do
                  "read_only" => true,
                  "colour_scheme" => "default",
                  "owner" => true,
-                 "level" => "owner"
+                 "level" => "owner",
+                 "eligibility_rate" => nil,
+                 "initial_success_rate" => nil,
+                 "response_rate" => nil,
+                 "timezone" => nil,
+                 "valid_respondent_rate" => nil
                }
              ]
     end
@@ -101,7 +116,12 @@ defmodule AskWeb.ProjectControllerTest do
                  "read_only" => false,
                  "colour_scheme" => "default",
                  "owner" => true,
-                 "level" => "owner"
+                 "level" => "owner",
+                 "eligibility_rate" => nil,
+                 "initial_success_rate" => nil,
+                 "response_rate" => nil,
+                 "timezone" => nil,
+                 "valid_respondent_rate" => nil
                }
              ]
     end
@@ -121,7 +141,12 @@ defmodule AskWeb.ProjectControllerTest do
                  "read_only" => true,
                  "colour_scheme" => "default",
                  "owner" => true,
-                 "level" => "owner"
+                 "level" => "owner",
+                 "eligibility_rate" => nil,
+                 "initial_success_rate" => nil,
+                 "response_rate" => nil,
+                 "timezone" => nil,
+                 "valid_respondent_rate" => nil
                },
                %{
                  "id" => active_project.id,
@@ -131,7 +156,12 @@ defmodule AskWeb.ProjectControllerTest do
                  "read_only" => false,
                  "colour_scheme" => "default",
                  "owner" => true,
-                 "level" => "owner"
+                 "level" => "owner",
+                 "eligibility_rate" => nil,
+                 "initial_success_rate" => nil,
+                 "response_rate" => nil,
+                 "timezone" => nil,
+                 "valid_respondent_rate" => nil
                }
              ]
     end
@@ -161,7 +191,12 @@ defmodule AskWeb.ProjectControllerTest do
         "read_only" => false,
         "colour_scheme" => "default",
         "owner" => true,
-        "level" => "owner"
+        "level" => "owner",
+        "eligibility_rate" => nil,
+        "initial_success_rate" => nil,
+        "response_rate" => nil,
+        "timezone" => nil,
+        "valid_respondent_rate" => nil
       }
 
       project_map_2 = %{
@@ -172,7 +207,12 @@ defmodule AskWeb.ProjectControllerTest do
         "read_only" => false,
         "colour_scheme" => "default",
         "owner" => true,
-        "level" => "owner"
+        "level" => "owner",
+        "eligibility_rate" => nil,
+        "initial_success_rate" => nil,
+        "response_rate" => nil,
+        "timezone" => nil,
+        "valid_respondent_rate" => nil
       }
 
       project_map_3 = %{
@@ -183,7 +223,12 @@ defmodule AskWeb.ProjectControllerTest do
         "read_only" => false,
         "colour_scheme" => "default",
         "owner" => true,
-        "level" => "owner"
+        "level" => "owner",
+        "eligibility_rate" => nil,
+        "initial_success_rate" => nil,
+        "response_rate" => nil,
+        "timezone" => nil,
+        "valid_respondent_rate" => nil
       }
 
       assert json_response(conn, 200)["data"] == [project_map_1, project_map_2, project_map_3]
@@ -203,7 +248,12 @@ defmodule AskWeb.ProjectControllerTest do
                "read_only" => false,
                "colour_scheme" => "default",
                "owner" => true,
-               "level" => "owner"
+               "level" => "owner",
+               "eligibility_rate" => nil,
+               "initial_success_rate" => nil,
+               "response_rate" => nil,
+               "timezone" => nil,
+               "valid_respondent_rate" => nil
              }
     end
 
@@ -219,7 +269,12 @@ defmodule AskWeb.ProjectControllerTest do
                "read_only" => true,
                "colour_scheme" => "default",
                "owner" => false,
-               "level" => "reader"
+               "level" => "reader",
+               "eligibility_rate" => nil,
+               "initial_success_rate" => nil,
+               "response_rate" => nil,
+               "timezone" => nil,
+               "valid_respondent_rate" => nil
              }
     end
 
@@ -255,7 +310,12 @@ defmodule AskWeb.ProjectControllerTest do
                "read_only" => true,
                "colour_scheme" => "default",
                "owner" => false,
-               "level" => "reader"
+               "level" => "reader",
+               "eligibility_rate" => nil,
+               "initial_success_rate" => nil,
+               "response_rate" => nil,
+               "timezone" => nil,
+               "valid_respondent_rate" => nil
              }
     end
   end

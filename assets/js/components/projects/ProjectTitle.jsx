@@ -4,7 +4,6 @@ import { withRouter } from "react-router"
 import { EditableTitleLabel } from "../ui"
 import merge from "lodash/merge"
 import * as projectActions from "../../actions/project"
-import { updateProject } from "../../api"
 import { translate } from "react-i18next"
 import { isProjectReadOnly } from "../../reducers/project"
 
@@ -25,12 +24,8 @@ class ProjectTitle extends Component {
   handleSubmit(newName) {
     const { dispatch, project } = this.props
     if (project.name == newName) return
-    const newProject = merge({}, project, { name: newName })
-
-    dispatch(projectActions.updateProject(newProject)) // Optimistic update
-    updateProject(newProject).then((response) =>
-      dispatch(projectActions.updateProject(response.entities.projects[response.result]))
-    )
+    const changes = merge({}, project, { name: newName })
+    dispatch(projectActions.updateProject(changes))
   }
 
   render() {

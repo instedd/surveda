@@ -38,14 +38,21 @@ defmodule Ask.Factory do
     %Ask.Project{
       name: sequence(:project, &"Project #{&1}"),
       salt: Ecto.UUID.generate(),
-      colour_scheme: "default"
+      colour_scheme: "default",
+      timezone: nil,
+      initial_success_rate: nil,
+      eligibility_rate: nil,
+      response_rate: nil,
+      valid_respondent_rate: nil,
+      archived: false
     }
   end
 
   def survey_factory do
+    project = build(:project)
     %Ask.Survey{
-      project: build(:project),
-      schedule: Ask.Schedule.always(),
+      project: project,
+      schedule: Ask.Schedule.always(project),
       name: sequence(:survey, &"Survey #{&1}"),
       mode: [["sms"]],
       state: :not_ready,

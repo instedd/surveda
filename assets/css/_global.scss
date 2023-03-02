@@ -1613,21 +1613,6 @@ body.bdfh {
   width: 100%;
 }
 
-#colourSchemeModal {
-  .modal-overlay {
-    z-index: 0;
-  }
-  .card-content {
-    max-height: initial;
-    padding: 2rem 2rem;
-
-    .row {
-      padding-top: 1rem;
-      padding-bottom: 1rem;
-    }
-  }
-}
-
 // ----- Three dots option menu next to Tabs ------
 .options {
   height: 2.2rem;

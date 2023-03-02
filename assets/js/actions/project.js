@@ -4,6 +4,8 @@ export const RECEIVE_PROJECT = "RECEIVE_PROJECT"
 export const FETCH_PROJECT = "FETCH_PROJECT"
 export const CREATE_PROJECT = "CREATE_PROJECT"
 export const UPDATE_PROJECT = "UPDATE_PROJECT"
+export const SAVING_PROJECT = "SAVING_PROJECT"
+export const NOT_SAVED_PROJECT = "NOT_SAVED_PROJECT"
 export const CLEAR_PROJECT = "CLEAR_PROJECT"
 
 export const fetchProject = (projectId) => (dispatch, getState) => {
@@ -48,9 +50,30 @@ export const createProject = (project) => ({
   project,
 })
 
-export const updateProject = (project) => ({
-  type: UPDATE_PROJECT,
-  project,
+export const saving = (project) => ({
+  type: SAVING_PROJECT,
+})
+
+export const updateProject = (project) => (dispatch, getState) => {
+  dispatch(saving(project))
+
+  api
+    .updateProject(project)
+    .then((response) => {
+      dispatch({
+        type: UPDATE_PROJECT,
+        project: response.entities.projects[response.result],
+      })
+    })
+    .catch(async (response) => {
+      const body = await response.json()
+      dispatch(notSavedProject(body.errors))
+    })
+}
+
+export const notSavedProject = (errors) => ({
+  type: NOT_SAVED_PROJECT,
+  errors,
 })
 
 export const clearProject = () => ({

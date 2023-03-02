@@ -176,7 +176,7 @@ defmodule Ask.Runtime.QuestionnaireSimulator do
       mode: [[mode]],
       state: :running,
       cutoff: 1,
-      schedule: Ask.Schedule.always(),
+      schedule: Ask.Schedule.always(project),
       started_at: Timex.now()
     }
 
@@ -200,7 +200,7 @@ defmodule Ask.Runtime.QuestionnaireSimulator do
         new_respondent,
         %Ask.Runtime.SimulatorChannel{},
         mode,
-        Ask.Schedule.always(),
+        Ask.Schedule.always(project),
         [],
         nil,
         nil,
