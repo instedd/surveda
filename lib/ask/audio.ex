@@ -1,8 +1,6 @@
 defmodule Ask.Audio do
   use Ask.Model
 
-  alias Ask.Sox
-
   require Logger
 
   schema "audios" do
@@ -17,8 +15,18 @@ defmodule Ask.Audio do
     timestamps()
   end
 
-  @valid_extensions ~w(.mp3 .wav)
-  @valid_mime_types ~w(audio/mpeg audio/wave audio/wav audio/x-wav audio/x-pn-wav)
+  @valid_extensions ~w(
+    .mp3
+    .wav
+    .m4a .mp4
+    .aac
+  )
+  @valid_mime_types ~w(
+    audio/mpeg
+    audio/wave audio/wav audio/x-wav audio/x-pn-wav
+    audio/mp4 video/mp4
+    audio/aac audio/x-hx-aac-adts
+  )
   @stored_audio_extension "mp3"
 
   def exported_audio_file_name(uuid), do: uuid <> ".#{@stored_audio_extension()}"
@@ -59,7 +67,7 @@ defmodule Ask.Audio do
   def params_from_converted_upload(upload) do
     basename = Path.basename(upload.filename, Path.extname(upload.filename))
 
-    case Sox.convert(upload.path, @stored_audio_extension) do
+    case Ask.FFmpeg.convert(upload.path, @stored_audio_extension) do
       {:ok, data} ->
         %{
           "uuid" => Ecto.UUID.generate(),

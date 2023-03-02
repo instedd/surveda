@@ -18,7 +18,7 @@ class I18nStyle extends Component<Props> {
   content: '${t("Uploading...")}';
 }
 .dropfile .drop-text.audio:before {
-  content: '${t("Drop your MP3 or WAV file here, or click to browse")}';
+  content: '${t("Drop your MP3, WAV, ACC or M4A file here, or click to browse")}';
 }
 .dropfile.active .drop-text:before {
   content: '${t("Drop your file to start uploading")}';

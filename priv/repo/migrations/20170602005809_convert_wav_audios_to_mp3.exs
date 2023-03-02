@@ -21,7 +21,7 @@ defmodule Ask.Repo.Migrations.ConvertWavAudiosToMp3 do
       # Convert the WAV to MP3
       IO.puts("Converting #{filename} (#{byte_size(wav_data)} bytes)")
 
-      case Ask.Sox.convert("wav", wav_data_path, "mp3") do
+      case Ask.FFmpeg.convert(wav_data_path, "mp3") do
         {:ok, mp3_data} ->
           IO.puts("Converted #{filename} into MP3 (#{byte_size(mp3_data)} bytes)")
 

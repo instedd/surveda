@@ -29,7 +29,7 @@ defmodule AskWeb.AudioControllerTest do
 
       audio = Repo.one(Audio)
       assert audio.filename == "test1.mp3"
-      assert AudioChecker.get_audio_format(audio.data, "mp3") == "audio/mpeg"
+      assert AudioChecker.get_audio_format(audio.data) == "audio/mpeg"
     end
 
     test "MP3: when data is valid returns its uuid", %{conn: conn} do
@@ -41,14 +41,14 @@ defmodule AskWeb.AudioControllerTest do
     end
 
     test "MP3 with WAV extension: saves as MP3", %{conn: conn} do
-      File.copy("test/fixtures/audio.mp3", "test/fixtures/mpeg.wav")
+      File.copy("test/fixtures/audio.mp3", "test/tmp/mpeg.wav")
 
       try do
-        file = %Plug.Upload{path: "test/fixtures/mpeg.wav", filename: "mpeg.wav"}
+        file = %Plug.Upload{path: "test/tmp/mpeg.wav", filename: "mpeg.wav"}
         conn = post conn, audio_path(conn, :create), file: file
         assert conn.status == 201
       after
-        File.rm("test/fixtures/mpeg.wav")
+        File.rm("test/tmp/mpeg.wav")
       end
 
       %{filename: "mpeg.mp3"} = Repo.one(Audio)
@@ -61,7 +61,7 @@ defmodule AskWeb.AudioControllerTest do
 
       audio = Repo.one(Audio)
       assert audio.filename == "test1.mp3"
-      assert AudioChecker.get_audio_format(audio.data, "mp3") == "audio/mpeg"
+      assert AudioChecker.get_audio_format(audio.data) == "audio/mpeg"
     end
 
     test "WAV: when data is valid returns its uuid", %{conn: conn} do
@@ -73,17 +73,35 @@ defmodule AskWeb.AudioControllerTest do
     end
 
     test "WAV with MP3 extension: saves as MP3", %{conn: conn} do
-      File.copy("test/fixtures/audio.wav", "test/fixtures/wave.mp3")
+      File.copy("test/fixtures/audio.wav", "test/tmp/wave.mp3")
 
       try do
-        file = %Plug.Upload{path: "test/fixtures/wave.mp3", filename: "wave.mp3"}
+        file = %Plug.Upload{path: "test/tmp/wave.mp3", filename: "wave.mp3"}
         conn = post conn, audio_path(conn, :create), file: file
         assert conn.status == 201
       after
-        File.rm("test/fixtures/wave.mp3")
+        File.rm("test/tmp/wave.mp3")
       end
 
       %{filename: "wave.mp3"} = Repo.one(Audio)
+    end
+
+    test "AAC: saves as MP3", %{conn: conn} do
+      file = %Plug.Upload{path: "test/fixtures/audio.aac", filename: "audio.aac"}
+      conn = post conn, audio_path(conn, :create), file: file
+      assert conn.status == 201
+
+      %{filename: "audio.mp3", data: data} = Repo.one(Audio)
+      assert AudioChecker.get_audio_format(data) == "audio/mpeg"
+    end
+
+    test "M4A: saves as MP3", %{conn: conn} do
+      file = %Plug.Upload{path: "test/fixtures/audio.m4a", filename: "audio.m4a"}
+      conn = post conn, audio_path(conn, :create), file: file
+      assert conn.status == 201
+
+      %{filename: "audio.mp3", data: data} = Repo.one(Audio)
+      assert AudioChecker.get_audio_format(data) == "audio/mpeg"
     end
 
     test "returns a validation error if the file is of an invalid type", %{conn: conn} do
