@@ -118,6 +118,43 @@ export default class Forecasts extends Component<Props> {
       .x((d) => x(d.time))
       .y((d) => y(d.value))
 
+    var tooltip = d3
+      .select("body")
+      .append("div")
+      .classed("forecast-tooltip", true)
+      .style("visibility", "hidden")
+
+    for (var i = 0; i <= data.length; i++) {
+      if (data[i]) {
+        for (var j = 0; j <= data[i].values.length; j++) {
+          if (
+            data[i].values[j] &&
+            y(data[i].values[j].value) != 0 &&
+            x(data[i].values[j].time) != 0
+          ) {
+            d3.select(this.refs.circles)
+              .selectAll("path")
+              .data([data[i].values[j]])
+              .enter()
+              .append("circle")
+              .attr("cx", (d) => x(d.time))
+              .attr("cy", (d) => y(d.value))
+              .attr("r", "3px")
+              .style("fill", data[i].color)
+              .style("stroke", data[i].color)
+              .on("mouseover", (d) =>
+                tooltip
+                  .text(d.value)
+                  .style("top", d3.event.pageY - 10 + "px")
+                  .style("left", d3.event.pageX + 10 + "px")
+                  .style("visibility", "visible")
+              )
+              .on("mouseout", () => tooltip.style("visibility", "hidden"))
+          }
+        }
+      }
+    }
+
     d3.select(this.refs.values)
       .selectAll("path")
       .data(data)
@@ -125,9 +162,14 @@ export default class Forecasts extends Component<Props> {
       .append("path")
       .merge(d3.select(this.refs.values).selectAll("path"))
       .attr("class", "line")
+      .attr("id", (d) => "line-" + d.id)
       .attr("stroke", (d) => d.color)
       .datum((d) => d.values)
       .attr("d", line)
+      .on("click", function (d) {
+        d3.selectAll(".line").classed("clicked-line", false)
+        d3.selectAll("#" + d3.select(this).attr("id")).classed("clicked-line", true)
+      })
 
     d3.select(this.refs.forecasts)
       .selectAll("path")
@@ -136,11 +178,16 @@ export default class Forecasts extends Component<Props> {
       .append("path")
       .merge(d3.select(this.refs.forecasts).selectAll("path"))
       .attr("class", "dotted line")
+      .attr("id", (d) => "line-" + d.id)
       .attr("stroke", (d) => d.color)
       .datum((d) => {
         return d.forecast
       })
       .attr("d", line)
+      .on("click", function (d) {
+        d3.selectAll(".line").classed("clicked-line", false)
+        d3.selectAll("#" + d3.select(this).attr("id")).classed("clicked-line", true)
+      })
 
     d3.select(this.refs.x)
       .attr("class", "axis")
@@ -187,6 +234,7 @@ export default class Forecasts extends Component<Props> {
         >
           <g transform={`translate(${margin.left},${margin.top})`}>
             <g ref="grid" />
+            <g ref="circles" />
             <g ref="values" />
             <g ref="forecasts" />
             <g ref="x" transform={`translate(0,${height})`} />

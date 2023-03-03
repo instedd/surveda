@@ -40,6 +40,10 @@
   align-items: center;
 }
 
+.clicked-line {
+  stroke-width: 4px !important;
+}
+
 .forecasts .line {
   fill: none;
   stroke-width: 2px;
@@ -341,6 +345,17 @@
 
 .double > * {
   width: 50%;
+}
+
+.forecast-tooltip {
+  position: absolute;
+  z-index: 10;
+  background: white;
+  padding: 8px;
+  border-radius: 6px;
+  border: 1px;
+  border-style: solid;
+  border-color: black;
 }
 
 .tooltip {
