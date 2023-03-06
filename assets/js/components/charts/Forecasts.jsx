@@ -103,7 +103,10 @@ export default class Forecasts extends Component<Props> {
       initialTime = new Date()
       lastTime = d3.timeMonth.offset(initialTime, 1)
     } else {
-      initialTime = d3.min(flatten, (d) => d.time)
+      initialTime = d3.timeDay.offset(
+        d3.min(flatten, (d) => d.time),
+        -1
+      )
       lastTime = d3.timeMonth.offset(initialTime, 1)
       lastTime = d3.max([d3.max(flatten, (d) => d.time), lastTime])
     }
@@ -124,35 +127,34 @@ export default class Forecasts extends Component<Props> {
       .classed("forecast-tooltip", true)
       .style("visibility", "hidden")
 
-    for (var i = 0; i <= data.length; i++) {
-      if (data[i]) {
-        for (var j = 0; j <= data[i].values.length; j++) {
-          if (
-            data[i].values[j] &&
-            y(data[i].values[j].value) != 0 &&
-            x(data[i].values[j].time) != 0
-          ) {
-            d3.select(this.refs.circles)
-              .selectAll("path")
-              .data([data[i].values[j]])
-              .enter()
-              .append("circle")
-              .attr("cx", (d) => x(d.time))
-              .attr("cy", (d) => y(d.value))
-              .attr("r", "3px")
-              .style("fill", data[i].color)
-              .style("stroke", data[i].color)
-              .on("mouseover", (d) =>
-                tooltip
-                  .text(d.value)
-                  .style("top", d3.event.pageY - 10 + "px")
-                  .style("left", d3.event.pageX + 10 + "px")
-                  .style("visibility", "visible")
-              )
-              .on("mouseout", () => tooltip.style("visibility", "hidden"))
-          }
+    for (var i = 0; i < data.length; i++) {
+      for (var j = 0; j < data[i].values.length; j++) {
+        if (y(data[i].values[j].value) != 0 && x(data[i].values[j].time) != 0) {
+          d3.select(this.refs.circles)
+            .selectAll("path")
+            .data([data[i].values[j]])
+            .enter()
+            .append("circle")
+            .attr("cx", (d) => x(d.time))
+            .attr("cy", (d) => y(d.value))
+            .attr("r", "3px")
+            .style("fill", data[i].color)
+            .style("stroke", data[i].color)
+            .on("mouseover", (d) =>
+              tooltip
+                .text(d.value)
+                .style("top", d3.event.pageY - 10 + "px")
+                .style("left", d3.event.pageX + 10 + "px")
+                .style("visibility", "visible")
+            )
+            .on("mouseout", () => tooltip.style("visibility", "hidden"))
         }
       }
+    }
+
+    const lineClick = function (d) {
+      d3.selectAll(".line").classed("clicked-line", false)
+      d3.selectAll("#" + d3.select(this).attr("id")).classed("clicked-line", true)
     }
 
     d3.select(this.refs.values)
@@ -166,10 +168,7 @@ export default class Forecasts extends Component<Props> {
       .attr("stroke", (d) => d.color)
       .datum((d) => d.values)
       .attr("d", line)
-      .on("click", function (d) {
-        d3.selectAll(".line").classed("clicked-line", false)
-        d3.selectAll("#" + d3.select(this).attr("id")).classed("clicked-line", true)
-      })
+      .on("click", lineClick)
 
     d3.select(this.refs.forecasts)
       .selectAll("path")
@@ -184,10 +183,7 @@ export default class Forecasts extends Component<Props> {
         return d.forecast
       })
       .attr("d", line)
-      .on("click", function (d) {
-        d3.selectAll(".line").classed("clicked-line", false)
-        d3.selectAll("#" + d3.select(this).attr("id")).classed("clicked-line", true)
-      })
+      .on("click", lineClick)
 
     d3.select(this.refs.x)
       .attr("class", "axis")
