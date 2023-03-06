@@ -154,7 +154,7 @@ export default class Forecasts extends Component<Props> {
 
     const lineClick = function (d) {
       d3.selectAll(".line").classed("clicked-line", false)
-      d3.selectAll("#" + d3.select(this).attr("id")).classed("clicked-line", true)
+      d3.selectAll(`[data-line-id='${this.dataset["lineId"]}']`).classed("clicked-line", true)
     }
 
     d3.select(this.refs.values)
@@ -164,7 +164,7 @@ export default class Forecasts extends Component<Props> {
       .append("path")
       .merge(d3.select(this.refs.values).selectAll("path"))
       .attr("class", "line")
-      .attr("id", (d) => "line-" + d.id)
+      .attr("data-line-id", (d) => d.id)
       .attr("stroke", (d) => d.color)
       .datum((d) => d.values)
       .attr("d", line)
@@ -177,7 +177,7 @@ export default class Forecasts extends Component<Props> {
       .append("path")
       .merge(d3.select(this.refs.forecasts).selectAll("path"))
       .attr("class", "dotted line")
-      .attr("id", (d) => "line-" + d.id)
+      .attr("data-line-id", (d) => d.id)
       .attr("stroke", (d) => d.color)
       .datum((d) => {
         return d.forecast
