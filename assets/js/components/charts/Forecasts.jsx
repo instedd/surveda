@@ -154,7 +154,7 @@ export default class Forecasts extends Component<Props> {
 
     const lineClick = function (d) {
       d3.selectAll(".line").classed("clicked-line", false)
-      d3.selectAll(`[data-line-id='${this.dataset["lineId"]}']`).classed("clicked-line", true)
+      d3.selectAll(`[data-line-id='${this.dataset.lineId}']`).classed("clicked-line", true)
     }
 
     d3.select(this.refs.values)
