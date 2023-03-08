@@ -6,11 +6,10 @@ import TimeAgo from "react-timeago"
 const margin = { left: 36, top: 18, right: 18, bottom: 36 }
 
 type Props = {
-  ceil: number,
   forecast: Array<Object>,
 }
 
-export default class Forecasts extends Component<Props> {
+export default class SuccessRateLine extends Component<Props> {
   constructor(props) {
     super(props)
 
@@ -24,7 +23,7 @@ export default class Forecasts extends Component<Props> {
   }
 
   getForecastEndDate(props) {
-    const { data, ceil, forecast } = this.props
+    const { data, forecast } = this.props
     return d3.max(data, (d) => (d.forecast.length ? d.forecast[d.forecast.length - 1].time : null))
   }
 
@@ -33,7 +32,7 @@ export default class Forecasts extends Component<Props> {
     const containerRect = container.getBoundingClientRect()
 
     const width = Math.round(containerRect.width) - margin.left - margin.right
-    const height = Math.round(width / 2)
+    const height = Math.round(width / 4)
 
     this.setState({ width, height })
   }
@@ -60,12 +59,13 @@ export default class Forecasts extends Component<Props> {
   }
 
   renderD3(initial = false) {
-    const { ceil } = this.props
     const { width, height, data } = this.state
 
-    let surveysData = data.filter((d) => d.label !== "Success rate")
+    let srData = data.filter((d) => d.label === "Success rate")
+    srData[0].values.unshift({ time: srData[0].values[0].time, value: 0 })
+    srData[0].values.push({ time: srData[0].values[srData[0].values.length - 1].time, value: 0 })
 
-    const flatten = Array.prototype.concat(...surveysData.map((d) => [...d.values, ...d.forecast]))
+    const flatten = Array.prototype.concat(...srData.map((d) => [...d.values, ...d.forecast]))
 
     let initialTime, lastTime
 
@@ -84,7 +84,7 @@ export default class Forecasts extends Component<Props> {
     const x = d3.scaleTime().domain([initialTime, lastTime]).range([0, width])
     const y = d3
       .scaleLinear()
-      .domain([0, d3.max([d3.max(flatten, (d) => d.value), ceil])])
+      .domain([0, d3.max(srData[0].values, (d) => d.value * 1.2)])
       .range([height, 0])
     const line = d3
       .line()
@@ -97,19 +97,20 @@ export default class Forecasts extends Component<Props> {
       .classed("forecast-tooltip", true)
       .style("visibility", "hidden")
 
-    for (var i = 0; i < surveysData.length; i++) {
-      for (var j = 0; j < surveysData[i].values.length; j++) {
-        if (y(surveysData[i].values[j].value) != 0 && x(surveysData[i].values[j].time) != 0) {
+    for (var i = 0; i < srData.length; i++) {
+      for (var j = 1; j < srData[i].values.length - 1; j++) {
+        if (y(srData[i].values[j].value) != 0 && x(srData[i].values[j].time) != 0) {
           d3.select(this.refs.circles)
             .selectAll("path")
-            .data([data[i].values[j]])
+            .data([srData[i].values[j]])
             .enter()
             .append("circle")
             .attr("cx", (d) => x(d.time))
             .attr("cy", (d) => y(d.value))
             .attr("r", "3px")
-            .style("fill", surveysData[i].color)
-            .style("stroke", surveysData[i].color)
+            .style("fill", srData[i].color)
+            .style("stroke", srData[i].color)
+            .style("opacity", 0.1)
             .on("mouseover", (d) =>
               tooltip
                 .text(d.value)
@@ -122,38 +123,17 @@ export default class Forecasts extends Component<Props> {
       }
     }
 
-    const lineClick = function (d) {
-      d3.selectAll(".line").classed("clicked-line", false)
-      d3.selectAll(`[data-line-id='${this.dataset.lineId}']`).classed("clicked-line", true)
-    }
-
     d3.select(this.refs.values)
       .selectAll("path")
-      .data(surveysData)
+      .data(srData)
       .enter()
       .append("path")
       .merge(d3.select(this.refs.values).selectAll("path"))
-      .attr("class", "line")
-      .attr("data-line-id", (d) => d.id)
+      .attr("class", "area")
       .attr("stroke", (d) => d.color)
+      .attr("fill", (d) => d.color)
       .datum((d) => d.values)
       .attr("d", line)
-      .on("click", lineClick)
-
-    d3.select(this.refs.forecasts)
-      .selectAll("path")
-      .data(surveysData)
-      .enter()
-      .append("path")
-      .merge(d3.select(this.refs.forecasts).selectAll("path"))
-      .attr("class", "dotted line")
-      .attr("data-line-id", (d) => d.id)
-      .attr("stroke", (d) => d.color)
-      .datum((d) => {
-        return d.forecast
-      })
-      .attr("d", line)
-      .on("click", lineClick)
 
     d3.select(this.refs.x)
       .attr("class", "axis")
@@ -200,30 +180,13 @@ export default class Forecasts extends Component<Props> {
         >
           <g transform={`translate(${margin.left},${margin.top})`}>
             <g ref="grid" />
-            <g ref="circles" />
             <g ref="values" />
+            <g ref="circles" />
             <g ref="forecasts" />
             <g ref="x" transform={`translate(0,${height})`} />
             <g ref="y" />
           </g>
         </svg>
-        <div className="bottom">
-          <div />
-          {forecastEndDate ? (
-            <div className="status">
-              <span className="icon">event</span>
-              <TimeAgo minPeriod="10" date={forecastEndDate} />
-            </div>
-          ) : (
-            ""
-          )}
-          <References
-            data={data.map((serie) => ({
-              label: serie.label,
-              color: serie.color,
-            }))}
-          />
-        </div>
       </div>
     )
   }
