@@ -314,7 +314,6 @@ class SurveyShow extends Component<any, State> {
           forecast: this.getForecast(d.values[0], d.values[d.values.length - 1], 100),
         }
       } else {
-      else {
         return { ...d, forecast: [] }
       }
     })
