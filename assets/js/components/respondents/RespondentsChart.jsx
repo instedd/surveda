@@ -53,18 +53,18 @@ class RespondentsChart extends PureComponent {
     if (!cumulativePercentages || totalQuestionnaires < 1) {
       initialDate = new Date()
       lastDate = new Date()
-      lastDate.setDate(lastDate.getDate() + 90)
+      lastDate.setDate(lastDate.getDate() + 7)
     } else {
       // Uses random one because all questionnaires have the same range of dates.
       const randomQuestionnaireId = Object.keys(cumulativePercentages)[0]
       const randomQuestionnaireByDate = cumulativePercentages[randomQuestionnaireId]
       initialDate = new Date(Date.parse(randomQuestionnaireByDate[0].date))
-      const nextThreeMonths = new Date(Date.parse(randomQuestionnaireByDate[0].date))
-      nextThreeMonths.setDate(nextThreeMonths.getDate() + 90)
+      const nextWeek = new Date(Date.parse(randomQuestionnaireByDate[0].date))
+      nextWeek.setDate(nextWeek.getDate() + 7)
       lastDate = new Date(
         Math.max(
           Date.parse(randomQuestionnaireByDate[randomQuestionnaireByDate.length - 1].date),
-          nextThreeMonths
+          nextWeek
         )
       )
     }
