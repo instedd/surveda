@@ -1,12 +1,10 @@
 import React, { Component } from "react"
 import * as d3 from "d3"
-import References from "./References"
-import TimeAgo from "react-timeago"
 
 const margin = { left: 36, top: 18, right: 18, bottom: 36 }
 
 type Props = {
-  forecast: Array<Object>,
+  data: Array<Object>,
 }
 
 export default class SuccessRateLine extends Component<Props> {
@@ -18,13 +16,7 @@ export default class SuccessRateLine extends Component<Props> {
       width: 0,
       height: 0,
       data: props.data,
-      forecastEndDate: this.getForecastEndDate(props),
     }
-  }
-
-  getForecastEndDate(props) {
-    const { data, forecast } = this.props
-    return d3.max(data, (d) => (d.forecast.length ? d.forecast[d.forecast.length - 1].time : null))
   }
 
   recalculate() {
@@ -50,7 +42,6 @@ export default class SuccessRateLine extends Component<Props> {
   componentWillReceiveProps(props) {
     this.setState({
       data: props.data,
-      forecastEndDate: this.getForecastEndDate(props),
     })
   }
 

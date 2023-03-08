@@ -7,7 +7,7 @@ const margin = { left: 36, top: 18, right: 18, bottom: 36 }
 
 type Props = {
   ceil: number,
-  forecast: Array<Object>,
+  data: Array<Object>,
 }
 
 export default class Forecasts extends Component<Props> {
@@ -24,7 +24,7 @@ export default class Forecasts extends Component<Props> {
   }
 
   getForecastEndDate(props) {
-    const { data, ceil, forecast } = this.props
+    const { data, ceil } = this.props
     return d3.max(data, (d) => (d.forecast.length ? d.forecast[d.forecast.length - 1].time : null))
   }
 
