@@ -1,7 +1,7 @@
 import React, { Component, PropTypes } from "react"
 import { translate, Trans } from "react-i18next"
 
-import { Link } from "react-router"
+import { Link, withRouter } from "react-router"
 import * as routes from "../../routes"
 import * as surveyActions from "../../actions/survey"
 import * as panelSurveyActions from "../../actions/panelSurvey"
@@ -14,7 +14,6 @@ import MoveSurveyForm from "./MoveSurveyForm"
 import classNames from "classnames/bind"
 
 import { connect } from "react-redux"
-import { withRouter } from "react-router"
 
 class _SurveyCard extends Component<any> {
   props: {
@@ -308,10 +307,6 @@ class _InnerSurveyCard extends Component<any> {
     t: Function,
     respondentsStats: ?Object,
     dispatch: Function,
-  }
-
-  constructor(props) {
-    super(props)
   }
 
   componentDidMount() {
