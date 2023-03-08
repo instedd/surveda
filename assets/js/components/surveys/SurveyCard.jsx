@@ -14,6 +14,7 @@ import MoveSurveyForm from "./MoveSurveyForm"
 import classNames from "classnames/bind"
 
 import { connect } from "react-redux"
+import { withRouter } from "react-router"
 
 class _SurveyCard extends Component<any> {
   props: {
@@ -299,7 +300,7 @@ class _PanelSurveyCard extends Component<any> {
   }
 }
 
-class InnerSurveyCard extends Component<any> {
+class _InnerSurveyCard extends Component<any> {
   props: {
     survey: Survey,
     actions: Array<Object>,
@@ -309,12 +310,20 @@ class InnerSurveyCard extends Component<any> {
     dispatch: Function,
   }
 
+  constructor(props) {
+    super(props)
+  }
+
   componentDidMount() {
     const { survey, dispatch } = this.props
 
     if (survey.state != "not_ready") {
-      fetchRespondentsStats(survey.projectId, survey.id)(dispatch)
+      dispatch(fetchRespondentsStats(survey.projectId, survey.id))
     }
+  }
+
+  componentWillReceiveProps(props) {
+    this.setState({ respondentsStats: props.respondentsStats })
   }
 
   render() {
@@ -489,5 +498,16 @@ class TwoStepsConfirmationModal extends Component<Props, State> {
   }
 }
 
+const mapStateToProps = (state, ownProps) => {
+  const { survey } = ownProps
+  const { respondentsStats } = state
+
+  return {
+    ...ownProps,
+    respondentsStats: respondentsStats[survey.id],
+  }
+}
+
 export const SurveyCard = translate()(connect()(_SurveyCard))
 export const PanelSurveyCard = translate()(connect()(_PanelSurveyCard))
+export const InnerSurveyCard = translate()(withRouter(connect(mapStateToProps)(_InnerSurveyCard)))
