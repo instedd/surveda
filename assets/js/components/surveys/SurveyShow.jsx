@@ -308,7 +308,7 @@ class SurveyShow extends Component<any, State> {
     })
 
     forecasts = forecasts.map((d) => {
-      if (this.shouldForecast(d, 100, true)) {
+      if (this.shouldForecast(d, 100, survey.state == "running")) {
         return {
           ...d,
           forecast: this.getForecast(d.values[0], d.values[d.values.length - 1], 100),
