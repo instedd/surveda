@@ -158,7 +158,6 @@ export default class SuccessRateLine extends Component<Props> {
   }
 
   render() {
-    const { data, forecastEndDate } = this.state
     const { width, height } = this.state
     const padding = 6
 

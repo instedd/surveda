@@ -24,7 +24,7 @@ export default class Forecasts extends Component<Props> {
   }
 
   getForecastEndDate(props) {
-    const { data, ceil } = this.props
+    const { data } = this.props
     return d3.max(data, (d) => (d.forecast.length ? d.forecast[d.forecast.length - 1].time : null))
   }
 
