@@ -70,6 +70,12 @@
   opacity: 0.1;
 }
 
+.area {
+  stroke-width: 2px;
+  shape-rendering: auto;
+  opacity: 0.25;
+}
+
 /*QueueSize*/
 .queueSize {
   font-family: "Roboto", sans-serif;
