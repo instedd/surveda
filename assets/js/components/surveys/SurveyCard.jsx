@@ -1,7 +1,7 @@
 import React, { Component, PropTypes } from "react"
 import { translate, Trans } from "react-i18next"
 
-import { Link } from "react-router"
+import { Link, withRouter } from "react-router"
 import * as routes from "../../routes"
 import * as surveyActions from "../../actions/survey"
 import * as panelSurveyActions from "../../actions/panelSurvey"
@@ -299,7 +299,7 @@ class _PanelSurveyCard extends Component<any> {
   }
 }
 
-class InnerSurveyCard extends Component<any> {
+class _InnerSurveyCard extends Component<any> {
   props: {
     survey: Survey,
     actions: Array<Object>,
@@ -313,8 +313,12 @@ class InnerSurveyCard extends Component<any> {
     const { survey, dispatch } = this.props
 
     if (survey.state != "not_ready") {
-      fetchRespondentsStats(survey.projectId, survey.id)(dispatch)
+      dispatch(fetchRespondentsStats(survey.projectId, survey.id))
     }
+  }
+
+  componentWillReceiveProps(props) {
+    this.setState({ respondentsStats: props.respondentsStats })
   }
 
   render() {
@@ -489,5 +493,16 @@ class TwoStepsConfirmationModal extends Component<Props, State> {
   }
 }
 
+const mapStateToProps = (state, ownProps) => {
+  const { survey } = ownProps
+  const { respondentsStats } = state
+
+  return {
+    ...ownProps,
+    respondentsStats: respondentsStats[survey.id],
+  }
+}
+
 export const SurveyCard = translate()(connect()(_SurveyCard))
 export const PanelSurveyCard = translate()(connect()(_PanelSurveyCard))
+export const InnerSurveyCard = translate()(withRouter(connect(mapStateToProps)(_InnerSurveyCard)))
