@@ -85,7 +85,7 @@ class RespondentsChart extends PureComponent {
     const yaxis = d3.axisRight().scale(yScale).tickSize(this.width).ticks(4)
 
     xaxisContainer
-      .call(xaxis.ticks(3).tickFormat(d3.timeFormat("%b")))
+      .call(xaxis.ticks(3).tickFormat(d3.timeFormat("%d-%b")))
       .selectAll("text")
       .attr("dy", 7)
       .attr("x", 10)
