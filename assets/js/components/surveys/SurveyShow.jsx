@@ -21,6 +21,7 @@ import classNames from "classnames/bind"
 import QueueSize from "../charts/QueueSize"
 import SuccessRate from "../charts/SuccessRate"
 import Forecasts from "../charts/Forecasts"
+import SuccessRateLine from "../charts/SuccessRateLine"
 import Stats from "../charts/Stats"
 import { translate } from "react-i18next"
 import SurveyRetriesPanel from "./SurveyRetriesPanel"
@@ -149,6 +150,21 @@ class SurveyShow extends Component<any, State> {
   toggleLock(e) {
     const { dispatch } = this.props
     dispatch(actions.toggleLock())
+  }
+
+  shouldForecast(data, ceil, forecast) {
+    return (
+      forecast &&
+      data.values.length > 1 &&
+      ceil > data.values[data.values.length - 1].value &&
+      data.values[data.values.length - 1].value > data.values[0].value &&
+      data.values[0].time < data.values[data.values.length - 1].time
+    )
+  }
+
+  getForecast(firstValue, lastValue, ceil) {
+    const slope = (lastValue.value - firstValue.value) / (lastValue.time - firstValue.time)
+    return [lastValue, { value: ceil, time: new Date(firstValue.time.getTime() + ceil / slope) }]
   }
 
   render() {
@@ -291,6 +307,17 @@ class SurveyShow extends Component<any, State> {
       return { ...d, values }
     })
 
+    forecasts = forecasts.map((d) => {
+      if (this.shouldForecast(d, 100, survey.state == "running")) {
+        return {
+          ...d,
+          forecast: this.getForecast(d.values[0], d.values[d.values.length - 1], 100),
+        }
+      } else {
+        return { ...d, forecast: [] }
+      }
+    })
+
     return (
       <div className="cockpit">
         <div className="row">
@@ -369,7 +396,14 @@ class SurveyShow extends Component<any, State> {
                 )}
               </div>
               <Stats data={stats} />
-              <Forecasts data={forecasts} ceil={100} forecast={survey.state == "running"} />
+              <Forecasts data={forecasts} ceil={100} />
+              <div className="header" style={{ marginTop: "40px", marginBottom: "0" }}>
+                <div className="title">{t("Success Rate")}</div>
+                <div className="description">
+                  {t("Estimated by combining initial and current values")}
+                </div>
+              </div>
+              <SuccessRateLine data={forecasts} />
               {this.showHistograms() ? (
                 <SurveyRetriesPanel projectId={projectId} surveyId={surveyId} />
               ) : null}
