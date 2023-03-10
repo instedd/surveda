@@ -258,10 +258,24 @@ Please watch <https://youtu.be/pYsZLLOZ4Ks> which demonstrates the use of a QST
 client in Nuntium... but I still have to understand how to interact (maybe using
 the QST gateway on mobile?) with it from Surveda.
 
-Another solution is to use a QST server and the Android QST Gateway to actually
-send the text messages through an Android phone.
+To enable your Nuntium instance on Surveda:
 
-Last but not least, we can setup a SMPP channel to send & receive SMS messages:
+#### QST channel
+
+We can setup a QST channel to connect to a QST server running locally on your
+maching. See for example the [NCD local gateway simulator](https://github.com/instedd/ncd_local_gateway_simulator).
+The README explains how to set it up and pre-create the QST channel in Nuntium.
+
+To actually create the channel in Surveda:
+
+1. Navigate to <http://app.surveda.lvh.me/channels>
+2. Enable the Nuntium service.
+3. Click on the `>` icon to create a QST channel in Nuntium. Use the 4 digits
+   code from the ticket to create the QST channel.
+
+#### SMPP channel
+
+We can also setup a SMPP channel to send & receive SMS messages.
 
 1. Navigate to <http://app.surveda.lvh.me/channels>
 
