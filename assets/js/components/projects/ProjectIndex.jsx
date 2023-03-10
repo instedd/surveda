@@ -29,6 +29,14 @@ class ProjectIndex extends Component {
     this.fetchProjects()
   }
 
+  getTimezone() {
+    try {
+      return Intl.DateTimeFormat().resolvedOptions().timeZone
+    } catch (ex) {
+      return null
+    }
+  }
+
   newProject(e) {
     e.preventDefault()
 
@@ -37,7 +45,7 @@ class ProjectIndex extends Component {
     this.creatingProject = true
 
     let theProject
-    createProject({ name: "" })
+    createProject({ name: "", timezone: this.getTimezone() })
       .then((response) => {
         theProject = response.entities.projects[response.result]
         this.props.projectActions.createProject(theProject)
