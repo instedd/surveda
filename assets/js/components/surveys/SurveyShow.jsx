@@ -408,13 +408,6 @@ class SurveyShow extends Component<any, State> {
                   <SuccessRateLine data={forecasts} />
                 </div>
               ) : null}
-              <div className="header" style={{ marginTop: "40px", marginBottom: "0" }}>
-                <div className="title">{t("Success Rate")}</div>
-                <div className="description">
-                  {t("Estimated by combining initial and current values")}
-                </div>
-              </div>
-              <SuccessRateLine data={forecasts} />
               {this.showHistograms() ? (
                 <SurveyRetriesPanel projectId={projectId} surveyId={surveyId} />
               ) : null}
