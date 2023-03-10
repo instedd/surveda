@@ -5,6 +5,7 @@ defmodule AskWeb.ProjectControllerTest do
 
   alias Ask.{Project, ActivityLog}
   @valid_attrs %{name: "some content"}
+  @valid_attrs_with_timezone %{name: "some content", timezone: "Europe/London"}
 
   setup %{conn: conn} do
     user = insert(:user)
@@ -329,6 +330,18 @@ defmodule AskWeb.ProjectControllerTest do
       assert response["data"]["owner"] == true
       assert Repo.get_by(Project, @valid_attrs)
     end
+
+
+    test "creates and renders resource when data is valid and have timezone", %{conn: conn} do
+      conn = post conn, project_path(conn, :create), project: @valid_attrs_with_timezone
+      response = json_response(conn, 201)
+      assert response["data"]["id"]
+      assert response["data"]["read_only"] == false
+      assert response["data"]["owner"] == true
+      assert response["data"]["timezone"] == "Europe/London"
+      assert Repo.get_by(Project, @valid_attrs_with_timezone)
+    end
+    
   end
 
   describe "update" do
