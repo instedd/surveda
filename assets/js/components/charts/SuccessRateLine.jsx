@@ -53,6 +53,9 @@ export default class SuccessRateLine extends Component<Props> {
     const { width, height, data } = this.state
 
     let srData = data.filter((d) => d.label === "Success rate")
+    if (!srData[0].values.length) {
+      return
+    }
     srData[0].values.unshift({ time: srData[0].values[0].time, value: 0 })
     srData[0].values.push({ time: srData[0].values[srData[0].values.length - 1].time, value: 0 })
 
