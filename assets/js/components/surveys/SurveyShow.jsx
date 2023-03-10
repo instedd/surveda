@@ -397,6 +397,17 @@ class SurveyShow extends Component<any, State> {
               </div>
               <Stats data={stats} />
               <Forecasts data={forecasts} ceil={100} />
+              {forecasts.filter((d) => d.id == "successRate").length ? (
+                <div>
+                  <div className="header" style={{ marginTop: "40px", marginBottom: "0" }}>
+                    <div className="title">{t("Success Rate")}</div>
+                    <div className="description">
+                      {t("Estimated by combining initial and current values")}
+                    </div>
+                  </div>
+                  <SuccessRateLine data={forecasts} />
+                </div>
+              ) : null}
               <div className="header" style={{ marginTop: "40px", marginBottom: "0" }}>
                 <div className="title">{t("Success Rate")}</div>
                 <div className="description">
