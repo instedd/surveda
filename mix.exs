@@ -7,7 +7,7 @@ defmodule Ask.Mixfile do
       build_path: "/_build",
       deps_path: "/deps",
       version: "0.31.0",
-      elixir: "~> 1.8",
+      elixir: "~> 1.10",
       elixirc_paths: elixirc_paths(Mix.env()),
       compilers: [:phoenix, :gettext] ++ Mix.compilers(),
       consolidate_protocols: Mix.env() != :test,
@@ -74,7 +74,7 @@ defmodule Ask.Mixfile do
       {:timex, "~> 3.6.0"},
       {:sentry, "~> 7.0"},
       {:hackney, "~> 1.0"},
-      {:ex_json_schema, "~> 0.5.2"},
+      {:ex_json_schema, "~> 0.6.2"},
       {:deep_merge, "~> 0.1.0"},
       # "~> 0.6"
       {:coherence, github: "smpallen99/coherence", branch: "master", override: true},

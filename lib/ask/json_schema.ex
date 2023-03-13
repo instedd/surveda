@@ -86,7 +86,7 @@ defmodule Ask.JsonSchema do
     ## validate throws a BadMapError on certain kinds of invalid
     ## input; absorb it (TODO fix ExJsonSchema upstream)
     try do
-      ExJsonSchema.Validator.validate(schema, type_schema, string_keyed_object)
+      ExJsonSchema.Validator.validation_errors(schema, type_schema, string_keyed_object)
     rescue
       _ -> [{"Failed validation", []}]
     end
