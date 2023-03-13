@@ -60,8 +60,8 @@ defmodule Ask.Mixfile do
       # {:plug_crypto, "~> 1.1.1"}, # held until Phoenix 1.5
       {:plug_cowboy, "~> 2.0"},
       {:phoenix_ecto, "~> 4.0"},
-      {:ecto_sql, "~> 3.7"},
-      {:myxql, ">= 0.0.0"},
+      {:ecto_sql, "~> 3.9"},
+      {:myxql, ">= 0.6.2"},
       {:phoenix_pubsub, "~> 1.0"},
       {:phoenix_html, "~> 2.10"},
       {:phoenix_live_reload, "~> 1.2.0", only: :dev},
@@ -100,9 +100,6 @@ defmodule Ask.Mixfile do
 
       # held back because of warnings & errors with newer versions
       {:swoosh, "~> 0.17.0"},
-
-      # held until release of https://github.com/elixir-ecto/myxql/commit/893234cc97df9be3b764eba6e1706dd6dd6c3e9b
-      {:db_connection, "< 2.4.1"}
     ]
   end
 
