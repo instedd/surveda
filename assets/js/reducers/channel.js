@@ -25,6 +25,8 @@ export const dataReducer = (state: Channel, action: any): Channel => {
       return removePattern(state, action)
     case actions.SET_CAPACITY:
       return setCapacity(state, action)
+    case actions.RECEIVE_CHANNEL_BROKER_HISTORY:
+      return setChannelBrokerHistory(state, action)
     default:
       return state
   }

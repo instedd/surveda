@@ -80,6 +80,8 @@ defmodule AskWeb.Router do
 
       get "/timezones", TimezoneController, :timezones
 
+      get "/channel_broker_history/:channel_id", ChannelBrokerHistoryController, :index
+
       resources "/projects", ProjectController, except: [:new, :edit] do
         resources "/folders", FolderController, only: [:create, :index, :show, :delete] do
           post "/set_name", FolderController, :set_name

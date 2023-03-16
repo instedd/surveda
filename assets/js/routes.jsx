@@ -29,6 +29,7 @@ import * as questionnaireActions from "./actions/questionnaire"
 import ChannelTabs from "./components/channels/ChannelTabs"
 import ChannelNew from "./components/channels/ChannelNew"
 import ChannelCapacity from "./components/channels/ChannelCapacity"
+import ChannelBrokerMonitor from "./components/channels/ChannelBrokerMonitor"
 import QuestionnaireSimulation from "./components/simulation/QuestionnaireSimulation"
 
 const k = (s) => s
@@ -106,7 +107,10 @@ export default (
         <IndexRedirect to="share" />
         <Route path="share" components={{ body: ChannelShare, tabs: ChannelTabs }} />
         <Route path="patterns" components={{ body: ChannelPatterns, tabs: ChannelTabs }} />
-        <Route path="capacity" components={{ body: ChannelCapacity, tabs: ChannelTabs }} />
+        <Route
+          path="broker_monitor"
+          components={{ body: ChannelBrokerMonitor, tabs: ChannelTabs }}
+        />
       </Route>
     </Route>
   </Route>
@@ -156,6 +160,7 @@ export const channels = "/channels"
 export const channelShare = (id) => `${channels}/${id}/share`
 export const channelPatterns = (id) => `${channels}/${id}/patterns`
 export const channelCapacity = (id) => `${channels}/${id}/capacity`
+export const channelBrokerMonitor = (id) => `${channels}/${id}/broker_monitor`
 
 export const showOrEditSurvey = (s) => {
   if (s.state == "not_ready" || s.state == "ready") {

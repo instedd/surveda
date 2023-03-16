@@ -9,7 +9,9 @@ export const SET_OUTPUT_PATTERN = "CHANNEL_SET_OUTPUT_PATTERN"
 export const REMOVE_PATTERN = "CHANNEL_REMOVE_PATTERN"
 export const SET_CAPACITY = "CHANNEL_SET_CAPACITY"
 export const FETCH = "CHANNEL_FETCH"
+export const FETCH_BROKER_HISTORY = "CHANNEL_BROKER_HISTORY_FETCH"
 export const RECEIVE = "CHANNEL_RECEIVE"
+export const RECEIVE_CHANNEL_BROKER_HISTORY = "CHANNEL_BROKER_HISTORY_RECEIVE"
 export const SAVING = "CHANNEL_SAVING"
 export const SAVED = "CHANNEL_SAVED"
 
@@ -34,8 +36,19 @@ export const fetchChannel =
       })
   }
 
+export const fetchChannelBrokerHistory = (id: number) => {
+  return api.fetchChannelBrokerHistory(id).then((response) => {
+    return response.entities.channelBrokerHistory
+  })
+}
+
 export const fetch = (id: number): FilteredAction => ({
   type: FETCH,
+  id,
+})
+
+export const fetchBrokerHistory = (id: number): FilteredAction => ({
+  type: FETCH_BROKER_HISTORY,
   id,
 })
 
@@ -52,6 +65,14 @@ export const fetchChannelIfNeeded =
 export const receive = (channel: Channel) => ({
   type: RECEIVE,
   data: channel,
+})
+
+export const receiveChannelBrokerHistory = (
+  channel: channel,
+  channelBrokerHistory: channelBrokerHistory
+) => ({
+  type: RECEIVE_CHANNEL_BROKER_HISTORY,
+  data: channelBrokerHistory,
 })
 
 export const shouldFetch = (state: DataStore<Channel>, id: number) => {

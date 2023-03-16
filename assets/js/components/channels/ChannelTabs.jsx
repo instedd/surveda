@@ -43,6 +43,13 @@ class ChannelTabs extends Component {
           {t("Patterns")}
         </TabLink>
         {capacityTab}
+        <TabLink
+          key="broker_monitor"
+          tabId="channel_tabs"
+          to={routes.channelBrokerMonitor(channelId)}
+        >
+          {t("Broker Monitor")}
+        </TabLink>
       </Tabs>
     )
   }

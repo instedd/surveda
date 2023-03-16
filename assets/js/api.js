@@ -13,6 +13,7 @@ const responseSchema = new Schema("response")
 const respondentsStatsSchema = new Schema("respondents")
 const referenceSchema = new Schema("reference")
 const channelSchema = new Schema("channels")
+const channelBrokerHistorySchema = new Schema("channelBrokerHistory")
 const audioSchema = new Schema("audios")
 const activitySchema = new Schema("activities")
 const integrationSchema = new Schema("integrations")
@@ -361,6 +362,10 @@ export const updateSurveyLockedStatus = (projectId, surveyId, locked) => {
 
 export const fetchChannels = () => {
   return apiFetchJSON(`channels`, arrayOf(channelSchema))
+}
+
+export const fetchChannelBrokerHistory = (channelId) => {
+  return apiFetchJSON(`channel_broker_history/${channelId}`, arrayOf(channelBrokerHistorySchema))
 }
 
 export const fetchProjectChannels = (projectId) => {

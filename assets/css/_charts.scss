@@ -343,6 +343,17 @@
   width: 50%;
 }
 
+.forecast-tooltip {
+  position: absolute;
+  z-index: 10;
+  background: white;
+  padding: 8px;
+  border-radius: 6px;
+  border: 1px;
+  border-style: solid;
+  border-color: black;
+}
+
 .tooltip {
   background-color: rgba(0, 0, 0, 0.85) !important;
   font-family: "Roboto", sans-serif !important;
