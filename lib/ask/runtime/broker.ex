@@ -7,6 +7,7 @@ defmodule Ask.Runtime.Broker do
     Repo,
     Logger,
     Survey,
+    Project,
     Respondent,
     RespondentGroup,
     QuotaBucket,
@@ -36,11 +37,7 @@ defmodule Ask.Runtime.Broker do
   def init(_args) do
     :timer.send_after(1000, :poll)
 
-    Logger.info(
-      "Broker started. Default batch size=#{default_batch_size()}. Limit per minute=#{
-        batch_limit_per_minute()
-      }."
-    )
+    Logger.info("Broker started. Default batch size=#{default_batch_size()}.")
 
     {:ok, nil}
   end
@@ -226,14 +223,34 @@ defmodule Ask.Runtime.Broker do
   end
 
   defp retry_respondents(now) do
+    # Select projects that have respondents to retry, then retry them respecting project's the batch limit
     Repo.all(
-      from r in Respondent,
-        select: r.id,
-        where: r.state == :active and r.timeout_at <= ^now,
-        limit: ^batch_limit_per_minute()
+      from p in Project,
+        as: :project,
+        where:
+          exists(
+            from survey in Survey,
+              join: r in Respondent,
+              on: r.survey_id == survey.id,
+              where:
+                parent_as(:project).id == survey.project_id and r.state == :active and
+                  r.timeout_at <= ^now,
+              select: 1,
+              limit: 1
+          )
     )
-    |> Enum.each(fn respondent_id ->
-      Respondent.with_lock(respondent_id, &retry_respondent(&1))
+    |> Enum.each(fn project ->
+      Repo.all(
+        from r in Respondent,
+          join: survey in Survey,
+          on: survey.project_id == ^project.id,
+          where: survey.id == r.survey_id and r.state == :active and r.timeout_at <= ^now,
+          select: r.id,
+          limit: ^batch_limit_per_minute(project)
+      )
+      |> Enum.each(fn respondent_id ->
+        Respondent.with_lock(respondent_id, &retry_respondent(&1))
+      end)
     end)
   end
 
@@ -316,8 +333,8 @@ defmodule Ask.Runtime.Broker do
     end
   end
 
-  defp batch_limit_per_minute do
-    Survey.environment_variable_named(:batch_limit_per_minute)
+  defp batch_limit_per_minute(project) do
+    project.batch_limit_per_minute || Survey.environment_variable_named(:batch_limit_per_minute)
   end
 
   defp complete(survey) do
@@ -331,7 +348,7 @@ defmodule Ask.Runtime.Broker do
   end
 
   defp start_some(survey, count) do
-    count = Enum.min([batch_limit_per_minute(), count])
+    count = Enum.min([batch_limit_per_minute(survey.project), count])
 
     from(r in assoc(survey, :respondents),
       select: r.id,

@@ -10,6 +10,7 @@ defmodule Ask.Project do
     field :eligibility_rate, :float
     field :response_rate, :float
     field :valid_respondent_rate, :float
+    field :batch_limit_per_minute, :integer
     field :archived, :boolean, default: false
 
     has_many :questionnaires, Ask.Questionnaire
@@ -39,13 +40,15 @@ defmodule Ask.Project do
       :initial_success_rate,
       :eligibility_rate,
       :response_rate,
-      :valid_respondent_rate
+      :valid_respondent_rate,
+      :batch_limit_per_minute
     ])
     |> validate_colour_scheme
     |> validate_rate(:initial_success_rate)
     |> validate_rate(:eligibility_rate)
     |> validate_rate(:response_rate)
     |> validate_rate(:valid_respondent_rate)
+    |> validate_positive
   end
 
   def touch!(project) do
@@ -76,6 +79,18 @@ defmodule Ask.Project do
     cond do
       rate_field && (rate_field < 0 || rate_field > 1) ->
         add_error(changeset, rate, "value has to be between 0 and 1")
+
+      true ->
+        changeset
+    end
+  end
+
+  defp validate_positive(changeset) do
+    batch_limit_per_minute = get_field(changeset, :batch_limit_per_minute)
+
+    cond do
+      batch_limit_per_minute && batch_limit_per_minute < 0 ->
+        add_error(changeset, :batch_limit_per_minute, "value has to be positive")
 
       true ->
         changeset
