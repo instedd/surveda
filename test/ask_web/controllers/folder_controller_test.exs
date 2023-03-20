@@ -104,7 +104,12 @@ defmodule AskWeb.FolderControllerTest do
       conn = get(conn, project_folder_path(conn, :index, project))
 
       assert json_response(conn, 200)["data"] == [
-               %{"id" => folder.id, "name" => folder.name, "project_id" => project.id}
+               %{
+                 "id" => folder.id,
+                 "name" => folder.name,
+                 "project_id" => project.id,
+                 "surveys" => []
+               }
              ]
     end
 
