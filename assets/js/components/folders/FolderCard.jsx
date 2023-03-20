@@ -41,6 +41,8 @@ class FolderCard extends PureComponent {
       </Dropdown>
     )
 
+    const runningSurveys = this.props.surveys.filter((survey) => survey.state === "running").length
+
     return (
       <Card>
         <div className="folder-card">
@@ -49,6 +51,9 @@ class FolderCard extends PureComponent {
               <i className="material-icons">folder</i>
               {name}
             </Link>
+            {runningSurveys ? (
+              <div className="folder-card-running-surveys">{runningSurveys}</div>
+            ) : null}
             {readOnly || options}
           </div>
         </div>

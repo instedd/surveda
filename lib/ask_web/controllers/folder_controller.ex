@@ -41,6 +41,7 @@ defmodule AskWeb.FolderController do
         where: f.project_id == ^project.id
       )
       |> Repo.all()
+      |> Repo.preload(:surveys)
 
     conn
     |> render("index.json", folders: folders)
