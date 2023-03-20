@@ -1,7 +1,7 @@
 defmodule AskWeb.FolderController do
   use AskWeb, :api_controller
 
-  alias Ask.{Folder, Logger, ActivityLog, Project}
+  alias Ask.{Folder, Logger, ActivityLog, Project, Survey}
   alias Ecto.Multi
 
   def create(conn, %{"project_id" => project_id, "folder" => %{"name" => name}}) do
@@ -41,10 +41,21 @@ defmodule AskWeb.FolderController do
         where: f.project_id == ^project.id
       )
       |> Repo.all()
-      |> Repo.preload(:surveys)
 
     conn
     |> render("index.json", folders: folders)
+  end
+
+  def running_surveys(folder_id) do
+    surveys =
+      from(s in Survey,
+        where: s.folder_id == ^folder_id,
+        where: s.state == ^:running,
+        select: count(s.id)
+      )
+      |> Repo.one()
+
+    surveys
   end
 
   def show(conn, %{"project_id" => project_id, "id" => folder_id}) do

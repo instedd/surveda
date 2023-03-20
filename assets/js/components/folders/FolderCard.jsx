@@ -17,7 +17,7 @@ class FolderCard extends PureComponent {
   }
 
   render() {
-    const { name, projectId, id, t, onDelete, onRename, readOnly } = this.props
+    const { name, projectId, id, runningSurveys, t, onDelete, onRename, readOnly } = this.props
     const options = (
       <Dropdown
         className="options"
@@ -41,8 +41,6 @@ class FolderCard extends PureComponent {
         </DropdownItem>
       </Dropdown>
     )
-
-    const runningSurveys = this.props.surveys.filter((survey) => survey.state === "running").length
 
     return (
       <Card>
