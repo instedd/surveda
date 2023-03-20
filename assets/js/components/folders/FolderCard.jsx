@@ -9,7 +9,7 @@ class FolderCard extends PureComponent {
     projectId: PropTypes.number,
     id: PropTypes.number,
     name: PropTypes.string,
-    surveys: PropTypes.array,
+    runningSurveys: PropTypes.number,
     t: PropTypes.func,
     onDelete: PropTypes.func,
     onRename: PropTypes.func,
