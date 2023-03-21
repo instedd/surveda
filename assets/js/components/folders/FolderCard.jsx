@@ -51,7 +51,10 @@ class FolderCard extends PureComponent {
               {name}
             </Link>
             {runningSurveys ? (
-              <div className="folder-card-running-surveys">{runningSurveys}</div>
+              <div className="folder-card-running-surveys">
+                <i className="material-icons">play_arrow</i>
+                {runningSurveys}
+              </div>
             ) : null}
             {readOnly || options}
           </div>
