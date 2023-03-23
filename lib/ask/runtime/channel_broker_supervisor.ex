@@ -67,6 +67,13 @@ defmodule Ask.Runtime.ChannelBrokerSupervisor do
     end
   end
 
+  def terminate_children() do
+    DynamicSupervisor.which_children(__MODULE__)
+    |> Enum.each(fn {_, pid, _, _} ->
+      terminate_child(pid)
+    end)
+  end
+
   defp lookup_child(channel_id) do
     case Registry.lookup(:channel_broker_registry, channel_id) do
       [{pid, nil}] ->

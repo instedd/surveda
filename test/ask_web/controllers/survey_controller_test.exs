@@ -356,6 +356,8 @@ defmodule AskWeb.SurveyControllerTest do
 
       assert t2
       assert code
+
+      ChannelBrokerSupervisor.terminate_children()
     end
 
     test "returns 404 when the project does not exist", %{conn: conn} do
@@ -812,6 +814,8 @@ defmodule AskWeb.SurveyControllerTest do
 
       assert t1
       assert t2
+
+      ChannelBrokerSupervisor.terminate_children()
     end
 
     test "renders page not found when id is nonexistent", %{conn: conn} do

@@ -4,6 +4,10 @@ defmodule AskWeb.ChannelControllerTest do
   alias Ask.Runtime.ChannelBrokerAgent
 
   setup %{conn: conn} do
+    on_exit(fn ->
+      ChannelBrokerSupervisor.terminate_children()
+    end)
+
     user = insert(:user)
 
     conn =
