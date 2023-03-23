@@ -25,6 +25,10 @@ defmodule Ask.Runtime.RetriesHistogramTest do
   @moduletag :time_mock
 
   setup do
+    on_exit(fn ->
+      ChannelBrokerSupervisor.terminate_children()
+    end)
+
     {:ok, _} = ChannelStatusServer.start_link()
     {:ok, _} = ChannelBrokerAgent.start_link()
     :ok
