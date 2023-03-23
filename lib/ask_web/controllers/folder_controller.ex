@@ -49,23 +49,15 @@ defmodule AskWeb.FolderController do
   def count_running_surveys(folder_id) do
     surveys =
       from(s in Survey,
-        where: s.folder_id == ^folder_id,
-        where: s.state == ^:running,
-        select: count(s.id)
-      )
-      |> Repo.one()
-
-    pannel_surveys =
-      from(s in Survey,
-        join: ps in PanelSurvey,
+        left_join: ps in PanelSurvey,
         on: s.panel_survey_id == ps.id,
-        where: ps.folder_id == ^folder_id,
+        where: (ps.folder_id == ^folder_id or s.folder_id == ^folder_id),
         where: s.state == ^:running,
         select: count(s.id)
       )
       |> Repo.one()
 
-    surveys + pannel_surveys
+    surveys
   end
 
   def show(conn, %{"project_id" => project_id, "id" => folder_id}) do
