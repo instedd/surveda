@@ -8,6 +8,10 @@ defmodule AskWeb.MobileSurveyControllerTest do
   require Ask.Runtime.ReplyHelper
 
   setup %{conn: conn} do
+    on_exit(fn ->
+      ChannelBrokerSupervisor.terminate_children()
+    end)
+
     conn =
       conn
       |> put_req_header("accept", "application/json")

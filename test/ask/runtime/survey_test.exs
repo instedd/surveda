@@ -33,6 +33,10 @@ defmodule Ask.Runtime.SurveyTest do
   require Ask.Runtime.ReplyHelper
 
   setup do
+    on_exit(fn ->
+      ChannelBrokerSupervisor.terminate_children()
+    end)
+
     {:ok, _} = ChannelStatusServer.start_link()
     ChannelBrokerAgent.start_link()
     :ok

@@ -8,6 +8,10 @@ defmodule Ask.Runtime.ChannelStatusServerTest do
   alias Ask.Runtime.ChannelBrokerAgent
 
   setup do
+    on_exit(fn ->
+      ChannelBrokerSupervisor.terminate_children()
+    end)
+
     {:ok, _} = ChannelBrokerAgent.start_link()
     :ok
   end
