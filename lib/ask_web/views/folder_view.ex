@@ -1,6 +1,8 @@
 defmodule AskWeb.FolderView do
   use AskWeb, :view
 
+  alias AskWeb.FolderController
+
   def render("index.json", %{folders: folders}) do
     %{data: render_many(folders, AskWeb.FolderView, "folder.json")}
   end
@@ -19,7 +21,8 @@ defmodule AskWeb.FolderView do
     %{
       id: folder.id,
       name: folder.name,
-      project_id: folder.project_id
+      project_id: folder.project_id,
+      running_surveys: FolderController.count_running_surveys(folder.id)
     }
     |> put_if(Ecto.assoc_loaded?(panel_surveys), :panel_surveys, fn ->
       render_many(panel_surveys, AskWeb.PanelSurveyView, "panel_survey.json")

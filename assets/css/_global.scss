@@ -435,6 +435,24 @@ path.respondentsData.referenceStrokeColor15 {
       display: flex;
       width: 100%;
     }
+
+    .folder-card-running-surveys {
+      @extend .green-text;
+      border-radius: 12px;
+      border: 1px solid color("grey", "lighten-2");
+      padding: 0px 8px 0px 5px;
+      margin-left: 10px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      line-height: 1.2rem;
+      text-align: center;
+      display: flex;
+      align-items: center;
+
+      .material-icons {
+        padding: 0px;
+      }
+    }
   }
 
   .folder-card-error {

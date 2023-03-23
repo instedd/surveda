@@ -9,6 +9,7 @@ class FolderCard extends PureComponent {
     projectId: PropTypes.number,
     id: PropTypes.number,
     name: PropTypes.string,
+    runningSurveys: PropTypes.number,
     t: PropTypes.func,
     onDelete: PropTypes.func,
     onRename: PropTypes.func,
@@ -16,7 +17,7 @@ class FolderCard extends PureComponent {
   }
 
   render() {
-    const { name, projectId, id, t, onDelete, onRename, readOnly } = this.props
+    const { name, projectId, id, runningSurveys, t, onDelete, onRename, readOnly } = this.props
     const options = (
       <Dropdown
         className="options"
@@ -49,6 +50,12 @@ class FolderCard extends PureComponent {
               <i className="material-icons">folder</i>
               {name}
             </Link>
+            {runningSurveys ? (
+              <div className="folder-card-running-surveys">
+                <i className="material-icons">play_arrow</i>
+                {runningSurveys}
+              </div>
+            ) : null}
             {readOnly || options}
           </div>
         </div>
