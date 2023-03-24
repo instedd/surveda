@@ -56,7 +56,8 @@ defmodule AskWeb.ProjectControllerTest do
                  "initial_success_rate" => nil,
                  "response_rate" => nil,
                  "timezone" => nil,
-                 "valid_respondent_rate" => nil
+                 "valid_respondent_rate" => nil,
+                 "batch_limit_per_minute" => nil
                },
                %{
                  "id" => project2.id,
@@ -71,7 +72,8 @@ defmodule AskWeb.ProjectControllerTest do
                  "initial_success_rate" => nil,
                  "response_rate" => nil,
                  "timezone" => nil,
-                 "valid_respondent_rate" => nil
+                 "valid_respondent_rate" => nil,
+                 "batch_limit_per_minute" => nil
                }
              ]
     end
@@ -97,7 +99,8 @@ defmodule AskWeb.ProjectControllerTest do
                  "initial_success_rate" => nil,
                  "response_rate" => nil,
                  "timezone" => nil,
-                 "valid_respondent_rate" => nil
+                 "valid_respondent_rate" => nil,
+                 "batch_limit_per_minute" => nil
                }
              ]
     end
@@ -122,7 +125,8 @@ defmodule AskWeb.ProjectControllerTest do
                  "initial_success_rate" => nil,
                  "response_rate" => nil,
                  "timezone" => nil,
-                 "valid_respondent_rate" => nil
+                 "valid_respondent_rate" => nil,
+                 "batch_limit_per_minute" => nil
                }
              ]
     end
@@ -147,7 +151,8 @@ defmodule AskWeb.ProjectControllerTest do
                  "initial_success_rate" => nil,
                  "response_rate" => nil,
                  "timezone" => nil,
-                 "valid_respondent_rate" => nil
+                 "valid_respondent_rate" => nil,
+                 "batch_limit_per_minute" => nil
                },
                %{
                  "id" => active_project.id,
@@ -162,7 +167,8 @@ defmodule AskWeb.ProjectControllerTest do
                  "initial_success_rate" => nil,
                  "response_rate" => nil,
                  "timezone" => nil,
-                 "valid_respondent_rate" => nil
+                 "valid_respondent_rate" => nil,
+                 "batch_limit_per_minute" => nil
                }
              ]
     end
@@ -197,7 +203,8 @@ defmodule AskWeb.ProjectControllerTest do
         "initial_success_rate" => nil,
         "response_rate" => nil,
         "timezone" => nil,
-        "valid_respondent_rate" => nil
+        "valid_respondent_rate" => nil,
+        "batch_limit_per_minute" => nil
       }
 
       project_map_2 = %{
@@ -213,7 +220,8 @@ defmodule AskWeb.ProjectControllerTest do
         "initial_success_rate" => nil,
         "response_rate" => nil,
         "timezone" => nil,
-        "valid_respondent_rate" => nil
+        "valid_respondent_rate" => nil,
+        "batch_limit_per_minute" => nil
       }
 
       project_map_3 = %{
@@ -229,7 +237,8 @@ defmodule AskWeb.ProjectControllerTest do
         "initial_success_rate" => nil,
         "response_rate" => nil,
         "timezone" => nil,
-        "valid_respondent_rate" => nil
+        "valid_respondent_rate" => nil,
+        "batch_limit_per_minute" => nil
       }
 
       assert json_response(conn, 200)["data"] == [project_map_1, project_map_2, project_map_3]
@@ -254,7 +263,8 @@ defmodule AskWeb.ProjectControllerTest do
                "initial_success_rate" => nil,
                "response_rate" => nil,
                "timezone" => nil,
-               "valid_respondent_rate" => nil
+               "valid_respondent_rate" => nil,
+               "batch_limit_per_minute" => nil
              }
     end
 
@@ -275,7 +285,8 @@ defmodule AskWeb.ProjectControllerTest do
                "initial_success_rate" => nil,
                "response_rate" => nil,
                "timezone" => nil,
-               "valid_respondent_rate" => nil
+               "valid_respondent_rate" => nil,
+               "batch_limit_per_minute" => nil
              }
     end
 
@@ -316,7 +327,8 @@ defmodule AskWeb.ProjectControllerTest do
                "initial_success_rate" => nil,
                "response_rate" => nil,
                "timezone" => nil,
-               "valid_respondent_rate" => nil
+               "valid_respondent_rate" => nil,
+               "batch_limit_per_minute" => nil
              }
     end
   end

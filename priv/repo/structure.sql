@@ -1,8 +1,8 @@
--- MySQL dump 10.19  Distrib 10.3.36-MariaDB, for debian-linux-gnu (x86_64)
+-- MySQL dump 10.16  Distrib 10.1.48-MariaDB, for debian-linux-gnu (x86_64)
 --
 -- Host: db    Database: ask_dev
 -- ------------------------------------------------------
--- Server version	5.7.40
+-- Server version	5.7.37
 
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
 /*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
@@ -288,6 +288,7 @@ CREATE TABLE `projects` (
   `eligibility_rate` double DEFAULT NULL,
   `response_rate` double DEFAULT NULL,
   `valid_respondent_rate` double DEFAULT NULL,
+  `batch_limit_per_minute` int(11) DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `id` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
@@ -987,7 +988,7 @@ CREATE TABLE `users` (
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2023-02-27 13:27:15
+-- Dump completed on 2023-03-17  8:48:46
 INSERT INTO `schema_migrations` (version) VALUES (20160812145257);
 INSERT INTO `schema_migrations` (version) VALUES (20160816183915);
 INSERT INTO `schema_migrations` (version) VALUES (20160830200454);
@@ -1201,3 +1202,4 @@ INSERT INTO `schema_migrations` (version) VALUES (20211125141835);
 INSERT INTO `schema_migrations` (version) VALUES (20211213094856);
 INSERT INTO `schema_migrations` (version) VALUES (20220131103226);
 INSERT INTO `schema_migrations` (version) VALUES (20230217143550);
+INSERT INTO `schema_migrations` (version) VALUES (20230317094712);
