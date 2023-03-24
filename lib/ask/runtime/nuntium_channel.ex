@@ -192,6 +192,18 @@ defmodule Ask.Runtime.NuntiumChannel do
       end
 
     json_reply = reply_to_messages(reply, from, respondent_id, channel_id)
+
+    case json_reply do
+      [] ->
+        :ok
+
+      _ ->
+        ChannelBroker.force_activate_respondent(
+          channel_id,
+          respondent_id
+        )
+    end
+
     SurvedaMetrics.increment_counter(:surveda_nuntium_incoming)
     Phoenix.Controller.json(conn, json_reply)
   end
