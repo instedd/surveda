@@ -48,7 +48,7 @@ defmodule Ask.Project do
     |> validate_rate(:eligibility_rate)
     |> validate_rate(:response_rate)
     |> validate_rate(:valid_respondent_rate)
-    |> validate_positive
+    |> validate_positive_number(:batch_limit_per_minute)
   end
 
   def touch!(project) do
@@ -85,12 +85,12 @@ defmodule Ask.Project do
     end
   end
 
-  defp validate_positive(changeset) do
-    batch_limit_per_minute = get_field(changeset, :batch_limit_per_minute)
+  defp validate_positive_number(changeset, field) do
+    field_value = get_field(changeset, field)
 
     cond do
-      batch_limit_per_minute && batch_limit_per_minute < 0 ->
-        add_error(changeset, :batch_limit_per_minute, "value has to be positive")
+      field_value && field_value < 0 ->
+        add_error(changeset, field, "value has to be positive")
 
       true ->
         changeset

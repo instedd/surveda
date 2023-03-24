@@ -37,7 +37,11 @@ defmodule Ask.Runtime.Broker do
   def init(_args) do
     :timer.send_after(1000, :poll)
 
-    Logger.info("Broker started. Default batch size=#{default_batch_size()}.")
+    Logger.info(
+      "Broker started. Default batch size=#{default_batch_size()}. Limit per minute=#{
+        default_batch_limit_per_minute()
+      }."
+    )
 
     {:ok, nil}
   end
@@ -223,27 +227,22 @@ defmodule Ask.Runtime.Broker do
   end
 
   defp retry_respondents(now) do
-    # Select projects that have respondents to retry, then retry them respecting project's the batch limit
+    # Select projects that have respondents to retry, then retry them respecting the project's batch limit
     Repo.all(
-      from p in Project,
-        as: :project,
-        where:
-          exists(
-            from survey in Survey,
-              join: r in Respondent,
-              on: r.survey_id == survey.id,
-              where:
-                parent_as(:project).id == survey.project_id and r.state == :active and
-                  r.timeout_at <= ^now,
-              select: 1,
-              limit: 1
-          )
+      from s in Survey,
+        distinct: true,
+        inner_join: r in Respondent,
+        on: r.survey_id == s.id,
+        where: r.state == :active,
+        select: s.project_id
     )
-    |> Enum.each(fn project ->
+    |> Enum.each(fn project_id ->
+      project = Project |> Repo.get(project_id)
+
       Repo.all(
         from r in Respondent,
           join: survey in Survey,
-          on: survey.project_id == ^project.id,
+          on: survey.project_id == ^project_id,
           where: survey.id == r.survey_id and r.state == :active and r.timeout_at <= ^now,
           select: r.id,
           limit: ^batch_limit_per_minute(project)
@@ -333,8 +332,12 @@ defmodule Ask.Runtime.Broker do
     end
   end
 
+  defp default_batch_limit_per_minute do
+    Survey.environment_variable_named(:batch_limit_per_minute)
+  end
+
   defp batch_limit_per_minute(project) do
-    project.batch_limit_per_minute || Survey.environment_variable_named(:batch_limit_per_minute)
+    project.batch_limit_per_minute || default_batch_limit_per_minute()
   end
 
   defp complete(survey) do

@@ -64,48 +64,6 @@ CREATE TABLE `audios` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Table structure for table `channel_broker_history`
---
-
-DROP TABLE IF EXISTS `channel_broker_history`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `channel_broker_history` (
-  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
-  `channel_id` bigint(20) unsigned DEFAULT NULL,
-  `instruction` varchar(255) DEFAULT NULL,
-  `parameters` json DEFAULT NULL,
-  `active_contacts` json DEFAULT NULL,
-  `contacts_queue_ids` json DEFAULT NULL,
-  `inserted_at` datetime NOT NULL,
-  `updated_at` datetime NOT NULL,
-  PRIMARY KEY (`id`),
-  KEY `channel_broker_history_channel_id_fkey` (`channel_id`),
-  CONSTRAINT `channel_broker_history_channel_id_fkey` FOREIGN KEY (`channel_id`) REFERENCES `channels` (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Table structure for table `channel_broker_recovery`
---
-
-DROP TABLE IF EXISTS `channel_broker_recovery`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `channel_broker_recovery` (
-  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
-  `channel_id` bigint(20) unsigned DEFAULT NULL,
-  `active_contacts` json DEFAULT NULL,
-  `contacts_queue_ids` json DEFAULT NULL,
-  `inserted_at` datetime NOT NULL,
-  `updated_at` datetime NOT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `channel_broker_recovery_channel_id_index` (`channel_id`),
-  CONSTRAINT `channel_broker_recovery_channel_id_fkey` FOREIGN KEY (`channel_id`) REFERENCES `channels` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
 -- Table structure for table `channels`
 --
 
@@ -989,28 +947,6 @@ CREATE TABLE `translations` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Table structure for table `user_channels`
---
-
-DROP TABLE IF EXISTS `user_channels`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `user_channels` (
-  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
-  `user_id` bigint(20) unsigned DEFAULT NULL,
-  `channel_id` bigint(20) unsigned DEFAULT NULL,
-  `patterns` text,
-  `inserted_at` datetime NOT NULL,
-  `updated_at` datetime NOT NULL,
-  PRIMARY KEY (`id`),
-  KEY `user_channels_user_id_fkey` (`user_id`),
-  KEY `user_channels_channel_id_fkey` (`channel_id`),
-  CONSTRAINT `user_channels_channel_id_fkey` FOREIGN KEY (`channel_id`) REFERENCES `channels` (`id`),
-  CONSTRAINT `user_channels_user_id_fkey` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
 -- Table structure for table `users`
 --
 
@@ -1265,9 +1201,5 @@ INSERT INTO `schema_migrations` (version) VALUES (20210629170410);
 INSERT INTO `schema_migrations` (version) VALUES (20211125141835);
 INSERT INTO `schema_migrations` (version) VALUES (20211213094856);
 INSERT INTO `schema_migrations` (version) VALUES (20220131103226);
-INSERT INTO `schema_migrations` (version) VALUES (20220801181201);
-INSERT INTO `schema_migrations` (version) VALUES (20220819144948);
-INSERT INTO `schema_migrations` (version) VALUES (20220916123648);
 INSERT INTO `schema_migrations` (version) VALUES (20230217143550);
-INSERT INTO `schema_migrations` (version) VALUES (20230315104750);
 INSERT INTO `schema_migrations` (version) VALUES (20230317094712);
