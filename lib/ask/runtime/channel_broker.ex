@@ -102,10 +102,10 @@ defmodule Ask.Runtime.ChannelBroker do
     )
   end
 
-  def force_activate_respondent(channel_id, respondent_id, provider) do
+  def force_activate_respondent(channel_id, respondent_id) do
     call_gen_server(
       channel_id,
-      {:force_activate_respondent, respondent_id, provider}
+      {:force_activate_respondent, respondent_id}
     )
   end
 
@@ -834,7 +834,7 @@ defmodule Ask.Runtime.ChannelBroker do
 
   @impl true
   def handle_call(
-        {:force_activate_respondent, respondent_id, provider},
+        {:force_activate_respondent, respondent_id},
         _from,
         %{
           active_contacts: active_contacts,

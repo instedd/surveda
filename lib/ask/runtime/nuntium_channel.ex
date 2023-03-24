@@ -200,8 +200,7 @@ defmodule Ask.Runtime.NuntiumChannel do
       _ ->
         ChannelBroker.force_activate_respondent(
           channel_id,
-          respondent_id,
-          "nuntium"
+          respondent_id
         )
     end
 
