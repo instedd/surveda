@@ -102,10 +102,10 @@ defmodule Ask.Runtime.ChannelBroker do
     )
   end
 
-  def force_active_respondent(channel_id, respondent, provider) do
+  def force_activate_respondent(channel_id, respondent_id, provider) do
     call_gen_server(
       channel_id,
-      {:force_active_respondent, respondent, provider}
+      {:force_activate_respondent, respondent_id, provider}
     )
   end
 
@@ -430,40 +430,6 @@ defmodule Ask.Runtime.ChannelBroker do
       |> save_to_agent()
 
     Logger.debug("CHNL_BRK state: #{inspect(state)}")
-    state
-  end
-
-  def activate_respondent(
-        %{
-          contacts_queue: contacts_queue,
-          active_contacts: active_contacts
-        } = state,
-        respondent
-      ) do
-    Logger.debug("CHNL_BRK activate_respondent: #{inspect(binding())}")
-
-    respondent_contacts =
-      case Map.get(active_contacts, respondent.id) do
-        %{contacts: contacts} -> contacts
-        _ -> 0
-      end
-
-    new_active_contacts =
-      Map.put(
-        active_contacts,
-        respondent.id,
-        %{
-          contacts: respondent_contacts + 1,
-          last_contact: elem(DateTime.now("Etc/UTC"), 1)
-        }
-      )
-
-    state =
-      Map.put(state, :active_contacts, new_active_contacts)
-      |> save_to_agent()
-
-    Logger.debug("CHNL_BRK state: #{inspect(state)}")
-
     state
   end
 
@@ -868,17 +834,34 @@ defmodule Ask.Runtime.ChannelBroker do
 
   @impl true
   def handle_call(
-        {:force_active_respondent, respondent, provider},
+        {:force_activate_respondent, respondent_id, provider},
         _from,
-        %{config: config, channel_id: channel_id} = state
+        %{
+          active_contacts: active_contacts,
+          config: config
+        } = state
       ) do
-    Logger.debug("CHN_BRK force_active_respondent: #{inspect(binding())}")
+    Logger.debug("CHN_BRK force_activate_respondent: #{inspect(binding())}")
+
+    respondent_contacts =
+      case Map.get(active_contacts, respondent_id) do
+        %{contacts: contacts} -> contacts
+        _ -> 0
+      end
+
+    new_active_contacts =
+      Map.put(
+        active_contacts,
+        respondent_id,
+        %{
+          contacts: respondent_contacts + 1,
+          last_contact: elem(DateTime.now("Etc/UTC"), 1)
+        }
+      )
 
     end_state =
-      case provider do
-        "nuntium" ->
-          activate_respondent(state, respondent)
-      end
+      Map.put(state, :active_contacts, new_active_contacts)
+      |> save_to_agent()
 
     Logger.debug("CHNL_BRK state: #{inspect(end_state)}")
 

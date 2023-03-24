@@ -198,9 +198,9 @@ defmodule Ask.Runtime.NuntiumChannel do
         :ok
 
       _ ->
-        ChannelBroker.force_active_respondent(
+        ChannelBroker.force_activate_respondent(
           channel_id,
-          Repo.get(Respondent, respondent_id),
+          respondent_id,
           "nuntium"
         )
     end
