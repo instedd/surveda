@@ -340,6 +340,9 @@ defmodule Ask.Runtime.Flow do
     {%{flow | retries: 0}, %Reply{stores: stores}, visitor}
   end
 
+  @spec should_update_disposition(atom, atom) :: bool
+  def should_update_disposition(old_disposition, new_disposition)
+
   if Mix.env() == :prod do
     def should_update_disposition(old_disposition, new_disposition)
         when is_binary(old_disposition) do
@@ -364,8 +367,6 @@ defmodule Ask.Runtime.Flow do
     end
   end
 
-  @spec should_update_disposition(atom, atom) :: bool
-  def should_update_disposition(old_disposition, new_disposition)
   # This transitions are forced through flag steps and should always be allowed
   def should_update_disposition(:queued, :"interim partial"), do: true
   def should_update_disposition(:queued, :completed), do: true
