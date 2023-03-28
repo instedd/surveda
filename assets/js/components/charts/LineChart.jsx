@@ -86,7 +86,7 @@ export default class LineChart extends Component<Props> {
       .append("div")
       .classed("forecast-tooltip", true)
       .style("visibility", "hidden")
-  
+
     // remove all circles
     d3.select(this.refs.circles).selectAll("circle").remove()
     for (var i = 0; i < flatten.length; i++) {
@@ -138,7 +138,7 @@ export default class LineChart extends Component<Props> {
       )
       .selectAll("text")
       .remove()
-        
+
     // Zoom on the chart only making use of the x axis (time)
     // Keep the circle radius constant
     const zoom = d3

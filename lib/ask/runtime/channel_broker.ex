@@ -187,7 +187,7 @@ defmodule Ask.Runtime.ChannelBroker do
       end
 
     # Logger.debug("CHNL_BRK state: #{inspect(state)}")
-    save_to_history(binding(),"activate_contacts", state)
+    save_to_history(binding(), "activate_contacts", state)
 
     state
   end
@@ -261,7 +261,7 @@ defmodule Ask.Runtime.ChannelBroker do
     }
 
     # Logger.debug("CHNL_BRK state: #{inspect(state)}")
-    save_to_history(binding(),"init", state)
+    save_to_history(binding(), "init", state)
 
     state
   end
@@ -377,7 +377,7 @@ defmodule Ask.Runtime.ChannelBroker do
       |> save_to_agent()
 
     # Logger.debug("CHNL_BRK state: #{inspect(state)}")
-    save_to_history(binding(),"clean_non_active_respondents", state)
+    save_to_history(binding(), "clean_non_active_respondents", state)
 
     state
   end
@@ -399,7 +399,7 @@ defmodule Ask.Runtime.ChannelBroker do
       |> save_to_agent()
 
     # Logger.debug("CHNL_BRK state: #{inspect(state)}")
-    save_to_history(binding(),"clean_outdated_respondents", state)
+    save_to_history(binding(), "clean_outdated_respondents", state)
 
     state
   end
@@ -445,7 +445,7 @@ defmodule Ask.Runtime.ChannelBroker do
       |> save_to_agent()
 
     # Logger.debug("CHNL_BRK state: #{inspect(state)}")
-    save_to_history(binding(),"queue_contact", state)
+    save_to_history(binding(), "queue_contact", state)
 
     state
   end
@@ -480,7 +480,7 @@ defmodule Ask.Runtime.ChannelBroker do
       |> save_to_agent()
 
     # Logger.debug("CHNL_BRK state: #{inspect(state)}")
-    save_to_history(binding(),"activate_contact", state)
+    save_to_history(binding(), "activate_contact", state)
 
     state
   end
@@ -518,7 +518,7 @@ defmodule Ask.Runtime.ChannelBroker do
       |> save_to_agent()
 
     # Logger.debug("CHNL_BRK state: #{inspect(state)}")
-    save_to_history(binding(),"activate_contact", state)
+    save_to_history(binding(), "activate_contact", state)
 
     {state, unqueued_item}
   end
@@ -548,7 +548,7 @@ defmodule Ask.Runtime.ChannelBroker do
 
     state = Map.put(state, :active_contacts, new_active_contacts)
     # Logger.debug("CHNL_BRK state: #{inspect(state)}")
-    save_to_history(binding(),"update_last_contact", state)
+    save_to_history(binding(), "update_last_contact", state)
 
     state
   end
@@ -579,7 +579,7 @@ defmodule Ask.Runtime.ChannelBroker do
 
     state = Map.put(state, :active_contacts, new_active_contacts)
     # Logger.debug("CHNL_BRK state: #{inspect(state)}")
-    save_to_history(binding(),"set_verboice_call_id", state)
+    save_to_history(binding(), "set_verboice_call_id", state)
     state
   end
 
@@ -634,7 +634,7 @@ defmodule Ask.Runtime.ChannelBroker do
       |> save_to_agent()
 
     # Logger.debug("CHNL_BRK state: #{inspect(state)}")
-    save_to_history(binding(),"deactivate_contact", state)
+    save_to_history(binding(), "deactivate_contact", state)
 
     state
   end
@@ -651,7 +651,7 @@ defmodule Ask.Runtime.ChannelBroker do
     new_contacts_queue = remove_r_contacts(contacts_queue, respondent_id, new_contacts_queue, n)
     new_state = Map.put(state, :contacts_queue, new_contacts_queue)
     # Logger.debug("CHNL_BRK state: #{inspect(new_state)}")
-    save_to_history(binding(),"remove_from_queue", new_state)
+    save_to_history(binding(), "remove_from_queue", new_state)
 
     new_state
   end
@@ -674,17 +674,18 @@ defmodule Ask.Runtime.ChannelBroker do
   end
 
   defp state_for_history(state, params) do
-    params_to_save = List.keydelete(params, :new_state, 0) 
+    params_to_save =
+      List.keydelete(params, :new_state, 0)
       |> List.keydelete(:state, 0)
       |> List.keydelete(:end_state, 0)
       |> List.keydelete(:active_contacts, 0)
 
-    Map.delete(state, :active_contacts) 
-      |> Map.delete(:contacts_queue) 
-      |> Map.put(:params, inspect(params_to_save))
+    Map.delete(state, :active_contacts)
+    |> Map.delete(:contacts_queue)
+    |> Map.put(:params, inspect(params_to_save))
   end
 
-  defp save_to_history(params ,method, state) do
+  defp save_to_history(params, method, state) do
     if state[:config][:monitor] do
       ChannelBrokerHistory.save(
         state[:channel_id],
@@ -693,7 +694,7 @@ defmodule Ask.Runtime.ChannelBroker do
         state[:active_contacts],
         state[:contacts_queue]
       )
-    end 
+    end
   end
 
   defp get_channel_state(channel_type, state, respondent_id) do
@@ -731,7 +732,7 @@ defmodule Ask.Runtime.ChannelBroker do
       end
 
     # Logger.debug("CHNL_BRK state: #{inspect(end_state)}")
-    save_to_history(binding(),"ask", end_state)
+    save_to_history(binding(), "ask", end_state)
 
     {:reply, :ok, end_state, timeout_from_config(config)}
   end
@@ -781,7 +782,7 @@ defmodule Ask.Runtime.ChannelBroker do
       end
 
     # Logger.debug("CHNL_BRK state: #{inspect(end_state)}")
-    save_to_history(binding(),"setup", end_state)
+    save_to_history(binding(), "setup", end_state)
 
     {:reply, :ok, end_state, timeout_from_config(config)}
   end
@@ -791,7 +792,7 @@ defmodule Ask.Runtime.ChannelBroker do
     # Logger.debug("CHNL_BRK prepare: #{inspect(binding())}")
     reply = Channel.prepare(channel)
     # Logger.debug("CHNL_BRK state: #{inspect(state)}")
-    save_to_history(binding(),"prepare", state)
+    save_to_history(binding(), "prepare", state)
     {:reply, reply, state, timeout_from_config(config)}
   end
 
@@ -800,7 +801,7 @@ defmodule Ask.Runtime.ChannelBroker do
     # Logger.debug("CHNL_BRK has_delivery_confirmation?: #{inspect(binding())}")
     reply = Channel.has_delivery_confirmation?(channel)
     # Logger.debug("CHNL_BRK state: #{inspect(state)}")
-    save_to_history(binding(),"has_delivery_confirmation?", state)
+    save_to_history(binding(), "has_delivery_confirmation?", state)
     {:reply, reply, state, timeout_from_config(config)}
   end
 
@@ -813,7 +814,7 @@ defmodule Ask.Runtime.ChannelBroker do
       ) do
     # Logger.debug("CHNL_BRK has_queued_message?: #{inspect(binding())}")
     # Logger.debug("CHNL_BRK state: #{inspect(state)}")
-    save_to_history(binding(),"has_queued_message?", state)
+    save_to_history(binding(), "has_queued_message?", state)
     {:reply, has_queued_message, state, timeout_from_config(config)}
   end
 
@@ -826,7 +827,7 @@ defmodule Ask.Runtime.ChannelBroker do
     # Logger.debug("CHNL_BRK has_queued_message?: #{inspect(binding())}")
     reply = is_active(state, respondent_id) || is_queued(state, respondent_id)
     # Logger.debug("CHNL_BRK state: #{inspect(state)}")
-    save_to_history(binding(),"has_queued_message?", state)
+    save_to_history(binding(), "has_queued_message?", state)
     {:reply, reply, state, timeout_from_config(config)}
   end
 
@@ -842,7 +843,7 @@ defmodule Ask.Runtime.ChannelBroker do
     state = deactivate_contact(state, respondent_id)
     state = remove_from_queue(state, respondent_id)
     # Logger.debug("CHNL_BRK state: #{inspect(state)}")
-    save_to_history(binding(),"cancel_message", state)
+    save_to_history(binding(), "cancel_message", state)
 
     {:reply, :ok, state, timeout_from_config(config)}
   end
@@ -857,7 +858,7 @@ defmodule Ask.Runtime.ChannelBroker do
     channel_state = get_channel_state(channel_type, state, respondent_id)
     reply = Channel.message_expired?(channel, channel_state)
     # Logger.debug("CHNL_BRK state: #{inspect(state)}")
-    save_to_history(binding(),"message_expired?", state)
+    save_to_history(binding(), "message_expired?", state)
 
     {:reply, reply, state, timeout_from_config(config)}
   end
@@ -867,7 +868,7 @@ defmodule Ask.Runtime.ChannelBroker do
     # Logger.debug("CHNL_BRK check_status: #{inspect(binding())}")
     reply = Channel.check_status(channel)
     # Logger.debug("CHNL_BRK state: #{inspect(state)}")
-    save_to_history(binding(),"check_status", state)
+    save_to_history(binding(), "check_status", state)
     {:reply, reply, state, timeout_from_config(config)}
   end
 
@@ -926,7 +927,7 @@ defmodule Ask.Runtime.ChannelBroker do
       end
 
     # Logger.debug("CHNL_BRK state: #{inspect(end_state)}")
-    save_to_history(binding(),"callback_received", end_state)
+    save_to_history(binding(), "callback_received", end_state)
 
     {:reply, :ok, end_state, timeout_from_config(config)}
   end
@@ -949,7 +950,7 @@ defmodule Ask.Runtime.ChannelBroker do
       end
 
     # Logger.debug("CHNL_BRK state: #{inspect(end_state)}")
-    save_to_history(binding(),"force_active", end_state)
+    save_to_history(binding(), "force_active", end_state)
 
     {:reply, :ok, end_state, timeout_from_config(config)}
   end
@@ -964,7 +965,7 @@ defmodule Ask.Runtime.ChannelBroker do
     new_capacity = Map.get(settings, "capacity", Config.default_channel_capacity())
     new_state = Map.put(state, :capacity, new_capacity)
     # Logger.debug("CHNL_BRK state: #{inspect(new_state)}")
-    save_to_history(binding(),"on_channel_settings_change", new_state)
+    save_to_history(binding(), "on_channel_settings_change", new_state)
 
     {:reply, :ok, new_state, timeout_from_config(config)}
   end
@@ -975,7 +976,7 @@ defmodule Ask.Runtime.ChannelBroker do
     ChannelBrokerAgent.save_channel_state(channel_id, state, true)
     ChannelBrokerSupervisor.terminate_child(channel_id)
     # Logger.debug("CHNL_BRK state: #{inspect(state)}")
-    save_to_history(binding(),"timeout", state)
+    save_to_history(binding(), "timeout", state)
   end
 
   def handle_info({:collect_garbage, channel_type}, %{config: config} = state) do
@@ -992,7 +993,7 @@ defmodule Ask.Runtime.ChannelBroker do
     gc_interval = gc_interval_from_config(config)
     schedule_GC(channel_type, gc_interval)
     # Logger.debug("CHNL_BRK state: #{inspect(new_state)}")
-    save_to_history(binding(),"collect_garbage", new_state)
+    save_to_history(binding(), "collect_garbage", new_state)
 
     {:noreply, new_state}
   end

@@ -25,8 +25,8 @@ defmodule AskWeb.ChannelBrokerHistoryController do
         from r in ChannelBrokerHistory,
           where: r.channel_id == ^channel_id and r.id == ^id,
           select:
-            {r.id, r.channel_id, r.instruction, r.parameters, r.active_contacts, r.contacts_queue_ids,
-             r.inserted_at, r.updated_at}
+            {r.id, r.channel_id, r.instruction, r.parameters, r.active_contacts,
+             r.contacts_queue_ids, r.inserted_at, r.updated_at}
       )
 
     render(conn, "show.json", channel_broker_history: channel_broker_history)
