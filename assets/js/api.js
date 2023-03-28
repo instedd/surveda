@@ -368,6 +368,10 @@ export const fetchChannelBrokerHistory = (channelId) => {
   return apiFetchJSON(`channel_broker_history/${channelId}`, arrayOf(channelBrokerHistorySchema))
 }
 
+export const fetchChannelBrokerHistoryId = (channelId, id) => {
+  return apiFetchJSON(`channel_broker_history/${channelId}/${id}`, channelBrokerHistorySchema)
+}
+
 export const fetchProjectChannels = (projectId) => {
   return apiFetchJSON(`projects/${projectId}/channels`, arrayOf(channelSchema))
 }

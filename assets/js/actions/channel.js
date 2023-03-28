@@ -36,8 +36,14 @@ export const fetchChannel =
       })
   }
 
-export const fetchChannelBrokerHistory = (id: number) => {
-  return api.fetchChannelBrokerHistory(id).then((response) => {
+export const fetchChannelBrokerHistory = (channel_id: number) => {
+  return api.fetchChannelBrokerHistory(channel_id).then((response) => {
+    return response.entities.channelBrokerHistory
+  })
+}
+
+export const fetchChannelBrokerHistoryId = (channel_id: number, id: number) => {
+  return api.fetchChannelBrokerHistoryId(channel_id, id).then((response) => {
     return response.entities.channelBrokerHistory
   })
 }

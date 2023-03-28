@@ -16,6 +16,7 @@ export default class LineChart extends Component<Props> {
       width: 0,
       height: 0,
       data: props.data,
+      selectedPoint: props.selectedPoint,
     }
   }
 
@@ -42,6 +43,7 @@ export default class LineChart extends Component<Props> {
   componentWillReceiveProps(props) {
     this.setState({
       data: props.data,
+      selectedPoint: props.selectedPoint,
     })
   }
 
@@ -50,14 +52,17 @@ export default class LineChart extends Component<Props> {
   }
 
   renderD3(initial = false) {
-    const { width, height, data } = this.state
+    const { width, height, data, selectedPoint } = this.state
     const { variable } = this.props
 
     const flatten = Object.entries(data).map((d) => {
       return {
         time: new Date(d[1]["insertedAt"]),
         value: d[1][variable].length,
-        color: "black",
+        stroke: d[1].id === parseInt(selectedPoint) ? "red" : "black",
+        fill: d[1].id === parseInt(selectedPoint) ? "red" : "black",
+        opacity: d[1].id === parseInt(selectedPoint) ? 1 : 0.2,
+        radius: d[1].id === parseInt(selectedPoint) ? "5px" : "3px",
         k: d[1].id,
         v: d[1],
       }
@@ -81,29 +86,29 @@ export default class LineChart extends Component<Props> {
       .append("div")
       .classed("forecast-tooltip", true)
       .style("visibility", "hidden")
-
+  
+    // remove all circles
+    d3.select(this.refs.circles).selectAll("circle").remove()
     for (var i = 0; i < flatten.length; i++) {
-      if (y(flatten[i].value) != 0 && x(flatten[i].time) != 0) {
-        d3.select(this.refs.circles)
-          .selectAll("path")
-          .data([flatten[i]])
-          .enter()
-          .append("circle")
-          .attr("cx", (d) => x(d.time))
-          .attr("cy", (d) => y(d.value))
-          .attr("r", "3px")
-          .style("fill", flatten[i].color)
-          .style("stroke", flatten[i].color)
-          .style("opacity", 0.1)
-          .on("mouseover", (d) =>
-            tooltip
-              .text(JSON.stringify(d.v, null, 2))
-              .style("top", d3.event.pageY - 10 + "px")
-              .style("left", d3.event.pageX + 10 + "px")
-              .style("visibility", "visible")
-          )
-          .on("mouseout", () => tooltip.style("visibility", "hidden"))
-      }
+      d3.select(this.refs.circles)
+        .selectAll("path")
+        .data([flatten[i]])
+        .enter()
+        .append("circle")
+        .attr("cx", (d) => x(d.time))
+        .attr("cy", (d) => y(d.value))
+        .attr("r", flatten[i].radius)
+        .style("fill", "black")
+        .style("stroke", flatten[i].stroke)
+        .style("opacity", flatten[i].opacity)
+        .on("mouseover", (d) =>
+          tooltip
+            .text(JSON.stringify(d.v.id, null, 2))
+            .style("top", d3.event.pageY - 10 + "px")
+            .style("left", d3.event.pageX + 10 + "px")
+            .style("visibility", "visible")
+        )
+        .on("mouseout", () => tooltip.style("visibility", "hidden"))
     }
 
     const xAxis = d3.axisBottom(x).ticks(width / 120)
@@ -133,12 +138,12 @@ export default class LineChart extends Component<Props> {
       )
       .selectAll("text")
       .remove()
-
+        
     // Zoom on the chart only making use of the x axis (time)
     // Keep the circle radius constant
     const zoom = d3
       .zoom()
-      .scaleExtent([1, 100])
+      .scaleExtent([1, 1000])
       .translateExtent([
         [0, 0],
         [width, height],

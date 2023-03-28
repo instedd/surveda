@@ -10,6 +10,19 @@ defmodule AskWeb.ChannelBrokerHistoryView do
       id: channel_broker_history |> elem(0),
       channel_id: channel_broker_history |> elem(1),
       instruction: channel_broker_history |> elem(2),
+      active_contacts: channel_broker_history |> elem(3) || "",
+      contacts_queue_ids: channel_broker_history |> elem(4),
+      inserted_at: channel_broker_history |> elem(5),
+      updated_at: channel_broker_history |> elem(6),
+      parameters: channel_broker_history |> elem(7)
+    }
+  end
+
+  def render("show.json", %{channel_broker_history: channel_broker_history}) do
+    %{
+      id: channel_broker_history |> elem(0),
+      channel_id: channel_broker_history |> elem(1),
+      instruction: channel_broker_history |> elem(2),
       parameters: channel_broker_history |> elem(3),
       active_contacts: channel_broker_history |> elem(4),
       contacts_queue_ids: channel_broker_history |> elem(5),

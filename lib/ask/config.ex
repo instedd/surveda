@@ -84,7 +84,9 @@ defmodule Ask.Config do
       # High values: the GC will discard older contacts. A too high value could lead to keep
       # contacts that actually finished, wasting the channel capacity and slowing-down the
       # contact rate.
-      gc_outdate_hours: env_to_int("CHNL_BKR_GC_OUTDATE_HOURS", 24)
+      gc_outdate_hours: env_to_int("CHNL_BKR_GC_OUTDATE_HOURS", 24),
+      # ChannelBrokerMonitor activated by default. Set to false to disable it.
+      monitor: env_to_int("CHNL_BKR_MONITOR", 1)
     }
   end
 
