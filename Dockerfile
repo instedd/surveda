@@ -1,4 +1,4 @@
-FROM elixir:1.8 AS dev
+FROM elixir:1.10 AS dev
 
 # Cleanup expired Let's Encrypt CA (Sept 30, 2021)
 RUN sed -i '/^mozilla\/DST_Root_CA_X3/s/^/!/' /etc/ca-certificates.conf && update-ca-certificates -f
