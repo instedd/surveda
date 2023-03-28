@@ -934,14 +934,14 @@ defmodule Ask.Runtime.ChannelBroker do
 
   @impl true
   def handle_call(
-        {:force_activate_respondent, respondent_id},
-        _from,
-        %{
-          active_contacts: active_contacts,
-          config: config
-        } = state
-      ) do
-    # Logger.debug("CHN_BRK force_active: #{inspect(binding())}")
+    {:force_activate_respondent, respondent_id},
+    _from,
+    %{
+      active_contacts: active_contacts,
+      config: config
+    } = state
+  ) do
+    #Logger.debug("CHN_BRK force_activate_respondent: #{inspect(binding())}")
 
     respondent_contacts =
       case Map.get(active_contacts, respondent_id) do
@@ -949,8 +949,22 @@ defmodule Ask.Runtime.ChannelBroker do
         _ -> 0
       end
 
+    new_active_contacts =
+      Map.put(
+        active_contacts,
+        respondent_id,
+        %{
+          contacts: respondent_contacts + 1,
+          last_contact: elem(DateTime.now("Etc/UTC"), 1)
+        }
+      )
+
+    end_state =
+      Map.put(state, :active_contacts, new_active_contacts)
+      |> save_to_agent()
+
     # Logger.debug("CHNL_BRK state: #{inspect(end_state)}")
-    save_to_history(binding(), "force_active", end_state)
+    save_to_history(binding(), "force_activate_respondent", end_state)
 
     {:reply, :ok, end_state, timeout_from_config(config)}
   end

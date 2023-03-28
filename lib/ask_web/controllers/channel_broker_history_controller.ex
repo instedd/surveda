@@ -1,7 +1,6 @@
 defmodule AskWeb.ChannelBrokerHistoryController do
   use AskWeb, :api_controller
 
-  alias Ask.{Channel, Project, Logger}
   alias Ask.Runtime.ChannelBrokerHistory
 
   def index(conn, %{"channel_id" => channel_id}) do
