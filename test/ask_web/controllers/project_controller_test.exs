@@ -57,7 +57,8 @@ defmodule AskWeb.ProjectControllerTest do
                  "response_rate" => nil,
                  "timezone" => nil,
                  "valid_respondent_rate" => nil,
-                 "batch_limit_per_minute" => nil
+                 "batch_limit_per_minute" => nil,
+                 "batch_size" => nil
                },
                %{
                  "id" => project2.id,
@@ -73,7 +74,8 @@ defmodule AskWeb.ProjectControllerTest do
                  "response_rate" => nil,
                  "timezone" => nil,
                  "valid_respondent_rate" => nil,
-                 "batch_limit_per_minute" => nil
+                 "batch_limit_per_minute" => nil,
+                 "batch_size" => nil
                }
              ]
     end
@@ -100,7 +102,8 @@ defmodule AskWeb.ProjectControllerTest do
                  "response_rate" => nil,
                  "timezone" => nil,
                  "valid_respondent_rate" => nil,
-                 "batch_limit_per_minute" => nil
+                 "batch_limit_per_minute" => nil,
+                 "batch_size" => nil
                }
              ]
     end
@@ -126,7 +129,8 @@ defmodule AskWeb.ProjectControllerTest do
                  "response_rate" => nil,
                  "timezone" => nil,
                  "valid_respondent_rate" => nil,
-                 "batch_limit_per_minute" => nil
+                 "batch_limit_per_minute" => nil,
+                 "batch_size" => nil
                }
              ]
     end
@@ -152,7 +156,8 @@ defmodule AskWeb.ProjectControllerTest do
                  "response_rate" => nil,
                  "timezone" => nil,
                  "valid_respondent_rate" => nil,
-                 "batch_limit_per_minute" => nil
+                 "batch_limit_per_minute" => nil,
+                 "batch_size" => nil
                },
                %{
                  "id" => active_project.id,
@@ -168,7 +173,8 @@ defmodule AskWeb.ProjectControllerTest do
                  "response_rate" => nil,
                  "timezone" => nil,
                  "valid_respondent_rate" => nil,
-                 "batch_limit_per_minute" => nil
+                 "batch_limit_per_minute" => nil,
+                 "batch_size" => nil
                }
              ]
     end
@@ -204,7 +210,8 @@ defmodule AskWeb.ProjectControllerTest do
         "response_rate" => nil,
         "timezone" => nil,
         "valid_respondent_rate" => nil,
-        "batch_limit_per_minute" => nil
+        "batch_limit_per_minute" => nil,
+        "batch_size" => nil
       }
 
       project_map_2 = %{
@@ -221,7 +228,8 @@ defmodule AskWeb.ProjectControllerTest do
         "response_rate" => nil,
         "timezone" => nil,
         "valid_respondent_rate" => nil,
-        "batch_limit_per_minute" => nil
+        "batch_limit_per_minute" => nil,
+        "batch_size" => nil
       }
 
       project_map_3 = %{
@@ -238,7 +246,8 @@ defmodule AskWeb.ProjectControllerTest do
         "response_rate" => nil,
         "timezone" => nil,
         "valid_respondent_rate" => nil,
-        "batch_limit_per_minute" => nil
+        "batch_limit_per_minute" => nil,
+        "batch_size" => nil
       }
 
       assert json_response(conn, 200)["data"] == [project_map_1, project_map_2, project_map_3]
@@ -264,7 +273,8 @@ defmodule AskWeb.ProjectControllerTest do
                "response_rate" => nil,
                "timezone" => nil,
                "valid_respondent_rate" => nil,
-               "batch_limit_per_minute" => nil
+               "batch_limit_per_minute" => nil,
+               "batch_size" => nil
              }
     end
 
@@ -286,7 +296,8 @@ defmodule AskWeb.ProjectControllerTest do
                "response_rate" => nil,
                "timezone" => nil,
                "valid_respondent_rate" => nil,
-               "batch_limit_per_minute" => nil
+               "batch_limit_per_minute" => nil,
+               "batch_size" => nil
              }
     end
 
@@ -328,7 +339,8 @@ defmodule AskWeb.ProjectControllerTest do
                "response_rate" => nil,
                "timezone" => nil,
                "valid_respondent_rate" => nil,
-               "batch_limit_per_minute" => nil
+               "batch_limit_per_minute" => nil,
+               "batch_size" => nil
              }
     end
   end
@@ -343,7 +355,6 @@ defmodule AskWeb.ProjectControllerTest do
       assert Repo.get_by(Project, @valid_attrs)
     end
 
-
     test "creates and renders resource when data is valid and have timezone", %{conn: conn} do
       conn = post conn, project_path(conn, :create), project: @valid_attrs_with_timezone
       response = json_response(conn, 201)
@@ -353,7 +364,6 @@ defmodule AskWeb.ProjectControllerTest do
       assert response["data"]["timezone"] == "Europe/London"
       assert Repo.get_by(Project, @valid_attrs_with_timezone)
     end
-    
   end
 
   describe "update" do
