@@ -106,7 +106,7 @@ defmodule Ask.ProjectMembership do
         })
 
       Repo.transaction(fn ->
-        Repo.insert_or_update(membership)
+        Repo.insert(membership)
         Repo.delete!(invite)
       end)
     end)
