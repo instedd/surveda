@@ -1,4 +1,4 @@
-defmodule Ask.Repo.Migrations.AddSettingsToProjects do
+defmodule Ask.Repo.Migrations.AddBatchLimitPerMinutToProjects do
   use Ecto.Migration
 
   def change do
