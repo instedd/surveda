@@ -18,6 +18,28 @@ defmodule Ask.ProjectMembership do
     |> validate_inclusion(:level, ["owner", "admin", "editor", "reader"])
     |> foreign_key_constraint(:user)
     |> foreign_key_constraint(:project)
+    |> validate_user_not_in_project
+  end
+
+  def validate_user_not_in_project(changeset) do
+    user_id = get_change(changeset, :user_id)
+    project_id = get_change(changeset, :project_id)
+
+    if user_id && project_id do
+      project_user =
+        Repo.one(
+          from pu in Ask.ProjectMembership,
+            where: pu.user_id == ^user_id and pu.project_id == ^project_id
+        )
+
+      if project_user do
+        add_error(changeset, :user_id, "User already in project")
+      else
+        changeset
+      end
+    else
+      changeset
+    end
   end
 
   def authorize(changeset, user_level) do
@@ -84,7 +106,7 @@ defmodule Ask.ProjectMembership do
         })
 
       Repo.transaction(fn ->
-        Repo.insert(membership)
+        Repo.insert_or_update(membership)
         Repo.delete!(invite)
       end)
     end)
