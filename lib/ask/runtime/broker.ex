@@ -326,7 +326,7 @@ defmodule Ask.Runtime.Broker do
   defp batch_size(survey, respondents_by_state) do
     case Survey.completed_respondents_needed_by(survey) do
       :all ->
-        survey.project.batch_limit_per_minute || default_batch_size()
+        survey.project.batch_size || default_batch_size()
 
       respondents_target when is_integer(respondents_target) ->
         successful = Survey.completed_state_respondents(survey, respondents_by_state)
