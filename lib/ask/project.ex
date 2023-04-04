@@ -11,6 +11,7 @@ defmodule Ask.Project do
     field :response_rate, :float
     field :valid_respondent_rate, :float
     field :batch_limit_per_minute, :integer
+    field :batch_size, :integer
     field :archived, :boolean, default: false
 
     has_many :questionnaires, Ask.Questionnaire
@@ -41,7 +42,8 @@ defmodule Ask.Project do
       :eligibility_rate,
       :response_rate,
       :valid_respondent_rate,
-      :batch_limit_per_minute
+      :batch_limit_per_minute,
+      :batch_size
     ])
     |> validate_colour_scheme
     |> validate_rate(:initial_success_rate)
@@ -49,6 +51,7 @@ defmodule Ask.Project do
     |> validate_rate(:response_rate)
     |> validate_rate(:valid_respondent_rate)
     |> validate_positive_number(:batch_limit_per_minute)
+    |> validate_positive_number(:batch_size)
   end
 
   def touch!(project) do

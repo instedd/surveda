@@ -289,6 +289,7 @@ CREATE TABLE `projects` (
   `response_rate` double DEFAULT NULL,
   `valid_respondent_rate` double DEFAULT NULL,
   `batch_limit_per_minute` int(11) DEFAULT NULL,
+  `batch_size` int(11) DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `id` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
@@ -988,7 +989,7 @@ CREATE TABLE `users` (
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2023-03-17  8:48:46
+-- Dump completed on 2023-04-03  7:13:11
 INSERT INTO `schema_migrations` (version) VALUES (20160812145257);
 INSERT INTO `schema_migrations` (version) VALUES (20160816183915);
 INSERT INTO `schema_migrations` (version) VALUES (20160830200454);
@@ -1203,3 +1204,4 @@ INSERT INTO `schema_migrations` (version) VALUES (20211213094856);
 INSERT INTO `schema_migrations` (version) VALUES (20220131103226);
 INSERT INTO `schema_migrations` (version) VALUES (20230217143550);
 INSERT INTO `schema_migrations` (version) VALUES (20230317094712);
+INSERT INTO `schema_migrations` (version) VALUES (20230402091100);

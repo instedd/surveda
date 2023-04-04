@@ -97,7 +97,8 @@ defmodule AskWeb.ProjectView do
       eligibility_rate: project.eligibility_rate,
       response_rate: project.response_rate,
       valid_respondent_rate: project.valid_respondent_rate,
-      batch_limit_per_minute: project.batch_limit_per_minute
+      batch_limit_per_minute: project.batch_limit_per_minute,
+      batch_size: project.batch_size
     }
   end
 end

@@ -38,6 +38,7 @@ class ProjectSettings extends Component {
       validRespondentRate: project.validRespondentRate || "",
       detailedRates: project.eligibilityRate != null,
       batchLimitPerMinute: project.batchLimitPerMinute || "",
+      batchSize: project.batchSize || "",
       archiveAction: project.readOnly ? "unarchive" : "archive",
     }
     this.initialState = JSON.parse(JSON.stringify(state))
@@ -60,6 +61,7 @@ class ProjectSettings extends Component {
       responseRate: parseFloat(this.state.responseRate, 10) || null,
       validRespondentRate: parseFloat(this.state.validRespondentRate, 10) || null,
       batchLimitPerMinute: parseInt(this.state.batchLimitPerMinute) || null,
+      batchSize: parseInt(this.state.batchSize) || null,
     })
     dispatch(projectActions.updateProject(changes))
   }
@@ -164,6 +166,7 @@ class ProjectSettings extends Component {
       colourScheme,
       initialSuccessRate,
       batchLimitPerMinute,
+      batchSize,
       detailedRates,
       archiveAction,
     } = this.state
@@ -289,6 +292,27 @@ class ProjectSettings extends Component {
       </div>
     )
 
+    const inputBatchSize = (
+      <div>
+        <div className="row">
+          <div className="col s3" id="batchSize">
+            <label className="gray-text">Batch size</label>
+            <input
+              type="number"
+              step="1"
+              min="0"
+              value={batchSize}
+              disabled={readOnly}
+              readOnly={readOnly}
+              onInput={(e) => this.setState({ batchSize: e.target.value })}
+              onChange={(e) => this.setState({ batchSize: e.target.value })}
+            />
+            {this.spanErrors("batchSize")}
+          </div>
+        </div>
+      </div>
+    )
+
     const actionsButtons = (
       <div className="row">
         <div className="col">
@@ -330,6 +354,7 @@ class ProjectSettings extends Component {
             {inputColourScheme}
             {inputRates}
             {inputBatchLimitPerMinute}
+            {inputBatchSize}
             {actionsButtons}
           </div>
         </div>
@@ -347,6 +372,7 @@ class ProjectSettings extends Component {
       "validRespondentRate",
       "detailedRates",
       "batchLimitPerMinute",
+      "batchSize",
     ]
     return (
       JSON.stringify(pick(this.state, fields)) !== JSON.stringify(pick(this.initialState, fields))
