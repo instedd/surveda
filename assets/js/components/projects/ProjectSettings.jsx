@@ -255,6 +255,10 @@ class ProjectSettings extends Component {
           </div>
           {detailedRates && this.renderDetailedRates()}
         </div>
+        <div className="small-text-bellow">
+          This variable impacts the initial batch size. Target/Success Rate = Batch Size. When the
+          success rate is low the batch size will be large and vice versa.
+        </div>
         <div className="row">
           <div>
             <input
@@ -274,7 +278,7 @@ class ProjectSettings extends Component {
     const inputBatchLimitPerMinute = (
       <div>
         <div className="row">
-          <div className="col s3" id="batchLimitPerMinute">
+          <div className="col s6" id="batchLimitPerMinute">
             <label className="gray-text">Batch limit per minute</label>
             <input
               type="number"
@@ -286,7 +290,10 @@ class ProjectSettings extends Component {
               onInput={(e) => this.setState({ batchLimitPerMinute: e.target.value })}
               onChange={(e) => this.setState({ batchLimitPerMinute: e.target.value })}
             />
-            {this.spanErrors("batchLimitPerMinute")}
+            <div className="row">{this.spanErrors("batchLimitPerMinute")}</div>
+            <div className="small-text-bellow">
+              This variable will limit the number of respondents added to active state each minute.
+            </div>
           </div>
         </div>
       </div>
@@ -295,7 +302,7 @@ class ProjectSettings extends Component {
     const inputBatchSize = (
       <div>
         <div className="row">
-          <div className="col s3" id="batchSize">
+          <div className="col s6" id="batchSize">
             <label className="gray-text">Batch size</label>
             <input
               type="number"
@@ -307,7 +314,10 @@ class ProjectSettings extends Component {
               onInput={(e) => this.setState({ batchSize: e.target.value })}
               onChange={(e) => this.setState({ batchSize: e.target.value })}
             />
-            {this.spanErrors("batchSize")}
+            <div className="row">{this.spanErrors("batchSize")}</div>
+            <div className="small-text-bellow">
+              This variable defines the batch size when there is no target defined.
+            </div>
           </div>
         </div>
       </div>
@@ -352,6 +362,11 @@ class ProjectSettings extends Component {
             {inputProjectName}
             {inputTimeZone}
             {inputColourScheme}
+            <br />
+            <div className="row">
+              Only edit the variables below if you know what are you doing, if you're not sure just
+              leave them as they are, the surveys will run OK.
+            </div>
             {inputRates}
             {inputBatchLimitPerMinute}
             {inputBatchSize}
