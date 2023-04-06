@@ -385,6 +385,12 @@ defmodule Ask.Runtime.VerboiceChannel do
     |> send_resp(200, reply)
   end
 
+  def callback(conn, _) do
+    conn
+    |> put_resp_content_type("text/xml")
+    |> send_resp(200, response(hangup()) |> generate)
+  end
+
   defp notify_channel_broker(respondent, status) do
     case respondent_channel(respondent) do
       %Channel{id: channel_id} ->
@@ -400,12 +406,6 @@ defmodule Ask.Runtime.VerboiceChannel do
 
   defp respondent_channel(%Respondent{session: state}) do
     Ask.Runtime.Session.load_current_mode(state).channel
-  end
-
-  def callback(conn, _) do
-    conn
-    |> put_resp_content_type("text/xml")
-    |> send_resp(200, response(hangup()) |> generate)
   end
 
   def callback_url(respondent, channel_base_url) do
