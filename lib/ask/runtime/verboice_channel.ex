@@ -90,15 +90,6 @@ defmodule Ask.Runtime.VerboiceChannel do
     ]
   end
 
-  defp respondent_channel(respondent) do
-    try do
-      session = respondent.session |> Ask.Runtime.Session.load()
-      session.current_mode.channel
-    rescue
-      _ -> nil
-    end
-  end
-
   defp channel_base_url(respondent) do
     try do
       session = respondent.session |> Ask.Runtime.Session.load()
@@ -323,14 +314,8 @@ defmodule Ask.Runtime.VerboiceChannel do
 
         respondent ->
           respondent = update_call_time_seconds(respondent, call_sid, call_duration)
-          channel = respondent_channel(respondent)
-          # The respondent has a current_mode, then provider should not be necessary
-          ChannelBroker.callback_received(
-            channel.id,
-            respondent,
-            status,
-            "verboice"
-          )
+
+          notify_channel_broker(respondent, status)
 
           case status do
             "expired" ->
@@ -355,11 +340,7 @@ defmodule Ask.Runtime.VerboiceChannel do
     conn |> send_resp(200, "")
   end
 
-  def callback(conn, params) do
-    callback(conn, params, Survey)
-  end
-
-  def callback(conn, params = %{"respondent" => respondent_id}, survey) do
+  def callback(conn, params = %{"respondent" => respondent_id}) do
     response_content =
       Respondent.with_lock(respondent_id, fn respondent ->
         case respondent do
@@ -376,17 +357,19 @@ defmodule Ask.Runtime.VerboiceChannel do
                 digits -> Flow.Message.reply(digits)
               end
 
-            case survey.sync_step(respondent, response, "ivr") do
+            case Survey.sync_step(respondent, response, "ivr") do
               {:reply, reply, _} ->
                 prompts = Reply.prompts(reply)
                 num_digits = Reply.num_digits(reply)
                 gather(respondent, prompts, num_digits)
 
               {:end, {:reply, reply}, _} ->
+                notify_channel_broker(respondent, "completed")
                 prompts = Reply.prompts(reply)
                 say_or_play(prompts, channel_base_url(respondent)) ++ [hangup()]
 
               {:end, _} ->
+                notify_channel_broker(respondent, "completed")
                 hangup()
             end
 
@@ -402,7 +385,24 @@ defmodule Ask.Runtime.VerboiceChannel do
     |> send_resp(200, reply)
   end
 
-  def callback(conn, _, _) do
+  defp notify_channel_broker(respondent, status) do
+    case respondent_channel(respondent) do
+      %Channel{id: channel_id} ->
+        ChannelBroker.callback_received(channel_id, respondent, status, "verboice")
+        :ok
+
+      _ ->
+        :error
+    end
+  end
+
+  defp respondent_channel(%Respondent{session: nil}), do: nil
+
+  defp respondent_channel(%Respondent{session: state}) do
+    Ask.Runtime.Session.load_current_mode(state).channel
+  end
+
+  def callback(conn, _) do
     conn
     |> put_resp_content_type("text/xml")
     |> send_resp(200, response(hangup()) |> generate)
