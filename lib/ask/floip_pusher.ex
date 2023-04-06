@@ -128,7 +128,7 @@ defmodule Ask.FloipPusher do
   end
 
   def create_package(survey, endpoint, responses_uri) do
-    {:ok, body} = FloipPackage.descriptor(survey, responses_uri) |> Poison.encode()
+    {:ok, body} = FloipPackage.descriptor(survey, responses_uri) |> Jason.encode()
 
     endpoint_uri = String.to_charlist("#{endpoint.uri}/flow-results/packages")
 
@@ -150,7 +150,7 @@ defmodule Ask.FloipPusher do
   end
 
   defp push_responses(endpoint, responses) do
-    {:ok, body} = Poison.encode(responses)
+    {:ok, body} = Jason.encode(responses)
 
     endpoint_uri =
       String.to_charlist(

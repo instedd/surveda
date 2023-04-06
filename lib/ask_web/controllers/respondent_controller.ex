@@ -611,7 +611,7 @@ defmodule AskWeb.RespondentController do
     |> Enum.map(fn {state, disposition, questionnaire_id, mode, count} ->
       reference_id =
         if mode && questionnaire_id do
-          "#{questionnaire_id}#{mode |> Poison.decode!() |> Enum.join("")}"
+          "#{questionnaire_id}#{mode |> Jason.decode!() |> Enum.join("")}"
         else
           nil
         end
@@ -652,7 +652,7 @@ defmodule AskWeb.RespondentController do
           {r.questionnaire_id, r.mode, r.date, fragment("CAST(? AS UNSIGNED)", sum(r.count))}
     )
     |> Enum.map(fn {questionnaire_id, mode, completed_at, count} ->
-      {"#{questionnaire_id}#{mode |> Poison.decode!() |> Enum.join("")}", completed_at, count}
+      {"#{questionnaire_id}#{mode |> Jason.decode!() |> Enum.join("")}", completed_at, count}
     end)
   end
 
@@ -665,7 +665,7 @@ defmodule AskWeb.RespondentController do
         select: {r.mode, r.date, fragment("CAST(? AS UNSIGNED)", sum(r.count))}
     )
     |> Enum.map(fn {mode, completed_at, count} ->
-      {mode |> Poison.decode!() |> Enum.join(""), completed_at, count}
+      {mode |> Jason.decode!() |> Enum.join(""), completed_at, count}
     end)
   end
 

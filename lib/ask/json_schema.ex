@@ -67,7 +67,7 @@ defmodule Ask.JsonSchema do
 
   defp load_schema(schema_path) do
     File.read!(schema_path)
-    |> Poison.decode!()
+    |> Jason.decode!()
     |> ExJsonSchema.Schema.resolve()
   end
 

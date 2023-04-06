@@ -345,7 +345,7 @@ defmodule AskWeb.QuestionnaireController do
       |> Enum.into(%{})
 
     json = files |> Map.get("manifest.json")
-    {:ok, manifest} = Poison.decode(json)
+    {:ok, manifest} = Jason.decode(json)
 
     audio_files = manifest |> Map.get("audio_files")
 

@@ -41,7 +41,7 @@ defmodule Ask.UrlShortener do
   end
 
   def build_short_url(host, response_body) do
-    "#{host}/#{Poison.decode!(response_body)["key"]}"
+    "#{host}/#{Jason.decode!(response_body)["key"]}"
   end
 
   defp get_api_key, do: ConfigHelper.get_config(__MODULE__, :url_shortener_api_key)

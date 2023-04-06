@@ -40,7 +40,7 @@ defmodule AskWeb.LayoutView do
       intercom_app_id: Ask.Intercom.intercom_app_id()
     }
 
-    {:ok, config_json} = client_config |> Poison.encode()
+    {:ok, config_json} = client_config |> Jason.encode()
     config_json
   end
 
