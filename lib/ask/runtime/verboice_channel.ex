@@ -340,7 +340,11 @@ defmodule Ask.Runtime.VerboiceChannel do
     conn |> send_resp(200, "")
   end
 
-  def callback(conn, params = %{"respondent" => respondent_id}) do
+  def callback(conn, params) do
+    callback(conn, params, Survey)
+  end
+
+  def callback(conn, params = %{"respondent" => respondent_id}, survey) do
     response_content =
       Respondent.with_lock(respondent_id, fn respondent ->
         case respondent do
@@ -357,7 +361,7 @@ defmodule Ask.Runtime.VerboiceChannel do
                 digits -> Flow.Message.reply(digits)
               end
 
-            case Survey.sync_step(respondent, response, "ivr") do
+            case survey.sync_step(respondent, response, "ivr") do
               {:reply, reply, _} ->
                 prompts = Reply.prompts(reply)
                 num_digits = Reply.num_digits(reply)
@@ -385,7 +389,7 @@ defmodule Ask.Runtime.VerboiceChannel do
     |> send_resp(200, reply)
   end
 
-  def callback(conn, _) do
+  def callback(conn, _, _) do
     conn
     |> put_resp_content_type("text/xml")
     |> send_resp(200, response(hangup()) |> generate)
@@ -397,16 +401,23 @@ defmodule Ask.Runtime.VerboiceChannel do
         ChannelBroker.callback_received(channel_id, respondent, status, "verboice")
         :ok
 
+      0 ->
+        ChannelBroker.callback_received(0, respondent, status, "verboice")
+        :ok
+
       _ ->
         :error
     end
   end
 
-  defp respondent_channel(%Respondent{session: nil}), do: nil
-
-  defp respondent_channel(%Respondent{session: state}) do
+  defp respondent_channel(%Respondent{
+         session: %{"current_mode" => "ivr", "session_id" => _} = state
+       }) do
     Ask.Runtime.Session.load_current_mode(state).channel
   end
+
+  defp respondent_channel(%Respondent{session: %{"current_mode" => "ivr"}}), do: 0
+  defp respondent_channel(_), do: nil
 
   def callback_url(respondent, channel_base_url) do
     verboice_callback(
