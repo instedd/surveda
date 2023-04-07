@@ -136,7 +136,7 @@ defmodule Ask.Runtime.VerboiceChannelTest do
           case elem(step, 0) do
             :end ->
               # reports completed call to channel broker
-              match_respondent = :meck.is(fn %Ask.Respondent{id: id} -> assert id == respondent.id end)
+              match_respondent = :meck.is(fn %Respondent{id: id} -> assert id == respondent.id end)
               assert_called ChannelBroker.callback_received(0, match_respondent, "completed", "verboice")
             _ ->
               # won't report in-progress calls to channel broker
@@ -961,6 +961,29 @@ defmodule Ask.Runtime.VerboiceChannelTest do
       broker |> GenServer.stop()
     end
 
+    test "can't notify channel broker of completed status", %{
+      conn: conn,
+      respondent: respondent,
+      logger: logger,
+      broker: broker
+    } do
+      respondent
+      |> Respondent.changeset(%{session: nil})
+      |> Repo.update!()
+
+      with_mock ChannelBroker, [callback_received: fn(_, _, _, _) -> :ok end] do
+        VerboiceChannel.callback(conn, %{
+          "path" => ["status", respondent.id, "token"],
+          "CallStatus" => "completed",
+          "CallDuration" => "15",
+          "CallSid" => "6B8F5B7B-E412-46D3-96E1-688215F43CC3",
+        })
+        assert_not_called ChannelBroker.callback_received(:_, :_, :_, :_)
+      end
+
+      logger |> GenServer.stop()
+      broker |> GenServer.stop()
+    end
   end
 
   defp assert_respondent_state(respondent, call_id, expected_call_duration, call_fail_reason) do
