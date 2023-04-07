@@ -101,7 +101,7 @@ defmodule Ask.Mixfile do
       # {:telemetry, "~> 0.4.3"},
 
       # held back because of warnings & errors with newer versions
-      {:swoosh, "~> 0.17.0"},
+      {:swoosh, "~> 0.17.0"}
     ]
   end
 
