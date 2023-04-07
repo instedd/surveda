@@ -396,7 +396,7 @@ defmodule Ask.Runtime.VerboiceChannel do
   end
 
   defp notify_channel_broker(respondent, status) do
-    case respondent_channel(respondent) do
+    case respondent_channel(respondent.session) do
       %Channel{id: channel_id} ->
         ChannelBroker.callback_received(channel_id, respondent, status, "verboice")
         :ok
@@ -410,13 +410,11 @@ defmodule Ask.Runtime.VerboiceChannel do
     end
   end
 
-  defp respondent_channel(%Respondent{
-         session: %{"current_mode" => "ivr", "session_id" => _} = state
-       }) do
+  defp respondent_channel(%{"current_mode" => %{"mode" => "ivr", "channel_id" => _}} = state) do
     Ask.Runtime.Session.load_current_mode(state).channel
   end
 
-  defp respondent_channel(%Respondent{session: %{"current_mode" => "ivr"}}), do: 0
+  defp respondent_channel(%{"current_mode" => %{"mode" => "ivr"}}), do: 0
   defp respondent_channel(_), do: nil
 
   def callback_url(respondent, channel_base_url) do
