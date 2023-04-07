@@ -936,6 +936,31 @@ defmodule Ask.Runtime.VerboiceChannelTest do
       logger |> GenServer.stop()
       broker |> GenServer.stop()
     end
+
+    test "notifies the channel broker of updated status", %{
+      conn: conn,
+      respondent: respondent,
+      logger: logger,
+      broker: broker
+    } do
+      %{"current_mode" => %{ "channel_id" => channel_id }} = respondent.session
+      match_channel = :meck.is(fn id -> assert id == channel_id end)
+      match_respondent = :meck.is(fn %Ask.Respondent{id: id} -> assert id == respondent.id end)
+
+      with_mock ChannelBroker, [callback_received: fn(_, _, _, _) -> :ok end] do
+        VerboiceChannel.callback(conn, %{
+          "path" => ["status", respondent.id, "token"],
+          "CallStatus" => "failed",
+          "CallDuration" => "0",
+          "CallSid" => "6B8F5B7B-E412-46D3-96E1-688215F43CC3",
+        })
+        assert_called ChannelBroker.callback_received(match_channel, match_respondent, "failed", "verboice")
+      end
+
+      logger |> GenServer.stop()
+      broker |> GenServer.stop()
+    end
+
   end
 
   defp assert_respondent_state(respondent, call_id, expected_call_duration, call_fail_reason) do
