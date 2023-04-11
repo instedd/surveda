@@ -35,6 +35,6 @@ defmodule Ask.OAuthToken do
   end
 
   def access_token(token) do
-    Poison.Decode.decode(token.access_token, as: %OAuth2.AccessToken{})
+    OAuth2.AccessToken.new(token.access_token["access_token"])
   end
 end
