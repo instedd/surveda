@@ -883,7 +883,10 @@ defmodule Ask.Runtime.ChannelBroker do
   end
 
   @impl true
-  def handle_info(:timeout, %{channel_id: channel_id} = state) do
+  def handle_info(
+        :timeout,
+        %{channel_id: channel_id, config: %{to_db_operations: to_db_operations}} = state
+      ) do
     Logger.debug("CHN_BRK timeout: #{inspect(binding())}")
     # Save the state to the agent in DB only if it is enabled, otherwise just in memory
     ChannelBrokerAgent.save_channel_state(channel_id, state, to_db_operations > 0)
