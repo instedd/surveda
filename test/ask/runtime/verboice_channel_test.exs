@@ -14,9 +14,11 @@ defmodule Ask.Runtime.VerboiceChannelTest do
     SurveyBroker,
     ChannelStatusServer,
     SurveyStub,
+    ChannelBroker,
     ChannelBrokerAgent
   }
 
+  import Mock
   require Ask.Runtime.ReplyHelper
 
   @survey %{schedule: Ask.Schedule.always()}
@@ -122,21 +124,38 @@ defmodule Ask.Runtime.VerboiceChannelTest do
            end}
         )
 
-        digits =
-          case flow_message do
-            :answer -> nil
-            {:reply, digits} -> digits
+        with_mock ChannelBroker, callback_received: fn _, _, _, _ -> :ok end do
+          digits =
+            case flow_message do
+              :answer -> nil
+              {:reply, digits} -> digits
+            end
+
+          conn =
+            VerboiceChannel.callback(
+              conn,
+              %{"respondent" => respondent_id, "Digits" => digits},
+              SurveyStub
+            )
+
+          case elem(step, 0) do
+            :end ->
+              # reports completed call to channel broker
+              match_respondent =
+                :meck.is(fn %Respondent{id: id} -> assert id == respondent.id end)
+
+              assert_called(
+                ChannelBroker.callback_received(0, match_respondent, "completed", "verboice")
+              )
+
+            _ ->
+              # won't report in-progress calls to channel broker
+              assert_not_called(ChannelBroker.callback_received(:_, :_, :_, :_))
           end
 
-        conn =
-          VerboiceChannel.callback(
-            conn,
-            %{"respondent" => respondent_id, "Digits" => digits},
-            SurveyStub
-          )
-
-        response_twiml = response(conn, 200) |> trim_xml
-        assert response_twiml =~ twiml
+          response_twiml = response(conn, 200) |> trim_xml
+          assert response_twiml =~ twiml
+        end
     end)
   end
 
@@ -923,6 +942,58 @@ defmodule Ask.Runtime.VerboiceChannelTest do
 
       respondent = Repo.get(Respondent, respondent.id)
       assert Stats.attempts(respondent.stats, :ivr) == 1
+
+      logger |> GenServer.stop()
+      broker |> GenServer.stop()
+    end
+
+    test "notifies the channel broker of updated status", %{
+      conn: conn,
+      respondent: respondent,
+      logger: logger,
+      broker: broker
+    } do
+      %{"current_mode" => %{"channel_id" => channel_id}} = respondent.session
+      match_channel = :meck.is(fn id -> assert id == channel_id end)
+      match_respondent = :meck.is(fn %Ask.Respondent{id: id} -> assert id == respondent.id end)
+
+      with_mock ChannelBroker, callback_received: fn _, _, _, _ -> :ok end do
+        VerboiceChannel.callback(conn, %{
+          "path" => ["status", respondent.id, "token"],
+          "CallStatus" => "failed",
+          "CallDuration" => "0",
+          "CallSid" => "6B8F5B7B-E412-46D3-96E1-688215F43CC3"
+        })
+
+        assert_called(
+          ChannelBroker.callback_received(match_channel, match_respondent, "failed", "verboice")
+        )
+      end
+
+      logger |> GenServer.stop()
+      broker |> GenServer.stop()
+    end
+
+    test "can't notify channel broker of completed status", %{
+      conn: conn,
+      respondent: respondent,
+      logger: logger,
+      broker: broker
+    } do
+      respondent
+      |> Respondent.changeset(%{session: nil})
+      |> Repo.update!()
+
+      with_mock ChannelBroker, callback_received: fn _, _, _, _ -> :ok end do
+        VerboiceChannel.callback(conn, %{
+          "path" => ["status", respondent.id, "token"],
+          "CallStatus" => "completed",
+          "CallDuration" => "15",
+          "CallSid" => "6B8F5B7B-E412-46D3-96E1-688215F43CC3"
+        })
+
+        assert_not_called(ChannelBroker.callback_received(:_, :_, :_, :_))
+      end
 
       logger |> GenServer.stop()
       broker |> GenServer.stop()

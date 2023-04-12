@@ -399,6 +399,10 @@ defmodule Ask.Runtime.Session do
     end
   end
 
+  def load_current_mode(%{"current_mode" => current_mode}) do
+    SessionModeProvider.load(current_mode)
+  end
+
   def current_step_index(session) do
     session.flow.current_step
   end

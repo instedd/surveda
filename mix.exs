@@ -70,6 +70,7 @@ defmodule Ask.Mixfile do
       {:csv, "~> 1.4.2"},
       {:oauth2, "~> 0.7.0"},
       {:mutex, "~> 1.1.3"},
+      {:mock, "~> 0.3.0", only: :test},
       {:mox, "~> 0.5", only: :test},
       {:timex, "~> 3.6.0"},
       {:sentry, "~> 7.0"},
@@ -100,7 +101,7 @@ defmodule Ask.Mixfile do
       # {:telemetry, "~> 0.4.3"},
 
       # held back because of warnings & errors with newer versions
-      {:swoosh, "~> 0.17.0"},
+      {:swoosh, "~> 0.17.0"}
     ]
   end
 
