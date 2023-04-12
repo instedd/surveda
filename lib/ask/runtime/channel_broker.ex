@@ -267,14 +267,9 @@ defmodule Ask.Runtime.ChannelBroker do
     end
   end
 
-  defp is_queued(
-         %{
-           contacts_queue: contacts_queue
-         } = _state,
-         respondent_id
-       ) do
+  defp is_queued(%{contacts_queue: contacts_queue}, respondent_id) do
     :pqueue.to_list(contacts_queue)
-    |> Enum.any?(fn queued_item -> queued_respondent_id(queued_item) == respondent_id end)
+    |> Enum.any?(fn [_, queued_item] -> queued_respondent_id(queued_item) == respondent_id end)
   end
 
   defp is_active(
