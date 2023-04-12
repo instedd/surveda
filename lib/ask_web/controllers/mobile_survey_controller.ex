@@ -179,33 +179,33 @@ defmodule AskWeb.MobileSurveyController do
     end
   end
 
-  defp check_cookie(conn, respondent_id, success_fn) do
-    respondent = Repo.get!(Respondent, respondent_id)
-    cookie_name = Respondent.mobile_web_cookie_name(respondent_id)
-    respondent_cookie = respondent.mobile_web_cookie_code
+  # defp check_cookie(conn, respondent_id, success_fn) do
+  #   respondent = Repo.get!(Respondent, respondent_id)
+  #   cookie_name = Respondent.mobile_web_cookie_name(respondent_id)
+  #   respondent_cookie = respondent.mobile_web_cookie_code
 
-    if respondent_cookie do
-      request_cookie = fetch_cookies(conn).req_cookies[cookie_name]
+  #   if respondent_cookie do
+  #     request_cookie = fetch_cookies(conn).req_cookies[cookie_name]
 
-      if request_cookie == respondent_cookie do
-        success_fn.(conn)
-      else
-        raise AskWeb.UnauthorizedError
-      end
-    else
-      cookie_value = Ecto.UUID.generate()
+  #     if request_cookie == respondent_cookie do
+  #       success_fn.(conn)
+  #     else
+  #       raise AskWeb.UnauthorizedError
+  #     end
+  #   else
+  #     cookie_value = Ecto.UUID.generate()
 
-      respondent
-      |> Respondent.changeset(%{mobile_web_cookie_code: cookie_value})
-      |> Repo.update!()
+  #     respondent
+  #     |> Respondent.changeset(%{mobile_web_cookie_code: cookie_value})
+  #     |> Repo.update!()
 
-      conn =
-        conn
-        |> put_resp_cookie(cookie_name, cookie_value)
+  #     conn =
+  #       conn
+  #       |> put_resp_cookie(cookie_name, cookie_value)
 
-      success_fn.(conn)
-    end
-  end
+  #     success_fn.(conn)
+  #   end
+  # end
 
   def unauthorized_error(conn, %{"id" => respondent_id}) do
     color_style = color_style_for(respondent_id)
