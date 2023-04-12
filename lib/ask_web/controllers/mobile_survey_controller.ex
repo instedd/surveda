@@ -76,9 +76,10 @@ defmodule AskWeb.MobileSurveyController do
 
   def get_step(conn, %{"respondent_id" => respondent_id, "token" => token}) do
     authorize(conn, respondent_id, token, fn ->
-      check_cookie(conn, respondent_id, fn conn ->
-        sync_step(conn, respondent_id, :answer)
-      end)
+      # Cookies disabled for now, see #2241
+      # check_cookie(conn, respondent_id, fn conn ->
+      sync_step(conn, respondent_id, :answer)
+      # end)
     end)
   end
 
@@ -89,9 +90,10 @@ defmodule AskWeb.MobileSurveyController do
         "step_id" => step_id
       }) do
     authorize(conn, respondent_id, token, fn ->
-      check_cookie(conn, respondent_id, fn conn ->
-        sync_step(conn, respondent_id, {:reply_with_step_id, value, step_id})
-      end)
+      # Cookies disabled for now, see #2241
+      # check_cookie(conn, respondent_id, fn conn ->
+      sync_step(conn, respondent_id, {:reply_with_step_id, value, step_id})
+      # end)
     end)
   end
 
