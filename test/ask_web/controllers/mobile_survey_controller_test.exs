@@ -146,7 +146,7 @@ defmodule AskWeb.MobileSurveyControllerTest do
       get(conn, mobile_survey_path(conn, :get_step, respondent.id))
     end
 
-    original_conn = conn
+    # original_conn = conn
 
     conn = get(conn, mobile_survey_path(conn, :get_step, respondent.id, %{token: token}))
     json = json_response(conn, 200)
