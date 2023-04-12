@@ -22,14 +22,8 @@ defmodule Ask.Runtime.ChannelBroker do
     {:via, Registry, {:channel_broker_registry, channel_id}}
   end
 
-  def prepare(nil, channel), do: prepare(0, channel)
-
   def prepare(channel_id, channel) do
     call_gen_server(channel_id, {:prepare, channel})
-  end
-
-  def setup(nil, channel_type, channel, respondent, token, not_before, not_after) do
-    setup(0, channel_type, channel, respondent, token, not_before, not_after)
   end
 
   def setup(channel_id, channel_type, channel, respondent, token, not_before, not_after) do
@@ -39,53 +33,28 @@ defmodule Ask.Runtime.ChannelBroker do
     )
   end
 
-  def has_delivery_confirmation?(nil, channel), do: has_delivery_confirmation?(0, channel)
-
   def has_delivery_confirmation?(channel_id, channel) do
     call_gen_server(channel_id, {:has_delivery_confirmation?, channel})
   end
 
-  def ask(nil, channel_type, channel, respondent, token, reply),
-    do: ask(0, channel_type, channel, respondent, token, reply)
-
   def ask(channel_id, channel_type, channel, respondent, token, reply) do
     call_gen_server(channel_id, {:ask, channel_type, channel, respondent, token, reply})
-  end
-
-  def has_queued_message?(nil, channel_type, channel, respondent_id) do
-    has_queued_message?(0, channel_type, channel, respondent_id)
   end
 
   def has_queued_message?(channel_id, channel_type, channel, respondent_id) do
     call_gen_server(channel_id, {:has_queued_message?, channel_type, channel, respondent_id})
   end
 
-  def cancel_message(nil, channel, channel_type, respondent_id) do
-    cancel_message(0, channel, channel_type, respondent_id)
-  end
-
   def cancel_message(channel_id, channel_type, channel, respondent_id) do
     call_gen_server(channel_id, {:cancel_message, channel_type, channel, respondent_id})
-  end
-
-  def message_expired?(nil, channel_type, channel, respondent_id) do
-    message_expired?(0, channel_type, channel, respondent_id)
   end
 
   def message_expired?(channel_id, channel_type, channel, respondent_id) do
     call_gen_server(channel_id, {:message_expired?, channel_type, channel, respondent_id})
   end
 
-  def check_status(nil, channel) do
-    check_status(0, channel)
-  end
-
   def check_status(channel_id, channel) do
     call_gen_server(channel_id, {:check_status, channel})
-  end
-
-  def check_status(nil, respondent, respondent_state, provider) do
-    check_status(0, respondent, respondent_state, provider)
   end
 
   def on_channel_settings_change(channel_id, settings) do
@@ -109,12 +78,22 @@ defmodule Ask.Runtime.ChannelBroker do
     )
   end
 
-  defp call_gen_server(channel_id, message) do
-    {channel_id, _} =
-      if is_integer(channel_id), do: {channel_id, nil}, else: Integer.parse(channel_id)
+  defp call_gen_server(nil, message) do
+    if Mix.env() == :test do
+      call_gen_server(0, message)
+    else
+      raise "Channels with channel_id=nil are only allowed in tests"
+    end
+  end
 
+  defp call_gen_server(channel_id, message) when is_integer(channel_id) do
     pid = find_or_start_process(channel_id)
     GenServer.call(pid, message)
+  end
+
+  defp call_gen_server(channel_id, message) do
+    {channel_id, _} = Integer.parse(channel_id)
+    call_gen_server(channel_id, message)
   end
 
   defp find_or_start_process(channel_id) do
