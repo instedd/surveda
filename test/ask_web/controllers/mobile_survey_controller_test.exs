@@ -114,7 +114,6 @@ defmodule AskWeb.MobileSurveyControllerTest do
     respondent = insert(:respondent, survey: survey, respondent_group: group)
     phone_number = respondent.sanitized_phone_number
     token = Respondent.token(respondent.id)
-    # cookie_name = Respondent.mobile_web_cookie_name(respondent.id)
 
     {:ok, broker} = Broker.start_link()
     Broker.poll()
@@ -146,19 +145,8 @@ defmodule AskWeb.MobileSurveyControllerTest do
       get(conn, mobile_survey_path(conn, :get_step, respondent.id))
     end
 
-    # original_conn = conn
-
     conn = get(conn, mobile_survey_path(conn, :get_step, respondent.id, %{token: token}))
     json = json_response(conn, 200)
-
-    # A cookie should have been generated
-    # %{value: mobile_web_code} = conn.resp_cookies[cookie_name]
-    # assert mobile_web_code
-
-    # Check again without a cookie
-    # assert_error_sent :forbidden, fn ->
-    #  get(original_conn, mobile_survey_path(conn, :get_step, respondent.id, %{token: token}))
-    # end
 
     assert %{
              "choices" => [],
@@ -188,18 +176,6 @@ defmodule AskWeb.MobileSurveyControllerTest do
         mobile_survey_path(conn, :send_reply, respondent.id, %{value: "", step_id: "s1"})
       )
     end
-
-    # Check without a cookie
-    # assert_error_sent :forbidden, fn ->
-    #  post(
-    #    original_conn,
-    #    mobile_survey_path(conn, :send_reply, respondent.id, %{
-    #      token: token,
-    #      value: "",
-    #      step_id: "s1"
-    #    })
-    #  )
-    # end
 
     conn =
       post(
