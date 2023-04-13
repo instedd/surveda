@@ -514,7 +514,6 @@ CREATE TABLE `respondents` (
   `hashed_number` varchar(255) DEFAULT NULL,
   `disposition` varchar(255) DEFAULT NULL,
   `lock_version` int(11) DEFAULT '1',
-  `mobile_web_cookie_code` varchar(255) DEFAULT NULL,
   `language` varchar(255) DEFAULT NULL,
   `effective_modes` varchar(255) DEFAULT NULL,
   `stats` longtext NOT NULL,
@@ -989,7 +988,7 @@ CREATE TABLE `users` (
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2023-04-03  7:13:11
+-- Dump completed on 2023-04-13  8:17:16
 INSERT INTO `schema_migrations` (version) VALUES (20160812145257);
 INSERT INTO `schema_migrations` (version) VALUES (20160816183915);
 INSERT INTO `schema_migrations` (version) VALUES (20160830200454);
@@ -1205,3 +1204,4 @@ INSERT INTO `schema_migrations` (version) VALUES (20220131103226);
 INSERT INTO `schema_migrations` (version) VALUES (20230217143550);
 INSERT INTO `schema_migrations` (version) VALUES (20230317094712);
 INSERT INTO `schema_migrations` (version) VALUES (20230402091100);
+INSERT INTO `schema_migrations` (version) VALUES (20230413101342);

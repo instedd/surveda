@@ -110,7 +110,6 @@ defmodule Ask.Respondent do
     # * ["mobileweb", "ivr"] -> Mobileweb as primary mode, IVR as fallback mode
     field :mode, JSON
     field :effective_modes, JSON
-    field :mobile_web_cookie_code, :string
     field :language, :string
     belongs_to :questionnaire, Questionnaire
     belongs_to :survey, Ask.Survey
@@ -144,7 +143,6 @@ defmodule Ask.Respondent do
       :questionnaire_id,
       :mode,
       :disposition,
-      :mobile_web_cookie_code,
       :language,
       :effective_modes,
       :stats,
@@ -234,10 +232,6 @@ defmodule Ask.Respondent do
       -12,
       12
     )
-  end
-
-  def mobile_web_cookie_name(respondent_id) do
-    "mobile_web_code_#{respondent_id}"
   end
 
   def completed_dispositions(count_partial_results \\ false)
