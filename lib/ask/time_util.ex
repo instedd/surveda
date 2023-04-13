@@ -23,7 +23,7 @@ defmodule Ask.TimeUtil do
   # There are no reasons to not use Timex.format unless you need raw performance and make lots of
   # repeating calls in a tight loop (eg. exporting a CSV) which is sole reason that method exists.
   def format2(ecto_timestamp, offset_seconds, offset_label) do
-    {{year, month, day}, {hour, min, sec}} = to_ymdhms(ecto_timestamp, offset_seconds)
+    {{year, month, day}, {hour, min, _sec}} = to_ymdhms(ecto_timestamp, offset_seconds)
     "#{Map.get(@months, month)} #{pad2(day, " ")}, #{year} #{pad2(hour)}:#{pad2(min)} #{offset_label}"
   end
 
