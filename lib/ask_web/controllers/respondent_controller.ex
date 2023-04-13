@@ -874,6 +874,10 @@ defmodule AskWeb.RespondentController do
       end)
       |> Enum.uniq()
 
+    # timezone = survey.schedule.timezone
+    tz_offset_in_seconds = Survey.timezone_offset_in_seconds(survey)
+    tz_offset = Survey.timezone_offset(survey)
+
     # Now traverse each respondent and create a row for it
     csv_rows =
       respondents
@@ -892,12 +896,11 @@ defmodule AskWeb.RespondentController do
               responses
               |> Enum.map(fn r -> r.updated_at end)
               |> Enum.max()
-              |> Survey.adjust_timezone(survey)
           end
 
         row =
           if date do
-            row ++ [date |> Timex.format!("%b %e, %Y %H:%M #{tz_offset}", :strftime)]
+            row ++ [Ask.TimeUtil.format2(date, tz_offset_in_seconds, tz_offset)]
           else
             row ++ ["-"]
           end
@@ -953,7 +956,7 @@ defmodule AskWeb.RespondentController do
             row
           end
 
-        # We traverse all fields and see if there's a response for this respondent
+        # # We traverse all fields and see if there's a response for this respondent
         row =
           all_fields
           |> Enum.reduce(row, fn field_name, acc ->
@@ -1047,14 +1050,18 @@ defmodule AskWeb.RespondentController do
         fn _ -> [] end
       )
 
+    tz_offset_in_seconds = Survey.timezone_offset_in_seconds(survey)
     tz_offset = Survey.timezone_offset(survey)
-    offset_seconds = Survey.timezone_offset_in_seconds(survey)
 
     csv_rows =
       history
       |> Stream.map(fn history ->
-        date = Ask.TimeUtil.format(history.inserted_at, offset_seconds, tz_offset)
-        [history.respondent_hashed_number, history.disposition, mode_label([history.mode]), date]
+        [
+          history.respondent_hashed_number,
+          history.disposition,
+          mode_label([history.mode]),
+          csv_datetime(history.inserted_at, tz_offset_in_seconds, tz_offset)
+        ]
       end)
 
     header = ["Respondent ID", "Disposition", "Mode", "Timestamp"]
@@ -1076,6 +1083,9 @@ defmodule AskWeb.RespondentController do
       |> where([s], s.incentives_enabled)
       |> Repo.get!(survey_id)
 
+    tz_offset_in_seconds = Survey.timezone_offset_in_seconds(survey)
+    tz_offset = Survey.timezone_offset(survey)
+
     csv_rows =
       from(r in Respondent,
         where:
@@ -1089,7 +1099,7 @@ defmodule AskWeb.RespondentController do
         [
           r.phone_number,
           experiment_name(r.questionnaire, r.mode),
-          csv_datetime(r.completed_at, survey)
+          csv_datetime(r.completed_at, tz_offset_in_seconds, tz_offset)
         ]
       end)
 
@@ -1106,6 +1116,8 @@ defmodule AskWeb.RespondentController do
     project = load_project_for_owner(conn, project_id)
     survey = load_survey(project, survey_id)
 
+    channels = survey_channel_names(survey)
+
     log_entries =
       Stream.resource(
         fn -> {"", 0} end,
@@ -1117,8 +1129,7 @@ defmodule AskWeb.RespondentController do
                   ((e.respondent_hashed_number == ^last_hash and e.id > ^last_id) or
                      e.respondent_hashed_number > ^last_hash),
               order_by: [e.respondent_hashed_number, e.id],
-              limit: 1000,
-              preload: :channel
+              limit: 1000
             )
             |> Repo.all()
 
@@ -1130,29 +1141,21 @@ defmodule AskWeb.RespondentController do
         fn _ -> [] end
       )
 
+    tz_offset_in_seconds = Survey.timezone_offset_in_seconds(survey)
+    tz_offset = Survey.timezone_offset(survey)
+
     csv_rows =
       log_entries
       |> Stream.map(fn e ->
-        channel_name =
-          if e.channel do
-            e.channel.name
-          else
-            ""
-          end
-
-        disposition = disposition_label(e.disposition)
-        action_type = action_type_label(e.action_type)
-        timestamp = csv_datetime(e.timestamp, survey)
-
         [
           Integer.to_string(e.id),
           e.respondent_hashed_number,
           interactions_mode_label(e.mode),
-          channel_name,
-          disposition,
-          action_type,
+          Map.get(channels, e.channel_id, ""),
+          disposition_label(e.disposition),
+          action_type_label(e.action_type),
           e.action_data,
-          timestamp
+          csv_datetime(e.timestamp, tz_offset_in_seconds, tz_offset)
         ]
       end)
 
@@ -1172,6 +1175,22 @@ defmodule AskWeb.RespondentController do
     filename = csv_filename(survey, "respondents_interactions")
     ActivityLog.download(project, conn, survey, "interactions") |> Repo.insert()
     conn |> csv_stream(rows, filename)
+  end
+
+  defp survey_channel_names(survey) do
+    from(c in Ask.Channel,
+      select: {c.id, c.name},
+      where:
+        c.id in subquery(
+          from(e in SurveyLogEntry,
+            distinct: true,
+            select: e.channel_id,
+            where: e.survey_id == ^survey.id
+          )
+        )
+    )
+    |> Repo.all()
+    |> Enum.into(%{})
   end
 
   defp mask_phone_numbers(respondent) do
@@ -1230,18 +1249,15 @@ defmodule AskWeb.RespondentController do
     Timex.format!(DateTime.utc_now(), "#{prefix}_%Y-%m-%d-%H-%M-%S.csv", :strftime)
   end
 
-  defp csv_datetime(nil, _), do: ""
+  defp csv_datetime(nil, _, _), do: ""
 
-  defp csv_datetime(dt, survey) when is_binary(dt) do
+  defp csv_datetime(dt, tz_offset_in_seconds, tz_offset) when is_binary(dt) do
     {:ok, datetime, _offset} = DateTime.from_iso8601(dt)
-    csv_datetime(datetime, survey)
+    csv_datetime(datetime, tz_offset_in_seconds, tz_offset)
   end
 
-  defp csv_datetime(dt, %Survey{} = survey) do
-    tz_offset = Survey.timezone_offset(survey)
-    offset_seconds = Survey.timezone_offset_in_seconds(survey)
-
-    Ask.TimeUtil.format(dt, offset_seconds, tz_offset)
+  defp csv_datetime(dt, tz_offset_in_seconds, tz_offset) do
+    Ask.TimeUtil.format(dt, tz_offset_in_seconds, tz_offset)
   end
 
   defp load_survey(project, survey_id) do
