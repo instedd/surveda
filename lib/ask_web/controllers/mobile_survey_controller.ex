@@ -76,9 +76,7 @@ defmodule AskWeb.MobileSurveyController do
 
   def get_step(conn, %{"respondent_id" => respondent_id, "token" => token}) do
     authorize(conn, respondent_id, token, fn ->
-      check_cookie(conn, respondent_id, fn conn ->
-        sync_step(conn, respondent_id, :answer)
-      end)
+      sync_step(conn, respondent_id, :answer)
     end)
   end
 
@@ -89,9 +87,7 @@ defmodule AskWeb.MobileSurveyController do
         "step_id" => step_id
       }) do
     authorize(conn, respondent_id, token, fn ->
-      check_cookie(conn, respondent_id, fn conn ->
-        sync_step(conn, respondent_id, {:reply_with_step_id, value, step_id})
-      end)
+      sync_step(conn, respondent_id, {:reply_with_step_id, value, step_id})
     end)
   end
 
@@ -174,34 +170,6 @@ defmodule AskWeb.MobileSurveyController do
         title: @default_title,
         mobile_web_intro_message: ""
       )
-    end
-  end
-
-  defp check_cookie(conn, respondent_id, success_fn) do
-    respondent = Repo.get!(Respondent, respondent_id)
-    cookie_name = Respondent.mobile_web_cookie_name(respondent_id)
-    respondent_cookie = respondent.mobile_web_cookie_code
-
-    if respondent_cookie do
-      request_cookie = fetch_cookies(conn).req_cookies[cookie_name]
-
-      if request_cookie == respondent_cookie do
-        success_fn.(conn)
-      else
-        raise AskWeb.UnauthorizedError
-      end
-    else
-      cookie_value = Ecto.UUID.generate()
-
-      respondent
-      |> Respondent.changeset(%{mobile_web_cookie_code: cookie_value})
-      |> Repo.update!()
-
-      conn =
-        conn
-        |> put_resp_cookie(cookie_name, cookie_value)
-
-      success_fn.(conn)
     end
   end
 
