@@ -874,9 +874,7 @@ defmodule AskWeb.RespondentController do
       end)
       |> Enum.uniq()
 
-    # timezone = survey.schedule.timezone
     tz_offset_in_seconds = Survey.timezone_offset_in_seconds(survey)
-    tz_offset = Survey.timezone_offset(survey)
 
     # Now traverse each respondent and create a row for it
     csv_rows =
@@ -956,7 +954,7 @@ defmodule AskWeb.RespondentController do
             row
           end
 
-        # # We traverse all fields and see if there's a response for this respondent
+        # We traverse all fields and see if there's a response for this respondent
         row =
           all_fields
           |> Enum.reduce(row, fn field_name, acc ->
