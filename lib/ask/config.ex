@@ -64,7 +64,8 @@ defmodule Ask.Config do
       # High values: the state of the process will be save less frequently. More contacts can be
       # lost in case of errors or unexpected resets. A too high value risks too many contacts
       # lost.
-      to_db_operations: env_to_int("CHNL_BKR_TO_DB_OPERATIONS", 100),
+      # To disable saving to DB, set this value to 0.
+      to_db_operations: env_to_int("CHNL_BKR_TO_DB_OPERATIONS", 0),
       # How many minutes the ChannelBroker garbage collector will wait between rounds. Default: 10
       # minutes.
       # Two situations brings the need of running the GC frequently:
