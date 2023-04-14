@@ -1129,7 +1129,7 @@ defmodule AskWeb.RespondentController do
     project = load_project_for_owner(conn, project_id)
     survey = load_survey(project, survey_id)
 
-    channels = survey_respondent_channel_names(survey)
+    channels = survey_log_entry_channel_names(survey)
 
     log_entries =
       Stream.resource(
@@ -1190,7 +1190,7 @@ defmodule AskWeb.RespondentController do
     conn |> csv_stream(rows, filename)
   end
 
-  defp survey_respondent_channel_names(survey) do
+  defp survey_log_entry_channel_names(survey) do
     from(c in Ask.Channel,
       select: {c.id, c.name},
       where:
