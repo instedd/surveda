@@ -925,19 +925,14 @@ defmodule AskWeb.RespondentController do
         row = row ++ [respondent_group]
 
         questionnaire_id = respondent.questionnaire_id
+        questionnaire = questionnaires |> Enum.find(fn q -> q.id == questionnaire_id end)
         mode = respondent.mode
 
         row =
           if has_comparisons do
             variant =
-              if questionnaire_id && mode do
-                questionnaire = questionnaires |> Enum.find(fn q -> q.id == questionnaire_id end)
-
-                if questionnaire do
-                  experiment_name(questionnaire, mode)
-                else
-                  "-"
-                end
+              if questionnaire && mode do
+                experiment_name(questionnaire, mode)
               else
                 "-"
               end
@@ -949,7 +944,10 @@ defmodule AskWeb.RespondentController do
 
         row =
           if partial_relevant_enabled do
-            row ++ [Respondent.partial_relevant_answered_count(respondent, false)]
+            respondent_with_questionnaire = %{respondent | questionnaire: questionnaire}
+
+            row ++
+              [Respondent.partial_relevant_answered_count(respondent_with_questionnaire, false)]
           else
             row
           end
