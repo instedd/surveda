@@ -736,7 +736,7 @@ defmodule AskWeb.RespondentController do
               where: ^filter_where,
               order_by: r2.id,
               limit: 1000,
-              preload: [:responses, :respondent_group, :questionnaire],
+              preload: [:responses, :respondent_group],
               select: r1
             )
             |> Repo.all()
@@ -1081,6 +1081,8 @@ defmodule AskWeb.RespondentController do
       |> where([s], s.incentives_enabled)
       |> Repo.get!(survey_id)
 
+    questionnaires = survey_respondent_questionnaires(survey)
+
     tz_offset_in_seconds = Survey.timezone_offset_in_seconds(survey)
     tz_offset = Survey.timezone_offset(survey)
 
@@ -1092,11 +1094,12 @@ defmodule AskWeb.RespondentController do
         order_by: r.id
       )
       |> Repo.stream()
-      |> Repo.stream_preload(:questionnaire)
       |> Stream.map(fn r ->
+        questionnaire = Enum.find(questionnaires, fn q -> q.id == r.questionnaire_id end)
+
         [
           r.phone_number,
-          experiment_name(r.questionnaire, r.mode),
+          experiment_name(questionnaire, r.mode),
           csv_datetime(r.completed_at, tz_offset_in_seconds, tz_offset)
         ]
       end)
@@ -1110,11 +1113,25 @@ defmodule AskWeb.RespondentController do
     conn
   end
 
+  defp survey_respondent_questionnaires(survey) do
+    from(q in Questionnaire,
+      where:
+        q.id in subquery(
+          from(r in Respondent,
+            distinct: true,
+            select: r.questionnaire_id,
+            where: r.survey_id == ^survey.id
+          )
+        )
+    )
+    |> Repo.all()
+  end
+
   def interactions(conn, %{"project_id" => project_id, "survey_id" => survey_id}) do
     project = load_project_for_owner(conn, project_id)
     survey = load_survey(project, survey_id)
 
-    channels = survey_channel_names(survey)
+    channels = survey_respondent_channel_names(survey)
 
     log_entries =
       Stream.resource(
@@ -1175,7 +1192,7 @@ defmodule AskWeb.RespondentController do
     conn |> csv_stream(rows, filename)
   end
 
-  defp survey_channel_names(survey) do
+  defp survey_respondent_channel_names(survey) do
     from(c in Ask.Channel,
       select: {c.id, c.name},
       where:
