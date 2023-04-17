@@ -4,14 +4,12 @@ FROM elixir:1.10 AS dev
 RUN sed -i '/^mozilla\/DST_Root_CA_X3/s/^/!/' /etc/ca-certificates.conf && update-ca-certificates -f
 
 RUN apt -q update && \
-    apt -q install -y default-mysql-client inotify-tools festival yarnpkg && \
+    apt -q install -y default-mysql-client inotify-tools festival && \
     apt -q install -y --no-install-recommends ffmpeg libaacs0 && \
     apt -q clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 RUN mix local.hex --force
 RUN mix local.rebar --force
-
-FROM dev AS release
 
 ENV MIX_ENV=prod
 
@@ -26,10 +24,23 @@ ADD . /app
 RUN mix compile
 RUN mix phx.digest
 
-RUN yarnpkg install --no-progress
-RUN yarnpkg deploy
+FROM node:10 as js
 
+COPY --from=dev /deps /deps
+ADD . /app
+WORKDIR /app
+
+RUN yarn install --no-progress
+RUN yarn deploy
+
+FROM dev AS release
+
+COPY --from=js /app/assets /app/
+
+ENV MIX_ENV=prod
 ENV PORT=80
+
+WORKDIR /app
 EXPOSE 80
 
 CMD elixir --sname server -S mix phx.server
