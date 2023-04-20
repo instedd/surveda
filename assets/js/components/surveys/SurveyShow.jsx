@@ -76,7 +76,7 @@ class SurveyShow extends Component<any, State> {
   }
 
   componentWillMount() {
-    const { dispatch, projectId, surveyId, survey } = this.props
+    const { dispatch, projectId, surveyId } = this.props
     dispatch(actions.fetchSurveyIfNeeded(projectId, surveyId)).then((response) => {
       this.setState({ paused: response.state == "paused" })
     })
@@ -97,7 +97,7 @@ class SurveyShow extends Component<any, State> {
   }
 
   pauseOrResumeSurvey() {
-    const { dispatch, survey, projectId, surveyId, router } = this.props
+    const { dispatch, survey, projectId, surveyId } = this.props
     if (survey && survey.state == "running") {
       pauseSurvey(projectId, surveyId).then(() => {
         dispatch(actions.pauseSurvey())
