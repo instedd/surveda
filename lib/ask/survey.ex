@@ -47,12 +47,13 @@ defmodule Ask.Survey do
     #   * 1st mode sequence: Mobileweb as primary mode, IVR as fallback mode
     #   * 2nd mode sequence: SMS as primary mode, no fallback mode
     field :mode, JSON
-    # not_ready, ready, pending, running, terminated, cancelling
+    # not_ready, ready, pending, paused, running, terminated, cancelling
     field :state, Ecto.Enum,
       values: [
         :not_ready,
         :ready,
         :pending,
+        :paused,
         :running,
         :terminated,
         :cancelling
@@ -228,6 +229,7 @@ defmodule Ask.Survey do
     end
   end
 
+  def editable?(%{state: :paused}), do: false
   def editable?(%{state: :running}), do: false
   def editable?(%{state: :terminated}), do: false
   def editable?(_), do: true
@@ -436,7 +438,7 @@ defmodule Ask.Survey do
     do: ConfigHelper.get_config(Ask.Runtime.Broker, name, &String.to_integer/1)
 
   def launched?(survey) do
-    survey.state in [:running, :terminated]
+    survey.state in [:paused, :running, :terminated]
   end
 
   def adjust_timezone(date_time, %Survey{} = survey) do
@@ -460,7 +462,7 @@ defmodule Ask.Survey do
   end
 
   def has_floip_package?(survey) do
-    survey.state == :running || survey.state == :terminated
+    survey.state == :paused || survey.state == :running || survey.state == :terminated
   end
 
   def cancel_respondents(survey) do
@@ -500,7 +502,7 @@ defmodule Ask.Survey do
   def running_channels() do
     query =
       from s in Survey,
-        where: s.state == :running,
+        where: s.state == :running or s.state == :paused,
         join: group in RespondentGroup,
         on: s.id == group.survey_id,
         join: rgc in RespondentGroupChannel,
@@ -820,8 +822,9 @@ defmodule Ask.Survey do
     |> Timex.compare(expiration_date_time) > -1
   end
 
-  # Running surveys aren't deletable
+  # Running or paused surveys aren't deletable
   def deletable?(%{state: :running} = _survey), do: false
+  def deletable?(%{state: :paused} = _survey), do: false
   # Only wave of a panel survey isn't deletable (because a panel survey cannot be empty)
   def deletable?(survey), do: not only_wave_of_panel_survey?(survey)
 

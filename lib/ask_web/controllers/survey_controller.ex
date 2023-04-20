@@ -381,6 +381,68 @@ defmodule AskWeb.SurveyController do
     render(conn, "config.json", config: Survey.config_rates())
   end
 
+  def pause(conn, %{"project_id" => project_id, "survey_id" => survey_id}) do
+    survey =
+      conn
+      |> load_project_for_change(project_id)
+      |> load_survey(survey_id)
+      |> Repo.preload([:project])
+
+    if survey.state == :running do
+      changeset = Survey.changeset(survey, %{state: :paused})
+
+      multi =
+        Multi.new()
+        |> Multi.insert(:log, ActivityLog.pause(survey.project, conn, survey))
+        |> Multi.update(:survey, changeset)
+        |> Repo.transaction()
+
+      case multi do
+        {:ok, %{survey: new_survey}} ->
+          conn
+          |> render_with_links(new_survey)
+
+        _ ->
+          conn
+          |> render_with_links(survey)
+      end
+    else
+      conn
+      |> render_with_links(survey)
+    end
+  end
+
+  def resume(conn, %{"project_id" => project_id, "survey_id" => survey_id}) do
+    survey =
+      conn
+      |> load_project_for_change(project_id)
+      |> load_survey(survey_id)
+      |> Repo.preload([:project])
+
+    if survey.state == :paused do
+      changeset = Survey.changeset(survey, %{state: :running})
+
+      multi =
+        Multi.new()
+        |> Multi.insert(:log, ActivityLog.resume(survey.project, conn, survey))
+        |> Multi.update(:survey, changeset)
+        |> Repo.transaction()
+
+      case multi do
+        {:ok, %{survey: new_survey}} ->
+          conn
+          |> render_with_links(new_survey)
+
+        _ ->
+          conn
+          |> render_with_links(survey)
+      end
+    else
+      conn
+      |> render_with_links(survey)
+    end
+  end
+
   def stop(conn, %{"project_id" => project_id, "survey_id" => survey_id}) do
     survey =
       conn
@@ -432,7 +494,7 @@ defmodule AskWeb.SurveyController do
       |> Survey.with_links(user_level(project_id, current_user(conn).id))
 
     case survey.state do
-      :running ->
+      s when s == :running or s == :paused ->
         [survey_changeset, activity_log] =
           case locked do
             true ->

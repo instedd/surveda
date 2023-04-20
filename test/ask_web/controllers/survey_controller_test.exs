@@ -110,6 +110,7 @@ defmodule AskWeb.SurveyControllerTest do
     test "list only running surveys", %{conn: conn, user: user} do
       project = create_project_for_user(user)
       insert(:survey, project: project, state: :terminated, exit_code: 0)
+      insert(:survey, project: project, state: :paused)
       survey = insert(:survey, project: project, state: :running)
       survey = Survey |> Repo.get(survey.id)
 
@@ -190,6 +191,7 @@ defmodule AskWeb.SurveyControllerTest do
     test "list only completed surveys", %{conn: conn, user: user} do
       project = create_project_for_user(user)
       insert(:survey, project: project, state: :running)
+      insert(:survey, project: project, state: :paused)
       survey = insert(:survey, project: project, state: :terminated, exit_code: 0)
       survey = Survey |> Repo.get(survey.id)
 
@@ -799,6 +801,70 @@ defmodule AskWeb.SurveyControllerTest do
       )
 
       ChannelStatusServer.poll(pid)
+
+      conn = get(conn, project_survey_path(conn, :show, project, survey))
+
+      data = json_response(conn, 200)["data"]
+
+      [
+        %{"status" => "down", "messages" => [], "timestamp" => t1, "name" => "test"},
+        %{"status" => "error", "code" => "some code", "timestamp" => t2, "name" => "test"}
+      ] = data["down_channels"]
+
+      assert t1
+      assert t2
+    end
+
+    test "shows channels status when survey is paused", %{conn: conn, user: user} do
+      {:ok, pid} = ChannelStatusServer.start_link()
+      Process.register(self(), :mail_target)
+
+      project = create_project_for_user(user)
+      survey = insert(:survey, project: project, state: :running)
+      survey = Survey |> Repo.get(survey.id)
+
+      up_channel =
+        TestChannel.create_channel(user, "test", TestChannel.settings(TestChannel.new(), 1))
+
+      down_channel =
+        TestChannel.create_channel(
+          user,
+          "test",
+          TestChannel.settings(TestChannel.new(), 2, :down)
+        )
+
+      error_channel =
+        TestChannel.create_channel(
+          user,
+          "test",
+          TestChannel.settings(TestChannel.new(), 3, :error)
+        )
+
+      group_1 = insert(:respondent_group, survey: survey)
+      group_2 = insert(:respondent_group, survey: survey)
+      group_3 = insert(:respondent_group, survey: survey)
+
+      insert(:respondent_group_channel,
+        channel: up_channel,
+        respondent_group: group_1,
+        mode: "sms"
+      )
+
+      insert(:respondent_group_channel,
+        channel: down_channel,
+        respondent_group: group_2,
+        mode: "sms"
+      )
+
+      insert(:respondent_group_channel,
+        channel: error_channel,
+        respondent_group: group_3,
+        mode: "sms"
+      )
+
+      ChannelStatusServer.poll(pid)
+
+      post(conn, project_survey_survey_path(conn, :pause, project, survey))
 
       conn = get(conn, project_survey_path(conn, :show, project, survey))
 
@@ -1911,6 +1977,17 @@ defmodule AskWeb.SurveyControllerTest do
       assert Survey |> Repo.get(survey.id)
     end
 
+    test "reject delete if the survey is paused", %{conn: conn, user: user} do
+      project = create_project_for_user(user)
+      survey = insert(:survey, project: project, state: :paused)
+
+      assert_error_sent :conflict, fn ->
+        delete(conn, project_survey_path(conn, :delete, survey.project, survey))
+      end
+
+      assert Survey |> Repo.get(survey.id)
+    end
+
     test "updates project updated_at when survey is deleted", %{conn: conn, user: user} do
       {:ok, datetime, _} = DateTime.from_iso8601("2000-01-01T00:00:00Z")
       project = create_project_for_user(user, updated_at: datetime)
@@ -2414,6 +2491,49 @@ defmodule AskWeb.SurveyControllerTest do
     assert Repo.get(Survey, survey.id).state == :running
   end
 
+  test "when pausing running a survey, it sets the state to paused", %{conn: conn, user: user} do
+    project = create_project_for_user(user)
+    survey = insert(:survey, project: project, state: :running)
+
+    conn = post(conn, project_survey_survey_path(conn, :pause, survey.project, survey))
+
+    assert json_response(conn, 200)
+    assert Repo.get(Survey, survey.id).state == :paused
+  end
+
+  test "when resuming a paused survey, it sets the state to running", %{conn: conn, user: user} do
+    project = create_project_for_user(user)
+    survey = insert(:survey, project: project, state: :paused)
+
+    conn = post(conn, project_survey_survey_path(conn, :resume, survey.project, survey))
+
+    assert json_response(conn, 200)
+    assert Repo.get(Survey, survey.id).state == :running
+  end
+
+  test "when pausing non running survey, the state does not change", %{conn: conn, user: user} do
+    project = create_project_for_user(user)
+    survey = insert(:survey, project: project, state: :ready)
+
+    conn = post(conn, project_survey_survey_path(conn, :pause, survey.project, survey))
+
+    assert json_response(conn, 200)
+    assert Repo.get(Survey, survey.id).state == :ready
+  end
+
+  test "when resuming a non non paused survey, the state does not change", %{
+    conn: conn,
+    user: user
+  } do
+    project = create_project_for_user(user)
+    survey = insert(:survey, project: project, state: :ready)
+
+    conn = post(conn, project_survey_survey_path(conn, :resume, survey.project, survey))
+
+    assert json_response(conn, 200)
+    assert Repo.get(Survey, survey.id).state == :ready
+  end
+
   test "when launching a survey, it creates questionnaire snapshots", %{conn: conn, user: user} do
     project = create_project_for_user(user)
     questionnaire = insert(:questionnaire, name: "test", project: project, steps: @dummy_steps)
@@ -2486,6 +2606,24 @@ defmodule AskWeb.SurveyControllerTest do
 
     assert_error_sent :forbidden, fn ->
       post(conn, project_survey_survey_path(conn, :launch, survey.project, survey))
+    end
+  end
+
+  test "forbids pause for project reader", %{conn: conn, user: user} do
+    project = create_project_for_user(user, level: "reader")
+    survey = insert(:survey, project: project, state: :running)
+
+    assert_error_sent :forbidden, fn ->
+      post(conn, project_survey_survey_path(conn, :pause, survey.project, survey))
+    end
+  end
+
+  test "forbids resume for project reader", %{conn: conn, user: user} do
+    project = create_project_for_user(user, level: "reader")
+    survey = insert(:survey, project: project, state: :paused)
+
+    assert_error_sent :forbidden, fn ->
+      post(conn, project_survey_survey_path(conn, :resume, survey.project, survey))
     end
   end
 
@@ -2762,7 +2900,10 @@ defmodule AskWeb.SurveyControllerTest do
       assert not survey.locked
     end
 
-    test "doesn't update locked status if survey state is not running", %{conn: conn, user: user} do
+    test "doesn't update locked status if survey state is not running or paused", %{
+      conn: conn,
+      user: user
+    } do
       project = create_project_for_user(user)
       questionnaire = insert(:questionnaire, project: project)
 
@@ -2896,6 +3037,25 @@ defmodule AskWeb.SurveyControllerTest do
         survey: survey,
         action: "completed_cancel",
         remote_ip: "0.0.0.0",
+        metadata: %{"survey_name" => survey.name}
+      })
+    end
+
+    test "generates logs after pausing a survey", %{conn: conn, user: user} do
+      project = create_project_for_user(user)
+      survey = insert(:survey, project: project, state: :running)
+
+      post(conn, project_survey_survey_path(conn, :pause, survey.project, survey))
+
+      logs = Repo.all(ActivityLog)
+
+      assert_survey_log(%{
+        log: Enum.at(logs, 0),
+        user_id: user.id,
+        project: project,
+        survey: survey,
+        action: "pause",
+        remote_ip: "192.168.0.128",
         metadata: %{"survey_name" => survey.name}
       })
     end

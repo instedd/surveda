@@ -27,6 +27,8 @@ export const CHANGE_MODE_COMPARISON = "SURVEY_CHANGE_MODE_COMPARISON"
 export const CHANGE_QUESTIONNAIRE_COMPARISON = "SURVEY_CHANGE_QUESTIONNAIRE_COMPARISON"
 export const UPDATE_RESPONDENTS_COUNT = "SURVEY_UPDATE_RESPONDENTS_COUNT"
 export const SET_STATE = "SURVEY_SURVEY_SET_STATE"
+export const PAUSE = "SURVEY_PAUSE"
+export const RESUME = "SURVEY_RESUME"
 export const UPDATE_LOCK = "SURVEY_UPDATE_LOCK"
 export const FETCH = "FETCH_SURVEY"
 export const RECEIVE = "RECEIVE_SURVEY"
@@ -162,6 +164,10 @@ export const setState = (state: string) => ({
   type: SET_STATE,
   state,
 })
+
+export const pauseSurvey = () => ({ type: SET_STATE, state: "paused" })
+
+export const resumeSurvey = () => ({ type: SET_STATE, state: "running" })
 
 export const toggleLock = () => (dispatch: Function, getState: () => Store) => {
   const survey = getState().survey.data

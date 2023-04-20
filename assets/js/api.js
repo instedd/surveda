@@ -386,6 +386,14 @@ export const stopSurvey = (projectId, surveyId) => {
   return apiPostJSON(`projects/${projectId}/surveys/${surveyId}/stop`, surveySchema)
 }
 
+export const pauseSurvey = (projectId, surveyId) => {
+  return apiPostJSON(`projects/${projectId}/surveys/${surveyId}/pause`, surveySchema)
+}
+
+export const resumeSurvey = (projectId, surveyId) => {
+  return apiPostJSON(`projects/${projectId}/surveys/${surveyId}/resume`, surveySchema)
+}
+
 export const newWave = (projectId, panelSurveyId) => {
   return apiPostJSON(`projects/${projectId}/panel_surveys/${panelSurveyId}/new_wave`, surveySchema)
 }

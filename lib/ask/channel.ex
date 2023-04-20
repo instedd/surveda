@@ -50,7 +50,7 @@ defmodule Ask.Channel do
 
   # Deletes a channel and:
   # - marks related :ready surveys as :not_ready
-  # - marks related :running surveys as :terminated with exit code 3
+  # - marks related :running and :paused surveys as :terminated with exit code 3
   def delete(channel) do
     surveys =
       Repo.all(
@@ -69,7 +69,7 @@ defmodule Ask.Channel do
           |> Ask.Survey.changeset(%{state: :not_ready})
           |> Repo.update!()
 
-        :running ->
+        s when s == :running or s == :paused ->
           Ask.Survey.cancel_respondents(survey)
 
           survey

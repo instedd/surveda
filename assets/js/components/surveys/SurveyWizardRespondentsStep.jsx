@@ -154,8 +154,8 @@ class SurveyWizardRespondentsStep extends Component {
 
     const { survey, t } = this.props
 
-    // If the survey is running, the only option is to add more respondents
-    if (survey.state == "running") {
+    // If the survey is running or paused, the only option is to add more respondents
+    if (survey.state == "running" || survey.state == "paused") {
       this.addMoreRespondents(group.id, file)
       return
     }

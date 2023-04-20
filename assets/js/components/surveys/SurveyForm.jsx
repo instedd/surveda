@@ -175,7 +175,8 @@ class SurveyForm extends Component {
     // However, for the respondents step we distinguish between "read only" and "survey started",
     // because a non-reader user can still add more respondents to an existing survey, though
     // she can, for example, change their channel.
-    const surveyStarted = survey.state == "running" || survey.state == "terminated"
+    const surveyStarted =
+      survey.state == "running" || survey.state == "paused" || survey.state == "terminated"
 
     const cutoffRulesStep = () => (
       <div>

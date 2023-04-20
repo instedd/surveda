@@ -8,7 +8,7 @@ import * as panelSurveysActions from "../../actions/panelSurveys"
 import SurveyStatus from "./SurveyStatus"
 import * as routes from "../../routes"
 import { Tooltip, Modal, dispositionGroupLabel, dispositionLabel } from "../ui"
-import { stopSurvey } from "../../api"
+import { stopSurvey, resumeSurvey, pauseSurvey } from "../../api"
 import sum from "lodash/sum"
 import { modeLabel } from "../../questionnaire.mode"
 import {
@@ -31,6 +31,7 @@ type State = {
   contacted: boolean,
   uncontacted: boolean,
   stopUnderstood: boolean,
+  paused: boolean,
 }
 
 class SurveyShow extends Component<any, State> {
@@ -70,12 +71,15 @@ class SurveyShow extends Component<any, State> {
       contacted: false,
       uncontacted: false,
       stopUnderstood: false,
+      paused: false,
     }
   }
 
   componentWillMount() {
-    const { dispatch, projectId, surveyId } = this.props
-    dispatch(actions.fetchSurveyIfNeeded(projectId, surveyId))
+    const { dispatch, projectId, surveyId, survey } = this.props
+    dispatch(actions.fetchSurveyIfNeeded(projectId, surveyId)).then((response) => {
+      this.setState({ paused: response.state == "paused" })
+    })
     dispatch(respondentActions.fetchRespondentsStats(projectId, surveyId))
     dispatch(actions.fetchSurveyStats(projectId, surveyId))
   }
@@ -89,7 +93,22 @@ class SurveyShow extends Component<any, State> {
 
   showHistograms() {
     const { survey } = this.props
-    return survey && survey.state == "running"
+    return survey && (survey.state == "running" || survey.state == "paused")
+  }
+
+  pauseOrResumeSurvey() {
+    const { dispatch, survey, projectId, surveyId, router } = this.props
+    if (survey && survey.state == "running") {
+      pauseSurvey(projectId, surveyId).then(() => {
+        dispatch(actions.pauseSurvey())
+        this.setState({ paused: true })
+      })
+    } else if (survey && survey.state == "paused") {
+      resumeSurvey(projectId, surveyId).then(() => {
+        dispatch(actions.resumeSurvey())
+        this.setState({ paused: false })
+      })
+    }
   }
 
   stopSurvey() {
@@ -191,7 +210,7 @@ class SurveyShow extends Component<any, State> {
       additionalCompletes,
       additionalRespondents,
     } = this.props
-    const { stopUnderstood } = this.state
+    const { stopUnderstood, paused } = this.state
 
     if (!survey || !cumulativePercentages || !questionnaires) {
       return <p>{t("Loading...")}</p>
@@ -200,8 +219,9 @@ class SurveyShow extends Component<any, State> {
     const readOnly = !project || project.readOnly
 
     let stopComponent = null
+    let pauseOrResumeComponent = null
     let switchComponent = null
-    if (!readOnly && survey.state == "running") {
+    if (!readOnly && (survey.state == "running" || survey.state == "paused")) {
       if (project.level == "owner" || project.level == "admin") {
         let lockOpenClass, lockClass
         if (survey.locked) {
@@ -222,6 +242,19 @@ class SurveyShow extends Component<any, State> {
           </div>
         )
       }
+
+      pauseOrResumeComponent = (
+        <Tooltip text={paused ? t("Resume survey") : t("Pause survey")}>
+          <a
+            className="btn-floating btn-large waves-effect waves-light orange right"
+            onClick={() => this.pauseOrResumeSurvey()}
+            disabled={survey.locked}
+          >
+            <i className="material-icons">{paused ? "play_arrow" : "pause"}</i>
+          </a>
+        </Tooltip>
+      )
+
       stopComponent = (
         <div className="stop-container">
           <Tooltip text={t("Stop survey")}>
@@ -233,6 +266,7 @@ class SurveyShow extends Component<any, State> {
               <i className="material-icons">stop</i>
             </a>
           </Tooltip>
+          {pauseOrResumeComponent}
           {switchComponent}
         </div>
       )
