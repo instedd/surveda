@@ -66,6 +66,7 @@ defmodule Ask.Config do
       # lost.
       # To disable saving to DB, set this value to 0.
       to_db_operations: env_to_int("CHNL_BKR_TO_DB_OPERATIONS", 0),
+
       # How many minutes the ChannelBroker garbage collector will wait between rounds. Default: 10
       # minutes.
       # Two situations brings the need of running the GC frequently:
@@ -76,7 +77,8 @@ defmodule Ask.Config do
       # High values: the GC will run less frequently. A too high value could lead to unnecessary
       # stops of the survey by reaching the channel capacity because of failed contacts or
       # callback losses.
-      gc_interval_minutes: env_to_int("CHNL_BKR_GC_INTERVAL_MINUTES", 10),
+      gc_interval_minutes: env_to_int("CHNL_BKR_GC_INTERVAL_MINUTES", 2),
+
       # How many hours after the last contact the ChannelBroker waits until a contact is discarded
       # because it's considered outdated. Default: 24 h.
       # Low values: the GC will discard younger contacts. A too low value could lead to discard
@@ -85,7 +87,11 @@ defmodule Ask.Config do
       # High values: the GC will discard older contacts. A too high value could lead to keep
       # contacts that actually finished, wasting the channel capacity and slowing-down the
       # contact rate.
-      gc_outdate_hours: env_to_int("CHNL_BKR_GC_OUTDATE_HOURS", 24)
+      # gc_outdate_hours: env_to_int("CHNL_BKR_GC_OUTDATE_HOURS", 24),
+
+      # How long after a call/message has been left idle (no callbacks received)
+      # before the GC starts polling the remote channel for its actual state.
+      gc_active_idle_minutes: env_to_int("CHNL_BKR_GC_IDLE_MINUTES", 2)
     }
   end
 

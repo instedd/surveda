@@ -1,5 +1,6 @@
 defmodule Ask.Runtime.ChannelBrokerTest do
   use AskWeb.ConnCase
+  use Ask.MockTime
   use Ask.TestHelpers
 
   alias Ask.Runtime.{
@@ -11,6 +12,7 @@ defmodule Ask.Runtime.ChannelBrokerTest do
   }
 
   alias Ask.{Config, Channel}
+  import Mock
 
   setup %{conn: conn} do
     on_exit(fn ->
@@ -160,6 +162,106 @@ defmodule Ask.Runtime.ChannelBrokerTest do
       new_state = ChannelBroker.remove_from_queue(state, 6)
 
       assert new_state == state
+    end
+  end
+
+  describe ":collect_garbage" do
+    @describetag :time_mock
+    @channel_capacity 5
+
+    setup do
+      set_actual_time()
+
+      # create IVR survey:
+      [_, respondents, channel] = initialize_survey("ivr", @channel_capacity)
+
+      # activate respondents:
+      from(r in Respondent, where: r.id in ^Enum.map(respondents, fn r -> r.id end))
+      |> Repo.update_all(set: [state: "active"])
+
+      active_contacts =
+        respondents
+        |> Enum.slice(0..4)
+        |> Enum.reduce(%{}, fn e, a -> Map.put(a, e.id, %{
+          contacts: 1,
+          last_contact: Ask.SystemTime.time().now,
+          verboice_call_id: e.id
+        })
+        end)
+
+      # queue the other respondents:
+      contacts_queue =
+        respondents
+        |> Enum.slice(5..9)
+        |> Enum.reduce(:pqueue.new(), fn e, a -> :pqueue.in([1, {e, "secret", nil, nil, channel}], 2, a) end)
+
+      # build channel broker state:
+      state = %{
+        channel_id: channel.id,
+        capacity: @channel_capacity,
+        active_contacts: active_contacts,
+        contacts_queue: contacts_queue,
+        config: Config.channel_broker_config(),
+        op_count: 2
+      }
+
+      {:ok, state: state, respondents: respondents, channel: channel}
+    end
+
+    test "deactivates failed respondents", %{state: state, respondents: respondents} do
+      # fail some respondents:
+      Enum.at(respondents, 1) |> Respondent.changeset(%{state: :failed}) |> Repo.update!()
+      Enum.at(respondents, 3) |> Respondent.changeset(%{state: :failed}) |> Repo.update!()
+      Enum.at(respondents, 4) |> Respondent.changeset(%{state: :failed}) |> Repo.update!()
+
+      # run:
+      {:noreply, new_state} = ChannelBroker.handle_info({:collect_garbage, "ivr"}, state)
+
+      # it removed failed respondents (1, 3, 4) and activated queued ones (5, 6, 7):
+      assert [
+        Enum.at(respondents, 0).id,
+        Enum.at(respondents, 2).id,
+        Enum.at(respondents, 5).id,
+        Enum.at(respondents, 6).id,
+        Enum.at(respondents, 7).id,
+      ] == Map.keys(new_state.active_contacts)
+    end
+
+    test "asks verboice for actual state of long idle contacts", %{state: state, respondents: respondents} do
+      # travel to the future (within allowed contact idle time):
+      time_passes(minutes: trunc(state.config.gc_active_idle_minutes / 2))
+      {:noreply, new_state} = ChannelBroker.handle_info({:collect_garbage, "ivr"}, state)
+      assert new_state.active_contacts == state.active_contacts
+
+      # travel to the future again (after allowed contact idle time):
+      time_passes(minutes: state.config.gc_active_idle_minutes * 2)
+
+      # mock calls to channel:
+      verboice_call_state_fn = fn _, %{"verboice_call_id" => call_id} ->
+        call_id in [
+          Enum.at(respondents, 0).id,
+          Enum.at(respondents, 1).id,
+          Enum.at(respondents, 3).id
+        ]
+      end
+      with_mock Ask.Runtime.Channel, [
+        message_inactive?: verboice_call_state_fn,
+        setup: fn _, _, _, _, _ -> {:ok, 0} end # NOTE: must mock setup/5 called by ChannelBroker.ivr_call/6 (why?)
+      ] do
+        {:noreply, new_state} = ChannelBroker.handle_info({:collect_garbage, "ivr"}, state)
+
+        # it asked verboice for call state (all calls are long idle in this test case):
+        assert_called_exactly Ask.Runtime.Channel.message_inactive?(:_, :_), @channel_capacity
+
+        # it removed inactive respondents (0, 1, 3) and activated queued ones (5, 6, 7):
+        assert [
+          Enum.at(respondents, 2).id,
+          Enum.at(respondents, 4).id,
+          Enum.at(respondents, 5).id,
+          Enum.at(respondents, 6).id,
+          Enum.at(respondents, 7).id,
+        ] == Map.keys(new_state.active_contacts)
+      end
     end
   end
 

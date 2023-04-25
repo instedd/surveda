@@ -111,77 +111,79 @@ defmodule Ask.Runtime.VerboiceChannelTest do
     }
   end
 
-  test "callbacks", %{conn: conn, respondent: respondent, twiml_map: twiml_map} do
-    respondent_id = respondent.id
+  describe "progress callbacks" do
+    test "complete survey", %{conn: conn, respondent: respondent, twiml_map: twiml_map} do
+      respondent_id = respondent.id
+      match_respondent = :meck.is(fn %Respondent{id: id} -> assert id == respondent.id end)
 
-    Enum.each(twiml_map, fn
-      {flow_message, step, twiml} ->
-        GenServer.cast(
-          SurveyStub.server_ref(),
-          {:expects,
-           fn
-             {:sync_step, %Respondent{id: ^respondent_id}, ^flow_message, "ivr"} -> step
-           end}
-        )
+      Enum.each(twiml_map, fn
+        {flow_message, step, twiml} ->
+          GenServer.cast(
+            SurveyStub.server_ref(),
+            {:expects,
+             fn
+               {:sync_step, %Respondent{id: ^respondent_id}, ^flow_message, "ivr"} -> step
+             end}
+          )
 
-        with_mock ChannelBroker, callback_received: fn _, _, _, _ -> :ok end do
-          digits =
-            case flow_message do
-              :answer -> nil
-              {:reply, digits} -> digits
-            end
+          with_mock ChannelBroker, callback_received: fn _, _, _, _ -> :ok end do
+            digits =
+              case flow_message do
+                :answer -> nil
+                {:reply, digits} -> digits
+              end
 
-          conn =
-            VerboiceChannel.callback(
-              conn,
-              %{"respondent" => respondent_id, "Digits" => digits},
-              SurveyStub
-            )
-
-          case elem(step, 0) do
-            :end ->
-              # reports completed call to channel broker
-              match_respondent =
-                :meck.is(fn %Respondent{id: id} -> assert id == respondent.id end)
-
-              assert_called(
-                ChannelBroker.callback_received(0, match_respondent, "completed", "verboice")
+            conn =
+              VerboiceChannel.callback(
+                conn,
+                %{"respondent" => respondent_id, "Digits" => digits},
+                SurveyStub
               )
 
-            _ ->
-              # won't report in-progress calls to channel broker
-              assert_not_called(ChannelBroker.callback_received(:_, :_, :_, :_))
+            # notifies channel broker each time (to update last contact and
+            # eventually complete the survey)
+            status =
+              case elem(step, 0) do
+                :end -> "completed"
+                _ -> "in-progress"
+              end
+
+            assert_called(
+              ChannelBroker.callback_received(0, match_respondent, status, "verboice")
+            )
+
+            response_twiml = response(conn, 200) |> trim_xml
+            assert response_twiml =~ twiml
           end
+      end)
+    end
 
-          response_twiml = response(conn, 200) |> trim_xml
-          assert response_twiml =~ twiml
-        end
-    end)
-  end
+    test "respondent not found", %{conn: conn} do
+      conn = VerboiceChannel.callback(conn, %{"respondent" => 0})
+      assert response(conn, 200) |> trim_xml == "<Response><Hangup/></Response>"
+    end
 
-  test "callback respondent not found", %{conn: conn} do
-    conn = VerboiceChannel.callback(conn, %{"respondent" => 0})
-    assert response(conn, 200) |> trim_xml == "<Response><Hangup/></Response>"
-  end
+    test "missing respondent", %{conn: conn} do
+      conn = VerboiceChannel.callback(conn, %{})
+      assert response(conn, 200) |> trim_xml == "<Response><Hangup/></Response>"
+    end
 
-  test "callback without respondent", %{conn: conn} do
-    conn = VerboiceChannel.callback(conn, %{})
-    assert response(conn, 200) |> trim_xml == "<Response><Hangup/></Response>"
-  end
+    test "ignored when not respondent's current mode", %{conn: conn, respondent: respondent} do
+      respondent
+      |> Respondent.changeset(%{session: %{"current_mode" => %{"mode" => "sms"}}})
+      |> Repo.update()
 
-  test "callback ignored if not respondent's current mode", %{conn: conn, respondent: respondent} do
-    respondent
-    |> Respondent.changeset(%{session: %{"current_mode" => %{"mode" => "sms"}}})
-    |> Repo.update()
+      conn =
+        VerboiceChannel.callback(
+          conn,
+          %{"respondent" => respondent.id, "Digits" => nil},
+          SurveyStub
+        )
 
-    conn =
-      VerboiceChannel.callback(
-        conn,
-        %{"respondent" => respondent.id, "Digits" => nil},
-        SurveyStub
-      )
+      # NOTE: maybe assert that `VerboiceChannel.callback` was never called?
 
-    assert response(conn, 200) |> trim_xml == "<Response><Hangup/></Response>"
+      assert response(conn, 200) |> trim_xml == "<Response><Hangup/></Response>"
+    end
   end
 
   @channel_foo %{"id" => 1, "name" => "foo"}
