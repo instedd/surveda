@@ -124,42 +124,34 @@ defmodule Ask.Runtime.ChannelBroker do
     {channel_type, settings}
   end
 
-  defp activate_contacts(channel_type, %{channel_id: channel_id} = state) do
-    Logger.debug("CHNL_BRK activate_contacts: #{inspect(binding())}")
+  defp activate_contacts(%{channel_id: channel_id} = state, channel_type) do
 
-    state =
-      if can_unqueue(state) do
-        {new_state, unqueued_item} = activate_contact(state)
+    if can_unqueue(state) do
+      {new_state, unqueued_item} = activate_contact(state)
 
+      new_state =
         case channel_type do
           "sms" ->
             {unq_respondent, unq_token, unq_reply, unq_channel} = unqueued_item
             channel_ask(unq_channel, unq_respondent, unq_token, unq_reply, channel_id)
+            state
 
           "ivr" ->
-            {unq_respondent, unq_token, unq_not_before, unq_not_after, unq_channel} =
-              unqueued_item
-
-            ivr_call(
-              new_state,
-              unq_channel,
-              unq_respondent,
-              unq_token,
-              unq_not_before,
-              unq_not_after
-            )
+            {unq_respondent, unq_token, unq_not_before, unq_not_after, unq_channel} = unqueued_item
+            ivr_call(new_state, unq_channel, unq_respondent, unq_token, unq_not_before, unq_not_after)
 
           _ ->
             raise ArgumentError, message: "Unknown channel type: #{channel_type}."
         end
 
-        if can_unqueue(new_state), do: activate_contacts(channel_type, new_state), else: new_state
+      if can_unqueue(new_state) do
+        activate_contacts(new_state, channel_type)
       else
-        state
+        new_state
       end
-
-    Logger.debug("CHNL_BRK state: #{inspect(state)}")
-    state
+    else
+      state
+    end
   end
 
   defp ivr_call(state, channel, respondent, token, not_before, not_after) do
@@ -183,10 +175,6 @@ defmodule Ask.Runtime.ChannelBroker do
 
   defp gc_interval_from_config(%{gc_interval_minutes: gc_interval_minutes} = _config) do
     gc_interval_minutes * 60_000
-  end
-
-  defp gc_timeout_from_config(%{gc_outdate_hours: gc_outdate_hours} = _config) do
-    gc_outdate_hours * 60 * 60
   end
 
   # Server (callbacks)
@@ -272,13 +260,8 @@ defmodule Ask.Runtime.ChannelBroker do
     |> Enum.any?(fn [_, queued_item] -> queued_respondent_id(queued_item) == respondent_id end)
   end
 
-  defp is_active(
-         %{
-           active_contacts: active_contacts
-         } = _state,
-         respondent_id
-       ) do
-    respondent_id in Map.keys(active_contacts)
+  defp is_active(%{active_contacts: active_contacts}, respondent_id) do
+    Map.has_key?(active_contacts, respondent_id)
   end
 
   defp channel_setup(channel, respondent, token, not_before, not_after) do
@@ -311,56 +294,54 @@ defmodule Ask.Runtime.ChannelBroker do
     elem(queued_item, 0).id
   end
 
-  def clean_non_active_respondents(
-        %{
-          active_contacts: active_contacts
-        } = state
-      ) do
-    Logger.debug("CHNL_BRK clean_non_active_respondents: #{inspect(binding())}")
-
-    # Respondents that failed could have active contacts waiting and don't exists anymore
+  # Respondents that failed could have active contacts waiting and don't exist
+  # anymore. Keep only the contacts for active respondents.
+  #
+  # FIXME: understand why the channel broker wasn't properly notified.
+  defp clean_inactive_respondents(%{active_contacts: active_contacts} = state) do
+    Logger.info("ChannelBroker.clean_inactive_respondents:")
 
     query =
       from r in "respondents",
         where: r.id in ^Map.keys(active_contacts) and r.state == "active",
         select: r.id
-
     active_respondents = Repo.all(query)
 
+    # TODO: Elixir 1.13 has Map.filter/2
     new_active_contacts =
-      :maps.filter(
-        fn respondent_id, _ ->
-          respondent_id in active_respondents
-        end,
-        Map.get(state, :active_contacts)
-      )
+      :maps.filter(fn respondent_id, _ -> respondent_id in active_respondents end, active_contacts)
 
-    state =
-      Map.put(state, :active_contacts, new_active_contacts)
-      |> save_to_agent()
-
-    Logger.debug("CHNL_BRK state: #{inspect(state)}")
     state
+    |> Map.put(:active_contacts, new_active_contacts)
+    |> save_to_agent()
   end
 
-  defp clean_outdated_respondents(%{active_contacts: active_contacts, config: config} = state) do
-    Logger.debug("CHNL_BRK clean_outdated_respondents: #{inspect(binding())}")
-    {:ok, now} = DateTime.now("Etc/UTC")
+  # For leftover active contacts, we ask the remote channel for the IVR OR SMS
+  # SMS state. Keep only the contacts that are active or queued.
+  defp clean_outdated_respondents(%{active_contacts: active_contacts, config: config} = state, channel_type) do
+    Logger.info("ChannelBroker.clean_outdated_respondents:")
 
+    idle_time = config.gc_active_idle_minutes * 60
+    now = Ask.SystemTime.time().now
+
+    channel =
+      Ask.Channel
+      |> Repo.get(state.channel_id)
+      |> Ask.Channel.runtime_channel()
+
+    # TODO: Elixir 1.13 has Map.filter/2
     new_active_contacts =
       :maps.filter(
-        fn _, %{last_contact: last_contact} ->
-          DateTime.diff(now, last_contact, :second) < gc_timeout_from_config(config)
+        fn _, %{last_contact: last_contact} = active_contact ->
+          DateTime.diff(now, last_contact, :second) < idle_time ||
+            !Channel.message_inactive?(channel, get_channel_state(channel_type, active_contact))
         end,
         active_contacts
       )
 
-    state =
-      Map.put(state, :active_contacts, new_active_contacts)
-      |> save_to_agent()
-
-    Logger.debug("CHNL_BRK state: #{inspect(state)}")
     state
+    |> Map.put(:active_contacts, new_active_contacts)
+    |> save_to_agent()
   end
 
   def save_to_agent(
@@ -426,15 +407,11 @@ defmodule Ask.Runtime.ChannelBroker do
         _ -> 0
       end
 
-    new_active_contacts =
-      Map.put(
-        active_contacts,
-        respondent_id,
-        %{
-          contacts: respondent_contacts + size,
-          last_contact: elem(DateTime.now("Etc/UTC"), 1)
-        }
-      )
+    active_contact = %{
+      contacts: respondent_contacts + size,
+      last_contact: Ask.SystemTime.time().now
+    }
+    new_active_contacts = Map.put(active_contacts, respondent_id, active_contact)
 
     state =
       Map.put(state, :active_contacts, new_active_contacts)
@@ -453,16 +430,13 @@ defmodule Ask.Runtime.ChannelBroker do
     Logger.debug("CHNL_BRK update_last_contact: #{inspect(binding())}")
 
     new_active_contacts =
-      if respondent_id in Map.keys(active_contacts) do
+      if Map.has_key?(active_contacts, respondent_id) do
         active_contact =
-          Map.get(active_contacts, respondent_id)
-          |> Map.put(:last_contact, elem(DateTime.now("Etc/UTC"), 1))
+          active_contacts
+          |> Map.get(respondent_id)
+          |> Map.put(:last_contact, Ask.SystemTime.time().now)
 
-        Map.put(
-          active_contacts,
-          respondent_id,
-          active_contact
-        )
+        Map.put(active_contacts, respondent_id, active_contact)
       else
         active_contacts
       end
@@ -472,26 +446,19 @@ defmodule Ask.Runtime.ChannelBroker do
     state
   end
 
-  defp set_verboice_call_id(
-         %{
-           active_contacts: active_contacts
-         } = state,
-         respondent_id,
-         verboice_call_id
-       ) do
-    Logger.debug("CHNL_BRK set_verboice_call_id: #{inspect(binding())}")
+  defp set_verboice_call_id(state, respondent_id, %{verboice_call_id: verboice_call_id}) do
+    set_verboice_call_id(state, respondent_id, verboice_call_id)
+  end
+
+  defp set_verboice_call_id(%{active_contacts: active_contacts} = state, respondent_id, verboice_call_id) do
 
     new_active_contacts =
-      if respondent_id in Map.keys(active_contacts) do
+      if Map.has_key?(active_contacts, respondent_id) do
         active_contact =
-          Map.get(active_contacts, respondent_id)
+          active_contacts
+          |> Map.get(respondent_id)
           |> Map.put(:verboice_call_id, verboice_call_id)
-
-        Map.put(
-          active_contacts,
-          respondent_id,
-          active_contact
-        )
+        Map.put(active_contacts, respondent_id, active_contact)
       else
         active_contacts
       end
@@ -507,12 +474,16 @@ defmodule Ask.Runtime.ChannelBroker do
          } = _state,
          respondent_id
        ) do
-    if respondent_id in Map.keys(active_contacts) do
+    if Map.has_key?(active_contacts, respondent_id) do
       active_contact = Map.get(active_contacts, respondent_id)
       Map.get(active_contact, :verboice_call_id)
     else
       nil
     end
+  end
+
+  defp get_verboice_call_id(active_contact) do
+    Map.get(active_contact, :verboice_call_id)
   end
 
   defp deactivate_contact(
@@ -524,7 +495,7 @@ defmodule Ask.Runtime.ChannelBroker do
     Logger.debug("CHNL_BRK deactivate_contact: #{inspect(binding())}")
 
     respondent_contacts =
-      if respondent_id in Map.keys(active_contacts) do
+      if Map.has_key?(active_contacts, respondent_id) do
         %{contacts: contacts} = Map.get(active_contacts, respondent_id)
         contacts
       else
@@ -536,7 +507,7 @@ defmodule Ask.Runtime.ChannelBroker do
         active_contact =
           Map.get(active_contacts, respondent_id)
           |> Map.put(:contacts, respondent_contacts - 1)
-          |> Map.put(:timestamp, elem(DateTime.now("Etc/UTC"), 1))
+          |> Map.put(:last_contact, Ask.SystemTime.time().now)
 
         Map.put(
           active_contacts,
@@ -591,6 +562,14 @@ defmodule Ask.Runtime.ChannelBroker do
     if channel_type == "ivr" and is_active(state, respondent_id) do
       verboice_call_id = get_verboice_call_id(state, respondent_id)
       %{"verboice_call_id" => verboice_call_id}
+    else
+      %{}
+    end
+  end
+
+  defp get_channel_state(channel_type, active_contact) do
+    if channel_type == "ivr" do
+      %{"verboice_call_id" => get_verboice_call_id(active_contact)}
     else
       %{}
     end
@@ -830,7 +809,7 @@ defmodule Ask.Runtime.ChannelBroker do
         respondent_id,
         %{
           contacts: respondent_contacts + 1,
-          last_contact: elem(DateTime.now("Etc/UTC"), 1)
+          last_contact: Ask.SystemTime.time().now
         }
       )
 
@@ -873,15 +852,14 @@ defmodule Ask.Runtime.ChannelBroker do
     # Remove the garbage contacts from active
     # New versions of elixir has Maps.filter, replace when possible
     new_state =
-      clean_non_active_respondents(state)
-      |> clean_outdated_respondents()
+      state
+      |> clean_inactive_respondents()
+      |> clean_outdated_respondents(channel_type)
+      |> activate_contacts(channel_type)
 
-    # Activate new ones if possible
-    new_state = activate_contacts(channel_type, new_state)
     # schedule next garbage collection
-    gc_interval = gc_interval_from_config(config)
-    schedule_GC(channel_type, gc_interval)
-    Logger.debug("CHNL_BRK state: #{inspect(new_state)}")
+    schedule_GC(channel_type, gc_interval_from_config(config))
+
     {:noreply, new_state}
   end
 end
