@@ -122,6 +122,8 @@ defimpl Ask.Runtime.Channel, for: Ask.TestChannel do
 
   def message_expired?(%{message_expired: message_expired}, _), do: message_expired
 
+  def message_inactive?(_, _), do: false
+
   def cancel_message(channel, channel_state) do
     send(channel.pid, [:cancel_message, channel, channel_state])
     :ok

@@ -4,6 +4,7 @@ defprotocol Ask.Runtime.Channel do
   def has_delivery_confirmation?(channel)
   def ask(channel, respondent, token, prompts, channel_id)
   def has_queued_message?(channel, channel_state)
+  def message_inactive?(channel, channel_state)
   def cancel_message(channel, channel_state)
   def message_expired?(channel, channel_state)
   # :up | {:down, messages} | {:error, messages}
