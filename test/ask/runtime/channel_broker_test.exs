@@ -100,71 +100,6 @@ defmodule Ask.Runtime.ChannelBrokerTest do
     end
   end
 
-  describe "contacts_queue" do
-    setup do
-      mock_queued_contact = fn respondent_id, params, disposition ->
-        {%{id: respondent_id, disposition: disposition}, params}
-      end
-
-      {
-        :ok,
-        state: %{
-          contacts_queue: :pqueue.new(),
-          active_contacts: Map.new(),
-          channel_id: 1,
-          op_count: 2,
-          config: Config.channel_broker_config()
-        },
-        mock_queued_contact: mock_queued_contact
-      }
-    end
-
-    test "queues contact", %{
-      state: s,
-      mock_queued_contact: mqc
-    } do
-      respondent_id = 2
-      params = 3
-      disposition = 4
-      contact = mqc.(respondent_id, params, disposition)
-      size = 5
-
-      %{contacts_queue: q} = ChannelBroker.queue_contact(s, contact, size)
-
-      {{:value, [queud_size, queued_contact]}, _} = :pqueue.out(q)
-      assert queued_contact == {%{id: respondent_id, disposition: disposition}, params}
-      assert queud_size == size
-    end
-
-    test "removes the respondent", %{
-      state: s,
-      mock_queued_contact: mqc
-    } do
-      respondent_id = 2
-      contact = mqc.(respondent_id, 3, 4)
-      size = 5
-      state = ChannelBroker.queue_contact(s, contact, size)
-
-      %{contacts_queue: q} = ChannelBroker.remove_from_queue(state, respondent_id)
-
-      assert :pqueue.is_empty(q)
-    end
-
-    test "doesn't removes other respondent", %{
-      state: s,
-      mock_queued_contact: mqc
-    } do
-      respondent_id = 2
-      contact = mqc.(respondent_id, 3, 4)
-      size = 5
-      state = ChannelBroker.queue_contact(s, contact, size)
-
-      new_state = ChannelBroker.remove_from_queue(state, 6)
-
-      assert new_state == state
-    end
-  end
-
   describe ":collect_garbage" do
     @describetag :time_mock
     @channel_capacity 5
@@ -195,8 +130,7 @@ defmodule Ask.Runtime.ChannelBrokerTest do
         |> Enum.slice(5..9)
         |> Enum.reduce(:pqueue.new(), fn e, a -> :pqueue.in([1, {e, "secret", nil, nil, channel}], 2, a) end)
 
-      # build channel broker state:
-      state = %{
+      state = %Ask.Runtime.ChannelBrokerState{
         channel_id: channel.id,
         capacity: @channel_capacity,
         active_contacts: active_contacts,
