@@ -94,11 +94,13 @@ defmodule Ask.Runtime.ChannelBrokerState do
       %{}
     end
   end
+
   def get_channel_state("sms", _state, _respondent_id), do: %{}
 
   def get_channel_state("ivr", active_contact) do
     %{"verboice_call_id" => get_verboice_call_id(active_contact)}
   end
+
   def get_channel_state("sms", _active_contact), do: %{}
 
   defp get_verboice_call_id(state, respondent_id) do
@@ -152,7 +154,9 @@ defmodule Ask.Runtime.ChannelBrokerState do
   # Activates the next contact from the queue. There must be at least one
   # contact currently waiting in queue!
   def activate_next_in_queue(%{active_contacts: active_contacts} = state) do
-    {{_unqueue_res, [size, unqueued_item]}, new_contacts_queue} = :pqueue.out(state.contacts_queue)
+    {{_unqueue_res, [size, unqueued_item]}, new_contacts_queue} =
+      :pqueue.out(state.contacts_queue)
+
     respondent_id = queued_respondent_id(unqueued_item)
 
     active_contact =
@@ -178,7 +182,11 @@ defmodule Ask.Runtime.ChannelBrokerState do
 
   # Increments the number of contacts for the respondent. Activates the contact
   # if it wasn't already.
-  def increment_respondents_contacts(%{active_contacts: active_contacts} = state, respondent_id, size) do
+  def increment_respondents_contacts(
+        %{active_contacts: active_contacts} = state,
+        respondent_id,
+        size
+      ) do
     active_contact =
       active_contacts
       |> Map.get(respondent_id, %{contacts: 0})
@@ -275,6 +283,7 @@ defmodule Ask.Runtime.ChannelBrokerState do
         fn respondent_id, _ -> respondent_id in active_respondents end,
         state.active_contacts
       )
+
     Map.put(state, :active_contacts, new_active_contacts)
   end
 
@@ -297,6 +306,7 @@ defmodule Ask.Runtime.ChannelBrokerState do
         end,
         state.active_contacts
       )
+
     Map.put(state, :active_contacts, new_active_contacts)
   end
 

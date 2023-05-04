@@ -7,9 +7,8 @@ defmodule Ask.Runtime.ChannelBrokerStateTest do
     mock_queued_contact = fn respondent_id, params, disposition ->
       {%{id: respondent_id, disposition: disposition}, params}
     end
-    {:ok,
-      state: State.new(0, %{}),
-      mock_queued_contact: mock_queued_contact}
+
+    {:ok, state: State.new(0, %{}), mock_queued_contact: mock_queued_contact}
   end
 
   test "queues contact", %{state: state, mock_queued_contact: mqc} do
