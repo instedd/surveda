@@ -363,6 +363,7 @@ defmodule Ask.Runtime.VerboiceChannel do
 
             case survey.sync_step(respondent, response, "ivr") do
               {:reply, reply, _} ->
+                notify_channel_broker(respondent, "in-progress")
                 prompts = Reply.prompts(reply)
                 num_digits = Reply.num_digits(reply)
                 gather(respondent, prompts, num_digits)
