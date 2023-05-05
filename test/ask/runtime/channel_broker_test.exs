@@ -121,7 +121,7 @@ defmodule Ask.Runtime.ChannelBrokerTest do
           Map.put(a, e.id, %{
             contacts: 1,
             last_contact: Ask.SystemTime.time().now,
-            verboice_call_id: e.id
+            channel_state: %{"verboice_call_id" => e.id}
           })
         end)
 
@@ -188,7 +188,7 @@ defmodule Ask.Runtime.ChannelBrokerTest do
       with_mock Ask.Runtime.Channel,
         message_inactive?: verboice_call_state_fn,
         # NOTE: must mock setup/5 called by ChannelBroker.ivr_call/6 (why?)
-        setup: fn _, _, _, _, _ -> {:ok, 0} end do
+        setup: fn _, r, _, _, _ -> {:ok, %{verboice_call_id: r.id}} end do
         {:noreply, new_state} = ChannelBroker.handle_info({:collect_garbage, "ivr"}, state)
 
         # it asked verboice for call state (all calls are long idle in this test case):

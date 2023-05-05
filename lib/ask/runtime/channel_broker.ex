@@ -151,6 +151,11 @@ defmodule Ask.Runtime.ChannelBroker do
 
     contact = {respondent, token, reply, channel}
 
+    # FIXME: don't call NuntiumChannel directly!
+    # OPTIMIZE: the call will generate the actual replies which we discard right
+    #           away, we shall a Ask.Runtime.Channel. function instead (verboice
+    #           would answer with hardcoded 1, and Nuntium count the number of
+    #           replies to send).
     size =
       reply
       |> NuntiumChannel.reply_to_messages(nil, respondent.id, state.channel_id)
@@ -255,7 +260,7 @@ defmodule Ask.Runtime.ChannelBroker do
       respondent_id: respondent_id
     )
 
-    channel_state = State.get_channel_state(channel_type, state, respondent_id)
+    channel_state = State.get_channel_state(state, respondent_id)
     Ask.Runtime.Channel.cancel_message(channel, channel_state)
 
     new_state =
@@ -276,7 +281,7 @@ defmodule Ask.Runtime.ChannelBroker do
       respondent_id: respondent_id
     )
 
-    channel_state = State.get_channel_state(channel_type, state, respondent_id)
+    channel_state = State.get_channel_state(state, respondent_id)
     reply = Ask.Runtime.Channel.message_expired?(channel, channel_state)
     {:reply, reply, state, State.process_timeout(state)}
   end
@@ -381,7 +386,7 @@ defmodule Ask.Runtime.ChannelBroker do
     new_state =
       state
       |> State.clean_inactive_respondents(active_respondents)
-      |> State.clean_outdated_respondents(channel_type, runtime_channel)
+      |> State.clean_outdated_respondents(runtime_channel)
       |> activate_contacts()
       |> save_to_agent()
       |> debug()
@@ -439,38 +444,38 @@ defmodule Ask.Runtime.ChannelBroker do
         ivr_call(new_state, channel, respondent, token, not_before, not_after)
 
       {respondent, token, reply, channel} ->
-        channel_ask(channel, respondent, token, reply, state.channel_id)
-        new_state
+        channel_ask(new_state, channel, respondent, token, reply, state.channel_id)
     end
   end
 
   defp ivr_call(state, channel, respondent, token, not_before, not_after) do
-    case channel_setup(channel, respondent, token, not_before, not_after) do
-      {:ok, verboice_call_id} ->
-        info("set_verboice_call_id",
-          respondent_id: respondent.id,
-          verboice_call_id: verboice_call_id
-        )
+    {:ok, %{verboice_call_id: verboice_call_id}} =
+      channel_setup(channel, respondent, token, not_before, not_after)
 
-        state
-        |> State.set_verboice_call_id(respondent.id, verboice_call_id)
-
-      _ ->
-        # FIXME: what about failures to queue the call to verboice?
-        state
-    end
+    channel_state = %{"verboice_call_id" => verboice_call_id}
+    info("put_channel_state", respondent_id: respondent.id, channel_state: channel_state)
+    State.put_channel_state(state, respondent.id, channel_state)
   end
 
-  defp channel_ask(%Channel{} = channel, respondent, token, reply, channel_id) do
-    channel
-    |> Channel.runtime_channel()
-    |> channel_ask(respondent, token, reply, channel_id)
+  defp channel_ask(state, %Channel{} = channel, respondent, token, reply, channel_id) do
+    runtime_channel = Channel.runtime_channel(channel)
+    channel_ask(state, runtime_channel, respondent, token, reply, channel_id)
   end
 
-  defp channel_ask(runtime_channel, %{id: respondent_id} = respondent, token, reply, channel_id) do
-    %{id: ^respondent_id} =
-      runtime_channel
-      |> Ask.Runtime.Channel.ask(respondent, token, reply, channel_id)
+  defp channel_ask(
+         state,
+         runtime_channel,
+         %{id: respondent_id} = respondent,
+         token,
+         reply,
+         channel_id
+       ) do
+    {:ok, %{nuntium_token: nuntium_token}} =
+      Ask.Runtime.Channel.ask(runtime_channel, respondent, token, reply, channel_id)
+
+    channel_state = %{"nuntium_token" => nuntium_token}
+    info("put_channel_state", respondent_id: respondent_id, channel_state: channel_state)
+    State.put_channel_state(state, respondent.id, channel_state)
   end
 
   # NOTE: save to agent and persist to DB are disabled for now.

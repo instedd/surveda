@@ -26,14 +26,14 @@ defmodule Ask.Runtime.ChannelBrokerState do
     # %{respondent_id => %{
     #   contacts: Integer,
     #   last_contact: DateTime,
-    #   verboice_call_id: Integer
+    #   channel_state: %{String.t => any()}
     # }}
     # ```
     #
     # Where:
     # - contacts: number of contacts being currently managed by the channel (ivr=1, sms=1+)
     # - last_contact: timestamp of the last sent contact or received callback
-    # - verboice_call_id: to match the contact with its associated call on Verboice
+    # - channel_state: identifier(s) for the contact on the channel
     active_contacts: %{},
 
     # A priority queue implemented using pqueue (https://github.com/okeuday/pqueue/).
@@ -86,42 +86,18 @@ defmodule Ask.Runtime.ChannelBrokerState do
     |> Map.has_key?(respondent_id)
   end
 
-  def get_channel_state("ivr", state, respondent_id) do
-    if is_active(state, respondent_id) do
-      %{"verboice_call_id" => get_verboice_call_id(state, respondent_id)}
-    else
-      # TODO: shall we raise instead?
-      %{}
-    end
-  end
-
-  def get_channel_state("sms", _state, _respondent_id), do: %{}
-
-  def get_channel_state("ivr", active_contact) do
-    %{"verboice_call_id" => get_verboice_call_id(active_contact)}
-  end
-
-  def get_channel_state("sms", _active_contact), do: %{}
-
-  defp get_verboice_call_id(state, respondent_id) do
-    case Map.get(state.active_contacts, respondent_id) do
-      %{verboice_call_id: verboice_call_id} -> verboice_call_id
-      _ -> nil
-    end
-  end
-
-  defp get_verboice_call_id(active_contact) do
-    Map.get(active_contact, :verboice_call_id)
-  end
-
-  def set_verboice_call_id(state, respondent_id, %{verboice_call_id: verboice_call_id}) do
-    set_verboice_call_id(state, respondent_id, verboice_call_id)
-  end
-
-  def set_verboice_call_id(state, respondent_id, verboice_call_id) do
+  def put_channel_state(state, respondent_id, channel_state) do
     update_active_contact(state, respondent_id, fn active_contact ->
-      Map.put(active_contact, :verboice_call_id, verboice_call_id)
+      Map.put(active_contact, :channel_state, channel_state)
     end)
+  end
+
+  def get_channel_state(state, respondent_id) do
+    case Map.get(state.active_contacts, respondent_id) do
+      %{channel_state: channel_state} -> channel_state
+      # TODO: shall we raise instead?
+      _ -> %{}
+    end
   end
 
   # Adds a contact to the queue.
@@ -289,7 +265,7 @@ defmodule Ask.Runtime.ChannelBrokerState do
 
   # For leftover active contacts, we ask the remote channel for the actual IVR
   # call or SMS message state. Keep only the contacts that are active or queued.
-  def clean_outdated_respondents(state, channel_type, runtime_channel) do
+  def clean_outdated_respondents(state, runtime_channel) do
     idle_time = gc_allowed_idle_time(state)
     now = SystemTime.time().now
 
@@ -300,8 +276,7 @@ defmodule Ask.Runtime.ChannelBrokerState do
           if DateTime.diff(now, last_contact, :second) < idle_time do
             true
           else
-            channel_state = get_channel_state(channel_type, active_contact)
-            !Ask.Runtime.Channel.message_inactive?(runtime_channel, channel_state)
+            !Ask.Runtime.Channel.message_inactive?(runtime_channel, active_contact.channel_state)
           end
         end,
         state.active_contacts

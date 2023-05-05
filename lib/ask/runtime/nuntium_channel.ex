@@ -435,8 +435,6 @@ defmodule Ask.Runtime.NuntiumChannel do
 
       Nuntium.Client.new(channel.base_url, channel.oauth_token)
       |> Nuntium.Client.send_ao(channel.settings["nuntium_account"], messages)
-
-      respondent
     end
 
     def check_status(runtime_channel) do
@@ -452,15 +450,15 @@ defmodule Ask.Runtime.NuntiumChannel do
       end
     end
 
-    # def message_inactive?(channel, %{"nuntium_ao_message_id" => ao_message_id}) do
-    #   client = Nuntium.Client.new(runtime_channel.base_url, runtime_channel.oauth_token)
-    #   case Nuntium.Client.ao_message_state(client, ao_message_id) do
-    #     {:ok, %{"state" => "queued"}} -> false
-    #     {:ok, %{"state" => _}} -> true
-    #     {:error, _} -> false # in case of error, we consider it's still active
-    #   end
-    # end
-    def message_inactive?(_, _), do: false
+    def message_inactive?(runtime_channel, %{"nuntium_token" => nuntium_token}) do
+      client = Nuntium.Client.new(runtime_channel.base_url, runtime_channel.oauth_token)
+      account = runtime_channel.settings["nuntium_account"]
+      case Nuntium.Client.get_ao(client, account, nuntium_token) do
+        {:ok, %{"state" => "queued"}} -> false
+        {:ok, %{"state" => _}} -> true
+        {:error, _} -> false # in case of error, we consider it's still active
+      end
+    end
 
     def has_delivery_confirmation?(_), do: true
     def has_queued_message?(_, _), do: false

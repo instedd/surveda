@@ -4,6 +4,8 @@ defmodule Nuntium.Client do
   defstruct [:base_url, :oauth2_client]
 
   # @type t :: %Client{}
+  # @type ok :: {:ok, String.t}
+  # @type error :: {:error, integer | String.t}
 
   # @spec new(String.t, OAuth2.AccessToken.t) :: t
   def new(url, token) do
@@ -11,7 +13,7 @@ defmodule Nuntium.Client do
     %Client{base_url: url, oauth2_client: oauth2_client}
   end
 
-  # @spec send_ao(t, String.t) :: any()
+  # @spec send_ao(t, String.t, list()) :: {:ok, %{nuntium_token: String.t}} | error
   def send_ao(client, account, messages) do
     url = "#{client.base_url}/api/ao_messages.json?#{URI.encode_query(account: account)}"
 
@@ -24,6 +26,22 @@ defmodule Nuntium.Client do
     SurvedaMetrics.increment_counter_with_label(:surveda_nuntium_enqueue, [
       response_body.status_code
     ])
+
+    if response_body.status_code == 200 do
+      nuntium_token = List.keyfind(response_body.headers, "x-nuntium-token", 0)
+      {:ok, %{nuntium_token: nuntium_token}}
+    else
+      parse_response(response)
+    end
+  end
+
+  # @spec get_ao(t, String.t, String.t) :: ok | error
+  def get_ao(client, account, token) do
+    url = "#{client.base_url}/api/ao_messages.json?#{URI.encode_query(account: account, token: token)}"
+
+    response =
+      client.oauth2_client
+      |> OAuth2.Client.get(url)
 
     parse_response(response)
   end
