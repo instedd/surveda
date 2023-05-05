@@ -96,23 +96,20 @@ defmodule Ask.Runtime.NuntiumChannel do
               # From the moment the ChannelBroker go live to production, every AO message will
               # include the channel_id. Only older messages should reach this chunk of code.
               Logger.warn(
-                "Missing channel_id in Nuntium status callback. respondent_id: #{respondent_id}"
+                "Nuntium: missing channel_id in AO callback respondent_id=#{respondent_id}"
               )
 
               nil
 
             _ ->
-              # Ideally, only "failed" and "confirmed" status should be filtered. But testing this
-              # in STG Surveda only receives the delivered status. We should understand why and
-              # fix it if needed.
-              # In the meantime, we accept both "confirmed" and "delivered" status.
-              if state in ["failed", "confirmed", "delivered"] do
-                ChannelBroker.callback_received(
-                  channel_id,
-                  respondent,
-                  state,
-                  "nuntium"
-                )
+              # Ideally, we'd forward the confirmed status, but there is no
+              # guarantee that an external provider will confirm AO messages. We
+              # also can't react to both as the channel broker would decrement
+              # the number of active messages twice. The cancelled state isn't
+              # currenlty sent by Nuntium, but maybe that will change in the
+              # future.
+              if state in ["failed", "delivered", "cancelled"] do
+                ChannelBroker.callback_received(channel_id, respondent, state, "nuntium")
               end
           end
 
@@ -164,7 +161,7 @@ defmodule Ask.Runtime.NuntiumChannel do
                   nil ->
                     # If there's a living session, it should have a channel
                     Logger.error(
-                      "Missing channel_id in Nuntium AT callback. respondent_id: #{respondent_id}"
+                      "Nuntium: missing channel_id in AT callback respondent_id=#{respondent_id}"
                     )
 
                     {nil, nil}
@@ -198,10 +195,7 @@ defmodule Ask.Runtime.NuntiumChannel do
         :ok
 
       _ ->
-        ChannelBroker.force_activate_respondent(
-          channel_id,
-          respondent_id
-        )
+        ChannelBroker.force_activate_respondent(channel_id, respondent_id, length(json_reply))
     end
 
     SurvedaMetrics.increment_counter(:surveda_nuntium_incoming)
@@ -424,7 +418,8 @@ defmodule Ask.Runtime.NuntiumChannel do
       to = "sms://#{respondent.sanitized_phone_number}"
 
       messages =
-        NuntiumChannel.reply_to_messages(reply, to, respondent.id, channel_id)
+        reply
+        |> NuntiumChannel.reply_to_messages(to, respondent.id, channel_id)
         |> Enum.map(fn msg ->
           Map.merge(msg, %{
             suggested_channel: channel.settings["nuntium_channel"],
@@ -435,8 +430,13 @@ defmodule Ask.Runtime.NuntiumChannel do
 
       Nuntium.Client.new(channel.base_url, channel.oauth_token)
       |> Nuntium.Client.send_ao(channel.settings["nuntium_account"], messages)
+    end
 
-      respondent
+    # OPTIMIZE: count messages, don't generate 'em just to count the result
+    def messages_count(_, respondent, to, reply, channel_id) do
+      reply
+      |> NuntiumChannel.reply_to_messages(to, respondent.id, channel_id)
+      |> length()
     end
 
     def check_status(runtime_channel) do
@@ -452,15 +452,20 @@ defmodule Ask.Runtime.NuntiumChannel do
       end
     end
 
-    # def message_inactive?(channel, %{"nuntium_ao_message_id" => ao_message_id}) do
-    #   client = Nuntium.Client.new(runtime_channel.base_url, runtime_channel.oauth_token)
-    #   case Nuntium.Client.ao_message_state(client, ao_message_id) do
-    #     {:ok, %{"state" => "queued"}} -> false
-    #     {:ok, %{"state" => _}} -> true
-    #     {:error, _} -> false # in case of error, we consider it's still active
-    #   end
-    # end
-    def message_inactive?(_, _), do: false
+    def message_inactive?(runtime_channel, %{"nuntium_token" => nuntium_token}) do
+      client = Nuntium.Client.new(runtime_channel.base_url, runtime_channel.oauth_token)
+      account = runtime_channel.settings["nuntium_account"]
+      inactive_states = ["delivered", "confirmed", "failed", "cancelled"]
+
+      case Nuntium.Client.get_ao(client, account, nuntium_token) do
+        {:ok, ao_messages} ->
+          Enum.all?(ao_messages, fn m -> m["state"] in inactive_states end)
+
+        {:error, _} ->
+          # in case of error, we consider it's still active
+          false
+      end
+    end
 
     def has_delivery_confirmation?(_), do: true
     def has_queued_message?(_, _), do: false
