@@ -65,9 +65,9 @@ class IvrPrompt extends Component {
       })
       .catch((e) => {
         e.json().then((response) => {
-          let errors = (response.errors.data || [t("Only mp3 and wav files are allowed.")]).join(
-            " "
-          )
+          let errors = (
+            response.errors.data || [t("Only MP3, WAV, M4A, AAC and MP4 files are allowed.")]
+          ).join(" ")
           this.setState({ audioErrors: errors })
           $("#unprocessableEntity").modal("open")
         })
@@ -183,7 +183,7 @@ class IvrPrompt extends Component {
         <div className="row audio-section">
           <ConfirmationModal
             modalId="invalidTypeFile"
-            modalText="The system only accepts MPEG and WAV files"
+            modalText="The system only accepts MP3, WAV, AAC, M4A and MP4 files"
             header="Invalid file type"
             confirmationText="accept"
             style={{ maxWidth: "600px" }}
