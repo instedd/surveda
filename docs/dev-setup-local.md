@@ -32,8 +32,18 @@ services and for services to talk between themselves.
 
   **Note:** If the browser returns a DNS error when navigating to `http://web.guisso.lvh.me` (or any `lvh.me` domain) then we could [try this solution](#lvh-dns-error).
 
+If the email confirmation doesn't send properly, you can find the confirmation url from the log:
 
-3. Now we need to create three applications:
+  ```console
+  $ cd guisso
+  $ grep confirmation_token= log/development.log | grep ^http:
+  http://web.guisso.lvh.me/users/confirmation?confirmation_token=mhnM2QVMt66MaQ52JDAt
+  ```
+
+If that doesn't work, open log/devlopment.log in a text editor or pager and search for the email
+address you used previously until you find something with the confirmation link in it.
+
+3. Now we need to create three applications in http://web.guisso.lvh.me once you are properly logged in:
 
   ```
   app=Nuntium  host=web.nuntium.lvh.me
@@ -62,7 +72,11 @@ services and for services to talk between themselves.
   ```
 
 2. Enable Guisso by editing (or creating) `config/guisso.yml`, copying the
-  client id and secret from http://web.guisso.lvh.me for the Verboice app:
+  client id and secret from http://web.guisso.lvh.me for the Verboice app.
+
+  To get the client id and secret, open the applications tab and click the "show" button for
+  "Verboice". Use the `Identifier` field for the `client_id` and the `Secret` field for the
+  `client_secret`.
 
   ```yaml
   enabled: true
