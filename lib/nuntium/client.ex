@@ -28,7 +28,7 @@ defmodule Nuntium.Client do
     ])
 
     if response_body.status_code == 200 do
-      nuntium_token = List.keyfind(response_body.headers, "x-nuntium-token", 0)
+      {"x-nuntium-token", nuntium_token} = List.keyfind(response_body.headers, "x-nuntium-token", 0)
       {:ok, %{nuntium_token: nuntium_token}}
     else
       parse_response(response)

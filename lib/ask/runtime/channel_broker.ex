@@ -66,8 +66,8 @@ defmodule Ask.Runtime.ChannelBroker do
     call_gen_server(channel_id, {:callback_received, respondent, respondent_state, provider})
   end
 
-  def force_activate_respondent(channel_id, respondent_id) do
-    call_gen_server(channel_id, {:force_activate_respondent, respondent_id})
+  def force_activate_respondent(channel_id, respondent_id, size \\ 1) do
+    call_gen_server(channel_id, {:force_activate_respondent, respondent_id, size})
   end
 
   # NOTE: channels without channel_id (used in some unit tests) share a single process (channel_id: 0)
@@ -328,7 +328,7 @@ defmodule Ask.Runtime.ChannelBroker do
 
     new_state =
       state
-      |> State.deactivate_contact(respondent.id)
+      |> State.decrement_respondents_contacts(respondent.id, 1)
       |> try_activate_next_queued_contact()
       |> save_to_agent()
       |> debug()
@@ -337,12 +337,12 @@ defmodule Ask.Runtime.ChannelBroker do
   end
 
   @impl true
-  def handle_call({:force_activate_respondent, respondent_id}, _from, state) do
-    info("handle_call[force_activate_respondent]", respondent_id: respondent_id)
+  def handle_call({:force_activate_respondent, respondent_id, size}, _from, state) do
+    info("handle_call[force_activate_respondent]", respondent_id: respondent_id, size: size)
 
     new_state =
       state
-      |> State.increment_respondents_contacts(respondent_id, 1)
+      |> State.increment_respondents_contacts(respondent_id, size)
       |> save_to_agent()
       |> debug()
 

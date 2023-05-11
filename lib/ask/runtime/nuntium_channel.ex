@@ -106,13 +106,10 @@ defmodule Ask.Runtime.NuntiumChannel do
               # in STG Surveda only receives the delivered status. We should understand why and
               # fix it if needed.
               # In the meantime, we accept both "confirmed" and "delivered" status.
+              #
+              # FIXME: consider only reacting to "delivered" to avoid decrementing twice?
               if state in ["failed", "confirmed", "delivered"] do
-                ChannelBroker.callback_received(
-                  channel_id,
-                  respondent,
-                  state,
-                  "nuntium"
-                )
+                ChannelBroker.callback_received(channel_id, respondent, state, "nuntium")
               end
           end
 
@@ -196,12 +193,8 @@ defmodule Ask.Runtime.NuntiumChannel do
     case json_reply do
       [] ->
         :ok
-
       _ ->
-        ChannelBroker.force_activate_respondent(
-          channel_id,
-          respondent_id
-        )
+        ChannelBroker.force_activate_respondent(channel_id, respondent_id, length(json_reply))
     end
 
     SurvedaMetrics.increment_counter(:surveda_nuntium_incoming)
@@ -453,10 +446,14 @@ defmodule Ask.Runtime.NuntiumChannel do
     def message_inactive?(runtime_channel, %{"nuntium_token" => nuntium_token}) do
       client = Nuntium.Client.new(runtime_channel.base_url, runtime_channel.oauth_token)
       account = runtime_channel.settings["nuntium_account"]
+      inactive_states = ["delivered", "confirmed", "failed", "cancelled"]
+
       case Nuntium.Client.get_ao(client, account, nuntium_token) do
-        {:ok, %{"state" => "queued"}} -> false
-        {:ok, %{"state" => _}} -> true
-        {:error, _} -> false # in case of error, we consider it's still active
+        {:ok, ao_messages} ->
+          Enum.all?(ao_messages, fn m -> m["state"] in inactive_states end)
+        {:error, _} ->
+          # in case of error, we consider it's still active
+          false
       end
     end
 

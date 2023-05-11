@@ -179,6 +179,40 @@ defmodule Ask.Runtime.ChannelBrokerState do
     Map.put(state, :active_contacts, new_active_contacts)
   end
 
+  # Decrements the number of contacts for the respondent. Does nothing if the
+  # respondent isn't an active contact. Deactivates the respondent if the number
+  # of contacts falls down to zero.
+  def decrement_respondents_contacts(
+        %{active_contacts: active_contacts} = state,
+        respondent_id,
+        size
+      ) do
+    active_contact =
+      active_contacts
+      |> Map.get(respondent_id)
+
+    if active_contact do
+      new_value = active_contact.contacts - size
+
+      if new_value <= 0 do
+        deactivate_contact(state, respondent_id)
+      else
+        new_active_contact =
+          active_contact
+          |> Map.put(:contacts, new_value)
+          |> Map.put(:last_contact, SystemTime.time().now)
+
+        new_active_contacts =
+          active_contacts
+          |> Map.put(respondent_id, new_active_contact)
+
+        Map.put(state, :active_contacts, new_active_contacts)
+      end
+    else
+      state
+    end
+  end
+
   def deactivate_contact(state, respondent_id) do
     respondent_contacts = contacts_for(state, respondent_id)
 
