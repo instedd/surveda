@@ -12,17 +12,6 @@ export class AudioDropzone extends Component<Props> {
   render() {
     const { onDrop, onDropRejected, error } = this.props
 
-    // Dropzone may have filtered out an unknown file format, in that case the
-    // files array will be empty, and we should reject instead of accepting the
-    // drop.
-    function verifyDrop(files) {
-      if (files.length === 0) {
-        onDropRejected()
-      } else {
-        onDrop(files)
-      }
-    }
-
     let className = "dropfile audio"
     if (error) className = `${className} error`
 
@@ -32,7 +21,9 @@ export class AudioDropzone extends Component<Props> {
         activeClassName="active"
         rejectClassName="rejectedfile"
         multiple={false}
-        onDrop={verifyDrop}
+        onDrop={(files) => {
+          files.length === 0 ? onDropRejected() : onDrop(files)
+        }}
         onDropRejected={onDropRejected}
         accept="audio/*, video/*"
       >
