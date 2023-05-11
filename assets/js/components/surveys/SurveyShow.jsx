@@ -527,17 +527,19 @@ class SurveyShow extends Component<any, State> {
     }
     const groupRow = (
       <tr key={group}>
-        <td>{dispositionGroupLabel(group)}</td>
+        <td className="expand-column">
+          <div className="expand-link-wrapper">
+            <a className="link" onClick={(e) => this.expandGroup(group)}>
+              <i className="material-icons grey-text">
+                {this.state[group] ? "expand_less" : "expand_more"}
+              </i>
+            </a>
+          </div>
+          {dispositionGroupLabel(group)}
+        </td>
         {groupStatsbyReference(referenceIds, detailsKeys, colorClasses, details)}
         <td className="right-align">{groupStats.count || defaultZeroValue}</td>
         <td className="right-align">{this.round(groupStats.percent)}%</td>
-        <td className="expand-column">
-          <a className="link" onClick={(e) => this.expandGroup(group)}>
-            <i className="material-icons right grey-text">
-              {this.state[group] ? "expand_less" : "expand_more"}
-            </i>
-          </a>
-        </td>
       </tr>
     )
 
@@ -569,7 +571,6 @@ class SurveyShow extends Component<any, State> {
             {referenceColumns}
             <td className="right-align">{individualStat.count}</td>
             <td className="right-align">{this.round(individualStat.percent)}%</td>
-            <td className="expand-column" />
           </tr>
         )
       })
@@ -587,7 +588,7 @@ class SurveyShow extends Component<any, State> {
     return (
       <div className="card overflow">
         <div className="card-table-title">
-          <div>{t("Dispositions")}</div>
+          <div className="left-align">{t("Dispositions")}</div>
           <div className="disposition-flow-chart-link">
             <a
               href="https://github.com/instedd/surveda/wiki/Disposition-flow-chart"
