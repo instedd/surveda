@@ -1846,3 +1846,12 @@ a.disabled {
     line-height: 2.4rem;
   }
 }
+
+.expand-column {
+  .expand-link-wrapper {
+    display: inline-block;
+    padding-top: 0.4em;
+    margin-right: 1ex;
+    vertical-align: middle;
+  }
+}
