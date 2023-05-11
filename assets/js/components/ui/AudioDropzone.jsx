@@ -21,9 +21,11 @@ export class AudioDropzone extends Component<Props> {
         activeClassName="active"
         rejectClassName="rejectedfile"
         multiple={false}
-        onDrop={onDrop}
+        onDrop={(files) => {
+          files.length === 0 ? onDropRejected() : onDrop(files)
+        }}
         onDropRejected={onDropRejected}
-        accept="audio/*"
+        accept="audio/*, video/*"
       >
         <div className="drop-icon" />
         <div className="drop-text audio" />
