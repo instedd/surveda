@@ -1,5 +1,5 @@
 defmodule Ask.Runtime.ChannelBroker do
-  alias Ask.Runtime.{ChannelBrokerAgent, ChannelBrokerSupervisor, NuntiumChannel}
+  alias Ask.Runtime.{ChannelBrokerAgent, ChannelBrokerSupervisor}
   alias Ask.Runtime.ChannelBrokerState, as: State
   alias Ask.{Channel, Logger}
   import Ecto.Query
