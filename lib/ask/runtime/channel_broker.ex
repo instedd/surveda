@@ -150,16 +150,7 @@ defmodule Ask.Runtime.ChannelBroker do
     )
 
     contact = {respondent, token, reply, channel}
-
-    # FIXME: don't call NuntiumChannel directly!
-    # OPTIMIZE: the call will generate the actual replies which we discard right
-    #           away, we shall a Ask.Runtime.Channel. function instead (verboice
-    #           would answer with hardcoded 1, and Nuntium count the number of
-    #           replies to send).
-    size =
-      reply
-      |> NuntiumChannel.reply_to_messages(nil, respondent.id, state.channel_id)
-      |> length()
+    size = Ask.Runtime.Channel.messages_count(channel, respondent, nil, reply)
 
     new_state =
       state

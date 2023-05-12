@@ -418,7 +418,8 @@ defmodule Ask.Runtime.NuntiumChannel do
       to = "sms://#{respondent.sanitized_phone_number}"
 
       messages =
-        NuntiumChannel.reply_to_messages(reply, to, respondent.id, channel_id)
+        reply
+        |> NuntiumChannel.reply_to_messages(to, respondent.id, channel_id)
         |> Enum.map(fn msg ->
           Map.merge(msg, %{
             suggested_channel: channel.settings["nuntium_channel"],
@@ -429,6 +430,13 @@ defmodule Ask.Runtime.NuntiumChannel do
 
       Nuntium.Client.new(channel.base_url, channel.oauth_token)
       |> Nuntium.Client.send_ao(channel.settings["nuntium_account"], messages)
+    end
+
+    # OPTIMIZE: count messages, don't generate 'em just to count the result
+    def messages_count(channel, respondent, to, reply) do
+      reply
+      |> NuntiumChannel.reply_to_messages(to, respondent.id, channel.id)
+      |> length()
     end
 
     def check_status(runtime_channel) do
