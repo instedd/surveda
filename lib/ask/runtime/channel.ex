@@ -42,7 +42,7 @@ defprotocol Ask.Runtime.Channel do
   # Returns the status of the channel.
   #
   # `:up | {:down, messages} | {:error, messages}`
-  @spec check_status(t()) :: :up | {:down, []}, {:error, []}
+  @spec(check_status(t()) :: :up | {:down, []}, {:error, []})
   def check_status(channel)
 end
 

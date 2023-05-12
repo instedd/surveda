@@ -28,7 +28,9 @@ defmodule Nuntium.Client do
     ])
 
     if response_body.status_code == 200 do
-      {"x-nuntium-token", nuntium_token} = List.keyfind(response_body.headers, "x-nuntium-token", 0)
+      {"x-nuntium-token", nuntium_token} =
+        List.keyfind(response_body.headers, "x-nuntium-token", 0)
+
       {:ok, %{nuntium_token: nuntium_token}}
     else
       parse_response(response)
@@ -37,7 +39,8 @@ defmodule Nuntium.Client do
 
   # @spec get_ao(t, String.t, String.t) :: ok | error
   def get_ao(client, account, token) do
-    url = "#{client.base_url}/api/ao_messages.json?#{URI.encode_query(account: account, token: token)}"
+    url =
+      "#{client.base_url}/api/ao_messages.json?#{URI.encode_query(account: account, token: token)}"
 
     response =
       client.oauth2_client

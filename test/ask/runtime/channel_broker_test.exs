@@ -106,9 +106,20 @@ defmodule Ask.Runtime.ChannelBrokerTest do
 
     setup do
       set_actual_time()
+      :ok
+    end
 
-      # create IVR survey:
-      [_, respondents, channel] = initialize_survey("ivr", @channel_capacity)
+    defp channel_state("ivr", respondent) do
+      %{"verboice_call_id" => respondent.id}
+    end
+
+    defp channel_state("sms", respondent) do
+      %{"nuntium_token" => respondent.id}
+    end
+
+    defp start_survey(channel_type) do
+      # create survey:
+      [_, respondents, channel] = initialize_survey(channel_type, @channel_capacity)
 
       # activate respondents:
       from(r in Respondent, where: r.id in ^Enum.map(respondents, fn r -> r.id end))
@@ -121,7 +132,7 @@ defmodule Ask.Runtime.ChannelBrokerTest do
           Map.put(a, e.id, %{
             contacts: 1,
             last_contact: Ask.SystemTime.time().now,
-            channel_state: %{"verboice_call_id" => e.id}
+            channel_state: channel_state(channel_type, e)
           })
         end)
 
@@ -130,7 +141,10 @@ defmodule Ask.Runtime.ChannelBrokerTest do
         respondents
         |> Enum.slice(5..9)
         |> Enum.reduce(:pqueue.new(), fn e, a ->
-          :pqueue.in([1, {e, "secret", nil, nil, channel}], 2, a)
+          case channel_type do
+            "ivr" -> :pqueue.in([1, {e, "secret", nil, nil, channel}], 2, a)
+            "sms" -> :pqueue.in([1, {e, "secret", [], channel}], 2, a)
+          end
         end)
 
       state = %Ask.Runtime.ChannelBrokerState{
@@ -142,10 +156,12 @@ defmodule Ask.Runtime.ChannelBrokerTest do
         op_count: 2
       }
 
-      {:ok, state: state, respondents: respondents, channel: channel}
+      %{state: state, respondents: respondents, channel: channel}
     end
 
-    test "deactivates failed respondents", %{state: state, respondents: respondents} do
+    test "deactivates failed respondents" do
+      %{state: state, respondents: respondents} = start_survey("ivr")
+
       # fail some respondents:
       Enum.at(respondents, 1) |> Respondent.changeset(%{state: :failed}) |> Repo.update!()
       Enum.at(respondents, 3) |> Respondent.changeset(%{state: :failed}) |> Repo.update!()
@@ -164,10 +180,9 @@ defmodule Ask.Runtime.ChannelBrokerTest do
              ] == Map.keys(new_state.active_contacts)
     end
 
-    test "asks verboice for actual state of long idle contacts", %{
-      state: state,
-      respondents: respondents
-    } do
+    test "asks verboice for actual state of long idle contacts" do
+      %{state: state, respondents: respondents} = start_survey("ivr")
+
       # travel to the future (within allowed contact idle time):
       time_passes(minutes: trunc(state.config.gc_active_idle_minutes / 2))
       {:noreply, new_state} = ChannelBroker.handle_info({:collect_garbage, "ivr"}, state)
@@ -177,7 +192,7 @@ defmodule Ask.Runtime.ChannelBrokerTest do
       time_passes(minutes: state.config.gc_active_idle_minutes * 2)
 
       # mock calls to channel:
-      verboice_call_state_fn = fn _, %{"verboice_call_id" => call_id} ->
+      verboice_message_inactive_fn = fn _, %{"verboice_call_id" => call_id} ->
         call_id in [
           Enum.at(respondents, 0).id,
           Enum.at(respondents, 1).id,
@@ -185,10 +200,12 @@ defmodule Ask.Runtime.ChannelBrokerTest do
         ]
       end
 
-      with_mock Ask.Runtime.Channel,
-        message_inactive?: verboice_call_state_fn,
-        # NOTE: must mock setup/5 called by ChannelBroker.ivr_call/6 (why?)
-        setup: fn _, r, _, _, _ -> {:ok, %{verboice_call_id: r.id}} end do
+      mocks = [
+        message_inactive?: verboice_message_inactive_fn,
+        setup: fn _, r, _, _, _ -> {:ok, %{verboice_call_id: r.id}} end
+      ]
+
+      with_mock Ask.Runtime.Channel, mocks do
         {:noreply, new_state} = ChannelBroker.handle_info({:collect_garbage, "ivr"}, state)
 
         # it asked verboice for call state (all calls are long idle in this test case):
@@ -198,6 +215,48 @@ defmodule Ask.Runtime.ChannelBrokerTest do
         assert [
                  Enum.at(respondents, 2).id,
                  Enum.at(respondents, 4).id,
+                 Enum.at(respondents, 5).id,
+                 Enum.at(respondents, 6).id,
+                 Enum.at(respondents, 7).id
+               ] == Map.keys(new_state.active_contacts)
+      end
+    end
+
+    test "asks nuntium for actual state of long idle contacts" do
+      %{state: state, respondents: respondents} = start_survey("sms")
+
+      # travel to the future (within allowed contact idle time):
+      time_passes(minutes: trunc(state.config.gc_active_idle_minutes / 2))
+      {:noreply, new_state} = ChannelBroker.handle_info({:collect_garbage, "sms"}, state)
+      assert new_state.active_contacts == state.active_contacts
+
+      # travel to the future again (after allowed contact idle time):
+      time_passes(minutes: state.config.gc_active_idle_minutes * 2)
+
+      # mock calls to channel:
+      nuntium_message_inactive_fn = fn _, %{"nuntium_token" => nuntium_token} ->
+        nuntium_token in [
+          Enum.at(respondents, 0).id,
+          Enum.at(respondents, 1).id,
+          Enum.at(respondents, 4).id
+        ]
+      end
+
+      mocks = [
+        message_inactive?: nuntium_message_inactive_fn,
+        ask: fn _, r, _, _, _ -> {:ok, %{nuntium_token: r.id}} end
+      ]
+
+      with_mock Ask.Runtime.Channel, mocks do
+        {:noreply, new_state} = ChannelBroker.handle_info({:collect_garbage, "sms"}, state)
+
+        # it asked nuntium for call state (all messages are long idle in this test case):
+        assert_called_exactly(Ask.Runtime.Channel.message_inactive?(:_, :_), @channel_capacity)
+
+        # it removed inactive respondents (0, 1, 4) and activated queued ones (5, 6, 7):
+        assert [
+                 Enum.at(respondents, 2).id,
+                 Enum.at(respondents, 3).id,
                  Enum.at(respondents, 5).id,
                  Enum.at(respondents, 6).id,
                  Enum.at(respondents, 7).id

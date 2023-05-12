@@ -532,7 +532,8 @@ defmodule Ask.Runtime.VerboiceChannel do
         {:ok, %{"state" => "active"}} -> false
         {:ok, %{"state" => "queued"}} -> false
         {:ok, %{"state" => _}} -> true
-        {:error, _} -> false # in case of error, we consider it's still active
+        # in case of error, we consider it's still active
+        {:error, _} -> false
       end
     end
     def message_inactive?(_, _), do: false
