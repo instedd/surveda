@@ -101,6 +101,8 @@ defmodule AskWeb.Router do
           post "/set_description", SurveyController, :set_description
           post "/launch", SurveyController, :launch
           post "/stop", SurveyController, :stop
+          post "/pause", SurveyController, :pause
+          post "/resume", SurveyController, :resume
           post "/config", SurveyController, :config
 
           put "/update_locked_status", SurveyController, :update_locked_status,

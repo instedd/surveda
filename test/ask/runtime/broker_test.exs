@@ -1151,6 +1151,19 @@ defmodule Ask.Runtime.BrokerTest do
       :ok = broker |> GenServer.stop()
       :ok = channel_status_server |> GenServer.stop()
     end
+
+    test "doesn't poll surveys which are paused" do
+      survey1 = insert(:survey, %{schedule: Schedule.always(), state: :running})
+
+      survey2 = insert(:survey, %{schedule: Schedule.always(), state: :paused})
+
+      Broker.handle_info(:poll, nil)
+
+      survey1 = Repo.get(Ask.Survey, survey1.id)
+      survey2 = Repo.get(Ask.Survey, survey2.id)
+      assert Ask.Survey.completed?(survey1)
+      assert survey2.state == :paused
+    end
   end
 
   describe "after 1 hour" do

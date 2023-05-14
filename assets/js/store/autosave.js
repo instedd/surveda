@@ -13,6 +13,13 @@ export default (storeProvider, actions) => (store) => (next) => (action) => {
   const result = next(action)
   const state = storeProvider(store.getState())
 
+  if (
+    action.type == "SURVEY_SURVEY_SET_STATE" &&
+    (action.state == "paused" || action.state == "running")
+  ) {
+    return result
+  }
+
   switch (action.type) {
     case actions.RECEIVE:
       store.dispatch(autoSaveStatusActions.receive(result.data))

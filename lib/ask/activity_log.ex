@@ -45,6 +45,8 @@ defmodule Ask.ActivityLog do
       "repeat",
       "request_cancel",
       "completed_cancel",
+      "pause",
+      "resume",
       "download",
       "enable_public_link",
       "regenerate_public_link",
@@ -293,6 +295,14 @@ defmodule Ask.ActivityLog do
 
   def repeat(project, conn, survey) do
     create("repeat", project, conn, survey, %{survey_name: survey.name})
+  end
+
+  def pause(project, conn, survey) do
+    create("pause", project, conn, survey, %{survey_name: survey.name})
+  end
+
+  def resume(project, conn, survey) do
+    create("resume", project, conn, survey, %{survey_name: survey.name})
   end
 
   def request_cancel(project, conn, survey) do

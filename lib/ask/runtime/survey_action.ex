@@ -78,7 +78,7 @@ defmodule Ask.Runtime.SurveyAction do
         # UI open with the cancel button, and meanwhile the survey finished
         {:ok, %{survey: survey}}
 
-      [:running, false] ->
+      [s, l] when l == false and (s == :running or s == :paused) ->
         changeset =
           Survey.changeset(survey, %{
             state: "cancelling",

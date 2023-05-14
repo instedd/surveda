@@ -105,6 +105,7 @@ class SurveyStatus extends PureComponent {
         text = t("Ready to launch", { context: "survey" })
         break
 
+      case "paused":
       case "running":
         const endsOnMessage = this.endsOnMessage()
         scheduleClarificationMessage = `${this.startedOnMessage()}${
@@ -124,13 +125,15 @@ class SurveyStatus extends PureComponent {
               text = this.nextCallDescription(survey, date)
             }
           } else {
-            icon = "play_arrow"
+            icon = survey.state == "running" ? "play_arrow" : "pause"
             if (survey.firstWindowStartedAt) {
               text = short
                 ? this.startedOnMessage()
                 : // On the survey overview, the "started on" message is included in the
-                  // scheduleClarification message, above the main message.
-                  t("Running")
+                // scheduleClarification message, above the main message.
+                survey.state == "running"
+                ? t("Running")
+                : t("Paused")
             } else {
               // When the survey will start immediately (there will be no distance between
               // started_at and first_window_started_at) there is a little time window while

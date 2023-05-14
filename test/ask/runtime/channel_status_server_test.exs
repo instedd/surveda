@@ -21,14 +21,21 @@ defmodule Ask.Runtime.ChannelStatusServerTest do
       insert(:survey, state: :pending),
       insert(:survey, state: :running),
       insert(:survey, state: :running),
-      insert(:survey, state: :running)
+      insert(:survey, state: :running),
+      # For the channels, paused surveys should be threated as running
+      insert(:survey, state: :paused)
     ]
 
     channels = [
       TestChannel.create_channel(user, "test", TestChannel.settings(TestChannel.new(), 1)),
       TestChannel.create_channel(user, "test", TestChannel.settings(TestChannel.new(), 2)),
       TestChannel.create_channel(user, "test", TestChannel.settings(TestChannel.new(), 3, :down)),
-      TestChannel.create_channel(user, "test", TestChannel.settings(TestChannel.new(), 4, :error))
+      TestChannel.create_channel(
+        user,
+        "test",
+        TestChannel.settings(TestChannel.new(), 4, :error)
+      ),
+      TestChannel.create_channel(user, "test", TestChannel.settings(TestChannel.new(), 5))
     ]
 
     setup_surveys_with_channels(surveys, channels)
@@ -39,13 +46,16 @@ defmodule Ask.Runtime.ChannelStatusServerTest do
     runtime_channel_2 = TestChannel.new(channels |> Enum.at(1))
     runtime_channel_3 = TestChannel.new(channels |> Enum.at(2))
     runtime_channel_4 = TestChannel.new(channels |> Enum.at(3))
+    runtime_channel_5 = TestChannel.new(channels |> Enum.at(4))
 
     refute_receive [:check_status, ^runtime_channel_1], 1000
     assert_receive [:check_status, ^runtime_channel_2], 1000
     assert_receive [:check_status, ^runtime_channel_3], 1000
     assert_receive [:check_status, ^runtime_channel_4], 1000
+    assert_receive [:check_status, ^runtime_channel_5], 1000
     assert ChannelStatusServer.get_channel_status((channels |> Enum.at(0)).id) == :unknown
     assert ChannelStatusServer.get_channel_status((channels |> Enum.at(1)).id) == :up
+    assert ChannelStatusServer.get_channel_status((channels |> Enum.at(4)).id) == :up
 
     %{status: :down, messages: [], timestamp: t1, name: "test"} =
       ChannelStatusServer.get_channel_status((channels |> Enum.at(2)).id)
