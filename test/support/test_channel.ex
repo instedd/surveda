@@ -118,7 +118,7 @@ defimpl Ask.Runtime.Channel, for: Ask.TestChannel do
     {:ok, %{nuntium_token: UUID.uuid4()}}
   end
 
-  def messages_count(_, _, _, _), do: 1
+  def messages_count(_, _, _, _, _), do: 1
 
   def has_delivery_confirmation?(%{delivery: delivery}), do: delivery
 

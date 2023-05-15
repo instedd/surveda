@@ -23,8 +23,8 @@ defprotocol Ask.Runtime.Channel do
   def ask(channel, respondent, token, prompts, channel_id)
 
   # Returns how many contacts will be queued on the remote channel.
-  @spec messages_count(t(), Ask.Respondent.t(), any(), [Ask.Runtime.Reply.t()]) :: integer()
-  def messages_count(channel, respondent, to, reply)
+  @spec messages_count(t(), Ask.Respondent.t(), any(), [Ask.Runtime.Reply.t()], integer()) :: integer()
+  def messages_count(channel, respondent, to, reply, channel_id)
 
   # Verify if a message has already been queued. `channel_state` will contain
   @spec has_queued_message?(t(), map()) :: boolean

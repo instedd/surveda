@@ -482,7 +482,7 @@ defmodule Ask.Runtime.VerboiceChannel do
     def has_delivery_confirmation?(_), do: false
     def ask(_, _, _, _, _), do: throw(:not_implemented)
     def prepare(_), do: :ok
-    def messages_count(_, _, _, _), do: 1
+    def messages_count(_, _, _, _, _), do: 1
 
     def setup(channel, respondent, token, not_before, not_after) do
       in_five_seconds = Timex.shift(not_before, seconds: 5)

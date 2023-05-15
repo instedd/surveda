@@ -151,7 +151,7 @@ defmodule Ask.Runtime.ChannelBroker do
     )
 
     contact = {respondent, token, reply, channel}
-    size = Ask.Runtime.Channel.messages_count(channel, respondent, nil, reply)
+    size = Ask.Runtime.Channel.messages_count(channel, respondent, nil, reply, state.channel_id)
 
     new_state =
       state

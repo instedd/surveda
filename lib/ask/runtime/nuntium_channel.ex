@@ -433,9 +433,9 @@ defmodule Ask.Runtime.NuntiumChannel do
     end
 
     # OPTIMIZE: count messages, don't generate 'em just to count the result
-    def messages_count(channel, respondent, to, reply) do
+    def messages_count(_, respondent, to, reply, channel_id) do
       reply
-      |> NuntiumChannel.reply_to_messages(to, respondent.id, channel.id)
+      |> NuntiumChannel.reply_to_messages(to, respondent.id, channel_id)
       |> length()
     end
 
