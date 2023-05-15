@@ -66,7 +66,7 @@ defmodule Ask.Config do
       # High values: the GC will run less frequently. A too high value could lead to unnecessary
       # stops of the survey by reaching the channel capacity because of failed contacts or
       # callback losses.
-      gc_interval_minutes: env_to_int("CHNL_BKR_GC_INTERVAL_MINUTES", 1),
+      gc_interval_minutes: env_to_int("CHNL_BKR_GC_INTERVAL_MINUTES", 2),
 
       # How many hours after the last contact the ChannelBroker waits until a contact is discarded
       # because it's considered outdated. Default: 24 h.
@@ -80,7 +80,7 @@ defmodule Ask.Config do
 
       # How long after a call/message has been left idle (no callbacks received)
       # before the GC starts polling the remote channel for its actual state.
-      gc_active_idle_minutes: env_to_int("CHNL_BKR_GC_IDLE_MINUTES", 1)
+      gc_active_idle_minutes: env_to_int("CHNL_BKR_GC_IDLE_MINUTES", 5)
     }
   end
 

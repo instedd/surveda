@@ -128,14 +128,7 @@ defmodule Ask.Runtime.ChannelBroker do
   @impl true
   def init([channel_id, channel_type, settings]) do
     info("init (new)", channel_id: channel_id, channel_type: channel_type, settings: settings)
-    state = State.new(channel_id, settings)
-    schedule_GC(channel_type, state)
-    {:ok, state, State.process_timeout(state)}
-  end
-
-  @impl true
-  def init([channel_id, channel_type, settings, state]) do
-    info("init (state)", channel_id: channel_id, channel_type: channel_type, settings: settings)
+    state = (Agent.recover_state(channel_id) || State.new(channel_id, settings))
     schedule_GC(channel_type, state)
     {:ok, state, State.process_timeout(state)}
   end
