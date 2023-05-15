@@ -6,7 +6,6 @@ defmodule Ask.Runtime.ChannelBrokerTest do
   alias Ask.Runtime.{
     ChannelStatusServer,
     ChannelBroker,
-    ChannelBrokerAgent,
     VerboiceChannel,
     NuntiumChannel
   }
@@ -17,10 +16,10 @@ defmodule Ask.Runtime.ChannelBrokerTest do
   setup %{conn: conn} do
     on_exit(fn ->
       ChannelBrokerSupervisor.terminate_children()
+      ChannelBrokerAgent.clear()
     end)
 
     {:ok, _} = ChannelStatusServer.start_link()
-    {:ok, _} = ChannelBrokerAgent.start_link()
     {:ok, conn: conn}
   end
 

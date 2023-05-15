@@ -14,8 +14,7 @@ defmodule Ask.Runtime.VerboiceChannelTest do
     SurveyBroker,
     ChannelStatusServer,
     SurveyStub,
-    ChannelBroker,
-    ChannelBrokerAgent
+    ChannelBroker
   }
 
   import Mock
@@ -30,11 +29,11 @@ defmodule Ask.Runtime.VerboiceChannelTest do
   setup %{conn: conn} do
     on_exit(fn ->
       ChannelBrokerSupervisor.terminate_children()
+      ChannelBrokerAgent.clear()
     end)
 
     GenServer.start_link(SurveyStub, [], name: SurveyStub.server_ref())
     {:ok, _} = ChannelStatusServer.start_link()
-    {:ok, _} = ChannelBrokerAgent.start_link()
     Ask.Config.start_link()
 
     respondent =

@@ -27,10 +27,10 @@ defmodule Ask.Runtime.RetriesHistogramTest do
   setup do
     on_exit(fn ->
       ChannelBrokerSupervisor.terminate_children()
+      ChannelBrokerAgent.clear()
     end)
 
     {:ok, _} = ChannelStatusServer.start_link()
-    {:ok, _} = ChannelBrokerAgent.start_link()
     :ok
   end
 
