@@ -1,6 +1,5 @@
 defmodule Ask.Runtime.ChannelBrokerSupervisor do
-  alias Ask.Runtime.{ChannelBroker, ChannelBrokerAgent, SurveyBroker}
-  alias Ask.Config
+  alias Ask.Runtime.{ChannelBroker, ChannelBrokerAgent}
   use DynamicSupervisor
 
   def start_link() do
@@ -12,47 +11,9 @@ defmodule Ask.Runtime.ChannelBrokerSupervisor do
   end
 
   def start_child(channel_id, channel_type, settings) do
-    cond do
-      channel_id in Map.keys(ChannelBrokerAgent.get()) ->
-        # If channel state is stored in the agent, recover it from there
-        DynamicSupervisor.start_child(
-          __MODULE__,
-          child_spec(
-            channel_id,
-            channel_type,
-            settings,
-            ChannelBrokerAgent.get_channel_state(channel_id)
-          )
-        )
-
-      ChannelBrokerAgent.is_in_db(channel_id) ->
-        # If channel state is stored in the db, recover it from there
-        cb_db = ChannelBrokerAgent.recover_from_db(channel_id)
-
-        channel_state = %{
-          channel_id: channel_id,
-          capacity: Map.get(settings, "capacity", Config.default_channel_capacity()),
-          contacts_queue: :pqueue.new(),
-          active_contacts: Map.get(cb_db, :active_contacts),
-          config: Config.channel_broker_config(),
-          # We save to db again inmediately on restart.
-          op_count: 1
-        }
-
-        res =
-          DynamicSupervisor.start_child(
-            __MODULE__,
-            child_spec(channel_id, channel_type, settings, channel_state)
-          )
-
-        # recontact contacts in the queue
-        SurveyBroker.recontact_queued_respondents(Map.get(cb_db, :contacts_queue_ids))
-        res
-
-      true ->
-        # Else, start the broker from scratch
-        DynamicSupervisor.start_child(__MODULE__, child_spec(channel_id, channel_type, settings))
-    end
+    state = ChannelBrokerAgent.recover_state(channel_id)
+    spec = child_spec(channel_id, channel_type, settings, state)
+    DynamicSupervisor.start_child(__MODULE__, spec)
   end
 
   def terminate_child(nil), do: terminate_child(0)
@@ -84,7 +45,7 @@ defmodule Ask.Runtime.ChannelBrokerSupervisor do
     end
   end
 
-  defp child_spec(channel_id, channel_type, settings) do
+  defp child_spec(channel_id, channel_type, settings, nil) do
     %{
       id: "channel_broker_#{channel_id}",
       start: {ChannelBroker, :start_link, [channel_id, channel_type, settings]}

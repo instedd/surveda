@@ -1,7 +1,6 @@
 defmodule Ask.Runtime.ChannelBrokerAgent do
-  alias Ask.Runtime.ChannelBrokerRecovery
+  alias Ask.Runtime.ChannelBrokerState, as: State
   use Agent
-  use Ask.Model
 
   def start_link do
     Agent.start_link(fn -> %{} end, name: __MODULE__)
@@ -11,32 +10,27 @@ defmodule Ask.Runtime.ChannelBrokerAgent do
     Agent.get(__MODULE__, & &1)
   end
 
-  def get_channel_state(channel_id) do
-    Map.get(Agent.get(__MODULE__, & &1), channel_id)
-  end
-
   def update do
     Agent.update(__MODULE__, & &1)
   end
 
-  def save_channel_state(channel_id, state, persist) do
-    Agent.update(__MODULE__, fn s -> Map.put(s, channel_id, state) end)
-
-    if persist do
-      persist_to_db(channel_id)
-    end
+  def recover_state(channel_id) do
+    Agent.get(__MODULE__, & &1)
+    |> Map.get(channel_id)
   end
 
-  def persist_to_db(channel_id) do
-    state = get_channel_state(channel_id)
-    ChannelBrokerRecovery.save(state)
+  def save_state(%State{channel_id: channel_id} = state) do
+    Agent.update(__MODULE__, fn agent ->
+      agent
+      |> Map.put(channel_id, state)
+    end)
+
+    state
   end
 
-  def recover_from_db(channel_id) do
-    ChannelBrokerRecovery.fetch(channel_id)
-  end
-
-  def is_in_db(channel_id) do
-    ChannelBrokerRecovery.saved?(channel_id)
+  def delete_state(channel_id) do
+    Agent.update(__MODULE__, fn agent ->
+      Map.delete(agent, channel_id)
+    end)
   end
 end

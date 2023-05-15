@@ -1,5 +1,6 @@
 defmodule Ask.Runtime.ChannelBroker do
-  alias Ask.Runtime.{ChannelBrokerAgent, ChannelBrokerSupervisor}
+  alias Ask.Runtime.ChannelBrokerSupervisor
+  alias Ask.Runtime.ChannelBrokerAgent, as: Agent
   alias Ask.Runtime.ChannelBrokerState, as: State
   alias Ask.{Channel, Logger}
   import Ecto.Query
@@ -156,7 +157,7 @@ defmodule Ask.Runtime.ChannelBroker do
       state
       |> State.queue_contact(contact, size)
       |> try_activate_next_queued_contact()
-      |> save_to_agent()
+      |> Agent.save_state()
       |> debug()
 
     {:reply, :ok, new_state, State.process_timeout(state)}
@@ -184,7 +185,7 @@ defmodule Ask.Runtime.ChannelBroker do
       state
       |> State.queue_contact(contact, 1)
       |> try_activate_next_queued_contact()
-      |> save_to_agent()
+      |> Agent.save_state()
       |> debug()
 
     {:reply, :ok, new_state, State.process_timeout(state)}
@@ -258,7 +259,7 @@ defmodule Ask.Runtime.ChannelBroker do
       state
       |> State.deactivate_contact(respondent_id)
       |> State.remove_from_queue(respondent_id)
-      |> save_to_agent()
+      |> Agent.save_state()
       |> debug()
 
     {:reply, :ok, new_state, State.process_timeout(state)}
@@ -302,7 +303,7 @@ defmodule Ask.Runtime.ChannelBroker do
         state
         |> State.touch_last_contact(respondent.id)
       end
-      |> save_to_agent()
+      |> Agent.save_state()
       |> debug()
 
     {:reply, :ok, new_state, State.process_timeout(state)}
@@ -321,7 +322,7 @@ defmodule Ask.Runtime.ChannelBroker do
       state
       |> State.decrement_respondents_contacts(respondent.id, 1)
       |> try_activate_next_queued_contact()
-      |> save_to_agent()
+      |> Agent.save_state()
       |> debug()
 
     {:reply, :ok, new_state, State.process_timeout(state)}
@@ -334,7 +335,7 @@ defmodule Ask.Runtime.ChannelBroker do
     new_state =
       state
       |> State.increment_respondents_contacts(respondent_id, size)
-      |> save_to_agent()
+      |> Agent.save_state()
       |> debug()
 
     {:reply, :ok, new_state, State.process_timeout(state)}
@@ -348,14 +349,16 @@ defmodule Ask.Runtime.ChannelBroker do
   end
 
   @impl true
-  def handle_info(
-        :timeout,
-        %{channel_id: channel_id, config: %{to_db_operations: to_db_operations}} = state
-      ) do
-    info("handle_info[timeout]", channel_id: channel_id, to_db_operations: to_db_operations)
+  def handle_info(:timeout, %{channel_id: channel_id} = state) do
+    info("handle_info[timeout]", channel_id: channel_id)
 
-    # save the state to the agent in DB only if it is enabled, otherwise just in memory
-    ChannelBrokerAgent.save_channel_state(channel_id, state, to_db_operations > 0)
+    if State.inactive?(state) do
+      Agent.delete_state(state.channel_id)
+    else
+      Agent.save_state(state)
+    end
+
+    # NOTE: maybe return {:stop, "terminating idle channel-broker", nil}
     ChannelBrokerSupervisor.terminate_child(channel_id)
   end
 
@@ -379,13 +382,13 @@ defmodule Ask.Runtime.ChannelBroker do
       |> State.clean_inactive_respondents(active_respondents)
       |> State.clean_outdated_respondents(runtime_channel)
       |> activate_contacts()
-      |> save_to_agent()
+      |> Agent.save_state()
       |> debug()
 
     # schedule next run
     schedule_GC(channel_type, state)
 
-    {:noreply, new_state}
+    {:noreply, new_state, State.process_timeout(state)}
   end
 
   # Internals
@@ -469,22 +472,6 @@ defmodule Ask.Runtime.ChannelBroker do
     State.put_channel_state(state, respondent.id, channel_state)
   end
 
-  # NOTE: save to agent and persist to DB are disabled for now.
-  # FIXME: only persist to DB should be disabled!
-  defp save_to_agent(%{op_count: op_count, config: %{to_db_operations: to_db_operations}} = state) do
-    # only persist to DB when the counter is reached
-    new_op_count =
-      if op_count <= 1 and to_db_operations > 0 do
-        ChannelBrokerAgent.save_channel_state(state.channel_id, state, true)
-        to_db_operations
-      else
-        ChannelBrokerAgent.save_channel_state(state.channel_id, state, false)
-        op_count - 1
-      end
-
-    Map.put(state, :op_count, new_op_count)
-  end
-
   # Don't schedule automatic GC runs in tests.
   if Mix.env() == :test do
     defp schedule_GC(_, _), do: nil
@@ -505,7 +492,12 @@ defmodule Ask.Runtime.ChannelBroker do
   end
 
   defp debug(state) do
-    Logger.debug("CHNL_BRK state: #{inspect(state)}")
+    Logger.debug(fn ->
+      num_active = map_size(state.active_contacts)
+      num_queued = :pqueue.len(state.contacts_queue)
+      "ChannelBrokerState: channel=#{state.channel_id} active=#{num_active} queued=#{num_queued}"
+    end)
+    # Logger.debug("ChannelBrokerState: #{inspect(state)}")
     state
   end
 end
