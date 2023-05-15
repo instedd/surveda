@@ -5,14 +5,13 @@ defmodule Ask.Runtime.ChannelStatusServerTest do
   alias Ask.TestChannel
   alias Ask.Runtime.ChannelStatusServer
   alias AskWeb.Email
-  alias Ask.Runtime.ChannelBrokerAgent
 
   setup do
     on_exit(fn ->
       ChannelBrokerSupervisor.terminate_children()
+      ChannelBrokerAgent.clear()
     end)
 
-    {:ok, _} = ChannelBrokerAgent.start_link()
     :ok
   end
 

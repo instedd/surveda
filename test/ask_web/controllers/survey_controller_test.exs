@@ -19,14 +19,18 @@ defmodule AskWeb.SurveyControllerTest do
     ActivityLog
   }
 
-  alias Ask.Runtime.{Flow, Session, ChannelStatusServer, ChannelBrokerAgent}
+  alias Ask.Runtime.{Flow, Session, ChannelStatusServer}
   alias Ask.Runtime.SessionModeProvider
 
   @valid_attrs %{name: "some content", description: "initial survey"}
   @invalid_attrs %{cutoff: -1}
 
   setup %{conn: conn} do
-    ChannelBrokerAgent.start_link()
+    on_exit(fn ->
+      ChannelBrokerSupervisor.terminate_children()
+      ChannelBrokerAgent.clear()
+    end)
+
     user = insert(:user)
 
     conn =
@@ -358,6 +362,7 @@ defmodule AskWeb.SurveyControllerTest do
       assert code
 
       ChannelBrokerSupervisor.terminate_children()
+      ChannelBrokerAgent.clear()
     end
 
     test "returns 404 when the project does not exist", %{conn: conn} do
@@ -816,6 +821,7 @@ defmodule AskWeb.SurveyControllerTest do
       assert t2
 
       ChannelBrokerSupervisor.terminate_children()
+      ChannelBrokerAgent.clear()
     end
 
     test "renders page not found when id is nonexistent", %{conn: conn} do

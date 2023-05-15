@@ -6,6 +6,7 @@ defmodule AskWeb.ChannelControllerTest do
   setup %{conn: conn} do
     on_exit(fn ->
       ChannelBrokerSupervisor.terminate_children()
+      ChannelBrokerAgent.clear()
     end)
 
     user = insert(:user)
@@ -16,7 +17,6 @@ defmodule AskWeb.ChannelControllerTest do
       |> put_req_header("accept", "application/json")
 
     {:ok, _} = Ask.Runtime.ChannelStatusServer.start_link()
-    {:ok, _} = ChannelBrokerAgent.start_link()
     {:ok, conn: conn, user: user}
   end
 

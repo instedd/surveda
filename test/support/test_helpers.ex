@@ -2,7 +2,7 @@ defmodule Ask.TestHelpers do
   defmacro __using__(_) do
     quote do
       use Ask.DummySteps
-      alias Ask.Runtime.{SurveyBroker, Flow, RespondentGroupAction, ChannelBrokerSupervisor}
+      alias Ask.Runtime.{SurveyBroker, Flow, RespondentGroupAction, ChannelBrokerSupervisor, ChannelBrokerAgent}
       alias Ask.{PanelSurvey, Repo, Respondent, Survey, TestChannel}
 
       @foo_string "foo"

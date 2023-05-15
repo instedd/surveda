@@ -14,6 +14,12 @@ defmodule Ask.Runtime.ChannelBrokerAgent do
     Agent.update(__MODULE__, & &1)
   end
 
+  def clear do
+    Agent.update(__MODULE__, fn agent ->
+      Map.drop(agent, Map.keys(agent))
+    end)
+  end
+
   def recover_state(channel_id) do
     Agent.get(__MODULE__, & &1)
     |> Map.get(channel_id)
@@ -21,8 +27,7 @@ defmodule Ask.Runtime.ChannelBrokerAgent do
 
   def save_state(%State{channel_id: channel_id} = state) do
     Agent.update(__MODULE__, fn agent ->
-      agent
-      |> Map.put(channel_id, state)
+      Map.put(agent, channel_id, state)
     end)
 
     state

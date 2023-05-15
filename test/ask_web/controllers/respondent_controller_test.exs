@@ -17,12 +17,7 @@ defmodule AskWeb.RespondentControllerTest do
     TestChannel
   }
 
-  alias Ask.Runtime.{ChannelStatusServer, ChannelBrokerAgent, ChannelBrokerAgent}
-
-  setup do
-    ChannelBrokerAgent.start_link()
-    :ok
-  end
+  alias Ask.Runtime.ChannelStatusServer
 
   @empty_stats %{
     "attempts" => nil,

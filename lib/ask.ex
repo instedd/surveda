@@ -18,6 +18,7 @@ defmodule Ask do
       supervisor(AskWeb.Endpoint, []),
       supervisor(Ask.MetricsEndpoint, []),
       supervisor(Registry, [:unique, :channel_broker_registry]),
+      worker(Ask.Runtime.ChannelBrokerAgent, []),
       supervisor(Ask.Runtime.ChannelBrokerSupervisor, []),
       supervisor(Ask.Runtime.SurveyCancellerSupervisor, []),
       {Mutex, name: Ask.Mutex}
@@ -34,7 +35,6 @@ defmodule Ask do
           worker(Ask.FloipPusher, []),
           worker(Ask.JsonSchema, []),
           worker(Ask.Runtime.ChannelStatusServer, []),
-          worker(Ask.Runtime.ChannelBrokerAgent, []),
           worker(Ask.Config, []),
           worker(Ask.Runtime.QuestionnaireSimulatorStore, [])
           | children
