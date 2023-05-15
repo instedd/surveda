@@ -152,8 +152,7 @@ defmodule Ask.Runtime.ChannelBrokerTest do
         capacity: @channel_capacity,
         active_contacts: active_contacts,
         contacts_queue: contacts_queue,
-        config: Config.channel_broker_config(),
-        op_count: 2
+        config: Config.channel_broker_config()
       }
 
       %{state: state, respondents: respondents, channel: channel}
