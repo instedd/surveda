@@ -97,6 +97,11 @@ defmodule Ask.Runtime.ChannelBroker do
 
       [] ->
         {channel_type, settings} = set_channel(channel_id)
+        if Mix.env() == :test do
+          # FIXME: makes sure that we load the runtime channel from the current
+          # process so it will be available in ChannelAgent.
+          Ask.Channel.runtime_channel(channel_id)
+        end
         {:ok, pid} = ChannelBrokerSupervisor.start_child(channel_id, channel_type, settings)
         pid
     end

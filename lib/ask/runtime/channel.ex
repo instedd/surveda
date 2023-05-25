@@ -1,3 +1,30 @@
+defmodule Ask.Runtime.ChannelAgent do
+  use Agent
+
+  def start_link do
+    Agent.start_link(fn -> %{} end, name: __MODULE__)
+  end
+
+  def clear do
+    Agent.update(__MODULE__, fn agent ->
+      Map.drop(agent, Map.keys(agent))
+    end)
+  end
+
+  def get(channel_id) do
+    Agent.get(__MODULE__, & &1)
+    |> Map.get(channel_id)
+  end
+
+  def set(runtime_channel, channel_id) do
+    Agent.update(__MODULE__, fn agent ->
+      Map.put(agent, channel_id, runtime_channel)
+    end)
+
+    runtime_channel
+  end
+end
+
 defprotocol Ask.Runtime.Channel do
   # TODO: finish reverse-engineering the typespec definitions
 

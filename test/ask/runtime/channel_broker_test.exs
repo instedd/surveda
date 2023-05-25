@@ -141,8 +141,8 @@ defmodule Ask.Runtime.ChannelBrokerTest do
         |> Enum.slice(5..9)
         |> Enum.reduce(:pqueue.new(), fn e, a ->
           case channel_type do
-            "ivr" -> :pqueue.in([1, {e, "secret", nil, nil, channel}], 2, a)
-            "sms" -> :pqueue.in([1, {e, "secret", [], channel}], 2, a)
+            "ivr" -> :pqueue.in([1, {e, "secret", nil, nil}], 2, a)
+            "sms" -> :pqueue.in([1, {e, "secret", []}], 2, a)
           end
         end)
 
@@ -242,6 +242,7 @@ defmodule Ask.Runtime.ChannelBrokerTest do
 
       mocks = [
         message_inactive?: nuntium_message_inactive_fn,
+        setup: fn _, _, _, _, _ -> {:ok, %{}} end,
         ask: fn _, r, _, _, _ -> {:ok, %{nuntium_token: r.id}} end
       ]
 

@@ -31,6 +31,8 @@ defmodule AskWeb.ChannelCase do
   end
 
   setup tags do
+    on_exit(&Ask.Runtime.ChannelAgent.clear/0)
+
     :ok = Ecto.Adapters.SQL.Sandbox.checkout(Ask.Repo)
 
     unless tags[:async] do
