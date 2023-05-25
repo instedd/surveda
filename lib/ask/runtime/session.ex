@@ -280,7 +280,7 @@ defmodule Ask.Runtime.Session do
 
   def contact_respondent(
         %{schedule: schedule, current_mode: %IVRMode{}} = session,
-        runtime_channel
+        _runtime_channel
       ) do
     token = Ecto.UUID.generate()
 
@@ -298,7 +298,6 @@ defmodule Ask.Runtime.Session do
       ChannelBroker.setup(
         channel.id,
         channel.type,
-        runtime_channel,
         session.respondent,
         token,
         next_available_date_time,
@@ -427,10 +426,6 @@ defmodule Ask.Runtime.Session do
        ) do
     runtime_channel = Ask.Channel.runtime_channel(channel)
 
-    # Is this really necessary?
-    :ok =
-      ChannelBroker.setup(channel.id, channel.type, runtime_channel, respondent, token, nil, nil)
-
     case flow
          |> Flow.step(
            session.current_mode |> SessionMode.visitor(),
@@ -523,13 +518,10 @@ defmodule Ask.Runtime.Session do
       schedule
       |> Schedule.at_end_time(next_available_date_time)
 
-    runtime_channel = Ask.Channel.runtime_channel(channel)
-
     :ok =
       ChannelBroker.setup(
         channel.id,
         channel.type,
-        runtime_channel,
         respondent,
         token,
         next_available_date_time,
@@ -550,10 +542,6 @@ defmodule Ask.Runtime.Session do
          } = session
        ) do
     runtime_channel = Ask.Channel.runtime_channel(channel)
-
-    # Is this really necessary?
-    :ok =
-      ChannelBroker.setup(channel.id, channel.type, runtime_channel, respondent, token, nil, nil)
 
     reply = mobile_contact_reply(session)
     channel = session.current_mode.channel

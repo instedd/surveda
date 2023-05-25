@@ -412,7 +412,7 @@ defmodule Ask.Runtime.NuntiumChannel do
       end
     end
 
-    def setup(_channel, _respondent, _token, _not_before, _not_after), do: :ok
+    def setup(_channel, _respondent, _token, _not_before, _not_after), do: {:ok, %{}}
 
     def ask(channel, respondent, token, reply, channel_id) do
       to = "sms://#{respondent.sanitized_phone_number}"

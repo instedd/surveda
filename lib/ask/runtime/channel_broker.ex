@@ -28,10 +28,10 @@ defmodule Ask.Runtime.ChannelBroker do
     call_gen_server(channel_id, {:prepare, channel})
   end
 
-  def setup(channel_id, channel_type, channel, respondent, token, not_before, not_after) do
+  def setup(channel_id, channel_type, respondent, token, not_before, not_after) do
     call_gen_server(
       channel_id,
-      {:setup, channel_type, channel, respondent, token, not_before, not_after}
+      {:setup, channel_type, respondent, token, not_before, not_after}
     )
   end
 
@@ -143,7 +143,7 @@ defmodule Ask.Runtime.ChannelBroker do
       reply: reply
     )
 
-    contact = {respondent, token, reply, channel}
+    contact = {respondent, token, reply}
     size = Ask.Runtime.Channel.messages_count(channel, respondent, nil, reply, state.channel_id)
 
     new_state =
@@ -157,11 +157,7 @@ defmodule Ask.Runtime.ChannelBroker do
   end
 
   @impl true
-  def handle_call(
-        {:setup, "ivr", channel, respondent, token, not_before, not_after},
-        _from,
-        state
-      ) do
+  def handle_call({:setup, "ivr", respondent, token, not_before, not_after}, _from, state) do
     info("handle_call[setup]",
       channel_type: "ivr",
       channel_id: state.channel_id,
@@ -172,7 +168,7 @@ defmodule Ask.Runtime.ChannelBroker do
     )
 
     # queue contact and try to activate immediately
-    contact = {respondent, token, not_before, not_after, channel}
+    contact = {respondent, token, not_before, not_after}
 
     new_state =
       state
@@ -184,24 +180,10 @@ defmodule Ask.Runtime.ChannelBroker do
     {:reply, :ok, new_state, State.process_timeout(state)}
   end
 
+  # FIXME: only needed for tests to pass
   @impl true
-  def handle_call(
-        {:setup, "sms", channel, respondent, token, not_before, not_after},
-        _from,
-        state
-      ) do
-    info("handle_call[setup]",
-      channel_type: "sms",
-      channel_id: state.channel_id,
-      respondent_id: respondent.id,
-      token: token,
-      not_before: not_before,
-      not_after: not_after
-    )
-
-    # only setup, contacts will be activated upon :ask
-    channel_setup(channel, respondent, token, not_before, not_after)
-
+  def handle_call({:setup, "sms", _, _, _, _}, _from, state) do
+    # shouldn't happen, but just in case: a silent noop is enough
     {:reply, :ok, state, State.process_timeout(state)}
   end
 
@@ -365,15 +347,10 @@ defmodule Ask.Runtime.ChannelBroker do
       )
       |> Repo.all()
 
-    runtime_channel =
-      Channel
-      |> Repo.get(state.channel_id)
-      |> Channel.runtime_channel()
-
     new_state =
       state
       |> State.clean_inactive_respondents(active_respondents)
-      |> State.clean_outdated_respondents(runtime_channel)
+      |> State.clean_outdated_respondents(Channel.runtime_channel(state.channel_id))
       |> activate_contacts()
       |> Agent.save_state()
       |> debug()
@@ -385,17 +362,6 @@ defmodule Ask.Runtime.ChannelBroker do
   end
 
   # Internals
-
-  defp channel_setup(%Channel{} = channel, respondent, token, not_before, not_after) do
-    channel
-    |> Channel.runtime_channel()
-    |> channel_setup(respondent, token, not_before, not_after)
-  end
-
-  defp channel_setup(runtime_channel, respondent, token, not_before, not_after) do
-    runtime_channel
-    |> Ask.Runtime.Channel.setup(respondent, token, not_before, not_after)
-  end
 
   # Activates has many queued contacts as possible, until either the queue is
   # empty or the channel capacity is reached.
@@ -421,47 +387,44 @@ defmodule Ask.Runtime.ChannelBroker do
     end
   end
 
-  # Activates the next queued contact. There must be one at least one contact in
-  # queue, and doesn't verify if the channel capacity has been reached!
+  # Activates the next queued contact. There must be at least one contact in
+  # queue. It doesn't verify if the channel capacity has been reached!
   defp activate_next_queued_contact(state) do
     {new_state, unqueued_item} = State.activate_next_in_queue(state)
 
     case unqueued_item do
-      {respondent, token, not_before, not_after, channel} ->
-        ivr_call(new_state, channel, respondent, token, not_before, not_after)
+      {respondent, token, not_before, not_after} ->
+        ivr_call(new_state, respondent, token, not_before, not_after)
 
-      {respondent, token, reply, channel} ->
-        channel_ask(new_state, channel, respondent, token, reply, state.channel_id)
+      {respondent, token, reply} ->
+        channel_ask(new_state, respondent, token, reply)
     end
   end
 
-  defp ivr_call(state, channel, respondent, token, not_before, not_after) do
+  # TODO: don't call when about to expire (not after > 1 minute ago)
+  defp ivr_call(state, respondent, token, not_before, not_after) do
     {:ok, %{verboice_call_id: verboice_call_id}} =
-      channel_setup(channel, respondent, token, not_before, not_after)
+      Channel.runtime_channel(state.channel_id)
+      |> Ask.Runtime.Channel.setup(respondent, token, not_before, not_after)
 
     channel_state = %{"verboice_call_id" => verboice_call_id}
     info("put_channel_state", respondent_id: respondent.id, channel_state: channel_state)
     State.put_channel_state(state, respondent.id, channel_state)
   end
 
-  defp channel_ask(state, %Channel{} = channel, respondent, token, reply, channel_id) do
-    runtime_channel = Channel.runtime_channel(channel)
-    channel_ask(state, runtime_channel, respondent, token, reply, channel_id)
-  end
+  defp channel_ask(state, respondent, token, reply) do
+    runtime_channel = Channel.runtime_channel(state.channel_id)
 
-  defp channel_ask(
-         state,
-         runtime_channel,
-         %{id: respondent_id} = respondent,
-         token,
-         reply,
-         channel_id
-       ) do
+    # FIXME: only needed for tests to pass
+    runtime_channel
+    |> Ask.Runtime.Channel.setup(respondent, token, nil, nil)
+
     {:ok, %{nuntium_token: nuntium_token}} =
-      Ask.Runtime.Channel.ask(runtime_channel, respondent, token, reply, channel_id)
+      runtime_channel
+      |> Ask.Runtime.Channel.ask(respondent, token, reply, state.channel_id)
 
     channel_state = %{"nuntium_token" => nuntium_token}
-    info("put_channel_state", respondent_id: respondent_id, channel_state: channel_state)
+    info("put_channel_state", respondent_id: respondent.id, channel_state: channel_state)
     State.put_channel_state(state, respondent.id, channel_state)
   end
 

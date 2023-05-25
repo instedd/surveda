@@ -38,8 +38,8 @@ defmodule Ask.Runtime.ChannelBrokerState do
     # to make the contact comes.
     #
     # Elements are tuples whose shape depend on the channel provider:
-    # - Verboice: `{respondent, token, not_before, not_after, channel}`
-    # - Nuntium: `{respondent, token, reply, channel}`
+    # - Verboice: `{respondent, token, not_before, not_after}`
+    # - Nuntium: `{respondent, token, reply}`
     contacts_queue: :pqueue.new()
   ]
 
