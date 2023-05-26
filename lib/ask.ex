@@ -18,7 +18,6 @@ defmodule Ask do
       supervisor(AskWeb.Endpoint, []),
       supervisor(Ask.MetricsEndpoint, []),
       supervisor(Registry, [:unique, :channel_broker_registry]),
-      worker(Ask.Runtime.ChannelAgent, []),
       worker(Ask.Runtime.ChannelBrokerAgent, []),
       supervisor(Ask.Runtime.ChannelBrokerSupervisor, []),
       supervisor(Ask.Runtime.SurveyCancellerSupervisor, []),

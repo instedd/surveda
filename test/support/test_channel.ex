@@ -137,4 +137,6 @@ defimpl Ask.Runtime.Channel, for: Ask.TestChannel do
     send(channel.pid, [:check_status, channel])
     channel.status
   end
+
+  def about_to_expire?(_), do: false
 end

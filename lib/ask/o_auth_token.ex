@@ -38,14 +38,14 @@ defmodule Ask.OAuthToken do
     Poison.Decode.decode(token.access_token, as: %OAuth2.AccessToken{})
   end
 
-  if Mix.env() == :test do
-    def about_to_expire?(nil) do
-      false
-    end
-  end
-
   def about_to_expire?(token) do
-    limit = Timex.now() |> Timex.add(Timex.Duration.from_minutes(1))
-    Timex.before?(token.expires_at, limit)
+    expires_at =
+      if is_integer(token.expires_at) do
+        DateTime.from_unix!(token.expires_at)
+      else
+        token.expires_at
+      end
+    limit = DateTime.now!("Etc/UTC") |> DateTime.add(60, :second)
+    DateTime.compare(expires_at, limit) == :lt
   end
 end

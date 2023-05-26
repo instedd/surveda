@@ -43,10 +43,9 @@ defmodule Ask.Runtime.ChannelStatusServer do
       Survey.running_channels()
       |> Repo.preload(:user)
       |> Enum.each(fn c ->
-        runtime_channel = Ask.Channel.runtime_channel(c)
         previous_status = get_status_from_state(c.id, state)
 
-        status = ChannelBroker.check_status(c.id, runtime_channel)
+        status = ChannelBroker.check_status(c.id)
         timestamp = Timex.now()
 
         case status do

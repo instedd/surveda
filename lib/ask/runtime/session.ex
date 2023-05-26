@@ -94,29 +94,18 @@ defmodule Ask.Runtime.Session do
   """
   def timeout(session) do
     channel = session.current_mode.channel
-    runtime_channel = Ask.Channel.runtime_channel(channel)
 
     cond do
-      ChannelBroker.has_queued_message?(
-        channel.id,
-        channel.type,
-        runtime_channel,
-        session.respondent.id
-      ) ->
+      ChannelBroker.has_queued_message?(channel.id, session.respondent.id) ->
         {:ok, session, %Reply{}, current_timeout(session)}
 
-      ChannelBroker.message_expired?(
-        channel.id,
-        channel.type,
-        runtime_channel,
-        session.respondent.id
-      ) ->
+      ChannelBroker.message_expired?(channel.id, session.respondent.id) ->
         # do not retry since the respondent was never contacted, thus the retries should not be consumed
-        session = contact_respondent(session, runtime_channel)
+        session = contact_respondent(session)
         {:ok, session, %Reply{}, base_timeout(session) + current_timeout(session)}
 
       true ->
-        timeout(session, runtime_channel)
+        timeout(session, nil)
     end
   end
 
@@ -129,9 +118,9 @@ defmodule Ask.Runtime.Session do
     switch_to_fallback_mode(session)
   end
 
-  def timeout(%Session{} = session, runtime_channel) do
+  def timeout(%Session{} = session, _) do
     best_timeout_option = best_timeout_option(session)
-    session = retry(session, runtime_channel)
+    session = retry(session)
 
     # The new session will timeout as defined by hd(retries)
     {:ok, session, %Reply{}, best_timeout_option || current_timeout(session)}
@@ -256,7 +245,7 @@ defmodule Ask.Runtime.Session do
     end
   end
 
-  def contact_respondent(%{current_mode: %SMSMode{}} = session, runtime_channel) do
+  def contact_respondent(%{current_mode: %SMSMode{}} = session) do
     token = Ecto.UUID.generate()
 
     respondent = session.respondent
@@ -264,16 +253,13 @@ defmodule Ask.Runtime.Session do
     channel = session.current_mode.channel
     log_prompts(reply, channel, session.flow.mode, respondent)
 
-    ChannelBroker.ask(channel.id, channel.type, runtime_channel, session.respondent, token, reply)
+    ChannelBroker.ask(channel.id, channel.type, session.respondent, token, reply)
 
     respondent = Respondent.update_stats(respondent.id, reply)
     %{session | token: token, respondent: respondent}
   end
 
-  def contact_respondent(
-        %{schedule: schedule, current_mode: %IVRMode{}} = session,
-        _runtime_channel
-      ) do
+  def contact_respondent(%{schedule: schedule, current_mode: %IVRMode{}} = session) do
     token = Ecto.UUID.generate()
 
     next_available_date_time =
@@ -298,14 +284,14 @@ defmodule Ask.Runtime.Session do
     %{session | token: token}
   end
 
-  def contact_respondent(%{current_mode: %MobileWebMode{}} = session, runtime_channel) do
+  def contact_respondent(%{current_mode: %MobileWebMode{}} = session) do
     token = Ecto.UUID.generate()
 
     reply = mobile_contact_reply(session)
     channel = session.current_mode.channel
     log_prompts(reply, channel, session.flow.mode, session.respondent)
 
-    ChannelBroker.ask(channel.id, channel.type, runtime_channel, session.respondent, token, reply)
+    ChannelBroker.ask(channel.id, channel.type, session.respondent, token, reply)
 
     respondent = Respondent.update_stats(session.respondent.id, reply)
     %{session | token: token, respondent: respondent}
@@ -322,8 +308,7 @@ defmodule Ask.Runtime.Session do
   end
 
   def contact_attempt_expired(session) do
-    runtime_channel = Ask.Channel.runtime_channel(session.current_mode.channel)
-    session = contact_respondent(session, runtime_channel)
+    session = contact_respondent(session)
     {:ok, session, base_timeout(session) + current_timeout(session)}
   end
 
@@ -343,8 +328,7 @@ defmodule Ask.Runtime.Session do
 
   def cancel(session) do
     channel = session.current_mode.channel
-    runtime_channel = Ask.Channel.runtime_channel(channel)
-    ChannelBroker.cancel_message(channel.id, channel.type, runtime_channel, session.respondent.id)
+    ChannelBroker.cancel_message(channel.id, session.respondent.id)
   end
 
   def dump(session) do
@@ -407,8 +391,6 @@ defmodule Ask.Runtime.Session do
            current_mode: %SMSMode{channel: channel}
          } = session
        ) do
-    runtime_channel = Ask.Channel.runtime_channel(channel)
-
     case flow
          |> Flow.step(
            session.current_mode |> SessionMode.visitor(),
@@ -419,7 +401,7 @@ defmodule Ask.Runtime.Session do
         if Reply.prompts(reply) != [] do
           log_prompts(reply, channel, flow.mode, respondent, true)
 
-          ChannelBroker.ask(channel.id, channel.type, runtime_channel, respondent, token, reply)
+          ChannelBroker.ask(channel.id, channel.type, respondent, token, reply)
 
           respondent = Respondent.update_stats(respondent.id, reply)
           {:end, reply, respondent}
@@ -440,7 +422,7 @@ defmodule Ask.Runtime.Session do
 
         log_prompts(reply, channel, flow.mode, respondent)
 
-        ChannelBroker.ask(channel.id, channel.type, runtime_channel, respondent, token, reply)
+        ChannelBroker.ask(channel.id, channel.type, respondent, token, reply)
 
         respondent = Respondent.update_stats(respondent.id, reply)
         {:ok, %{session | flow: flow, respondent: respondent}, reply, current_timeout(session)}
@@ -521,14 +503,10 @@ defmodule Ask.Runtime.Session do
            current_mode: %MobileWebMode{channel: channel}
          } = session
        ) do
-    runtime_channel = Ask.Channel.runtime_channel(channel)
-
     reply = mobile_contact_reply(session)
-    channel = session.current_mode.channel
-
     log_prompts(reply, channel, flow.mode, session.respondent)
 
-    ChannelBroker.ask(channel.id, channel.type, runtime_channel, respondent, token, reply)
+    ChannelBroker.ask(channel.id, channel.type, respondent, token, reply)
     respondent = Respondent.update_stats(respondent.id, reply)
 
     {:ok, %{session | flow: flow, respondent: respondent}, reply, current_timeout(session)}
@@ -542,10 +520,10 @@ defmodule Ask.Runtime.Session do
     {:ok, %{session | flow: flow, respondent: respondent}, reply, current_timeout(session)}
   end
 
-  defp retry(session, runtime_channel) do
+  defp retry(session) do
     session
     |> add_session_mode_attempt!()
-    |> contact_respondent(runtime_channel)
+    |> contact_respondent()
     |> consume_retry()
     |> RetriesHistogram.retry()
   end
@@ -656,10 +634,8 @@ defmodule Ask.Runtime.Session do
 
   defp log_prompts(reply, channel, mode, respondent, force \\ false, persist \\ true) do
     if persist do
-      runtime_channel = Ask.Channel.runtime_channel(channel)
-
       if force ||
-           !ChannelBroker.has_delivery_confirmation?(channel.id, runtime_channel) do
+           !ChannelBroker.has_delivery_confirmation?(channel.id) do
         disposition = Reply.disposition(reply) || respondent.disposition
 
         Enum.each(Reply.steps(reply), fn step ->

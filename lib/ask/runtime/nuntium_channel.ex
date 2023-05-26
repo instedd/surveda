@@ -471,5 +471,9 @@ defmodule Ask.Runtime.NuntiumChannel do
     def has_queued_message?(_, _), do: false
     def message_expired?(_, _), do: false
     def cancel_message(_, _), do: :ok
+
+    def about_to_expire?(channel) do
+      Ask.OAuthToken.about_to_expire?(channel.oauth_token)
+    end
   end
 end

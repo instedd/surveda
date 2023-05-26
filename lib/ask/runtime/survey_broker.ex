@@ -237,10 +237,8 @@ defmodule Ask.Runtime.SurveyBroker do
     |> Enum.each(fn respondent_id ->
       respondent = Respondent |> Repo.get(respondent_id)
       session = respondent.session |> Session.load()
-      channel = session.current_mode.channel
-      runtime_channel = Ask.Channel.runtime_channel(channel)
       # We have loaded everything neccesary, now contact them without consuming a retry
-      Ask.Runtime.Session.contact_respondent(session, runtime_channel)
+      Ask.Runtime.Session.contact_respondent(session)
     end)
   end
 

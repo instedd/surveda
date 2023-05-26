@@ -9,10 +9,12 @@ defmodule Ask.Runtime.ChannelBrokerSupervisor do
     DynamicSupervisor.start_link(__MODULE__, init_arg, name: __MODULE__)
   end
 
-  def start_child(channel_id, channel_type, settings) do
+  def start_child(channel_id, channel_type, runtime_channel, settings) do
+    args = [channel_id, channel_type, runtime_channel, settings]
+
     DynamicSupervisor.start_child(__MODULE__, %{
       id: "channel_broker_#{channel_id}",
-      start: {Ask.Runtime.ChannelBroker, :start_link, [channel_id, channel_type, settings]}
+      start: {Ask.Runtime.ChannelBroker, :start_link, args}
     })
   end
 

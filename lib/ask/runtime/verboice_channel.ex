@@ -569,5 +569,9 @@ defmodule Ask.Runtime.VerboiceChannel do
         error -> error
       end
     end
+
+    def about_to_expire?(channel) do
+      Ask.OAuthToken.about_to_expire?(channel.client.oauth2_client.token)
+    end
   end
 end

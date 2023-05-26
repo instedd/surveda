@@ -27,7 +27,7 @@ defmodule Ask.Runtime.ChannelBrokerAgent do
 
   def save_state(%State{channel_id: channel_id} = state) do
     Agent.update(__MODULE__, fn agent ->
-      Map.put(agent, channel_id, state)
+      Map.put(agent, channel_id, Map.delete(state, :runtime_channel))
     end)
 
     state
