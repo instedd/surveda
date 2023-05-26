@@ -264,15 +264,7 @@ defmodule Ask.Runtime.Session do
     channel = session.current_mode.channel
     log_prompts(reply, channel, session.flow.mode, respondent)
 
-    :ok =
-      ChannelBroker.ask(
-        channel.id,
-        channel.type,
-        runtime_channel,
-        session.respondent,
-        token,
-        reply
-      )
+    ChannelBroker.ask(channel.id, channel.type, runtime_channel, session.respondent, token, reply)
 
     respondent = Respondent.update_stats(respondent.id, reply)
     %{session | token: token, respondent: respondent}
@@ -294,15 +286,14 @@ defmodule Ask.Runtime.Session do
 
     channel = session.current_mode.channel
 
-    :ok =
-      ChannelBroker.setup(
-        channel.id,
-        channel.type,
-        session.respondent,
-        token,
-        next_available_date_time,
-        today_end_time
-      )
+    ChannelBroker.setup(
+      channel.id,
+      channel.type,
+      session.respondent,
+      token,
+      next_available_date_time,
+      today_end_time
+    )
 
     %{session | token: token}
   end
@@ -314,15 +305,7 @@ defmodule Ask.Runtime.Session do
     channel = session.current_mode.channel
     log_prompts(reply, channel, session.flow.mode, session.respondent)
 
-    :ok =
-      ChannelBroker.ask(
-        channel.id,
-        channel.type,
-        runtime_channel,
-        session.respondent,
-        token,
-        reply
-      )
+    ChannelBroker.ask(channel.id, channel.type, runtime_channel, session.respondent, token, reply)
 
     respondent = Respondent.update_stats(session.respondent.id, reply)
     %{session | token: token, respondent: respondent}
@@ -436,8 +419,7 @@ defmodule Ask.Runtime.Session do
         if Reply.prompts(reply) != [] do
           log_prompts(reply, channel, flow.mode, respondent, true)
 
-          :ok =
-            ChannelBroker.ask(channel.id, channel.type, runtime_channel, respondent, token, reply)
+          ChannelBroker.ask(channel.id, channel.type, runtime_channel, respondent, token, reply)
 
           respondent = Respondent.update_stats(respondent.id, reply)
           {:end, reply, respondent}
@@ -458,8 +440,7 @@ defmodule Ask.Runtime.Session do
 
         log_prompts(reply, channel, flow.mode, respondent)
 
-        :ok =
-          ChannelBroker.ask(channel.id, channel.type, runtime_channel, respondent, token, reply)
+        ChannelBroker.ask(channel.id, channel.type, runtime_channel, respondent, token, reply)
 
         respondent = Respondent.update_stats(respondent.id, reply)
         {:ok, %{session | flow: flow, respondent: respondent}, reply, current_timeout(session)}
@@ -518,15 +499,14 @@ defmodule Ask.Runtime.Session do
       schedule
       |> Schedule.at_end_time(next_available_date_time)
 
-    :ok =
-      ChannelBroker.setup(
-        channel.id,
-        channel.type,
-        respondent,
-        token,
-        next_available_date_time,
-        today_end_time
-      )
+    ChannelBroker.setup(
+      channel.id,
+      channel.type,
+      respondent,
+      token,
+      next_available_date_time,
+      today_end_time
+    )
 
     log_contact("Enqueueing call", channel, flow.mode, respondent)
 
@@ -548,7 +528,7 @@ defmodule Ask.Runtime.Session do
 
     log_prompts(reply, channel, flow.mode, session.respondent)
 
-    :ok = ChannelBroker.ask(channel.id, channel.type, runtime_channel, respondent, token, reply)
+    ChannelBroker.ask(channel.id, channel.type, runtime_channel, respondent, token, reply)
     respondent = Respondent.update_stats(respondent.id, reply)
 
     {:ok, %{session | flow: flow, respondent: respondent}, reply, current_timeout(session)}

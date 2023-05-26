@@ -27,7 +27,7 @@ defmodule Ask.Channel do
   Returns a new instance of the runtime channel implementation (Ask.Runtime.Channel)
   """
   def runtime_channel(%Ask.Channel{} = channel) do
-    provider(channel.provider).new(channel)
+    runtime_channel(channel.id)
   end
 
   @doc """
@@ -35,14 +35,8 @@ defmodule Ask.Channel do
   """
   def runtime_channel(channel_id) do
     case Ask.Runtime.ChannelAgent.get(channel_id) do
-      nil ->
-        Ask.Channel
-        |> Repo.get(channel_id)
-        |> runtime_channel()
-        |> Ask.Runtime.ChannelAgent.set(channel_id)
-
-      runtime_channel ->
-        runtime_channel
+      nil -> exit(:shutdown)
+      rs -> rs
     end
   end
 

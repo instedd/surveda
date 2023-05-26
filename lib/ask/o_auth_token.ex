@@ -37,4 +37,15 @@ defmodule Ask.OAuthToken do
   def access_token(token) do
     Poison.Decode.decode(token.access_token, as: %OAuth2.AccessToken{})
   end
+
+  if Mix.env() == :test do
+    def about_to_expire?(nil) do
+      false
+    end
+  end
+
+  def about_to_expire?(token) do
+    limit = Timex.now() |> Timex.add(Timex.Duration.from_minutes(1))
+    Timex.before?(token.expires_at, limit)
+  end
 end

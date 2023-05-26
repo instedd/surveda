@@ -1,6 +1,6 @@
 defmodule Ask.TestChannel do
   @behaviour Ask.Runtime.ChannelProvider
-  defstruct [:pid, :has_queued_message, :delivery, :message_expired, :test_id, :status]
+  defstruct [:pid, :has_queued_message, :delivery, :message_expired, :test_id, :status, :access_token]
 
   def new() do
     %Ask.TestChannel{pid: self(), status: :up}
