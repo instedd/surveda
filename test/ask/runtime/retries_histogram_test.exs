@@ -10,12 +10,13 @@ defmodule Ask.Runtime.RetriesHistogramTest do
 
   alias Ask.Runtime.{
     Survey,
-    Broker,
+    SurveyBroker,
     Flow,
     ChannelStatusServer,
     VerboiceChannel,
     RetriesHistogram,
-    Session
+    Session,
+    ChannelBrokerAgent
   }
 
   alias Ask.{Repo, Survey, Respondent, Stats}
@@ -24,7 +25,12 @@ defmodule Ask.Runtime.RetriesHistogramTest do
   @moduletag :time_mock
 
   setup do
+    on_exit(fn ->
+      ChannelBrokerSupervisor.terminate_children()
+    end)
+
     {:ok, _} = ChannelStatusServer.start_link()
+    {:ok, _} = ChannelBrokerAgent.start_link()
     :ok
   end
 

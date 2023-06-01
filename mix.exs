@@ -70,6 +70,7 @@ defmodule Ask.Mixfile do
       {:csv, "~> 1.4.2"},
       {:oauth2, "~> 0.7.0"},
       {:mutex, "~> 1.1.3"},
+      {:mock, "~> 0.3.0", only: :test},
       {:mox, "~> 0.5", only: :test},
       {:timex, "~> 3.6.0"},
       {:sentry, "~> 7.0"},
@@ -78,6 +79,7 @@ defmodule Ask.Mixfile do
       {:deep_merge, "~> 0.1.0"},
       # "~> 0.6"
       {:coherence, github: "smpallen99/coherence", branch: "master", override: true},
+      {:pqueue, "~> 2.0"},
       {:gen_smtp, "~> 0.11"},
       # TODO: update to ~> 2.0
       {:xml_builder, "~> 0.0.9"},
@@ -99,7 +101,7 @@ defmodule Ask.Mixfile do
       # {:telemetry, "~> 0.4.3"},
 
       # held back because of warnings & errors with newer versions
-      {:swoosh, "~> 0.17.0"},
+      {:swoosh, "~> 0.17.0"}
     ]
   end
 

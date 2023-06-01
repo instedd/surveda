@@ -193,7 +193,7 @@ defmodule Ask.Runtime.QuestionnaireSimulator do
       responses: []
     }
 
-    # Simulating what Broker does when starting a respondent: Session.start and then Survey.handle_session_step
+    # Simulating what SurveyBroker does when starting a respondent: Session.start and then Survey.handle_session_step
     session_started =
       Session.start(
         questionnaire,

@@ -2,7 +2,15 @@ defmodule Ask.Runtime.VerboiceChannel do
   alias __MODULE__
   use Ask.Model
   alias Ask.{Repo, Respondent, Channel, SurvedaMetrics, Stats}
-  alias Ask.Runtime.{Survey, Flow, Reply, RetriesHistogram}
+
+  alias Ask.Runtime.{
+    Survey,
+    Flow,
+    Reply,
+    RetriesHistogram,
+    ChannelBroker
+  }
+
   alias AskWeb.Router.Helpers
   import Plug.Conn
   import XmlBuilder
@@ -197,11 +205,8 @@ defmodule Ask.Runtime.VerboiceChannel do
     |> Repo.insert!()
   end
 
-  defp channel_changeset(channel, base_url, api_channel) do
-    settings = %{
-      "verboice_channel" => api_channel["name"],
-      "verboice_channel_id" => api_channel["id"]
-    }
+  defp channel_changeset(%{settings: settings} = channel, base_url, api_channel) do
+    settings = update_settings(settings, api_channel)
 
     settings =
       if api_channel["shared_by"] do
@@ -217,6 +222,18 @@ defmodule Ask.Runtime.VerboiceChannel do
       base_url: base_url,
       settings: settings
     })
+  end
+
+  defp update_settings(nil = _settings, api_channel) do
+    %{
+      "verboice_channel" => api_channel["name"],
+      "verboice_channel_id" => api_channel["id"]
+    }
+  end
+
+  defp update_settings(settings, api_channel) do
+    Map.put(settings, "verboice_channel", api_channel["name"])
+    |> Map.put("verboice_channel_id", api_channel["id"])
   end
 
   defp match_channel(%{settings: %{"verboice_channel_id" => id}}, %{"id" => id}), do: true
@@ -298,6 +315,8 @@ defmodule Ask.Runtime.VerboiceChannel do
         respondent ->
           respondent = update_call_time_seconds(respondent, call_sid, call_duration)
 
+          notify_channel_broker(respondent, status)
+
           case status do
             "expired" ->
               # respondent is still being considered as active in Surveda
@@ -349,10 +368,12 @@ defmodule Ask.Runtime.VerboiceChannel do
                 gather(respondent, prompts, num_digits)
 
               {:end, {:reply, reply}, _} ->
+                notify_channel_broker(respondent, "completed")
                 prompts = Reply.prompts(reply)
                 say_or_play(prompts, channel_base_url(respondent)) ++ [hangup()]
 
               {:end, _} ->
+                notify_channel_broker(respondent, "completed")
                 hangup()
             end
 
@@ -373,6 +394,28 @@ defmodule Ask.Runtime.VerboiceChannel do
     |> put_resp_content_type("text/xml")
     |> send_resp(200, response(hangup()) |> generate)
   end
+
+  defp notify_channel_broker(respondent, status) do
+    case respondent_channel(respondent.session) do
+      %Channel{id: channel_id} ->
+        ChannelBroker.callback_received(channel_id, respondent, status, "verboice")
+        :ok
+
+      0 ->
+        ChannelBroker.callback_received(0, respondent, status, "verboice")
+        :ok
+
+      _ ->
+        :error
+    end
+  end
+
+  defp respondent_channel(%{"current_mode" => %{"mode" => "ivr", "channel_id" => _}} = state) do
+    Ask.Runtime.Session.load_current_mode(state).channel
+  end
+
+  defp respondent_channel(%{"current_mode" => %{"mode" => "ivr"}}), do: 0
+  defp respondent_channel(_), do: nil
 
   def callback_url(respondent, channel_base_url) do
     verboice_callback(
@@ -436,7 +479,7 @@ defmodule Ask.Runtime.VerboiceChannel do
 
   defimpl Ask.Runtime.Channel, for: Ask.Runtime.VerboiceChannel do
     def has_delivery_confirmation?(_), do: false
-    def ask(_, _, _, _), do: throw(:not_implemented)
+    def ask(_, _, _, _, _), do: throw(:not_implemented)
     def prepare(_), do: :ok
 
     def setup(channel, respondent, token, not_before, not_after) do
@@ -461,7 +504,7 @@ defmodule Ask.Runtime.VerboiceChannel do
 
       channel.client
       |> Verboice.Client.call(params)
-      |> Ask.Runtime.VerboiceChannel.process_call_response()
+      |> VerboiceChannel.process_call_response()
     end
 
     def has_queued_message?(channel, %{"verboice_call_id" => call_id}) do
