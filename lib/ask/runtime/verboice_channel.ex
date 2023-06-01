@@ -363,6 +363,7 @@ defmodule Ask.Runtime.VerboiceChannel do
 
             case survey.sync_step(respondent, response, "ivr") do
               {:reply, reply, _} ->
+                notify_channel_broker(respondent, "in-progress")
                 prompts = Reply.prompts(reply)
                 num_digits = Reply.num_digits(reply)
                 gather(respondent, prompts, num_digits)
@@ -481,6 +482,7 @@ defmodule Ask.Runtime.VerboiceChannel do
     def has_delivery_confirmation?(_), do: false
     def ask(_, _, _, _, _), do: throw(:not_implemented)
     def prepare(_), do: :ok
+    def messages_count(_, _, _, _, _), do: 1
 
     def setup(channel, respondent, token, not_before, not_after) do
       in_five_seconds = Timex.shift(not_before, seconds: 5)
@@ -525,6 +527,17 @@ defmodule Ask.Runtime.VerboiceChannel do
     def has_queued_message?(_, _) do
       false
     end
+
+    def message_inactive?(channel, %{"verboice_call_id" => call_id}) do
+      case Verboice.Client.call_state(channel.client, call_id) do
+        {:ok, %{"state" => "active"}} -> false
+        {:ok, %{"state" => "queued"}} -> false
+        {:ok, %{"state" => _}} -> true
+        # in case of error, we consider it's still active
+        {:error, _} -> false
+      end
+    end
+    def message_inactive?(_, _), do: false
 
     def message_expired?(channel, %{"verboice_call_id" => call_id}) do
       response =

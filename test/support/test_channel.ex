@@ -108,19 +108,25 @@ defimpl Ask.Runtime.Channel, for: Ask.TestChannel do
     send(channel.pid, [:setup, channel, respondent, token])
     # TODO: Mock this response to test error scenarios.
     # Real answers like this should be tested: `{:error, {:error, 400}}`
-    {:ok, 0}
+    {:ok, %{verboice_call_id: 0}}
   end
 
   def ask(channel, respondent, token, prompts, channel_id) do
     send(channel.pid, [:ask, channel, respondent, token, prompts, channel_id])
-    respondent
+    # TODO: Mock this response to test error scenarios.
+    # Real answers like this should be tested: `{:error, {:error, 400}}`
+    {:ok, %{nuntium_token: UUID.uuid4()}}
   end
+
+  def messages_count(_, _, _, _, _), do: 1
 
   def has_delivery_confirmation?(%{delivery: delivery}), do: delivery
 
   def has_queued_message?(%{has_queued_message: has_queued_message}, _), do: has_queued_message
 
   def message_expired?(%{message_expired: message_expired}, _), do: message_expired
+
+  def message_inactive?(_, _), do: false
 
   def cancel_message(channel, channel_state) do
     send(channel.pid, [:cancel_message, channel, channel_state])
