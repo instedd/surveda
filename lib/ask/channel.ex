@@ -24,13 +24,6 @@ defmodule Ask.Channel do
   end
 
   @doc """
-  Returns a new instance of the runtime channel implementation (Ask.Runtime.Channel)
-  """
-  def runtime_channel(channel) do
-    provider(channel.provider).new(channel)
-  end
-
-  @doc """
   Returns the runtime chanel provider (module) by name
   """
   def provider(name) do

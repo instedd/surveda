@@ -128,11 +128,15 @@ defmodule AskWeb.ChannelControllerTest do
   end
 
   describe "update" do
-    test "share channel with projects", %{conn: conn, user: user} do
+    setup %{conn: conn, user: user} do
+      settings = Ask.TestChannel.settings(Ask.TestChannel.new)
+      channel = insert(:channel, user: user, type: "sms", settings: settings)
+      {:ok, conn: conn, user: user, channel: channel}
+    end
+
+    test "share channel with projects", %{conn: conn, user: user, channel: channel} do
       project1 = create_project_for_user(user)
       project2 = create_project_for_user(user)
-
-      channel = insert(:channel, user: user)
 
       conn =
         put conn, channel_path(conn, :update, channel),
@@ -141,13 +145,11 @@ defmodule AskWeb.ChannelControllerTest do
       assert json_response(conn, 200)["data"]["projects"] == [project1.id, project2.id]
     end
 
-    test "don't share channel with another user's project", %{conn: conn, user: user} do
+    test "don't share channel with another user's project", %{conn: conn, user: user, channel: channel} do
       project1 = create_project_for_user(user)
 
       user2 = insert(:user)
       project2 = create_project_for_user(user2)
-
-      channel = insert(:channel, user: user)
 
       assert_error_sent :forbidden, fn ->
         put conn, channel_path(conn, :update, channel),
@@ -155,9 +157,7 @@ defmodule AskWeb.ChannelControllerTest do
       end
     end
 
-    test "update patterns", %{conn: conn, user: user} do
-      channel = insert(:channel, user: user)
-
+    test "update patterns", %{conn: conn, channel: channel} do
       patterns = [
         %{"input" => "123XX", "output" => "0XX"},
         %{"input" => "222XX", "output" => "0XX"}

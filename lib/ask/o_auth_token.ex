@@ -37,4 +37,15 @@ defmodule Ask.OAuthToken do
   def access_token(token) do
     Poison.Decode.decode(token.access_token, as: %OAuth2.AccessToken{})
   end
+
+  def about_to_expire?(token) do
+    expires_at =
+      if is_integer(token.expires_at) do
+        DateTime.from_unix!(token.expires_at)
+      else
+        token.expires_at
+      end
+    limit = DateTime.now!("Etc/UTC") |> DateTime.add(60, :second)
+    DateTime.compare(expires_at, limit) == :lt
+  end
 end

@@ -118,7 +118,7 @@ defmodule Ask.Runtime.ChannelBrokerTest do
 
     defp start_survey(channel_type) do
       # create survey:
-      [_, respondents, channel] = initialize_survey(channel_type, @channel_capacity)
+      [test_channel, respondents, channel] = initialize_survey(channel_type, @channel_capacity)
 
       # activate respondents:
       from(r in Respondent, where: r.id in ^Enum.map(respondents, fn r -> r.id end))
@@ -141,13 +141,14 @@ defmodule Ask.Runtime.ChannelBrokerTest do
         |> Enum.slice(5..9)
         |> Enum.reduce(:pqueue.new(), fn e, a ->
           case channel_type do
-            "ivr" -> :pqueue.in([1, {e, "secret", nil, nil, channel}], 2, a)
-            "sms" -> :pqueue.in([1, {e, "secret", [], channel}], 2, a)
+            "ivr" -> :pqueue.in([1, {e, "secret", nil, nil}], 2, a)
+            "sms" -> :pqueue.in([1, {e, "secret", []}], 2, a)
           end
         end)
 
       state = %Ask.Runtime.ChannelBrokerState{
         channel_id: channel.id,
+        runtime_channel: test_channel,
         capacity: @channel_capacity,
         active_contacts: active_contacts,
         contacts_queue: contacts_queue,
@@ -198,7 +199,9 @@ defmodule Ask.Runtime.ChannelBrokerTest do
         ]
       end
 
+      # FIXME: mocks aren't needed, TestChannel forwards calls to the spec process (use `assert_received`)
       mocks = [
+        about_to_expire?: fn _ -> false end,
         message_inactive?: verboice_message_inactive_fn,
         setup: fn _, r, _, _, _ -> {:ok, %{verboice_call_id: r.id}} end
       ]
@@ -240,8 +243,11 @@ defmodule Ask.Runtime.ChannelBrokerTest do
         ]
       end
 
+      # FIXME: mocks aren't needed, TestChannel forwards calls to the spec process (use `assert_received`)
       mocks = [
+        about_to_expire?: fn _ -> false end,
         message_inactive?: nuntium_message_inactive_fn,
+        setup: fn _, _, _, _, _ -> {:ok, %{}} end,
         ask: fn _, r, _, _, _ -> {:ok, %{nuntium_token: r.id}} end
       ]
 

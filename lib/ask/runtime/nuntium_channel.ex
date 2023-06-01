@@ -412,7 +412,7 @@ defmodule Ask.Runtime.NuntiumChannel do
       end
     end
 
-    def setup(_channel, _respondent, _token, _not_before, _not_after), do: :ok
+    def setup(_channel, _respondent, _token, _not_before, _not_after), do: {:ok, %{}}
 
     def ask(channel, respondent, token, reply, channel_id) do
       to = "sms://#{respondent.sanitized_phone_number}"
@@ -471,5 +471,9 @@ defmodule Ask.Runtime.NuntiumChannel do
     def has_queued_message?(_, _), do: false
     def message_expired?(_, _), do: false
     def cancel_message(_, _), do: :ok
+
+    def about_to_expire?(channel) do
+      Ask.OAuthToken.about_to_expire?(channel.oauth_token)
+    end
   end
 end

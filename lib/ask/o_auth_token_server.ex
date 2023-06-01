@@ -22,18 +22,13 @@ defmodule Ask.OAuthTokenServer do
       |> Repo.get_by(provider: provider, base_url: base_url, user_id: user_id)
 
     token =
-      if about_to_expire?(token) do
+      if OAuthToken.about_to_expire?(token) do
         refresh(provider, base_url, token)
       else
         token
       end
 
     {:reply, OAuthToken.access_token(token), state}
-  end
-
-  defp about_to_expire?(token) do
-    limit = Timex.now() |> Timex.add(Timex.Duration.from_minutes(1))
-    Timex.before?(token.expires_at, limit)
   end
 
   defp refresh(provider_name, base_url, token) do

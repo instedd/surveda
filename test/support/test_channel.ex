@@ -1,6 +1,6 @@
 defmodule Ask.TestChannel do
   @behaviour Ask.Runtime.ChannelProvider
-  defstruct [:pid, :has_queued_message, :delivery, :message_expired, :test_id, :status]
+  defstruct [:pid, :has_queued_message, :delivery, :message_expired, :test_id, :status, :access_token]
 
   def new() do
     %Ask.TestChannel{pid: self(), status: :up}
@@ -137,4 +137,6 @@ defimpl Ask.Runtime.Channel, for: Ask.TestChannel do
     send(channel.pid, [:check_status, channel])
     channel.status
   end
+
+  def about_to_expire?(_), do: false
 end

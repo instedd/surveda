@@ -11,6 +11,10 @@ defmodule Ask.Runtime.ChannelBrokerState do
     # Each ChannelBroker process manages a single channel.
     :channel_id,
 
+    # Each ChannelBroker have the sole responsibility of interacting with their
+    # Ask.Runtime.Channel
+    :runtime_channel,
+
     # The maximum parallel contacts the channel shouldn't exceded.
     :capacity,
 
@@ -38,8 +42,8 @@ defmodule Ask.Runtime.ChannelBrokerState do
     # to make the contact comes.
     #
     # Elements are tuples whose shape depend on the channel provider:
-    # - Verboice: `{respondent, token, not_before, not_after, channel}`
-    # - Nuntium: `{respondent, token, reply, channel}`
+    # - Verboice: `{respondent, token, not_before, not_after}`
+    # - Nuntium: `{respondent, token, reply}`
     contacts_queue: :pqueue.new()
   ]
 
@@ -294,7 +298,7 @@ defmodule Ask.Runtime.ChannelBrokerState do
 
   # For leftover active contacts, we ask the remote channel for the actual IVR
   # call or SMS message state. Keep only the contacts that are active or queued.
-  def clean_outdated_respondents(state, runtime_channel) do
+  def clean_outdated_respondents(state) do
     idle_time = gc_allowed_idle_time(state)
     now = SystemTime.time().now
 
@@ -305,7 +309,7 @@ defmodule Ask.Runtime.ChannelBrokerState do
           if DateTime.diff(now, last_contact, :second) < idle_time do
             true
           else
-            !Ask.Runtime.Channel.message_inactive?(runtime_channel, active_contact.channel_state)
+            !Ask.Runtime.Channel.message_inactive?(state.runtime_channel, active_contact.channel_state)
           end
         end,
         state.active_contacts

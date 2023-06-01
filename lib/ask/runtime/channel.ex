@@ -48,6 +48,11 @@ defprotocol Ask.Runtime.Channel do
   # `:up | {:down, messages} | {:error, messages}`
   @spec(check_status(t()) :: :up | {:down, []}, {:error, []})
   def check_status(channel)
+
+  # Verify if the authentication (i.e. OAuthToken) with the remote service is
+  # about to expire, and should be refreshed.
+  @spec about_to_expire?(t()) :: boolean
+  def about_to_expire?(channel)
 end
 
 defmodule Ask.Runtime.ChannelProvider do
