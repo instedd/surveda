@@ -6,7 +6,6 @@ defmodule Ask.Runtime.ChannelBrokerTest do
   alias Ask.Runtime.{
     ChannelStatusServer,
     ChannelBroker,
-    ChannelBrokerAgent,
     VerboiceChannel,
     NuntiumChannel
   }
@@ -17,10 +16,10 @@ defmodule Ask.Runtime.ChannelBrokerTest do
   setup %{conn: conn} do
     on_exit(fn ->
       ChannelBrokerSupervisor.terminate_children()
+      ChannelBrokerAgent.clear()
     end)
 
     {:ok, _} = ChannelStatusServer.start_link()
-    {:ok, _} = ChannelBrokerAgent.start_link()
     {:ok, conn: conn}
   end
 
@@ -152,8 +151,7 @@ defmodule Ask.Runtime.ChannelBrokerTest do
         capacity: @channel_capacity,
         active_contacts: active_contacts,
         contacts_queue: contacts_queue,
-        config: Config.channel_broker_config(),
-        op_count: 2
+        config: Config.channel_broker_config()
       }
 
       %{state: state, respondents: respondents, channel: channel}
@@ -168,7 +166,7 @@ defmodule Ask.Runtime.ChannelBrokerTest do
       Enum.at(respondents, 4) |> Respondent.changeset(%{state: :failed}) |> Repo.update!()
 
       # run:
-      {:noreply, new_state} = ChannelBroker.handle_info({:collect_garbage, "ivr"}, state)
+      {:noreply, new_state, _} = ChannelBroker.handle_info({:collect_garbage, "ivr"}, state)
 
       # it removed failed respondents (1, 3, 4) and activated queued ones (5, 6, 7):
       assert [
@@ -185,7 +183,7 @@ defmodule Ask.Runtime.ChannelBrokerTest do
 
       # travel to the future (within allowed contact idle time):
       time_passes(minutes: trunc(state.config.gc_active_idle_minutes / 2))
-      {:noreply, new_state} = ChannelBroker.handle_info({:collect_garbage, "ivr"}, state)
+      {:noreply, new_state, _} = ChannelBroker.handle_info({:collect_garbage, "ivr"}, state)
       assert new_state.active_contacts == state.active_contacts
 
       # travel to the future again (after allowed contact idle time):
@@ -206,7 +204,7 @@ defmodule Ask.Runtime.ChannelBrokerTest do
       ]
 
       with_mock Ask.Runtime.Channel, mocks do
-        {:noreply, new_state} = ChannelBroker.handle_info({:collect_garbage, "ivr"}, state)
+        {:noreply, new_state, _} = ChannelBroker.handle_info({:collect_garbage, "ivr"}, state)
 
         # it asked verboice for call state (all calls are long idle in this test case):
         assert_called_exactly(Ask.Runtime.Channel.message_inactive?(:_, :_), @channel_capacity)
@@ -227,7 +225,7 @@ defmodule Ask.Runtime.ChannelBrokerTest do
 
       # travel to the future (within allowed contact idle time):
       time_passes(minutes: trunc(state.config.gc_active_idle_minutes / 2))
-      {:noreply, new_state} = ChannelBroker.handle_info({:collect_garbage, "sms"}, state)
+      {:noreply, new_state, _} = ChannelBroker.handle_info({:collect_garbage, "sms"}, state)
       assert new_state.active_contacts == state.active_contacts
 
       # travel to the future again (after allowed contact idle time):
@@ -248,7 +246,7 @@ defmodule Ask.Runtime.ChannelBrokerTest do
       ]
 
       with_mock Ask.Runtime.Channel, mocks do
-        {:noreply, new_state} = ChannelBroker.handle_info({:collect_garbage, "sms"}, state)
+        {:noreply, new_state, _} = ChannelBroker.handle_info({:collect_garbage, "sms"}, state)
 
         # it asked nuntium for call state (all messages are long idle in this test case):
         assert_called_exactly(Ask.Runtime.Channel.message_inactive?(:_, :_), @channel_capacity)

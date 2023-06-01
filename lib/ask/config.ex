@@ -55,17 +55,6 @@ defmodule Ask.Config do
       # concurrently. A too high value could lead to a potential (but not expected) risk of
       # overloading the server load.
       shut_down_minutes: env_to_int("SHUT_DOWN_MINUTES", 30),
-      # How many ChannelBroker internal operations (like queueing or activating a respondent)
-      # wait until the state is saved to the DB. Default: 100 operations.
-      # When a proccess inits (it may be because of a crash) it uses the last saved state.
-      # Low values: the state of the process will be saved more frequently. Less contacts can be
-      # lost in case of errors or unexpected resets. A too low value could lead to server
-      # overload and unexpected errors because of race conditions.
-      # High values: the state of the process will be save less frequently. More contacts can be
-      # lost in case of errors or unexpected resets. A too high value risks too many contacts
-      # lost.
-      # To disable saving to DB, set this value to 0.
-      to_db_operations: env_to_int("CHNL_BKR_TO_DB_OPERATIONS", 0),
 
       # How many minutes the ChannelBroker garbage collector will wait between rounds. Default: 10
       # minutes.
@@ -91,7 +80,7 @@ defmodule Ask.Config do
 
       # How long after a call/message has been left idle (no callbacks received)
       # before the GC starts polling the remote channel for its actual state.
-      gc_active_idle_minutes: env_to_int("CHNL_BKR_GC_IDLE_MINUTES", 2)
+      gc_active_idle_minutes: env_to_int("CHNL_BKR_GC_IDLE_MINUTES", 5)
     }
   end
 

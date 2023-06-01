@@ -11,8 +11,7 @@ defmodule Ask.Runtime.SurveyTest do
     Flow,
     SurveyLogger,
     ReplyHelper,
-    ChannelStatusServer,
-    ChannelBrokerAgent
+    ChannelStatusServer
   }
 
   alias Ask.{
@@ -35,10 +34,10 @@ defmodule Ask.Runtime.SurveyTest do
   setup do
     on_exit(fn ->
       ChannelBrokerSupervisor.terminate_children()
+      ChannelBrokerAgent.clear()
     end)
 
     {:ok, _} = ChannelStatusServer.start_link()
-    ChannelBrokerAgent.start_link()
     :ok
   end
 

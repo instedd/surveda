@@ -4,8 +4,7 @@ defmodule Ask.Runtime.ChannelBrokerState do
   @enforce_keys [
     :channel_id,
     :capacity,
-    :config,
-    :op_count
+    :config
   ]
 
   defstruct [
@@ -17,9 +16,6 @@ defmodule Ask.Runtime.ChannelBrokerState do
 
     # See `Config.channel_broker_config/0`
     :config,
-
-    # Internal counter of how many updates until this state shall be saved to the DB
-    :op_count,
 
     # A dictionary of active contacts with the following shape:
     # ```
@@ -53,8 +49,7 @@ defmodule Ask.Runtime.ChannelBrokerState do
     %Ask.Runtime.ChannelBrokerState{
       channel_id: channel_id,
       capacity: Map.get(settings, "capacity", Config.default_channel_capacity()),
-      config: config,
-      op_count: config.to_db_operations
+      config: config
     }
   end
 
@@ -321,5 +316,10 @@ defmodule Ask.Runtime.ChannelBrokerState do
 
   defp queued_respondent_id(queued_item) do
     elem(queued_item, 0).id
+  end
+
+  # Returns true when there are neither active nor queued contacts (idle state).
+  def inactive?(state) do
+    map_size(state.active_contacts) == 0 && :pqueue.len(state.contacts_queue) == 0
   end
 end

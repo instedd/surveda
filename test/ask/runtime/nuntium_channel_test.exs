@@ -10,7 +10,6 @@ defmodule Ask.Runtime.NuntiumChannelTest do
     ReplyHelper,
     SurveyStub,
     ChannelStatusServer,
-    ChannelBrokerAgent
   }
 
   require Ask.Runtime.ReplyHelper
@@ -18,11 +17,11 @@ defmodule Ask.Runtime.NuntiumChannelTest do
   setup %{conn: conn} do
     on_exit(fn ->
       ChannelBrokerSupervisor.terminate_children()
+      ChannelBrokerAgent.clear()
     end)
 
     GenServer.start_link(SurveyStub, [], name: SurveyStub.server_ref())
     ChannelStatusServer.start_link()
-    ChannelBrokerAgent.start_link()
 
     [_survey, _group, _test_channel, [respondent], channel] =
       create_running_survey_with_channel_and_respondents_with_options(
