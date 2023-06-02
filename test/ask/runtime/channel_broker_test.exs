@@ -140,8 +140,11 @@ defmodule Ask.Runtime.ChannelBrokerTest do
         respondents
         |> Enum.slice(5..9)
         |> Enum.reduce(:pqueue.new(), fn e, a ->
+          not_before = DateTime.now!("Etc/UTC") |> DateTime.add(-3600, :second)
+          not_after = DateTime.now!("Etc/UTC") |> DateTime.add(3600, :second)
+
           case channel_type do
-            "ivr" -> :pqueue.in([1, {e, "secret", nil, nil}], 2, a)
+            "ivr" -> :pqueue.in([1, {e, "secret", not_before, not_after}], 2, a)
             "sms" -> :pqueue.in([1, {e, "secret", []}], 2, a)
           end
         end)
