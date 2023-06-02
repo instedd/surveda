@@ -15,21 +15,24 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
       - name: Set environment up
         run: |
-          docker-compose build
-          docker-compose run --rm -e MIX_ENV=test app mix do deps.get, deps.compile
-          docker-compose run --rm webpack yarn install --no-progress
+          docker compose build
+          docker compose run --rm -e MIX_ENV=test app mix do deps.get, deps.compile
+          docker compose run --rm webpack yarn install --no-progress
 
       - name: Run specs
         run: |
-          docker-compose run --rm -e MIX_ENV=test app mix do compile --warnings-as-errors, ecto.create, ecto.load, test
-          docker-compose run --rm webpack yarn test
-          docker-compose run --rm webpack yarn webpack
-          docker-compose run --rm webpack yarn flow check
-          docker-compose run --rm webpack yarn eslint
+          docker compose run --rm -e MIX_ENV=test app mix do compile --warnings-as-errors, ecto.create, ecto.load, test
+          docker compose run --rm webpack yarn test
+          docker compose run --rm webpack yarn webpack
+          docker compose run --rm webpack yarn flow check
+          docker compose run --rm webpack yarn eslint
+
+      - name: Style guides
+        run: ./pre-commit.sh
 
   build:
     runs-on: ubuntu-latest

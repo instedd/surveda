@@ -6,10 +6,10 @@ You can setup your local environment following different approaches.
 ### Approach #1: without Verboice nor Nuntium
 If you don't need to connect to Verboice nor Nuntium, you can move forward with this setup.
 
-1. You need to use [dockerdev](https://github.com/waj/dockerdev) to access the web app at `app.surveda.lvh.me` and ngrok at `ngrok.surveda.lvh.me`.  Just follow the project's readme.  **WARNING:** You should install `dockerdev` _before_ creating your stack's network in Docker. If you have already run `./dev-setup.sh`, you may want to run `docker-compose down -v` to **delete every container, data and other artifacts** from the project and start from scratch _after_ running `dockerdev`.
+1. You need to use [dockerdev](https://github.com/waj/dockerdev) to access the web app at `app.surveda.lvh.me` and ngrok at `ngrok.surveda.lvh.me`.  Just follow the project's readme.  **WARNING:** You should install `dockerdev` _before_ creating your stack's network in Docker. If you have already run `./dev-setup.sh`, you may want to run `docker compose down -v` to **delete every container, data and other artifacts** from the project and start from scratch _after_ running `dockerdev`.
 2. Clone this repository.
 3. In the project's root, execute `./dev-setup.sh`.
-4. Start the app with `docker-compose up`.
+4. Start the app with `docker compose up`.
 5. Once the app is up and running, you can visit [`http://app.surveda.lvh.me/`](http://app.surveda.lvh.me/) from your browser.
 6. You will be able to Create an Account and Login with a built-in authentication.  However, you might fail to receive the needed emails that are sent during this flow.  You can check the CLI console where you'll be able to see logs with the email content, including the links that you need to complete the workflow.
 
@@ -28,42 +28,42 @@ Both guides include setting up Guisso, so you can skip the following GUISSO sect
 We can open a shell in a service. For example the **app** service:
 
 ```console
-$ docker-compose exec app bash
+$ docker compose exec app bash
 ```
 or the **db** service:
 
 ```console
-$ docker-compose exec db bash
+$ docker compose exec db bash
 ```
 
 For a list of all available services, we can run:
 
 ```console
-$ docker-compose ps --services
+$ docker compose ps --services
 ```
 
 Also we can run [Interactive Elixir](https://elixir-lang.org/getting-started/introduction.html#interactive-mode) like this:
 
 ```console
-$ docker-compose exec app iex
+$ docker compose exec app iex
 ```
 
 And if we want to start an `Interactive Elixir` in the context of our running Phoenix app:
 
 ```console
-$ docker-compose exec app iex -S mix
+$ docker compose exec app iex -S mix
 ```
 
 #### Tests
 We can [run a one-time command](https://docs.docker.com/compose/reference/run/) to execute all the `backend` tests:
 
 ```console
-$ docker-compose run --rm app mix test
+$ docker compose run --rm app mix test
 ```
 
 For the `client side`, we can open a terminal:
 ```console
-$ docker-compose run --rm webpack bash
+$ docker compose run --rm webpack bash
 ```
 
 and then we can run all JavaScript tests:
@@ -98,7 +98,7 @@ http://app.surveda.lvh.me/session/oauth_callback
 http://app.surveda.lvh.me/oauth_client/callback
 ```
 
-To work with a cloud GUISSO, make sure your `ngrok` service is running (`docker-compose up ngrok`), and get your ngrok domain visiting `http://ngrok.surveda.lvh.me`. Fill the Application information as for the local case, but using the ngrok domain instead. When you restart your `ngrok` service, you will need to update this information before approving new authorizations in GUISSO.
+To work with a cloud GUISSO, make sure your `ngrok` service is running (`docker compose up ngrok`), and get your ngrok domain visiting `http://ngrok.surveda.lvh.me`. Fill the Application information as for the local case, but using the ngrok domain instead. When you restart your `ngrok` service, you will need to update this information before approving new authorizations in GUISSO.
 
 On your local surveda directory, create a `config/local.exs` file like below, including the client ID & secret from your Application in GUISSO:
 

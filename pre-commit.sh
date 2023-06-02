@@ -26,8 +26,8 @@ fi
 ELIXIR_FILES=$($FILES | egrep '\.(ex|exs|eex|heex)$')
 ASSET_FILES=$($FILES | egrep '\.(js|jsx|css|scss)$' | grep assets/ | grep -v assets/vendor)
 
-MIX="docker-compose run --no-deps --rm app mix"
-YARN="docker-compose run --no-deps --rm webpack yarn"
+MIX="docker compose run --no-deps --rm app mix"
+YARN="docker compose run --no-deps --rm webpack yarn"
 
 report() {
   if [ $1 -eq 0 ]; then

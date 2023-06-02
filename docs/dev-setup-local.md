@@ -23,9 +23,9 @@ services and for services to talk between themselves.
   ```console
   $ git clone git@github.com:instedd/guisso.git
   $ cd guisso/
-  $ docker-compose run --rm web bundle
-  $ docker-compose run --rm web rake db:create db:setup
-  $ docker-compose up web
+  $ docker compose run --rm web bundle
+  $ docker compose run --rm web rake db:create db:setup
+  $ docker compose up web
   ```
 
 2. Navigate to <http://web.guisso.lvh.me> and create an account.
@@ -67,8 +67,8 @@ address you used previously until you find something with the confirmation link 
   ```console
   $ git clone git@github.com:instedd/verboice.git
   $ cd verboice/
-  $ docker-compose run --rm web bundle
-  $ docker-compose run --rm web rake db:create db:setup
+  $ docker compose run --rm web bundle
+  $ docker compose run --rm web rake db:create db:setup
   ```
 
 2. Enable Guisso by editing (or creating) `config/guisso.yml`, copying the
@@ -88,7 +88,7 @@ address you used previously until you find something with the confirmation link 
 3. Startup verboice:
 
   ```console
-  $ docker-compose up web broker asterisk
+  $ docker compose up web broker asterisk
   ```
 
 4. Navigate to <http://web.verboice.lvh.me> and we should be authenticated automatically because we are using Guisso.
@@ -111,8 +111,8 @@ address you used previously until you find something with the confirmation link 
    ```console
    $ git clone git@github.com:instedd/nuntium.git
    $ cd nuntium/
-   $ docker-compose run --rm web bundle
-   $ docker-compose run --rm web rake db:create db:setup
+   $ docker compose run --rm web bundle
+   $ docker compose run --rm web rake db:create db:setup
    ```
 
 2. Enable Guisso by editing (or creating) `config/guisso.yml`, copying the
@@ -128,7 +128,7 @@ address you used previously until you find something with the confirmation link 
 3. Startup Nuntium:
 
    ```console
-   $ docker-compose up web workerfast workerslow cron sched smpp
+   $ docker compose up web workerfast workerslow cron sched smpp
    ```
 
 4. Navigate to <http://web.nuntium.lvh.me> and we should be authenticated automatically because we are using Guisso.
@@ -234,7 +234,7 @@ address you used previously until you find something with the confirmation link 
 3. Startup Surveda:
 
    ```console
-   $ docker-compose up app webpack
+   $ docker compose up app webpack
    ```
 
 4. Navigate to <http://app.surveda.lvh.me> and we should be authenticated automatically because we are using Guisso.
@@ -346,7 +346,7 @@ We can also setup a SMPP channel to send & receive SMS messages.
 
    ```console
    $ cd nuntium
-   $ docker-compose up smpp
+   $ docker compose up smpp
    ```
 
 8. You should now be able to reply from your mobile or simulator. You should see
@@ -365,7 +365,7 @@ We can also setup a SMPP channel to send & receive SMS messages.
 
    ```console
    $ cd nuntium
-   $ docker-compose up workerfast
+   $ docker compose up workerfast
    ```
 
    You may get issues with the `workerfast` container not being able to resolve
@@ -384,7 +384,7 @@ We can also setup a SMPP channel to send & receive SMS messages.
    ```console
    $ docker kill nuntium_workerfast_1
    $ docker container rm nuntium_workerfast_1
-   $ docker-compose up workerfast
+   $ docker compose up workerfast
    ```
 
 #### SMSC Simulator (SMPP)
@@ -517,7 +517,7 @@ without `shared` then we need to add the container to this network. For this, we
 ```console
 $ docker kill verboice_web_1
 $ docker container rm verboice_web_1
-$ docker-compose up web
+$ docker compose up web
 ```
 
 Running the `inspect` command should return:
