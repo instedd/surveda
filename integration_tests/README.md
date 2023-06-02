@@ -21,7 +21,7 @@ This directory contains integration test that requires some manual setup before 
   $ npm run cypress:open # or cypress:run
   ```
 
-Alternative it can be run with `$ docker-compose run --rm cypress` directly.
+Alternative it can be run with `$ docker compose run --rm cypress` directly.
 
 4. Setup a ncd local gateway simulator
 

@@ -9,7 +9,7 @@ This guide describes the steps needed to have a development environment that wil
 1. Install [dockerdev](https://github.com/waj/dockerdev)
 2. Checkout the project
 3. Execute `$ ./dev-setup.sh`
-4. `$ docker-compose up ngrok`
+4. `$ docker compose up ngrok`
     * NOTE: if `ngrok` container is restarted the assigned tunnel URL will change and it will need to be updated in config and in Guisso.
 5. Go to `http://ngrok.surveda.lvh.me/` and grab the tunnel URL: like `https://ef6e48ea.ngrok.io`.
 6. Setup [Guisso](https://login-stg.instedd.org) with:
@@ -59,8 +59,8 @@ config :ask, Nuntium,
   ]
 ```
 
-8. `$ docker-compose up db`
-9. `$ docker-compose up app webpack`
+8. `$ docker compose up db`
+9. `$ docker compose up app webpack`
 
 Launching the containers in different consoles will allow you to restart `app` and `webpack` without changing the ngrok url.
 
