@@ -420,10 +420,10 @@ defmodule Ask.Runtime.ChannelBroker do
     case unqueued_item do
       {respondent, token, not_before, not_after} ->
         if not_after < DateTime.now("Etc/UTC") do
-          ivr_call(new_state, respondent, token, not_before, not_after)
-        else
           # skip expired call
           State.deactivate_contact(new_state, respondent.id)
+        else
+          ivr_call(new_state, respondent, token, not_before, not_after)
         end
 
       {respondent, token, reply} ->
