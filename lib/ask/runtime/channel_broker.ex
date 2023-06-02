@@ -444,7 +444,9 @@ defmodule Ask.Runtime.ChannelBroker do
 
       {:error, reason} ->
         Logger.warn("ChannelBroker: IVR call to Verboice failed with #{inspect(reason)}")
-        State.queue_contact(state, {respondent, token, not_before, not_after}, 1)
+        state
+        |> State.deactivate_contact(respondent.id)
+        |> State.queue_contact(state, {respondent, token, not_before, not_after}, 1)
     end
   end
 
