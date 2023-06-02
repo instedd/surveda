@@ -388,7 +388,7 @@ defmodule Ask.Runtime.ChannelBroker do
   # Activates has many queued contacts as possible, until either the queue is
   # empty or the channel capacity is reached.
   defp activate_contacts(state) do
-    info("activate_contacts", channel_id: state.channel_id)
+    # info("activate_contacts", channel_id: state.channel_id)
 
     if State.can_unqueue(state) do
       state
@@ -419,22 +419,33 @@ defmodule Ask.Runtime.ChannelBroker do
 
     case unqueued_item do
       {respondent, token, not_before, not_after} ->
-        ivr_call(new_state, respondent, token, not_before, not_after)
+        if not_after < DateTime.now("Etc/UTC") do
+          ivr_call(new_state, respondent, token, not_before, not_after)
+        else
+          # skip expired call
+          State.deactivate_contact(new_state, respondent.id)
+        end
 
       {respondent, token, reply} ->
         channel_ask(new_state, respondent, token, reply)
     end
   end
 
-  # TODO: don't call when about to expire (not after > 1 minute ago)
   defp ivr_call(state, respondent, token, not_before, not_after) do
-    {:ok, %{verboice_call_id: verboice_call_id}} =
+    response =
       state.runtime_channel
       |> Ask.Runtime.Channel.setup(respondent, token, not_before, not_after)
 
-    channel_state = %{"verboice_call_id" => verboice_call_id}
-    info("put_channel_state", respondent_id: respondent.id, channel_state: channel_state)
-    State.put_channel_state(state, respondent.id, channel_state)
+    case response do
+      {:ok, %{verboice_call_id: verboice_call_id}} ->
+        channel_state = %{"verboice_call_id" => verboice_call_id}
+        info("put_channel_state", respondent_id: respondent.id, channel_state: channel_state)
+        State.put_channel_state(state, respondent.id, channel_state)
+
+      {:error, reason} ->
+        Logger.warn("ChannelBroker: IVR call to Verboice failed with #{inspect(reason)}")
+        State.queue_contact(state, {respondent, token, not_before, not_after}, 1)
+    end
   end
 
   defp channel_ask(state, respondent, token, reply) do
