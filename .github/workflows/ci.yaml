@@ -31,6 +31,9 @@ jobs:
           docker compose run --rm webpack yarn flow check
           docker compose run --rm webpack yarn eslint
 
+      - name: Style guides
+        run: ./pre-commit.sh
+
   build:
     runs-on: ubuntu-latest
     needs: test
