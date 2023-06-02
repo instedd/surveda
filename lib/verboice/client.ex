@@ -64,6 +64,9 @@ defmodule Verboice.Client do
       {:ok, response = %{status_code: 200}} ->
         {:ok, response.body}
 
+      {:ok, %OAuth2.Response{body: %{"error" => reason}}} ->
+        {:error, reason}
+
       {:ok, response} ->
         {:error, response.status_code}
 
