@@ -419,16 +419,34 @@ defmodule Ask.Runtime.ChannelBroker do
 
     case unqueued_item do
       {respondent, token, not_before, not_after} ->
-        if not_after < DateTime.now("Etc/UTC") do
-          # skip expired call
-          State.deactivate_contact(new_state, respondent.id)
-        else
-          ivr_call(new_state, respondent, token, not_before, not_after)
+        cond do
+          expired_call?(not_after) ->
+            # {:expired_call, respondent.id, not_before, not_after} |> IO.inspect()
+            State.deactivate_contact(new_state, respondent.id)
+
+          future_call?(not_before) ->
+            # {:future_call, respondent.id, not_before, not_after} |> IO.inspect()
+            State.reschedule_contact(new_state, {respondent, token, not_before, not_after}, 1)
+
+          true ->
+            # {:ivr_call, respondent.id, not_before, not_after} |> IO.inspect()
+            ivr_call(new_state, respondent, token, not_before, not_after)
         end
 
       {respondent, token, reply} ->
         channel_ask(new_state, respondent, token, reply)
     end
+  end
+
+  defp future_call?(not_before) do
+    # we add some leeway to avoid deprioritizing calls that have just been
+    # pushed (scheduled for 5 seconds in the future) and allow calls that are
+    # about to be made to be scheduled now
+    DateTime.compare(not_before, DateTime.now!("Etc/UTC") |> DateTime.add(60, :second)) == :gt
+  end
+
+  defp expired_call?(not_after) do
+    DateTime.compare(not_after, DateTime.now!("Etc/UTC")) != :gt
   end
 
   defp ivr_call(state, respondent, token, not_before, not_after) do
@@ -486,7 +504,7 @@ defmodule Ask.Runtime.ChannelBroker do
   defp debug(state) do
     Logger.debug(fn ->
       num_active = map_size(state.active_contacts)
-      num_queued = :pqueue.len(state.contacts_queue)
+      num_queued = Ask.PQueue.len(state.contacts_queue)
       "ChannelBrokerState: channel=#{state.channel_id} active=#{num_active} queued=#{num_queued}"
     end)
     # Logger.debug("ChannelBrokerState: #{inspect(state)}")

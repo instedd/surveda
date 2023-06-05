@@ -1,5 +1,5 @@
 defmodule Ask.Runtime.ChannelBrokerState do
-  alias Ask.{Config, SystemTime}
+  alias Ask.{Config, PQueue, SystemTime}
 
   @enforce_keys [
     :channel_id,
@@ -15,7 +15,7 @@ defmodule Ask.Runtime.ChannelBrokerState do
     # Ask.Runtime.Channel
     :runtime_channel,
 
-    # The maximum parallel contacts the channel shouldn't exceded.
+    # The maximum parallel contacts the channel shouldn't exceed.
     :capacity,
 
     # See `Config.channel_broker_config/0`
@@ -36,7 +36,7 @@ defmodule Ask.Runtime.ChannelBrokerState do
     # - channel_state: identifier(s) for the contact on the channel
     active_contacts: %{},
 
-    # A priority queue implemented using pqueue (https://github.com/okeuday/pqueue/).
+    # A priority queue.
     #
     # When a contact is queued, the received params are stored to be used when the time
     # to make the contact comes.
@@ -44,7 +44,7 @@ defmodule Ask.Runtime.ChannelBrokerState do
     # Elements are tuples whose shape depend on the channel provider:
     # - Verboice: `{respondent, token, not_before, not_after}`
     # - Nuntium: `{respondent, token, reply}`
-    contacts_queue: :pqueue.new()
+    contacts_queue: PQueue.new()
   ]
 
   def new(channel_id, settings) do
@@ -99,12 +99,24 @@ defmodule Ask.Runtime.ChannelBrokerState do
     end
   end
 
-  # Adds a contact to the queue.
+  # Adds a contact to the queue. The priority is set from the respondent's
+  # disposition.
   def queue_contact(state, contact, size) do
     respondent = elem(contact, 0)
-    priority = if respondent.disposition == :queued, do: 2, else: 1
-    new_contacts_queue = :pqueue.in([size, contact], priority, state.contacts_queue)
+    priority = if respondent.disposition == :queued, do: :normal, else: :high
+    queue_contact(state, contact, size, priority)
+  end
+
+  # Adds a contact to the queue with given priority.
+  def queue_contact(state, contact, size, priority) do
+    # {:queue_contact, elem(contact, 0).id, size, priority} |> IO.inspect()
+    new_contacts_queue = PQueue.push(state.contacts_queue, [size, contact], priority)
     Map.put(state, :contacts_queue, new_contacts_queue)
+  end
+
+  # Adds a contact to the queue with the lowest priority.
+  def reschedule_contact(state, contact, size) do
+    queue_contact(state, contact, size, :low)
   end
 
   # Updates the active contact for the respondent. Does nothing if there are
@@ -129,9 +141,7 @@ defmodule Ask.Runtime.ChannelBrokerState do
   # Activates the next contact from the queue. There must be at least one
   # contact currently waiting in queue!
   def activate_next_in_queue(%{active_contacts: active_contacts} = state) do
-    {{_unqueue_res, [size, unqueued_item]}, new_contacts_queue} =
-      :pqueue.out(state.contacts_queue)
-
+    {new_contacts_queue, [size, unqueued_item]} = PQueue.pop(state.contacts_queue)
     respondent_id = queued_respondent_id(unqueued_item)
 
     active_contact =
@@ -236,11 +246,24 @@ defmodule Ask.Runtime.ChannelBrokerState do
   end
 
   def can_unqueue(state) do
-    if :pqueue.is_empty(state.contacts_queue) do
-      false
-    else
-      count_active_contacts(state) < state.capacity
+    cond do
+      PQueue.empty?(state.contacts_queue) -> false
+      activable_contacts?(state.contacts_queue) -> under_capacity?(state)
+      true -> false
     end
+  end
+
+  defp activable_contacts?(queue) do
+    PQueue.any?(queue, fn [_, item] ->
+      case item do
+        {_, _, not_before, _} -> Date.compare(not_before, DateTime.now!("Etc/UTC")) != :gt
+        _ -> true
+      end
+    end)
+  end
+
+  defp under_capacity?(state) do
+    count_active_contacts(state) < state.capacity
   end
 
   defp count_active_contacts(state) do
@@ -250,32 +273,14 @@ defmodule Ask.Runtime.ChannelBrokerState do
 
   def is_queued(state, respondent_id) do
     state.contacts_queue
-    |> :pqueue.to_list()
-    |> Enum.any?(fn [_, queued_item] -> queued_respondent_id(queued_item) == respondent_id end)
+    |> PQueue.any?(fn [_, item] -> queued_respondent_id(item) == respondent_id end)
   end
 
   def remove_from_queue(state, respondent_id) do
-    contacts_queue = state.contacts_queue
-    n = :pqueue.len(contacts_queue)
-    new_contacts_queue = remove_from_queue(contacts_queue, respondent_id, :pqueue.new(), n)
-    Map.put(state, :contacts_queue, new_contacts_queue)
-  end
-
-  defp remove_from_queue(contacts_queue, respondent_id, new_contacts_queue, n) when n > 0 do
-    {{:value, [size, unqueued_item], priority}, contacts_queue} = :pqueue.pout(contacts_queue)
-
     new_contacts_queue =
-      if respondent_id == queued_respondent_id(unqueued_item) do
-        new_contacts_queue
-      else
-        :pqueue.in([size, unqueued_item], priority, new_contacts_queue)
-      end
-
-    remove_from_queue(contacts_queue, respondent_id, new_contacts_queue, n - 1)
-  end
-
-  defp remove_from_queue(_contacts_queue, _respondent_id, new_contacts_queue, 0) do
-    new_contacts_queue
+      state.contacts_queue
+      |> PQueue.delete(fn [_, item] -> queued_respondent_id(item) == respondent_id end)
+    Map.put(state, :contacts_queue, new_contacts_queue)
   end
 
   # Keep only the contacts for active respondents.
@@ -324,6 +329,6 @@ defmodule Ask.Runtime.ChannelBrokerState do
 
   # Returns true when there are neither active nor queued contacts (idle state).
   def inactive?(state) do
-    map_size(state.active_contacts) == 0 && :pqueue.len(state.contacts_queue) == 0
+    map_size(state.active_contacts) == 0 && PQueue.empty?(state.contacts_queue)
   end
 end

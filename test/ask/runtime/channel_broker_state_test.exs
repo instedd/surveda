@@ -20,7 +20,7 @@ defmodule Ask.Runtime.ChannelBrokerStateTest do
 
     %{contacts_queue: q} = State.queue_contact(state, contact, size)
 
-    {{:value, [queud_size, queued_contact]}, _} = :pqueue.out(q)
+    {_, [queud_size, queued_contact]} = Ask.PQueue.pop(q)
     assert queued_contact == {%{id: respondent_id, disposition: disposition}, params}
     assert queud_size == size
   end
@@ -33,7 +33,7 @@ defmodule Ask.Runtime.ChannelBrokerStateTest do
 
     %{contacts_queue: q} = State.remove_from_queue(state, respondent_id)
 
-    assert :pqueue.is_empty(q)
+    assert Ask.PQueue.empty?(q)
   end
 
   test "doesn't removes other respondent", %{state: state, mock_queued_contact: mqc} do
