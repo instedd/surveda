@@ -421,15 +421,14 @@ defmodule Ask.Runtime.ChannelBroker do
       {respondent, token, not_before, not_after} ->
         cond do
           expired_call?(not_after) ->
-            # {:expired_call, respondent.id, not_before, not_after} |> IO.inspect()
             State.deactivate_contact(new_state, respondent.id)
 
           future_call?(not_before) ->
-            # {:future_call, respondent.id, not_before, not_after} |> IO.inspect()
-            State.reschedule_contact(new_state, {respondent, token, not_before, not_after}, 1)
+            new_state
+            |> State.deactivate_contact(respondent.id)
+            |> State.queue_contact({respondent, token, not_before, not_after}, 1, :low)
 
           true ->
-            # {:ivr_call, respondent.id, not_before, not_after} |> IO.inspect()
             ivr_call(new_state, respondent, token, not_before, not_after)
         end
 
@@ -442,11 +441,11 @@ defmodule Ask.Runtime.ChannelBroker do
     # we add some leeway to avoid deprioritizing calls that have just been
     # pushed (scheduled for 5 seconds in the future) and allow calls that are
     # about to be made to be scheduled now
-    DateTime.compare(not_before, DateTime.now!("Etc/UTC") |> DateTime.add(60, :second)) == :gt
+    DateTime.compare(not_before, Ask.SystemTime.time().now |> DateTime.add(60, :second)) == :gt
   end
 
   defp expired_call?(not_after) do
-    DateTime.compare(not_after, DateTime.now!("Etc/UTC")) != :gt
+    DateTime.compare(not_after, Ask.SystemTime.time().now) != :gt
   end
 
   defp ivr_call(state, respondent, token, not_before, not_after) do

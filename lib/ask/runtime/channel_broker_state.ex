@@ -107,16 +107,10 @@ defmodule Ask.Runtime.ChannelBrokerState do
     queue_contact(state, contact, size, priority)
   end
 
-  # Adds a contact to the queue with given priority.
+  # Adds a contact to the queue with given priority (`:high`, `:normal`, `:low`).
   def queue_contact(state, contact, size, priority) do
-    # {:queue_contact, elem(contact, 0).id, size, priority} |> IO.inspect()
     new_contacts_queue = PQueue.push(state.contacts_queue, [size, contact], priority)
     Map.put(state, :contacts_queue, new_contacts_queue)
-  end
-
-  # Adds a contact to the queue with the lowest priority.
-  def reschedule_contact(state, contact, size) do
-    queue_contact(state, contact, size, :low)
   end
 
   # Updates the active contact for the respondent. Does nothing if there are
@@ -256,7 +250,7 @@ defmodule Ask.Runtime.ChannelBrokerState do
   defp activable_contacts?(queue) do
     PQueue.any?(queue, fn [_, item] ->
       case item do
-        {_, _, not_before, _} -> Date.compare(not_before, DateTime.now!("Etc/UTC")) != :gt
+        {_, _, not_before, _} -> Date.compare(not_before, SystemTime.time().now) != :gt
         _ -> true
       end
     end)

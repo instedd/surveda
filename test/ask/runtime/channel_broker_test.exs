@@ -23,6 +23,7 @@ defmodule Ask.Runtime.ChannelBrokerTest do
     {:ok, conn: conn}
   end
 
+  @channel_capacity 5
   @respondents_quantity 10
 
   describe "Verboice" do
@@ -59,6 +60,76 @@ defmodule Ask.Runtime.ChannelBrokerTest do
         Enum.take(respondents, channel_capacity + callbacks) |> Enum.take(-callbacks)
 
       assert_made_calls(released_respondents, test_channel)
+    end
+
+    test "Skips expired calls" do
+      %{state: state, respondents: respondents} = build_survey("ivr")
+
+      now = SystemTime.time().now
+      not_before = DateTime.add(now, 5, :second)
+      not_after = DateTime.add(now, 60, :second)
+      expired = DateTime.add(now, -5, :second)
+
+      state =
+        state
+        |> activate_respondent("ivr", Enum.at(respondents, 0), not_before, not_after)
+        |> activate_respondent("ivr", Enum.at(respondents, 1), not_before, expired)
+        |> activate_respondent("ivr", Enum.at(respondents, 2), not_before, expired)
+        |> activate_respondent("ivr", Enum.at(respondents, 3), not_before, not_after)
+        |> activate_respondent("ivr", Enum.at(respondents, 4), not_before, not_after)
+
+      assert [
+        Enum.at(respondents, 0).id,
+        Enum.at(respondents, 3).id,
+        Enum.at(respondents, 4).id,
+      ] == Enum.map(state.active_contacts, fn {r_id, _} -> r_id end)
+    end
+
+    @tag :time_mock
+    test "Reschedules calls scheduled for the future" do
+      set_actual_time()
+
+      %{state: state, respondents: respondents} = build_survey("ivr")
+
+      now = SystemTime.time().now
+      not_before = DateTime.add(now, 5, :second)
+      not_after = DateTime.add(now, 3600, :second)
+      the_future = DateTime.add(now, 180, :second)
+
+      state =
+        state
+        |> activate_respondent("ivr", Enum.at(respondents, 0), not_before, not_after)
+        |> activate_respondent("ivr", Enum.at(respondents, 1), the_future, not_after)
+        |> activate_respondent("ivr", Enum.at(respondents, 2), not_before, not_after)
+        |> activate_respondent("ivr", Enum.at(respondents, 3), the_future, not_after)
+        |> activate_respondent("ivr", Enum.at(respondents, 4), not_before, not_after)
+
+      assert [
+        Enum.at(respondents, 0).id,
+        Enum.at(respondents, 2).id,
+        Enum.at(respondents, 4).id,
+      ] == Enum.map(state.active_contacts, fn {r_id, _} -> r_id end)
+
+      # skip to the future
+      time_passes(minutes: 5)
+
+      state =
+        state
+        |> activate_respondent("ivr", Enum.at(respondents, 1), the_future, not_after)
+        |> activate_respondent("ivr", Enum.at(respondents, 3), the_future, not_after)
+
+      assert [
+        Enum.at(respondents, 0).id,
+        Enum.at(respondents, 1).id,
+        Enum.at(respondents, 2).id,
+        Enum.at(respondents, 3).id,
+        Enum.at(respondents, 4).id,
+      ] == Enum.map(state.active_contacts, fn {r_id, _} -> r_id end)
+    end
+
+    defp activate_respondent(state, "ivr", respondent, not_before, not_after) do
+      {_, state, _} = ChannelBroker.handle_cast({:setup, "ivr", respondent, "token", not_before, not_after}, state)
+      state
     end
   end
 
@@ -101,64 +172,10 @@ defmodule Ask.Runtime.ChannelBrokerTest do
 
   describe ":collect_garbage" do
     @describetag :time_mock
-    @channel_capacity 5
 
     setup do
       set_actual_time()
       :ok
-    end
-
-    defp channel_state("ivr", respondent) do
-      %{"verboice_call_id" => respondent.id}
-    end
-
-    defp channel_state("sms", respondent) do
-      %{"nuntium_token" => respondent.id}
-    end
-
-    defp start_survey(channel_type) do
-      # create survey:
-      [test_channel, respondents, channel] = initialize_survey(channel_type, @channel_capacity)
-
-      # activate respondents:
-      from(r in Respondent, where: r.id in ^Enum.map(respondents, fn r -> r.id end))
-      |> Repo.update_all(set: [state: "active"])
-
-      active_contacts =
-        respondents
-        |> Enum.slice(0..4)
-        |> Enum.reduce(%{}, fn e, a ->
-          Map.put(a, e.id, %{
-            contacts: 1,
-            last_contact: Ask.SystemTime.time().now,
-            channel_state: channel_state(channel_type, e)
-          })
-        end)
-
-      # queue the other respondents:
-      contacts_queue =
-        respondents
-        |> Enum.slice(5..9)
-        |> Enum.reduce(Ask.PQueue.new(), fn e, a ->
-          not_before = DateTime.now!("Etc/UTC") |> DateTime.add(-3600, :second)
-          not_after = DateTime.now!("Etc/UTC") |> DateTime.add(3600, :second)
-
-          case channel_type do
-            "ivr" -> Ask.PQueue.push(a, [1, {e, "secret", not_before, not_after}], :normal)
-            "sms" -> Ask.PQueue.push(a, [1, {e, "secret", []}], :normal)
-          end
-        end)
-
-      state = %Ask.Runtime.ChannelBrokerState{
-        channel_id: channel.id,
-        runtime_channel: test_channel,
-        capacity: @channel_capacity,
-        active_contacts: active_contacts,
-        contacts_queue: contacts_queue,
-        config: Config.channel_broker_config()
-      }
-
-      %{state: state, respondents: respondents, channel: channel}
     end
 
     test "deactivates failed respondents" do
@@ -315,6 +332,72 @@ defmodule Ask.Runtime.ChannelBrokerTest do
       )
 
     [test_channel, respondents, channel]
+  end
+
+  defp build_survey(channel_type) do
+    # create survey:
+    [test_channel, respondents, channel] = initialize_survey(channel_type, @channel_capacity)
+
+    # pre-activate respondents:
+    from(r in Respondent, where: r.id in ^Enum.map(respondents, fn r -> r.id end))
+    |> Repo.update_all(set: [state: "active"])
+
+    # build state
+    state = %Ask.Runtime.ChannelBrokerState{
+      channel_id: channel.id,
+      runtime_channel: test_channel,
+      capacity: @channel_capacity,
+      active_contacts: %{},
+      contacts_queue: Ask.PQueue.new(),
+      config: Config.channel_broker_config()
+    }
+
+    %{state: state, respondents: respondents, channel: channel}
+  end
+
+  defp start_survey(channel_type) do
+    %{state: state, respondents: respondents, channel: channel} = build_survey(channel_type)
+
+    # activate respondents (up to capacity):
+    active_contacts =
+      respondents
+      |> Enum.slice(0..4)
+      |> Enum.reduce(%{}, fn e, a ->
+        Map.put(a, e.id, %{
+          contacts: 1,
+          last_contact: SystemTime.time().now,
+          channel_state: channel_state(channel_type, e)
+        })
+      end)
+
+    # queue the other respondents:
+    contacts_queue =
+      respondents
+      |> Enum.slice(5..9)
+      |> Enum.reduce(Ask.PQueue.new(), fn e, a ->
+        not_before = SystemTime.time().now |> DateTime.add(-3600, :second)
+        not_after = SystemTime.time().now |> DateTime.add(3600, :second)
+
+        case channel_type do
+          "ivr" -> Ask.PQueue.push(a, [1, {e, "secret", not_before, not_after}], :normal)
+          "sms" -> Ask.PQueue.push(a, [1, {e, "secret", []}], :normal)
+        end
+      end)
+
+    state =
+      state
+      |> Map.put(:active_contacts, active_contacts)
+      |> Map.put(:contacts_queue, contacts_queue)
+
+    %{state: state, respondents: respondents, channel: channel}
+  end
+
+  defp channel_state("ivr", respondent) do
+    %{"verboice_call_id" => respondent.id}
+  end
+
+  defp channel_state("sms", respondent) do
+    %{"nuntium_token" => respondent.id}
   end
 
   defp callback_respondents(conn, respondents, "nuntium" = _provider, channel_id) do
