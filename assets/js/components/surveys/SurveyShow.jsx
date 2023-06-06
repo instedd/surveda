@@ -318,6 +318,9 @@ class SurveyShow extends Component<any, State> {
       }
     })
 
+    let forecastLines = forecasts.filter((d) => d.label !== "Success rate")
+    let successRateLines = forecasts.filter((d) => d.label === "Success rate")
+
     return (
       <div className="cockpit">
         <div className="row">
@@ -396,8 +399,8 @@ class SurveyShow extends Component<any, State> {
                 )}
               </div>
               <Stats data={stats} />
-              <Forecasts data={forecasts} ceil={100} />
-              {forecasts.filter((d) => d.id == "successRate").length ? (
+              <Forecasts data={forecastLines} ceil={100} />
+              {successRateLines.length ? (
                 <div>
                   <div className="header" style={{ marginTop: "40px", marginBottom: "0" }}>
                     <div className="title">{t("Success Rate")}</div>

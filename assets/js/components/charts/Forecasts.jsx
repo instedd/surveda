@@ -63,7 +63,7 @@ export default class Forecasts extends Component<Props> {
     const { ceil } = this.props
     const { width, height, data } = this.state
 
-    let surveysData = data.filter((d) => d.label !== "Success rate")
+    let surveysData = data // data.filter((d) => d.label !== "Success rate")
 
     const flatten = Array.prototype.concat(...surveysData.map((d) => [...d.values, ...d.forecast]))
 
