@@ -364,8 +364,9 @@ class ProjectSettings extends Component {
             {inputColourScheme}
             <br />
             <div className="row">
-              Only edit the variables below if you know what are you doing, if you're not sure just
-              leave them as they are, the surveys will run OK.
+               This setting is for advanced users only. Changing any of the settings
+               may affect data collection. If you are not familiar with these
+               variables, please do not make any changes and leave the default values.
             </div>
             {inputRates}
             {inputBatchLimitPerMinute}
