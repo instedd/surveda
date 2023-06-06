@@ -63,9 +63,7 @@ export default class Forecasts extends Component<Props> {
     const { ceil } = this.props
     const { width, height, data } = this.state
 
-    let surveysData = data // data.filter((d) => d.label !== "Success rate")
-
-    const flatten = Array.prototype.concat(...surveysData.map((d) => [...d.values, ...d.forecast]))
+    const flatten = Array.prototype.concat(...data.map((d) => [...d.values, ...d.forecast]))
 
     let initialTime, lastTime
 
@@ -97,9 +95,9 @@ export default class Forecasts extends Component<Props> {
       .classed("forecast-tooltip", true)
       .style("visibility", "hidden")
 
-    for (var i = 0; i < surveysData.length; i++) {
-      for (var j = 0; j < surveysData[i].values.length; j++) {
-        if (y(surveysData[i].values[j].value) != 0 && x(surveysData[i].values[j].time) != 0) {
+    for (var i = 0; i < data.length; i++) {
+      for (var j = 0; j < data[i].values.length; j++) {
+        if (y(data[i].values[j].value) != 0 && x(data[i].values[j].time) != 0) {
           d3.select(this.refs.circles)
             .selectAll("path")
             .data([data[i].values[j]])
@@ -108,8 +106,8 @@ export default class Forecasts extends Component<Props> {
             .attr("cx", (d) => x(d.time))
             .attr("cy", (d) => y(d.value))
             .attr("r", "3px")
-            .style("fill", surveysData[i].color)
-            .style("stroke", surveysData[i].color)
+            .style("fill", data[i].color)
+            .style("stroke", data[i].color)
             .on("mouseover", (d) =>
               tooltip
                 .text(d.value)
@@ -129,7 +127,7 @@ export default class Forecasts extends Component<Props> {
 
     d3.select(this.refs.values)
       .selectAll("path")
-      .data(surveysData)
+      .data(data)
       .enter()
       .append("path")
       .merge(d3.select(this.refs.values).selectAll("path"))
@@ -142,7 +140,7 @@ export default class Forecasts extends Component<Props> {
 
     d3.select(this.refs.forecasts)
       .selectAll("path")
-      .data(surveysData)
+      .data(data)
       .enter()
       .append("path")
       .merge(d3.select(this.refs.forecasts).selectAll("path"))
