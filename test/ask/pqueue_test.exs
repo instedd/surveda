@@ -83,9 +83,25 @@ defmodule Ask.PQueueTest do
   test "len" do
     queue = PQueue.new()
     assert 0 == PQueue.len(queue)
+
     assert 1 == PQueue.len(queue = PQueue.push(queue, 1, :high))
+    assert 1 == PQueue.len(queue, :high)
+    assert 0 == PQueue.len(queue, :normal)
+    assert 0 == PQueue.len(queue, :low)
+
     assert 2 == PQueue.len(queue = PQueue.push(queue, 1, :high))
+    assert 2 == PQueue.len(queue, :high)
+    assert 0 == PQueue.len(queue, :normal)
+    assert 0 == PQueue.len(queue, :low)
+
     assert 3 == PQueue.len(queue = PQueue.push(queue, 1, :normal))
-    assert 4 == PQueue.len(PQueue.push(queue, 1, :low))
+    assert 2 == PQueue.len(queue, :high)
+    assert 1 == PQueue.len(queue, :normal)
+    assert 0 == PQueue.len(queue, :low)
+
+    assert 4 == PQueue.len(queue = PQueue.push(queue, 1, :low))
+    assert 2 == PQueue.len(queue, :high)
+    assert 1 == PQueue.len(queue, :normal)
+    assert 1 == PQueue.len(queue, :low)
   end
 end
