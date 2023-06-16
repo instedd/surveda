@@ -45,45 +45,47 @@ defmodule Ask.Runtime.ChannelStatusServer do
       |> Enum.each(fn c ->
         previous_status = get_status_from_state(c.id, state)
 
-        status = ChannelBroker.check_status(c.id)
-        timestamp = Timex.now()
+        spawn(fn ->
+          status = ChannelBroker.check_status(c.id)
+          timestamp = Timex.now()
 
-        case status do
-          {:down, messages} ->
-            case previous_status do
-              %{status: :down} ->
-                nil
+          case status do
+            {:down, messages} ->
+              case previous_status do
+                %{status: :down} ->
+                  nil
 
-              _ ->
-                AskWeb.Email.channel_down(c.user.email, c, messages) |> Ask.Mailer.deliver()
+                _ ->
+                  AskWeb.Email.channel_down(c.user.email, c, messages) |> Ask.Mailer.deliver()
 
-                update_channel_status(c.id, %{
-                  status: :down,
-                  messages: messages,
-                  name: c.name,
-                  timestamp: timestamp
-                })
-            end
+                  update_channel_status(c.id, %{
+                    status: :down,
+                    messages: messages,
+                    name: c.name,
+                    timestamp: timestamp
+                  })
+              end
 
-          {:error, code} ->
-            case previous_status do
-              %{status: :error} ->
-                nil
+            {:error, code} ->
+              case previous_status do
+                %{status: :error} ->
+                  nil
 
-              _ ->
-                AskWeb.Email.channel_error(c.user.email, c, code) |> Ask.Mailer.deliver()
+                _ ->
+                  AskWeb.Email.channel_error(c.user.email, c, code) |> Ask.Mailer.deliver()
 
-                update_channel_status(c.id, %{
-                  status: :error,
-                  code: code,
-                  name: c.name,
-                  timestamp: timestamp
-                })
-            end
+                  update_channel_status(c.id, %{
+                    status: :error,
+                    code: code,
+                    name: c.name,
+                    timestamp: timestamp
+                  })
+              end
 
-          status ->
-            update_channel_status(c.id, status)
-        end
+            status ->
+              update_channel_status(c.id, status)
+          end
+        end)
       end)
 
       {:noreply, state}
