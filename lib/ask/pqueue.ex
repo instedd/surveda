@@ -85,4 +85,9 @@ defmodule Ask.PQueue do
   def len(queue) do
     length(queue.high) + length(queue.normal) + length(queue.low)
   end
+
+  @spec len(t, :high | :normal | :low) :: non_neg_integer
+  def len(queue, :high), do: length(queue.high)
+  def len(queue, :normal), do: length(queue.normal)
+  def len(queue, :low), do: length(queue.low)
 end
