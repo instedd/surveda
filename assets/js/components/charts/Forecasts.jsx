@@ -2,6 +2,7 @@ import React, { Component } from "react"
 import * as d3 from "d3"
 import References from "./References"
 import TimeAgo from "react-timeago"
+import { percentFormat } from "./utils"
 
 const margin = { left: 36, top: 18, right: 18, bottom: 36 }
 
@@ -110,7 +111,7 @@ export default class Forecasts extends Component<Props> {
             .style("stroke", data[i].color)
             .on("mouseover", (d) =>
               tooltip
-                .text(d.value)
+                .text(percentFormat(d.value / 100))
                 .style("top", d3.event.pageY - 10 + "px")
                 .style("left", d3.event.pageX + 10 + "px")
                 .style("visibility", "visible")
