@@ -1,8 +1,8 @@
 import React, { Component } from "react"
-import * as d3 from "d3"
 import Donut from "./Donut"
 import classNames from "classnames"
 import { translate } from "react-i18next"
+import { numberFormat, labelFormat } from "./utils"
 
 const margin = { left: 18, top: 18, right: 18, bottom: 18 }
 
@@ -45,14 +45,6 @@ class SuccessRate extends Component<Props> {
     window.removeEventListener("resize", this.recalculate)
   }
 
-  numberFormat(number) {
-    return number < 0.1 ? d3.format(".1%")(number) : d3.format(".0%")(number)
-  }
-
-  labelFormat(number) {
-    return number > 0 && number < 1 ? d3.format(".2f")(number) : d3.format(".0f")(number)
-  }
-
   render() {
     const { progress, weight, initial, actual, estimated, exhausted, t } = this.props
     const zeroExhausted = exhausted == 0
@@ -86,14 +78,14 @@ class SuccessRate extends Component<Props> {
                   className="initial label"
                   transform={`translate(${-arcRadius - offset}, 0) rotate(-90)`}
                 >
-                  {this.labelFormat(1 - progress)}
+                  {labelFormat(1 - progress)}
                 </text>
                 <text
                   ref="foregroundLabel"
                   className="actual label hanging"
                   transform={`translate(${weight - arcRadius + offset}, 0) rotate(-90)`}
                 >
-                  {this.labelFormat(progress)}
+                  {labelFormat(progress)}
                 </text>
               </g>
             </g>
@@ -128,7 +120,7 @@ class SuccessRate extends Component<Props> {
               {t("estimated success rate")}
             </text>
             <text x={arcRadius} y={arcRadius / 2} className="percent large">
-              {this.numberFormat(estimated)}
+              {numberFormat(estimated)}
             </text>
             <g
               ref="progress"
@@ -146,7 +138,7 @@ class SuccessRate extends Component<Props> {
                 {t("Progress")}
               </text>
               <text x={donutRadius} y={donutRadius - margin.bottom} className="progress percent">
-                {this.numberFormat(progress)}
+                {numberFormat(progress)}
               </text>
             </g>
             <g
@@ -166,7 +158,7 @@ class SuccessRate extends Component<Props> {
                 {t("initial success rate")}
               </text>
               <text x={donutRadius / 2} y={donutRadius / 2} className="initial percent middle">
-                {this.numberFormat(initial)}
+                {numberFormat(initial)}
               </text>
             </g>
             <g
@@ -198,7 +190,7 @@ class SuccessRate extends Component<Props> {
                   "zero-exhausted": zeroExhausted,
                 })}
               >
-                {this.numberFormat(actual)}
+                {numberFormat(actual)}
               </text>
             </g>
           </g>

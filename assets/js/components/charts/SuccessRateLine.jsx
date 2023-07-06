@@ -1,5 +1,6 @@
 import React, { Component } from "react"
 import * as d3 from "d3"
+import { percentFormat } from "./utils"
 
 const margin = { left: 36, top: 18, right: 18, bottom: 36 }
 
@@ -105,13 +106,13 @@ export default class SuccessRateLine extends Component<Props> {
             .style("fill", srData[i].color)
             .style("stroke", srData[i].color)
             .style("opacity", 0.1)
-            .on("mouseover", (d) =>
+            .on("mouseover", (d) => {
               tooltip
-                .text(d.value)
+                .text(percentFormat(d.value / 100))
                 .style("top", d3.event.pageY - 10 + "px")
                 .style("left", d3.event.pageX + 10 + "px")
                 .style("visibility", "visible")
-            )
+            })
             .on("mouseout", () => tooltip.style("visibility", "hidden"))
         }
       }
