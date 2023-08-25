@@ -1,5 +1,8 @@
 defmodule Ask.Runtime.ChannelBrokerState do
-  alias Ask.{Config, PQueue, SystemTime}
+  import Ecto.Query
+
+  alias Ask.{Config, Repo, SystemTime}
+  alias Ask.ChannelBrokerQueue, as: Queue
 
   @enforce_keys [
     :channel_id,
@@ -10,6 +13,7 @@ defmodule Ask.Runtime.ChannelBrokerState do
   defstruct [
     # Each ChannelBroker process manages a single channel.
     :channel_id,
+    :channel_type,
 
     # Each ChannelBroker have the sole responsibility of interacting with their
     # Ask.Runtime.Channel
@@ -19,41 +23,15 @@ defmodule Ask.Runtime.ChannelBrokerState do
     :capacity,
 
     # See `Config.channel_broker_config/0`
-    :config,
-
-    # A dictionary of active contacts with the following shape:
-    # ```
-    # %{respondent_id => %{
-    #   contacts: Integer,
-    #   last_contact: DateTime,
-    #   channel_state: %{String.t => any()}
-    # }}
-    # ```
-    #
-    # Where:
-    # - contacts: number of contacts being currently managed by the channel (ivr=1, sms=1+)
-    # - last_contact: timestamp of the last sent contact or received callback
-    # - channel_state: identifier(s) for the contact on the channel
-    active_contacts: %{},
-
-    # A priority queue.
-    #
-    # When a contact is queued, the received params are stored to be used when the time
-    # to make the contact comes.
-    #
-    # Elements are tuples whose shape depend on the channel provider:
-    # - Verboice: `{respondent, token, not_before, not_after}`
-    # - Nuntium: `{respondent, token, reply}`
-    contacts_queue: PQueue.new()
+    :config
   ]
 
-  def new(channel_id, settings) do
-    config = Config.channel_broker_config()
-
+  def new(channel_id, channel_type, settings) do
     %Ask.Runtime.ChannelBrokerState{
       channel_id: channel_id,
+      channel_type: channel_type,
       capacity: Map.get(settings, "capacity", Config.default_channel_capacity()),
-      config: config
+      config: Config.channel_broker_config()
     }
   end
 
@@ -80,201 +58,191 @@ defmodule Ask.Runtime.ChannelBrokerState do
     state.config.gc_active_idle_minutes * 60
   end
 
-  def is_active(state, respondent_id) do
-    state.active_contacts
-    |> Map.has_key?(respondent_id)
+  # Returns true when there are neither active nor queued contacts (idle state).
+  def inactive?(state) do
+    !Repo.exists?(from q in Queue,
+      where: q.channel_id == ^state.channel_id)
   end
 
-  def put_channel_state(state, respondent_id, channel_state) do
-    update_active_contact(state, respondent_id, fn active_contact ->
-      Map.put(active_contact, :channel_state, channel_state)
-    end)
-  end
-
-  def get_channel_state(state, respondent_id) do
-    case Map.get(state.active_contacts, respondent_id) do
-      %{channel_state: channel_state} -> channel_state
-      # TODO: shall we raise instead?
-      _ -> %{}
-    end
+  # Returns true if a respondent is currently in queue (active or not).
+  def queued_or_active?(state, respondent_id) do
+    Repo.exists?(from q in Queue,
+      where: q.channel_id == ^state.channel_id and q.respondent_id == ^respondent_id)
   end
 
   # Adds a contact to the queue. The priority is set from the respondent's
   # disposition.
   def queue_contact(state, contact, size) do
     respondent = elem(contact, 0)
-    priority = if respondent.disposition == :queued, do: :normal, else: :high
-    queue_contact(state, contact, size, priority)
-  end
 
-  # Adds a contact to the queue with given priority (`:high`, `:normal`, `:low`).
-  def queue_contact(state, contact, size, priority) do
-    new_contacts_queue = PQueue.push(state.contacts_queue, [size, contact], priority)
-    Map.put(state, :contacts_queue, new_contacts_queue)
-  end
-
-  # Updates the active contact for the respondent. Does nothing if there are
-  # no active contact for this respondent.
-  defp update_active_contact(%{active_contacts: active_contacts} = state, respondent_id, cb) do
-    if active_contact = Map.get(active_contacts, respondent_id) do
-      new_active_contacts = Map.put(active_contacts, respondent_id, cb.(active_contact))
-      Map.put(state, :active_contacts, new_active_contacts)
+    if respondent.disposition == :queued do
+      queue_contact(state, contact, size, :normal)
     else
-      state
+      queue_contact(state, contact, size, :high)
     end
   end
 
-  # Touches the :last_contact attribute for a respondent. Does nothing if the
-  # respondent can't be found.
+  # Adds an IVR contact to the queue with given priority (`:high`, `:normal`, `:low`).
+  def queue_contact(state, {respondent, token, not_before, not_after}, size, priority) do
+    Queue.create!(%{
+      channel_id: state.channel_id,
+      respondent_id: respondent.id,
+      queued_at: SystemTime.time().now,
+      priority: priority,
+      size: size,
+      token: token,
+      not_before: not_before,
+      not_after: not_after,
+      reply: nil,
+    })
+    state
+  end
+
+  # Adds an SMS contact to the queue with given priority (`:high`, `:normal`, `:low`).
+  def queue_contact(state, {respondent, token, reply}, size, priority) do
+    Queue.create!(%{
+      channel_id: state.channel_id,
+      respondent_id: respondent.id,
+      queued_at: SystemTime.time().now,
+      priority: priority,
+      size: size,
+      token: token,
+      not_before: nil,
+      not_after: nil,
+      reply: reply,
+    })
+    state
+  end
+
+  def put_channel_state(state, respondent_id, channel_state) do
+    query = from q in Queue,
+      where: q.channel_id == ^state.channel_id and q.respondent_id == ^respondent_id
+    Repo.update_all(query, set: [channel_state: channel_state])
+    state
+  end
+
+  def get_channel_state(state, respondent_id) do
+    channel_state = Repo.one(from q in Queue,
+      select: q.channel_state,
+      where: q.channel_id == ^state.channel_id and q.respondent_id == ^respondent_id)
+    channel_state || %{}
+  end
+
+  # Touches the `last_contact` attribute for a respondent. Assumes that the
+  # respondent has already been contacted. Does nothing if the respondent can't
+  # be found.
   def touch_last_contact(state, respondent_id) do
-    update_active_contact(state, respondent_id, fn active_contact ->
-      Map.put(active_contact, :last_contact, SystemTime.time().now)
-    end)
+    query = from q in Queue,
+      where: q.channel_id == ^state.channel_id and q.respondent_id == ^respondent_id
+    Repo.update_all(query, set: [last_contact: SystemTime.time().now])
+    state
   end
 
   # Activates the next contact from the queue. There must be at least one
   # contact currently waiting in queue!
-  def activate_next_in_queue(%{active_contacts: active_contacts} = state) do
-    {new_contacts_queue, [size, unqueued_item]} = PQueue.pop(state.contacts_queue)
-    respondent_id = queued_respondent_id(unqueued_item)
+  def activate_next_in_queue(state) do
+    contact = Repo.one!(from q in Queue,
+      where: q.channel_id == ^state.channel_id and is_nil(q.last_contact) and (q.not_before <= ^SystemTime.time().now or is_nil(q.not_before)),
+      order_by: [q.priority, q.queued_at],
+      preload: [:respondent],
+      limit: 1
+    )
 
-    active_contact =
-      active_contacts
-      |> Map.get(respondent_id, %{contacts: 0})
+    contact
+    |> Queue.changeset(%{
+      contacts: contact.size,
+      last_contact: SystemTime.time().now
+    })
+    |> Repo.update()
 
-    new_active_contact =
-      active_contact
-      |> Map.put(:contacts, active_contact.contacts + size)
-      |> Map.put(:last_contact, SystemTime.time().now)
+    {state, to_item(state.channel_type, contact)}
+  end
 
-    new_active_contacts =
-      active_contacts
-      |> Map.put(respondent_id, new_active_contact)
+  defp to_item("ivr", contact) do
+    {contact.respondent, contact.token, contact.not_before, contact.not_after}
+  end
 
-    new_state =
-      state
-      |> Map.put(:contacts_queue, new_contacts_queue)
-      |> Map.put(:active_contacts, new_active_contacts)
-
-    {new_state, unqueued_item}
+  defp to_item("sms", contact) do
+    {contact.respondent, contact.token, contact.reply}
   end
 
   # Increments the number of contacts for the respondent. Activates the contact
   # if it wasn't already.
-  def increment_respondents_contacts(
-        %{active_contacts: active_contacts} = state,
-        respondent_id,
-        size
-      ) do
-    active_contact =
-      active_contacts
-      |> Map.get(respondent_id, %{contacts: 0})
+  def increment_respondents_contacts(state, respondent_id, size) do
+    query = from q in Queue,
+      update: [set: [
+        contacts: coalesce(q.contacts, 0) + ^size,
+        last_contact: ^SystemTime.time().now,
+      ]],
+      where: q.channel_id == ^state.channel_id and q.respondent_id == ^respondent_id
+    Repo.update_all(query, [])
 
-    new_active_contact =
-      active_contact
-      |> Map.put(:contacts, active_contact.contacts + size)
-      |> Map.put(:last_contact, SystemTime.time().now)
-
-    new_active_contacts =
-      active_contacts
-      |> Map.put(respondent_id, new_active_contact)
-
-    Map.put(state, :active_contacts, new_active_contacts)
+    state
   end
 
   # Decrements the number of contacts for the respondent. Does nothing if the
   # respondent isn't an active contact. Deactivates the respondent if the number
   # of contacts falls down to zero.
-  def decrement_respondents_contacts(
-        %{active_contacts: active_contacts} = state,
-        respondent_id,
-        size
-      ) do
-    active_contact =
-      active_contacts
-      |> Map.get(respondent_id)
+  def decrement_respondents_contacts(state, respondent_id, size) do
+    query = from q in Queue,
+      update: [set: [
+        contacts: coalesce(q.contacts, 0) - ^size,
+        last_contact: ^SystemTime.time().now,
+      ]],
+      where: q.channel_id == ^state.channel_id and q.respondent_id == ^respondent_id
+    Repo.update_all(query, [])
 
-    if active_contact do
-      new_value = active_contact.contacts - size
+    Repo.delete_all(from q in Queue,
+      where: q.channel_id == ^state.channel_id and q.respondent_id == ^respondent_id and not(is_nil(q.contacts)) and q.contacts <= 0)
 
-      if new_value <= 0 do
-        deactivate_contact(state, respondent_id)
-      else
-        new_active_contact =
-          active_contact
-          |> Map.put(:contacts, new_value)
-          |> Map.put(:last_contact, SystemTime.time().now)
-
-        new_active_contacts =
-          active_contacts
-          |> Map.put(respondent_id, new_active_contact)
-
-        Map.put(state, :active_contacts, new_active_contacts)
-      end
-    else
-      state
-    end
+    state
   end
 
+  # Deactivates a contact and removes them from the queue.
   def deactivate_contact(state, respondent_id) do
-    respondent_contacts = contacts_for(state, respondent_id)
-
-    if respondent_contacts > 1 do
-      update_active_contact(state, respondent_id, fn active_contact ->
-        active_contact
-        |> Map.put(:contacts, respondent_contacts - 1)
-        |> Map.put(:last_contact, SystemTime.time().now)
-      end)
-    else
-      state
-      |> Map.put(:active_contacts, Map.delete(state.active_contacts, respondent_id))
-    end
+    Repo.delete_all(from q in Queue,
+      where: q.channel_id == ^state.channel_id and q.respondent_id == ^respondent_id)
+    state
   end
 
-  # Returns the current number of active contacts for the respondent.
-  defp contacts_for(state, respondent_id) do
-    case Map.get(state.active_contacts, respondent_id) do
-      %{contacts: contacts} -> contacts
-      _ -> 0
-    end
+  # Deactivates a contact and puts them back into the queue.
+  def reenqueue_contact(state, respondent_id, priority \\ :normal) do
+    query = from q in Queue,
+      where: q.channel_id == ^state.channel_id and q.respondent_id == ^respondent_id
+    Repo.update_all(query, set: [
+      queued_at: SystemTime.time().now,
+      priority: priority,
+      contacts: nil,
+      last_contact: nil,
+      channel_state: nil,
+    ])
+    state
   end
 
+  # Returns true if we can active a new contact: there are pending contacts in
+  # queue that we can activate, and the channel is under capacity.
   def can_unqueue(state) do
-    cond do
-      PQueue.empty?(state.contacts_queue) -> false
-      activable_contacts?(state.contacts_queue) -> under_capacity?(state)
-      true -> false
+    if Queue.activable_contacts?(state.channel_id) do
+      under_capacity?(state)
+    else
+      false
     end
   end
 
-  defp activable_contacts?(queue) do
-    PQueue.any?(queue, fn [_, item] ->
-      case item do
-        {_, _, not_before, _} -> Date.compare(not_before, SystemTime.time().now) != :gt
-        _ -> true
-      end
-    end)
-  end
-
+  # OPTIMIZE: Cache the number of active contacts into the state to heavily
+  #           reduce the number of COUNT(*) queries that tend to be slow.
+  #
+  #           on load: count from the database & cache the value
+  #           on activate: increment the number (by size)
+  #           on increment/decrement/deactivate/reenqueue: update the count
   defp under_capacity?(state) do
-    count_active_contacts(state) < state.capacity
+    Queue.count_active_contacts(state.channel_id) < state.capacity
   end
 
-  defp count_active_contacts(state) do
-    state.active_contacts
-    |> Enum.reduce(0, fn {_, %{contacts: contacts}}, acc -> contacts + acc end)
-  end
-
-  def is_queued(state, respondent_id) do
-    state.contacts_queue
-    |> PQueue.any?(fn [_, item] -> queued_respondent_id(item) == respondent_id end)
-  end
-
-  def remove_from_queue(state, respondent_id) do
-    new_contacts_queue =
-      state.contacts_queue
-      |> PQueue.delete(fn [_, item] -> queued_respondent_id(item) == respondent_id end)
-    Map.put(state, :contacts_queue, new_contacts_queue)
+  def active_respondent_ids(state) do
+    Repo.all(from q in Queue,
+      select: q.respondent_id,
+      where: q.channel_id == ^state.channel_id and not(is_nil(q.last_contact)))
   end
 
   # Keep only the contacts for active respondents.
@@ -284,45 +252,52 @@ defmodule Ask.Runtime.ChannelBrokerState do
   #
   # FIXME: understand why Surveda would know about a contact having failed but
   #        the channel broker wouldn't have been notified?!
-  def clean_inactive_respondents(state, active_respondents) do
-    # TODO: Elixir 1.13 has Map.filter/2
-    new_active_contacts =
-      :maps.filter(
-        fn respondent_id, _ -> respondent_id in active_respondents end,
-        state.active_contacts
-      )
+  def clean_inactive_respondents(state, active_respondent_ids) do
+    Repo.delete_all(from q in Queue,
+      where: q.channel_id == ^state.channel_id and not(q.respondent_id in(^active_respondent_ids)) and not(is_nil(q.last_contact)))
 
-    Map.put(state, :active_contacts, new_active_contacts)
+    state
   end
 
-  # For leftover active contacts, we ask the remote channel for the actual IVR
-  # call or SMS message state. Keep only the contacts that are active or queued.
+  # For idle contacts, we ask the remote channel for the actual IVR call or SMS
+  # message state. Keep only the contacts that are active or queued.
+  #
+  # FIXME: this may take a while, and during that time the channel broker
+  #        won't process its mailbox, if it ever becomes a problem, we might
+  #        consider:
+  #
+  #        - only process a random N number of idle contacts on each call
+  #        - run the task in its own concurrent process
   def clean_outdated_respondents(state) do
     idle_time = gc_allowed_idle_time(state)
-    now = SystemTime.time().now
+    last_contact = SystemTime.time().now |> DateTime.add(-idle_time, :second)
 
-    # TODO: Elixir 1.13 has Map.filter/2
-    new_active_contacts =
-      :maps.filter(
-        fn _, %{last_contact: last_contact} = active_contact ->
-          if DateTime.diff(now, last_contact, :second) < idle_time do
-            true
-          else
-            !Ask.Runtime.Channel.message_inactive?(state.runtime_channel, active_contact.channel_state)
-          end
-        end,
-        state.active_contacts
-      )
+    query = from q in Queue,
+      select: [:channel_id, :respondent_id, :channel_state],
+      where: q.channel_id == ^state.channel_id and q.last_contact < ^last_contact
 
-    Map.put(state, :active_contacts, new_active_contacts)
+    Repo.all(query) |> Enum.each(fn active_contact ->
+      if Ask.Runtime.Channel.message_inactive?(state.runtime_channel, active_contact.channel_state) do
+        Repo.delete(active_contact)
+      end
+    end)
+
+    state
   end
 
-  defp queued_respondent_id(queued_item) do
-    elem(queued_item, 0).id
-  end
+  def statistics(state) do
+    queued = Repo.all(from q in Queue,
+      select: {q.priority, count()},
+      where: is_nil(q.last_contact),
+      group_by: q.priority)
 
-  # Returns true when there are neither active nor queued contacts (idle state).
-  def inactive?(state) do
-    map_size(state.active_contacts) == 0 && PQueue.empty?(state.contacts_queue)
+    [
+      channel: state.channel_id,
+      active: Queue.count_active_contacts(state.channel_id),
+      queued: Enum.reduce(queued, 0, fn {_, count}, a-> a + count end),
+      queued_low: queued[:low] || 0,
+      queued_normal: queued[:normal] || 0,
+      queued_high: queued[:high] || 0,
+    ]
   end
 end

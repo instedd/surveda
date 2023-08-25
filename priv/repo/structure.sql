@@ -1,8 +1,8 @@
--- MySQL dump 10.19  Distrib 10.3.34-MariaDB, for debian-linux-gnu (x86_64)
+-- MySQL dump 10.19  Distrib 10.3.38-MariaDB, for debian-linux-gnu (x86_64)
 --
 -- Host: db    Database: ask_dev
 -- ------------------------------------------------------
--- Server version	5.7.37
+-- Server version	5.7.41
 
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
 /*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
@@ -61,6 +61,30 @@ CREATE TABLE `audios` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `id` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `channel_broker_queue`
+--
+
+DROP TABLE IF EXISTS `channel_broker_queue`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `channel_broker_queue` (
+  `channel_id` bigint(20) unsigned NOT NULL,
+  `respondent_id` bigint(20) unsigned NOT NULL,
+  `queued_at` datetime NOT NULL,
+  `priority` tinyint(4) NOT NULL,
+  `size` int(11) NOT NULL,
+  `token` varchar(255) NOT NULL,
+  `not_before` datetime DEFAULT NULL,
+  `not_after` datetime DEFAULT NULL,
+  `reply` blob,
+  `last_contact` datetime DEFAULT NULL,
+  `contacts` int(11) DEFAULT NULL,
+  `channel_state` blob,
+  PRIMARY KEY (`channel_id`,`respondent_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -988,7 +1012,7 @@ CREATE TABLE `users` (
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2023-04-13  8:17:16
+-- Dump completed on 2023-08-28 11:00:34
 INSERT INTO `schema_migrations` (version) VALUES (20160812145257);
 INSERT INTO `schema_migrations` (version) VALUES (20160816183915);
 INSERT INTO `schema_migrations` (version) VALUES (20160830200454);
@@ -1204,4 +1228,6 @@ INSERT INTO `schema_migrations` (version) VALUES (20220131103226);
 INSERT INTO `schema_migrations` (version) VALUES (20230217143550);
 INSERT INTO `schema_migrations` (version) VALUES (20230317094712);
 INSERT INTO `schema_migrations` (version) VALUES (20230402091100);
+INSERT INTO `schema_migrations` (version) VALUES (20230405111657);
 INSERT INTO `schema_migrations` (version) VALUES (20230413101342);
+INSERT INTO `schema_migrations` (version) VALUES (20230821100203);
