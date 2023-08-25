@@ -33,13 +33,8 @@ defmodule AskWeb.ConnCase do
     end
   end
 
-  setup tags do
-    :ok = Ecto.Adapters.SQL.Sandbox.checkout(Ask.Repo)
-
-    unless tags[:async] do
-      Ecto.Adapters.SQL.Sandbox.mode(Ask.Repo, {:shared, self()})
-    end
-
+  setup do
+    on_exit(&Ask.DatabaseCleaner.delete/0)
     {:ok, conn: Phoenix.ConnTest.build_conn()}
   end
 end

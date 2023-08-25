@@ -12,12 +12,12 @@ config :logger, level: :warn
 
 # Configure your database
 config :ask, Ask.Repo,
-  adapter: Ecto.Adapters.MySQL,
+  adapter: Ecto.Adapters.MyXQL,
   username: "root",
   password: "",
   database: "ask_test",
   hostname: System.get_env("DATABASE_HOST") || "localhost",
-  pool: Ecto.Adapters.SQL.Sandbox
+  pool_size: 10
 
 config :ask, Ask.Runtime.SurveyBroker, batch_size: 10
 
