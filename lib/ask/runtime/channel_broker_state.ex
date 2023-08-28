@@ -141,8 +141,11 @@ defmodule Ask.Runtime.ChannelBrokerState do
   # Activates the next contact from the queue. There must be at least one
   # contact currently waiting in queue!
   def activate_next_in_queue(state) do
+    # add leeway to activate contacts to be scheduled soon:
+    not_before = SystemTime.time().now |> DateTime.add(60, :second)
+
     contact = Repo.one!(from q in Queue,
-      where: q.channel_id == ^state.channel_id and is_nil(q.last_contact) and (q.not_before <= ^SystemTime.time().now or is_nil(q.not_before)),
+      where: q.channel_id == ^state.channel_id and is_nil(q.last_contact) and (q.not_before <= ^not_before or is_nil(q.not_before)),
       order_by: [q.priority, q.queued_at],
       preload: [:respondent],
       limit: 1

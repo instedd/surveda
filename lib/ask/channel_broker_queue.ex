@@ -67,8 +67,11 @@ defmodule Ask.ChannelBrokerQueue do
   end
 
   def activable_contacts?(channel_id) do
+    # add leeway to activate contacts to be scheduled soon
+    not_before = Ask.SystemTime.time().now |> DateTime.add(60, :second)
+
     Repo.exists?(from q in Queue,
-      where: q.channel_id == ^channel_id and is_nil(q.last_contact) and (is_nil(q.not_before) or q.not_before <= ^Ask.SystemTime.time().now))
+      where: q.channel_id == ^channel_id and is_nil(q.last_contact) and (is_nil(q.not_before) or q.not_before <= ^not_before))
   end
 
   def count_active_contacts(channel_id) do

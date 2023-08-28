@@ -132,6 +132,12 @@ defmodule Ask.Runtime.ChannelBrokerStateTest do
       |> State.can_unqueue()
     end
 
+    test "returns true when activable contacts (not_before <= now + leeway)", %{state: state} do
+      assert state
+      |> State.queue_contact(new_contact(1, :queued, DateTime.utc_now() |> DateTime.add(50, :second)), 1)
+      |> State.can_unqueue()
+    end
+
     test "returns true when activable contacts (not_before is null)", %{state: state} do
       assert state
       |> State.queue_contact(new_contact(1, nil), 1)
@@ -228,13 +234,13 @@ defmodule Ask.Runtime.ChannelBrokerStateTest do
     end
 
     @tag :time_mock
-    test "skips respondent until not_before <= now", %{state: state} do
+    test "skips respondent until not_before <= now + leeway", %{state: state} do
       now = DateTime.utc_now()
       mock_time(now)
 
       state
-      |> State.queue_contact(new_contact(1, :queued, DateTime.add(now, 30, :second)), 1)
-      |> State.queue_contact(new_contact(2, :queued, DateTime.add(now, 20, :second)), 1)
+      |> State.queue_contact(new_contact(1, :queued, DateTime.add(now, 90, :second)), 1)
+      |> State.queue_contact(new_contact(2, :queued, DateTime.add(now, 80, :second)), 1)
       |> State.queue_contact(new_contact(3), 1)
 
       mock_time(DateTime.add(now, 15, :second))
