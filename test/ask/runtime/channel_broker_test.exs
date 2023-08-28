@@ -112,6 +112,7 @@ defmodule Ask.Runtime.ChannelBrokerTest do
         |> activate_respondent("ivr", Enum.at(respondents, 3), the_future, not_after)
         |> activate_respondent("ivr", Enum.at(respondents, 4), not_before, not_after)
 
+      # activated soon to be contacted respondents:
       assert [
         Enum.at(respondents, 0).id,
         Enum.at(respondents, 2).id,
@@ -121,10 +122,11 @@ defmodule Ask.Runtime.ChannelBrokerTest do
       # skip to the future
       time_passes(minutes: 5)
 
+      # trigger more enqueues (by pushing more contacts):
       state =
         state
-        |> activate_respondent("ivr", Enum.at(respondents, 1), the_future, not_after)
-        |> activate_respondent("ivr", Enum.at(respondents, 3), the_future, not_after)
+        |> activate_respondent("ivr", Enum.at(respondents, 5), not_after, not_after)
+        |> activate_respondent("ivr", Enum.at(respondents, 7), not_after, not_after)
 
       assert [
         Enum.at(respondents, 0).id,
