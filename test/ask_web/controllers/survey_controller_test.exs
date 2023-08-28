@@ -2884,6 +2884,8 @@ defmodule AskWeb.SurveyControllerTest do
 
       post(conn, project_survey_survey_path(conn, :stop, survey.project, survey))
 
+      # FIXME: flaky test: sometimes Repo.all will only return 1 row
+      Process.sleep(100)
       logs = Repo.all(ActivityLog)
 
       assert_survey_log(%{
