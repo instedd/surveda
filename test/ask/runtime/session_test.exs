@@ -112,10 +112,11 @@ defmodule Ask.Runtime.SessionTest do
     assert_receive [:setup, ^test_channel, respondent, ^token]
     assert session_respondent.id == respondent.id
 
+    respondent_id = respondent.id
     assert_receive [
       :ask,
       ^test_channel,
-      ^respondent,
+      %Respondent{id: ^respondent_id},
       ^token,
       ReplyHelper.simple("Contact", message),
       _channel_id
@@ -235,10 +236,11 @@ defmodule Ask.Runtime.SessionTest do
     assert_receive [:setup, ^test_channel, respondent, ^token]
     assert session_respondent.id == respondent.id
 
+    respondent_id = respondent.id
     assert_receive [
       :ask,
       ^test_channel,
-      ^respondent,
+      %Respondent{id: ^respondent_id},
       ^token,
       ReplyHelper.simple("Contact", message),
       _channel_id
@@ -361,7 +363,8 @@ defmodule Ask.Runtime.SessionTest do
     assert 120 = timeout
     assert token != nil
 
-    assert_receive [:setup, ^test_channel, ^respondent, ^token]
+    respondent_id = respondent.id
+    assert_receive [:setup, ^test_channel, %Respondent{id: ^respondent_id}, ^token]
     refute_receive _
   end
 
@@ -382,10 +385,11 @@ defmodule Ask.Runtime.SessionTest do
     assert_receive [:setup, ^test_channel, respondent_received, ^token]
     assert respondent.id == respondent_received.id
 
+    respondent_received_id = respondent_received.id
     assert_receive [
       :ask,
       ^test_channel,
-      ^respondent_received,
+      %Respondent{id: ^respondent_received_id},
       ^token,
       ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO"),
       _channel_id
@@ -582,10 +586,11 @@ defmodule Ask.Runtime.SessionTest do
     assert_receive [:setup, ^test_channel, respondent_received, ^token]
     assert respondent.id == respondent_received.id
 
+    respondent_received_id = respondent_received.id
     assert_receive [
       :ask,
       ^test_channel,
-      ^respondent_received,
+      %Respondent{id: ^respondent_received_id},
       ^token,
       ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO"),
       _channel_id
@@ -648,10 +653,11 @@ defmodule Ask.Runtime.SessionTest do
     assert_receive [:setup, ^test_channel, respondent_received, ^token]
     assert respondent_received.id == respondent.id
 
+    respondent_received_id = respondent_received.id
     assert_receive [
       :ask,
       ^test_channel,
-      ^respondent_received,
+      %Respondent{id: ^respondent_received_id},
       ^token,
       ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO"),
       _channel_id
@@ -716,10 +722,11 @@ defmodule Ask.Runtime.SessionTest do
     assert_receive [:setup, ^test_channel, respondent_received, ^token]
     assert respondent.id == respondent_received.id
 
+    respondent_received_id = respondent_received.id
     assert_receive [
       :ask,
       ^test_channel,
-      ^respondent_received,
+      %Respondent{id: ^respondent_received_id},
       ^token,
       ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO"),
       _channel_id
@@ -805,10 +812,11 @@ defmodule Ask.Runtime.SessionTest do
     assert_receive [:setup, ^test_channel, respondent_received, ^token]
     assert respondent.id == respondent_received.id
 
+    respondent_received_id = respondent_received.id
     assert_receive [
       :ask,
       ^test_channel,
-      ^respondent_received,
+      %Respondent{id: ^respondent_received_id},
       ^token,
       ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO"),
       _channel_id
@@ -839,10 +847,11 @@ defmodule Ask.Runtime.SessionTest do
     assert_receive [:setup, ^test_channel, respondent_received, ^token]
     assert respondent.id == respondent_received.id
 
+    respondent_received_id = respondent_received.id
     assert_receive [
       :ask,
       ^test_channel,
-      ^respondent_received,
+      %Respondent{id: ^respondent_received_id},
       ^token,
       ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO"),
       _channel_id
@@ -948,10 +957,11 @@ defmodule Ask.Runtime.SessionTest do
     assert_receive [:setup, ^test_channel, respondent_received, ^token]
     assert respondent.id == respondent_received.id
 
+    respondent_received_id = respondent_received.id
     assert_receive [
       :ask,
       ^test_channel,
-      ^respondent_received,
+      %Respondent{id: ^respondent_received_id},
       ^token,
       ReplyHelper.simple("Do you smoke?", "Do you smoke? Reply 1 for YES, 2 for NO"),
       _channel_id
@@ -1200,35 +1210,37 @@ defmodule Ask.Runtime.SessionTest do
   test "doesn't consume a retry if it has an expired message" do
     quiz = insert(:questionnaire, steps: @dummy_steps)
     respondent = insert(:respondent)
+    respondent_id = respondent.id
     test_channel = TestChannel.new(:expired)
     channel = insert(:channel, type: "ivr", settings: test_channel |> TestChannel.settings())
 
     assert {:ok, session = %Session{token: token, respondent: respondent}, _, 5} =
              Session.start(quiz, respondent, channel, "ivr", Schedule.always(), [5])
 
-    assert_receive [:setup, ^test_channel, ^respondent, ^token]
+    assert_receive [:setup, ^test_channel, %Respondent{id: ^respondent_id}, ^token]
 
     assert {:ok, %Session{token: token, respondent: respondent}, %Reply{}, 5} =
              Session.timeout(session)
 
-    assert_receive [:setup, ^test_channel, ^respondent, ^token]
+    assert_receive [:setup, ^test_channel, %Respondent{id: ^respondent_id}, ^token]
   end
 
   test "doesn't fail if it has an expired message" do
     quiz = insert(:questionnaire, steps: @dummy_steps)
     respondent = insert(:respondent)
+    respondent_id = respondent.id
     test_channel = TestChannel.new(:expired)
     channel = insert(:channel, settings: test_channel |> TestChannel.settings(), type: "ivr")
 
     assert {:ok, session = %Session{token: token, respondent: respondent}, _, 120} =
              Session.start(quiz, respondent, channel, "ivr", Schedule.always())
 
-    assert_receive [:setup, ^test_channel, ^respondent, ^token]
+    assert_receive [:setup, ^test_channel, %Respondent{id: ^respondent_id}, ^token]
 
     assert {:ok, %Session{token: token, respondent: respondent}, %Reply{}, 120} =
              Session.timeout(session)
 
-    assert_receive [:setup, ^test_channel, ^respondent, ^token]
+    assert_receive [:setup, ^test_channel, %Respondent{id: ^respondent_id}, ^token]
   end
 
   test "doesn't switch to fallback if it has an expired message", %{
@@ -1257,13 +1269,14 @@ defmodule Ask.Runtime.SessionTest do
         "ivr",
         fallback_retries
       )
+    respondent_id = respondent.id
 
-    assert_receive [:setup, ^test_channel, ^respondent, ^token]
+    assert_receive [:setup, ^test_channel, %Respondent{id: ^respondent_id}, ^token]
 
     assert {:ok, %Session{token: token, respondent: respondent}, %Reply{}, 120} =
              Session.timeout(session)
 
-    assert_receive [:setup, ^test_channel, ^respondent, ^token]
+    assert_receive [:setup, ^test_channel, %Respondent{id: ^respondent_id}, ^token]
   end
 
   test "uses retry configuration", %{quiz: quiz, respondent: respondent, channel: channel} do
