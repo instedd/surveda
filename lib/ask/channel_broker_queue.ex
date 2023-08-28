@@ -25,8 +25,18 @@ defmodule Ask.ChannelBrokerQueue do
     field :channel_state, Ask.Ecto.Type.ErlangTerm
   end
 
-  def create!(params) do
-    changeset(%Queue{}, params) |> Repo.insert!()
+  def upsert!(params) do
+    upsert_params =
+      params
+      |> Map.drop([:channel_id, :respondent_id])
+      |> Map.put_new(:last_contact, nil)
+      |> Map.put_new(:contacts, nil)
+      |> Map.put_new(:channel_state, nil)
+      |> Map.to_list()
+
+    %Queue{}
+    |> changeset(params)
+    |> Repo.insert!(on_conflict: [set: upsert_params])
   end
 
   def changeset(struct, params \\ %{}) do
