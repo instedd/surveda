@@ -342,7 +342,7 @@ defmodule Ask.Runtime.ChannelBrokerState do
       Repo.all(
         from q in Queue,
           select: {q.priority, count()},
-          where: is_nil(q.last_contact),
+          where: q.channel_id == ^state.channel_id and is_nil(q.last_contact),
           group_by: q.priority
       )
 

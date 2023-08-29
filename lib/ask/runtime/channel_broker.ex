@@ -139,6 +139,7 @@ defmodule Ask.Runtime.ChannelBroker do
     state =
       (Agent.recover_state(channel_id) || State.new(channel_id, channel_type, settings))
       |> Map.put(:runtime_channel, runtime_channel)
+      |> info()
 
     schedule_GC(state)
     {:ok, state, State.process_timeout(state)}
