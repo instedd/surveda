@@ -68,12 +68,15 @@ defmodule Ask.DatabaseCleaner do
     case state do
       %{tables: tables} ->
         {state, tables}
+
       _ ->
         {:ok, %{rows: tables}} = sql_query("SHOW tables")
+
         tables =
           tables
           |> List.flatten()
           |> Enum.reject(fn table -> table == "schema_migrations" end)
+
         {Map.put(state, :tables, tables), tables}
     end
   end
