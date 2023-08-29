@@ -70,19 +70,27 @@ defmodule Ask.Runtime.ChannelBrokerTest do
       not_after = DateTime.add(now, 60, :second)
       expired = DateTime.add(now, -5, :second)
 
-      state =
-        state
-        |> activate_respondent("ivr", Enum.at(respondents, 0), not_before, not_after)
-        |> activate_respondent("ivr", Enum.at(respondents, 1), not_before, expired)
-        |> activate_respondent("ivr", Enum.at(respondents, 2), not_before, expired)
-        |> activate_respondent("ivr", Enum.at(respondents, 3), not_before, not_after)
-        |> activate_respondent("ivr", Enum.at(respondents, 4), not_before, not_after)
+      with_mock Ask.Runtime.Survey, [contact_attempt_expired: fn _ -> :ok end] do
+        state =
+          state
+          |> activate_respondent("ivr", Enum.at(respondents, 0), not_before, not_after)
+          |> activate_respondent("ivr", Enum.at(respondents, 1), not_before, expired)
+          |> activate_respondent("ivr", Enum.at(respondents, 2), not_before, expired)
+          |> activate_respondent("ivr", Enum.at(respondents, 3), not_before, not_after)
+          |> activate_respondent("ivr", Enum.at(respondents, 4), not_before, not_after)
 
-      assert [
-        Enum.at(respondents, 0).id,
-        Enum.at(respondents, 3).id,
-        Enum.at(respondents, 4).id,
-      ] == Enum.map(state.active_contacts, fn {r_id, _} -> r_id end)
+        assert [
+          Enum.at(respondents, 0).id,
+          Enum.at(respondents, 3).id,
+          Enum.at(respondents, 4).id,
+        ] == Enum.map(state.active_contacts, fn {r_id, _} -> r_id end)
+
+        assert_not_called(Ask.Runtime.Survey.contact_attempt_expired(%{id: Enum.at(respondents, 0).id}))
+        assert_called_exactly(Ask.Runtime.Survey.contact_attempt_expired(%{id: Enum.at(respondents, 1).id}), 1)
+        assert_called_exactly(Ask.Runtime.Survey.contact_attempt_expired(%{id: Enum.at(respondents, 2).id}), 1)
+        assert_not_called(Ask.Runtime.Survey.contact_attempt_expired(%{id: Enum.at(respondents, 3).id}))
+        assert_not_called(Ask.Runtime.Survey.contact_attempt_expired(%{id: Enum.at(respondents, 4).id}))
+      end
     end
 
     @tag :time_mock
