@@ -426,6 +426,7 @@ defmodule Ask.Runtime.ChannelBroker do
       {respondent, token, not_before, not_after} ->
         cond do
           expired_call?(not_after) ->
+            Ask.Runtime.Survey.contact_attempt_expired(respondent)
             State.deactivate_contact(new_state, respondent.id)
 
           future_call?(not_before) ->
