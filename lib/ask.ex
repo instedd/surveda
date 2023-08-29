@@ -33,6 +33,7 @@ defmodule Ask do
             worker(Ask.DatabaseCleaner, [])
             | children
           ]
+
         !IEx.started?() ->
           [
             worker(Ask.OAuthTokenServer, []),
@@ -45,6 +46,7 @@ defmodule Ask do
             worker(Ask.Runtime.QuestionnaireSimulatorStore, [])
             | children
           ]
+
         true ->
           children
       end

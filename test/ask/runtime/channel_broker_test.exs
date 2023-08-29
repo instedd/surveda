@@ -80,10 +80,10 @@ defmodule Ask.Runtime.ChannelBrokerTest do
           |> activate_respondent("ivr", Enum.at(respondents, 4), not_before, not_after)
 
         assert [
-          Enum.at(respondents, 0).id,
-          Enum.at(respondents, 3).id,
-          Enum.at(respondents, 4).id,
-        ] == active_respondent_ids(state)
+               Enum.at(respondents, 0).id,
+               Enum.at(respondents, 3).id,
+               Enum.at(respondents, 4).id
+             ] == active_respondent_ids(state)
 
         assert_not_called(Ask.Runtime.Survey.contact_attempt_expired(%{id: Enum.at(respondents, 0).id}))
         assert_called_exactly(Ask.Runtime.Survey.contact_attempt_expired(%{id: Enum.at(respondents, 1).id}), 1)
@@ -114,10 +114,10 @@ defmodule Ask.Runtime.ChannelBrokerTest do
 
       # activated soon to be contacted respondents:
       assert [
-        Enum.at(respondents, 0).id,
-        Enum.at(respondents, 2).id,
-        Enum.at(respondents, 4).id,
-      ] == active_respondent_ids(state)
+               Enum.at(respondents, 0).id,
+               Enum.at(respondents, 2).id,
+               Enum.at(respondents, 4).id
+             ] == active_respondent_ids(state)
 
       # skip to the future
       time_passes(minutes: 5)
@@ -129,16 +129,21 @@ defmodule Ask.Runtime.ChannelBrokerTest do
         |> activate_respondent("ivr", Enum.at(respondents, 7), not_after, not_after)
 
       assert [
-        Enum.at(respondents, 0).id,
-        Enum.at(respondents, 1).id,
-        Enum.at(respondents, 2).id,
-        Enum.at(respondents, 3).id,
-        Enum.at(respondents, 4).id,
-      ] == active_respondent_ids(state)
+               Enum.at(respondents, 0).id,
+               Enum.at(respondents, 1).id,
+               Enum.at(respondents, 2).id,
+               Enum.at(respondents, 3).id,
+               Enum.at(respondents, 4).id
+             ] == active_respondent_ids(state)
     end
 
     defp activate_respondent(state, "ivr", respondent, not_before, not_after) do
-      {_, state, _} = ChannelBroker.handle_cast({:setup, "ivr", respondent, "token", not_before, not_after}, state)
+      {_, state, _} =
+        ChannelBroker.handle_cast(
+          {:setup, "ivr", respondent, "token", not_before, not_after},
+          state
+        )
+
       state
     end
   end
@@ -383,7 +388,10 @@ defmodule Ask.Runtime.ChannelBrokerTest do
       |> Enum.reduce(state, fn respondent, state ->
         state
         |> Ask.Runtime.ChannelBrokerState.increment_respondents_contacts(respondent.id, 1)
-        |> Ask.Runtime.ChannelBrokerState.put_channel_state(respondent.id, channel_state(channel.type, respondent))
+        |> Ask.Runtime.ChannelBrokerState.put_channel_state(
+          respondent.id,
+          channel_state(channel.type, respondent)
+        )
       end)
 
     %{state: state, respondents: respondents, channel: channel}

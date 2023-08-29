@@ -13,7 +13,8 @@ defmodule Ask.ChannelBrokerQueue do
     # queued (pending):
     field :queued_at, :utc_datetime
     field :priority, Ecto.Enum, values: [low: 2, normal: 1, high: 0]
-    field :size, :integer # number of outgoing messages (ivr=1, sms=1+)
+    # number of outgoing messages (ivr=1, sms=1+)
+    field :size, :integer
     field :token, :string
     field :not_before, :utc_datetime
     field :not_after, :utc_datetime
@@ -21,7 +22,8 @@ defmodule Ask.ChannelBrokerQueue do
 
     # sent (active):
     field :last_contact, :utc_datetime
-    field :contacts, :integer # number of active messages left (pending confirmation)
+    # number of active messages left (pending confirmation)
+    field :contacts, :integer
     field :channel_state, Ask.Ecto.Type.ErlangTerm
   end
 
@@ -63,6 +65,7 @@ defmodule Ask.ChannelBrokerQueue do
       :size,
       :token
     ])
+
     # |> assoc_constraint(:channel, :respondent)
   end
 
@@ -70,23 +73,33 @@ defmodule Ask.ChannelBrokerQueue do
     # add leeway to activate contacts to be scheduled soon
     not_before = Ask.SystemTime.time().now |> DateTime.add(60, :second)
 
-    Repo.exists?(from q in Queue,
-      where: q.channel_id == ^channel_id and is_nil(q.last_contact) and (is_nil(q.not_before) or q.not_before <= ^not_before))
+    Repo.exists?(
+      from q in Queue,
+        where:
+          q.channel_id == ^channel_id and is_nil(q.last_contact) and
+            (is_nil(q.not_before) or q.not_before <= ^not_before)
+    )
   end
 
   def count_active_contacts(channel_id) do
-    Repo.one(from q in Queue,
-      select: type(coalesce(sum(coalesce(q.contacts, 0)), 0), :integer),
-      where: q.channel_id == ^channel_id and not(is_nil(q.last_contact)))
+    Repo.one(
+      from q in Queue,
+        select: type(coalesce(sum(coalesce(q.contacts, 0)), 0), :integer),
+        where: q.channel_id == ^channel_id and not is_nil(q.last_contact)
+    )
   end
 
   def queued_contacts(channel_id) do
-    Repo.all(from q in Ask.ChannelBrokerQueue,
-      where: q.channel_id == ^channel_id and is_nil(q.last_contact))
+    Repo.all(
+      from q in Ask.ChannelBrokerQueue,
+        where: q.channel_id == ^channel_id and is_nil(q.last_contact)
+    )
   end
 
   def active_contacts(channel_id) do
-    Repo.all(from q in Ask.ChannelBrokerQueue,
-      where: q.channel_id == ^channel_id and not(is_nil(q.last_contact)))
+    Repo.all(
+      from q in Ask.ChannelBrokerQueue,
+        where: q.channel_id == ^channel_id and not is_nil(q.last_contact)
+    )
   end
 end

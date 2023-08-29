@@ -113,6 +113,7 @@ defmodule Ask.Runtime.SessionTest do
     assert session_respondent.id == respondent.id
 
     respondent_id = respondent.id
+
     assert_receive [
       :ask,
       ^test_channel,
@@ -237,6 +238,7 @@ defmodule Ask.Runtime.SessionTest do
     assert session_respondent.id == respondent.id
 
     respondent_id = respondent.id
+
     assert_receive [
       :ask,
       ^test_channel,
@@ -386,6 +388,7 @@ defmodule Ask.Runtime.SessionTest do
     assert respondent.id == respondent_received.id
 
     respondent_received_id = respondent_received.id
+
     assert_receive [
       :ask,
       ^test_channel,
@@ -587,6 +590,7 @@ defmodule Ask.Runtime.SessionTest do
     assert respondent.id == respondent_received.id
 
     respondent_received_id = respondent_received.id
+
     assert_receive [
       :ask,
       ^test_channel,
@@ -654,6 +658,7 @@ defmodule Ask.Runtime.SessionTest do
     assert respondent_received.id == respondent.id
 
     respondent_received_id = respondent_received.id
+
     assert_receive [
       :ask,
       ^test_channel,
@@ -723,6 +728,7 @@ defmodule Ask.Runtime.SessionTest do
     assert respondent.id == respondent_received.id
 
     respondent_received_id = respondent_received.id
+
     assert_receive [
       :ask,
       ^test_channel,
@@ -813,6 +819,7 @@ defmodule Ask.Runtime.SessionTest do
     assert respondent.id == respondent_received.id
 
     respondent_received_id = respondent_received.id
+
     assert_receive [
       :ask,
       ^test_channel,
@@ -848,6 +855,7 @@ defmodule Ask.Runtime.SessionTest do
     assert respondent.id == respondent_received.id
 
     respondent_received_id = respondent_received.id
+
     assert_receive [
       :ask,
       ^test_channel,
@@ -958,6 +966,7 @@ defmodule Ask.Runtime.SessionTest do
     assert respondent.id == respondent_received.id
 
     respondent_received_id = respondent_received.id
+
     assert_receive [
       :ask,
       ^test_channel,
@@ -1269,6 +1278,7 @@ defmodule Ask.Runtime.SessionTest do
         "ivr",
         fallback_retries
       )
+
     respondent_id = respondent.id
 
     assert_receive [:setup, ^test_channel, %Respondent{id: ^respondent_id}, ^token]

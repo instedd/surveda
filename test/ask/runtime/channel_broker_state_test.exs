@@ -13,40 +13,42 @@ defmodule Ask.Runtime.ChannelBrokerStateTest do
   describe ".inactive?" do
     test "returns true when empty", %{state: state} do
       assert state
-      |> State.inactive?()
+             |> State.inactive?()
     end
 
     test "returns true if any pending contact", %{state: state} do
       refute state
-      |> State.queue_contact(new_contact(2), 1)
-      |> State.inactive?()
+             |> State.queue_contact(new_contact(2), 1)
+             |> State.inactive?()
     end
 
     test "returns true if any active contact", %{state: state} do
       refute state
-      |> State.queue_contact(new_contact(2), 1)
-      |> State.activate_next_in_queue() |> elem(0)
-      |> State.inactive?()
+             |> State.queue_contact(new_contact(2), 1)
+             |> State.activate_next_in_queue()
+             |> elem(0)
+             |> State.inactive?()
     end
   end
 
   describe ".queued_or_active?" do
     test "returns true if respondent in queue", %{state: state} do
       assert state
-      |> State.queue_contact(new_contact(2), 1)
-      |> State.queued_or_active?(2)
+             |> State.queue_contact(new_contact(2), 1)
+             |> State.queued_or_active?(2)
     end
 
     test "returns true if respondent is active", %{state: state} do
       assert state
-      |> State.queue_contact(new_contact(2), 1)
-      |> State.activate_next_in_queue() |> elem(0)
-      |> State.queued_or_active?(2)
+             |> State.queue_contact(new_contact(2), 1)
+             |> State.activate_next_in_queue()
+             |> elem(0)
+             |> State.queued_or_active?(2)
     end
 
     test "returns false otherwise", %{state: state} do
       refute state
-      |> State.queued_or_active?(2)
+             |> State.queued_or_active?(2)
     end
   end
 
@@ -79,9 +81,10 @@ defmodule Ask.Runtime.ChannelBrokerStateTest do
       |> State.queue_contact(new_contact(2, :started), 1)
 
       assert [
-        %{respondent_id: 1, priority: :normal},
-        %{respondent_id: 2, priority: :high},
-      ] = Queue.queued_contacts(0)
+               %{respondent_id: 1, priority: :normal},
+               %{respondent_id: 2, priority: :high}
+             ] = Queue.queued_contacts(0)
+
       assert [] = Queue.active_contacts(0)
     end
   end
@@ -90,16 +93,20 @@ defmodule Ask.Runtime.ChannelBrokerStateTest do
     channel_state =
       state
       |> State.queue_contact(new_contact(1), 1)
-      |> State.activate_next_in_queue() |> elem(0)
+      |> State.activate_next_in_queue()
+      |> elem(0)
       |> State.put_channel_state(1, %{"verboice_id" => 123})
       |> State.get_channel_state(1)
+
     assert channel_state == %{"verboice_id" => 123}
 
     channel_state =
       state
       |> State.queue_contact(new_contact(2), 1)
-      |> State.activate_next_in_queue() |> elem(0)
+      |> State.activate_next_in_queue()
+      |> elem(0)
       |> State.get_channel_state(2)
+
     assert channel_state == %{}
   end
 
@@ -107,7 +114,8 @@ defmodule Ask.Runtime.ChannelBrokerStateTest do
     test "", %{state: state} do
       state
       |> State.queue_contact(new_contact(1), 1)
-      |> State.activate_next_in_queue() |> elem(0)
+      |> State.activate_next_in_queue()
+      |> elem(0)
       |> State.touch_last_contact(1)
 
       assert [%{respondent_id: 1}] = Queue.active_contacts(0)
@@ -117,40 +125,55 @@ defmodule Ask.Runtime.ChannelBrokerStateTest do
   describe ".can_unqueue" do
     test "returns false when no pending contacts", %{state: state} do
       refute state
-      |> State.can_unqueue()
+             |> State.can_unqueue()
     end
 
     test "returns false when non activable contacts", %{state: state} do
       refute state
-      |> State.queue_contact(new_contact(1, :queued, DateTime.utc_now() |> DateTime.add(7200, :second)), 1)
-      |> State.can_unqueue()
+             |> State.queue_contact(
+               new_contact(1, :queued, DateTime.utc_now() |> DateTime.add(7200, :second)),
+               1
+             )
+             |> State.can_unqueue()
     end
 
     test "returns true when activable contacts (not_before <= now)", %{state: state} do
       assert state
-      |> State.queue_contact(new_contact(1, :queued, DateTime.utc_now() |> DateTime.add(-1, :second)), 1)
-      |> State.can_unqueue()
+             |> State.queue_contact(
+               new_contact(1, :queued, DateTime.utc_now() |> DateTime.add(-1, :second)),
+               1
+             )
+             |> State.can_unqueue()
     end
 
     test "returns true when activable contacts (not_before <= now + leeway)", %{state: state} do
       assert state
-      |> State.queue_contact(new_contact(1, :queued, DateTime.utc_now() |> DateTime.add(50, :second)), 1)
-      |> State.can_unqueue()
+             |> State.queue_contact(
+               new_contact(1, :queued, DateTime.utc_now() |> DateTime.add(50, :second)),
+               1
+             )
+             |> State.can_unqueue()
     end
 
     test "returns true when activable contacts (not_before is null)", %{state: state} do
       assert state
-      |> State.queue_contact(new_contact(1, nil), 1)
-      |> State.can_unqueue()
+             |> State.queue_contact(new_contact(1, nil), 1)
+             |> State.can_unqueue()
     end
 
     test "returns false when capacity is reached", %{state: state} do
       refute state
-      |> State.queue_contact(new_contact(1), 1) |> State.activate_next_in_queue() |> elem(0)
-      |> State.queue_contact(new_contact(2), 2) |> State.activate_next_in_queue() |> elem(0)
-      |> State.queue_contact(new_contact(3), 3) |> State.activate_next_in_queue() |> elem(0)
-      |> State.queue_contact(new_contact(4), 1)
-      |> State.can_unqueue()
+             |> State.queue_contact(new_contact(1), 1)
+             |> State.activate_next_in_queue()
+             |> elem(0)
+             |> State.queue_contact(new_contact(2), 2)
+             |> State.activate_next_in_queue()
+             |> elem(0)
+             |> State.queue_contact(new_contact(3), 3)
+             |> State.activate_next_in_queue()
+             |> elem(0)
+             |> State.queue_contact(new_contact(4), 1)
+             |> State.can_unqueue()
     end
   end
 
@@ -164,11 +187,13 @@ defmodule Ask.Runtime.ChannelBrokerStateTest do
       |> State.queue_contact(new_contact(1), 2)
       |> State.activate_next_in_queue()
 
-      assert [%{
-        respondent_id: 1,
-        contacts: 2,
-        last_contact: now
-      }] = Queue.active_contacts(0)
+      assert [
+               %{
+                 respondent_id: 1,
+                 contacts: 2,
+                 last_contact: now
+               }
+             ] = Queue.active_contacts(0)
     end
 
     test "returns unqueued ivr contact" do
@@ -217,19 +242,28 @@ defmodule Ask.Runtime.ChannelBrokerStateTest do
 
       # 1. high priority
       {state, _} = State.activate_next_in_queue(state)
-      assert [2] = Queue.active_contacts(0) |> Enum.map(fn c -> c.respondent_id end) |> Enum.sort()
+
+      assert [2] =
+               Queue.active_contacts(0) |> Enum.map(fn c -> c.respondent_id end) |> Enum.sort()
 
       # 2. normal priority queued 1st
       {state, _} = State.activate_next_in_queue(state)
-      assert [1, 2] = Queue.active_contacts(0) |> Enum.map(fn c -> c.respondent_id end) |> Enum.sort()
+
+      assert [1, 2] =
+               Queue.active_contacts(0) |> Enum.map(fn c -> c.respondent_id end) |> Enum.sort()
 
       # 3. normal priority queued 2nd
       {state, _} = State.activate_next_in_queue(state)
-      assert [1, 2, 4] = Queue.active_contacts(0) |> Enum.map(fn c -> c.respondent_id end) |> Enum.sort()
+
+      assert [1, 2, 4] =
+               Queue.active_contacts(0) |> Enum.map(fn c -> c.respondent_id end) |> Enum.sort()
 
       # 4. low priority queued 1st
       {_, _} = State.activate_next_in_queue(state)
-      assert [1, 2, 3, 4] = Queue.active_contacts(0) |> Enum.map(fn c -> c.respondent_id end) |> Enum.sort()
+
+      assert [1, 2, 3, 4] =
+               Queue.active_contacts(0) |> Enum.map(fn c -> c.respondent_id end) |> Enum.sort()
+
       assert [%{respondent_id: 5}] = Queue.queued_contacts(0)
     end
 
@@ -245,15 +279,21 @@ defmodule Ask.Runtime.ChannelBrokerStateTest do
 
       mock_time(DateTime.add(now, 15, :second))
       {state, _} = State.activate_next_in_queue(state)
-      assert [3] = Queue.active_contacts(0) |> Enum.map(fn c -> c.respondent_id end) |> Enum.sort()
+
+      assert [3] =
+               Queue.active_contacts(0) |> Enum.map(fn c -> c.respondent_id end) |> Enum.sort()
 
       mock_time(DateTime.add(now, 25, :second))
       {state, _} = State.activate_next_in_queue(state)
-      assert [2, 3] = Queue.active_contacts(0) |> Enum.map(fn c -> c.respondent_id end) |> Enum.sort()
+
+      assert [2, 3] =
+               Queue.active_contacts(0) |> Enum.map(fn c -> c.respondent_id end) |> Enum.sort()
 
       mock_time(DateTime.add(now, 35, :second))
       {_, _} = State.activate_next_in_queue(state)
-      assert [1, 2, 3] = Queue.active_contacts(0) |> Enum.map(fn c -> c.respondent_id end) |> Enum.sort()
+
+      assert [1, 2, 3] =
+               Queue.active_contacts(0) |> Enum.map(fn c -> c.respondent_id end) |> Enum.sort()
     end
   end
 
@@ -270,7 +310,8 @@ defmodule Ask.Runtime.ChannelBrokerStateTest do
     test "removes from the active queue", %{state: state} do
       state
       |> State.queue_contact(new_contact(2), 5)
-      |> State.activate_next_in_queue() |> elem(0)
+      |> State.activate_next_in_queue()
+      |> elem(0)
       |> State.deactivate_contact(2)
 
       assert [] = Queue.queued_contacts(0)
@@ -291,7 +332,8 @@ defmodule Ask.Runtime.ChannelBrokerStateTest do
     test "increments the number of contacts for a respondent", %{state: state} do
       state
       |> State.queue_contact(new_contact(2), 5)
-      |> State.activate_next_in_queue() |> elem(0)
+      |> State.activate_next_in_queue()
+      |> elem(0)
       |> State.increment_respondents_contacts(2, 3)
 
       assert [] = Queue.queued_contacts(0)
@@ -310,7 +352,8 @@ defmodule Ask.Runtime.ChannelBrokerStateTest do
     test "silently fails for unknown respondent", %{state: state} do
       state
       |> State.queue_contact(new_contact(2), 5)
-      |> State.activate_next_in_queue() |> elem(0)
+      |> State.activate_next_in_queue()
+      |> elem(0)
       |> State.increment_respondents_contacts(6, 1)
 
       assert [] = Queue.queued_contacts(0)
@@ -322,7 +365,8 @@ defmodule Ask.Runtime.ChannelBrokerStateTest do
     test "decrements the number of contacts for a respondent", %{state: state} do
       state
       |> State.queue_contact(new_contact(2), 5)
-      |> State.activate_next_in_queue() |> elem(0)
+      |> State.activate_next_in_queue()
+      |> elem(0)
       |> State.decrement_respondents_contacts(2, 3)
 
       assert [] = Queue.queued_contacts(0)
@@ -333,8 +377,10 @@ defmodule Ask.Runtime.ChannelBrokerStateTest do
       state
       |> State.queue_contact(new_contact(2), 5)
       |> State.queue_contact(new_contact(4), 3)
-      |> State.activate_next_in_queue() |> elem(0)
-      |> State.activate_next_in_queue() |> elem(0)
+      |> State.activate_next_in_queue()
+      |> elem(0)
+      |> State.activate_next_in_queue()
+      |> elem(0)
       |> State.decrement_respondents_contacts(2, 5)
       |> State.decrement_respondents_contacts(4, 7)
 
@@ -345,7 +391,8 @@ defmodule Ask.Runtime.ChannelBrokerStateTest do
     test "silently fails for unknown respondent", %{state: state} do
       state
       |> State.queue_contact(new_contact(2), 5)
-      |> State.activate_next_in_queue() |> elem(0)
+      |> State.activate_next_in_queue()
+      |> elem(0)
       |> State.decrement_respondents_contacts(6, 1)
 
       assert [] = Queue.queued_contacts(0)
@@ -369,13 +416,16 @@ defmodule Ask.Runtime.ChannelBrokerStateTest do
 
       State.reenqueue_contact(new_state, 2)
 
-      assert [%{
-        respondent_id: 2,
-        contacts: nil,
-        last_contact: nil,
-        channel_state: nil,
-        queued_at: later
-      }] = Queue.queued_contacts(0)
+      assert [
+               %{
+                 respondent_id: 2,
+                 contacts: nil,
+                 last_contact: nil,
+                 channel_state: nil,
+                 queued_at: later
+               }
+             ] = Queue.queued_contacts(0)
+
       assert [] = Queue.active_contacts(0)
     end
   end

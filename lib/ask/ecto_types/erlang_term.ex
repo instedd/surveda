@@ -18,4 +18,3 @@ defmodule Ask.Ecto.Type.ErlangTerm do
     {:ok, :erlang.term_to_binary(term)}
   end
 end
-
