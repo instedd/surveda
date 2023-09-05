@@ -16,13 +16,13 @@ defmodule Ask.Runtime.ChannelBrokerStateTest do
              |> State.inactive?()
     end
 
-    test "returns true if any pending contact", %{state: state} do
+    test "returns false if any pending contact", %{state: state} do
       refute state
              |> State.queue_contact(new_contact(2), 1)
              |> State.inactive?()
     end
 
-    test "returns true if any active contact", %{state: state} do
+    test "returns false if any active contact", %{state: state} do
       refute state
              |> State.queue_contact(new_contact(2), 1)
              |> State.activate_next_in_queue()
@@ -46,7 +46,7 @@ defmodule Ask.Runtime.ChannelBrokerStateTest do
              |> State.queued_or_active?(2)
     end
 
-    test "returns false otherwise", %{state: state} do
+    test "returns false when empty", %{state: state} do
       refute state
              |> State.queued_or_active?(2)
     end
