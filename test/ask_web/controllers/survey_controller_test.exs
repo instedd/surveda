@@ -345,6 +345,9 @@ defmodule AskWeb.SurveyControllerTest do
 
       ChannelStatusServer.poll(pid)
 
+      # FIXME: flaky test: need time for async task to update the channel status server state
+      Process.sleep(100)
+
       conn = get(conn, project_survey_path(conn, :index, project.id))
 
       [survey_1, survey_2, survey_3] = json_response(conn, 200)["data"]
@@ -807,6 +810,9 @@ defmodule AskWeb.SurveyControllerTest do
       )
 
       ChannelStatusServer.poll(pid)
+
+      # FIXME: flaky test: need time for async task to update the channel status server state
+      Process.sleep(100)
 
       conn = get(conn, project_survey_path(conn, :show, project, survey))
 
@@ -2884,6 +2890,8 @@ defmodule AskWeb.SurveyControllerTest do
 
       post(conn, project_survey_survey_path(conn, :stop, survey.project, survey))
 
+      # FIXME: flaky test: sometimes Repo.all will only return 1 row
+      Process.sleep(100)
       logs = Repo.all(ActivityLog)
 
       assert_survey_log(%{

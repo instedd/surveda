@@ -32,7 +32,7 @@ config :phoenix, :stacktrace_depth, 20
 
 # Configure your database
 config :ask, Ask.Repo,
-  adapter: Ecto.Adapters.MySQL,
+  adapter: Ecto.Adapters.MyXQL,
   username: "root",
   password: "",
   database: "ask_dev",

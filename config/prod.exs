@@ -65,7 +65,7 @@ config :ask, AskWeb.Endpoint, secret_key_base: System.get_env("SECRET_KEY_BASE")
 
 # Configure your database
 config :ask, Ask.Repo,
-  adapter: Ecto.Adapters.MySQL,
+  adapter: Ecto.Adapters.MyXQL,
   username: System.get_env("DATABASE_USER") || "root",
   password: System.get_env("DATABASE_PASS") || "",
   database: System.get_env("DATABASE_NAME") || "ask",

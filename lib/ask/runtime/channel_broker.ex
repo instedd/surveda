@@ -3,7 +3,7 @@ defmodule Ask.Runtime.ChannelBroker do
   alias Ask.Runtime.ChannelBrokerSupervisor
   alias Ask.Runtime.ChannelBrokerAgent, as: Agent
   alias Ask.Runtime.ChannelBrokerState, as: State
-  alias Ask.{Channel, Logger, PQueue}
+  alias Ask.{Channel, Logger}
   import Ecto.Query
   alias Ask.Repo
   use GenServer
@@ -137,10 +137,11 @@ defmodule Ask.Runtime.ChannelBroker do
     info("init", channel_id: channel_id, channel_type: channel_type, settings: settings)
 
     state =
-      (Agent.recover_state(channel_id) || State.new(channel_id, settings))
+      (Agent.recover_state(channel_id) || State.new(channel_id, channel_type, settings))
       |> Map.put(:runtime_channel, runtime_channel)
+      |> info()
 
-    schedule_GC(channel_type, state)
+    schedule_GC(state)
     {:ok, state, State.process_timeout(state)}
   end
 
@@ -163,7 +164,6 @@ defmodule Ask.Runtime.ChannelBroker do
       |> State.queue_contact(contact, size)
       |> try_activate_next_queued_contact()
       |> Agent.save_state()
-      |> debug()
 
     {:noreply, new_state, State.process_timeout(new_state)}
   end
@@ -187,7 +187,6 @@ defmodule Ask.Runtime.ChannelBroker do
       |> State.queue_contact(contact, 1)
       |> try_activate_next_queued_contact()
       |> Agent.save_state()
-      |> debug()
 
     {:noreply, new_state, State.process_timeout(new_state)}
   end
@@ -213,9 +212,7 @@ defmodule Ask.Runtime.ChannelBroker do
       |> refresh_runtime_channel()
       |> do_cancel_message(channel_state)
       |> State.deactivate_contact(respondent_id)
-      |> State.remove_from_queue(respondent_id)
       |> Agent.save_state()
-      |> debug()
 
     {:noreply, new_state, State.process_timeout(new_state)}
   end
@@ -239,7 +236,6 @@ defmodule Ask.Runtime.ChannelBroker do
         |> State.touch_last_contact(respondent.id)
       end
       |> Agent.save_state()
-      |> debug()
 
     {:noreply, new_state, State.process_timeout(new_state)}
   end
@@ -258,7 +254,6 @@ defmodule Ask.Runtime.ChannelBroker do
       |> State.decrement_respondents_contacts(respondent.id, 1)
       |> try_activate_next_queued_contact()
       |> Agent.save_state()
-      |> debug()
 
     {:noreply, new_state, State.process_timeout(new_state)}
   end
@@ -271,7 +266,6 @@ defmodule Ask.Runtime.ChannelBroker do
       state
       |> State.increment_respondents_contacts(respondent_id, size)
       |> Agent.save_state()
-      |> debug()
 
     {:noreply, new_state, State.process_timeout(new_state)}
   end
@@ -279,7 +273,7 @@ defmodule Ask.Runtime.ChannelBroker do
   @impl true
   def handle_cast({:on_channel_settings_change, settings}, state) do
     debug("handle_cast[on_channel_settings_change]", settings: settings)
-    new_state = State.put_capacity(state, Map.get(settings, "capacity")) |> debug()
+    new_state = State.put_capacity(state, Map.get(settings, "capacity"))
     {:noreply, new_state, State.process_timeout(new_state)}
   end
 
@@ -315,7 +309,7 @@ defmodule Ask.Runtime.ChannelBroker do
         respondent_id: respondent_id
       )
 
-      reply = State.is_active(state, respondent_id) || State.is_queued(state, respondent_id)
+      reply = State.queued_or_active?(state, respondent_id)
       {:reply, reply, state, State.process_timeout(state)}
     end
   end
@@ -355,19 +349,19 @@ defmodule Ask.Runtime.ChannelBroker do
     ChannelBrokerSupervisor.terminate_child(channel_id)
   end
 
-  def handle_info({:collect_garbage, channel_type}, state) do
-    info("handle_info[collect_garbage]", channel_type: channel_type, config: state.config)
+  def handle_info({:collect_garbage}, state) do
+    info("handle_info[collect_garbage]", channel_type: state.channel_type, config: state.config)
 
-    active_respondents =
-      from(r in "respondents",
-        where: r.id in ^Map.keys(state.active_contacts) and r.state == "active",
-        select: r.id
+    active_respondent_ids =
+      Repo.all(
+        from r in "respondents",
+          select: r.id,
+          where: r.id in ^State.active_respondent_ids(state) and r.state == "active"
       )
-      |> Repo.all()
 
     new_state =
       state
-      |> State.clean_inactive_respondents(active_respondents)
+      |> State.clean_inactive_respondents(active_respondent_ids)
       |> refresh_runtime_channel()
       |> State.clean_outdated_respondents()
       |> activate_contacts()
@@ -375,7 +369,7 @@ defmodule Ask.Runtime.ChannelBroker do
       |> info()
 
     # schedule next run
-    schedule_GC(channel_type, state)
+    schedule_GC(state)
 
     {:noreply, new_state, State.process_timeout(new_state)}
   end
@@ -430,9 +424,7 @@ defmodule Ask.Runtime.ChannelBroker do
             State.deactivate_contact(new_state, respondent.id)
 
           future_call?(not_before) ->
-            new_state
-            |> State.deactivate_contact(respondent.id)
-            |> State.queue_contact({respondent, token, not_before, not_after}, 1, :low)
+            State.reenqueue_contact(new_state, respondent.id, :low)
 
           true ->
             ivr_call(new_state, respondent, token, not_before, not_after)
@@ -467,10 +459,7 @@ defmodule Ask.Runtime.ChannelBroker do
 
       {:error, reason} ->
         Logger.warn("ChannelBroker: IVR call to Verboice failed with #{inspect(reason)}")
-
-        state
-        |> State.deactivate_contact(respondent.id)
-        |> State.queue_contact({respondent, token, not_before, not_after}, 1)
+        State.reenqueue_contact(state, respondent.id)
     end
   end
 
@@ -490,12 +479,12 @@ defmodule Ask.Runtime.ChannelBroker do
 
   # Don't schedule automatic GC runs in tests.
   if Mix.env() == :test do
-    defp schedule_GC(_, _), do: nil
+    defp schedule_GC(_), do: nil
   else
-    defp schedule_GC(channel_type, state) do
+    defp schedule_GC(state) do
       interval = State.gc_interval(state)
-      debug("schedule_GC", channel_type: channel_type, interval: interval)
-      Process.send_after(self(), {:collect_garbage, channel_type}, interval)
+      debug("schedule_GC", channel_type: state.channel_type, interval: interval)
+      Process.send_after(self(), {:collect_garbage}, interval)
     end
   end
 
@@ -516,41 +505,20 @@ defmodule Ask.Runtime.ChannelBroker do
 
   # Log helpers
 
-  defp info(name, options) do
-    Logger.info(
-      "ChannelBroker.#{name}:#{Enum.map(options, fn {k, v} -> " #{k}=#{inspect(v)}" end)}"
-    )
-  end
-
   defp debug(name, options) do
     Logger.debug(
       "ChannelBroker.#{name}:#{Enum.map(options, fn {k, v} -> " #{k}=#{inspect(v)}" end)}"
     )
   end
 
-  defp debug(%State{} = state) do
-    debug("State",
-      channel: state.channel_id,
-      active: map_size(state.active_contacts),
-      queued: PQueue.len(state.contacts_queue),
-      queued_high: PQueue.len(state.contacts_queue, :high),
-      queued_normal: PQueue.len(state.contacts_queue, :normal),
-      queued_low: PQueue.len(state.contacts_queue, :low)
+  defp info(name, options) do
+    Logger.info(
+      "ChannelBroker.#{name}:#{Enum.map(options, fn {k, v} -> " #{k}=#{inspect(v)}" end)}"
     )
-
-    state
   end
 
   defp info(%State{} = state) do
-    info("State",
-      channel: state.channel_id,
-      active: map_size(state.active_contacts),
-      queued: PQueue.len(state.contacts_queue),
-      queued_high: PQueue.len(state.contacts_queue, :high),
-      queued_normal: PQueue.len(state.contacts_queue, :normal),
-      queued_low: PQueue.len(state.contacts_queue, :low)
-    )
-
+    info("State", State.statistics(state))
     state
   end
 end

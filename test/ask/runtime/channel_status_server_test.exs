@@ -115,6 +115,10 @@ defmodule Ask.Runtime.ChannelStatusServerTest do
     setup_surveys_with_channels([survey], [channel])
     ChannelStatusServer.poll(pid)
     assert_receive [:email, ^email]
+
+    # FIXME: flaky test: need time between polls for async task to update the channel status server state
+    Process.sleep(100)
+
     ChannelStatusServer.poll(pid)
     refute_receive [:email, ^email]
   end
@@ -133,6 +137,10 @@ defmodule Ask.Runtime.ChannelStatusServerTest do
     setup_surveys_with_channels([survey], [channel])
     ChannelStatusServer.poll(pid)
     assert_receive [:email, ^email]
+
+    # FIXME: flaky test: need time between polls for async task to update the channel status server state
+    Process.sleep(100)
+
     ChannelStatusServer.poll(pid)
     refute_receive [:email, ^email]
   end

@@ -80,10 +80,10 @@ defmodule Ask.Runtime.ChannelBrokerTest do
           |> activate_respondent("ivr", Enum.at(respondents, 4), not_before, not_after)
 
         assert [
-          Enum.at(respondents, 0).id,
-          Enum.at(respondents, 3).id,
-          Enum.at(respondents, 4).id,
-        ] == Enum.map(state.active_contacts, fn {r_id, _} -> r_id end)
+               Enum.at(respondents, 0).id,
+               Enum.at(respondents, 3).id,
+               Enum.at(respondents, 4).id
+             ] == active_respondent_ids(state)
 
         assert_not_called(Ask.Runtime.Survey.contact_attempt_expired(%{id: Enum.at(respondents, 0).id}))
         assert_called_exactly(Ask.Runtime.Survey.contact_attempt_expired(%{id: Enum.at(respondents, 1).id}), 1)
@@ -112,31 +112,38 @@ defmodule Ask.Runtime.ChannelBrokerTest do
         |> activate_respondent("ivr", Enum.at(respondents, 3), the_future, not_after)
         |> activate_respondent("ivr", Enum.at(respondents, 4), not_before, not_after)
 
+      # activated soon to be contacted respondents:
       assert [
-        Enum.at(respondents, 0).id,
-        Enum.at(respondents, 2).id,
-        Enum.at(respondents, 4).id,
-      ] == Enum.map(state.active_contacts, fn {r_id, _} -> r_id end)
+               Enum.at(respondents, 0).id,
+               Enum.at(respondents, 2).id,
+               Enum.at(respondents, 4).id
+             ] == active_respondent_ids(state)
 
       # skip to the future
       time_passes(minutes: 5)
 
+      # trigger more enqueues (by pushing more contacts):
       state =
         state
-        |> activate_respondent("ivr", Enum.at(respondents, 1), the_future, not_after)
-        |> activate_respondent("ivr", Enum.at(respondents, 3), the_future, not_after)
+        |> activate_respondent("ivr", Enum.at(respondents, 5), not_after, not_after)
+        |> activate_respondent("ivr", Enum.at(respondents, 7), not_after, not_after)
 
       assert [
-        Enum.at(respondents, 0).id,
-        Enum.at(respondents, 1).id,
-        Enum.at(respondents, 2).id,
-        Enum.at(respondents, 3).id,
-        Enum.at(respondents, 4).id,
-      ] == Enum.map(state.active_contacts, fn {r_id, _} -> r_id end)
+               Enum.at(respondents, 0).id,
+               Enum.at(respondents, 1).id,
+               Enum.at(respondents, 2).id,
+               Enum.at(respondents, 3).id,
+               Enum.at(respondents, 4).id
+             ] == active_respondent_ids(state)
     end
 
     defp activate_respondent(state, "ivr", respondent, not_before, not_after) do
-      {_, state, _} = ChannelBroker.handle_cast({:setup, "ivr", respondent, "token", not_before, not_after}, state)
+      {_, state, _} =
+        ChannelBroker.handle_cast(
+          {:setup, "ivr", respondent, "token", not_before, not_after},
+          state
+        )
+
       state
     end
   end
@@ -195,7 +202,7 @@ defmodule Ask.Runtime.ChannelBrokerTest do
       Enum.at(respondents, 4) |> Respondent.changeset(%{state: :failed}) |> Repo.update!()
 
       # run:
-      {:noreply, new_state, _} = ChannelBroker.handle_info({:collect_garbage, "ivr"}, state)
+      {:noreply, new_state, _} = ChannelBroker.handle_info({:collect_garbage}, state)
 
       # it removed failed respondents (1, 3, 4) and activated queued ones (5, 6, 7):
       assert [
@@ -204,16 +211,17 @@ defmodule Ask.Runtime.ChannelBrokerTest do
                Enum.at(respondents, 5).id,
                Enum.at(respondents, 6).id,
                Enum.at(respondents, 7).id
-             ] == Map.keys(new_state.active_contacts)
+             ] == active_respondent_ids(new_state)
     end
 
     test "asks verboice for actual state of long idle contacts" do
       %{state: state, respondents: respondents} = start_survey("ivr")
+      initial_active = active_respondent_ids(state)
 
       # travel to the future (within allowed contact idle time):
       time_passes(minutes: trunc(state.config.gc_active_idle_minutes / 2))
-      {:noreply, new_state, _} = ChannelBroker.handle_info({:collect_garbage, "ivr"}, state)
-      assert new_state.active_contacts == state.active_contacts
+      {:noreply, new_state, _} = ChannelBroker.handle_info({:collect_garbage}, state)
+      assert active_respondent_ids(new_state) == initial_active
 
       # travel to the future again (after allowed contact idle time):
       time_passes(minutes: state.config.gc_active_idle_minutes * 2)
@@ -235,7 +243,7 @@ defmodule Ask.Runtime.ChannelBrokerTest do
       ]
 
       with_mock Ask.Runtime.Channel, mocks do
-        {:noreply, new_state, _} = ChannelBroker.handle_info({:collect_garbage, "ivr"}, state)
+        {:noreply, new_state, _} = ChannelBroker.handle_info({:collect_garbage}, state)
 
         # it asked verboice for call state (all calls are long idle in this test case):
         assert_called_exactly(Ask.Runtime.Channel.message_inactive?(:_, :_), @channel_capacity)
@@ -247,17 +255,18 @@ defmodule Ask.Runtime.ChannelBrokerTest do
                  Enum.at(respondents, 5).id,
                  Enum.at(respondents, 6).id,
                  Enum.at(respondents, 7).id
-               ] == Map.keys(new_state.active_contacts)
+               ] == active_respondent_ids(new_state)
       end
     end
 
     test "asks nuntium for actual state of long idle contacts" do
       %{state: state, respondents: respondents} = start_survey("sms")
+      initial_active = active_respondent_ids(state)
 
       # travel to the future (within allowed contact idle time):
       time_passes(minutes: trunc(state.config.gc_active_idle_minutes / 2))
-      {:noreply, new_state, _} = ChannelBroker.handle_info({:collect_garbage, "sms"}, state)
-      assert new_state.active_contacts == state.active_contacts
+      {:noreply, new_state, _} = ChannelBroker.handle_info({:collect_garbage}, state)
+      assert active_respondent_ids(new_state) == initial_active
 
       # travel to the future again (after allowed contact idle time):
       time_passes(minutes: state.config.gc_active_idle_minutes * 2)
@@ -280,7 +289,7 @@ defmodule Ask.Runtime.ChannelBrokerTest do
       ]
 
       with_mock Ask.Runtime.Channel, mocks do
-        {:noreply, new_state, _} = ChannelBroker.handle_info({:collect_garbage, "sms"}, state)
+        {:noreply, new_state, _} = ChannelBroker.handle_info({:collect_garbage}, state)
 
         # it asked nuntium for call state (all messages are long idle in this test case):
         assert_called_exactly(Ask.Runtime.Channel.message_inactive?(:_, :_), @channel_capacity)
@@ -292,7 +301,7 @@ defmodule Ask.Runtime.ChannelBrokerTest do
                  Enum.at(respondents, 5).id,
                  Enum.at(respondents, 6).id,
                  Enum.at(respondents, 7).id
-               ] == Map.keys(new_state.active_contacts)
+               ] == active_respondent_ids(new_state)
       end
     end
   end
@@ -353,10 +362,9 @@ defmodule Ask.Runtime.ChannelBrokerTest do
     # build state
     state = %Ask.Runtime.ChannelBrokerState{
       channel_id: channel.id,
+      channel_type: channel.type,
       runtime_channel: test_channel,
       capacity: @channel_capacity,
-      active_contacts: %{},
-      contacts_queue: Ask.PQueue.new(),
       config: Config.channel_broker_config()
     }
 
@@ -366,38 +374,37 @@ defmodule Ask.Runtime.ChannelBrokerTest do
   defp start_survey(channel_type) do
     %{state: state, respondents: respondents, channel: channel} = build_survey(channel_type)
 
-    # activate respondents (up to capacity):
-    active_contacts =
+    # queue respondents:
+    state =
+      Enum.reduce(respondents, state, fn respondent, state ->
+        contact = respondent_to_contact(channel_type, respondent)
+        state |> Ask.Runtime.ChannelBrokerState.queue_contact(contact, 1, :normal)
+      end)
+
+    # force activate respondents (up to capacity):
+    state =
       respondents
       |> Enum.slice(0..4)
-      |> Enum.reduce(%{}, fn e, a ->
-        Map.put(a, e.id, %{
-          contacts: 1,
-          last_contact: SystemTime.time().now,
-          channel_state: channel_state(channel_type, e)
-        })
+      |> Enum.reduce(state, fn respondent, state ->
+        state
+        |> Ask.Runtime.ChannelBrokerState.increment_respondents_contacts(respondent.id, 1)
+        |> Ask.Runtime.ChannelBrokerState.put_channel_state(
+          respondent.id,
+          channel_state(channel.type, respondent)
+        )
       end)
-
-    # queue the other respondents:
-    contacts_queue =
-      respondents
-      |> Enum.slice(5..9)
-      |> Enum.reduce(Ask.PQueue.new(), fn e, a ->
-        not_before = SystemTime.time().now |> DateTime.add(-3600, :second)
-        not_after = SystemTime.time().now |> DateTime.add(3600, :second)
-
-        case channel_type do
-          "ivr" -> Ask.PQueue.push(a, [1, {e, "secret", not_before, not_after}], :normal)
-          "sms" -> Ask.PQueue.push(a, [1, {e, "secret", []}], :normal)
-        end
-      end)
-
-    state =
-      state
-      |> Map.put(:active_contacts, active_contacts)
-      |> Map.put(:contacts_queue, contacts_queue)
 
     %{state: state, respondents: respondents, channel: channel}
+  end
+
+  defp respondent_to_contact("ivr", respondent) do
+    not_before = SystemTime.time().now |> DateTime.add(-3600, :second)
+    not_after = SystemTime.time().now |> DateTime.add(3600, :second)
+    {respondent, "secret", not_before, not_after}
+  end
+
+  defp respondent_to_contact("sms", respondent) do
+    {respondent, "secret", []}
   end
 
   defp channel_state("ivr", respondent) do
@@ -434,5 +441,10 @@ defmodule Ask.Runtime.ChannelBrokerTest do
     Enum.each(respondents, fn %{id: id} ->
       assert Repo.get(Respondent, id).state == state
     end)
+  end
+
+  defp active_respondent_ids(state) do
+    Ask.ChannelBrokerQueue.active_contacts(state.channel_id)
+    |> Enum.map(fn c -> c.respondent_id end)
   end
 end

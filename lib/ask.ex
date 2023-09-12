@@ -27,20 +27,28 @@ defmodule Ask do
     ]
 
     children =
-      if Mix.env() != :test && !IEx.started?() do
-        [
-          worker(Ask.OAuthTokenServer, []),
-          worker(Ask.Runtime.SurveyLogger, []),
-          worker(Ask.Runtime.SurveyBroker, []),
-          worker(Ask.FloipPusher, []),
-          worker(Ask.JsonSchema, []),
-          worker(Ask.Runtime.ChannelStatusServer, []),
-          worker(Ask.Config, []),
-          worker(Ask.Runtime.QuestionnaireSimulatorStore, [])
-          | children
-        ]
-      else
-        children
+      cond do
+        Mix.env() == :test ->
+          [
+            worker(Ask.DatabaseCleaner, [])
+            | children
+          ]
+
+        !IEx.started?() ->
+          [
+            worker(Ask.OAuthTokenServer, []),
+            worker(Ask.Runtime.SurveyLogger, []),
+            worker(Ask.Runtime.SurveyBroker, []),
+            worker(Ask.FloipPusher, []),
+            worker(Ask.JsonSchema, []),
+            worker(Ask.Runtime.ChannelStatusServer, []),
+            worker(Ask.Config, []),
+            worker(Ask.Runtime.QuestionnaireSimulatorStore, [])
+            | children
+          ]
+
+        true ->
+          children
       end
 
     # See http://elixir-lang.org/docs/stable/elixir/Supervisor.html
