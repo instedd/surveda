@@ -41,7 +41,7 @@ defmodule AskWeb.LayoutView do
       default_channel_capacity: Config.default_channel_capacity()
     }
 
-    {:ok, config_json} = client_config |> Poison.encode()
+    {:ok, config_json} = client_config |> Jason.encode()
     config_json
   end
 

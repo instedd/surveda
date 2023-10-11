@@ -94,7 +94,7 @@ defmodule Ask.Mixfile do
       {:zstream, "~> 0.2.0"},
       # required by Phoenix
       {:jason, "~> 1.0"},
-      # until we migrate Surveda to Jason
+      # OAuth2 v0.7.0 require Poison for tests (https://hexdocs.pm/oauth2/changelog.html#improvements-6)
       {:poison, "~> 3.1"},
 
       # {:telemetry, "~> 0.4.3"},

@@ -142,11 +142,13 @@ defmodule Ask.Runtime.RespondentGroupAction do
       zip =
         canonical_numbers
         |> Enum.zip(phone_numbers)
-        |> List.foldl(%{}, fn ({k, v}, zip) -> Map.put(zip, k, v) end)
+        |> List.foldl(%{}, fn {k, v}, zip -> Map.put(zip, k, v) end)
 
       existing_numbers
-      |> List.foldl(zip, fn (n, zip) -> Map.delete(zip, n) end) # remove duplicates (using canonical number)
-      |> Map.values() # return the de-duplicated list of phone numbers
+      # remove duplicates (using canonical number)
+      |> List.foldl(zip, fn n, zip -> Map.delete(zip, n) end)
+      # return the de-duplicated list of phone numbers
+      |> Map.values()
     end
   end
 
