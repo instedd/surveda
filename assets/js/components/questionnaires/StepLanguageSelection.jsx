@@ -2,16 +2,11 @@ import React, { Component, PropTypes } from "react"
 import { connect } from "react-redux"
 import * as actions from "../../actions/questionnaire"
 import { Input } from "react-materialize"
-import iso6393 from "iso-639-3"
+import { codeToName } from "../../language"
 import { Card } from "../ui"
 import { translate } from "react-i18next"
 
 class StepLanguageSelection extends Component {
-  translateLangCode(code) {
-    const language = iso6393.find((lang) => lang.iso6391 == code || lang.iso6393 == code)
-    return language.name
-  }
-
   changeLanguageOrder(choice, event) {
     const { dispatch } = this.props
     event.preventDefault()
@@ -46,7 +41,7 @@ class StepLanguageSelection extends Component {
               <tbody>
                 {languageChoices.map((choice, index) => (
                   <tr key={`${choice}${index}`}>
-                    <td>{this.translateLangCode(choice)}</td>
+                    <td>{codeToName(choice)}</td>
                     <td>
                       <Input
                         s={8}

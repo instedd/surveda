@@ -3,7 +3,7 @@ import * as actions from "../../actions/questionnaire"
 import React, { Component } from "react"
 import { connect } from "react-redux"
 import "materialize-autocomplete"
-import { translateLangCode } from "../timezones/util"
+import { codeToName } from "../../language"
 import classNames from "classnames/bind"
 import AddLanguage from "./AddLanguage"
 import { hasErrorsInLanguage } from "../../questionnaireErrors"
@@ -103,7 +103,7 @@ class LanguagesList extends Component<Props> {
 
     let otherLanguages = languages
       .filter((lang) => lang !== defaultLanguage)
-      .map((lang: string) => [lang, translateLangCode(lang)])
+      .map((lang: string) => [lang, codeToName(lang)])
       .sort(([c1, n1], [c2, n2]) => n1.localeCompare(n2))
       .map(([code, name]) => this.renderLanguageRow(code, name))
 
@@ -117,7 +117,7 @@ class LanguagesList extends Component<Props> {
     return (
       <div className="languages">
         <LanguageSection title={t("Primary language")}>
-          {this.renderLanguageRow(defaultLanguage, translateLangCode(defaultLanguage), true)}
+          {this.renderLanguageRow(defaultLanguage, codeToName(defaultLanguage), true)}
         </LanguageSection>
         {otherLanguagesComponent}
         {readOnly ? null : (
