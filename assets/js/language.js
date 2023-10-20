@@ -4,8 +4,8 @@ import { config } from "./config"
 const languages = (() => {
   let langs = iso6393
   for (const [code, name] of Object.entries(config.custom_language_names)) {
-    let lang
-    if (lang = langs.find((l) => l.iso6393 == code)) {
+    let lang = langs.find((l) => l.iso6393 == code)
+    if (lang) {
       lang.name = name
     }
   }
