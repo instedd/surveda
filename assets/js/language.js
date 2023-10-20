@@ -1,4 +1,3 @@
-// @flow
 import iso6393 from "iso-639-3"
 import { config } from "./config"
 
@@ -18,7 +17,7 @@ export function nameToCode(name: string): ?string {
   return match ? idForLanguage(match) : null
 }
 
-export const idForLanguage = (lang) => (lang.iso6391 ? lang.iso6391 : lang.iso6393)
+export const idForLanguage = (lang): string => (lang.iso6391 ? lang.iso6391 : lang.iso6393)
 
 export function livingLanguages() {
   return languages.filter((lang) => lang.type == "living")

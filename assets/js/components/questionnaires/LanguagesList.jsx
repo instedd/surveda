@@ -104,7 +104,7 @@ class LanguagesList extends Component<Props> {
     let otherLanguages = languages
       .filter((lang) => lang !== defaultLanguage)
       .map((lang: string) => [lang, codeToName(lang)])
-      .sort(([c1, n1], [c2, n2]) => n1.localeCompare(n2))
+      .sort(([c1, n1], [c2, n2]) => (n1 || '').localeCompare((n2 || '')))
       .map(([code, name]) => this.renderLanguageRow(code, name))
 
     let otherLanguagesComponent = null
