@@ -28,6 +28,18 @@ defmodule AskWeb.LayoutView do
           end
       end
 
+
+    custom_language_names = if Application.get_env(:ask, :custom_language_names) do
+      # this may belong to a separate languages module if the requirement grows
+      %{
+        ceb: "Bisaya",
+        ilo: "Ilokano",
+        bik: "Bikolano",
+      }
+    else
+      %{}
+    end
+
     client_config = %{
       version: version,
       csrf_token: get_csrf_token(),
@@ -35,6 +47,7 @@ defmodule AskWeb.LayoutView do
       user_settings: user_settings,
       sentryDsn: sentry_dsn,
       available_languages_for_numbers: Ask.NumberTranslator.langs(),
+      custom_language_names: custom_language_names,
       nuntium: Config.provider_config(Nuntium) |> guisso_configs,
       verboice: Config.provider_config(Verboice) |> guisso_configs,
       intercom_app_id: Ask.Intercom.intercom_app_id(),
