@@ -1,6 +1,6 @@
 import React, { Component, PropTypes } from "react"
 import { translate } from "react-i18next"
-import { translateLangCode } from "../timezones/util"
+import { codeToName } from "../../language"
 
 class ActivityDescription extends Component {
   reportTypeText(reportType) {
@@ -216,12 +216,12 @@ class ActivityDescription extends Component {
           case "add_language":
             return t("Added language <i>{{language}}</i> to <i>{{questionnaireName}}", {
               questionnaireName,
-              language: translateLangCode(metadata["language"]),
+              language: codeToName(metadata["language"]),
             })
           case "remove_language":
             return t("Removed language <i>{{language}}</i> from <i>{{questionnaireName}}", {
               questionnaireName,
-              language: translateLangCode(metadata["language"]),
+              language: codeToName(metadata["language"]),
             })
           case "create_step":
             return t("Added step <i>{{stepTitle}}</i> to <i>{{questionnaireName}}</i>", {

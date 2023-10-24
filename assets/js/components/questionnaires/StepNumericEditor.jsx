@@ -6,7 +6,7 @@ import { bindActionCreators } from "redux"
 import * as questionnaireActions from "../../actions/questionnaire"
 import { newRefusal } from "../../step"
 import ChoiceEditor from "./ChoiceEditor"
-import { translateLangCode } from "../timezones/util"
+import { codeToName } from "../../language"
 import SkipLogic from "./SkipLogic"
 import propsAreEqual from "../../propsAreEqual"
 import { config } from "../../config"
@@ -357,7 +357,7 @@ class StepNumericEditor extends Component<any, State> {
         questionnaire.languages,
         config.available_languages_for_numbers
       )
-        .map((lang) => translateLangCode(lang))
+        .map((lang) => codeToName(lang))
         .join(", ")
 
       alphabeticalAnswersComponent = (
