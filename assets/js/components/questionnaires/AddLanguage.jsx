@@ -1,7 +1,7 @@
 import * as actions from "../../actions/questionnaire"
 import React, { Component, PropTypes } from "react"
 import { Autocomplete } from "../ui"
-import iso6393 from "iso-639-3"
+import { idForLanguage, livingLanguages } from "../../language"
 import "materialize-autocomplete"
 import withQuestionnaire from "./withQuestionnaire"
 import { translate } from "react-i18next"
@@ -28,13 +28,11 @@ class AddLanguage extends Component {
 
   autocompleteGetData(value, callback) {
     const { questionnaire } = this.props
-    const idForLanguange = (lang) => (lang.iso6391 ? lang.iso6391 : lang.iso6393)
     const matchesLanguage = (value, lang) =>
       lang.text.indexOf(value) !== -1 || lang.text.toLowerCase().indexOf(value) !== -1
 
-    let languagesOptions = iso6393
-      .filter((lang) => lang.type == "living")
-      .map((lang) => ({ id: idForLanguange(lang), text: lang.name }))
+    let languagesOptions = livingLanguages()
+      .map((lang) => ({ id: idForLanguage(lang), text: lang.name }))
 
     // Don't show languages that are already selected
     languagesOptions = languagesOptions.filter(
