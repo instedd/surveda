@@ -28,16 +28,9 @@ defmodule AskWeb.LayoutView do
           end
       end
 
-
-    custom_language_names = if Application.get_env(:ask, :custom_language_names) do
-      # this may belong to a separate languages module if the requirement grows
-      %{
-        ceb: "Bisaya",
-        ilo: "Ilokano",
-        bik: "Bikolano",
-      }
-    else
-      %{}
+    custom_language_names = case Poison.decode(Application.get_env(:ask, :custom_language_names) || "") do
+      {:ok, custom_languages} -> custom_languages
+      _ -> %{}
     end
 
     client_config = %{

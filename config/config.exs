@@ -58,7 +58,7 @@ config :ask, Ask.Runtime.QuestionnaireSimulatorStore,
 config :ask, AskWeb.Email,
   smtp_from_address: {:system, "SMTP_FROM_ADDRESS", "InSTEDD Surveda <noreply@instedd.org>"}
 
-config :ask, custom_language_names: System.get_env("CUSTOM_LANGUAGE_NAMES", "false") == "true"
+config :ask, custom_language_names: System.get_env("CUSTOM_LANGUAGE_NAMES")
 
 # Configures Elixir's Logger
 config :logger, :console,
