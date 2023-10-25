@@ -1,7 +1,7 @@
 // @flow
 import React, { Component } from "react"
 import dateformat from "dateformat"
-import languageNames from "language-names"
+import { codeToName } from "../../language"
 import capitalize from "lodash/capitalize"
 import { fieldUniqueKey, isFieldSelected } from "../../reducers/respondents"
 
@@ -65,7 +65,7 @@ class RespondentRow extends Component<Props> {
             // For the 'language' variable we convert the code to the native name
             let value = response.value
             if (response.name == "language") {
-              value = languageNames[value] || value
+              value = codeToName(value) || value
             }
 
             return (
