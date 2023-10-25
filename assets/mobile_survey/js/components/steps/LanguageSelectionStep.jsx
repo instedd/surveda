@@ -1,7 +1,7 @@
 // @flow
 import React, { Component, PropTypes } from "react"
 import Prompt from "../Prompt"
-import languageNames from "language-names"
+import { codeToName } from "../../../../js/language"
 
 type Props = {
   step: Object,
@@ -33,7 +33,7 @@ class LanguageSelectionStep extends Component<Props> {
                   onClick(index + 1)
                 }}
               >
-                {languageNames[choice]}
+                {codeToName(choice)}
               </button>
             </div>
           )
