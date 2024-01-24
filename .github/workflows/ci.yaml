@@ -13,7 +13,7 @@ on:
 
 jobs:
   test:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v3
 
@@ -35,7 +35,7 @@ jobs:
         run: ./pre-commit.sh
 
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     needs: test
     if: contains('refs/heads/main', github.ref) || startsWith(github.ref, 'refs/heads/release/') || startsWith(github.ref, 'refs/heads/preview/') || startsWith(github.ref, 'refs/tags/')
 
@@ -45,6 +45,6 @@ jobs:
       DOCKER_PASS: ${{ secrets.DOCKER_PASS }}
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Build image & push to Docker Hub
         run: ./build.sh
