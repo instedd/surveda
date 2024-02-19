@@ -15,7 +15,7 @@ jobs:
   test:
     runs-on: ubuntu-22.04
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Set environment up
         run: |
@@ -45,6 +45,6 @@ jobs:
       DOCKER_PASS: ${{ secrets.DOCKER_PASS }}
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Build image & push to Docker Hub
         run: ./build.sh
