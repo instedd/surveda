@@ -8,8 +8,8 @@ volumes:
 
 services:
   db:
-    image: mysql:5.7
-    command: --max_allowed_packet=1G
+    image: mysql:8.0-debian
+    command: --max_allowed_packet=1G --default-authentication-plugin=mysql_native_password
     volumes:
       - db:/var/lib/mysql
     environment:
