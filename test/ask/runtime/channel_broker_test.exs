@@ -204,14 +204,22 @@ defmodule Ask.Runtime.ChannelBrokerTest do
       # run:
       {:noreply, new_state, _} = ChannelBroker.handle_info({:collect_garbage}, state)
 
-      # it removed failed respondents (1, 3, 4) and activated queued ones (5, 6, 7):
-      assert [
-               Enum.at(respondents, 0).id,
-               Enum.at(respondents, 2).id,
-               Enum.at(respondents, 5).id,
-               Enum.at(respondents, 6).id,
-               Enum.at(respondents, 7).id
-             ] == active_respondent_ids(new_state)
+      # it removed failed respondents (1, 3, 4):
+      active_respondent_ids = active_respondent_ids(new_state)
+      assert Enum.at(respondents, 0).id in active_respondent_ids
+      assert Enum.at(respondents, 1).id not in active_respondent_ids
+      assert Enum.at(respondents, 2).id in active_respondent_ids
+      assert Enum.at(respondents, 3).id not in active_respondent_ids
+      assert Enum.at(respondents, 4).id not in active_respondent_ids
+
+      # and activated three of the pending ones (order depends on MySQL version):
+      assert MapSet.new([
+        Enum.at(respondents, 5).id,
+        Enum.at(respondents, 6).id,
+        Enum.at(respondents, 7).id,
+        Enum.at(respondents, 8).id,
+        Enum.at(respondents, 9).id
+      ]) |> MapSet.intersection(MapSet.new(active_respondent_ids)) |> Enum.count == 3
     end
 
     test "asks verboice for actual state of long idle contacts" do
@@ -248,14 +256,22 @@ defmodule Ask.Runtime.ChannelBrokerTest do
         # it asked verboice for call state (all calls are long idle in this test case):
         assert_called_exactly(Ask.Runtime.Channel.message_inactive?(:_, :_), @channel_capacity)
 
-        # it removed inactive respondents (0, 1, 3) and activated queued ones (5, 6, 7):
-        assert [
-                 Enum.at(respondents, 2).id,
-                 Enum.at(respondents, 4).id,
-                 Enum.at(respondents, 5).id,
-                 Enum.at(respondents, 6).id,
-                 Enum.at(respondents, 7).id
-               ] == active_respondent_ids(new_state)
+        # it removed inactive respondents (0, 1, 3):
+        active_respondent_ids = active_respondent_ids(new_state)
+        assert Enum.at(respondents, 0).id not in active_respondent_ids
+        assert Enum.at(respondents, 1).id not in active_respondent_ids
+        assert Enum.at(respondents, 2).id in active_respondent_ids
+        assert Enum.at(respondents, 3).id not in active_respondent_ids
+        assert Enum.at(respondents, 4).id in active_respondent_ids
+
+        # and activated three of the pending ones (order depends on MySQL version):
+        assert MapSet.new([
+          Enum.at(respondents, 5).id,
+          Enum.at(respondents, 6).id,
+          Enum.at(respondents, 7).id,
+          Enum.at(respondents, 8).id,
+          Enum.at(respondents, 9).id
+        ]) |> MapSet.intersection(MapSet.new(active_respondent_ids)) |> Enum.count == 3
       end
     end
 
@@ -294,14 +310,22 @@ defmodule Ask.Runtime.ChannelBrokerTest do
         # it asked nuntium for call state (all messages are long idle in this test case):
         assert_called_exactly(Ask.Runtime.Channel.message_inactive?(:_, :_), @channel_capacity)
 
-        # it removed inactive respondents (0, 1, 4) and activated queued ones (5, 6, 7):
-        assert [
-                 Enum.at(respondents, 2).id,
-                 Enum.at(respondents, 3).id,
-                 Enum.at(respondents, 5).id,
-                 Enum.at(respondents, 6).id,
-                 Enum.at(respondents, 7).id
-               ] == active_respondent_ids(new_state)
+        # it removed inactive respondents (0, 1, 4):
+        active_respondent_ids = active_respondent_ids(new_state)
+        assert Enum.at(respondents, 0).id not in active_respondent_ids
+        assert Enum.at(respondents, 1).id not in active_respondent_ids
+        assert Enum.at(respondents, 2).id in active_respondent_ids
+        assert Enum.at(respondents, 3).id in active_respondent_ids
+        assert Enum.at(respondents, 4).id not in active_respondent_ids
+
+        # and activated three of the pending ones (order depends on MySQL version):
+        assert MapSet.new([
+          Enum.at(respondents, 5).id,
+          Enum.at(respondents, 6).id,
+          Enum.at(respondents, 7).id,
+          Enum.at(respondents, 8).id,
+          Enum.at(respondents, 9).id
+        ]) |> MapSet.intersection(MapSet.new(active_respondent_ids)) |> Enum.count == 3
       end
     end
   end
