@@ -209,13 +209,11 @@ defmodule Ask.Runtime.ChannelBrokerTest do
       assert Enum.at(respondents, 4).id not in active_respondent_ids
 
       # and activated three of the pending ones (order depends on MySQL version):
-      assert MapSet.new([
-        Enum.at(respondents, 5).id,
-        Enum.at(respondents, 6).id,
-        Enum.at(respondents, 7).id,
-        Enum.at(respondents, 8).id,
-        Enum.at(respondents, 9).id
-      ]) |> MapSet.intersection(MapSet.new(active_respondent_ids)) |> Enum.count == 3
+      assert_some_in_both(
+        3,
+        respondents |> Enum.drop(5) |> Enum.map(& &1id),
+        active_respondent_ids
+      )
     end
 
     test "asks verboice for actual state of long idle contacts" do
@@ -261,13 +259,11 @@ defmodule Ask.Runtime.ChannelBrokerTest do
         assert Enum.at(respondents, 4).id in active_respondent_ids
 
         # and activated three of the pending ones (order depends on MySQL version):
-        assert MapSet.new([
-          Enum.at(respondents, 5).id,
-          Enum.at(respondents, 6).id,
-          Enum.at(respondents, 7).id,
-          Enum.at(respondents, 8).id,
-          Enum.at(respondents, 9).id
-        ]) |> MapSet.intersection(MapSet.new(active_respondent_ids)) |> Enum.count == 3
+        assert_some_in_both(
+          3,
+          respondents |> Enum.drop(5) |> Enum.map(& &1id),
+          active_respondent_ids
+        )
       end
     end
 
@@ -315,13 +311,11 @@ defmodule Ask.Runtime.ChannelBrokerTest do
         assert Enum.at(respondents, 4).id not in active_respondent_ids
 
         # and activated three of the pending ones (order depends on MySQL version):
-        assert MapSet.new([
-          Enum.at(respondents, 5).id,
-          Enum.at(respondents, 6).id,
-          Enum.at(respondents, 7).id,
-          Enum.at(respondents, 8).id,
-          Enum.at(respondents, 9).id
-        ]) |> MapSet.intersection(MapSet.new(active_respondent_ids)) |> Enum.count == 3
+        assert_some_in_both(
+          3,
+          respondents |> Enum.drop(5) |> Enum.map(& &1id),
+          active_respondent_ids
+        )
       end
     end
   end
@@ -380,6 +374,12 @@ defmodule Ask.Runtime.ChannelBrokerTest do
     end) |> Enum.take(amount)
 
     refute_received [:ask, ^test_channel, _respondent, _token, _reply, _channel_id]
+  end
+
+  defp assert_some_in_both(amount, an_enum, other_enum) do
+    assert MapSet.new(an_enum)
+      |> MapSet.intersection(MapSet.new(other_enum))
+      |> Enum.count == amount
   end
 
   defp initialize_survey(mode, channel_capacity) do
