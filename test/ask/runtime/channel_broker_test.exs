@@ -57,7 +57,7 @@ defmodule Ask.Runtime.ChannelBrokerTest do
       callback_respondents(conn, release_respondents, "verboice")
 
       # Assert
-      assert_some_called(callbacks, pending_respondents, test_channel)
+      assert_some_made_calls(callbacks, pending_respondents, test_channel)
     end
 
     test "Skips expired calls" do
@@ -167,6 +167,7 @@ defmodule Ask.Runtime.ChannelBrokerTest do
       # Assert
       verify_state(respondents, :active)
       assert_sent_smss(Enum.take(respondents, channel_capacity), test_channel)
+      pending_respondents = Enum.drop(respondents, channel_capacity)
 
       # Arrange
       callbacks = 4
@@ -176,10 +177,7 @@ defmodule Ask.Runtime.ChannelBrokerTest do
       callback_respondents(conn, release_respondents, "nuntium", channel.id)
 
       # Assert
-      released_respondents =
-        Enum.take(respondents, channel_capacity + callbacks) |> Enum.take(-callbacks)
-
-      assert_sent_smss(released_respondents, test_channel)
+      assert_some_sent_smss(callbacks, pending_respondents, test_channel)
     end
   end
 
@@ -354,7 +352,7 @@ defmodule Ask.Runtime.ChannelBrokerTest do
     refute_received [:setup, ^test_channel, _respondent, _token]
   end
 
-  defp assert_some_called(amount, respondents, test_channel) do
+  defp assert_some_made_calls(amount, respondents, test_channel) do
     respondent_ids = Enum.map(respondents, & &1.id)
 
     Stream.repeatedly(fn ->
@@ -369,6 +367,17 @@ defmodule Ask.Runtime.ChannelBrokerTest do
     Enum.each(respondents, fn %{id: id} ->
       assert_received [:ask, ^test_channel, %{id: ^id}, _token, _reply, _channel_id]
     end)
+
+    refute_received [:ask, ^test_channel, _respondent, _token, _reply, _channel_id]
+  end
+
+  defp assert_some_sent_smss(amount, respondents, test_channel) do
+    respondent_ids = Enum.map(respondents, & &1.id)
+
+    Stream.repeatedly(fn ->
+      assert_received [:ask, ^test_channel, %{id: id}, _token, _reply, _channel_id]
+      assert Enum.member?(respondent_ids, id)
+    end) |> Enum.take(amount)
 
     refute_received [:ask, ^test_channel, _respondent, _token, _reply, _channel_id]
   end
