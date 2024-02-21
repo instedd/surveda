@@ -211,7 +211,7 @@ defmodule Ask.Runtime.ChannelBrokerTest do
       # and activated three of the pending ones (order depends on MySQL version):
       assert_some_in_both(
         3,
-        respondents |> Enum.drop(5) |> Enum.map(& &1id),
+        respondents |> Enum.drop(5) |> Enum.map(& &1.id),
         active_respondent_ids
       )
     end
@@ -261,7 +261,7 @@ defmodule Ask.Runtime.ChannelBrokerTest do
         # and activated three of the pending ones (order depends on MySQL version):
         assert_some_in_both(
           3,
-          respondents |> Enum.drop(5) |> Enum.map(& &1id),
+          respondents |> Enum.drop(5) |> Enum.map(& &1.id),
           active_respondent_ids
         )
       end
@@ -313,7 +313,7 @@ defmodule Ask.Runtime.ChannelBrokerTest do
         # and activated three of the pending ones (order depends on MySQL version):
         assert_some_in_both(
           3,
-          respondents |> Enum.drop(5) |> Enum.map(& &1id),
+          respondents |> Enum.drop(5) |> Enum.map(& &1.id),
           active_respondent_ids
         )
       end
