@@ -191,6 +191,7 @@ defmodule Ask.Runtime.ChannelBrokerTest do
 
     test "deactivates failed respondents" do
       %{state: state, respondents: respondents} = start_survey("ivr")
+      pending_respondent_ids = respondents |> Enum.drop(5) |> Enum.map(& &1.id)
 
       # fail some respondents:
       Enum.at(respondents, 1) |> Respondent.changeset(%{state: :failed}) |> Repo.update!()
@@ -200,25 +201,28 @@ defmodule Ask.Runtime.ChannelBrokerTest do
       # run:
       {:noreply, new_state, _} = ChannelBroker.handle_info({:collect_garbage}, state)
 
-      # it removed failed respondents (1, 3, 4):
       active_respondent_ids = active_respondent_ids(new_state)
-      assert Enum.at(respondents, 0).id in active_respondent_ids
+
+      # it refilled the channel up to capacity:
+      assert length(active_respondent_ids) == 5
+
+      # it removed failed respondents (1, 3, 4):
       assert Enum.at(respondents, 1).id not in active_respondent_ids
-      assert Enum.at(respondents, 2).id in active_respondent_ids
       assert Enum.at(respondents, 3).id not in active_respondent_ids
       assert Enum.at(respondents, 4).id not in active_respondent_ids
 
-      # and activated three of the pending ones (order depends on MySQL version):
-      assert_some_in_both(
-        3,
-        respondents |> Enum.drop(5) |> Enum.map(& &1.id),
-        active_respondent_ids
-      )
+      # it kept active respondents
+      assert Enum.at(respondents, 0).id in active_respondent_ids
+      assert Enum.at(respondents, 2).id in active_respondent_ids
+
+      # it activated 3 pending respondents:
+      assert_some_in_both(3, pending_respondent_ids, active_respondent_ids)
     end
 
     test "asks verboice for actual state of long idle contacts" do
       %{state: state, respondents: respondents} = start_survey("ivr")
       initial_active = active_respondent_ids(state)
+      pending_respondent_ids = respondents |> Enum.drop(5) |> Enum.map(& &1.id)
 
       # travel to the future (within allowed contact idle time):
       time_passes(minutes: trunc(state.config.gc_active_idle_minutes / 2))
@@ -246,30 +250,32 @@ defmodule Ask.Runtime.ChannelBrokerTest do
 
       with_mock Ask.Runtime.Channel, mocks do
         {:noreply, new_state, _} = ChannelBroker.handle_info({:collect_garbage}, state)
+        active_respondent_ids = active_respondent_ids(new_state)
+
+        # it refilled the channel up to capacity:
+        assert length(active_respondent_ids) == 5
 
         # it asked verboice for call state (all calls are long idle in this test case):
         assert_called_exactly(Ask.Runtime.Channel.message_inactive?(:_, :_), @channel_capacity)
 
         # it removed inactive respondents (0, 1, 3):
-        active_respondent_ids = active_respondent_ids(new_state)
         assert Enum.at(respondents, 0).id not in active_respondent_ids
         assert Enum.at(respondents, 1).id not in active_respondent_ids
-        assert Enum.at(respondents, 2).id in active_respondent_ids
         assert Enum.at(respondents, 3).id not in active_respondent_ids
+
+        # it kept active respondents
+        assert Enum.at(respondents, 2).id in active_respondent_ids
         assert Enum.at(respondents, 4).id in active_respondent_ids
 
-        # and activated three of the pending ones (order depends on MySQL version):
-        assert_some_in_both(
-          3,
-          respondents |> Enum.drop(5) |> Enum.map(& &1.id),
-          active_respondent_ids
-        )
+        # it activated 3 pending respondents:
+        assert_some_in_both(3, pending_respondent_ids, active_respondent_ids)
       end
     end
 
     test "asks nuntium for actual state of long idle contacts" do
       %{state: state, respondents: respondents} = start_survey("sms")
       initial_active = active_respondent_ids(state)
+      pending_respondent_ids = respondents |> Enum.drop(5) |> Enum.map(& &1.id)
 
       # travel to the future (within allowed contact idle time):
       time_passes(minutes: trunc(state.config.gc_active_idle_minutes / 2))
@@ -298,24 +304,25 @@ defmodule Ask.Runtime.ChannelBrokerTest do
 
       with_mock Ask.Runtime.Channel, mocks do
         {:noreply, new_state, _} = ChannelBroker.handle_info({:collect_garbage}, state)
+        active_respondent_ids = active_respondent_ids(new_state)
+
+        # it refilled the channel up to capacity:
+        assert length(active_respondent_ids) == 5
 
         # it asked nuntium for call state (all messages are long idle in this test case):
         assert_called_exactly(Ask.Runtime.Channel.message_inactive?(:_, :_), @channel_capacity)
 
         # it removed inactive respondents (0, 1, 4):
-        active_respondent_ids = active_respondent_ids(new_state)
         assert Enum.at(respondents, 0).id not in active_respondent_ids
         assert Enum.at(respondents, 1).id not in active_respondent_ids
-        assert Enum.at(respondents, 2).id in active_respondent_ids
-        assert Enum.at(respondents, 3).id in active_respondent_ids
         assert Enum.at(respondents, 4).id not in active_respondent_ids
 
-        # and activated three of the pending ones (order depends on MySQL version):
-        assert_some_in_both(
-          3,
-          respondents |> Enum.drop(5) |> Enum.map(& &1.id),
-          active_respondent_ids
-        )
+        # it kept active respondents
+        assert Enum.at(respondents, 2).id in active_respondent_ids
+        assert Enum.at(respondents, 3).id in active_respondent_ids
+
+        # it activated 3 pending respondents:
+        assert_some_in_both(3, pending_respondent_ids, active_respondent_ids)
       end
     end
   end
