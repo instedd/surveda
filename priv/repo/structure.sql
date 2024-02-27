@@ -1,8 +1,8 @@
--- MySQL dump 10.19  Distrib 10.3.38-MariaDB, for debian-linux-gnu (x86_64)
+-- MySQL dump 10.19  Distrib 10.3.39-MariaDB, for debian-linux-gnu (x86_64)
 --
 -- Host: db    Database: ask_dev
 -- ------------------------------------------------------
--- Server version	5.7.41
+-- Server version	8.0.36
 
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
 /*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
@@ -23,11 +23,11 @@ DROP TABLE IF EXISTS `activity_log`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `activity_log` (
-  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
-  `project_id` bigint(20) unsigned DEFAULT NULL,
-  `user_id` bigint(20) unsigned DEFAULT NULL,
+  `id` bigint unsigned NOT NULL AUTO_INCREMENT,
+  `project_id` bigint unsigned DEFAULT NULL,
+  `user_id` bigint unsigned DEFAULT NULL,
   `entity_type` varchar(255) DEFAULT NULL,
-  `entity_id` int(11) DEFAULT NULL,
+  `entity_id` int DEFAULT NULL,
   `action` varchar(255) DEFAULT NULL,
   `metadata` text,
   `inserted_at` datetime NOT NULL,
@@ -39,7 +39,7 @@ CREATE TABLE `activity_log` (
   KEY `activity_log_user_id_fkey` (`user_id`),
   CONSTRAINT `activity_log_project_id_fkey` FOREIGN KEY (`project_id`) REFERENCES `projects` (`id`),
   CONSTRAINT `activity_log_user_id_fkey` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -50,17 +50,17 @@ DROP TABLE IF EXISTS `audios`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `audios` (
-  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
-  `uuid` char(36) CHARACTER SET ascii DEFAULT NULL,
+  `id` bigint unsigned NOT NULL AUTO_INCREMENT,
+  `uuid` char(36) CHARACTER SET ascii COLLATE ascii_general_ci DEFAULT NULL,
   `data` mediumblob,
   `filename` varchar(255) DEFAULT NULL,
   `source` varchar(255) DEFAULT NULL,
-  `duration` int(11) DEFAULT NULL,
+  `duration` int DEFAULT NULL,
   `inserted_at` datetime NOT NULL,
   `updated_at` datetime NOT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `id` (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -71,20 +71,20 @@ DROP TABLE IF EXISTS `channel_broker_queue`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `channel_broker_queue` (
-  `channel_id` bigint(20) unsigned NOT NULL,
-  `respondent_id` bigint(20) unsigned NOT NULL,
+  `channel_id` bigint unsigned NOT NULL,
+  `respondent_id` bigint unsigned NOT NULL,
   `queued_at` datetime NOT NULL,
-  `priority` tinyint(4) NOT NULL,
-  `size` int(11) NOT NULL,
+  `priority` tinyint NOT NULL,
+  `size` int NOT NULL,
   `token` varchar(255) NOT NULL,
   `not_before` datetime DEFAULT NULL,
   `not_after` datetime DEFAULT NULL,
   `reply` blob,
   `last_contact` datetime DEFAULT NULL,
-  `contacts` int(11) DEFAULT NULL,
+  `contacts` int DEFAULT NULL,
   `channel_state` blob,
   PRIMARY KEY (`channel_id`,`respondent_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -95,12 +95,12 @@ DROP TABLE IF EXISTS `channels`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `channels` (
-  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `id` bigint unsigned NOT NULL AUTO_INCREMENT,
   `name` varchar(255) DEFAULT NULL,
   `type` varchar(255) DEFAULT NULL,
   `provider` varchar(255) DEFAULT NULL,
   `settings` text,
-  `user_id` bigint(20) unsigned DEFAULT NULL,
+  `user_id` bigint unsigned DEFAULT NULL,
   `inserted_at` datetime NOT NULL,
   `updated_at` datetime NOT NULL,
   `base_url` varchar(255) DEFAULT NULL,
@@ -109,7 +109,7 @@ CREATE TABLE `channels` (
   UNIQUE KEY `id` (`id`),
   KEY `channels_user_id_index` (`user_id`),
   CONSTRAINT `channels_user_id_fkey` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -120,15 +120,15 @@ DROP TABLE IF EXISTS `completed_respondents`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `completed_respondents` (
-  `survey_id` bigint(20) unsigned NOT NULL,
-  `questionnaire_id` int(11) NOT NULL,
-  `quota_bucket_id` int(11) NOT NULL,
+  `survey_id` bigint unsigned NOT NULL,
+  `questionnaire_id` int NOT NULL,
+  `quota_bucket_id` int NOT NULL,
   `mode` varchar(255) NOT NULL,
   `date` date NOT NULL,
-  `count` int(11) DEFAULT '0',
+  `count` int DEFAULT '0',
   PRIMARY KEY (`survey_id`,`questionnaire_id`,`quota_bucket_id`,`mode`,`date`),
   CONSTRAINT `completed_respondents_survey_id_fkey` FOREIGN KEY (`survey_id`) REFERENCES `surveys` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -139,11 +139,11 @@ DROP TABLE IF EXISTS `floip_endpoints`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `floip_endpoints` (
-  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
-  `survey_id` bigint(20) unsigned DEFAULT NULL,
+  `id` bigint unsigned NOT NULL AUTO_INCREMENT,
+  `survey_id` bigint unsigned DEFAULT NULL,
   `uri` varchar(255) DEFAULT NULL,
-  `last_pushed_response_id` bigint(20) unsigned DEFAULT NULL,
-  `retries` int(11) DEFAULT '0',
+  `last_pushed_response_id` bigint unsigned DEFAULT NULL,
+  `retries` int DEFAULT '0',
   `name` varchar(255) DEFAULT NULL,
   `state` varchar(255) DEFAULT NULL,
   `auth_token` varchar(255) DEFAULT NULL,
@@ -156,7 +156,7 @@ CREATE TABLE `floip_endpoints` (
   KEY `floip_endpoints_survey_id_index` (`survey_id`),
   CONSTRAINT `floip_endpoints_last_pushed_response_id_fkey` FOREIGN KEY (`last_pushed_response_id`) REFERENCES `responses` (`id`),
   CONSTRAINT `floip_endpoints_survey_id_fkey` FOREIGN KEY (`survey_id`) REFERENCES `surveys` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -167,17 +167,17 @@ DROP TABLE IF EXISTS `folders`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `folders` (
-  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `id` bigint unsigned NOT NULL AUTO_INCREMENT,
   `name` varchar(255) DEFAULT NULL,
   `inserted_at` datetime NOT NULL,
   `updated_at` datetime NOT NULL,
-  `project_id` bigint(20) unsigned DEFAULT NULL,
+  `project_id` bigint unsigned DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `id` (`id`),
   UNIQUE KEY `folders_name_project_id_index` (`name`,`project_id`),
   KEY `folders_project_id_index` (`project_id`),
   CONSTRAINT `folders_project_id_fkey` FOREIGN KEY (`project_id`) REFERENCES `projects` (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -188,10 +188,10 @@ DROP TABLE IF EXISTS `invites`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `invites` (
-  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `id` bigint unsigned NOT NULL AUTO_INCREMENT,
   `code` varchar(255) DEFAULT NULL,
   `level` varchar(255) DEFAULT NULL,
-  `project_id` bigint(20) unsigned DEFAULT NULL,
+  `project_id` bigint unsigned DEFAULT NULL,
   `email` varchar(255) DEFAULT NULL,
   `inserted_at` datetime NOT NULL,
   `updated_at` datetime NOT NULL,
@@ -199,7 +199,7 @@ CREATE TABLE `invites` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `id` (`id`),
   UNIQUE KEY `project_id` (`project_id`,`email`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -210,10 +210,10 @@ DROP TABLE IF EXISTS `oauth_tokens`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `oauth_tokens` (
-  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `id` bigint unsigned NOT NULL AUTO_INCREMENT,
   `provider` varchar(255) DEFAULT NULL,
   `access_token` text,
-  `user_id` bigint(20) unsigned DEFAULT NULL,
+  `user_id` bigint unsigned DEFAULT NULL,
   `inserted_at` datetime NOT NULL,
   `updated_at` datetime NOT NULL,
   `expires_at` datetime DEFAULT NULL,
@@ -221,7 +221,7 @@ CREATE TABLE `oauth_tokens` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `id` (`id`),
   UNIQUE KEY `oauth_tokens_user_id_provider_base_url_index` (`user_id`,`provider`,`base_url`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -232,10 +232,10 @@ DROP TABLE IF EXISTS `panel_surveys`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `panel_surveys` (
-  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `id` bigint unsigned NOT NULL AUTO_INCREMENT,
   `name` varchar(255) DEFAULT NULL,
-  `project_id` bigint(20) unsigned DEFAULT NULL,
-  `folder_id` bigint(20) unsigned DEFAULT NULL,
+  `project_id` bigint unsigned DEFAULT NULL,
+  `folder_id` bigint unsigned DEFAULT NULL,
   `inserted_at` datetime NOT NULL,
   `updated_at` datetime NOT NULL,
   PRIMARY KEY (`id`),
@@ -244,7 +244,7 @@ CREATE TABLE `panel_surveys` (
   KEY `panel_surveys_folder_id_fkey` (`folder_id`),
   CONSTRAINT `panel_surveys_folder_id_fkey` FOREIGN KEY (`folder_id`) REFERENCES `folders` (`id`),
   CONSTRAINT `panel_surveys_project_id_fkey` FOREIGN KEY (`project_id`) REFERENCES `projects` (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -255,9 +255,9 @@ DROP TABLE IF EXISTS `project_channels`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `project_channels` (
-  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
-  `channel_id` bigint(20) unsigned DEFAULT NULL,
-  `project_id` bigint(20) unsigned DEFAULT NULL,
+  `id` bigint unsigned NOT NULL AUTO_INCREMENT,
+  `channel_id` bigint unsigned DEFAULT NULL,
+  `project_id` bigint unsigned DEFAULT NULL,
   `inserted_at` datetime NOT NULL,
   `updated_at` datetime NOT NULL,
   PRIMARY KEY (`id`),
@@ -266,7 +266,7 @@ CREATE TABLE `project_channels` (
   KEY `project_channels_project_id_fkey` (`project_id`),
   CONSTRAINT `project_channels_channel_id_fkey` FOREIGN KEY (`channel_id`) REFERENCES `channels` (`id`) ON DELETE CASCADE,
   CONSTRAINT `project_channels_project_id_fkey` FOREIGN KEY (`project_id`) REFERENCES `projects` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -277,9 +277,9 @@ DROP TABLE IF EXISTS `project_memberships`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `project_memberships` (
-  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
-  `user_id` bigint(20) unsigned DEFAULT NULL,
-  `project_id` bigint(20) unsigned DEFAULT NULL,
+  `id` bigint unsigned NOT NULL AUTO_INCREMENT,
+  `user_id` bigint unsigned DEFAULT NULL,
+  `project_id` bigint unsigned DEFAULT NULL,
   `level` varchar(255) DEFAULT NULL,
   `inserted_at` datetime NOT NULL,
   `updated_at` datetime NOT NULL,
@@ -289,7 +289,7 @@ CREATE TABLE `project_memberships` (
   KEY `project_memberships_project_id_fkey` (`project_id`),
   CONSTRAINT `project_memberships_project_id_fkey` FOREIGN KEY (`project_id`) REFERENCES `projects` (`id`) ON DELETE CASCADE,
   CONSTRAINT `project_memberships_user_id_fkey` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -300,7 +300,7 @@ DROP TABLE IF EXISTS `projects`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `projects` (
-  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `id` bigint unsigned NOT NULL AUTO_INCREMENT,
   `name` varchar(255) DEFAULT NULL,
   `inserted_at` datetime NOT NULL,
   `updated_at` datetime NOT NULL,
@@ -312,11 +312,11 @@ CREATE TABLE `projects` (
   `eligibility_rate` double DEFAULT NULL,
   `response_rate` double DEFAULT NULL,
   `valid_respondent_rate` double DEFAULT NULL,
-  `batch_limit_per_minute` int(11) DEFAULT NULL,
-  `batch_size` int(11) DEFAULT NULL,
+  `batch_limit_per_minute` int DEFAULT NULL,
+  `batch_size` int DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `id` (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -327,10 +327,10 @@ DROP TABLE IF EXISTS `questionnaire_variables`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `questionnaire_variables` (
-  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `id` bigint unsigned NOT NULL AUTO_INCREMENT,
   `name` varchar(255) DEFAULT NULL,
-  `project_id` bigint(20) unsigned DEFAULT NULL,
-  `questionnaire_id` bigint(20) unsigned DEFAULT NULL,
+  `project_id` bigint unsigned DEFAULT NULL,
+  `questionnaire_id` bigint unsigned DEFAULT NULL,
   `inserted_at` datetime NOT NULL,
   `updated_at` datetime NOT NULL,
   PRIMARY KEY (`id`),
@@ -339,7 +339,7 @@ CREATE TABLE `questionnaire_variables` (
   KEY `questionnaire_variables_questionnaire_id_index` (`questionnaire_id`),
   CONSTRAINT `questionnaire_variables_project_id_fkey` FOREIGN KEY (`project_id`) REFERENCES `projects` (`id`),
   CONSTRAINT `questionnaire_variables_questionnaire_id_fkey` FOREIGN KEY (`questionnaire_id`) REFERENCES `questionnaires` (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -350,9 +350,9 @@ DROP TABLE IF EXISTS `questionnaires`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `questionnaires` (
-  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `id` bigint unsigned NOT NULL AUTO_INCREMENT,
   `name` varchar(255) DEFAULT NULL,
-  `project_id` bigint(20) unsigned DEFAULT NULL,
+  `project_id` bigint unsigned DEFAULT NULL,
   `inserted_at` datetime NOT NULL,
   `updated_at` datetime NOT NULL,
   `modes` varchar(255) DEFAULT NULL,
@@ -361,7 +361,7 @@ CREATE TABLE `questionnaires` (
   `default_language` varchar(255) DEFAULT NULL,
   `valid` tinyint(1) DEFAULT NULL,
   `settings` text,
-  `snapshot_of` bigint(20) unsigned DEFAULT NULL,
+  `snapshot_of` bigint unsigned DEFAULT NULL,
   `quota_completed_steps` longtext,
   `deleted` tinyint(1) DEFAULT '0',
   `description` text,
@@ -373,7 +373,7 @@ CREATE TABLE `questionnaires` (
   KEY `questionnaires_snapshot_of_fkey` (`snapshot_of`),
   CONSTRAINT `questionnaires_project_id_fkey` FOREIGN KEY (`project_id`) REFERENCES `projects` (`id`),
   CONSTRAINT `questionnaires_snapshot_of_fkey` FOREIGN KEY (`snapshot_of`) REFERENCES `questionnaires` (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -384,18 +384,18 @@ DROP TABLE IF EXISTS `quota_buckets`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `quota_buckets` (
-  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `id` bigint unsigned NOT NULL AUTO_INCREMENT,
   `condition` text,
-  `quota` int(11) DEFAULT NULL,
-  `count` int(11) DEFAULT NULL,
-  `survey_id` bigint(20) unsigned DEFAULT NULL,
+  `quota` int DEFAULT NULL,
+  `count` int DEFAULT NULL,
+  `survey_id` bigint unsigned DEFAULT NULL,
   `inserted_at` datetime NOT NULL,
   `updated_at` datetime NOT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `id` (`id`),
   KEY `quota_buckets_survey_id_fkey` (`survey_id`),
   CONSTRAINT `quota_buckets_survey_id_fkey` FOREIGN KEY (`survey_id`) REFERENCES `surveys` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -406,11 +406,11 @@ DROP TABLE IF EXISTS `rememberables`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `rememberables` (
-  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `id` bigint unsigned NOT NULL AUTO_INCREMENT,
   `series_hash` varchar(255) DEFAULT NULL,
   `token_hash` varchar(255) DEFAULT NULL,
   `token_created_at` datetime DEFAULT NULL,
-  `user_id` bigint(20) unsigned DEFAULT NULL,
+  `user_id` bigint unsigned DEFAULT NULL,
   `inserted_at` datetime NOT NULL,
   `updated_at` datetime NOT NULL,
   PRIMARY KEY (`id`),
@@ -420,7 +420,7 @@ CREATE TABLE `rememberables` (
   KEY `rememberables_series_hash_index` (`series_hash`),
   KEY `rememberables_token_hash_index` (`token_hash`),
   CONSTRAINT `rememberables_user_id_fkey` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -431,13 +431,13 @@ DROP TABLE IF EXISTS `respondent_disposition_history`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `respondent_disposition_history` (
-  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `id` bigint unsigned NOT NULL AUTO_INCREMENT,
   `disposition` varchar(255) DEFAULT NULL,
-  `respondent_id` bigint(20) unsigned DEFAULT NULL,
+  `respondent_id` bigint unsigned DEFAULT NULL,
   `inserted_at` datetime NOT NULL,
   `updated_at` datetime NOT NULL,
   `mode` varchar(255) DEFAULT NULL,
-  `survey_id` bigint(20) unsigned DEFAULT NULL,
+  `survey_id` bigint unsigned DEFAULT NULL,
   `respondent_hashed_number` varchar(255) DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `id` (`id`),
@@ -445,7 +445,7 @@ CREATE TABLE `respondent_disposition_history` (
   KEY `respondent_disposition_history_survey_id_id_index` (`survey_id`,`id`),
   CONSTRAINT `respondent_disposition_history_respondent_id_fkey` FOREIGN KEY (`respondent_id`) REFERENCES `respondents` (`id`) ON DELETE CASCADE,
   CONSTRAINT `respondent_disposition_history_survey_id_fkey` FOREIGN KEY (`survey_id`) REFERENCES `surveys` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -456,9 +456,9 @@ DROP TABLE IF EXISTS `respondent_group_channels`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `respondent_group_channels` (
-  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
-  `respondent_group_id` bigint(20) unsigned DEFAULT NULL,
-  `channel_id` bigint(20) unsigned DEFAULT NULL,
+  `id` bigint unsigned NOT NULL AUTO_INCREMENT,
+  `respondent_group_id` bigint unsigned DEFAULT NULL,
+  `channel_id` bigint unsigned DEFAULT NULL,
   `inserted_at` datetime NOT NULL,
   `updated_at` datetime NOT NULL,
   `mode` varchar(255) DEFAULT NULL,
@@ -468,7 +468,7 @@ CREATE TABLE `respondent_group_channels` (
   KEY `respondent_group_channels_channel_id_index` (`channel_id`),
   CONSTRAINT `respondent_group_channels_channel_id_fkey` FOREIGN KEY (`channel_id`) REFERENCES `channels` (`id`),
   CONSTRAINT `respondent_group_channels_respondent_group_id_fkey` FOREIGN KEY (`respondent_group_id`) REFERENCES `respondent_groups` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -479,18 +479,18 @@ DROP TABLE IF EXISTS `respondent_groups`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `respondent_groups` (
-  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `id` bigint unsigned NOT NULL AUTO_INCREMENT,
   `name` varchar(255) DEFAULT NULL,
-  `survey_id` bigint(20) unsigned DEFAULT NULL,
+  `survey_id` bigint unsigned DEFAULT NULL,
   `inserted_at` datetime NOT NULL,
   `updated_at` datetime NOT NULL,
   `sample` longtext,
-  `respondents_count` int(11) DEFAULT NULL,
+  `respondents_count` int DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `id` (`id`),
   KEY `respondent_groups_survey_id_fkey` (`survey_id`),
   CONSTRAINT `respondent_groups_survey_id_fkey` FOREIGN KEY (`survey_id`) REFERENCES `surveys` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -501,16 +501,16 @@ DROP TABLE IF EXISTS `respondent_stats`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `respondent_stats` (
-  `survey_id` bigint(20) unsigned NOT NULL,
-  `questionnaire_id` int(11) NOT NULL,
+  `survey_id` bigint unsigned NOT NULL,
+  `questionnaire_id` int NOT NULL,
   `state` varchar(255) NOT NULL,
   `disposition` varchar(255) NOT NULL,
-  `quota_bucket_id` int(11) NOT NULL,
+  `quota_bucket_id` int NOT NULL,
   `mode` varchar(255) NOT NULL,
-  `count` int(11) DEFAULT '0',
+  `count` int DEFAULT '0',
   PRIMARY KEY (`survey_id`,`questionnaire_id`,`state`,`disposition`,`quota_bucket_id`,`mode`),
   CONSTRAINT `respondent_stats_survey_id_fkey` FOREIGN KEY (`survey_id`) REFERENCES `surveys` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -521,9 +521,9 @@ DROP TABLE IF EXISTS `respondents`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `respondents` (
-  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `id` bigint unsigned NOT NULL AUTO_INCREMENT,
   `phone_number` varchar(255) DEFAULT NULL,
-  `survey_id` bigint(20) unsigned DEFAULT NULL,
+  `survey_id` bigint unsigned DEFAULT NULL,
   `inserted_at` datetime NOT NULL,
   `updated_at` datetime NOT NULL,
   `state` varchar(255) DEFAULT 'pending',
@@ -531,18 +531,18 @@ CREATE TABLE `respondents` (
   `completed_at` datetime DEFAULT NULL,
   `timeout_at` datetime DEFAULT NULL,
   `sanitized_phone_number` varchar(255) DEFAULT NULL,
-  `quota_bucket_id` int(11) DEFAULT NULL,
-  `questionnaire_id` bigint(20) unsigned DEFAULT NULL,
+  `quota_bucket_id` int DEFAULT NULL,
+  `questionnaire_id` bigint unsigned DEFAULT NULL,
   `mode` varchar(255) DEFAULT NULL,
-  `respondent_group_id` bigint(20) unsigned DEFAULT NULL,
+  `respondent_group_id` bigint unsigned DEFAULT NULL,
   `hashed_number` varchar(255) DEFAULT NULL,
   `disposition` varchar(255) DEFAULT NULL,
-  `lock_version` int(11) DEFAULT '1',
+  `lock_version` int DEFAULT '1',
   `language` varchar(255) DEFAULT NULL,
   `effective_modes` varchar(255) DEFAULT NULL,
   `stats` longtext NOT NULL,
   `section_order` varchar(255) DEFAULT NULL,
-  `retry_stat_id` bigint(20) unsigned DEFAULT NULL,
+  `retry_stat_id` bigint unsigned DEFAULT NULL,
   `canonical_phone_number` varchar(255) DEFAULT NULL,
   `user_stopped` tinyint(1) NOT NULL,
   PRIMARY KEY (`id`),
@@ -561,21 +561,18 @@ CREATE TABLE `respondents` (
   CONSTRAINT `respondents_respondent_group_id_fkey` FOREIGN KEY (`respondent_group_id`) REFERENCES `respondent_groups` (`id`) ON DELETE CASCADE,
   CONSTRAINT `respondents_retry_stat_id_fkey` FOREIGN KEY (`retry_stat_id`) REFERENCES `retry_stats` (`id`) ON DELETE CASCADE,
   CONSTRAINT `respondents_survey_id_fkey` FOREIGN KEY (`survey_id`) REFERENCES `surveys` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
 /*!40101 SET character_set_client = @saved_cs_client */;
 /*!50003 SET @saved_cs_client      = @@character_set_client */ ;
 /*!50003 SET @saved_cs_results     = @@character_set_results */ ;
 /*!50003 SET @saved_col_connection = @@collation_connection */ ;
-/*!50003 SET character_set_client  = utf8 */ ;
-/*!50003 SET character_set_results = utf8 */ ;
-/*!50003 SET collation_connection  = utf8_general_ci */ ;
+/*!50003 SET character_set_client  = utf8mb3 */ ;
+/*!50003 SET character_set_results = utf8mb3 */ ;
+/*!50003 SET collation_connection  = utf8mb3_general_ci */ ;
 /*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
-/*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION' */ ;
+/*!50003 SET sql_mode              = 'NO_AUTO_VALUE_ON_ZERO' */ ;
 DELIMITER ;;
-/*!50003 CREATE*/ /*!50017 DEFINER=`root`@`%`*/ /*!50003 TRIGGER respondents_ins
-AFTER INSERT ON respondents
-FOR EACH ROW
-BEGIN
+/*!50003 CREATE*/ /*!50017 DEFINER=`root`@`%`*/ /*!50003 TRIGGER `respondents_ins` AFTER INSERT ON `respondents` FOR EACH ROW BEGIN
 
   INSERT INTO respondent_stats(survey_id, questionnaire_id, state, disposition, quota_bucket_id, mode, `count`)
   VALUES (NEW.survey_id, IFNULL(NEW.questionnaire_id, 0), NEW.state, NEW.disposition, IFNULL(NEW.quota_bucket_id, 0), IFNULL(NEW.mode, ''), 1)
@@ -591,16 +588,13 @@ DELIMITER ;
 /*!50003 SET @saved_cs_client      = @@character_set_client */ ;
 /*!50003 SET @saved_cs_results     = @@character_set_results */ ;
 /*!50003 SET @saved_col_connection = @@collation_connection */ ;
-/*!50003 SET character_set_client  = utf8 */ ;
-/*!50003 SET character_set_results = utf8 */ ;
-/*!50003 SET collation_connection  = utf8_general_ci */ ;
+/*!50003 SET character_set_client  = utf8mb3 */ ;
+/*!50003 SET character_set_results = utf8mb3 */ ;
+/*!50003 SET collation_connection  = utf8mb3_general_ci */ ;
 /*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
-/*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION' */ ;
+/*!50003 SET sql_mode              = 'NO_AUTO_VALUE_ON_ZERO' */ ;
 DELIMITER ;;
-/*!50003 CREATE*/ /*!50017 DEFINER=`root`@`%`*/ /*!50003 TRIGGER on_respondents_completed_ins
-AFTER INSERT ON respondents
-FOR EACH ROW
-BEGIN
+/*!50003 CREATE*/ /*!50017 DEFINER=`root`@`%`*/ /*!50003 TRIGGER `on_respondents_completed_ins` AFTER INSERT ON `respondents` FOR EACH ROW BEGIN
 
   IF NEW.disposition = 'completed' THEN
     INSERT INTO completed_respondents(survey_id, questionnaire_id, quota_bucket_id, mode, date, count)
@@ -617,16 +611,13 @@ DELIMITER ;
 /*!50003 SET @saved_cs_client      = @@character_set_client */ ;
 /*!50003 SET @saved_cs_results     = @@character_set_results */ ;
 /*!50003 SET @saved_col_connection = @@collation_connection */ ;
-/*!50003 SET character_set_client  = utf8 */ ;
-/*!50003 SET character_set_results = utf8 */ ;
-/*!50003 SET collation_connection  = utf8_general_ci */ ;
+/*!50003 SET character_set_client  = utf8mb3 */ ;
+/*!50003 SET character_set_results = utf8mb3 */ ;
+/*!50003 SET collation_connection  = utf8mb3_general_ci */ ;
 /*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
-/*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION' */ ;
+/*!50003 SET sql_mode              = 'NO_AUTO_VALUE_ON_ZERO' */ ;
 DELIMITER ;;
-/*!50003 CREATE*/ /*!50017 DEFINER=`root`@`%`*/ /*!50003 TRIGGER respondents_upd
-AFTER UPDATE ON respondents
-FOR EACH ROW
-BEGIN
+/*!50003 CREATE*/ /*!50017 DEFINER=`root`@`%`*/ /*!50003 TRIGGER `respondents_upd` AFTER UPDATE ON `respondents` FOR EACH ROW BEGIN
 
   UPDATE respondent_stats
      SET `count` = `count` - 1
@@ -652,16 +643,13 @@ DELIMITER ;
 /*!50003 SET @saved_cs_client      = @@character_set_client */ ;
 /*!50003 SET @saved_cs_results     = @@character_set_results */ ;
 /*!50003 SET @saved_col_connection = @@collation_connection */ ;
-/*!50003 SET character_set_client  = utf8 */ ;
-/*!50003 SET character_set_results = utf8 */ ;
-/*!50003 SET collation_connection  = utf8_general_ci */ ;
+/*!50003 SET character_set_client  = utf8mb3 */ ;
+/*!50003 SET character_set_results = utf8mb3 */ ;
+/*!50003 SET collation_connection  = utf8mb3_general_ci */ ;
 /*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
-/*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION' */ ;
+/*!50003 SET sql_mode              = 'NO_AUTO_VALUE_ON_ZERO' */ ;
 DELIMITER ;;
-/*!50003 CREATE*/ /*!50017 DEFINER=`root`@`%`*/ /*!50003 TRIGGER on_respondents_completed_upd
-AFTER UPDATE ON respondents
-FOR EACH ROW
-BEGIN
+/*!50003 CREATE*/ /*!50017 DEFINER=`root`@`%`*/ /*!50003 TRIGGER `on_respondents_completed_upd` AFTER UPDATE ON `respondents` FOR EACH ROW BEGIN
 
   IF NEW.disposition = 'completed' AND OLD.disposition <> 'completed' THEN
     INSERT INTO completed_respondents(survey_id, questionnaire_id, quota_bucket_id, mode, date, count)
@@ -686,16 +674,13 @@ DELIMITER ;
 /*!50003 SET @saved_cs_client      = @@character_set_client */ ;
 /*!50003 SET @saved_cs_results     = @@character_set_results */ ;
 /*!50003 SET @saved_col_connection = @@collation_connection */ ;
-/*!50003 SET character_set_client  = utf8 */ ;
-/*!50003 SET character_set_results = utf8 */ ;
-/*!50003 SET collation_connection  = utf8_general_ci */ ;
+/*!50003 SET character_set_client  = utf8mb3 */ ;
+/*!50003 SET character_set_results = utf8mb3 */ ;
+/*!50003 SET collation_connection  = utf8mb3_general_ci */ ;
 /*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
-/*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION' */ ;
+/*!50003 SET sql_mode              = 'NO_AUTO_VALUE_ON_ZERO' */ ;
 DELIMITER ;;
-/*!50003 CREATE*/ /*!50017 DEFINER=`root`@`%`*/ /*!50003 TRIGGER respondents_del
-AFTER DELETE ON respondents
-FOR EACH ROW
-BEGIN
+/*!50003 CREATE*/ /*!50017 DEFINER=`root`@`%`*/ /*!50003 TRIGGER `respondents_del` AFTER DELETE ON `respondents` FOR EACH ROW BEGIN
 
   UPDATE respondent_stats
      SET `count` = `count` - 1
@@ -716,16 +701,13 @@ DELIMITER ;
 /*!50003 SET @saved_cs_client      = @@character_set_client */ ;
 /*!50003 SET @saved_cs_results     = @@character_set_results */ ;
 /*!50003 SET @saved_col_connection = @@collation_connection */ ;
-/*!50003 SET character_set_client  = utf8 */ ;
-/*!50003 SET character_set_results = utf8 */ ;
-/*!50003 SET collation_connection  = utf8_general_ci */ ;
+/*!50003 SET character_set_client  = utf8mb3 */ ;
+/*!50003 SET character_set_results = utf8mb3 */ ;
+/*!50003 SET collation_connection  = utf8mb3_general_ci */ ;
 /*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
-/*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION' */ ;
+/*!50003 SET sql_mode              = 'NO_AUTO_VALUE_ON_ZERO' */ ;
 DELIMITER ;;
-/*!50003 CREATE*/ /*!50017 DEFINER=`root`@`%`*/ /*!50003 TRIGGER on_respondents_completed_del
-AFTER DELETE ON respondents
-FOR EACH ROW
-BEGIN
+/*!50003 CREATE*/ /*!50017 DEFINER=`root`@`%`*/ /*!50003 TRIGGER `on_respondents_completed_del` AFTER DELETE ON `respondents` FOR EACH ROW BEGIN
 
   IF OLD.disposition = 'completed' THEN
     UPDATE completed_respondents
@@ -752,17 +734,17 @@ DROP TABLE IF EXISTS `responses`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `responses` (
-  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `id` bigint unsigned NOT NULL AUTO_INCREMENT,
   `field_name` varchar(255) DEFAULT NULL,
   `value` varchar(255) DEFAULT NULL,
-  `respondent_id` bigint(20) unsigned DEFAULT NULL,
+  `respondent_id` bigint unsigned DEFAULT NULL,
   `inserted_at` datetime NOT NULL,
   `updated_at` datetime NOT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `id` (`id`),
   KEY `responses_respondent_id_index` (`respondent_id`),
   CONSTRAINT `responses_respondent_id_fkey` FOREIGN KEY (`respondent_id`) REFERENCES `respondents` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -773,12 +755,12 @@ DROP TABLE IF EXISTS `retry_stats`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `retry_stats` (
-  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `id` bigint unsigned NOT NULL AUTO_INCREMENT,
   `mode` varchar(255) NOT NULL,
-  `attempt` int(11) NOT NULL,
+  `attempt` int NOT NULL,
   `retry_time` varchar(255) NOT NULL,
-  `count` int(11) NOT NULL,
-  `survey_id` bigint(20) unsigned NOT NULL,
+  `count` int NOT NULL,
+  `survey_id` bigint unsigned NOT NULL,
   `inserted_at` datetime NOT NULL,
   `updated_at` datetime NOT NULL,
   `ivr_active` tinyint(1) NOT NULL,
@@ -787,7 +769,7 @@ CREATE TABLE `retry_stats` (
   UNIQUE KEY `retry_stats_mode_attempt_retry_time_ivr_active_survey_id_index` (`mode`,`attempt`,`retry_time`,`ivr_active`,`survey_id`),
   KEY `retry_stats_survey_id_fkey` (`survey_id`),
   CONSTRAINT `retry_stats_survey_id_fkey` FOREIGN KEY (`survey_id`) REFERENCES `surveys` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -798,10 +780,10 @@ DROP TABLE IF EXISTS `schema_migrations`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `schema_migrations` (
-  `version` bigint(20) NOT NULL,
+  `version` bigint NOT NULL,
   `inserted_at` datetime DEFAULT NULL,
   PRIMARY KEY (`version`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -812,7 +794,7 @@ DROP TABLE IF EXISTS `sessions`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `sessions` (
-  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `id` bigint unsigned NOT NULL AUTO_INCREMENT,
   `token` varchar(255) DEFAULT NULL,
   `user_type` varchar(255) DEFAULT NULL,
   `user_id` varchar(255) DEFAULT NULL,
@@ -822,7 +804,7 @@ CREATE TABLE `sessions` (
   UNIQUE KEY `id` (`id`),
   UNIQUE KEY `sessions_token_index` (`token`),
   KEY `sessions_user_id_index` (`user_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -833,7 +815,7 @@ DROP TABLE IF EXISTS `short_links`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `short_links` (
-  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `id` bigint unsigned NOT NULL AUTO_INCREMENT,
   `hash` varchar(255) DEFAULT NULL,
   `name` varchar(255) DEFAULT NULL,
   `target` varchar(255) DEFAULT NULL,
@@ -841,7 +823,7 @@ CREATE TABLE `short_links` (
   `updated_at` datetime NOT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `id` (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -852,12 +834,12 @@ DROP TABLE IF EXISTS `survey_log_entries`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `survey_log_entries` (
-  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
-  `survey_id` int(11) DEFAULT NULL,
+  `id` bigint unsigned NOT NULL AUTO_INCREMENT,
+  `survey_id` int DEFAULT NULL,
   `mode` varchar(255) DEFAULT NULL,
-  `respondent_id` int(11) DEFAULT NULL,
+  `respondent_id` int DEFAULT NULL,
   `respondent_hashed_number` varchar(255) DEFAULT NULL,
-  `channel_id` int(11) DEFAULT NULL,
+  `channel_id` int DEFAULT NULL,
   `disposition` varchar(255) DEFAULT NULL,
   `action_type` varchar(255) DEFAULT NULL,
   `action_data` longtext,
@@ -867,7 +849,7 @@ CREATE TABLE `survey_log_entries` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `id` (`id`),
   KEY `survey_log_entries_survey_id_respondent_hashed_number_id_index` (`survey_id`,`respondent_hashed_number`,`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -878,9 +860,9 @@ DROP TABLE IF EXISTS `survey_questionnaires`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `survey_questionnaires` (
-  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
-  `survey_id` bigint(20) unsigned DEFAULT NULL,
-  `questionnaire_id` bigint(20) unsigned DEFAULT NULL,
+  `id` bigint unsigned NOT NULL AUTO_INCREMENT,
+  `survey_id` bigint unsigned DEFAULT NULL,
+  `questionnaire_id` bigint unsigned DEFAULT NULL,
   `inserted_at` datetime NOT NULL,
   `updated_at` datetime NOT NULL,
   PRIMARY KEY (`id`),
@@ -889,7 +871,7 @@ CREATE TABLE `survey_questionnaires` (
   KEY `survey_questionnaires_questionnaire_id_index` (`questionnaire_id`),
   CONSTRAINT `survey_questionnaires_questionnaire_id_fkey` FOREIGN KEY (`questionnaire_id`) REFERENCES `questionnaires` (`id`),
   CONSTRAINT `survey_questionnaires_survey_id_fkey` FOREIGN KEY (`survey_id`) REFERENCES `surveys` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -900,13 +882,13 @@ DROP TABLE IF EXISTS `surveys`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `surveys` (
-  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `id` bigint unsigned NOT NULL AUTO_INCREMENT,
   `name` varchar(255) DEFAULT NULL,
-  `project_id` bigint(20) unsigned DEFAULT NULL,
+  `project_id` bigint unsigned DEFAULT NULL,
   `inserted_at` datetime NOT NULL,
   `updated_at` datetime NOT NULL,
   `state` varchar(255) DEFAULT 'pending',
-  `cutoff` int(11) DEFAULT NULL,
+  `cutoff` int DEFAULT NULL,
   `mode` text,
   `sms_retry_configuration` text,
   `ivr_retry_configuration` text,
@@ -917,18 +899,18 @@ CREATE TABLE `surveys` (
   `count_partial_results` tinyint(1) DEFAULT '0',
   `mobileweb_retry_configuration` text,
   `simulation` tinyint(1) DEFAULT '0',
-  `exit_code` int(11) DEFAULT NULL,
+  `exit_code` int DEFAULT NULL,
   `exit_message` varchar(255) DEFAULT NULL,
   `schedule` text,
   `floip_package_id` varchar(255) DEFAULT NULL,
   `description` text,
   `locked` tinyint(1) DEFAULT '0',
-  `folder_id` bigint(20) unsigned DEFAULT NULL,
+  `folder_id` bigint unsigned DEFAULT NULL,
   `ended_at` datetime DEFAULT NULL,
   `incentives_enabled` tinyint(1) DEFAULT '1',
   `first_window_started_at` datetime DEFAULT NULL,
   `last_window_ends_at` datetime DEFAULT NULL,
-  `panel_survey_id` bigint(20) unsigned DEFAULT NULL,
+  `panel_survey_id` bigint unsigned DEFAULT NULL,
   `generates_panel_survey` tinyint(1) DEFAULT '0',
   PRIMARY KEY (`id`),
   UNIQUE KEY `id` (`id`),
@@ -939,7 +921,7 @@ CREATE TABLE `surveys` (
   CONSTRAINT `surveys_folder_id_fkey` FOREIGN KEY (`folder_id`) REFERENCES `folders` (`id`),
   CONSTRAINT `surveys_panel_survey_id_fkey` FOREIGN KEY (`panel_survey_id`) REFERENCES `panel_surveys` (`id`),
   CONSTRAINT `surveys_project_id_fkey` FOREIGN KEY (`project_id`) REFERENCES `projects` (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -950,14 +932,14 @@ DROP TABLE IF EXISTS `translations`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `translations` (
-  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `id` bigint unsigned NOT NULL AUTO_INCREMENT,
   `mode` varchar(255) DEFAULT NULL,
   `source_lang` varchar(255) DEFAULT NULL,
   `source_text` longtext,
   `target_lang` varchar(255) DEFAULT NULL,
   `target_text` longtext,
-  `project_id` bigint(20) unsigned DEFAULT NULL,
-  `questionnaire_id` bigint(20) unsigned DEFAULT NULL,
+  `project_id` bigint unsigned DEFAULT NULL,
+  `questionnaire_id` bigint unsigned DEFAULT NULL,
   `inserted_at` datetime NOT NULL,
   `updated_at` datetime NOT NULL,
   `scope` varchar(255) DEFAULT NULL,
@@ -967,7 +949,7 @@ CREATE TABLE `translations` (
   KEY `translations_questionnaire_id_index` (`questionnaire_id`),
   CONSTRAINT `translations_project_id_fkey` FOREIGN KEY (`project_id`) REFERENCES `projects` (`id`),
   CONSTRAINT `translations_questionnaire_id_fkey` FOREIGN KEY (`questionnaire_id`) REFERENCES `questionnaires` (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -978,7 +960,7 @@ DROP TABLE IF EXISTS `users`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `users` (
-  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `id` bigint unsigned NOT NULL AUTO_INCREMENT,
   `email` varchar(255) DEFAULT NULL,
   `encrypted_password` varchar(255) DEFAULT NULL,
   `inserted_at` datetime NOT NULL,
@@ -996,7 +978,7 @@ CREATE TABLE `users` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `id` (`id`),
   UNIQUE KEY `users_email_index` (`email`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -1012,7 +994,7 @@ CREATE TABLE `users` (
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2023-08-28 11:00:34
+-- Dump completed on 2024-02-21  5:26:53
 INSERT INTO `schema_migrations` (version) VALUES (20160812145257);
 INSERT INTO `schema_migrations` (version) VALUES (20160816183915);
 INSERT INTO `schema_migrations` (version) VALUES (20160830200454);
