@@ -23,7 +23,9 @@ erl_crash.dump
 # variables.
 /config/prod.secret.exs
 
+# Local configuration
 /config/local.exs
+/docker-compose.override.yml
 
 .vagrant
 
