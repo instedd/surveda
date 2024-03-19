@@ -49,7 +49,7 @@ services:
       - yarn-cache:/usr/local/share/.cache/yarn
 
   ngrok:
-    image: ngrok/ngrok:3.8.0-alpine
+    image: ngrok/ngrok:alpine
     ports:
       - 4040
     command: http app:80
