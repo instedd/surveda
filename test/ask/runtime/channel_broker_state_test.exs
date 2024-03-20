@@ -256,7 +256,7 @@ defmodule Ask.Runtime.ChannelBrokerStateTest do
                Queue.active_contacts(0) |> Enum.map(fn c -> c.respondent_id end) |> Enum.sort()
 
       # 4. normal priority queued 2nd
-      {state, _} = State.activate_next_in_queue(state)
+      {_, _} = State.activate_next_in_queue(state)
 
       assert [1, 2, 3, 4] =
                Queue.active_contacts(0) |> Enum.map(fn c -> c.respondent_id end) |> Enum.sort()
