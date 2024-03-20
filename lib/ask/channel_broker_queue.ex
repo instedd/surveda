@@ -12,7 +12,7 @@ defmodule Ask.ChannelBrokerQueue do
 
     # queued (pending):
     field :queued_at, :utc_datetime
-    field :priority, Ecto.Enum, values: [low: 2, normal: 1, high: 0]
+    field :priority, Ecto.Enum, values: [normal: 1, high: 0]
     # number of outgoing messages (ivr=1, sms=1+)
     field :size, :integer
     field :token, :string
