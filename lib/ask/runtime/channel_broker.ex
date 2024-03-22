@@ -420,9 +420,10 @@ defmodule Ask.Runtime.ChannelBroker do
       {respondent, token, not_before, not_after} ->
         cond do
           expired_call?(not_after) ->
-            State.deactivate_contact(new_state, respondent.id)
+            new_state = State.deactivate_contact(new_state, respondent.id)
             Ask.Runtime.Survey.contact_attempt_expired(respondent)
-
+            new_state
+            
           true ->
             ivr_call(new_state, respondent, token, not_before, not_after)
         end
