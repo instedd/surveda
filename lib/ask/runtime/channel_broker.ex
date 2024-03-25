@@ -420,12 +420,10 @@ defmodule Ask.Runtime.ChannelBroker do
       {respondent, token, not_before, not_after} ->
         cond do
           expired_call?(not_after) ->
+            new_state = State.deactivate_contact(new_state, respondent.id)
             Ask.Runtime.Survey.contact_attempt_expired(respondent)
-            State.deactivate_contact(new_state, respondent.id)
-
-          future_call?(not_before) ->
-            State.reenqueue_contact(new_state, respondent.id, :low)
-
+            new_state
+            
           true ->
             ivr_call(new_state, respondent, token, not_before, not_after)
         end
@@ -433,13 +431,6 @@ defmodule Ask.Runtime.ChannelBroker do
       {respondent, token, reply} ->
         channel_ask(new_state, respondent, token, reply)
     end
-  end
-
-  defp future_call?(not_before) do
-    # we add some leeway to avoid deprioritizing calls that have just been
-    # pushed (scheduled for 5 seconds in the future) and allow calls that are
-    # about to be made to be scheduled now
-    DateTime.compare(not_before, Ask.SystemTime.time().now |> DateTime.add(60, :second)) == :gt
   end
 
   defp expired_call?(not_after) do

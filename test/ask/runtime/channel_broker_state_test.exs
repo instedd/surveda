@@ -232,13 +232,10 @@ defmodule Ask.Runtime.ChannelBrokerStateTest do
       state = State.queue_contact(state, new_contact(2), 1, :high)
 
       mock_time(DateTime.add(now, 2, :second))
-      state = State.queue_contact(state, new_contact(3), 1, :low)
+      state = State.queue_contact(state, new_contact(3), 1, :normal)
 
       mock_time(DateTime.add(now, 3, :second))
-      state = State.queue_contact(state, new_contact(4), 1, :normal)
-
-      mock_time(DateTime.add(now, 5, :second))
-      state = State.queue_contact(state, new_contact(5), 1, :low)
+      state = State.queue_contact(state, new_contact(4), 1, :high)
 
       # 1. high priority
       {state, _} = State.activate_next_in_queue(state)
@@ -246,25 +243,23 @@ defmodule Ask.Runtime.ChannelBrokerStateTest do
       assert [2] =
                Queue.active_contacts(0) |> Enum.map(fn c -> c.respondent_id end) |> Enum.sort()
 
-      # 2. normal priority queued 1st
+      # 2. high priority queued 2nd
       {state, _} = State.activate_next_in_queue(state)
 
-      assert [1, 2] =
+      assert [2, 4] =
                Queue.active_contacts(0) |> Enum.map(fn c -> c.respondent_id end) |> Enum.sort()
 
-      # 3. normal priority queued 2nd
+      # 3. normal priority queued 1st
       {state, _} = State.activate_next_in_queue(state)
 
       assert [1, 2, 4] =
                Queue.active_contacts(0) |> Enum.map(fn c -> c.respondent_id end) |> Enum.sort()
 
-      # 4. low priority queued 1st
+      # 4. normal priority queued 2nd
       {_, _} = State.activate_next_in_queue(state)
 
       assert [1, 2, 3, 4] =
                Queue.active_contacts(0) |> Enum.map(fn c -> c.respondent_id end) |> Enum.sort()
-
-      assert [%{respondent_id: 5}] = Queue.queued_contacts(0)
     end
 
     @tag :time_mock

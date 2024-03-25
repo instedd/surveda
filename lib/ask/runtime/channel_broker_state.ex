@@ -86,7 +86,7 @@ defmodule Ask.Runtime.ChannelBrokerState do
     end
   end
 
-  # Adds an IVR contact to the queue with given priority (`:high`, `:normal`, `:low`).
+  # Adds an IVR contact to the queue with given priority (`:high`, `:normal`).
   def queue_contact(state, {respondent, token, not_before, not_after}, size, priority) do
     Queue.upsert!(%{
       channel_id: state.channel_id,
@@ -103,7 +103,7 @@ defmodule Ask.Runtime.ChannelBrokerState do
     state
   end
 
-  # Adds an SMS contact to the queue with given priority (`:high`, `:normal`, `:low`).
+  # Adds an SMS contact to the queue with given priority (`:high`, `:normal`).
   def queue_contact(state, {respondent, token, reply}, size, priority) do
     Queue.upsert!(%{
       channel_id: state.channel_id,
@@ -350,7 +350,6 @@ defmodule Ask.Runtime.ChannelBrokerState do
       channel: state.channel_id,
       active: Queue.count_active_contacts(state.channel_id),
       queued: Enum.reduce(queued, 0, fn {_, count}, a -> a + count end),
-      queued_low: queued[:low] || 0,
       queued_normal: queued[:normal] || 0,
       queued_high: queued[:high] || 0
     ]
