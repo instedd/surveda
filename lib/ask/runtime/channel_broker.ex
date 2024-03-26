@@ -161,7 +161,7 @@ defmodule Ask.Runtime.ChannelBroker do
 
     new_state =
       refreshed_state
-      |> State.queue_contact(contact, size)
+      |> queue_contact(contact, size)
       |> try_activate_next_queued_contact()
       |> Agent.save_state()
 
@@ -184,7 +184,7 @@ defmodule Ask.Runtime.ChannelBroker do
 
     new_state =
       state
-      |> State.queue_contact(contact, 1)
+      |> queue_contact(contact, 1)
       |> try_activate_next_queued_contact()
       |> Agent.save_state()
 
@@ -492,6 +492,19 @@ defmodule Ask.Runtime.ChannelBroker do
     else
       state
     end
+  end
+
+  # Adds a contact to the queue.
+  # The priority is set from the respondent's state
+  defp queue_contact(state, contact, size) do  
+    respondent = elem(contact, 0)
+    priority = cond do
+      respondent.disposition != :queued -> :high
+      respondent.stats.attempts != nil -> :high 
+      true -> :normal
+    end
+    
+    State.queue_contact(state, contact, size, priority)
   end
 
   # Log helpers
