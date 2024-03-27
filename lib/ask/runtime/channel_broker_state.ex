@@ -74,17 +74,7 @@ defmodule Ask.Runtime.ChannelBrokerState do
     )
   end
 
-  # Adds a contact to the queue. The priority is set from the respondent's
-  # disposition.
-  def queue_contact(state, contact, size) do
-    respondent = elem(contact, 0)
-
-    if respondent.disposition == :queued do
-      queue_contact(state, contact, size, :normal)
-    else
-      queue_contact(state, contact, size, :high)
-    end
-  end
+  def queue_contact(state, contact, size, priority \\ :normal)
 
   # Adds an IVR contact to the queue with given priority (`:high`, `:normal`).
   def queue_contact(state, {respondent, token, not_before, not_after}, size, priority) do

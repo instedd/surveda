@@ -90,6 +90,100 @@ defmodule Ask.Runtime.ChannelBrokerTest do
         assert_not_called(Ask.Runtime.Survey.contact_attempt_expired(%{id: Enum.at(respondents, 4).id}))
       end
     end
+    
+    test "prioritizes respondents that have disposition :queued but more than one attempt" do
+      %{state: state, respondents: respondents} = build_survey("ivr")
+
+      respondent1 = Enum.at(respondents, 0)
+                    |> Ask.Respondent.add_mode_attempt!(:ivr)
+                    |> Ask.Respondent.add_mode_attempt!(:ivr)
+                    |> Ask.Respondent.changeset(%{disposition: :queued})
+                    |> Repo.update!()
+
+      respondent2 = Enum.at(respondents, 1)
+                      |> Ask.Respondent.add_mode_attempt!(:ivr)
+                      |> Ask.Respondent.changeset(%{disposition: :queued})
+                      |> Repo.update!()
+
+      assert 2 == Ask.Stats.attempts(respondent1.stats, :full)
+      assert 1 == Ask.Stats.attempts(respondent2.stats, :full)
+
+      now = SystemTime.time().now
+      not_before = DateTime.add(now, 5, :second)
+      not_after = DateTime.add(now, 60, :second)
+
+      with_mock Ask.Runtime.Survey, [contact_attempt_expired: fn _ -> :ok end] do
+        state =
+          state
+          |> activate_respondent("ivr", respondent1, not_before, not_after)
+          |> activate_respondent("ivr", respondent2, not_before, not_after)
+
+        contacts = Ask.ChannelBrokerQueue.active_contacts(state.channel_id)
+        contact1 = Enum.at(contacts, 0)
+        contact2 = Enum.at(contacts, 1)
+
+        assert contact1.respondent_id == respondent1.id
+        assert contact1.priority == :high
+        assert contact2.respondent_id == respondent2.id
+        assert contact2.priority == :normal
+      end
+    end
+
+    test "prioritizes respondents that have disposition :contacted" do
+      %{state: state, respondents: respondents} = build_survey("ivr")
+
+      respondent1 = Enum.at(respondents, 0)
+                    |> Ask.Respondent.changeset(%{disposition: :contacted})
+                    |> Repo.update!()
+
+      respondent2 = Enum.at(respondents, 1)
+                      |> Ask.Respondent.changeset(%{disposition: :queued})
+                      |> Repo.update!()
+
+      now = SystemTime.time().now
+      not_before = DateTime.add(now, 5, :second)
+      not_after = DateTime.add(now, 60, :second)
+
+      with_mock Ask.Runtime.Survey, [contact_attempt_expired: fn _ -> :ok end] do
+        state =
+          state
+          |> activate_respondent("ivr", respondent1, not_before, not_after)
+          |> activate_respondent("ivr", respondent2, not_before, not_after)
+
+        contacts = Ask.ChannelBrokerQueue.active_contacts(state.channel_id)
+        contact1 = Enum.at(contacts, 0)
+        contact2 = Enum.at(contacts, 1)
+
+        assert contact1.respondent_id == respondent1.id
+        assert contact1.priority == :high
+        assert contact2.respondent_id == respondent2.id
+        assert contact2.priority == :normal
+      end
+    end
+
+    test "queues respondents that have disposition :queued with priority :normal" do
+      %{state: state, respondents: respondents} = build_survey("ivr")
+
+      respondent = Enum.at(respondents, 0)
+                    |> Ask.Respondent.changeset(%{disposition: :queued})
+                    |> Repo.update!()
+
+      now = SystemTime.time().now
+      not_before = DateTime.add(now, 5, :second)
+      not_after = DateTime.add(now, 60, :second)
+
+      with_mock Ask.Runtime.Survey, [contact_attempt_expired: fn _ -> :ok end] do
+        state =
+          state
+          |> activate_respondent("ivr", respondent, not_before, not_after)
+
+        contacts = Ask.ChannelBrokerQueue.active_contacts(state.channel_id)
+        contact = Enum.at(contacts, 0)
+
+        assert contact.respondent_id == respondent.id
+        assert contact.priority == :normal
+      end
+    end
 
     @tag :time_mock
     test "Reschedules calls scheduled for the future" do
