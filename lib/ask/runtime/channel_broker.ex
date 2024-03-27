@@ -501,10 +501,13 @@ defmodule Ask.Runtime.ChannelBroker do
     priority = cond do
       # Respondent is participating in the survey
       prioritized_disposition?(respondent.disposition) -> :high
+
       # We have already 'bothered' this respondent
-      # attempts > 1 since when queuing the respondent the first time
-      # it already has `attempts: 1`
+      # we check that attempts > 1 since
+      # when queuing the respondent the first time
+      # already has `attempts: 1` (see Session.run_flow)
       Stats.attempts(respondent.stats, :full) > 1 -> :high
+
       true -> :normal
     end
 
