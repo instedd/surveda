@@ -96,9 +96,25 @@ defmodule Ask.Runtime.Session do
     channel = session.current_mode.channel
 
     cond do
+
+      # This branch exists to avoid retrying if we actually never contacted the respondent
+      #
+      # The timeout of the respondent is set when we activate the respondent session
+      # not when we actually contact the respondent
+      # What we are doing here is replying to update the respondent timeout
+      # because we the last attempt didn't go through yet
       ChannelBroker.has_queued_message?(channel.id, session.respondent.id) ->
         {:ok, session, %Reply{}, current_timeout(session)}
 
+      # TODO: Shouldn't this branch be first?
+      # This message_expired is of the runtime channel
+      # Could it happen that the message got expired in verboice
+      # but the contact is still queued?
+      # - The callback of verboice_channel#callback/1 calls 
+      #   Survey#contact_attempt_expired that should do a 
+      #    new contact to the respondent which should 
+      #    do an upsert in the queue 
+      #   * The thing is, is the respondent ever updated in the db?
       ChannelBroker.message_expired?(channel.id, session.respondent.id) ->
         # do not retry since the respondent was never contacted, thus the retries should not be consumed
         session = contact_respondent(session)
