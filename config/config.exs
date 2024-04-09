@@ -12,7 +12,7 @@ config :plug, :types, %{
 }
 
 # Use Jason for JSON parsing in Phoenix
-config :phoenix, :json_library, Poison
+config :phoenix, :json_library, Jason
 
 # General application configuration
 config :ask,
