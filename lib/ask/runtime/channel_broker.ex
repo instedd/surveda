@@ -3,7 +3,7 @@ defmodule Ask.Runtime.ChannelBroker do
   alias Ask.Runtime.ChannelBrokerSupervisor
   alias Ask.Runtime.ChannelBrokerAgent, as: Agent
   alias Ask.Runtime.ChannelBrokerState, as: State
-  alias Ask.{Channel, Logger}
+  alias Ask.{Channel, Logger, Stats}
   import Ecto.Query
   alias Ask.Repo
   use GenServer
@@ -161,7 +161,7 @@ defmodule Ask.Runtime.ChannelBroker do
 
     new_state =
       refreshed_state
-      |> State.queue_contact(contact, size)
+      |> queue_contact(contact, size)
       |> try_activate_next_queued_contact()
       |> Agent.save_state()
 
@@ -184,7 +184,7 @@ defmodule Ask.Runtime.ChannelBroker do
 
     new_state =
       state
-      |> State.queue_contact(contact, 1)
+      |> queue_contact(contact, 1)
       |> try_activate_next_queued_contact()
       |> Agent.save_state()
 
@@ -493,6 +493,31 @@ defmodule Ask.Runtime.ChannelBroker do
       state
     end
   end
+
+  # Adds a contact to the queue.
+  # The priority is set from the respondent's state
+  defp queue_contact(state, contact, size) do
+    respondent = elem(contact, 0)
+    priority = cond do
+      # Respondent is participating in the survey
+      prioritized_disposition?(respondent.disposition) -> :high
+
+      # We have already 'bothered' this respondent
+      # we check that attempts > 1 since
+      # when queuing the respondent the first time
+      # already has `attempts: 1` (see Session.run_flow)
+      Stats.attempts(respondent.stats, :full) > 1 -> :high
+
+      true -> :normal
+    end
+
+    State.queue_contact(state, contact, size, priority)
+  end
+
+  defp prioritized_disposition?(:queued), do: false
+  defp prioritized_disposition?(:registered), do: false
+  defp prioritized_disposition?(:failed), do: false
+  defp prioritized_disposition?(_), do: true
 
   # Log helpers
 

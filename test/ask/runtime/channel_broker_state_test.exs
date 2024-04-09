@@ -75,10 +75,10 @@ defmodule Ask.Runtime.ChannelBrokerStateTest do
       assert [] = Queue.active_contacts(0)
     end
 
-    test "sets priority from respondent's disposition", %{state: state} do
+    test "respects given priority", %{state: state} do
       state
-      |> State.queue_contact(new_contact(1, :queued), 1)
-      |> State.queue_contact(new_contact(2, :started), 1)
+      |> State.queue_contact(new_contact(1, :queued), 1, :normal)
+      |> State.queue_contact(new_contact(2, :started), 1, :high)
 
       assert [
                %{respondent_id: 1, priority: :normal},
