@@ -522,14 +522,49 @@ describe('survey reducer', () => {
         quotas: {
           vars: ['Smokes', 'Age'],
           buckets: [
+            {'condition': [{store: 'Age', value: [null, 19]}, {store: 'Smokes', value: 'Yes'}], 'quota': 0},
             {'condition': [{store: 'Age', value: [20, 29]}, {store: 'Smokes', value: 'Yes'}], 'quota': 0},
             {'condition': [{store: 'Age', value: [30, 39]}, {store: 'Smokes', value: 'Yes'}], 'quota': 0},
             {'condition': [{store: 'Age', value: [40, 49]}, {store: 'Smokes', value: 'Yes'}], 'quota': 0},
-            {'condition': [{store: 'Age', value: [50, 120]}, {store: 'Smokes', value: 'Yes'}], 'quota': 0},
+            {'condition': [{store: 'Age', value: [50, 119]}, {store: 'Smokes', value: 'Yes'}], 'quota': 0},
+            {'condition': [{store: 'Age', value: [120, null]}, {store: 'Smokes', value: 'Yes'}], 'quota': 0},
+            {'condition': [{store: 'Age', value: [null, 19]}, {store: 'Smokes', value: 'No'}], 'quota': 0},
             {'condition': [{store: 'Age', value: [20, 29]}, {store: 'Smokes', value: 'No'}], 'quota': 0},
             {'condition': [{store: 'Age', value: [30, 39]}, {store: 'Smokes', value: 'No'}], 'quota': 0},
             {'condition': [{store: 'Age', value: [40, 49]}, {store: 'Smokes', value: 'No'}], 'quota': 0},
-            {'condition': [{store: 'Age', value: [50, 120]}, {store: 'Smokes', value: 'No'}], 'quota': 0}
+            {'condition': [{store: 'Age', value: [50, 119]}, {store: 'Smokes', value: 'No'}], 'quota': 0},
+            {'condition': [{store: 'Age', value: [120, null]}, {store: 'Smokes', value: 'No'}], 'quota': 0}
+          ]
+        }
+      }
+    })
+  })
+
+  it('should set quota vars from single numeric step', () => {
+    const questionnaire = deepFreeze({
+      steps: [
+        {
+          type: 'numeric',
+          store: 'Age'
+        }
+      ],
+      id: 1
+    })
+    const state = playActions([
+      actions.fetch(1, 1),
+      actions.receive(survey),
+      actions.setQuotaVars([{var: 'Age', steps: '35'}], questionnaire)
+    ])
+
+    expect(state).toEqual({
+      ...state,
+      data: {
+        ...state.data,
+        quotas: {
+          vars: ['Age'],
+          buckets: [
+            {'condition': [{store: 'Age', value: [null, 34]}], 'quota': 0},
+            {'condition': [{store: 'Age', value: [35, null]}], 'quota': 0},
           ]
         }
       }
@@ -581,18 +616,23 @@ describe('survey reducer', () => {
         buckets: [
           {
             'condition': [
-              { store: 'age', value: [1, 9] }
+              { store: 'age', value: [null, 9] }
             ]
           },
           {
             'condition': [
-              { store: 'age', value: [10, 50] }
+              { store: 'age', value: [10, 49] }
+            ]
+          },
+          {
+            'condition': [
+              { store: 'age', value: [50, null] }
             ]
           }
         ]
       }
     })
-    expect(rebuildInputFromQuotaBuckets('age', survey)).toEqual('1,10,50')
+    expect(rebuildInputFromQuotaBuckets('age', survey)).toEqual('10,50')
   })
 
   it('changes modeComparison', () => {

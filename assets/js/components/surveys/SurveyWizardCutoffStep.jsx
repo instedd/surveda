@@ -77,9 +77,9 @@ class SurveyWizardCutoffStep extends Component {
       bucket.condition.map(({ store, value }) => {
         if(Array.isArray(value) && value.length == 2){
           if(value[0] == null){
-            value = `<= ${value[1]}`
+            value = `< ${value[1] + 1}`
           } else if(value[1] == null){
-            value = `>= ${value[0]}`
+            value = `${value[0]}+`
           } else {
             value = join(value, " - ")
           }
