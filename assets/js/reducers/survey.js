@@ -5,6 +5,7 @@ import fetchReducer from "./fetch"
 import drop from "lodash/drop"
 import flatten from "lodash/flatten"
 import map from "lodash/map"
+import zip from "lodash/zip"
 import split from "lodash/split"
 import find from "lodash/find"
 import findIndex from "lodash/findIndex"
@@ -293,15 +294,11 @@ const intervalsFrom = (valueString) => {
   const values = map(split(valueString, ","), (value) => parseInt(value.trim())).sort(
     (a, b) => a - b
   )
-  if (values.length <= 1) {
-    return []
-  }
-
-  if (values.length == 2) {
-    return [[values[0], values[1]]]
-  }
-
-  return [[values[0], values[1] - 1], ...intervalsFrom(drop(values))]
+  const prevValues = map(values, (value) => value - 1)
+  
+  const lowerBounds = [null, ...values]
+  const upperBounds = [...prevValues, null]
+  return zip(lowerBounds, upperBounds)
 }
 
 const comparisonRatioChange = (state, action) => {
@@ -368,11 +365,7 @@ export const rebuildInputFromQuotaBuckets = (store: string, survey: Survey) => {
     buckets.map((bucket) => find(bucket.condition, (condition) => condition.store == store).value),
     isEqual
   )
-  let lastCondition = conditions.pop() // last condition's upper bound doesn't have to be incremented
-  conditions = conditions.map((x) => [x[0], x[1] + 1])
-  conditions.push(lastCondition)
-  conditions = flatten(conditions)
-  conditions = uniqWith(conditions, isEqual)
+  conditions = conditions.map((x) => x[0]).filter((x) => x !== null)
   return conditions.join()
 }
 

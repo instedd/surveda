@@ -50,6 +50,28 @@ defmodule Ask.QuotaBucket do
     end
   end
 
+  def matches_condition?(value, [from, nil]) do
+    from = if is_integer(from), do: from, else: String.to_integer(from)
+    case Integer.parse(value) do
+      {value, ""} ->
+        from <= value
+
+      _ ->
+        false
+    end
+  end
+
+  def matches_condition?(value, [nil, to]) do
+    to = if is_integer(to), do: to, else: String.to_integer(to)
+    case Integer.parse(value) do
+      {value, ""} ->
+        value <= to
+
+      _ ->
+        false
+    end
+  end
+
   def matches_condition?(value, [from, to]) do
     matches_condition?(value, [String.to_integer(from), String.to_integer(to)])
   end
