@@ -23,11 +23,10 @@ export default class SingleDatePicker extends Component<Props, State> {
     }
   }
 
-  toggleStartDatePicker(event: any) {
+  toggleStartDatePicker() {
     this.setState({
       showDatePicker: !this.state.showDatePicker,
     })
-    event.preventDefault()
   }
 
   render() {
@@ -43,7 +42,8 @@ export default class SingleDatePicker extends Component<Props, State> {
             className="black-text"
             href="#"
             onClick={(event) => {
-              this.toggleStartDatePicker(event)
+              this.toggleStartDatePicker()
+              event.preventDefault()
             }}
           >
             <i className="material-icons">today</i>
@@ -53,7 +53,10 @@ export default class SingleDatePicker extends Component<Props, State> {
           <Card className="datepicker-card">
             <InfiniteCalendar
               selected={selected}
-              onSelect={onSelect}
+              onSelect={(date) => {
+                onSelect(date)
+                this.toggleStartDatePicker()
+              }}
               theme={datePickerTheme}
               displayOptions={datePickerDisplayOptions}
               locale={datePickerLocales[i18n.language]}
