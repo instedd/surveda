@@ -1,0 +1,32 @@
+version: '2'
+services:
+  db:
+    image: postgres:9.6.4
+    environment:
+      POSTGRES_PASSWORD: **really secure password**
+      POSTGRES_DB: surveda_ona_connector
+    stdin_open: true
+    volumes:
+    - surveda-ona-connector-data:/var/lib/postgresql/data
+    tty: true
+    labels:
+      io.rancher.container.pull_image: always
+  app:
+    image: instedd/surveda-ona-connector:0.1.0
+    environment:
+      DATABASE_HOST: db
+      DATABASE_PASS: ** DB PASSWORD **
+      SECRET_KEY_BASE: ** random secret **
+      GUISSO_ENABLED: 'true'
+      GUISSO_BASE_URL: https://login.surveda-xx.org
+      GUISSO_CLIENT_ID: ** Guisso Ona Connector Client Id **
+      GUISSO_CLIENT_SECRET: ** Guisso Ona Connector Client Secret **
+      HOST: ona.surveda-xx.org
+      SURVEDA_BASE_URL: https://surveda-xx.org
+      POLL_INTERVAL: '15'
+    command:
+    - /bin/sh
+    - -c
+    - mix ecto.setup && elixir --sname server -S mix phx.server
+    labels:
+      io.rancher.container.pull_image: always
