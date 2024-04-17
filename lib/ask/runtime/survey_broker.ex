@@ -173,7 +173,6 @@ defmodule Ask.Runtime.SurveyBroker do
 
         active < batch_size && pending > 0 && !survey_completed ->
           count = batch_size - active
-          Logger.info("Survey #{survey.id}. Starting up to #{count} respondents.")
           start_some(survey, count)
 
         true ->
@@ -371,8 +370,10 @@ defmodule Ask.Runtime.SurveyBroker do
     )
   end
 
-  defp start_some(survey, count) do
-    count = Enum.min([batch_limit_per_minute(survey.project), count])
+  defp start_some(survey, requested_count) do
+    count_limit = batch_limit_per_minute(survey.project)
+    count = min(requested_count, count_limit)
+    Logger.info("Survey #{survey.id}. Starting up to #{count} respondents (wanted to start #{requested_count}, batch limit at #{count_limit}).")
 
     from(r in assoc(survey, :respondents),
       select: r.id,
