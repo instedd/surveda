@@ -116,7 +116,8 @@ defmodule Ask.Mixfile do
       "ecto.reset": ["ecto.drop", "ecto.setup"],
       "ecto.migrate": ["ecto.migrate", "ask.ecto_dump"],
       "ecto.rollback": ["ecto.rollback", "ask.ecto_dump"],
-      test: ["ecto.create --quiet", "ecto.migrate --quiet", "test"]
+      test: ["ecto.create --quiet", "ecto.migrate --quiet", "test"],
+      deadlocks: ["ask.deadlock.test"]
     ]
   end
 end
