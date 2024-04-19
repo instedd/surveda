@@ -1,15 +1,18 @@
 version: '2'
 services:
   mysql:
-    image: instedd/ask-mysql:5.7
+    image: mysql:8.0
     environment:
       MYSQL_ROOT_PASSWORD: ** REALLY SECURE PASSWORD **
     volumes:
     - mysql-data:/var/lib/mysql
+    command:
+    - --max_allowed_packet=1G
+    - --default-authentication-plugin=mysql_native_password
     labels:
       io.rancher.container.pull_image: always
   mysql-backup:
-    image: schickling/mysql-backup-s3
+    image: matiasgarciaisaia/mysql-backup-s3:write-only
     environment:
       MULTI_FILES: 'yes'
       MYSQL_HOST: mysql
@@ -20,6 +23,7 @@ services:
       S3_PREFIX: surveda-#{country_code}
       S3_REGION: us-east-1
       S3_SECRET_ACCESS_KEY: ** S3 ACCESS KEY SECRET **
-      SCHEDULE: '@daily'
+      S3_ENSURE_BUCKET_EXISTS: 'no'
+      SCHEDULE: 0 0 * * *
     labels:
       io.rancher.container.pull_image: always

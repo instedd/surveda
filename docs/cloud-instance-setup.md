@@ -103,7 +103,12 @@ There probably are implicit requirements and assumptions throughout the doc, and
 
 1. **Attach NFS to Rancher**
   Go to Rancher, add a new stack from Catalog. Search for Rancher NFS, pick the latest template version. Fill EFS's `DNS Name` as `NFS Server`, `/` as base directory, set `noresvport` as Mount Options, pick `retain` On Remove, launch.
-  Go to Infrastructure, and Add Volume to the `rancher-nfs` driver. Call it `mysql-data`. Add another one called `nuntium-rabbitmq-data`, then `verboice-asterisk-config`, `verboice-data` & `verboice-sounds`.
+  Go to Infrastructure, and Add Volume to the `rancher-nfs` driver. Call it `verboice-data`. Add another one called `nuntium-rabbitmq-data`, then `verboice-asterisk-config` & `verboice-sounds`.
+
+1. **Create DB data volume in EBS**
+  Go to IAM, create a new user called `surveda-xx-ebs` with Programmatic access, don't add any policy, role nor permission. Select the user in IAM, then `Add inline policy`. Copy the `iam.ebs-volume-user-policy.json` contents, replacing the placeholder in the JSON for the region's code (`${region-code}`). Create an access key for the user and take note of it.
+  Go to Rancher, `Add from Catalog`, look for `Rancher EBS` and add it with the access key and secret you just got from IAM.
+  In Rancher, go to Infrastructure -> Storage, look for the EBS driver, `Add Volume` named `mysql-data` with Driver Options `size`=`50` and `volumeType`=`gp3`.
 
 1. **Set up DB backups to S3**
   We'll backup the DB on S3. Create a `surveda-xx` directory inside `instedd-backups` S3 bucket.
