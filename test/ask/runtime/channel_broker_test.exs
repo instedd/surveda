@@ -90,7 +90,7 @@ defmodule Ask.Runtime.ChannelBrokerTest do
         assert_not_called(Ask.Runtime.Survey.contact_attempt_expired(%{id: Enum.at(respondents, 4).id}))
       end
     end
-    
+
     test "prioritizes respondents that have disposition :queued but more than one attempt" do
       %{state: state, respondents: respondents} = build_survey("ivr")
 
@@ -448,10 +448,13 @@ defmodule Ask.Runtime.ChannelBrokerTest do
   end
 
   defp assert_some_made_calls(amount, respondents, test_channel) do
+    Process.sleep(100)
     respondent_ids = Enum.map(respondents, & &1.id)
+    IO.puts("Will wait for #{amount} setups for these IDs: #{Enum.join(respondent_ids, " | ")}")
 
     Stream.repeatedly(fn ->
       assert_received [:setup, ^test_channel, %{id: id}, _token]
+      IO.puts("Received setup for respondent #{id}")
       assert Enum.member?(respondent_ids, id)
     end) |> Enum.take(amount)
 
