@@ -617,38 +617,6 @@ DELIMITER ;
 /*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
 /*!50003 SET sql_mode              = 'NO_AUTO_VALUE_ON_ZERO' */ ;
 DELIMITER ;;
-/*!50003 CREATE*/ /*!50017 DEFINER=`root`@`%`*/ /*!50003 TRIGGER `respondents_upd` AFTER UPDATE ON `respondents` FOR EACH ROW BEGIN
-
-  UPDATE respondent_stats
-     SET `count` = `count` - 1
-   WHERE survey_id = OLD.survey_id
-     AND questionnaire_id = IFNULL(OLD.questionnaire_id, 0)
-     AND state = OLD.state
-     AND disposition = OLD.disposition
-     AND quota_bucket_id = IFNULL(OLD.quota_bucket_id, 0)
-     AND mode = IFNULL(OLD.mode, '')
-  ;
-
-  INSERT INTO respondent_stats(survey_id, questionnaire_id, state, disposition, quota_bucket_id, mode, `count`)
-  VALUES (NEW.survey_id, IFNULL(NEW.questionnaire_id, 0), NEW.state, NEW.disposition, IFNULL(NEW.quota_bucket_id, 0), IFNULL(NEW.mode, ''), 1)
-  ON DUPLICATE KEY UPDATE `count` = `count` + 1
-  ;
-
-END */;;
-DELIMITER ;
-/*!50003 SET sql_mode              = @saved_sql_mode */ ;
-/*!50003 SET character_set_client  = @saved_cs_client */ ;
-/*!50003 SET character_set_results = @saved_cs_results */ ;
-/*!50003 SET collation_connection  = @saved_col_connection */ ;
-/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
-/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
-/*!50003 SET @saved_col_connection = @@collation_connection */ ;
-/*!50003 SET character_set_client  = utf8mb3 */ ;
-/*!50003 SET character_set_results = utf8mb3 */ ;
-/*!50003 SET collation_connection  = utf8mb3_general_ci */ ;
-/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
-/*!50003 SET sql_mode              = 'NO_AUTO_VALUE_ON_ZERO' */ ;
-DELIMITER ;;
 /*!50003 CREATE*/ /*!50017 DEFINER=`root`@`%`*/ /*!50003 TRIGGER `on_respondents_completed_upd` AFTER UPDATE ON `respondents` FOR EACH ROW BEGIN
 
   IF NEW.disposition = 'completed' AND OLD.disposition <> 'completed' THEN
@@ -664,6 +632,62 @@ DELIMITER ;;
        AND mode = IFNULL(OLD.mode, '')
        AND date = DATE(OLD.updated_at);
   END IF;
+
+END */;;
+DELIMITER ;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;
+/*!50003 SET character_set_results = @saved_cs_results */ ;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;
+/*!50003 SET character_set_client  = utf8mb4 */ ;
+/*!50003 SET character_set_results = utf8mb4 */ ;
+/*!50003 SET collation_connection  = utf8mb4_general_ci */ ;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
+/*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
+DELIMITER ;;
+/*!50003 CREATE*/ /*!50017 DEFINER=`root`@`%`*/ /*!50003 TRIGGER `respondents_upd` AFTER UPDATE ON `respondents` FOR EACH ROW BEGIN
+
+  # This is a hack for using the `select for update`
+  # so we can lock all the records that will get updated 
+  # by this trigger before actually modifying them
+  # so we prevent this trigger to generate deadlocks
+  # see #1744
+  DECLARE temp_stats INT;
+
+  SELECT count(*) 
+  INTO temp_stats
+  FROM respondent_stats
+  WHERE (survey_id = OLD.survey_id
+            AND questionnaire_id = IFNULL(OLD.questionnaire_id, 0)
+            AND state = OLD.state
+            AND disposition = OLD.disposition
+            AND quota_bucket_id = IFNULL(OLD.quota_bucket_id, 0)
+            AND mode = IFNULL(OLD.mode, ''))
+  OR (survey_id = NEW.survey_id
+            AND questionnaire_id = IFNULL(NEW.questionnaire_id, 0)
+            AND state = NEW.state
+            AND disposition = NEW.disposition
+            AND quota_bucket_id = IFNULL(NEW.quota_bucket_id, 0)
+            AND mode = IFNULL(NEW.mode, ''))
+  FOR UPDATE;
+
+  UPDATE respondent_stats
+      SET `count` = `count` - 1
+    WHERE survey_id = OLD.survey_id
+      AND questionnaire_id = IFNULL(OLD.questionnaire_id, 0)
+      AND state = OLD.state
+      AND disposition = OLD.disposition
+      AND quota_bucket_id = IFNULL(OLD.quota_bucket_id, 0)
+      AND mode = IFNULL(OLD.mode, '')
+  ;
+
+  INSERT INTO respondent_stats(survey_id, questionnaire_id, state, disposition, quota_bucket_id, mode, `count`)
+  VALUES (NEW.survey_id, IFNULL(NEW.questionnaire_id, 0), NEW.state, NEW.disposition, IFNULL(NEW.quota_bucket_id, 0), IFNULL(NEW.mode, ''), 1)
+  ON DUPLICATE KEY UPDATE `count` = `count` + 1
+  ;
 
 END */;;
 DELIMITER ;
@@ -994,7 +1018,7 @@ CREATE TABLE `users` (
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2024-02-21  5:26:53
+-- Dump completed on 2024-04-22 22:06:45
 INSERT INTO `schema_migrations` (version) VALUES (20160812145257);
 INSERT INTO `schema_migrations` (version) VALUES (20160816183915);
 INSERT INTO `schema_migrations` (version) VALUES (20160830200454);
@@ -1213,3 +1237,4 @@ INSERT INTO `schema_migrations` (version) VALUES (20230402091100);
 INSERT INTO `schema_migrations` (version) VALUES (20230405111657);
 INSERT INTO `schema_migrations` (version) VALUES (20230413101342);
 INSERT INTO `schema_migrations` (version) VALUES (20230821100203);
+INSERT INTO `schema_migrations` (version) VALUES (20240422175453);
