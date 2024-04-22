@@ -9,66 +9,53 @@ defmodule Mix.Tasks.Ask.Deadlock.Test do
   Edits multiple respondents at the same time to try to generate a deadlock by respondent_stats locks.
   """
  
+  @impl Mix.Task
+  def run([survey_id]) do
+    run([survey_id, :contacted, :queued])
+  end
+  
   # Prerequisites
   # have a survey with respondents 
-  # - state:active, disposition:queued
-  # - state:active, disposition:contacted
+  # - state:active, disposition:disposition_a
+  # - state:active, disposition:disposition_b
   #
   # Steps to achieve that:
   # - create new survey and load respondent sample (without launching)
-  # - update n respondents to be active & queued
-  # - update m respondents to be active & contacted
-  @impl Mix.Task
-  def run([survey_id]) do
+  # - update n respondents to be active & disposition_a
+  # - update m respondents to be active & disposition_b
+  def run([survey_id, disposition_a, disposition_b]) do
     Mix.shell().info("Starting deadlock test..")
     Mix.shell().info("Max concurrency: #{System.schedulers_online()}")
+    Mix.shell().info("Updating respondents from dispositions #{disposition_a} <-> #{disposition_b}")
 
     Mix.Task.run("app.start")
 
-    # respondents = Repo.all(from r in Respondent, 
-    #         where: r.survey_id == ^survey_id,
-    #         where: r.state == :pending,
-    #         where: r.disposition == :registered,
-    #         limit: 1000
-    #         )
-    
-    # Task.async_stream(respondents, fn r -> 
-    #     :timer.sleep(Enum.random(50..1_000))
-    #     disposition = Enum.random(Ecto.Enum.values(Ask.Respondent, :disposition))
-    #     state = Enum.random(Ecto.Enum.values(Ask.Respondent, :state))
-    #     mode = Enum.random(["['sms']", "['ivr']"])
-    #     Respondent.update(r, %{disposition: disposition, state: state, mode: mode, quota_bucket_id: 1}, true) 
-    #   end, 
-    #   timeout: :infinity)
-    # |> Stream.run()
-
-    contacted_respondents = Repo.all(from r in Respondent, 
+    disposition_a_respondents = Repo.all(from r in Respondent, 
             where: r.survey_id == ^survey_id,
             where: r.state == :active,
-            where: r.disposition == :contacted
+            where: r.disposition == ^disposition_a
     )
 
-    queued_respondents = Repo.all(from r in Respondent, 
+    disposition_b_respondents = Repo.all(from r in Respondent, 
             where: r.survey_id == ^survey_id,
             where: r.state == :active,
-            where: r.disposition == :queued
+            where: r.disposition == ^disposition_b
     )
     
-    tasks1 = contacted_respondents |> Enum.map(fn r -> 
-      Task.async(fn -> 
-        :timer.sleep(Enum.random(50..500))
-        r |> Respondent.update(%{disposition: :queued}, true) 
-      end)
-    end)
+    tasks1 = respondents_to_update_tasks(disposition_a_respondents, disposition_b)
     
-    tasks2 = queued_respondents |> Enum.map(fn r -> 
-      Task.async(fn -> 
-        :timer.sleep(Enum.random(50..500))
-        r |> Respondent.update(%{disposition: :contacted}, true) 
-      end)
-    end)
+    tasks2 = respondents_to_update_tasks(disposition_b_respondents, disposition_a)
 
     Task.yield_many(tasks1 ++ tasks2, :infinity)
 
+  end
+
+  def respondents_to_update_tasks(respondents, new_disposition) do
+    respondents
+    |> Enum.map(fn r -> 
+      Task.async(fn -> 
+        Respondent.update(r, %{disposition: new_disposition}, true) 
+      end)
+    end)
   end
 end
