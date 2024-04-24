@@ -155,7 +155,6 @@ defmodule Ask.Runtime.ChannelBrokerState do
             q.channel_id == ^state.channel_id and is_nil(q.last_contact) and
               (q.not_before <= ^not_before or is_nil(q.not_before)),
           order_by: [q.priority, q.queued_at],
-          preload: [:respondent],
           limit: 1
       )
 
@@ -170,11 +169,11 @@ defmodule Ask.Runtime.ChannelBrokerState do
   end
 
   defp to_item("ivr", contact) do
-    {contact.respondent, contact.token, contact.not_before, contact.not_after}
+    {contact.respondent_id, contact.token, contact.not_before, contact.not_after}
   end
 
   defp to_item("sms", contact) do
-    {contact.respondent, contact.token, contact.reply}
+    {contact.respondent_id, contact.token, contact.reply}
   end
 
   # Increments the number of contacts for the respondent. Activates the contact
