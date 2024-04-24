@@ -10,6 +10,7 @@ import split from "lodash/split"
 import find from "lodash/find"
 import findIndex from "lodash/findIndex"
 import isEqual from "lodash/isEqual"
+import uniq from "lodash/uniq"
 import uniqWith from "lodash/uniqWith"
 import every from "lodash/every"
 import some from "lodash/some"
@@ -291,7 +292,8 @@ const buildBuckets = (storeVars, options) => {
 }
 
 const intervalsFrom = (valueString) => {
-  const values = map(split(valueString, ","), (value) => parseInt(value.trim())).sort(
+  const inputValues = map(split(valueString, ","), (value) => parseInt(value.trim()))
+  const values = uniq(inputValues).sort(
     (a, b) => a - b
   )
   const prevValues = map(values, (value) => value - 1)

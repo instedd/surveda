@@ -571,6 +571,39 @@ describe('survey reducer', () => {
     })
   })
 
+  it('should ignore duplicated numeric step', () => {
+    const questionnaire = deepFreeze({
+      steps: [
+        {
+          type: 'numeric',
+          store: 'Age'
+        }
+      ],
+      id: 1
+    })
+    const state = playActions([
+      actions.fetch(1, 1),
+      actions.receive(survey),
+      actions.setQuotaVars([{var: 'Age', steps: '35, 50, 50, 80'}], questionnaire)
+    ])
+
+    expect(state).toEqual({
+      ...state,
+      data: {
+        ...state.data,
+        quotas: {
+          vars: ['Age'],
+          buckets: [
+            {'condition': [{store: 'Age', value: [null, 34]}], 'quota': 0},
+            {'condition': [{store: 'Age', value: [35, 49]}], 'quota': 0},
+            {'condition': [{store: 'Age', value: [50, 79]}], 'quota': 0},
+            {'condition': [{store: 'Age', value: [80, null]}], 'quota': 0},
+          ]
+        }
+      }
+    })
+  })
+
   describe('quota buckets intervals', () => {
     const questionnaire = deepFreeze({
       steps: [

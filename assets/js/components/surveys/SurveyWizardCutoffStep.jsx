@@ -80,6 +80,8 @@ class SurveyWizardCutoffStep extends Component {
             value = `< ${value[1] + 1}`
           } else if(value[1] == null){
             value = `${value[0]}+`
+          } else if(value[0] == value[1]) {
+            value = `${value[0]}`
           } else {
             value = join(value, " - ")
           }
