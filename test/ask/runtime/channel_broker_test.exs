@@ -441,7 +441,7 @@ defmodule Ask.Runtime.ChannelBrokerTest do
 
   defp assert_made_calls(respondents, test_channel) do
     Enum.each(respondents, fn %{id: id} ->
-      assert_received [:setup, ^test_channel, %{id: ^id}, _token]
+      assert_receive [:setup, ^test_channel, %{id: ^id}, _token]
     end)
 
     refute_received [:setup, ^test_channel, _respondent, _token]
@@ -451,7 +451,7 @@ defmodule Ask.Runtime.ChannelBrokerTest do
     respondent_ids = Enum.map(respondents, & &1.id)
 
     Stream.repeatedly(fn ->
-      assert_received [:setup, ^test_channel, %{id: id}, _token]
+      assert_receive [:setup, ^test_channel, %{id: id}, _token]
       assert Enum.member?(respondent_ids, id)
     end) |> Enum.take(amount)
 
@@ -460,7 +460,7 @@ defmodule Ask.Runtime.ChannelBrokerTest do
 
   defp assert_sent_smss(respondents, test_channel) do
     Enum.each(respondents, fn %{id: id} ->
-      assert_received [:ask, ^test_channel, %{id: ^id}, _token, _reply, _channel_id]
+      assert_receive [:ask, ^test_channel, %{id: ^id}, _token, _reply, _channel_id]
     end)
 
     refute_received [:ask, ^test_channel, _respondent, _token, _reply, _channel_id]
@@ -470,7 +470,7 @@ defmodule Ask.Runtime.ChannelBrokerTest do
     respondent_ids = Enum.map(respondents, & &1.id)
 
     Stream.repeatedly(fn ->
-      assert_received [:ask, ^test_channel, %{id: id}, _token, _reply, _channel_id]
+      assert_receive [:ask, ^test_channel, %{id: id}, _token, _reply, _channel_id]
       assert Enum.member?(respondent_ids, id)
     end) |> Enum.take(amount)
 

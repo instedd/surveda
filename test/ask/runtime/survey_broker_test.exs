@@ -47,14 +47,14 @@ defmodule Ask.Runtime.SurveyBrokerTest do
       # First poll, activate the respondent
       SurveyBroker.handle_info(:poll, nil)
 
-      assert_received [
+      assert_receive [
         :setup,
         ^test_channel,
         respondent = %Respondent{sanitized_phone_number: ^phone_number},
         token
       ]
 
-      assert_received [
+      assert_receive [
         :ask,
         ^test_channel,
         ^respondent,
@@ -74,7 +74,7 @@ defmodule Ask.Runtime.SurveyBrokerTest do
       SurveyBroker.handle_info(:poll, nil)
       refute_received [:setup, _, _, _, _]
 
-      assert_received [
+      assert_receive [
         :ask,
         ^test_channel,
         %Respondent{sanitized_phone_number: ^phone_number},
@@ -117,14 +117,14 @@ defmodule Ask.Runtime.SurveyBrokerTest do
       # First poll, activate the respondent
       SurveyBroker.handle_info(:poll, nil)
 
-      assert_received [
+      assert_receive [
         :setup,
         ^test_channel,
         respondent = %Respondent{sanitized_phone_number: ^phone_number},
         token
       ]
 
-      assert_received [
+      assert_receive [
         :ask,
         ^test_channel,
         ^respondent,
@@ -148,7 +148,7 @@ defmodule Ask.Runtime.SurveyBrokerTest do
       SurveyBroker.handle_info(:poll, nil)
       refute_received [:setup, _, _, _, _]
 
-      assert_received [
+      assert_receive [
         :ask,
         ^test_channel,
         %Respondent{sanitized_phone_number: ^phone_number},
@@ -267,7 +267,7 @@ defmodule Ask.Runtime.SurveyBrokerTest do
       # First poll, activate the respondent
       SurveyBroker.handle_info(:poll, nil)
 
-      assert_received [
+      assert_receive [
         :setup,
         ^test_channel,
         %Respondent{sanitized_phone_number: ^phone_number, mode: ^sequence_mode},
@@ -283,7 +283,7 @@ defmodule Ask.Runtime.SurveyBrokerTest do
       # Second poll, retry the question
       SurveyBroker.handle_info(:poll, nil)
 
-      assert_received [
+      assert_receive [
         :setup,
         ^test_channel,
         %Respondent{sanitized_phone_number: ^phone_number},
@@ -398,14 +398,14 @@ defmodule Ask.Runtime.SurveyBrokerTest do
       # First poll, activate the respondent
       SurveyBroker.handle_info(:poll, nil)
 
-      assert_received [
+      assert_receive [
         :setup,
         ^test_channel,
         respondent = %Respondent{sanitized_phone_number: ^phone_number},
         token
       ]
 
-      assert_received [
+      assert_receive [
         :ask,
         ^test_channel,
         ^respondent,
@@ -425,7 +425,7 @@ defmodule Ask.Runtime.SurveyBrokerTest do
 
       refute_received [:setup, _, _, _, _]
 
-      assert_received [
+      assert_receive [
         :ask,
         ^test_channel,
         %Respondent{sanitized_phone_number: ^phone_number},
@@ -444,7 +444,7 @@ defmodule Ask.Runtime.SurveyBrokerTest do
       SurveyBroker.handle_info(:poll, nil)
       refute_received [:setup, _, _, _, _]
 
-      assert_received [
+      assert_receive [
         :ask,
         ^test_channel,
         %Respondent{sanitized_phone_number: ^phone_number},
@@ -462,7 +462,7 @@ defmodule Ask.Runtime.SurveyBrokerTest do
       # Fourth poll, this time fallback to IVR channel
       SurveyBroker.handle_info(:poll, nil)
 
-      assert_received [
+      assert_receive [
         :setup,
         ^test_fallback_channel,
         %Respondent{sanitized_phone_number: ^phone_number},
@@ -516,7 +516,7 @@ defmodule Ask.Runtime.SurveyBrokerTest do
       # First poll, activate the respondent
       SurveyBroker.handle_info(:poll, nil)
 
-      assert_received [
+      assert_receive [
         :setup,
         ^test_channel,
         %Respondent{sanitized_phone_number: ^phone_number},
@@ -548,7 +548,7 @@ defmodule Ask.Runtime.SurveyBrokerTest do
       # Third poll, this time fallback to SMS channel
       SurveyBroker.handle_info(:poll, nil)
 
-      assert_received [
+      assert_receive [
         :setup,
         ^test_channel,
         %Respondent{sanitized_phone_number: ^phone_number},
@@ -564,14 +564,14 @@ defmodule Ask.Runtime.SurveyBrokerTest do
       # Fourth poll, this time fallback to SMS channel
       SurveyBroker.handle_info(:poll, nil)
 
-      assert_received [
+      assert_receive [
         :setup,
         ^test_fallback_channel,
         respondent = %Respondent{sanitized_phone_number: ^phone_number},
         token
       ]
 
-      assert_received [
+      assert_receive [
         :ask,
         ^test_fallback_channel,
         ^respondent,
@@ -1185,7 +1185,7 @@ defmodule Ask.Runtime.SurveyBrokerTest do
       {:ok, _} = SurveyLogger.start_link()
       SurveyBroker.poll()
 
-      assert_received [
+      assert_receive [
         :ask,
         ^test_channel,
         %Respondent{sanitized_phone_number: ^phone_number},
@@ -1231,7 +1231,7 @@ defmodule Ask.Runtime.SurveyBrokerTest do
       {:ok, _} = SurveyLogger.start_link()
       SurveyBroker.poll()
 
-      assert_received [
+      assert_receive [
         :ask,
         ^test_channel,
         %Respondent{sanitized_phone_number: ^phone_number},
@@ -1282,7 +1282,7 @@ defmodule Ask.Runtime.SurveyBrokerTest do
       {:ok, _} = SurveyLogger.start_link()
       SurveyBroker.poll()
 
-      assert_received [
+      assert_receive [
         :ask,
         ^test_channel,
         %Respondent{sanitized_phone_number: ^phone_number},
