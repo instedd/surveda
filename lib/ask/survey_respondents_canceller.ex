@@ -122,7 +122,17 @@ defmodule Ask.RespondentsCancellerConsumer do
 end
 
 defmodule Ask.SurveyCanceller do
-  alias Ask.{RespondentsCancellerConsumer, RespondentsCancellerProducer, Logger}
+  use Ecto.Schema
+  import Ecto.Query
+
+  alias Ask.{
+    Logger,
+    Repo,
+    RespondentsCancellerConsumer,
+    RespondentsCancellerProducer,
+    Survey
+  }
+
   @default_number_consumers 3
 
   defstruct [:processes, :consumers_pids]
@@ -142,6 +152,15 @@ defmodule Ask.SurveyCanceller do
     |> Enum.map(fn name ->
       GenStage.start_link(RespondentsCancellerConsumer, producer_pid, name: name)
     end)
+  end
+
+  def surveys_cancelling() do
+    from(
+      s in Survey,
+      where: s.state == :cancelling,
+      select: s.id
+    )
+    |> Repo.all()
   end
 
   def start_cancelling(survey_id, number_consumers \\ @default_number_consumers) do
