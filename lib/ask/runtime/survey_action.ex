@@ -98,10 +98,9 @@ defmodule Ask.Runtime.SurveyAction do
           {:ok, %{survey: survey}} ->
             survey.project |> Project.touch!()
 
-            %{consumers_pids: consumers_pids, processes: processes} =
-              SurveyCanceller.start_cancelling(survey.id)
+            SurveyCanceller.cancel(survey.id)
 
-            {:ok, %{survey: survey, cancellers_pids: consumers_pids, processes: processes}}
+            {:ok, %{survey: survey}}
 
           {:error, _, changeset, _} ->
             Logger.warn("Error when stopping survey #{inspect(survey)}")

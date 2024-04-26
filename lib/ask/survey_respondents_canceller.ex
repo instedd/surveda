@@ -137,11 +137,19 @@ defmodule Ask.SurveyCanceller do
     Survey
   }
 
-  alias Ask.Runtime.Session
+  alias Ask.Runtime.{
+    Session,
+    SurveyCancellerSupervisor
+  }
+
   alias Ecto.Multi
 
   def start_link(survey_id) do
     GenServer.start_link(__MODULE__, survey_id)
+  end
+
+  def cancel(survey_id) do
+    SurveyCancellerSupervisor.start_cancelling(survey_id)
   end
 
   @impl true

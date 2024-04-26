@@ -388,11 +388,6 @@ defmodule AskWeb.SurveyController do
       |> load_survey(survey_id)
 
     case SurveyAction.stop(survey, conn) do
-      {:ok, %{survey: survey, cancellers_pids: cancellers_pids}} ->
-        conn
-        |> assign(:processors_pids, cancellers_pids)
-        |> render_with_links(survey)
-
       {:ok, %{survey: survey}} ->
         conn
         |> render_with_links(survey)
