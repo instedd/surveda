@@ -1226,19 +1226,48 @@ describe('questionnaire reducer', () => {
       })
     })
 
-    it('should validate mobileweb message must not be blank if mobileweb mode is on', () => {
+    it('should validate SMS parts messages must not be blank if "SMS" mode is on and there are SMS parts', () => {
       const resultState = playActions([
         actions.fetch(1, 1),
         actions.receive(questionnaire),
-        actions.addMode('mobileweb'),
-        actions.changeStepPromptMobileWeb('17141bea-a81c-4227-bdda-f5f69188b0e7', '')
+        actions.removeMode('ivr'),
+        actions.addLanguage('es'),
+        // Two empty sms parts (empty before and after split separator)
+        actions.changeStepPromptSms('17141bea-a81c-4227-bdda-f5f69188b0e7', `${smsSplitSeparator}` ),
+        actions.setActiveLanguage('es'),
+        // One empty sms parts (empty after split separator)
+        actions.changeStepPromptSms('17141bea-a81c-4227-bdda-f5f69188b0e7', `Hola!${smsSplitSeparator} `),
       ])
 
-      expect(resultState.errors).toInclude({
-        path: "steps[0].prompt['en'].mobileweb",
+      const errors = resultState.errors
+      expect(errors).toInclude({
+        path: "steps[1].prompt['en'].sms",
         lang: 'en',
-        mode: 'mobileweb',
-        message: ['Mobile web prompt must not be blank']
+        mode: 'sms',
+        message: ['[0]SMS prompt must not be blank']
+      })
+      expect(errors).toInclude({
+        path: "steps[1].prompt['en'].sms",
+        lang: 'en',
+        mode: 'sms',
+        message: ['[1]SMS prompt must not be blank']
+      })
+
+      expect(errors).toInclude({
+        path: "steps[1].prompt['es'].sms",
+        lang: 'es',
+        mode: 'sms',
+        message: ['[1]SMS prompt must not be blank']
+      })
+
+      expect(resultState.errorsByPath).toInclude({
+        "steps[1].prompt['en'].sms": [['[0]SMS prompt must not be blank'], ['[1]SMS prompt must not be blank']],
+        "steps[1].prompt['es'].sms": [['[1]SMS prompt must not be blank']]
+      })
+
+      expect(resultState.errorsByLang).toInclude({
+        'en': true,
+        'es': true,
       })
     })
 
@@ -1285,6 +1314,22 @@ describe('questionnaire reducer', () => {
 
       expect(resultState.errors).toExclude({
         [`steps[0].prompt['en'].sms`]: [['SMS prompt is too long']]
+      })
+    })
+
+    it('should validate mobileweb message must not be blank if mobileweb mode is on', () => {
+      const resultState = playActions([
+        actions.fetch(1, 1),
+        actions.receive(questionnaire),
+        actions.addMode('mobileweb'),
+        actions.changeStepPromptMobileWeb('17141bea-a81c-4227-bdda-f5f69188b0e7', '')
+      ])
+
+      expect(resultState.errors).toInclude({
+        path: "steps[0].prompt['en'].mobileweb",
+        lang: 'en',
+        mode: 'mobileweb',
+        message: ['Mobile web prompt must not be blank']
       })
     })
 
