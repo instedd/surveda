@@ -403,7 +403,7 @@ class SurveyShow extends Component<any, State> {
               {successRates && successRates.values.length ? (
                 <div>
                   <div className="header" style={{ marginTop: "40px", marginBottom: "0" }}>
-                    <div className="title">{t("Historical Success Rate")}</div>
+                    <div className="title">{t("Success Rate over time")}</div>
                     <div className="description">
                       {t("Actual success rate value throughout the survey's life")}
                     </div>
