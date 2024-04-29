@@ -289,23 +289,26 @@ class SurveyShow extends Component<any, State> {
       ]
     }
 
-    if (percentages) {
-      forecastsReferences.push({
-        label: "Success rate",
-        color: "#000000",
-        id: "successRate",
-      })
-    }
-
     // TODO: we should be doing this when receiving properties, not at render
     let forecasts = forecastsReferences.map((d) => {
-      const values = (cumulativePercentages[d.id] || percentages[d.id] || []).map((v) => ({
+      const values = (cumulativePercentages[d.id] || []).map((v) => ({
         time: new Date(v.date),
         value: Number(v.percent),
       }))
 
       return { ...d, values }
     })
+
+    const successRates = percentages && percentages.successRate && {
+      label: "Success rate",
+      color: "#000000",
+      id: "successRate",
+      values: percentages.successRate.map((v) => ({
+        time: new Date(v.date),
+        value: Number(v.percent),
+      })),
+    }
+    
 
     forecasts = forecasts.map((d) => {
       if (this.shouldForecast(d, 100, survey.state == "running")) {
@@ -317,9 +320,6 @@ class SurveyShow extends Component<any, State> {
         return { ...d, forecast: [] }
       }
     })
-
-    let forecastLines = forecasts.filter((d) => d.label !== "Success rate")
-    let successRateLines = forecasts.filter((d) => d.label === "Success rate")
 
     return (
       <div className="cockpit">
@@ -399,16 +399,16 @@ class SurveyShow extends Component<any, State> {
                 )}
               </div>
               <Stats data={stats} />
-              <Forecasts data={forecastLines} ceil={100} />
-              {successRateLines.length ? (
+              <Forecasts data={forecasts} ceil={100} />
+              {successRates && successRates.values.length ? (
                 <div>
                   <div className="header" style={{ marginTop: "40px", marginBottom: "0" }}>
-                    <div className="title">{t("Success Rate")}</div>
+                    <div className="title">{t("Historical Success Rate")}</div>
                     <div className="description">
-                      {t("Estimated by combining initial and current values")}
+                      {t("Actual success rate value throughout the survey's life")}
                     </div>
                   </div>
-                  <SuccessRateLine data={forecasts} />
+                  <SuccessRateLine data={successRates} />
                 </div>
               ) : null}
               {this.showHistograms() ? (
