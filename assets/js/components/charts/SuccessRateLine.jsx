@@ -99,7 +99,7 @@ export default class SuccessRateLine extends Component<Props> {
           .attr("r", "3px")
           .style("fill", data.color)
           .style("stroke", data.color)
-          .style("opacity", 0.2)
+          .style("opacity", 0.1)
           .on("mouseover", (d) => {
             tooltip
               .text(percentFormat(d.value / 100))
