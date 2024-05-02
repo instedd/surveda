@@ -50,24 +50,36 @@ class SmsPrompt extends Component {
     return joinSmsPieces(this.allInputs.map((x) => x.getText() || ""))
   }
 
+  filterErrorsForPart(errors, index) {
+    const partErrorPrefix = `[${index}]`
+    return errors &&
+      errors
+      .flat()
+      // We are interested only in the errors that
+      // match with the sms part index
+      .filter(error => error.startsWith(partErrorPrefix))
+      .map(error => {
+        // We remove the part prefix
+        const errorMessage = error.split(partErrorPrefix)[1]
+        return [errorMessage]
+      })
+  }
+
   renderSmsInput(total, index, value) {
     let { inputErrors, readOnly, fixedEndLength, label, t } = this.props
-
-    const shouldDisplayErrors = value == this.props.originalValue
-
-    let textBelow = ""
-    if (limitExceeded(value)) {
-      textBelow = k("Use SHIFT+ENTER to split in multiple parts")
-    }
+    const last = index + 1 == total
+    const first = index == 0
+    const textBelow = limitExceeded(value) ? k("Use SHIFT+ENTER to split in multiple parts") : ""
 
     if (!label) label = t("SMS message")
 
-    const labelComponent = total == 1 ? label : `${label} (part ${index + 1})`
-    const last = index + 1 == total
-    const fixedLength = last ? fixedEndLength : null
+    if (total > 1){
+      label = `${label} (part ${index + 1})`
+      inputErrors = this.filterErrorsForPart(inputErrors, index)
+    }
 
     let autocompleteProps = {}
-    if (index == 0) {
+    if (first) {
       autocompleteProps = {
         autocomplete: this.props.autocomplete,
         autocompleteGetData: this.props.autocompleteGetData,
@@ -78,15 +90,15 @@ class SmsPrompt extends Component {
     const inputComponent = (
       <div>
         <Draft
-          label={labelComponent}
+          label={label}
           value={value}
           readOnly={readOnly}
-          errors={shouldDisplayErrors && map(inputErrors, (error) => t(...error))}
+          errors={map(inputErrors, (error) => t(...error))}
           textBelow={textBelow}
           onSplit={(caretIndex) => this.splitPiece(caretIndex, index)}
           onBlur={(e) => this.onBlur()}
           characterCounter
-          characterCounterFixedLength={fixedLength}
+          characterCounterFixedLength={last ? fixedEndLength : null}
           plainText
           ref={(ref) => {
             if (ref) {
@@ -97,7 +109,7 @@ class SmsPrompt extends Component {
         />
       </div>
     )
-    if (total <= 1 || index == 0) {
+    if (first) {
       return (
         <div className="row" key={index}>
           <div className="col s12">{inputComponent}</div>
@@ -129,6 +141,7 @@ class SmsPrompt extends Component {
     this.allInputs = []
 
     const smsPieces = splitSmsText(value)
+
     const inputs = smsPieces.map((piece, index) => {
       return this.renderSmsInput(smsPieces.length, index, piece)
     })

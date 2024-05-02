@@ -1,5 +1,5 @@
 // @flow
-import { getStepPrompt, newStepPrompt, newIvrPrompt } from "../step"
+import { getStepPrompt, newStepPrompt, newIvrPrompt, smsSplitSeparator } from "../step"
 import { hasSections, countRelevantSteps } from "./questionnaire"
 
 const k = (...args: any) => args
@@ -204,6 +204,12 @@ const validateSmsLangPrompt = (
     addError(context, `${path}.sms`, k("SMS prompt must not be blank"), lang, "sms")
     return
   }
+  const smsParts = prompt.sms && prompt.sms.trim().split(smsSplitSeparator) || []
+  smsParts.forEach((part, idx) => {
+    if(isBlank(part)){
+      addError(context, `${path}.sms`, k(`[${idx}]SMS prompt must not be blank`), lang, "sms")
+    }
+  })
 }
 
 const validateIvrLangPrompt = (
