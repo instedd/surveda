@@ -1,10 +1,13 @@
+# FIXME: no test here directly references the SurveyCanceller. So maybe
+# this is a SurveyCancellerSupervisor test, or a mixture between
+# supervisor and controller
 defmodule Ask.SurveyCancellerTest do
   use AskWeb.ConnCase
   use Ask.TestHelpers
   use Ask.DummySteps
 
   alias Ask.{Survey, RespondentGroup, Channel, TestChannel, RespondentGroupChannel}
-  alias Ask.Runtime.{Flow, Session}
+  alias Ask.Runtime.{Flow, Session, SurveyCancellerSupervisor}
   alias Ask.Runtime.SessionModeProvider
 
   setup %{conn: conn} do
@@ -20,8 +23,7 @@ defmodule Ask.SurveyCancellerTest do
 
   describe "stops surveys as if the application were starting" do
     test "survey canceller does not have pending surveys to cancel" do
-      survey_canceller = Ask.SurveyCanceller.start_cancelling(nil)
-      assert survey_canceller == :ignore
+      assert [] = simulate_survey_canceller_start()
 
       assert length(
                Repo.all(
@@ -66,11 +68,9 @@ defmodule Ask.SurveyCancellerTest do
       |> Ask.Respondent.changeset(%{session: session})
       |> Repo.update!()
 
-      survey_canceller = Ask.SurveyCanceller.start_cancelling(nil)
+      simulate_survey_canceller_start()
 
-      assert %Ask.SurveyCanceller{processes: _, consumers_pids: _} = survey_canceller
-
-      wait_all_cancellations_from_pids(survey_canceller.processes)
+      wait_all_cancellations(survey_1)
 
       survey = Repo.get(Survey, survey_1.id)
       assert Survey.cancelled?(survey)
@@ -122,11 +122,10 @@ defmodule Ask.SurveyCancellerTest do
       |> Ask.Respondent.changeset(%{session: session})
       |> Repo.update!()
 
-      survey_canceller = Ask.SurveyCanceller.start_cancelling(nil)
+      simulate_survey_canceller_start()
 
-      assert %Ask.SurveyCanceller{processes: _, consumers_pids: _} = survey_canceller
-
-      wait_all_cancellations_from_pids(survey_canceller.processes)
+      wait_all_cancellations(survey_1)
+      wait_all_cancellations(survey_2)
 
       survey = Repo.get(Survey, survey_1.id)
       survey_2 = Repo.get(Survey, survey_2.id)
@@ -185,13 +184,12 @@ defmodule Ask.SurveyCancellerTest do
       |> Ask.Respondent.changeset(%{session: session})
       |> Repo.update!()
 
-      survey_canceller = Ask.SurveyCanceller.start_cancelling(nil)
-      conn = post(conn, project_survey_survey_path(conn, :stop, survey_3.project, survey_3))
+      simulate_survey_canceller_start()
+      post(conn, project_survey_survey_path(conn, :stop, survey_3.project, survey_3))
 
-      assert %Ask.SurveyCanceller{processes: _, consumers_pids: _} = survey_canceller
-
-      wait_all_cancellations_from_conn(conn)
-      wait_all_cancellations_from_pids(survey_canceller.processes)
+      wait_all_cancellations(survey_1)
+      wait_all_cancellations(survey_2)
+      wait_all_cancellations(survey_3)
 
       survey = Repo.get(Survey, survey_1.id)
       survey_2 = Repo.get(Survey, survey_2.id)
@@ -234,23 +232,30 @@ defmodule Ask.SurveyCancellerTest do
       )
       |> Repo.insert()
     end
+  end
 
-    def wait_all_cancellations_from_pids(pids) do
-      pids
-      |> Enum.map(fn {_, pid} -> Process.monitor(pid) end)
-      |> Enum.each(&receive_down/1)
-    end
+  defp wait_all_cancellations(%{id: survey_id}) do
+    ref =
+      SurveyCancellerSupervisor.canceller_pid(survey_id)
+      |> Process.monitor()
 
-    def wait_all_cancellations_from_conn(conn) do
-      conn.assigns[:processors_pids]
-      |> Enum.map(&Process.monitor/1)
-      |> Enum.each(&receive_down/1)
+    receive do
+      {:DOWN, ^ref, _, _, _reason} -> :task_is_down
     end
+  end
 
-    def receive_down(ref) do
-      receive do
-        {:DOWN, ^ref, _, _, _} -> :task_is_down
-      end
-    end
+  defp simulate_survey_canceller_start() do
+    # The SurveyCancellerSupervisor is started by mix before running the tests, so calling
+    # `start_link` would error with :already_started
+    # Instead, here we call `init` to check which cancellers should start, and then we start
+    # said cancellers
+    {:ok, {_, cancellers_to_run}} = SurveyCancellerSupervisor.init(nil)
+
+    cancellers_to_run
+    |> Enum.each(fn %{start: {Ask.SurveyCanceller, :start_link, [survey_id]}} ->
+      SurveyCancellerSupervisor.start_cancelling(survey_id)
+    end)
+
+    cancellers_to_run
   end
 end

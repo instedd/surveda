@@ -21,7 +21,7 @@ defmodule Ask.Runtime.SurveyCancellerSupervisor do
     target_name = canceller_process_name(survey_id)
 
     case Supervisor.which_children(__MODULE__)
-         |> Enum.find(fn {process_name, _, _, _} -> ^target_name = process_name end) do
+         |> Enum.find(fn {children_name, _, _, _} -> children_name == target_name end) do
       {_, pid, _, _} -> pid
       _ -> nil
     end
