@@ -947,14 +947,12 @@ defmodule Ask.Runtime.SurveyBrokerTest do
           last_window_ends_at: Timex.shift(now, days: -1)
         })
 
-      stop_surveys_result = SurveyBroker.poll_active_surveys(now)
+      SurveyBroker.poll_active_surveys(now)
 
       survey = Repo.get(Ask.Survey, survey.id)
       assert survey.state == :cancelling
 
-      Enum.each(stop_surveys_result, fn {:ok, %{processes: processes}} ->
-        wait_all_cancellations_from_pids(processes)
-      end)
+      wait_all_cancellations(survey)
 
       survey = Repo.get(Ask.Survey, survey.id)
       assert survey.state == :terminated
@@ -1164,6 +1162,8 @@ defmodule Ask.Runtime.SurveyBrokerTest do
 
       {:ok, broker} = SurveyBroker.start_link()
       ChannelStatusServer.poll(channel_status_server)
+      # let channel status server run before poll
+      wait_for_email()
       SurveyBroker.poll()
 
       refute_received [:ask, ^test_channel_1, _, _, _, _channel_id]
@@ -1171,6 +1171,12 @@ defmodule Ask.Runtime.SurveyBrokerTest do
 
       :ok = broker |> GenServer.stop()
       :ok = channel_status_server |> GenServer.stop()
+    end
+  end
+
+  defp wait_for_email do
+    receive do
+      [:email, email] -> email
     end
   end
 
@@ -1885,13 +1891,11 @@ defmodule Ask.Runtime.SurveyBrokerTest do
     refute respondent.state == state
   end
 
-  def wait_all_cancellations_from_pids(pids) do
-    pids
-    |> Enum.map(fn {_, pid} -> Process.monitor(pid) end)
-    |> Enum.each(&receive_down/1)
-  end
+  def wait_all_cancellations(%{id: survey_id}) do
+    ref =
+      Ask.Runtime.SurveyCancellerSupervisor.canceller_pid(survey_id)
+      |> Process.monitor()
 
-  def receive_down(ref) do
     receive do
       {:DOWN, ^ref, _, _, _} -> :task_is_down
     end

@@ -1,11 +1,7 @@
 defmodule Ask.Runtime.SurveyCancellerSupervisor do
   alias Ask.Runtime.SurveyCancellerSupervisor
 
-  alias Ask.{
-    SurveyCanceller,
-    RespondentsCancellerProducer,
-    RespondentsCancellerConsumer
-  }
+  alias Ask.SurveyCanceller
 
   use Supervisor
 
@@ -17,15 +13,27 @@ defmodule Ask.Runtime.SurveyCancellerSupervisor do
     Supervisor.start_link(__MODULE__, init_arg, name: __MODULE__)
   end
 
+  defp canceller_process_name(survey_id) do
+    String.to_atom("SurveyCanceller_#{survey_id}")
+  end
+
+  def canceller_pid(survey_id) do
+    target_name = canceller_process_name(survey_id)
+
+    case Supervisor.which_children(__MODULE__)
+         |> Enum.find(fn {process_name, _, _, _} -> ^target_name = process_name end) do
+      {_, pid, _, _} -> pid
+      _ -> nil
+    end
+  end
+
   def start_cancelling(survey_id) do
     Supervisor.start_child(__MODULE__, canceller_process_spec(survey_id))
   end
 
   defp canceller_process_spec(survey_id) do
-    process_name = String.to_atom("SurveyCanceller_#{survey_id}")
-
     %{
-      id: process_name,
+      id: canceller_process_name(survey_id),
       start: {SurveyCanceller, :start_link, [survey_id]},
       restart: :transient
     }
