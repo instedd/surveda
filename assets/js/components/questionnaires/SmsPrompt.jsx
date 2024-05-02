@@ -109,7 +109,7 @@ class SmsPrompt extends Component {
         />
       </div>
     )
-    if (index == 0) {
+    if (first) {
       return (
         <div className="row" key={index}>
           <div className="col s12">{inputComponent}</div>
