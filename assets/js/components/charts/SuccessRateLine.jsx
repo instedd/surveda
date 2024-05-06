@@ -53,33 +53,28 @@ export default class SuccessRateLine extends Component<Props> {
   renderD3(initial = false) {
     const { width, height, data } = this.state
 
-    let srData = data.filter((d) => d.label === "Success rate")
-    if (!srData[0].values.length) {
+    if (!data){
       return
     }
-    srData[0].values.unshift({ time: srData[0].values[0].time, value: 0 })
-    srData[0].values.push({ time: srData[0].values[srData[0].values.length - 1].time, value: 0 })
-
-    const flatten = Array.prototype.concat(...srData.map((d) => [...d.values, ...d.forecast]))
 
     let initialTime, lastTime
 
-    if (!flatten || flatten.length < 1) {
+    if (!data.values || data.values.length < 1) {
       initialTime = new Date()
       lastTime = d3.timeMonth.offset(initialTime, 1)
     } else {
       initialTime = d3.timeHour.offset(
-        d3.min(flatten, (d) => d.time),
+        d3.min(data.values, (d) => d.time),
         -1
       )
-      lastTime = d3.timeMonth.offset(initialTime, 1)
-      lastTime = d3.max([d3.max(flatten, (d) => d.time), lastTime])
+      const oneMonthFromStart = d3.timeMonth.offset(initialTime, 1)
+      lastTime = d3.max([d3.max(data.values, (d) => d.time), oneMonthFromStart])
     }
 
     const x = d3.scaleTime().domain([initialTime, lastTime]).range([0, width])
     const y = d3
       .scaleLinear()
-      .domain([0, d3.max(srData[0].values, (d) => d.value * 1.2)])
+      .domain([0, d3.max(data.values, (d) => d.value * 1.2)])
       .range([height, 0])
     const line = d3
       .line()
@@ -92,35 +87,33 @@ export default class SuccessRateLine extends Component<Props> {
       .classed("forecast-tooltip", true)
       .style("visibility", "hidden")
 
-    for (var i = 0; i < srData.length; i++) {
-      for (var j = 1; j < srData[i].values.length - 1; j++) {
-        if (y(srData[i].values[j].value) != 0 && x(srData[i].values[j].time) != 0) {
-          d3.select(this.refs.circles)
-            .selectAll("path")
-            .data([srData[i].values[j]])
-            .enter()
-            .append("circle")
-            .attr("cx", (d) => x(d.time))
-            .attr("cy", (d) => y(d.value))
-            .attr("r", "3px")
-            .style("fill", srData[i].color)
-            .style("stroke", srData[i].color)
-            .style("opacity", 0.1)
-            .on("mouseover", (d) => {
-              tooltip
-                .text(percentFormat(d.value / 100))
-                .style("top", d3.event.pageY - 10 + "px")
-                .style("left", d3.event.pageX + 10 + "px")
-                .style("visibility", "visible")
-            })
-            .on("mouseout", () => tooltip.style("visibility", "hidden"))
-        }
+    for (var j = 1; j < data.values.length - 1; j++) {
+      if (y(data.values[j].value) != 0 && x(data.values[j].time) != 0) {
+        d3.select(this.refs.circles)
+          .selectAll("path")
+          .data([data.values[j]])
+          .enter()
+          .append("circle")
+          .attr("cx", (d) => x(d.time))
+          .attr("cy", (d) => y(d.value))
+          .attr("r", "3px")
+          .style("fill", data.color)
+          .style("stroke", data.color)
+          .style("opacity", 0.1)
+          .on("mouseover", (d) => {
+            tooltip
+              .text(percentFormat(d.value / 100))
+              .style("top", d3.event.pageY - 10 + "px")
+              .style("left", d3.event.pageX + 10 + "px")
+              .style("visibility", "visible")
+          })
+          .on("mouseout", () => tooltip.style("visibility", "hidden"))
       }
     }
 
     d3.select(this.refs.values)
       .selectAll("path")
-      .data(srData)
+      .data([data])
       .enter()
       .append("path")
       .merge(d3.select(this.refs.values).selectAll("path"))
