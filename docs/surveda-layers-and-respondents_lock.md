@@ -54,6 +54,6 @@ See [this commit](https://github.com/instedd/surveda/pull/1667/commits/d2f3aa59f
 
 ### ChannelBroker
 
-Every time the ChannelBroker unqueues a respondent and activates their contact
+Every time the ChannelBroker dequeues a respondent and activates their contact
 
 * `activate_next_queued_contact`
