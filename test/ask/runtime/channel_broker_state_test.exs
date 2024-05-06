@@ -205,7 +205,7 @@ defmodule Ask.Runtime.ChannelBrokerStateTest do
         |> State.queue_contact({respondent, "secret", nil, nil}, 2)
         |> State.activate_next_in_queue()
 
-      assert {%Ask.Respondent{id: ^respondent_id}, "secret", nil, nil} = contact
+      assert {^respondent_id, "secret", nil, nil} = contact
     end
 
     test "returns unqueued sms contact" do
@@ -217,7 +217,7 @@ defmodule Ask.Runtime.ChannelBrokerStateTest do
         |> State.queue_contact({respondent, "secret", []}, 2)
         |> State.activate_next_in_queue()
 
-      assert {%Ask.Respondent{id: ^respondent_id}, "secret", []} = contact
+      assert {^respondent_id, "secret", []} = contact
     end
 
     @tag :time_mock

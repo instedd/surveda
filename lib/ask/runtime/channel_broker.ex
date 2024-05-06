@@ -3,9 +3,8 @@ defmodule Ask.Runtime.ChannelBroker do
   alias Ask.Runtime.ChannelBrokerSupervisor
   alias Ask.Runtime.ChannelBrokerAgent, as: Agent
   alias Ask.Runtime.ChannelBrokerState, as: State
-  alias Ask.{Channel, Logger, Stats}
+  alias Ask.{Channel, Logger, Respondent, Repo, Stats}
   import Ecto.Query
-  alias Ask.Repo
   use GenServer
 
   # Public interface
@@ -417,19 +416,22 @@ defmodule Ask.Runtime.ChannelBroker do
       |> State.activate_next_in_queue()
 
     case unqueued_item do
-      {respondent, token, not_before, not_after} ->
-        cond do
-          expired_call?(not_after) ->
-            new_state = State.deactivate_contact(new_state, respondent.id)
-            Ask.Runtime.Survey.contact_attempt_expired(respondent)
-            new_state
-            
-          true ->
-            ivr_call(new_state, respondent, token, not_before, not_after)
-        end
+      {respondent_id, token, not_before, not_after} ->
+        Respondent.with_lock(respondent_id, fn respondent ->
+          cond do
+            expired_call?(not_after) ->
+              new_state = State.deactivate_contact(new_state, respondent.id)
+              Ask.Runtime.Survey.contact_attempt_expired(respondent)
+              new_state
 
-      {respondent, token, reply} ->
-        channel_ask(new_state, respondent, token, reply)
+            true ->
+              ivr_call(new_state, respondent, token, not_before, not_after)
+          end
+        end)
+      {respondent_id, token, reply} ->
+        Respondent.with_lock(respondent_id, fn respondent ->
+          channel_ask(new_state, respondent, token, reply)
+        end)
     end
   end
 
