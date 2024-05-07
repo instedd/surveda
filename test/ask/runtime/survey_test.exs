@@ -3673,13 +3673,13 @@ defmodule Ask.Runtime.SurveyTest do
   end
 
   defp assert_respondent(respondent_id, %{
-    current_state: current_state,
-    previous_disposition: previous_disposition,
-    current_disposition: current_disposition,
-    user_stopped: user_stopped
-    }) do
+         current_state: current_state,
+         previous_disposition: previous_disposition,
+         current_disposition: current_disposition,
+         user_stopped: user_stopped
+       }) do
     respondent = Repo.get!(Respondent, respondent_id)
-      
+
     assert respondent.state == current_state
     assert respondent.disposition == current_disposition
     assert respondent.user_stopped == user_stopped
@@ -3692,7 +3692,9 @@ defmodule Ask.Runtime.SurveyTest do
   end
 
   defp assert_disposition_changed(respondent_id, old_disposition, new_disposition) do
-    last_entry = Repo.all(from log in SurveyLogEntry, where: log.respondent_id == ^respondent_id) |> take_last
+    last_entry =
+      Repo.all(from log in SurveyLogEntry, where: log.respondent_id == ^respondent_id)
+      |> take_last
 
     assert last_entry.action_type == "disposition changed"
     assert last_entry.disposition == to_string(old_disposition)
@@ -3700,7 +3702,12 @@ defmodule Ask.Runtime.SurveyTest do
   end
 
   defp assert_last_history_disposition_is(respondent_id, disposition) do
-    last_history = Repo.all(from history in RespondentDispositionHistory, where: history.respondent_id == ^respondent_id) |> take_last
+    last_history =
+      Repo.all(
+        from history in RespondentDispositionHistory,
+          where: history.respondent_id == ^respondent_id
+      )
+      |> take_last
 
     assert last_history.disposition == to_string(disposition)
   end
