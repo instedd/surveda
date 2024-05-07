@@ -2488,16 +2488,16 @@ defmodule Ask.Runtime.SurveyTest do
 
   describe "STOP MO" do
     setup do
-      start_test(@explanation_steps_minimal)
+      [_survey, respondent] = start_test(@explanation_steps_minimal)
       poll_survey()
 
-      :ok
+      {:ok, respondent_id: respondent.id}
     end
 
-    test "base scenario (previous to the STOP MO message)" do
-      confirm_delivery("Do you exercise?")
+    test "base scenario (previous to the STOP MO message)", %{respondent_id: respondent_id} do
+      confirm_delivery(respondent_id, "Do you exercise?")
 
-      assert_respondent(%{
+      assert_respondent(respondent_id, %{
         current_state: :active,
         previous_disposition: :queued,
         current_disposition: :contacted,
@@ -2505,11 +2505,11 @@ defmodule Ask.Runtime.SurveyTest do
       })
     end
 
-    test "contacted -> refused" do
-      confirm_delivery("Do you exercise?")
-      respondent_sends_stop()
+    test "contacted -> refused", %{respondent_id: respondent_id} do
+      confirm_delivery(respondent_id, "Do you exercise?")
+      respondent_sends_stop(respondent_id)
 
-      assert_respondent(%{
+      assert_respondent(respondent_id, %{
         current_state: :failed,
         previous_disposition: :contacted,
         current_disposition: :refused,
@@ -2517,12 +2517,12 @@ defmodule Ask.Runtime.SurveyTest do
       })
     end
 
-    test "started -> breakoff" do
-      confirm_delivery("Do you exercise?")
-      respondent_answers("Any thing")
-      respondent_sends_stop()
+    test "started -> breakoff", %{respondent_id: respondent_id} do
+      confirm_delivery(respondent_id, "Do you exercise?")
+      respondent_answers(respondent_id, "Any thing")
+      respondent_sends_stop(respondent_id)
 
-      assert_respondent(%{
+      assert_respondent(respondent_id, %{
         current_state: :failed,
         previous_disposition: :started,
         current_disposition: :breakoff,
@@ -2530,12 +2530,12 @@ defmodule Ask.Runtime.SurveyTest do
       })
     end
 
-    test "queued -> refused" do
+    test "queued -> refused", %{respondent_id: respondent_id} do
       #     This test covers an improbable (and normally unexpected) scenario.
       #     It's expected that a "queued" respondent isn't yet contacted.
-      respondent_sends_stop()
+      respondent_sends_stop(respondent_id)
 
-      assert_respondent(%{
+      assert_respondent(respondent_id, %{
         current_state: :failed,
         previous_disposition: :queued,
         current_disposition: :refused,
@@ -3653,53 +3653,54 @@ defmodule Ask.Runtime.SurveyTest do
     end
   end
 
-  defp confirm_delivery(message) do
-    respondent = Repo.one!(Respondent)
+  defp confirm_delivery(respondent_id, message) do
+    respondent = Repo.get!(Respondent, respondent_id)
     Survey.delivery_confirm(respondent, message)
   end
 
   defp start_test(steps) do
-    create_running_survey_with_channel_and_respondent(steps)
+    [survey, _, _, respondent, _] = create_running_survey_with_channel_and_respondent(steps)
     SurveyBroker.start_link()
     SurveyLogger.start_link()
+    [survey, respondent]
   end
 
   defp poll_survey(), do: SurveyBroker.handle_info(:poll, nil)
 
-  defp respondent_answers(message) do
-    respondent = Repo.one!(Respondent)
+  defp respondent_answers(respondent_id, message) do
+    respondent = Repo.get!(Respondent, respondent_id)
     Survey.sync_step(respondent, Flow.Message.reply(message))
   end
 
-  defp assert_respondent(%{
-         current_state: current_state,
-         previous_disposition: previous_disposition,
-         current_disposition: current_disposition,
-         user_stopped: user_stopped
-       }) do
-    respondent = Repo.one!(Respondent)
-
+  defp assert_respondent(respondent_id, %{
+    current_state: current_state,
+    previous_disposition: previous_disposition,
+    current_disposition: current_disposition,
+    user_stopped: user_stopped
+    }) do
+    respondent = Repo.get!(Respondent, respondent_id)
+      
     assert respondent.state == current_state
     assert respondent.disposition == current_disposition
     assert respondent.user_stopped == user_stopped
-    assert_last_history_disposition_is(current_disposition)
-    assert_disposition_changed(previous_disposition, current_disposition)
+    assert_last_history_disposition_is(respondent.id, current_disposition)
+    assert_disposition_changed(respondent.id, previous_disposition, current_disposition)
   end
 
-  defp respondent_sends_stop() do
-    respondent_answers("StoP")
+  defp respondent_sends_stop(respondent_id) do
+    respondent_answers(respondent_id, "StoP")
   end
 
-  defp assert_disposition_changed(old_disposition, new_disposition) do
-    last_entry = SurveyLogEntry |> Repo.all() |> take_last
+  defp assert_disposition_changed(respondent_id, old_disposition, new_disposition) do
+    last_entry = Repo.all(from log in SurveyLogEntry, where: log.respondent_id == ^respondent_id) |> take_last
 
     assert last_entry.action_type == "disposition changed"
     assert last_entry.disposition == to_string(old_disposition)
     assert last_entry.action_data == upcaseFirst(new_disposition)
   end
 
-  defp assert_last_history_disposition_is(disposition) do
-    last_history = RespondentDispositionHistory |> Repo.all() |> take_last
+  defp assert_last_history_disposition_is(respondent_id, disposition) do
+    last_history = Repo.all(from history in RespondentDispositionHistory, where: history.respondent_id == ^respondent_id) |> take_last
 
     assert last_history.disposition == to_string(disposition)
   end
