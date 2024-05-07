@@ -68,7 +68,14 @@ export default class SuccessRateLine extends Component<Props> {
         -1
       )
       const oneMonthFromStart = d3.timeMonth.offset(initialTime, 1)
-      lastTime = d3.max([d3.max(data.values, (d) => d.time), oneMonthFromStart])
+      const surveyLastDay = d3.max(data.values, (d) => d.time)
+      // Select lastTime to show as max x-axis value in the chart
+      //
+      // We want the chart to show at least 1 month. 
+      // If the survey is still running and for more than one month already,
+      // we add some extra days to give the sense of incompleteness
+      const lastDay = data.isRunning ? d3.timeDay.offset(surveyLastDay, 5) : surveyLastDay
+      lastTime = d3.max([lastDay, oneMonthFromStart])
     }
 
     const x = d3.scaleTime().domain([initialTime, lastTime]).range([0, width])

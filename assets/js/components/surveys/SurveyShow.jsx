@@ -87,9 +87,13 @@ class SurveyShow extends Component<any, State> {
     }
   }
 
+  surveyIsRunning(survey){
+    return survey && survey.state == "running"
+  }
+
   showHistograms() {
     const { survey } = this.props
-    return survey && survey.state == "running"
+    return this.surveyIsRunning(survey)
   }
 
   stopSurvey() {
@@ -201,7 +205,7 @@ class SurveyShow extends Component<any, State> {
 
     let stopComponent = null
     let switchComponent = null
-    if (!readOnly && survey.state == "running") {
+    if (!readOnly && this.surveyIsRunning(survey)) {
       if (project.level == "owner" || project.level == "admin") {
         let lockOpenClass, lockClass
         if (survey.locked) {
@@ -303,6 +307,7 @@ class SurveyShow extends Component<any, State> {
       label: "Success rate",
       color: "#000000",
       id: "successRate",
+      isRunning: this.surveyIsRunning(survey),
       values: percentages.successRate.map((v) => ({
         time: new Date(v.date),
         value: Number(v.percent),
@@ -311,7 +316,7 @@ class SurveyShow extends Component<any, State> {
     
 
     forecasts = forecasts.map((d) => {
-      if (this.shouldForecast(d, 100, survey.state == "running")) {
+      if (this.shouldForecast(d, 100, this.surveyIsRunning(survey))) {
         return {
           ...d,
           forecast: this.getForecast(d.values[0], d.values[d.values.length - 1], 100),
