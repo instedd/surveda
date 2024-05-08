@@ -7,11 +7,6 @@ COLOR_GREEN="$(tput setaf 2)"
 COLOR_MAGENTA="$(tput setaf 5)"
 COLOR_LIGHT_BLUE="$(tput setaf 81)"
 
-echo "$COLOR_LIGHT_BLUE 🧑‍🔧 Setting up pre-commit script... $COLOR_REST"
-cd .git/hooks/
-ln -sf ../../pre-commit.sh pre-commit
-cd ../..
-
 echo "$COLOR_LIGHT_BLUE 🧑‍🔧 Building Docker images... $COLOR_REST"
 docker compose build
 
