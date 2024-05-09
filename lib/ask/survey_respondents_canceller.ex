@@ -6,7 +6,6 @@ defmodule Ask.SurveyCanceller do
   alias Ask.{
     ActivityLog,
     Logger,
-    Project,
     Repo,
     Respondent,
     Survey
@@ -47,7 +46,6 @@ defmodule Ask.SurveyCanceller do
 
   defp cancel_survey(survey_id) do
     survey = Repo.get(Survey, survey_id)
-    project = Repo.get!(Project, survey.project_id)
 
     changeset =
       Survey.changeset(survey, %{
@@ -58,7 +56,7 @@ defmodule Ask.SurveyCanceller do
 
     Multi.new()
     |> Multi.update(:survey, changeset)
-    |> Multi.insert(:log, ActivityLog.completed_cancel(project, nil, survey))
+    |> Multi.insert(:log, ActivityLog.completed_cancel(survey))
     |> Repo.transaction()
   end
 
