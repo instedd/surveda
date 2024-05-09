@@ -22,10 +22,6 @@ defmodule Ask.Runtime.SurveyCanceller do
     GenServer.start_link(__MODULE__, survey_id)
   end
 
-  def cancel(survey_id) do
-    SurveyCancellerSupervisor.start_cancelling(survey_id)
-  end
-
   @impl true
   def init(survey_id) do
     :timer.send_after(1000, :cancel)

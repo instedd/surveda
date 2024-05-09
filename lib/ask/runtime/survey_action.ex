@@ -100,7 +100,7 @@ defmodule Ask.Runtime.SurveyAction do
           {:ok, %{survey: survey}} ->
             survey.project |> Project.touch!()
 
-            SurveyCanceller.cancel(survey.id)
+            SurveyCancellerSupervisor.start_cancelling(survey.id)
 
             {:ok, %{survey: survey}}
 
