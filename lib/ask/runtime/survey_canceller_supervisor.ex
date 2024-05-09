@@ -33,6 +33,11 @@ defmodule Ask.Runtime.SurveyCancellerSupervisor do
     }
   end
 
+  # The SurveyCancellerSupervisor makes sure every cancelling Survey
+  # effectively gets cancelled. Upon startup, it checks and starts a
+  # SurveyCanceller process for each survey pending of cancellation, and
+  # then it also starts new cancellers on demand when a new survey gets
+  # cancelled.
   @impl true
   def init(_init_arg) do
     processes_to_start =
