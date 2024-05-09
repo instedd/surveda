@@ -1,4 +1,4 @@
-defmodule Ask.SurveyCanceller do
+defmodule Ask.Runtime.SurveyCanceller do
   use Ecto.Schema
   use GenServer
   import Ecto.Query

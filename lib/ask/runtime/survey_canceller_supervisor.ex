@@ -1,7 +1,8 @@
 defmodule Ask.Runtime.SurveyCancellerSupervisor do
-  alias Ask.Runtime.SurveyCancellerSupervisor
-
-  alias Ask.SurveyCanceller
+  alias Ask.Runtime.{
+    SurveyCanceller,
+    SurveyCancellerSupervisor
+  }
 
   use Supervisor
 

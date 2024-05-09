@@ -5,14 +5,16 @@ defmodule Ask.Runtime.SurveyAction do
     Repo,
     Questionnaire,
     ActivityLog,
-    SurveyCanceller,
     Project,
     SystemTime,
     Schedule,
     PanelSurvey
   }
 
-  alias Ask.Runtime.ChannelBroker
+  alias Ask.Runtime.{
+    ChannelBroker,
+    SurveyCanceller
+  }
 
   alias Ecto.Multi
 

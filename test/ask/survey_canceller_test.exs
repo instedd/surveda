@@ -252,7 +252,7 @@ defmodule Ask.SurveyCancellerTest do
     {:ok, {_, cancellers_to_run}} = SurveyCancellerSupervisor.init(nil)
 
     cancellers_to_run
-    |> Enum.each(fn %{start: {Ask.SurveyCanceller, :start_link, [survey_id]}} ->
+    |> Enum.each(fn %{start: {Ask.Runtime.SurveyCanceller, :start_link, [survey_id]}} ->
       SurveyCancellerSupervisor.start_cancelling(survey_id)
     end)
 
