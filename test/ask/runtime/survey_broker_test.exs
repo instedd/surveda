@@ -17,6 +17,7 @@ defmodule Ask.Runtime.SurveyBrokerTest do
     Repo,
     Respondent,
     Survey,
+    SurveyLogEntry,
     Schedule,
     RespondentGroupChannel,
     TestChannel,
@@ -1218,13 +1219,7 @@ defmodule Ask.Runtime.SurveyBrokerTest do
       assert respondent.state == :failed
       assert respondent.disposition == :failed
 
-      last_entry =
-        (respondent |> Repo.preload(:survey_log_entries)).survey_log_entries |> Enum.at(-1)
-
-      assert last_entry.survey_id == survey.id
-      assert last_entry.action_data == "Failed"
-      assert last_entry.action_type == "disposition changed"
-      assert last_entry.disposition == "queued"
+      assert_disposition_changed(respondent.id, "queued", "failed")
     end
 
     test "contacted respondents are marked as unresponsive" do
@@ -1269,13 +1264,7 @@ defmodule Ask.Runtime.SurveyBrokerTest do
       assert respondent.state == :failed
       assert respondent.disposition == :unresponsive
 
-      last_entry =
-        (respondent |> Repo.preload(:survey_log_entries)).survey_log_entries |> Enum.at(-1)
-
-      assert last_entry.survey_id == survey.id
-      assert last_entry.action_data == "Unresponsive"
-      assert last_entry.action_type == "disposition changed"
-      assert last_entry.disposition == "contacted"
+      assert_disposition_changed(respondent.id, "contacted", "unresponsive")
     end
 
     test "started respondents are marked as breakoff" do
@@ -1330,17 +1319,11 @@ defmodule Ask.Runtime.SurveyBrokerTest do
       assert respondent.state == :failed
       assert respondent.disposition == :breakoff
 
-      last_entry =
-        (respondent |> Repo.preload(:survey_log_entries)).survey_log_entries |> Enum.at(-1)
-
-      assert last_entry.survey_id == survey.id
-      assert last_entry.action_data == "Breakoff"
-      assert last_entry.action_type == "disposition changed"
-      assert last_entry.disposition == "started"
+      assert_disposition_changed(respondent.id, "started", "breakoff")
     end
 
     test "interim partial respondents are kept as partial (SMS)" do
-      [survey, _, _, respondent, _] =
+      [_survey, _, _, respondent, _] =
         create_running_survey_with_channel_and_respondent(@flag_step_after_multiple_choice)
 
       {:ok, _} = SurveyBroker.start_link()
@@ -1378,13 +1361,7 @@ defmodule Ask.Runtime.SurveyBrokerTest do
       assert respondent.state == :failed
       assert respondent.disposition == :partial
 
-      last_entry =
-        (respondent |> Repo.preload(:survey_log_entries)).survey_log_entries |> Enum.at(-1)
-
-      assert last_entry.survey_id == survey.id
-      assert last_entry.action_data == "Partial"
-      assert last_entry.action_type == "disposition changed"
-      assert last_entry.disposition == "interim partial"
+      assert_disposition_changed(respondent.id, "interim partial", "partial")
     end
   end
 
@@ -1900,4 +1877,14 @@ defmodule Ask.Runtime.SurveyBrokerTest do
       {:DOWN, ^ref, _, _, _} -> :task_is_down
     end
   end
+
+  defp assert_disposition_changed(respondent_id, old_disposition, new_disposition) do
+    last_entry =
+      Repo.one(from log in SurveyLogEntry, where: log.respondent_id == ^respondent_id, where: log.action_type == "disposition changed", order_by: [desc: :id], limit: 1)
+
+    assert last_entry.disposition == to_string(old_disposition)
+    assert last_entry.action_data == upcaseFirst(new_disposition)
+  end
+  defp upcaseFirst(value) when is_atom(value), do: to_string(value) |> upcaseFirst
+  defp upcaseFirst(<<first::utf8, rest::binary>>), do: String.upcase(<<first::utf8>>) <> rest
 end
