@@ -48,11 +48,7 @@ defmodule Ask.SurveyCanceller do
     survey = Repo.get(Survey, survey_id)
 
     changeset =
-      Survey.changeset(survey, %{
-        state: "terminated",
-        exit_code: 1,
-        exit_message: "Cancelled by user"
-      })
+      Survey.changeset(survey, %{ state: "terminated" })
 
     Multi.new()
     |> Multi.update(:survey, changeset)

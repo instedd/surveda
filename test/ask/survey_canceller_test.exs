@@ -38,7 +38,7 @@ defmodule Ask.SurveyCancellerTest do
     test "stops a survey in cancelling status without its id", %{user: user} do
       project = create_project_for_user(user)
       questionnaire = insert(:questionnaire, name: "test", project: project)
-      survey_1 = insert(:survey, project: project, state: "cancelling")
+      survey_1 = cancelling_survey(project)
       test_channel = TestChannel.new(false)
 
       channel =
@@ -90,8 +90,8 @@ defmodule Ask.SurveyCancellerTest do
     test "stops multiple survey in cancelling status", %{user: user} do
       project = create_project_for_user(user)
       questionnaire = insert(:questionnaire, name: "test", project: project)
-      survey_1 = insert(:survey, project: project, state: "cancelling")
-      survey_2 = insert(:survey, project: project, state: "cancelling")
+      survey_1 = cancelling_survey(project)
+      survey_2 = cancelling_survey(project)
       test_channel = TestChannel.new(false)
 
       channel =
@@ -150,8 +150,8 @@ defmodule Ask.SurveyCancellerTest do
     } do
       project = create_project_for_user(user)
       questionnaire = insert(:questionnaire, name: "test", project: project)
-      survey_1 = insert(:survey, project: project, state: :cancelling)
-      survey_2 = insert(:survey, project: project, state: :cancelling)
+      survey_1 = cancelling_survey(project)
+      survey_2 = cancelling_survey(project)
       survey_3 = insert(:survey, project: project, state: :running)
       test_channel = TestChannel.new(false)
 
@@ -257,5 +257,9 @@ defmodule Ask.SurveyCancellerTest do
     end)
 
     cancellers_to_run
+  end
+
+  defp cancelling_survey(project) do
+    insert(:survey, project: project, state: "cancelling", exit_code: 1)
   end
 end
