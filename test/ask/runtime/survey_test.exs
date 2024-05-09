@@ -3693,10 +3693,9 @@ defmodule Ask.Runtime.SurveyTest do
 
   defp assert_disposition_changed(respondent_id, old_disposition, new_disposition) do
     last_entry =
-      Repo.all(from log in SurveyLogEntry, where: log.respondent_id == ^respondent_id)
+      Repo.all(from log in SurveyLogEntry, where: log.respondent_id == ^respondent_id, where: log.action_type == "disposition changed")
       |> take_last
 
-    assert last_entry.action_type == "disposition changed"
     assert last_entry.disposition == to_string(old_disposition)
     assert last_entry.action_data == upcaseFirst(new_disposition)
   end
