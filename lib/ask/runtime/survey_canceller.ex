@@ -11,10 +11,7 @@ defmodule Ask.Runtime.SurveyCanceller do
     Survey
   }
 
-  alias Ask.Runtime.{
-    Session,
-    SurveyCancellerSupervisor
-  }
+  alias Ask.Runtime.Session
 
   alias Ecto.Multi
 

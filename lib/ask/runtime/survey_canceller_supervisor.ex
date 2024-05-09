@@ -1,17 +1,10 @@
 defmodule Ask.Runtime.SurveyCancellerSupervisor do
-  alias Ask.Runtime.{
-    SurveyCanceller,
-    SurveyCancellerSupervisor
-  }
+  alias Ask.Runtime.SurveyCanceller
 
   use Supervisor
 
   def start_link() do
-    SurveyCancellerSupervisor.start_link([])
-  end
-
-  def start_link(init_arg) do
-    Supervisor.start_link(__MODULE__, init_arg, name: __MODULE__)
+    Supervisor.start_link(__MODULE__, nil, name: __MODULE__)
   end
 
   defp canceller_process_name(survey_id) do

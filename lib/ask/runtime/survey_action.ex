@@ -13,7 +13,7 @@ defmodule Ask.Runtime.SurveyAction do
 
   alias Ask.Runtime.{
     ChannelBroker,
-    SurveyCanceller
+    SurveyCancellerSupervisor
   }
 
   alias Ecto.Multi
