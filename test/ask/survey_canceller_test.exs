@@ -234,6 +234,71 @@ defmodule Ask.SurveyCancellerTest do
     end
   end
 
+  describe "failure resistance" do
+    test "keeps cancelling other respondents when cancelling some fail", %{user: user} do
+      project = create_project_for_user(user)
+      questionnaire = insert(:questionnaire, name: "test", project: project)
+      survey = cancelling_survey(project)
+      test_channel = TestChannel.new(false)
+
+      channel =
+        insert(:channel,
+          settings:
+            test_channel
+            |> TestChannel.settings(),
+          type: "sms"
+        )
+
+      respondent_group = create_group(survey, channel)
+      insert_list(5, :respondent, survey: survey, state: "active", respondent_group: respondent_group)
+
+      failing_respondent = insert(:respondent, survey: survey, state: "active", respondent_group: respondent_group)
+      failing_session = %Session{
+        current_mode: nil, # this will make the canceller fail
+        respondent: failing_respondent,
+        flow: %Flow{
+          questionnaire: questionnaire
+        },
+        schedule: survey.schedule
+      }
+
+      failing_respondent
+      |> Ask.Respondent.changeset(%{session: Session.dump(failing_session)})
+      |> Repo.update!()
+
+      insert_list(5, :respondent, survey: survey, state: "active", respondent_group: respondent_group)
+
+      simulate_survey_canceller_start()
+
+      wait_for_cancels(survey, 3)
+
+      survey = Repo.get(Survey, survey.id)
+      refute Survey.cancelled?(survey)
+
+      assert length(
+               Repo.all(
+                 from(
+                   r in Ask.Respondent,
+                   where: r.state == :cancelled and is_nil(r.session) and is_nil(r.timeout_at)
+                 )
+               )
+             ) == 10
+      assert Repo.get(Respondent, failing_respondent.id).state == :active
+    end
+  end
+
+  defp wait_for_cancels(%Survey{id: survey_id}, times) do
+    canceller = SurveyCancellerSupervisor.canceller_pid(survey_id)
+    :erlang.trace(canceller, true, [:receive])
+    wait_for_cancels(canceller, times)
+  end
+
+  defp wait_for_cancels(_pid, 0), do: true
+  defp wait_for_cancels(canceller_pid, times) do
+    assert_receive {:trace, ^canceller_pid, :receive, :cancel}, 2_000
+    wait_for_cancels(canceller_pid, times - 1)
+  end
+
   defp wait_all_cancellations(%{id: survey_id}) do
     ref =
       SurveyCancellerSupervisor.canceller_pid(survey_id)

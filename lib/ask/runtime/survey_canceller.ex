@@ -49,23 +49,29 @@ defmodule Ask.Runtime.SurveyCanceller do
     |> Repo.transaction()
   end
 
-  defp cancel_respondent(respondent) do
-    if respondent.session != nil do
-      respondent.session
-      |> Session.load()
-      |> Session.cancel()
-    end
+  defp try_cancel_respondent(respondent) do
+    try do
+      if respondent.session != nil do
+        respondent.session
+        |> Session.load()
+        |> Session.cancel()
+      end
 
-    respondent
-    |> Respondent.changeset(%{state: "cancelled", session: nil, timeout_at: nil})
-    |> Repo.update!()
+      respondent
+      |> Respondent.changeset(%{state: "cancelled", session: nil, timeout_at: nil})
+      |> Repo.update!()
+    rescue
+      error ->
+        Logger.error(error, __STACKTRACE__, "Error cancelling respondent #{respondent.id}'s session")
+        Sentry.capture_exception(error, extra: %{respondent_id: respondent.id})
+    end
   end
 
   defp cancel_respondents(respondent_ids, survey_id) do
     Logger.debug("Cancelling #{Enum.count(respondent_ids)} respondents for survey #{survey_id}")
 
     respondent_ids
-    |> Enum.each(fn respondent_id -> Respondent.with_lock(respondent_id, &cancel_respondent/1) end)
+    |> Enum.each(fn respondent_id -> Respondent.with_lock(respondent_id, &try_cancel_respondent/1) end)
   end
 
   @impl true
