@@ -37,7 +37,7 @@ defmodule Ask.Runtime.SurveyCanceller do
     )
   end
 
-  defp cancel_survey(survey_id) do
+  defp terminate_survey(survey_id) do
     survey = Repo.get(Survey, survey_id)
 
     changeset =
@@ -80,7 +80,7 @@ defmodule Ask.Runtime.SurveyCanceller do
 
     case respondents_to_cancel(survey_id) do
       [] ->
-        cancel_survey(survey_id)
+        terminate_survey(survey_id)
         Logger.info("Finished cancelling survey #{survey_id}")
         {:stop, :normal, nil}
 
