@@ -103,24 +103,31 @@ defmodule Ask.ActivityLog do
   defp typeof(%Questionnaire{}), do: "questionnaire"
   defp typeof(%Folder{}), do: "folder"
 
+  defp remote_ip(nil), do: "0.0.0.0"
+
+  defp remote_ip(%{remote_ip: remote_ip, req_headers: headers}) do
+    case Enum.find(headers, fn {key, _value} -> key == "x-forwarded-for" end) do
+      {"x-forwarded-for", forwarded_ip} -> forwarded_ip
+      nil -> to_string(:inet_parse.ntoa(remote_ip))
+    end
+  end
+
   defp create(action, %Project{id: project_id}, conn, entity, metadata) do
     create(action, project_id, conn, entity, metadata)
   end
 
   defp create(action, project_id, conn, entity, metadata) do
-    {user_id, remote_ip} =
-      case conn do
-        nil ->
-          {nil, "0.0.0.0"}
-
-        conn ->
-          remote_ip = to_string(:inet_parse.ntoa(conn.remote_ip))
-
-          case current_user(conn) do
-            nil -> {nil, remote_ip}
-            user -> {user.id, remote_ip}
-          end
+    user_id =
+      if conn do
+        case current_user(conn) do
+          nil -> nil
+          user -> user.id
+        end
+      else
+        nil
       end
+
+    remote_ip = remote_ip(conn)
 
     ActivityLog.changeset(%ActivityLog{}, %{
       project_id: project_id,
