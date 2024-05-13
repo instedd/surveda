@@ -270,6 +270,9 @@ defmodule Ask.SurveyCancellerTest do
 
       simulate_survey_canceller_start()
 
+      # first :cancel will cancel all but the failing respondent
+      # second :cancel would have cancelled the survey if not for the failing respondent
+      # we wait for the third :cancel to arrive to be sure that the second :cancel was effectively processed
       wait_for_cancels(survey, 3)
 
       survey = Repo.get(Survey, survey.id)
