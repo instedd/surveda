@@ -17,7 +17,6 @@ defmodule Ask.Runtime.SurveyBrokerTest do
     Repo,
     Respondent,
     Survey,
-    SurveyLogEntry,
     Schedule,
     RespondentGroupChannel,
     TestChannel,
@@ -1877,14 +1876,4 @@ defmodule Ask.Runtime.SurveyBrokerTest do
       {:DOWN, ^ref, _, _, _} -> :task_is_down
     end
   end
-
-  defp assert_disposition_changed(respondent_id, old_disposition, new_disposition) do
-    last_entry =
-      Repo.one(from log in SurveyLogEntry, where: log.respondent_id == ^respondent_id, where: log.action_type == "disposition changed", order_by: [desc: :id], limit: 1)
-
-    assert last_entry.disposition == to_string(old_disposition)
-    assert last_entry.action_data == upcaseFirst(new_disposition)
-  end
-  defp upcaseFirst(value) when is_atom(value), do: to_string(value) |> upcaseFirst
-  defp upcaseFirst(<<first::utf8, rest::binary>>), do: String.upcase(<<first::utf8>>) <> rest
 end

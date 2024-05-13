@@ -3691,15 +3691,6 @@ defmodule Ask.Runtime.SurveyTest do
     respondent_answers(respondent_id, "StoP")
   end
 
-  defp assert_disposition_changed(respondent_id, old_disposition, new_disposition) do
-    last_entry =
-      Repo.all(from log in SurveyLogEntry, where: log.respondent_id == ^respondent_id, where: log.action_type == "disposition changed")
-      |> take_last
-
-    assert last_entry.disposition == to_string(old_disposition)
-    assert last_entry.action_data == upcaseFirst(new_disposition)
-  end
-
   defp assert_last_history_disposition_is(respondent_id, disposition) do
     last_history =
       Repo.all(
@@ -3712,7 +3703,4 @@ defmodule Ask.Runtime.SurveyTest do
   end
 
   defp take_last(records), do: records |> Enum.take(-1) |> hd
-
-  defp upcaseFirst(value) when is_atom(value), do: to_string(value) |> upcaseFirst
-  defp upcaseFirst(<<first::utf8, rest::binary>>), do: String.upcase(<<first::utf8>>) <> rest
 end
