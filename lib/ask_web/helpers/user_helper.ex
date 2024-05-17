@@ -4,6 +4,8 @@ defmodule User.Helper do
   alias Ask.{Repo, Project, ProjectMembership}
   alias AskWeb.UnauthorizedError
 
+  def current_user(nil), do: nil
+
   def current_user(conn) do
     case conn.assigns do
       %{current_user: user} -> user
