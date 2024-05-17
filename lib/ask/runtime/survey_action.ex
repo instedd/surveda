@@ -5,14 +5,16 @@ defmodule Ask.Runtime.SurveyAction do
     Repo,
     Questionnaire,
     ActivityLog,
-    SurveyCanceller,
     Project,
     SystemTime,
     Schedule,
     PanelSurvey
   }
 
-  alias Ask.Runtime.ChannelBroker
+  alias Ask.Runtime.{
+    ChannelBroker,
+    SurveyCancellerSupervisor
+  }
 
   alias Ecto.Multi
 
@@ -98,10 +100,9 @@ defmodule Ask.Runtime.SurveyAction do
           {:ok, %{survey: survey}} ->
             survey.project |> Project.touch!()
 
-            %{consumers_pids: consumers_pids, processes: processes} =
-              SurveyCanceller.start_cancelling(survey.id)
+            SurveyCancellerSupervisor.start_cancelling(survey.id)
 
-            {:ok, %{survey: survey, cancellers_pids: consumers_pids, processes: processes}}
+            {:ok, %{survey: survey}}
 
           {:error, _, changeset, _} ->
             Logger.warn("Error when stopping survey #{inspect(survey)}")

@@ -345,8 +345,8 @@ defmodule AskWeb.SurveyControllerTest do
 
       ChannelStatusServer.poll(pid)
 
-      # FIXME: flaky test: need time for async task to update the channel status server state
-      Process.sleep(100)
+      # let channel status server run
+      wait_for_email()
 
       conn = get(conn, project_survey_path(conn, :index, project.id))
 
@@ -380,6 +380,12 @@ defmodule AskWeb.SurveyControllerTest do
       assert_error_sent :forbidden, fn ->
         get(conn, project_survey_path(conn, :index, survey.project))
       end
+    end
+  end
+
+  defp wait_for_email do
+    receive do
+      [:email, email] -> email
     end
   end
 
@@ -811,8 +817,8 @@ defmodule AskWeb.SurveyControllerTest do
 
       ChannelStatusServer.poll(pid)
 
-      # FIXME: flaky test: need time for async task to update the channel status server state
-      Process.sleep(100)
+      # let channel status server run
+      wait_for_email()
 
       conn = get(conn, project_survey_path(conn, :show, project, survey))
 
@@ -2599,7 +2605,8 @@ defmodule AskWeb.SurveyControllerTest do
       session = Session.dump(session)
       r1 |> Ask.Respondent.changeset(%{session: session}) |> Repo.update!()
       conn = post(conn, project_survey_survey_path(conn, :stop, survey.project, survey))
-      wait_all_cancellations(conn)
+
+      wait_all_cancellations(survey)
 
       assert json_response(conn, 200)
       survey = Repo.get(Survey, survey.id)
@@ -2647,7 +2654,7 @@ defmodule AskWeb.SurveyControllerTest do
       r1 |> Ask.Respondent.changeset(%{session: session}) |> Repo.update!()
       conn = post(conn, project_survey_survey_path(conn, :stop, survey.project, survey))
 
-      wait_all_cancellations(conn)
+      wait_all_cancellations(survey)
 
       assert json_response(conn, 200)
       assert Repo.get(Survey, survey2.id).state == :running
@@ -2890,8 +2897,7 @@ defmodule AskWeb.SurveyControllerTest do
 
       post(conn, project_survey_survey_path(conn, :stop, survey.project, survey))
 
-      # FIXME: flaky test: sometimes Repo.all will only return 1 row
-      Process.sleep(100)
+      wait_all_cancellations(survey)
       logs = Repo.all(ActivityLog)
 
       assert_survey_log(%{
@@ -3193,13 +3199,11 @@ defmodule AskWeb.SurveyControllerTest do
     assert log.metadata == metadata
   end
 
-  def wait_all_cancellations(conn) do
-    conn.assigns[:processors_pids]
-    |> Enum.map(&Process.monitor/1)
-    |> Enum.each(&receive_down/1)
-  end
+  def wait_all_cancellations(%{id: survey_id}) do
+    ref =
+      Ask.Runtime.SurveyCancellerSupervisor.canceller_pid(survey_id)
+      |> Process.monitor()
 
-  def receive_down(ref) do
     receive do
       {:DOWN, ^ref, _, _, _} -> :task_is_down
     end

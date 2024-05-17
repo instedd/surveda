@@ -1,10 +1,13 @@
+# FIXME: no test here directly references the SurveyCanceller. So maybe
+# this is a SurveyCancellerSupervisor test, or a mixture between
+# supervisor and controller
 defmodule Ask.SurveyCancellerTest do
   use AskWeb.ConnCase
   use Ask.TestHelpers
   use Ask.DummySteps
 
   alias Ask.{Survey, RespondentGroup, Channel, TestChannel, RespondentGroupChannel}
-  alias Ask.Runtime.{Flow, Session}
+  alias Ask.Runtime.{Flow, Session, SurveyCancellerSupervisor}
   alias Ask.Runtime.SessionModeProvider
 
   setup %{conn: conn} do
@@ -20,8 +23,7 @@ defmodule Ask.SurveyCancellerTest do
 
   describe "stops surveys as if the application were starting" do
     test "survey canceller does not have pending surveys to cancel" do
-      survey_canceller = Ask.SurveyCanceller.start_cancelling(nil)
-      assert survey_canceller == :ignore
+      assert [] = simulate_survey_canceller_start()
 
       assert length(
                Repo.all(
@@ -36,7 +38,7 @@ defmodule Ask.SurveyCancellerTest do
     test "stops a survey in cancelling status without its id", %{user: user} do
       project = create_project_for_user(user)
       questionnaire = insert(:questionnaire, name: "test", project: project)
-      survey_1 = insert(:survey, project: project, state: "cancelling")
+      survey_1 = cancelling_survey(project)
       test_channel = TestChannel.new(false)
 
       channel =
@@ -66,11 +68,9 @@ defmodule Ask.SurveyCancellerTest do
       |> Ask.Respondent.changeset(%{session: session})
       |> Repo.update!()
 
-      survey_canceller = Ask.SurveyCanceller.start_cancelling(nil)
+      simulate_survey_canceller_start()
 
-      assert %Ask.SurveyCanceller{processes: _, consumers_pids: _} = survey_canceller
-
-      wait_all_cancellations_from_pids(survey_canceller.processes)
+      wait_all_cancellations(survey_1)
 
       survey = Repo.get(Survey, survey_1.id)
       assert Survey.cancelled?(survey)
@@ -90,8 +90,8 @@ defmodule Ask.SurveyCancellerTest do
     test "stops multiple survey in cancelling status", %{user: user} do
       project = create_project_for_user(user)
       questionnaire = insert(:questionnaire, name: "test", project: project)
-      survey_1 = insert(:survey, project: project, state: "cancelling")
-      survey_2 = insert(:survey, project: project, state: "cancelling")
+      survey_1 = cancelling_survey(project)
+      survey_2 = cancelling_survey(project)
       test_channel = TestChannel.new(false)
 
       channel =
@@ -122,11 +122,10 @@ defmodule Ask.SurveyCancellerTest do
       |> Ask.Respondent.changeset(%{session: session})
       |> Repo.update!()
 
-      survey_canceller = Ask.SurveyCanceller.start_cancelling(nil)
+      simulate_survey_canceller_start()
 
-      assert %Ask.SurveyCanceller{processes: _, consumers_pids: _} = survey_canceller
-
-      wait_all_cancellations_from_pids(survey_canceller.processes)
+      wait_all_cancellations(survey_1)
+      wait_all_cancellations(survey_2)
 
       survey = Repo.get(Survey, survey_1.id)
       survey_2 = Repo.get(Survey, survey_2.id)
@@ -151,8 +150,8 @@ defmodule Ask.SurveyCancellerTest do
     } do
       project = create_project_for_user(user)
       questionnaire = insert(:questionnaire, name: "test", project: project)
-      survey_1 = insert(:survey, project: project, state: :cancelling)
-      survey_2 = insert(:survey, project: project, state: :cancelling)
+      survey_1 = cancelling_survey(project)
+      survey_2 = cancelling_survey(project)
       survey_3 = insert(:survey, project: project, state: :running)
       test_channel = TestChannel.new(false)
 
@@ -185,13 +184,12 @@ defmodule Ask.SurveyCancellerTest do
       |> Ask.Respondent.changeset(%{session: session})
       |> Repo.update!()
 
-      survey_canceller = Ask.SurveyCanceller.start_cancelling(nil)
-      conn = post(conn, project_survey_survey_path(conn, :stop, survey_3.project, survey_3))
+      simulate_survey_canceller_start()
+      post(conn, project_survey_survey_path(conn, :stop, survey_3.project, survey_3))
 
-      assert %Ask.SurveyCanceller{processes: _, consumers_pids: _} = survey_canceller
-
-      wait_all_cancellations_from_conn(conn)
-      wait_all_cancellations_from_pids(survey_canceller.processes)
+      wait_all_cancellations(survey_1)
+      wait_all_cancellations(survey_2)
+      wait_all_cancellations(survey_3)
 
       survey = Repo.get(Survey, survey_1.id)
       survey_2 = Repo.get(Survey, survey_2.id)
@@ -234,23 +232,102 @@ defmodule Ask.SurveyCancellerTest do
       )
       |> Repo.insert()
     end
+  end
 
-    def wait_all_cancellations_from_pids(pids) do
-      pids
-      |> Enum.map(fn {_, pid} -> Process.monitor(pid) end)
-      |> Enum.each(&receive_down/1)
-    end
+  describe "failure resistance" do
+    test "keeps cancelling other respondents when cancelling some fail", %{user: user} do
+      project = create_project_for_user(user)
+      questionnaire = insert(:questionnaire, name: "test", project: project)
+      survey = cancelling_survey(project)
+      test_channel = TestChannel.new(false)
 
-    def wait_all_cancellations_from_conn(conn) do
-      conn.assigns[:processors_pids]
-      |> Enum.map(&Process.monitor/1)
-      |> Enum.each(&receive_down/1)
-    end
+      channel =
+        insert(:channel,
+          settings:
+            test_channel
+            |> TestChannel.settings(),
+          type: "sms"
+        )
 
-    def receive_down(ref) do
-      receive do
-        {:DOWN, ^ref, _, _, _} -> :task_is_down
-      end
+      respondent_group = create_group(survey, channel)
+      insert_list(5, :respondent, survey: survey, state: "active", respondent_group: respondent_group)
+
+      failing_respondent = insert(:respondent, survey: survey, state: "active", respondent_group: respondent_group)
+      failing_session = %Session{
+        current_mode: nil, # this will make the canceller fail
+        respondent: failing_respondent,
+        flow: %Flow{
+          questionnaire: questionnaire
+        },
+        schedule: survey.schedule
+      }
+
+      failing_respondent
+      |> Ask.Respondent.changeset(%{session: Session.dump(failing_session)})
+      |> Repo.update!()
+
+      insert_list(5, :respondent, survey: survey, state: "active", respondent_group: respondent_group)
+
+      simulate_survey_canceller_start()
+
+      # first :cancel will cancel all but the failing respondent
+      # second :cancel would have cancelled the survey if not for the failing respondent
+      # we wait for the third :cancel to arrive to be sure that the second :cancel was effectively processed
+      wait_for_cancels(survey, 3)
+
+      survey = Repo.get(Survey, survey.id)
+      refute Survey.cancelled?(survey)
+
+      assert length(
+               Repo.all(
+                 from(
+                   r in Ask.Respondent,
+                   where: r.state == :cancelled and is_nil(r.session) and is_nil(r.timeout_at)
+                 )
+               )
+             ) == 10
+      assert Repo.get(Respondent, failing_respondent.id).state == :active
     end
+  end
+
+  defp wait_for_cancels(%Survey{id: survey_id}, times) do
+    canceller = SurveyCancellerSupervisor.canceller_pid(survey_id)
+    :erlang.trace(canceller, true, [:receive])
+    wait_for_cancels(canceller, times)
+  end
+
+  defp wait_for_cancels(_pid, 0), do: true
+  defp wait_for_cancels(canceller_pid, times) do
+    assert_receive {:trace, ^canceller_pid, :receive, :cancel}, 2_000
+    wait_for_cancels(canceller_pid, times - 1)
+  end
+
+  defp wait_all_cancellations(%{id: survey_id}) do
+    ref =
+      SurveyCancellerSupervisor.canceller_pid(survey_id)
+      |> Process.monitor()
+
+    receive do
+      {:DOWN, ^ref, _, _, _reason} -> :task_is_down
+    end
+  end
+
+  defp simulate_survey_canceller_start() do
+    # The SurveyCancellerSupervisor is started by mix before running the tests, so calling
+    # `start_link` would error with :already_started
+    # Instead, here we call `init` to check which cancellers should start, and then we start
+    # said cancellers
+    {:ok, {_, cancellers_to_run}} = SurveyCancellerSupervisor.init(nil)
+
+    cancellers_to_run
+    |> Enum.each(fn %{start: {Ask.Runtime.SurveyCanceller, :start_link, [survey_id]}} ->
+      SurveyCancellerSupervisor.start_cancelling(survey_id)
+    end)
+
+    cancellers_to_run
+  end
+
+  defp cancelling_survey(project) do
+    insert(:survey, project: project, state: "cancelling", exit_code: 1)
   end
 end

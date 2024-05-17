@@ -103,7 +103,11 @@ defmodule Ask.ActivityLog do
   defp typeof(%Questionnaire{}), do: "questionnaire"
   defp typeof(%Folder{}), do: "folder"
 
-  defp create(action, project, conn, entity, metadata) do
+  defp create(action, %Project{id: project_id}, conn, entity, metadata) do
+    create(action, project_id, conn, entity, metadata)
+  end
+
+  defp create(action, project_id, conn, entity, metadata) do
     {user_id, remote_ip} =
       case conn do
         nil ->
@@ -119,7 +123,7 @@ defmodule Ask.ActivityLog do
       end
 
     ActivityLog.changeset(%ActivityLog{}, %{
-      project_id: project.id,
+      project_id: project_id,
       user_id: user_id,
       entity_type: typeof(entity),
       entity_id: entity.id,
@@ -299,8 +303,8 @@ defmodule Ask.ActivityLog do
     create("request_cancel", project, conn, survey, %{survey_name: survey.name})
   end
 
-  def completed_cancel(project, conn, survey) do
-    create("completed_cancel", project, conn, survey, %{survey_name: survey.name})
+  def completed_cancel(survey) do
+    create("completed_cancel", survey.project_id, nil, survey, %{survey_name: survey.name})
   end
 
   def create_questionnaire(project, conn, questionnaire) do

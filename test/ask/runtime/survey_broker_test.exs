@@ -947,14 +947,12 @@ defmodule Ask.Runtime.SurveyBrokerTest do
           last_window_ends_at: Timex.shift(now, days: -1)
         })
 
-      stop_surveys_result = SurveyBroker.poll_active_surveys(now)
+      SurveyBroker.poll_active_surveys(now)
 
       survey = Repo.get(Ask.Survey, survey.id)
       assert survey.state == :cancelling
 
-      Enum.each(stop_surveys_result, fn {:ok, %{processes: processes}} ->
-        wait_all_cancellations_from_pids(processes)
-      end)
+      wait_all_cancellations(survey)
 
       survey = Repo.get(Ask.Survey, survey.id)
       assert survey.state == :terminated
@@ -1164,6 +1162,8 @@ defmodule Ask.Runtime.SurveyBrokerTest do
 
       {:ok, broker} = SurveyBroker.start_link()
       ChannelStatusServer.poll(channel_status_server)
+      # let channel status server run before poll
+      wait_for_email()
       SurveyBroker.poll()
 
       refute_received [:ask, ^test_channel_1, _, _, _, _channel_id]
@@ -1171,6 +1171,12 @@ defmodule Ask.Runtime.SurveyBrokerTest do
 
       :ok = broker |> GenServer.stop()
       :ok = channel_status_server |> GenServer.stop()
+    end
+  end
+
+  defp wait_for_email do
+    receive do
+      [:email, email] -> email
     end
   end
 
@@ -1212,13 +1218,7 @@ defmodule Ask.Runtime.SurveyBrokerTest do
       assert respondent.state == :failed
       assert respondent.disposition == :failed
 
-      last_entry =
-        (respondent |> Repo.preload(:survey_log_entries)).survey_log_entries |> Enum.at(-1)
-
-      assert last_entry.survey_id == survey.id
-      assert last_entry.action_data == "Failed"
-      assert last_entry.action_type == "disposition changed"
-      assert last_entry.disposition == "queued"
+      assert_disposition_changed(respondent.id, "queued", "failed")
     end
 
     test "contacted respondents are marked as unresponsive" do
@@ -1263,13 +1263,7 @@ defmodule Ask.Runtime.SurveyBrokerTest do
       assert respondent.state == :failed
       assert respondent.disposition == :unresponsive
 
-      last_entry =
-        (respondent |> Repo.preload(:survey_log_entries)).survey_log_entries |> Enum.at(-1)
-
-      assert last_entry.survey_id == survey.id
-      assert last_entry.action_data == "Unresponsive"
-      assert last_entry.action_type == "disposition changed"
-      assert last_entry.disposition == "contacted"
+      assert_disposition_changed(respondent.id, "contacted", "unresponsive")
     end
 
     test "started respondents are marked as breakoff" do
@@ -1324,17 +1318,11 @@ defmodule Ask.Runtime.SurveyBrokerTest do
       assert respondent.state == :failed
       assert respondent.disposition == :breakoff
 
-      last_entry =
-        (respondent |> Repo.preload(:survey_log_entries)).survey_log_entries |> Enum.at(-1)
-
-      assert last_entry.survey_id == survey.id
-      assert last_entry.action_data == "Breakoff"
-      assert last_entry.action_type == "disposition changed"
-      assert last_entry.disposition == "started"
+      assert_disposition_changed(respondent.id, "started", "breakoff")
     end
 
     test "interim partial respondents are kept as partial (SMS)" do
-      [survey, _, _, respondent, _] =
+      [_survey, _, _, respondent, _] =
         create_running_survey_with_channel_and_respondent(@flag_step_after_multiple_choice)
 
       {:ok, _} = SurveyBroker.start_link()
@@ -1372,13 +1360,7 @@ defmodule Ask.Runtime.SurveyBrokerTest do
       assert respondent.state == :failed
       assert respondent.disposition == :partial
 
-      last_entry =
-        (respondent |> Repo.preload(:survey_log_entries)).survey_log_entries |> Enum.at(-1)
-
-      assert last_entry.survey_id == survey.id
-      assert last_entry.action_data == "Partial"
-      assert last_entry.action_type == "disposition changed"
-      assert last_entry.disposition == "interim partial"
+      assert_disposition_changed(respondent.id, "interim partial", "partial")
     end
   end
 
@@ -1885,13 +1867,11 @@ defmodule Ask.Runtime.SurveyBrokerTest do
     refute respondent.state == state
   end
 
-  def wait_all_cancellations_from_pids(pids) do
-    pids
-    |> Enum.map(fn {_, pid} -> Process.monitor(pid) end)
-    |> Enum.each(&receive_down/1)
-  end
+  def wait_all_cancellations(%{id: survey_id}) do
+    ref =
+      Ask.Runtime.SurveyCancellerSupervisor.canceller_pid(survey_id)
+      |> Process.monitor()
 
-  def receive_down(ref) do
     receive do
       {:DOWN, ^ref, _, _, _} -> :task_is_down
     end
