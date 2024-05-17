@@ -118,13 +118,9 @@ defmodule Ask.ActivityLog do
 
   defp create(action, project_id, conn, entity, metadata) do
     user_id =
-      if conn do
-        case current_user(conn) do
-          nil -> nil
-          user -> user.id
-        end
-      else
-        nil
+      case current_user(conn) do
+        nil -> nil
+        user -> user.id
       end
 
     remote_ip = remote_ip(conn)
