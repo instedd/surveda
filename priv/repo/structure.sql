@@ -872,7 +872,8 @@ CREATE TABLE `survey_log_entries` (
   `updated_at` datetime NOT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `id` (`id`),
-  KEY `survey_log_entries_survey_id_respondent_hashed_number_id_index` (`survey_id`,`respondent_hashed_number`,`id`)
+  KEY `survey_log_entries_survey_id_respondent_hashed_number_id_index` (`survey_id`,`respondent_hashed_number`,`id`),
+  KEY `survey_log_entries_survey_id_channel_id_index` (`survey_id`,`channel_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -1018,7 +1019,7 @@ CREATE TABLE `users` (
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2024-04-22 22:06:45
+-- Dump completed on 2024-05-31 22:30:15
 INSERT INTO `schema_migrations` (version) VALUES (20160812145257);
 INSERT INTO `schema_migrations` (version) VALUES (20160816183915);
 INSERT INTO `schema_migrations` (version) VALUES (20160830200454);
@@ -1238,3 +1239,4 @@ INSERT INTO `schema_migrations` (version) VALUES (20230405111657);
 INSERT INTO `schema_migrations` (version) VALUES (20230413101342);
 INSERT INTO `schema_migrations` (version) VALUES (20230821100203);
 INSERT INTO `schema_migrations` (version) VALUES (20240422175453);
+INSERT INTO `schema_migrations` (version) VALUES (20240531222620);
