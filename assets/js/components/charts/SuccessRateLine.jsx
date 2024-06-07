@@ -83,10 +83,12 @@ export default class SuccessRateLine extends Component<Props> {
       .scaleLinear()
       .domain([0, d3.max(data.values, (d) => d.value * 1.2)])
       .range([height, 0])
-    const line = d3
-      .line()
+
+    const area = d3
+      .area()
       .x((d) => x(d.time))
-      .y((d) => y(d.value))
+      .y0(height)
+      .y1((d) => y(d.value))
 
     var tooltip = d3
       .select("body")
@@ -94,7 +96,8 @@ export default class SuccessRateLine extends Component<Props> {
       .classed("forecast-tooltip", true)
       .style("visibility", "hidden")
 
-    for (var j = 1; j < data.values.length - 1; j++) {
+    // add circles
+    for (var j = 0; j < data.values.length ; j++) {
       if (y(data.values[j].value) != 0 && x(data.values[j].time) != 0) {
         d3.select(this.refs.circles)
           .selectAll("path")
@@ -106,7 +109,7 @@ export default class SuccessRateLine extends Component<Props> {
           .attr("r", "3px")
           .style("fill", data.color)
           .style("stroke", data.color)
-          .style("opacity", 0.1)
+          .style("opacity", 0.3)
           .on("mouseover", (d) => {
             tooltip
               .text(percentFormat(d.value / 100))
@@ -117,18 +120,20 @@ export default class SuccessRateLine extends Component<Props> {
           .on("mouseout", () => tooltip.style("visibility", "hidden"))
       }
     }
+      
 
+    // add area
     d3.select(this.refs.values)
       .selectAll("path")
       .data([data])
       .enter()
       .append("path")
       .merge(d3.select(this.refs.values).selectAll("path"))
-      .attr("class", "area")
-      .attr("stroke", (d) => d.color)
-      .attr("fill", (d) => d.color)
+      .attr("stroke", "none")
+      .attr("fill", (d => d.color))
+      .attr("fill-opacity", .2)
       .datum((d) => d.values)
-      .attr("d", line)
+      .attr("d", area)
 
     d3.select(this.refs.x)
       .attr("class", "axis")
