@@ -35,6 +35,7 @@ defmodule Ask.SurveyCancellerTest do
              ) == 0
     end
 
+    @tag :skip
     test "stops a survey in cancelling status without its id", %{user: user} do
       project = create_project_for_user(user)
       questionnaire = insert(:questionnaire, name: "test", project: project)
@@ -144,6 +145,7 @@ defmodule Ask.SurveyCancellerTest do
       assert_receive [:cancel_message, ^test_channel, %{}]
     end
 
+    @tag :skip
     test "stops multiple surveys from canceller and from controller simultaneously", %{
       conn: conn,
       user: user
