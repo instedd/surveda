@@ -5,6 +5,7 @@ defmodule Ask.TestHelpers do
 
       alias Ask.Runtime.{
         SurveyBroker,
+        SurveyCancellerSupervisor,
         Flow,
         RespondentGroupAction,
         ChannelBrokerSupervisor,
@@ -44,6 +45,8 @@ defmodule Ask.TestHelpers do
 
         respondent_groups
       end
+
+      defp start_survey_canceller_supervisor(), do: SurveyCancellerSupervisor.start_link()
 
       defp create_running_survey_with_channel_and_respondents_with_options(options \\ []) do
         steps = Keyword.get(options, :steps, @dummy_steps)

@@ -23,7 +23,7 @@ defmodule Ask.SurveyCancellerTest do
 
   describe "stops surveys as if the application were starting" do
     test "survey canceller does not have pending surveys to cancel" do
-      assert [] = simulate_survey_canceller_start()
+      start_survey_canceller_supervisor()
 
       assert length(
                Repo.all(
@@ -68,7 +68,7 @@ defmodule Ask.SurveyCancellerTest do
       |> Ask.Respondent.changeset(%{session: session})
       |> Repo.update!()
 
-      simulate_survey_canceller_start()
+      start_survey_canceller_supervisor()
 
       wait_all_cancellations(survey_1)
 
@@ -122,7 +122,7 @@ defmodule Ask.SurveyCancellerTest do
       |> Ask.Respondent.changeset(%{session: session})
       |> Repo.update!()
 
-      simulate_survey_canceller_start()
+      start_survey_canceller_supervisor()
 
       wait_all_cancellations(survey_1)
       wait_all_cancellations(survey_2)
@@ -184,7 +184,7 @@ defmodule Ask.SurveyCancellerTest do
       |> Ask.Respondent.changeset(%{session: session})
       |> Repo.update!()
 
-      simulate_survey_canceller_start()
+      start_survey_canceller_supervisor()
       post(conn, project_survey_survey_path(conn, :stop, survey_3.project, survey_3))
 
       wait_all_cancellations(survey_1)
@@ -268,7 +268,7 @@ defmodule Ask.SurveyCancellerTest do
 
       insert_list(5, :respondent, survey: survey, state: "active", respondent_group: respondent_group)
 
-      simulate_survey_canceller_start()
+      start_survey_canceller_supervisor()
 
       # first :cancel will cancel all but the failing respondent
       # second :cancel would have cancelled the survey if not for the failing respondent
@@ -310,21 +310,6 @@ defmodule Ask.SurveyCancellerTest do
     receive do
       {:DOWN, ^ref, _, _, _reason} -> :task_is_down
     end
-  end
-
-  defp simulate_survey_canceller_start() do
-    # The SurveyCancellerSupervisor is started by mix before running the tests, so calling
-    # `start_link` would error with :already_started
-    # Instead, here we call `init` to check which cancellers should start, and then we start
-    # said cancellers
-    {:ok, {_, cancellers_to_run}} = SurveyCancellerSupervisor.init(nil)
-
-    cancellers_to_run
-    |> Enum.each(fn %{start: {Ask.Runtime.SurveyCanceller, :start_link, [survey_id]}} ->
-      SurveyCancellerSupervisor.start_cancelling(survey_id)
-    end)
-
-    cancellers_to_run
   end
 
   defp cancelling_survey(project) do

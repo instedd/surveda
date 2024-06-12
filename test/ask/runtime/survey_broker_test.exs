@@ -936,6 +936,7 @@ defmodule Ask.Runtime.SurveyBrokerTest do
 
     @tag :time_mock
     test "stops the survey if it's expired" do
+      start_survey_canceller_supervisor()
       {:ok, now, _} = DateTime.from_iso8601("2021-02-19T00:00:00Z")
       mock_time(now)
       schedule = Schedule.always()
