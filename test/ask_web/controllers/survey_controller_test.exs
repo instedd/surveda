@@ -2585,6 +2585,7 @@ defmodule AskWeb.SurveyControllerTest do
 
   describe "stopping survey" do
     test "stops survey", %{conn: conn, user: user} do
+      start_survey_canceller_supervisor()
       project = create_project_for_user(user)
       questionnaire = insert(:questionnaire, name: "test", project: project)
       survey = insert(:survey, project: project, state: :running)
@@ -2624,6 +2625,7 @@ defmodule AskWeb.SurveyControllerTest do
     end
 
     test "stops respondents only for the stopped survey", %{conn: conn, user: user} do
+      start_survey_canceller_supervisor() 
       project = create_project_for_user(user)
       questionnaire = insert(:questionnaire, name: "test", project: project)
       survey = insert(:survey, project: project, state: :running)
@@ -2892,6 +2894,7 @@ defmodule AskWeb.SurveyControllerTest do
     end
 
     test "generates logs after stopping a survey", %{conn: conn, user: user} do
+      start_survey_canceller_supervisor()
       project = create_project_for_user(user)
       survey = insert(:survey, project: project, state: :running)
 

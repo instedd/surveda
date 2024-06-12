@@ -20,7 +20,6 @@ defmodule Ask do
       supervisor(Registry, [:unique, :channel_broker_registry]),
       worker(Ask.Runtime.ChannelBrokerAgent, []),
       supervisor(Ask.Runtime.ChannelBrokerSupervisor, []),
-      supervisor(Ask.Runtime.SurveyCancellerSupervisor, []),
       {Mutex, name: Ask.Mutex}
       # Start your own worker by calling: Ask.Worker.start_link(arg1, arg2, arg3)
       # worker(Ask.Worker, [arg1, arg2, arg3]),
@@ -45,7 +44,10 @@ defmodule Ask do
             worker(Ask.Config, []),
             worker(Ask.Runtime.QuestionnaireSimulatorStore, [])
             | children
-          ]
+          ] ++ [
+              # SurveyCancellerSupervisor depends on Ask.Repo, so must be started (and declared!) after it
+              supervisor(Ask.Runtime.SurveyCancellerSupervisor, [])
+            ]
 
         true ->
           children
