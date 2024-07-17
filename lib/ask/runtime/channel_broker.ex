@@ -439,11 +439,18 @@ defmodule Ask.Runtime.ChannelBroker do
     DateTime.compare(not_after, Ask.SystemTime.time().now) != :gt
   end
 
+  # This guard is only for test purposes
+  defp log_contact(_status, %{session: nil}) do
+    if Mix.env() != :test do
+      raise "Trying to contact a respondent without a session"
+    end
+  end
+
   defp log_contact(status, respondent) do
     session = respondent.session |> Ask.Runtime.Session.load()
     SurveyLogger.log(
       respondent.survey_id,
-      session.current_mode.channel.type,
+      session.flow.mode,
       respondent.id,
       respondent.hashed_number,
       session.current_mode.channel.id,

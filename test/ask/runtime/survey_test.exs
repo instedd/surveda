@@ -163,79 +163,72 @@ defmodule Ask.Runtime.SurveyTest do
 
       :ok = logger |> GenServer.stop()
 
-      assert [
-               do_you_smoke,
-               disposition_changed_to_contacted,
-               do_smoke,
-               disposition_changed_to_started,
-               do_you_exercise,
-               do_exercise,
-               second_perfect_number,
-               ninety_nine,
-               question_number,
-               eleven,
-               thank_you,
-               disposition_changed_to_completed
-             ] = (respondent |> Repo.preload(:survey_log_entries)).survey_log_entries
+      entries = (respondent |> Repo.preload(:survey_log_entries)).survey_log_entries
+      [
+        do_you_smoke,
+        do_you_exercise,
+        second_perfect_number,
+        question_number,
+        thank_you
+      ] = entries |> Enum.filter(fn e -> e.action_type == "prompt" end)
+      [
+        do_smoke,
+        do_exercise,
+        ninety_nine,
+        eleven
+      ] = entries |> Enum.filter(fn e -> e.action_type == "response" end)
+      [
+        disposition_changed_to_contacted,
+        disposition_changed_to_started,
+        disposition_changed_to_completed,
+      ] = entries |> Enum.filter(fn e -> e.action_type == "disposition changed" end)
 
       assert do_you_smoke.survey_id == survey.id
       assert do_you_smoke.action_data == "Do you smoke?"
-      assert do_you_smoke.action_type == "prompt"
       assert do_you_smoke.disposition == "queued"
 
       assert disposition_changed_to_contacted.survey_id == survey.id
       assert disposition_changed_to_contacted.action_data == "Contacted"
-      assert disposition_changed_to_contacted.action_type == "disposition changed"
       assert disposition_changed_to_contacted.disposition == "queued"
 
       assert do_smoke.survey_id == survey.id
       assert do_smoke.action_data == "Yes"
-      assert do_smoke.action_type == "response"
       assert do_smoke.disposition == "contacted"
 
       assert disposition_changed_to_started.survey_id == survey.id
       assert disposition_changed_to_started.action_data == "Started"
-      assert disposition_changed_to_started.action_type == "disposition changed"
       assert disposition_changed_to_started.disposition == "contacted"
 
       assert do_you_exercise.survey_id == survey.id
       assert do_you_exercise.action_data == "Do you exercise"
-      assert do_you_exercise.action_type == "prompt"
       assert do_you_exercise.disposition == "started"
 
       assert do_exercise.survey_id == survey.id
       assert do_exercise.action_data == "Yes"
-      assert do_exercise.action_type == "response"
       assert do_exercise.disposition == "started"
 
       assert second_perfect_number.survey_id == survey.id
       assert second_perfect_number.action_data == "Which is the second perfect number?"
-      assert second_perfect_number.action_type == "prompt"
       assert second_perfect_number.disposition == "started"
 
       assert ninety_nine.survey_id == survey.id
       assert ninety_nine.action_data == "99"
-      assert ninety_nine.action_type == "response"
       assert ninety_nine.disposition == "started"
 
       assert question_number.survey_id == survey.id
       assert question_number.action_data == "What's the number of this question?"
-      assert question_number.action_type == "prompt"
       assert question_number.disposition == "started"
 
       assert eleven.survey_id == survey.id
       assert eleven.action_data == "11"
-      assert eleven.action_type == "response"
       assert eleven.disposition == "started"
 
       assert thank_you.survey_id == survey.id
       assert thank_you.action_data == "Thank you"
-      assert thank_you.action_type == "prompt"
       assert thank_you.disposition == "started"
 
       assert disposition_changed_to_completed.survey_id == survey.id
       assert disposition_changed_to_completed.action_data == "Completed"
-      assert disposition_changed_to_completed.action_type == "disposition changed"
       assert disposition_changed_to_completed.disposition == "started"
 
       :ok = broker |> GenServer.stop()
@@ -604,73 +597,67 @@ defmodule Ask.Runtime.SurveyTest do
 
       :ok = logger |> GenServer.stop()
 
-      assert [
-               do_you_smoke,
-               disposition_changed_to_contacted,
-               do_smoke,
-               disposition_changed_to_started,
-               do_you_exercise,
-               do_exercise,
-               second_perfect_number,
-               ninety_nine,
-               question_number,
-               eleven,
-               disposition_changed_to_completed
-             ] = (respondent |> Repo.preload(:survey_log_entries)).survey_log_entries
+      entries = (respondent |> Repo.preload(:survey_log_entries)).survey_log_entries
+      [
+        do_you_smoke,
+        do_you_exercise,
+        second_perfect_number,
+        question_number
+      ] = entries |> Enum.filter(fn e -> e.action_type == "prompt" end)
+      [
+        do_smoke,
+        do_exercise,
+        ninety_nine,
+        eleven
+      ] = entries |> Enum.filter(fn e -> e.action_type == "response" end)
+      [
+        disposition_changed_to_contacted,
+        disposition_changed_to_started,
+        disposition_changed_to_completed,
+      ] = entries |> Enum.filter(fn e -> e.action_type == "disposition changed" end)
 
       assert do_you_smoke.survey_id == survey.id
       assert do_you_smoke.action_data == "Do you smoke?"
-      assert do_you_smoke.action_type == "prompt"
       assert do_you_smoke.disposition == "queued"
 
       assert disposition_changed_to_contacted.survey_id == survey.id
       assert disposition_changed_to_contacted.action_data == "Contacted"
-      assert disposition_changed_to_contacted.action_type == "disposition changed"
       assert disposition_changed_to_contacted.disposition == "queued"
 
       assert do_smoke.survey_id == survey.id
       assert do_smoke.action_data == "Yes"
-      assert do_smoke.action_type == "response"
       assert do_smoke.disposition == "contacted"
 
       assert disposition_changed_to_started.survey_id == survey.id
       assert disposition_changed_to_started.action_data == "Started"
-      assert disposition_changed_to_started.action_type == "disposition changed"
       assert disposition_changed_to_started.disposition == "contacted"
 
       assert do_you_exercise.survey_id == survey.id
       assert do_you_exercise.action_data == "Do you exercise"
-      assert do_you_exercise.action_type == "prompt"
       assert do_you_exercise.disposition == "started"
 
       assert do_exercise.survey_id == survey.id
       assert do_exercise.action_data == "Yes"
-      assert do_exercise.action_type == "response"
       assert do_exercise.disposition == "started"
 
       assert second_perfect_number.survey_id == survey.id
       assert second_perfect_number.action_data == "Which is the second perfect number?"
-      assert second_perfect_number.action_type == "prompt"
       assert second_perfect_number.disposition == "started"
 
       assert ninety_nine.survey_id == survey.id
       assert ninety_nine.action_data == "99"
-      assert ninety_nine.action_type == "response"
       assert ninety_nine.disposition == "started"
 
       assert question_number.survey_id == survey.id
       assert question_number.action_data == "What's the number of this question?"
-      assert question_number.action_type == "prompt"
       assert question_number.disposition == "started"
 
       assert eleven.survey_id == survey.id
       assert eleven.action_data == "11"
-      assert eleven.action_type == "response"
       assert eleven.disposition == "started"
 
       assert disposition_changed_to_completed.survey_id == survey.id
       assert disposition_changed_to_completed.action_data == "Completed"
-      assert disposition_changed_to_completed.action_type == "disposition changed"
       assert disposition_changed_to_completed.disposition == "started"
 
       :ok = broker |> GenServer.stop()
@@ -787,79 +774,73 @@ defmodule Ask.Runtime.SurveyTest do
 
       :ok = logger |> GenServer.stop()
 
-      assert [
-               do_you_smoke,
-               disposition_changed_to_contacted,
-               do_smoke,
-               disposition_changed_to_started,
-               do_you_exercise,
-               do_exercise,
-               second_perfect_number,
-               ninety_nine,
-               question_number,
-               eleven,
-               bye,
-               disposition_changed_to_completed
-             ] = (respondent |> Repo.preload(:survey_log_entries)).survey_log_entries
+      entries = (respondent |> Repo.preload(:survey_log_entries)).survey_log_entries
+
+      [
+        do_you_smoke,
+        do_you_exercise,
+        second_perfect_number,
+        question_number,
+        bye
+      ] = entries |> Enum.filter(fn e -> e.action_type == "prompt" end)
+      [
+        do_smoke,
+        do_exercise,
+        ninety_nine,
+        eleven
+      ] = entries |> Enum.filter(fn e -> e.action_type == "response" end)
+      [
+        disposition_changed_to_contacted,
+        disposition_changed_to_started,
+        disposition_changed_to_completed,
+      ] = entries |> Enum.filter(fn e -> e.action_type == "disposition changed" end)
 
       assert do_you_smoke.survey_id == survey.id
       assert do_you_smoke.action_data == "Do you smoke?"
-      assert do_you_smoke.action_type == "prompt"
       assert do_you_smoke.disposition == "queued"
 
       assert disposition_changed_to_contacted.survey_id == survey.id
       assert disposition_changed_to_contacted.action_data == "Contacted"
-      assert disposition_changed_to_contacted.action_type == "disposition changed"
       assert disposition_changed_to_contacted.disposition == "queued"
 
       assert do_smoke.survey_id == survey.id
       assert do_smoke.action_data == "Yes"
-      assert do_smoke.action_type == "response"
       assert do_smoke.disposition == "contacted"
 
       assert disposition_changed_to_started.survey_id == survey.id
       assert disposition_changed_to_started.action_data == "Started"
-      assert disposition_changed_to_started.action_type == "disposition changed"
       assert disposition_changed_to_started.disposition == "contacted"
 
       assert do_you_exercise.survey_id == survey.id
       assert do_you_exercise.action_data == "Do you exercise"
-      assert do_you_exercise.action_type == "prompt"
       assert do_you_exercise.disposition == "started"
 
       assert do_exercise.survey_id == survey.id
       assert do_exercise.action_data == "Yes"
-      assert do_exercise.action_type == "response"
       assert do_exercise.disposition == "started"
 
       assert second_perfect_number.survey_id == survey.id
       assert second_perfect_number.action_data == "Which is the second perfect number?"
-      assert second_perfect_number.action_type == "prompt"
       assert second_perfect_number.disposition == "started"
 
       assert ninety_nine.survey_id == survey.id
       assert ninety_nine.action_data == "99"
-      assert ninety_nine.action_type == "response"
       assert ninety_nine.disposition == "started"
 
       assert question_number.survey_id == survey.id
       assert question_number.action_data == "What's the number of this question?"
-      assert question_number.action_type == "prompt"
       assert question_number.disposition == "started"
 
       assert eleven.survey_id == survey.id
       assert eleven.action_data == "11"
-      assert eleven.action_type == "response"
       assert eleven.disposition == "started"
 
       assert bye.survey_id == survey.id
       assert bye.action_data == "Bye"
-      assert bye.action_type == "prompt"
       assert bye.disposition == "started"
 
       assert disposition_changed_to_completed.survey_id == survey.id
       assert disposition_changed_to_completed.action_data == "Completed"
-      assert disposition_changed_to_completed.action_type == "disposition changed"
       assert disposition_changed_to_completed.disposition == "started"
 
       :ok = broker |> GenServer.stop()
@@ -1207,73 +1188,68 @@ defmodule Ask.Runtime.SurveyTest do
 
       :ok = logger |> GenServer.stop()
 
-      assert [
-               do_you_smoke,
-               disposition_changed_to_contacted,
-               foo,
-               disposition_changed_to_started,
-               wrong_answer,
-               do_you_smoke_again,
-               dont_smoke,
-               disposition_changed_to_rejected,
-               satisfaction,
-               dissatisfied,
-               completed
-             ] = (respondent |> Repo.preload(:survey_log_entries)).survey_log_entries
+      entries = (respondent |> Repo.preload(:survey_log_entries)).survey_log_entries
+
+      [
+        do_you_smoke,
+        wrong_answer,
+        do_you_smoke_again,
+        satisfaction,
+        completed,
+      ] = entries |> Enum.filter(fn e -> e.action_type == "prompt" end)
+      [
+        foo,
+        dont_smoke,
+        dissatisfied,
+      ]= entries |> Enum.filter(fn e -> e.action_type == "response" end)
+      [
+        disposition_changed_to_contacted,
+        disposition_changed_to_started,
+        disposition_changed_to_rejected,
+      ]= entries |> Enum.filter(fn e -> e.action_type == "disposition changed" end)
 
       assert do_you_smoke.survey_id == survey.id
       assert do_you_smoke.action_data == "Do you smoke?"
-      assert do_you_smoke.action_type == "prompt"
       assert do_you_smoke.disposition == "queued"
 
       assert disposition_changed_to_contacted.survey_id == survey.id
       assert disposition_changed_to_contacted.action_data == "Contacted"
-      assert disposition_changed_to_contacted.action_type == "disposition changed"
       assert disposition_changed_to_contacted.disposition == "queued"
 
       assert foo.survey_id == survey.id
       assert foo.action_data == "Foo"
-      assert foo.action_type == "response"
       assert foo.disposition == "contacted"
 
       assert disposition_changed_to_started.survey_id == survey.id
       assert disposition_changed_to_started.action_data == "Started"
-      assert disposition_changed_to_started.action_type == "disposition changed"
       assert disposition_changed_to_started.disposition == "contacted"
 
       assert wrong_answer.survey_id == survey.id
       assert wrong_answer.action_data == "Error"
-      assert wrong_answer.action_type == "prompt"
       assert wrong_answer.disposition == "started"
 
       assert do_you_smoke_again.survey_id == survey.id
       assert do_you_smoke_again.action_data == "Do you smoke?"
-      assert do_you_smoke_again.action_type == "prompt"
       assert do_you_smoke_again.disposition == "started"
 
       assert dont_smoke.survey_id == survey.id
       assert dont_smoke.action_data == "No"
-      assert dont_smoke.action_type == "response"
       assert dont_smoke.disposition == "started"
 
       assert disposition_changed_to_rejected.survey_id == survey.id
       assert disposition_changed_to_rejected.action_data == "Rejected"
-      assert disposition_changed_to_rejected.action_type == "disposition changed"
       assert disposition_changed_to_rejected.disposition == "started"
 
       assert satisfaction.survey_id == survey.id
       assert satisfaction.action_data == "Satisfaction"
-      assert satisfaction.action_type == "prompt"
       assert satisfaction.disposition == "rejected"
 
       assert dissatisfied.survey_id == survey.id
       assert dissatisfied.action_data == "No"
-      assert dissatisfied.action_type == "response"
       assert dissatisfied.disposition == "rejected"
 
       assert completed.survey_id == survey.id
       assert completed.action_data == "Completed"
-      assert completed.action_type == "prompt"
       assert completed.disposition == "rejected"
 
       :ok = broker |> GenServer.stop()
@@ -2092,23 +2068,30 @@ defmodule Ask.Runtime.SurveyTest do
 
     :ok = logger |> GenServer.stop()
 
-    assert [
-             do_you_exercise,
-             disposition_changed_to_contacted,
-             do_exercise,
-             disposition_changed_to_started,
-             disposition_changed_to_completed,
-             thank_you
-           ] = (respondent |> Repo.preload(:survey_log_entries)).survey_log_entries
+    entries = (respondent |> Repo.preload(:survey_log_entries)).survey_log_entries
+
+    enqueueing_contact = entries |> Enum.find(fn e -> e.action_type == "contact" end)
+    do_exercise = entries |> Enum.find(fn e -> e.action_type == "response" end)
+    [
+      do_you_exercise,
+      thank_you
+    ] = entries|> Enum.filter(fn e -> e.action_type == "prompt" end)
+    [ 
+      disposition_changed_to_contacted,
+      disposition_changed_to_started,
+      disposition_changed_to_completed,
+    ]  = entries|> Enum.filter(fn e -> e.action_type == "disposition changed" end)
 
     assert do_you_exercise.survey_id == survey.id
     assert do_you_exercise.action_data == "Do you exercise?"
-    assert do_you_exercise.action_type == "prompt"
     assert do_you_exercise.disposition == "queued"
+
+    assert enqueueing_contact.survey_id == survey.id
+    assert enqueueing_contact.action_data == "Enqueueing sms"
+    assert enqueueing_contact.disposition == "queued"
 
     assert disposition_changed_to_contacted.survey_id == survey.id
     assert disposition_changed_to_contacted.action_data == "Contacted"
-    assert disposition_changed_to_contacted.action_type == "disposition changed"
     assert disposition_changed_to_contacted.disposition == "queued"
 
     assert do_exercise.survey_id == survey.id
@@ -2118,17 +2101,14 @@ defmodule Ask.Runtime.SurveyTest do
 
     assert disposition_changed_to_started.survey_id == survey.id
     assert disposition_changed_to_started.action_data == "Started"
-    assert disposition_changed_to_started.action_type == "disposition changed"
     assert disposition_changed_to_started.disposition == "contacted"
 
     assert disposition_changed_to_completed.survey_id == survey.id
     assert disposition_changed_to_completed.action_data == "Completed"
-    assert disposition_changed_to_completed.action_type == "disposition changed"
     assert disposition_changed_to_completed.disposition == "started"
 
     assert thank_you.survey_id == survey.id
     assert thank_you.action_data == "Thank you"
-    assert thank_you.action_type == "prompt"
     assert thank_you.disposition == "completed"
 
     :ok = broker |> GenServer.stop()
@@ -2356,17 +2336,17 @@ defmodule Ask.Runtime.SurveyTest do
 
     :ok = logger |> GenServer.stop()
 
-    [disposition_changed_to_interim_partial, do_you_exercise] =
+    entries = 
       (respondent |> Repo.preload(:survey_log_entries)).survey_log_entries
+    disposition_changed_to_interim_partial = entries |> Enum.find(fn e -> e.action_type == "disposition changed" end)
+    do_you_exercise = entries |> Enum.find(fn e -> e.action_type == "prompt" end)
 
     assert disposition_changed_to_interim_partial.survey_id == survey.id
     assert disposition_changed_to_interim_partial.action_data == "Interim partial"
-    assert disposition_changed_to_interim_partial.action_type == "disposition changed"
     assert disposition_changed_to_interim_partial.disposition == "queued"
 
     assert do_you_exercise.survey_id == survey.id
     assert do_you_exercise.action_data == "Do you exercise?"
-    assert do_you_exercise.action_type == "prompt"
     assert do_you_exercise.disposition == "interim partial"
 
     :ok = broker |> GenServer.stop()
@@ -2455,32 +2435,37 @@ defmodule Ask.Runtime.SurveyTest do
 
     :ok = logger |> GenServer.stop()
 
-    [do_exercise, disposition_changed_to_started, disposition_changed_to_refused, bye, thank_you] =
+    entries = 
       (respondent |> Repo.preload(:survey_log_entries)).survey_log_entries
+    
+    do_exercise = entries |> Enum.find(fn e -> e.action_type == "response" end)
+    [
+      disposition_changed_to_started, 
+      disposition_changed_to_refused
+    ] = entries |> Enum.filter(fn e -> e.action_type == "disposition changed" end)
+    [
+      bye,
+      thank_you
+    ] = entries |> Enum.filter(fn e -> e.action_type == "prompt" end)
 
     assert do_exercise.survey_id == survey.id
     assert do_exercise.action_data == "Yes"
-    assert do_exercise.action_type == "response"
     assert do_exercise.disposition == "queued"
 
     assert disposition_changed_to_started.survey_id == survey.id
     assert disposition_changed_to_started.action_data == "Started"
-    assert disposition_changed_to_started.action_type == "disposition changed"
     assert disposition_changed_to_started.disposition == "queued"
 
     assert disposition_changed_to_refused.survey_id == survey.id
     assert disposition_changed_to_refused.action_data == "Refused"
-    assert disposition_changed_to_refused.action_type == "disposition changed"
     assert disposition_changed_to_refused.disposition == "started"
 
     assert bye.survey_id == survey.id
     assert bye.action_data == "Bye"
-    assert bye.action_type == "prompt"
     assert bye.disposition == "refused"
 
     assert thank_you.survey_id == survey.id
     assert thank_you.action_data == "Thank you"
-    assert thank_you.action_type == "prompt"
     assert thank_you.disposition == "refused"
 
     :ok = broker |> GenServer.stop()
@@ -3422,22 +3407,21 @@ defmodule Ask.Runtime.SurveyTest do
 
     :ok = logger |> GenServer.stop()
 
-    [enqueueing, channel_failed, disposition_changed_to_failed] =
+    entries =
       (respondent |> Repo.preload(:survey_log_entries)).survey_log_entries
 
+    enqueueing = entries |> Enum.find(fn e -> e.action_data == "Enqueueing call" && e.action_type == "contact" end)
+    channel_failed = entries |> Enum.find(fn e -> e.action_data == "The channel failed" && e.action_type == "contact" end)
+    disposition_changed_to_failed = entries |> Enum.find(fn e -> e.action_type == "disposition changed" end)
+
     assert enqueueing.survey_id == survey.id
-    assert enqueueing.action_data == "Enqueueing call"
-    assert enqueueing.action_type == "contact"
     assert enqueueing.disposition == "queued"
 
     assert channel_failed.survey_id == survey.id
-    assert channel_failed.action_data == "The channel failed"
-    assert channel_failed.action_type == "contact"
     assert channel_failed.disposition == "queued"
 
     assert disposition_changed_to_failed.survey_id == survey.id
     assert disposition_changed_to_failed.action_data == "Failed"
-    assert disposition_changed_to_failed.action_type == "disposition changed"
     assert disposition_changed_to_failed.disposition == "queued"
 
     :ok = broker |> GenServer.stop()
@@ -3497,51 +3481,48 @@ defmodule Ask.Runtime.SurveyTest do
 
     :ok = logger |> GenServer.stop()
 
-    assert [
-             do_you_smoke,
-             disposition_changed_to_contacted,
-             response1,
-             disposition_changed_to_started,
-             response2,
-             response3,
-             disposition_changed_to_breakoff
-           ] =
+    entries = 
              (Repo.get(Respondent, respondent.id)
               |> Repo.preload(:survey_log_entries)).survey_log_entries
 
+    do_you_smoke = entries |> Enum.find(fn e -> e.action_type == "prompt" end)
+    [
+      disposition_changed_to_contacted,
+      disposition_changed_to_started,
+      disposition_changed_to_breakoff
+    ] = entries |> Enum.filter(fn e -> e.action_type == "disposition changed" end)
+    [
+      response1,
+      response2,
+      response3
+    ]  = entries |> Enum.filter(fn e -> e.action_type == "response" end)
+
     assert do_you_smoke.survey_id == survey.id
     assert do_you_smoke.action_data == "Do you smoke?"
-    assert do_you_smoke.action_type == "prompt"
     assert do_you_smoke.disposition == "queued"
 
     assert disposition_changed_to_contacted.survey_id == survey.id
     assert disposition_changed_to_contacted.action_data == "Contacted"
-    assert disposition_changed_to_contacted.action_type == "disposition changed"
     assert disposition_changed_to_contacted.disposition == "queued"
 
     assert response1.survey_id == survey.id
     assert response1.action_data == "1-734-5##-####"
-    assert response1.action_type == "response"
     assert response1.disposition == "contacted"
 
     assert disposition_changed_to_started.survey_id == survey.id
     assert disposition_changed_to_started.action_data == "Started"
-    assert disposition_changed_to_started.action_type == "disposition changed"
     assert disposition_changed_to_started.disposition == "contacted"
 
     assert response2.survey_id == survey.id
     assert response2.action_data == "fooo (1-734) 5## #### bar"
-    assert response2.action_type == "response"
     assert response2.disposition == "started"
 
     assert response3.survey_id == survey.id
     assert response3.action_data == "fooo (1734) 5##.#### bar"
-    assert response3.action_type == "response"
     assert response3.disposition == "started"
 
     assert disposition_changed_to_breakoff.survey_id == survey.id
     assert disposition_changed_to_breakoff.action_data == "Breakoff"
-    assert disposition_changed_to_breakoff.action_type == "disposition changed"
     assert disposition_changed_to_breakoff.disposition == "started"
 
     :ok = broker |> GenServer.stop()

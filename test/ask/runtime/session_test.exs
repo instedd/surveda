@@ -2000,17 +2000,17 @@ defmodule Ask.Runtime.SessionTest do
       survey_logger |> GenServer.stop()
       entries = SurveyLogEntry |> Repo.all()
 
+      first_entry = entries |> Enum.at(0)
+      assert first_entry.action_type == "contact"
+      assert first_entry.action_data == "Answer"
       second_entry = entries |> Enum.at(1)
-      assert second_entry.action_type == "contact"
-      assert second_entry.action_data == "Answer"
+      assert second_entry.action_type == "disposition changed"
+      assert second_entry.disposition == "queued"
+      assert second_entry.action_data == "Contacted"
       third_entry = entries |> Enum.at(2)
-      assert third_entry.action_type == "disposition changed"
-      assert third_entry.disposition == "queued"
-      assert third_entry.action_data == "Contacted"
-      fourth_entry = entries |> Enum.at(3)
-      assert fourth_entry.action_type == "prompt"
-      assert fourth_entry.disposition == "contacted"
-      assert fourth_entry.action_data == "Do you exercise?"
+      assert third_entry.action_type == "prompt"
+      assert third_entry.disposition == "contacted"
+      assert third_entry.action_data == "Do you exercise?"
     end
   end
 
