@@ -439,7 +439,7 @@ defmodule Ask.Runtime.ChannelBroker do
     DateTime.compare(not_after, Ask.SystemTime.time().now) != :gt
   end
 
-  defp log_contact(status, state, respondent) do #channel, mode, respondent, disposition \\ nil) do
+  defp log_contact(status, respondent) do
     session = respondent.session |> Ask.Runtime.Session.load()
     SurveyLogger.log(
       respondent.survey_id,
@@ -454,7 +454,7 @@ defmodule Ask.Runtime.ChannelBroker do
   end
 
   defp ivr_call(state, respondent, token, not_before, not_after) do
-    log_contact("Enqueueing call", state, respondent)
+    log_contact("Enqueueing call", respondent)
 
     response =
       state.runtime_channel
@@ -473,7 +473,7 @@ defmodule Ask.Runtime.ChannelBroker do
   end
 
   defp channel_ask(state, respondent, token, reply) do
-    log_contact("Enqueueing sms", state, respondent)
+    log_contact("Enqueueing sms", respondent)
 
     # FIXME: only needed for tests to pass
     state.runtime_channel
