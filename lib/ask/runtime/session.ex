@@ -466,7 +466,6 @@ defmodule Ask.Runtime.Session do
 
   defp mode_start(
          %Session{
-           flow: flow,
            current_mode: %IVRMode{channel: channel},
            respondent: respondent,
            token: token,
