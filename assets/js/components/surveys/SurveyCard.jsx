@@ -23,6 +23,8 @@ class _SurveyCard extends Component<any> {
     readOnly: boolean,
   }
 
+  duplicatingSurvey: boolean // FIXME: this should be declared at the Index level (shared between cards)
+
   constructor(props) {
     super(props)
 
@@ -36,9 +38,24 @@ class _SurveyCard extends Component<any> {
     if (survey.state != "not_ready") {
       fetchRespondentsStats(survey.projectId, survey.id)(dispatch)
     }
+
+    this.duplicatingSurvey = false
   }
 
   changeFolder = (folderId) => this.setState({ folderId })
+
+  duplicateSurvey = () => {
+    // Prevent duplicating multiple surveys at once
+    if (this.duplicatingSurvey) return
+    this.duplicatingSurvey = true
+
+    const { dispatch, survey } = this.props
+    dispatch(surveyActions.duplicateSurvey(survey)).then((newSurvey) => {
+      this.duplicatingSurvey = false
+      // FIXME: navigate using the router? it's not available here
+      window.location = routes.survey(newSurvey.projectId, newSurvey.id)
+    })
+  }
 
   askMoveSurvey = () => {
     const moveSurveyConfirmationModal: ConfirmationModal = this.refs.moveSurveyConfirmationModal
@@ -106,7 +123,9 @@ class _SurveyCard extends Component<any> {
   render() {
     const { survey, t, dispatch } = this.props
 
-    let actions = []
+    let actions = [
+      { name: t("Duplicate"), icon: "content_copy", func: this.duplicateSurvey }
+    ]
     if (this.movable())
       actions.push({ name: t("Move to"), icon: "folder", func: this.askMoveSurvey })
     if (this.deletable())

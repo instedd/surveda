@@ -212,6 +212,10 @@ export const createSurvey = (projectId, folderId, survey) => {
   return apiPostJSON(`projects/${projectId}${folderPath}/surveys`, surveySchema, { survey })
 }
 
+export const duplicateSurvey = (projectId, surveyId) => {
+  return apiPostJSON(`projects/${projectId}/surveys/${surveyId}/duplicate`, surveySchema)
+}
+
 export const deleteSurvey = (projectId, survey) => {
   return apiDelete(`projects/${projectId}/surveys/${survey.id}`)
 }
