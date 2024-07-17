@@ -7,6 +7,7 @@ defmodule AskWeb.SurveyController do
     Survey,
     Logger,
     ActivityLog,
+    QuotaBucket,
     RetriesHistogram,
     ScheduleError
   }
@@ -110,6 +111,83 @@ defmodule AskWeb.SurveyController do
         |> render("error.json", changeset: changeset)
     end
   end
+
+  def duplicate(conn, %{"project_id" => project_id, "survey_id" => source_survey_id}) do
+    project =
+      conn
+      |> load_project(project_id)
+
+    source_survey =
+      project
+      |> load_survey(source_survey_id)
+      |> Repo.preload([:quota_buckets, :questionnaires])
+    props = %{
+      "project_id" => project_id,
+      "folder_id" => source_survey.folder_id,
+      "name" => "#{source_survey.name || "Untitled survey"} (duplicate)",
+      "description" => source_survey.description,
+      "comparisons" => source_survey.comparisons,
+      "questionnaire_ids" => editable_questionnaire_ids(source_survey.questionnaires),
+      "mode" => source_survey.mode,
+      "schedule" => source_survey.schedule,
+      "fallback_delay" => source_survey.fallback_delay,
+      "ivr_retry_configuration" => source_survey.ivr_retry_configuration,
+      "mobileweb_retry_configuration" => source_survey.mobileweb_retry_configuration,
+      "sms_retry_configuration" => source_survey.sms_retry_configuration,
+      "cutoff" => source_survey.cutoff,
+      "quota_vars" => source_survey.quota_vars,
+      "count_partial_results" => source_survey.count_partial_results,
+    }
+    changeset =
+      project
+      |> build_assoc(:surveys)
+      |> Survey.changeset(props)
+      |> update_questionnaires(props)
+      |> put_assoc(:quota_buckets, quota_buckets_definitions(source_survey.quota_buckets))
+
+    multi =
+      Multi.new()
+      |> Multi.insert(:survey, changeset)
+      |> Multi.run(:log, fn _, %{survey: survey} ->
+        ActivityLog.create_survey(project, conn, survey) |> Repo.insert() # FIXME: should be a different activity? Mentioning duplication
+      end)
+      |> Repo.transaction()
+
+    case multi do
+      {:ok, %{survey: survey}} ->
+        project |> Project.touch!()
+
+        survey =
+          survey
+          |> Repo.preload([:quota_buckets])
+          |> Repo.preload(:questionnaires)
+          |> Survey.with_links(user_level(project_id, current_user(conn).id))
+
+        conn
+        |> put_status(:created)
+        |> put_resp_header("location", project_survey_path(conn, :show, project_id, survey))
+        |> render("show.json", survey: survey)
+
+      {:error, _, changeset, _} ->
+        Logger.warn("Error when creating a survey: #{inspect(changeset)}")
+
+        conn
+        |> put_status(:unprocessable_entity)
+        |> put_view(AskWeb.ChangesetView)
+        |> render("error.json", changeset: changeset)
+    end
+  end
+
+  defp editable_questionnaire_ids(questionnaires), do:
+    Enum.map(questionnaires,
+      fn %{id: questionnaire_id, snapshot_of: original_questionnaire_id} -> original_questionnaire_id || questionnaire_id end
+    )
+
+  defp quota_buckets_definitions(quota_buckets), do:
+    Enum.map(quota_buckets, fn %{condition: condition} ->
+      %QuotaBucket{condition: condition}
+    end
+    )
 
   def show(conn, %{"project_id" => project_id, "id" => id}) do
     survey =
