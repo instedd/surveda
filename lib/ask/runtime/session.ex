@@ -490,8 +490,6 @@ defmodule Ask.Runtime.Session do
       today_end_time
     )
 
-    log_contact("Enqueueing call", channel, flow.mode, respondent)
-
     {:ok, %{session | respondent: respondent}, %Reply{}, current_timeout(session)}
   end
 
