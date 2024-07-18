@@ -532,7 +532,7 @@ defmodule Ask.Runtime.SurveyBrokerTest do
       # Second poll, retry the question
       SurveyBroker.handle_info(:poll, nil)
 
-      assert_received [
+      assert_receive [
         :setup,
         ^test_channel,
         %Respondent{sanitized_phone_number: ^phone_number},
