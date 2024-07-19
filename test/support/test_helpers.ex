@@ -154,15 +154,6 @@ defmodule Ask.TestHelpers do
         assert p == pending
       end
 
-      def assert_disposition_changed(respondent_id, old_disposition, new_disposition) do
-        case Repo.one(from log in SurveyLogEntry, where: log.respondent_id == ^respondent_id, where: log.action_type == "disposition changed", order_by: [desc: :id], limit: 1) do
-          nil -> raise "No 'disposition changed' SurveyLogEntry for respondent (id: #{respondent_id})"
-          last_entry -> 
-            assert last_entry.disposition == to_string(old_disposition)
-            assert last_entry.action_data == upcaseFirst(new_disposition)
-        end
-      end
-      
       defp upcaseFirst(value) when is_atom(value), do: to_string(value) |> upcaseFirst
       defp upcaseFirst(<<first::utf8, rest::binary>>), do: String.upcase(<<first::utf8>>) <> rest
 
