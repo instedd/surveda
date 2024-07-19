@@ -48,12 +48,12 @@ defmodule Ask.SurveyLogEntry do
   end
   
   defp normalize_mode_field(changeset) do
-    downcase_mode_field = String.downcase(get_field(changeset, :mode))
-    formatted_mode = case downcase_mode_field do
+    mode_field = get_field(changeset, :mode)
+    formatted_mode = case String.downcase(mode_field) do
       "sms" -> "SMS"
       "ivr" -> "IVR"
       "mobileweb" -> "Mobile Web"
-      other -> other
+      _ -> mode_field
     end
     changeset |> put_change(:mode, formatted_mode)
   end
