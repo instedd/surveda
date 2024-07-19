@@ -1398,6 +1398,26 @@ defmodule AskWeb.SurveyControllerTest do
 
       assert (new_survey.questionnaires |> hd).id == questionnaire.id
     end
+
+    test "finished survey copies don't copy their exit status", %{ conn: conn, user: user } do
+      project = create_project_for_user(user)
+
+      survey =
+        insert(:survey,
+          project: project,
+          state: "terminated",
+          exit_code: 0,
+          exit_message: "Successfully completed"
+        )
+
+      conn = post conn, project_survey_survey_path(conn, :duplicate, project, survey)
+
+      new_survey = Repo.get(Survey, json_response(conn, 201)["data"]["id"])
+
+      assert new_survey.state == :not_ready
+      assert new_survey.exit_code == nil
+      assert new_survey.exit_message == nil
+    end
   end
 
   describe "update" do
