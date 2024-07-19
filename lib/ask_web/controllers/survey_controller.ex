@@ -115,12 +115,13 @@ defmodule AskWeb.SurveyController do
   def duplicate(conn, %{"project_id" => project_id, "survey_id" => source_survey_id}) do
     project =
       conn
-      |> load_project(project_id)
+      |> load_project_for_change(project_id)
 
     source_survey =
       project
-      |> load_survey(source_survey_id)
+      |> load_standalone_survey(source_survey_id)
       |> Repo.preload([:quota_buckets, :questionnaires])
+
     props = %{
       "project_id" => project_id,
       "folder_id" => source_survey.folder_id,
@@ -138,6 +139,7 @@ defmodule AskWeb.SurveyController do
       "quota_vars" => source_survey.quota_vars,
       "count_partial_results" => source_survey.count_partial_results,
     }
+
     changeset =
       project
       |> build_assoc(:surveys)
@@ -557,4 +559,15 @@ defmodule AskWeb.SurveyController do
     |> assoc(:surveys)
     |> Repo.get!(survey_id)
   end
+
+  defp load_standalone_survey(project, survey_id) do
+    load_survey(project, survey_id)
+    |> validate_standalone_survey
+  end
+
+  # TODO: this seems to clash with the definition in `Survey.belongs_to_panel_survey?`
+  defp validate_standalone_survey(%{generates_panel_survey: true}), do: raise ConflictError
+  defp validate_standalone_survey(survey = %{panel_survey_id: nil}), do: survey
+  defp validate_standalone_survey(%{panel_survey_id: _id}), do: raise ConflictError
+
 end

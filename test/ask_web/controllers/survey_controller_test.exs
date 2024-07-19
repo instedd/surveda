@@ -1271,6 +1271,121 @@ defmodule AskWeb.SurveyControllerTest do
     end
   end
 
+  describe "duplicate" do
+    test "returns new survey's ID", %{conn: conn, user: user} do
+      project = create_project_for_user(user)
+      survey = insert(:survey, project: project)
+
+      conn = post conn, project_survey_survey_path(conn, :duplicate, project, survey)
+
+      assert new_survey_id = json_response(conn, 201)["data"]["id"]
+      assert Repo.get(Survey, new_survey_id)
+    end
+
+    test "duplicated survey has same data", %{conn: conn, user: user} do
+      project = create_project_for_user(user)
+      survey = insert(:survey, project: project)
+      channel = insert(:channel, user: user)
+      create_group(survey, channel)
+
+      Repo.get(Survey, survey.id) |> Repo.preload([:respondent_groups])
+
+      conn = post conn, project_survey_survey_path(conn, :duplicate, project, survey)
+
+      new_survey = Repo.get(Survey, json_response(conn, 201)["data"]["id"])
+        |> Repo.preload([:respondent_groups])
+
+      assert new_survey.name == "#{survey.name} (duplicate)"
+      assert new_survey.project_id == survey.project_id
+      assert new_survey.description == survey.description
+      assert new_survey.schedule == survey.schedule
+      assert new_survey.respondent_groups == []
+      assert new_survey.folder_id == nil
+    end
+
+    test "duplicated survey is on the same folder as the original", %{conn: conn, user: user} do
+      project = create_project_for_user(user)
+      folder = insert(:folder, project: project)
+      survey = insert(:survey, project: project, folder: folder)
+
+      conn = post conn, project_survey_survey_path(conn, :duplicate, project, survey)
+
+      new_survey = Repo.get(Survey, json_response(conn, 201)["data"]["id"])
+
+      assert new_survey.folder_id == folder.id
+    end
+
+    test "duplicated survey doesn't copy buckets' quotas", %{conn: conn, user: user} do
+      project = create_project_for_user(user)
+      survey = insert(:survey, project: project, quota_vars: ["gender", "smokes"])
+
+      insert(:quota_bucket,
+        survey: survey,
+        condition: %{gender: "male", smokes: "no"},
+        quota: 10,
+        count: 3
+      )
+
+      insert(:quota_bucket, survey: survey, condition: %{gender: "male", smokes: "yes"}, quota: 20)
+
+      insert(:quota_bucket,
+        survey: survey,
+        condition: %{gender: "female", smokes: "no"},
+        quota: 30,
+        count: 1
+      )
+
+      insert(:quota_bucket,
+        survey: survey,
+        condition: %{gender: "female", smokes: "yes"},
+        quota: 40
+      )
+
+      survey = survey |> Repo.preload([:quota_buckets])
+
+      conn = post conn, project_survey_survey_path(conn, :duplicate, project, survey)
+
+      new_survey = Repo.get(Survey, json_response(conn, 201)["data"]["id"])
+        |> Repo.preload([:quota_buckets])
+
+      new_buckets = new_survey.quota_buckets
+
+      condition_set = fn quota_buckets -> quota_buckets |> Enum.map(fn bucket -> bucket.condition end) |> MapSet.new end
+
+      assert Enum.count(new_buckets) == 4
+      assert condition_set.(new_buckets) == condition_set.(survey.quota_buckets)
+      assert Enum.all?(new_buckets, fn bucket -> bucket.quota == nil end)
+    end
+
+    test "forbids duplication if project is archived", %{conn: conn, user: user} do
+      project = create_project_for_user(user, archived: true)
+      survey = insert(:survey, project: project)
+
+      assert_error_sent :forbidden, fn ->
+        post conn, project_survey_survey_path(conn, :duplicate, project, survey)
+      end
+    end
+
+    test "disallows duplication of panel survey templates", %{conn: conn, user: user} do
+      project = create_project_for_user(user)
+      survey = insert(:survey, project: project, generates_panel_survey: true)
+
+      assert_error_sent :conflict, fn ->
+        post conn, project_survey_survey_path(conn, :duplicate, project, survey)
+      end
+    end
+
+    test "disallows duplication of panel survey instance", %{ conn: conn, user: user } do
+      project = create_project_for_user(user)
+      panel_survey = insert(:panel_survey, project: project)
+      survey = insert(:survey, project: project, panel_survey: panel_survey)
+
+      assert_error_sent :conflict, fn ->
+        post conn, project_survey_survey_path(conn, :duplicate, project, survey)
+      end
+    end
+  end
+
   describe "update" do
     test "updates and renders chosen resource when data is valid", %{conn: conn, user: user} do
       project = create_project_for_user(user)
