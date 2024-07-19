@@ -1384,6 +1384,20 @@ defmodule AskWeb.SurveyControllerTest do
         post conn, project_survey_survey_path(conn, :duplicate, project, survey)
       end
     end
+
+    test "running survey copies use editable questionnaire", %{ conn: conn, user: user } do
+      project = create_project_for_user(user)
+      questionnaire = insert(:questionnaire)
+      snapshot = insert(:questionnaire, snapshot_of_questionnaire: questionnaire)
+      survey = insert(:survey, project: project, questionnaires: [snapshot])
+
+      conn = post conn, project_survey_survey_path(conn, :duplicate, project, survey)
+
+      new_survey = Repo.get(Survey, json_response(conn, 201)["data"]["id"])
+        |> Repo.preload([:questionnaires])
+
+      assert (new_survey.questionnaires |> hd).id == questionnaire.id
+    end
   end
 
   describe "update" do
