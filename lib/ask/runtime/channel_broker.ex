@@ -1,6 +1,6 @@
 # NOTE: channels without channel_id (used in some unit tests) share a single process (channel_id: 0)
 defmodule Ask.Runtime.ChannelBroker do
-  alias Ask.Runtime.ChannelBrokerSupervisor
+  alias Ask.Runtime.{ChannelBrokerSupervisor, SurveyLogger}
   alias Ask.Runtime.ChannelBrokerAgent, as: Agent
   alias Ask.Runtime.ChannelBrokerState, as: State
   alias Ask.{Channel, Logger, Respondent, Repo, Stats}
@@ -439,7 +439,30 @@ defmodule Ask.Runtime.ChannelBroker do
     DateTime.compare(not_after, Ask.SystemTime.time().now) != :gt
   end
 
+  # This guard is only for test purposes
+  defp log_contact(_status, %{session: nil}) do
+    if Mix.env() != :test do
+      raise "Trying to contact a respondent without a session"
+    end
+  end
+
+  defp log_contact(status, respondent) do
+    session = respondent.session |> Ask.Runtime.Session.load()
+    SurveyLogger.log(
+      respondent.survey_id,
+      session.flow.mode,
+      respondent.id,
+      respondent.hashed_number,
+      session.current_mode.channel.id,
+      respondent.disposition,
+      :contact,
+      status
+    )
+  end
+
   defp ivr_call(state, respondent, token, not_before, not_after) do
+    log_contact("Enqueueing call", respondent)
+
     response =
       state.runtime_channel
       |> Ask.Runtime.Channel.setup(respondent, token, not_before, not_after)
@@ -457,6 +480,8 @@ defmodule Ask.Runtime.ChannelBroker do
   end
 
   defp channel_ask(state, respondent, token, reply) do
+    log_contact("Enqueueing sms", respondent)
+
     # FIXME: only needed for tests to pass
     state.runtime_channel
     |> Ask.Runtime.Channel.setup(respondent, token, nil, nil)

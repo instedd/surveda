@@ -466,7 +466,6 @@ defmodule Ask.Runtime.Session do
 
   defp mode_start(
          %Session{
-           flow: flow,
            current_mode: %IVRMode{channel: channel},
            respondent: respondent,
            token: token,
@@ -489,8 +488,6 @@ defmodule Ask.Runtime.Session do
       next_available_date_time,
       today_end_time
     )
-
-    log_contact("Enqueueing call", channel, flow.mode, respondent)
 
     {:ok, %{session | respondent: respondent}, %Reply{}, current_timeout(session)}
   end

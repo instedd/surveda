@@ -41,8 +41,20 @@ defmodule Ask.SurveyLogEntry do
       :action_type,
       :timestamp
     ])
+    |> normalize_mode_field()
     |> foreign_key_constraint(:survey_id)
     |> foreign_key_constraint(:channel_id)
     |> foreign_key_constraint(:respondent_id)
+  end
+  
+  defp normalize_mode_field(changeset) do
+    mode_field = get_field(changeset, :mode)
+    formatted_mode = case String.downcase(mode_field) do
+      "sms" -> "SMS"
+      "ivr" -> "IVR"
+      "mobileweb" -> "Mobile Web"
+      _ -> mode_field
+    end
+    changeset |> put_change(:mode, formatted_mode)
   end
 end

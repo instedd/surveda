@@ -190,13 +190,14 @@ defmodule Ask.Factory do
 
     respondent_group = insert(:respondent_group)
     canonical_phone_number = Ask.Respondent.canonicalize_phone_number(phone_number)
-
+    hashed_number = Ask.Respondent.hash_phone_number(phone_number, respondent_group.survey.project.salt)
     %Ask.Respondent{
       respondent_group: respondent_group,
       survey: (respondent_group |> Ask.Repo.preload(:survey)).survey,
       phone_number: phone_number,
       sanitized_phone_number: canonical_phone_number,
-      canonical_phone_number: canonical_phone_number
+      canonical_phone_number: canonical_phone_number,
+      hashed_number: hashed_number,
     }
   end
 
