@@ -1389,7 +1389,7 @@ defmodule AskWeb.SurveyControllerTest do
       project = create_project_for_user(user)
       questionnaire = insert(:questionnaire)
       snapshot = insert(:questionnaire, snapshot_of_questionnaire: questionnaire)
-      survey = insert(:survey, project: project, questionnaires: [snapshot])
+      survey = insert(:survey, project: project, questionnaires: [snapshot], state: :running)
 
       conn = post conn, project_survey_survey_path(conn, :duplicate, project, survey)
 
