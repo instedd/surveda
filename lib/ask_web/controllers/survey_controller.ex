@@ -185,6 +185,9 @@ defmodule AskWeb.SurveyController do
       fn %{id: questionnaire_id, snapshot_of: original_questionnaire_id} -> original_questionnaire_id || questionnaire_id end
     )
 
+  # Duplicate the buckets without their counts and quotas
+  # This is because duplicate surveys will have different respondent groups,
+  # implying different quotas - and no current counts
   defp quota_buckets_definitions(quota_buckets), do:
     Enum.map(quota_buckets, fn %{condition: condition} ->
       %QuotaBucket{condition: condition}
