@@ -23,7 +23,7 @@ class _SurveyCard extends Component<any> {
     readOnly: boolean,
   }
 
-  duplicatingSurvey: boolean // FIXME: this should be declared at the Index level (shared between cards)
+  duplicatingSurvey: boolean
 
   constructor(props) {
     super(props)
@@ -52,7 +52,6 @@ class _SurveyCard extends Component<any> {
     const { dispatch, survey } = this.props
     dispatch(surveyActions.duplicateSurvey(survey)).then((newSurvey) => {
       this.duplicatingSurvey = false
-      // FIXME: navigate using the router? it's not available here
       window.location = routes.survey(newSurvey.projectId, newSurvey.id)
     })
   }
