@@ -1284,16 +1284,15 @@ defmodule AskWeb.SurveyControllerTest do
 
     test "duplicated survey has same data", %{conn: conn, user: user} do
       project = create_project_for_user(user)
-      survey = insert(:survey, project: project)
+      questionnaire = insert(:questionnaire)
+      survey = insert(:survey, project: project, questionnaires: [questionnaire])
       channel = insert(:channel, user: user)
       create_group(survey, channel)
-
-      Repo.get(Survey, survey.id) |> Repo.preload([:respondent_groups])
 
       conn = post conn, project_survey_survey_path(conn, :duplicate, project, survey)
 
       new_survey = Repo.get(Survey, json_response(conn, 201)["data"]["id"])
-        |> Repo.preload([:respondent_groups])
+        |> Repo.preload([:questionnaires, :respondent_groups])
 
       assert new_survey.name == "#{survey.name} (duplicate)"
       assert new_survey.project_id == survey.project_id
@@ -1301,6 +1300,7 @@ defmodule AskWeb.SurveyControllerTest do
       assert new_survey.schedule == survey.schedule
       assert new_survey.respondent_groups == []
       assert new_survey.folder_id == nil
+      assert (new_survey.questionnaires |> hd).id == questionnaire.id
     end
 
     test "duplicated survey is on the same folder as the original", %{conn: conn, user: user} do
