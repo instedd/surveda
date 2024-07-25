@@ -21,7 +21,8 @@ defmodule Ask.Runtime.SurveyCanceller do
 
   @impl true
   def init(survey_id) do
-    :timer.send_after(1000, :cancel)
+    # FIXME: We only care about the :cancel being async, so we use the smallest timeout possible - but this smells bad
+    :timer.send_after(1, :cancel)
     Logger.info("Starting canceller for survey #{survey_id}")
     {:ok, survey_id}
   end
