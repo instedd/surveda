@@ -79,43 +79,11 @@ defmodule AskWeb.SurveyController do
       |> build_assoc(:surveys)
       |> Survey.changeset(props)
 
-    multi =
-      Multi.new()
-      |> Multi.insert(:survey, changeset)
-      |> Multi.run(:log, fn _, %{survey: survey} ->
-        ActivityLog.create_survey(project, conn, survey) |> Repo.insert()
-      end)
-      |> Repo.transaction()
-
-    case multi do
-      {:ok, %{survey: survey}} ->
-        project |> Project.touch!()
-
-        survey =
-          survey
-          |> Repo.preload([:quota_buckets])
-          |> Repo.preload(:questionnaires)
-          |> Survey.with_links(user_level(project_id, current_user(conn).id))
-
-        conn
-        |> put_status(:created)
-        |> put_resp_header("location", project_survey_path(conn, :show, project_id, survey))
-        |> render("show.json", survey: survey)
-
-      {:error, _, changeset, _} ->
-        Logger.warn("Error when creating a survey: #{inspect(changeset)}")
-
-        conn
-        |> put_status(:unprocessable_entity)
-        |> put_view(AskWeb.ChangesetView)
-        |> render("error.json", changeset: changeset)
-    end
+    insert_survey_and_show_it(changeset, project, conn)
   end
 
   def duplicate(conn, %{"project_id" => project_id, "survey_id" => source_survey_id}) do
-    project =
-      conn
-      |> load_project_for_change(project_id)
+    project = load_project_for_change(conn, project_id)
 
     source_survey =
       project
@@ -147,11 +115,15 @@ defmodule AskWeb.SurveyController do
       |> update_questionnaires(props)
       |> put_assoc(:quota_buckets, quota_buckets_definitions(source_survey.quota_buckets))
 
+    insert_survey_and_show_it(changeset, project, conn)
+  end
+
+  defp insert_survey_and_show_it(changeset, project, conn) do
     multi =
       Multi.new()
       |> Multi.insert(:survey, changeset)
       |> Multi.run(:log, fn _, %{survey: survey} ->
-        ActivityLog.create_survey(project, conn, survey) |> Repo.insert() # FIXME: should be a different activity? Mentioning duplication
+        ActivityLog.create_survey(project, conn, survey) |> Repo.insert()
       end)
       |> Repo.transaction()
 
@@ -163,11 +135,11 @@ defmodule AskWeb.SurveyController do
           survey
           |> Repo.preload([:quota_buckets])
           |> Repo.preload(:questionnaires)
-          |> Survey.with_links(user_level(project_id, current_user(conn).id))
+          |> Survey.with_links(user_level(project.id, current_user(conn).id))
 
         conn
         |> put_status(:created)
-        |> put_resp_header("location", project_survey_path(conn, :show, project_id, survey))
+        |> put_resp_header("location", project_survey_path(conn, :show, project.id, survey))
         |> render("show.json", survey: survey)
 
       {:error, _, changeset, _} ->
