@@ -23,6 +23,8 @@ class _SurveyCard extends Component<any> {
     readOnly: boolean,
   }
 
+  duplicatingSurvey: boolean
+
   constructor(props) {
     super(props)
 
@@ -36,9 +38,23 @@ class _SurveyCard extends Component<any> {
     if (survey.state != "not_ready") {
       fetchRespondentsStats(survey.projectId, survey.id)(dispatch)
     }
+
+    this.duplicatingSurvey = false
   }
 
   changeFolder = (folderId) => this.setState({ folderId })
+
+  duplicateSurvey = () => {
+    // Prevent duplicating multiple surveys at once
+    if (this.duplicatingSurvey) return
+    this.duplicatingSurvey = true
+
+    const { dispatch, survey } = this.props
+    dispatch(surveyActions.duplicateSurvey(survey)).then((newSurvey) => {
+      this.duplicatingSurvey = false
+      window.location = routes.survey(newSurvey.projectId, newSurvey.id)
+    })
+  }
 
   askMoveSurvey = () => {
     const moveSurveyConfirmationModal: ConfirmationModal = this.refs.moveSurveyConfirmationModal
@@ -106,7 +122,9 @@ class _SurveyCard extends Component<any> {
   render() {
     const { survey, t, dispatch } = this.props
 
-    let actions = []
+    let actions = [
+      { name: t("Duplicate"), icon: "content_copy", func: this.duplicateSurvey }
+    ]
     if (this.movable())
       actions.push({ name: t("Move to"), icon: "folder", func: this.askMoveSurvey })
     if (this.deletable())

@@ -7,6 +7,7 @@ defmodule AskWeb.SurveyController do
     Survey,
     Logger,
     ActivityLog,
+    QuotaBucket,
     RetriesHistogram,
     ScheduleError
   }
@@ -78,6 +79,46 @@ defmodule AskWeb.SurveyController do
       |> build_assoc(:surveys)
       |> Survey.changeset(props)
 
+    insert_survey_and_show_it(changeset, project, conn)
+  end
+
+  def duplicate(conn, %{"project_id" => project_id, "survey_id" => source_survey_id}) do
+    project = load_project_for_change(conn, project_id)
+
+    source_survey =
+      project
+      |> load_standalone_survey(source_survey_id)
+      |> Repo.preload([:quota_buckets, :questionnaires])
+
+    props = %{
+      "project_id" => project_id,
+      "folder_id" => source_survey.folder_id,
+      "name" => "#{source_survey.name || "Untitled survey"} (duplicate)",
+      "description" => source_survey.description,
+      "comparisons" => source_survey.comparisons,
+      "questionnaire_ids" => editable_questionnaire_ids(source_survey.questionnaires),
+      "mode" => source_survey.mode,
+      "schedule" => source_survey.schedule,
+      "fallback_delay" => source_survey.fallback_delay,
+      "ivr_retry_configuration" => source_survey.ivr_retry_configuration,
+      "mobileweb_retry_configuration" => source_survey.mobileweb_retry_configuration,
+      "sms_retry_configuration" => source_survey.sms_retry_configuration,
+      "cutoff" => source_survey.cutoff,
+      "quota_vars" => source_survey.quota_vars,
+      "count_partial_results" => source_survey.count_partial_results,
+    }
+
+    changeset =
+      project
+      |> build_assoc(:surveys)
+      |> Survey.changeset(props)
+      |> update_questionnaires(props)
+      |> put_assoc(:quota_buckets, quota_buckets_definitions(source_survey.quota_buckets))
+
+    insert_survey_and_show_it(changeset, project, conn)
+  end
+
+  defp insert_survey_and_show_it(changeset, project, conn) do
     multi =
       Multi.new()
       |> Multi.insert(:survey, changeset)
@@ -94,11 +135,11 @@ defmodule AskWeb.SurveyController do
           survey
           |> Repo.preload([:quota_buckets])
           |> Repo.preload(:questionnaires)
-          |> Survey.with_links(user_level(project_id, current_user(conn).id))
+          |> Survey.with_links(user_level(project.id, current_user(conn).id))
 
         conn
         |> put_status(:created)
-        |> put_resp_header("location", project_survey_path(conn, :show, project_id, survey))
+        |> put_resp_header("location", project_survey_path(conn, :show, project.id, survey))
         |> render("show.json", survey: survey)
 
       {:error, _, changeset, _} ->
@@ -110,6 +151,20 @@ defmodule AskWeb.SurveyController do
         |> render("error.json", changeset: changeset)
     end
   end
+
+  defp editable_questionnaire_ids(questionnaires), do:
+    Enum.map(questionnaires,
+      fn %{id: questionnaire_id, snapshot_of: original_questionnaire_id} -> original_questionnaire_id || questionnaire_id end
+    )
+
+  # Duplicate the buckets without their counts and quotas
+  # This is because duplicate surveys will have different respondent groups,
+  # implying different quotas - and no current counts
+  defp quota_buckets_definitions(quota_buckets), do:
+    Enum.map(quota_buckets, fn %{condition: condition} ->
+      %QuotaBucket{condition: condition}
+    end
+    )
 
   def show(conn, %{"project_id" => project_id, "id" => id}) do
     survey =
@@ -479,4 +534,15 @@ defmodule AskWeb.SurveyController do
     |> assoc(:surveys)
     |> Repo.get!(survey_id)
   end
+
+  defp load_standalone_survey(project, survey_id) do
+    load_survey(project, survey_id)
+    |> validate_standalone_survey
+  end
+
+  # TODO: this seems to clash with the definition in `Survey.belongs_to_panel_survey?`
+  defp validate_standalone_survey(%{generates_panel_survey: true}), do: raise ConflictError
+  defp validate_standalone_survey(survey = %{panel_survey_id: nil}), do: survey
+  defp validate_standalone_survey(%{panel_survey_id: _id}), do: raise ConflictError
+
 end

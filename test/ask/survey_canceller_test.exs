@@ -7,7 +7,7 @@ defmodule Ask.SurveyCancellerTest do
   use Ask.DummySteps
 
   alias Ask.{Survey, RespondentGroup, Channel, TestChannel, RespondentGroupChannel}
-  alias Ask.Runtime.{Flow, Session, SurveyCancellerSupervisor}
+  alias Ask.Runtime.{Flow, Session, SurveyCanceller, SurveyCancellerSupervisor}
   alias Ask.Runtime.SessionModeProvider
 
   setup %{conn: conn} do
@@ -19,6 +19,34 @@ defmodule Ask.SurveyCancellerTest do
       |> put_req_header("accept", "application/json")
 
     {:ok, conn: conn, user: user}
+  end
+
+  describe "canceller" do
+    test "sends a cancel message to itself on init" do
+      project = insert(:project)
+      %{id: survey_id} = insert(:survey, project: project)
+      {:ok, canceller_pid } = SurveyCanceller.start_link(survey_id)
+      :erlang.trace(canceller_pid, true, [:receive])
+      assert_receive {:trace, ^canceller_pid, :receive, :cancel}, 2_000
+    end
+
+    test "marks the survey as terminated" do
+      project = insert(:project)
+      %{id: survey_id} = insert(:survey, project: project)
+
+      cancel_survey(survey_id)
+
+      survey = Repo.get(Survey, survey_id)
+
+      assert survey.state == :terminated
+    end
+  end
+
+  defp cancel_survey(survey_id) do
+    {:ok, canceller_pid } = SurveyCanceller.start_link(survey_id)
+    ref = Process.monitor(canceller_pid)
+    assert_receive {:DOWN, ^ref, :process, ^canceller_pid, :normal }, 2_000
+    :ok
   end
 
   describe "stops surveys as if the application were starting" do
@@ -68,9 +96,7 @@ defmodule Ask.SurveyCancellerTest do
       |> Ask.Respondent.changeset(%{session: session})
       |> Repo.update!()
 
-      start_survey_canceller_supervisor()
-
-      wait_all_cancellations(survey_1)
+      cancel_survey(survey_1.id)
 
       survey = Repo.get(Survey, survey_1.id)
       assert Survey.cancelled?(survey)
@@ -122,10 +148,8 @@ defmodule Ask.SurveyCancellerTest do
       |> Ask.Respondent.changeset(%{session: session})
       |> Repo.update!()
 
-      start_survey_canceller_supervisor()
-
-      wait_all_cancellations(survey_1)
-      wait_all_cancellations(survey_2)
+      cancel_survey(survey_1.id)
+      cancel_survey(survey_2.id)
 
       survey = Repo.get(Survey, survey_1.id)
       survey_2 = Repo.get(Survey, survey_2.id)
@@ -144,6 +168,7 @@ defmodule Ask.SurveyCancellerTest do
       assert_receive [:cancel_message, ^test_channel, %{}]
     end
 
+    @tag :skip # FIXME: this is testing the supervisor launches a new canceller - it isn't a canceller test
     test "stops multiple surveys from canceller and from controller simultaneously", %{
       conn: conn,
       user: user

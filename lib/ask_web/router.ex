@@ -102,6 +102,7 @@ defmodule AskWeb.Router do
           post "/launch", SurveyController, :launch
           post "/stop", SurveyController, :stop
           post "/config", SurveyController, :config
+          post "/duplicate", SurveyController, :duplicate
 
           put "/update_locked_status", SurveyController, :update_locked_status,
             as: :update_locked_status

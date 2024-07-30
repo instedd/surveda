@@ -43,5 +43,5 @@ export const RespondentsContainer = translate()(({ children, t, incentivesEnable
 RespondentsContainer.propTypes = {
   t: PropTypes.func,
   children: PropTypes.node,
-  incentiveDisabled: PropTypes.boolean,
+  incentivesEnabled: PropTypes.bool,
 }

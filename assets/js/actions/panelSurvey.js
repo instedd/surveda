@@ -7,7 +7,7 @@ export const RECEIVE = "RECEIVE_PANEL_SURVEY"
 
 export const createPanelSurvey =
   (projectId: number, folderId?: number) => (dispatch: Function, getState: () => Store) =>
-    api.createSurvey(projectId, folderId, true).then((response) => {
+    api.createSurvey(projectId, folderId, { generatesPanelSurvey: true } ).then((response) => {
       const firstWave = response.result
       dispatch(fetch(projectId, firstWave.id))
       dispatch(receive(firstWave))

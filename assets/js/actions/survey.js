@@ -68,6 +68,15 @@ export const fetchSurvey =
       })
   }
 
+export const duplicateSurvey = (survey: Survey) => (dispatch: Function) => {
+  return api.duplicateSurvey(survey.projectId, survey.id).then((response) => {
+    const newSurvey = response.entities.surveys[response.result]
+    dispatch(fetch(newSurvey.projectId, newSurvey.id))
+    dispatch(receive(newSurvey))
+    return newSurvey
+  })
+}
+
 export const fetchSurveyStats = (projectId: number, id: number) => (dispatch: Function) => {
   api.fetchSurveyStats(projectId, id).then((stats) => dispatch(receiveSurveyStats(id, stats)))
 }
