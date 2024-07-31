@@ -3847,23 +3847,24 @@ defmodule AskWeb.RespondentControllerTest do
           schedule: completed_schedule()
         )
 
-      respondent_1 = insert(:respondent, survey: survey, hashed_number: "1234")
-      respondent_2 = insert(:respondent, survey: survey, hashed_number: "5678")
-      channel = insert(:channel, name: "test_channel")
+      channel_1 = insert(:channel, name: "test_channel_ivr",  type: "ivr")
+      group_1 = insert(:respondent_group, survey: survey)
+      insert(:respondent_group_channel, respondent_group: group_1, channel: channel_1, mode: "ivr")
+
+      channel_2 = insert(:channel, name: "test_channel_sms",  type: "sms")
+      group_2 = insert(:respondent_group, survey: survey)
+      insert(:respondent_group_channel, respondent_group: group_2, channel: channel_2, mode: "sms")
+
+      channel_3 = insert(:channel, name: "test_channel_mobile_web",  type: "mobileweb")
+      group_3 = insert(:respondent_group, survey: survey)
+      insert(:respondent_group_channel, respondent_group: group_3, channel: channel_3, mode: "mobileweb")
+
+
+      respondent_1 = insert(:respondent, survey: survey, hashed_number: "1234", respondent_group: group_1)
+      respondent_2 = insert(:respondent, survey: survey, hashed_number: "5678", respondent_group: group_2)
+      respondent_3 = insert(:respondent, survey: survey, hashed_number: "8901", respondent_group: group_3)
 
       for _ <- 1..200 do
-        insert(:survey_log_entry,
-          survey: survey,
-          mode: "sms",
-          respondent: respondent_2,
-          respondent_hashed_number: "5678",
-          channel: channel,
-          disposition: "completed",
-          action_type: "prompt",
-          action_data: "explanation",
-          timestamp: cast!("2000-01-01T01:02:03Z")
-        )
-
         insert(:survey_log_entry,
           survey: survey,
           mode: "ivr",
@@ -3878,10 +3879,22 @@ defmodule AskWeb.RespondentControllerTest do
 
         insert(:survey_log_entry,
           survey: survey,
-          mode: "mobileweb",
+          mode: "sms",
           respondent: respondent_2,
           respondent_hashed_number: "5678",
-          channel: nil,
+          channel: channel_2,
+          disposition: "completed",
+          action_type: "prompt",
+          action_data: "explanation",
+          timestamp: cast!("2000-01-01T01:02:03Z")
+        )
+
+        insert(:survey_log_entry,
+          survey: survey,
+          mode: "mobileweb",
+          respondent: respondent_3,
+          respondent_hashed_number: "8901",
+          channel: channel_3,
           disposition: "partial",
           action_type: "contact",
           action_data: "explanation",
@@ -3906,9 +3919,7 @@ defmodule AskWeb.RespondentControllerTest do
       respondent_1_interactions_ids =
         Repo.all(
           from entry in SurveyLogEntry,
-            join: r in Respondent,
-            on: entry.respondent_id == r.id,
-            where: r.id == ^respondent_1.id,
+            where: entry.respondent_id == ^respondent_1.id,
             order_by: entry.id,
             select: entry.id
         )
@@ -3916,9 +3927,14 @@ defmodule AskWeb.RespondentControllerTest do
       respondent_2_interactions_ids =
         Repo.all(
           from entry in SurveyLogEntry,
-            join: r in Respondent,
-            on: entry.respondent_id == r.id,
-            where: r.id == ^respondent_2.id,
+            where: entry.respondent_id == ^respondent_2.id,
+            order_by: entry.id,
+            select: entry.id
+        )
+      respondent_3_interactions_ids =
+        Repo.all(
+          from entry in SurveyLogEntry,
+            where: entry.respondent_id == ^respondent_3.id,
             order_by: entry.id,
             select: entry.id
         )
@@ -3928,17 +3944,15 @@ defmodule AskWeb.RespondentControllerTest do
           "ID,Respondent ID,Mode,Channel,Disposition,Action Type,Action Data,Timestamp",
           for i <- 0..199 do
             interaction_id = respondent_1_interactions_ids |> Enum.at(i)
-
             "#{interaction_id},1234,IVR,,Partial,Contact attempt,explanation,2000-01-01 02:03:04 UTC"
           end,
           for i <- 0..199 do
-            interaction_id_sms = respondent_2_interactions_ids |> Enum.at(2 * i)
-            interaction_id_web = respondent_2_interactions_ids |> Enum.at(2 * i + 1)
-
-            [
-              "#{interaction_id_sms},5678,SMS,test_channel,Completed,Prompt,explanation,2000-01-01 01:02:03 UTC",
-              "#{interaction_id_web},5678,Mobile Web,,Partial,Contact attempt,explanation,2000-01-01 03:04:05 UTC"
-            ]
+            interaction_id_sms = respondent_2_interactions_ids |> Enum.at(i)
+            "#{interaction_id_sms},5678,SMS,test_channel_sms,Completed,Prompt,explanation,2000-01-01 01:02:03 UTC"
+          end,
+          for i <- 0..199 do
+            interaction_id_web = respondent_3_interactions_ids |> Enum.at(i)
+            "#{interaction_id_web},8901,Mobile Web,test_channel_mobile_web,Partial,Contact attempt,explanation,2000-01-01 03:04:05 UTC"
           end
         ])
 
@@ -4327,23 +4341,24 @@ defmodule AskWeb.RespondentControllerTest do
           schedule: completed_schedule()
         )
 
-      respondent_1 = insert(:respondent, survey: survey, hashed_number: "1234")
-      respondent_2 = insert(:respondent, survey: survey, hashed_number: "5678")
-      channel = insert(:channel, name: "test_channel")
+      channel_1 = insert(:channel, name: "test_channel_ivr",  type: "ivr")
+      group_1 = insert(:respondent_group, survey: survey)
+      insert(:respondent_group_channel, respondent_group: group_1, channel: channel_1, mode: "ivr")
+
+      channel_2 = insert(:channel, name: "test_channel_sms",  type: "sms")
+      group_2 = insert(:respondent_group, survey: survey)
+      insert(:respondent_group_channel, respondent_group: group_2, channel: channel_2, mode: "sms")
+
+      channel_3 = insert(:channel, name: "test_channel_mobile_web",  type: "mobileweb")
+      group_3 = insert(:respondent_group, survey: survey)
+      insert(:respondent_group_channel, respondent_group: group_3, channel: channel_3, mode: "mobileweb")
+
+
+      respondent_1 = insert(:respondent, survey: survey, hashed_number: "1234", respondent_group: group_1)
+      respondent_2 = insert(:respondent, survey: survey, hashed_number: "5678", respondent_group: group_2)
+      respondent_3 = insert(:respondent, survey: survey, hashed_number: "8901", respondent_group: group_3)
 
       for _ <- 1..200 do
-        insert(:survey_log_entry,
-          survey: survey,
-          mode: "sms",
-          respondent: respondent_2,
-          respondent_hashed_number: "5678",
-          channel: channel,
-          disposition: "completed",
-          action_type: "prompt",
-          action_data: "explanation",
-          timestamp: cast!("2000-01-01T01:02:03Z")
-        )
-
         insert(:survey_log_entry,
           survey: survey,
           mode: "ivr",
@@ -4358,10 +4373,22 @@ defmodule AskWeb.RespondentControllerTest do
 
         insert(:survey_log_entry,
           survey: survey,
-          mode: "mobileweb",
+          mode: "sms",
           respondent: respondent_2,
           respondent_hashed_number: "5678",
-          channel: nil,
+          channel: channel_2,
+          disposition: "completed",
+          action_type: "prompt",
+          action_data: "explanation",
+          timestamp: cast!("2000-01-01T01:02:03Z")
+        )
+
+        insert(:survey_log_entry,
+          survey: survey,
+          mode: "mobileweb",
+          respondent: respondent_3,
+          respondent_hashed_number: "8901",
+          channel: channel_3,
           disposition: "partial",
           action_type: "contact",
           action_data: "explanation",
@@ -4380,9 +4407,7 @@ defmodule AskWeb.RespondentControllerTest do
       respondent_1_interactions_ids =
         Repo.all(
           from entry in SurveyLogEntry,
-            join: r in Respondent,
-            on: entry.respondent_id == r.id,
-            where: r.id == ^respondent_1.id,
+            where: entry.respondent_id == ^respondent_1.id,
             order_by: entry.id,
             select: entry.id
         )
@@ -4390,16 +4415,19 @@ defmodule AskWeb.RespondentControllerTest do
       respondent_2_interactions_ids =
         Repo.all(
           from entry in SurveyLogEntry,
-            join: r in Respondent,
-            on: entry.respondent_id == r.id,
-            where: r.id == ^respondent_2.id,
+            where: entry.respondent_id == ^respondent_2.id,
+            order_by: entry.id,
+            select: entry.id
+        )
+      respondent_3_interactions_ids =
+        Repo.all(
+          from entry in SurveyLogEntry,
+            where: entry.respondent_id == ^respondent_3.id,
             order_by: entry.id,
             select: entry.id
         )
 
       conn = get(conn, short_link_path(conn, :access, link.hash))
-
-      # conn = get conn, project_survey_respondents_interactions_path(conn, :interactions, survey.project.id, survey.id, %{"_format" => "csv"})
       csv = response(conn, 200)
 
       expected_list =
@@ -4407,17 +4435,15 @@ defmodule AskWeb.RespondentControllerTest do
           "ID,Respondent ID,Mode,Channel,Disposition,Action Type,Action Data,Timestamp",
           for i <- 0..199 do
             interaction_id = respondent_1_interactions_ids |> Enum.at(i)
-
             "#{interaction_id},1234,IVR,,Partial,Contact attempt,explanation,2000-01-01 02:03:04 UTC"
           end,
           for i <- 0..199 do
-            interaction_id_sms = respondent_2_interactions_ids |> Enum.at(2 * i)
-            interaction_id_web = respondent_2_interactions_ids |> Enum.at(2 * i + 1)
-
-            [
-              "#{interaction_id_sms},5678,SMS,test_channel,Completed,Prompt,explanation,2000-01-01 01:02:03 UTC",
-              "#{interaction_id_web},5678,Mobile Web,,Partial,Contact attempt,explanation,2000-01-01 03:04:05 UTC"
-            ]
+            interaction_id_sms = respondent_2_interactions_ids |> Enum.at(i)
+            "#{interaction_id_sms},5678,SMS,test_channel_sms,Completed,Prompt,explanation,2000-01-01 01:02:03 UTC"
+          end,
+          for i <- 0..199 do
+            interaction_id_web = respondent_3_interactions_ids |> Enum.at(i)
+            "#{interaction_id_web},8901,Mobile Web,test_channel_mobile_web,Partial,Contact attempt,explanation,2000-01-01 03:04:05 UTC"
           end
         ])
 
