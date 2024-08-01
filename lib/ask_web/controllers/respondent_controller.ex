@@ -1191,9 +1191,9 @@ defmodule AskWeb.RespondentController do
   end
 
   defp survey_log_entry_channel_names(survey) do
-    respondent_groups = Repo.preload(survey, :respondent_groups).respondent_groups
+    respondent_groups = Repo.preload(survey, respondent_groups: [:channels]).respondent_groups
     respondent_groups 
-    |> Enum.flat_map(fn resp_group -> Repo.preload(resp_group, :channels).channels end ) 
+    |> Enum.flat_map(fn resp_group -> resp_group.channels end)
     |> Enum.map( fn channel -> {channel.id, channel.name} end) 
     |> MapSet.new # convert to set to remove duplicates
     |> Enum.into(%{})
