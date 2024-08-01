@@ -13,6 +13,7 @@ defmodule Ask.Runtime.SurveyFilesManager do
   import Ecto.Query
 
   @db_chunk_limit 10_000
+  @target_dir "generated_files"
 
   @server_ref {:global, __MODULE__}
   def server_ref, do: @server_ref
@@ -90,7 +91,8 @@ defmodule Ask.Runtime.SurveyFilesManager do
       rows = Stream.concat([[header], csv_rows])
 
       filename = csv_filename(survey, "respondents_interactions")
-      file = File.open!(filename, [:write, :utf8])
+      File.mkdir_p!(@target_dir)
+      file = File.open!("#{@target_dir}/#{filename}", [:write, :utf8])
       initial_datetime = Timex.now()
       rows
       |> CSV.encode()
@@ -143,7 +145,7 @@ defmodule Ask.Runtime.SurveyFilesManager do
   defp csv_filename(survey, prefix) do
     name = survey.name || "survey_id_#{survey.id}"
     name = Regex.replace(~r/[^a-zA-Z0-9_]/, name, "_")
-    prefix = "#{name}-#{prefix}"
+    prefix = "#{name}_#{survey.state}-#{prefix}"
     Timex.format!(DateTime.utc_now(), "#{prefix}_%Y-%m-%d-%H-%M-%S.csv", :strftime)
   end
   
@@ -161,7 +163,6 @@ defmodule Ask.Runtime.SurveyFilesManager do
 
 
   ## Public API
-    
   def generate_interactions_file(survey_id) do
     Logger.info("Enqueueing generation of survey (id: #{survey_id}) interaction file")
     GenServer.cast(server_ref(), {:interactions, survey_id})
