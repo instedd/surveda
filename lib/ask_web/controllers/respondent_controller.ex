@@ -11,9 +11,10 @@ defmodule AskWeb.RespondentController do
     RespondentDispositionHistory,
     Stats,
     Survey,
-    SurveyLogEntry,
     RespondentsFilter
   }
+
+  alias Ask.Runtime.SurveyFilesManager
 
   @db_chunk_limit 10_000
 
@@ -1131,74 +1132,12 @@ defmodule AskWeb.RespondentController do
     project = load_project_for_owner(conn, project_id)
     survey = load_survey(project, survey_id)
 
-    channels = survey_log_entry_channel_names(survey)
-
-    log_entries =
-      Stream.resource(
-        fn -> {"", 0} end,
-        fn {last_hash, last_id} ->
-          results =
-            from(e in SurveyLogEntry,
-              where:
-                e.survey_id == ^survey.id and
-                  ((e.respondent_hashed_number == ^last_hash and e.id > ^last_id) or
-                     e.respondent_hashed_number > ^last_hash),
-              order_by: [e.respondent_hashed_number, e.id],
-              limit: @db_chunk_limit
-            )
-            |> Repo.all()
-
-          case List.last(results) do
-            nil -> {:halt, {last_hash, last_id}}
-            last_entry -> {results, {last_entry.respondent_hashed_number, last_entry.id}}
-          end
-        end,
-        fn _ -> [] end
-      )
-
-    tz_offset_in_seconds = Survey.timezone_offset_in_seconds(survey)
-    tz_offset = Survey.timezone_offset(survey)
-
-    csv_rows =
-      log_entries
-      |> Stream.map(fn e ->
-        [
-          Integer.to_string(e.id),
-          e.respondent_hashed_number,
-          interactions_mode_label(e.mode),
-          Map.get(channels, e.channel_id, ""),
-          disposition_label(e.disposition),
-          action_type_label(e.action_type),
-          e.action_data,
-          csv_datetime(e.timestamp, tz_offset_in_seconds, tz_offset)
-        ]
-      end)
-
-    header = [
-      "ID",
-      "Respondent ID",
-      "Mode",
-      "Channel",
-      "Disposition",
-      "Action Type",
-      "Action Data",
-      "Timestamp"
-    ]
-
-    rows = Stream.concat([[header], csv_rows])
-
-    filename = csv_filename(survey, "respondents_interactions")
+    # TODO: We just change this for "trigger generation" 
+    # and add another log when actually downloading?
     ActivityLog.download(project, conn, survey, "interactions") |> Repo.insert()
-    conn |> csv_stream(rows, filename)
-  end
 
-  defp survey_log_entry_channel_names(survey) do
-    respondent_groups = Repo.preload(survey, respondent_groups: [:channels]).respondent_groups
-    respondent_groups 
-    |> Enum.flat_map(fn resp_group -> resp_group.channels end)
-    |> Enum.map( fn channel -> {channel.id, channel.name} end) 
-    |> MapSet.new # convert to set to remove duplicates
-    |> Enum.into(%{})
+    SurveyFilesManager.generate_interactions_file(survey_id)
+    conn |> send_resp(200, "OK")
   end
 
   defp mask_phone_numbers(respondent) do
@@ -1225,28 +1164,6 @@ defmodule AskWeb.RespondentController do
       ["mobileweb", "sms"] -> "Mobile Web with SMS fallback"
       ["mobileweb", "ivr"] -> "Mobile Web with phone call fallback"
       _ -> "Unknown mode"
-    end
-  end
-
-  defp interactions_mode_label(mode) do
-    case mode do
-      "mobileweb" -> "Mobile Web"
-      _ -> String.upcase(mode)
-    end
-  end
-
-  defp action_type_label(action) do
-    case action do
-      nil -> nil
-      "contact" -> "Contact attempt"
-      _ -> String.capitalize(action)
-    end
-  end
-
-  defp disposition_label(disposition) do
-    case disposition do
-      nil -> nil
-      _ -> String.capitalize(disposition)
     end
   end
 

@@ -42,7 +42,8 @@ defmodule Ask do
             worker(Ask.JsonSchema, []),
             worker(Ask.Runtime.ChannelStatusServer, []),
             worker(Ask.Config, []),
-            worker(Ask.Runtime.QuestionnaireSimulatorStore, [])
+            worker(Ask.Runtime.QuestionnaireSimulatorStore, []),
+            worker(Ask.Runtime.SurveyFilesManager, [])
             | children
           ] ++ [
               # SurveyCancellerSupervisor depends on Ask.Repo, so must be started (and declared!) after it
