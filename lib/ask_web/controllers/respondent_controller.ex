@@ -15,6 +15,8 @@ defmodule AskWeb.RespondentController do
     RespondentsFilter
   }
 
+  @db_chunk_limit 10_000
+
   def index(conn, %{"project_id" => project_id, "survey_id" => survey_id} = params) do
     limit = Map.get(params, "limit", "")
     page = Map.get(params, "page", "")
@@ -735,7 +737,7 @@ defmodule AskWeb.RespondentController do
               where: r2.survey_id == ^survey.id and r2.id > ^last_seen_id,
               where: ^filter_where,
               order_by: r2.id,
-              limit: 1000,
+              limit: @db_chunk_limit,
               preload: [:responses, :respondent_group],
               select: r1
             )
@@ -1034,7 +1036,7 @@ defmodule AskWeb.RespondentController do
             from(h in RespondentDispositionHistory,
               where: h.survey_id == ^survey.id and h.id > ^last_id,
               order_by: h.id,
-              limit: 1000
+              limit: @db_chunk_limit
             )
             |> Repo.all()
 
@@ -1142,7 +1144,7 @@ defmodule AskWeb.RespondentController do
                   ((e.respondent_hashed_number == ^last_hash and e.id > ^last_id) or
                      e.respondent_hashed_number > ^last_hash),
               order_by: [e.respondent_hashed_number, e.id],
-              limit: 1000
+              limit: @db_chunk_limit
             )
             |> Repo.all()
 
