@@ -1191,18 +1191,11 @@ defmodule AskWeb.RespondentController do
   end
 
   defp survey_log_entry_channel_names(survey) do
-    from(c in Ask.Channel,
-      select: {c.id, c.name},
-      where:
-        c.id in subquery(
-          from(e in SurveyLogEntry,
-            distinct: true,
-            select: e.channel_id,
-            where: e.survey_id == ^survey.id
-          )
-        )
-    )
-    |> Repo.all()
+    respondent_groups = Repo.preload(survey, respondent_groups: [:channels]).respondent_groups
+    respondent_groups 
+    |> Enum.flat_map(fn resp_group -> resp_group.channels end)
+    |> Enum.map( fn channel -> {channel.id, channel.name} end) 
+    |> MapSet.new # convert to set to remove duplicates
     |> Enum.into(%{})
   end
 
