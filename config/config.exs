@@ -18,10 +18,6 @@ config :phoenix, :json_library, Poison
 config :ask,
   ecto_repos: [Ask.Repo]
 
-if System.get_env("DISABLE_TIMEOUTS") == "true" do
-  config :ask, AskWeb.Endpoint, http: [protocol_options: [idle_timeout: :infinity]]
-end
-
 # Configures the endpoint
 config :ask, AskWeb.Endpoint,
   url: [host: "localhost"],
