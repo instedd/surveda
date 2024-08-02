@@ -8,7 +8,17 @@
 ## in the message queue, the process will continue the loop immediately. 
 defmodule Ask.Runtime.SurveyFilesManager do
   use GenServer
-  alias Ask.{Logger, Questionnaire, Repo, Respondent, Survey, SurveyLogEntry}
+
+  alias Ask.{
+    Logger,
+    Questionnaire,
+    Repo,
+    Respondent,
+    RespondentDispositionHistory,
+    Survey,
+    SurveyLogEntry
+  }
+
   import Ecto.Query
 
   @db_chunk_limit 10_000
@@ -140,7 +150,47 @@ defmodule Ask.Runtime.SurveyFilesManager do
     end)
   end
 
-  defp do_generate_file(file_type, survey),
+  defp do_generate_file(:disposition_history, survey) do
+    history =
+      Stream.resource(
+        fn -> 0 end,
+        fn last_id ->
+          results =
+            from(h in RespondentDispositionHistory,
+              where: h.survey_id == ^survey.id and h.id > ^last_id,
+              order_by: h.id,
+              limit: @db_chunk_limit
+            )
+            |> Repo.all()
+
+          case List.last(results) do
+            nil -> {:halt, last_id}
+            last_entry -> {results, last_entry.id}
+          end
+        end,
+        fn _ -> [] end
+      )
+
+    tz_offset_in_seconds = Survey.timezone_offset_in_seconds(survey)
+    tz_offset = Survey.timezone_offset(survey)
+
+    csv_rows =
+      history
+      |> Stream.map(fn history ->
+        [
+          history.respondent_hashed_number,
+          history.disposition,
+          mode_label([history.mode]),
+          csv_datetime(history.inserted_at, tz_offset_in_seconds, tz_offset)
+        ]
+      end)
+
+    header = ["Respondent ID", "Disposition", "Mode", "Timestamp"]
+    rows = Stream.concat([[header], csv_rows])
+    write_to_file(:disposition_history, survey, rows)
+  end
+
+  defp do_generate_file(file_type, _),
     do: Logger.warn("No function for generating #{file_type} files")
 
   defp write_to_file(file_type, survey, rows) do
@@ -162,6 +212,7 @@ defmodule Ask.Runtime.SurveyFilesManager do
 
   defp file_prefix(:interactions), do: "respondents_interactions"
   defp file_prefix(:incentives), do: "respondents_incentives"
+  defp file_prefix(:disposition_history), do: "disposition_history"
   defp file_prefix(_), do: ""
 
   defp should_generate_file(:interactions, survey) do
@@ -224,7 +275,6 @@ defmodule Ask.Runtime.SurveyFilesManager do
     "#{name}_#{survey.state}-#{prefix}"
   end
 
-  # FIXME: duplicated from respondent_controller
   defp csv_datetime(nil, _, _), do: ""
 
   defp csv_datetime(dt, tz_offset_in_seconds, tz_offset) when is_binary(dt) do
@@ -285,5 +335,10 @@ defmodule Ask.Runtime.SurveyFilesManager do
   def generate_incentives_file(survey_id) do
     Logger.info("Enqueueing generation of survey (id: #{survey_id}) incentives file")
     GenServer.cast(server_ref(), {:incentives, survey_id})
+  end
+
+  def generate_disposition_history_file(survey_id) do
+    Logger.info("Enqueueing generation of survey (id: #{survey_id}) disposition_history file")
+    GenServer.cast(server_ref(), {:disposition_history, survey_id})
   end
 end

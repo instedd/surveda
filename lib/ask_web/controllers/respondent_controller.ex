@@ -8,7 +8,6 @@ defmodule AskWeb.RespondentController do
     Logger,
     Questionnaire,
     Respondent,
-    RespondentDispositionHistory,
     Stats,
     Survey,
     RespondentsFilter
@@ -1029,46 +1028,12 @@ defmodule AskWeb.RespondentController do
     project = load_project(conn, project_id)
     survey = load_survey(project, survey_id)
 
-    history =
-      Stream.resource(
-        fn -> 0 end,
-        fn last_id ->
-          results =
-            from(h in RespondentDispositionHistory,
-              where: h.survey_id == ^survey.id and h.id > ^last_id,
-              order_by: h.id,
-              limit: @db_chunk_limit
-            )
-            |> Repo.all()
-
-          case List.last(results) do
-            nil -> {:halt, last_id}
-            last_entry -> {results, last_entry.id}
-          end
-        end,
-        fn _ -> [] end
-      )
-
-    tz_offset_in_seconds = Survey.timezone_offset_in_seconds(survey)
-    tz_offset = Survey.timezone_offset(survey)
-
-    csv_rows =
-      history
-      |> Stream.map(fn history ->
-        [
-          history.respondent_hashed_number,
-          history.disposition,
-          mode_label([history.mode]),
-          csv_datetime(history.inserted_at, tz_offset_in_seconds, tz_offset)
-        ]
-      end)
-
-    header = ["Respondent ID", "Disposition", "Mode", "Timestamp"]
-    rows = Stream.concat([[header], csv_rows])
-
-    filename = csv_filename(survey, "respondents_disposition_history")
+    # TODO: We just change this for "trigger generation" 
+    # and add another log when actually downloading?
     ActivityLog.download(project, conn, survey, "disposition_history") |> Repo.insert()
-    conn |> csv_stream(rows, filename)
+    
+    SurveyFilesManager.generate_disposition_history_file(survey_id)
+    conn |> send_resp(200, "OK")
   end
 
   def incentives(conn, %{"project_id" => project_id, "survey_id" => survey_id}) do
@@ -1134,17 +1099,6 @@ defmodule AskWeb.RespondentController do
     name = Regex.replace(~r/[^a-zA-Z0-9_]/, name, "_")
     prefix = "#{name}-#{prefix}"
     Timex.format!(DateTime.utc_now(), "#{prefix}_%Y-%m-%d-%H-%M-%S.csv", :strftime)
-  end
-
-  defp csv_datetime(nil, _, _), do: ""
-
-  defp csv_datetime(dt, tz_offset_in_seconds, tz_offset) when is_binary(dt) do
-    {:ok, datetime, _offset} = DateTime.from_iso8601(dt)
-    csv_datetime(datetime, tz_offset_in_seconds, tz_offset)
-  end
-
-  defp csv_datetime(dt, tz_offset_in_seconds, tz_offset) do
-    Ask.TimeUtil.format(dt, tz_offset_in_seconds, tz_offset)
   end
 
   defp load_survey(project, survey_id) do
