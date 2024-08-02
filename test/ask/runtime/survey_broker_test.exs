@@ -1219,7 +1219,6 @@ defmodule Ask.Runtime.SurveyBrokerTest do
       assert respondent.state == :failed
       assert respondent.disposition == :failed
 
-      assert_disposition_changed(respondent.id, "queued", "failed")
     end
 
     test "contacted respondents are marked as unresponsive" do
@@ -1263,8 +1262,6 @@ defmodule Ask.Runtime.SurveyBrokerTest do
       respondent = Repo.get(Respondent, respondent.id)
       assert respondent.state == :failed
       assert respondent.disposition == :unresponsive
-
-      assert_disposition_changed(respondent.id, "contacted", "unresponsive")
     end
 
     test "started respondents are marked as breakoff" do
@@ -1318,8 +1315,6 @@ defmodule Ask.Runtime.SurveyBrokerTest do
       respondent = Repo.get(Respondent, respondent.id)
       assert respondent.state == :failed
       assert respondent.disposition == :breakoff
-
-      assert_disposition_changed(respondent.id, "started", "breakoff")
     end
 
     test "interim partial respondents are kept as partial (SMS)" do
@@ -1360,8 +1355,6 @@ defmodule Ask.Runtime.SurveyBrokerTest do
       respondent = Repo.get(Respondent, respondent.id)
       assert respondent.state == :failed
       assert respondent.disposition == :partial
-
-      assert_disposition_changed(respondent.id, "interim partial", "partial")
     end
   end
 

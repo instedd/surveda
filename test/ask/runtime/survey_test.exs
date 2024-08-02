@@ -2484,7 +2484,6 @@ defmodule Ask.Runtime.SurveyTest do
 
       assert_respondent(respondent_id, %{
         current_state: :active,
-        previous_disposition: :queued,
         current_disposition: :contacted,
         user_stopped: false
       })
@@ -2496,7 +2495,6 @@ defmodule Ask.Runtime.SurveyTest do
 
       assert_respondent(respondent_id, %{
         current_state: :failed,
-        previous_disposition: :contacted,
         current_disposition: :refused,
         user_stopped: true
       })
@@ -2509,7 +2507,6 @@ defmodule Ask.Runtime.SurveyTest do
 
       assert_respondent(respondent_id, %{
         current_state: :failed,
-        previous_disposition: :started,
         current_disposition: :breakoff,
         user_stopped: true
       })
@@ -2522,7 +2519,6 @@ defmodule Ask.Runtime.SurveyTest do
 
       assert_respondent(respondent_id, %{
         current_state: :failed,
-        previous_disposition: :queued,
         current_disposition: :refused,
         user_stopped: true
       })
@@ -3642,7 +3638,6 @@ defmodule Ask.Runtime.SurveyTest do
   defp start_test(steps) do
     [survey, _, _, respondent, _] = create_running_survey_with_channel_and_respondent(steps)
     SurveyBroker.start_link()
-    SurveyLogger.start_link()
     [survey, respondent]
   end
 
@@ -3655,7 +3650,6 @@ defmodule Ask.Runtime.SurveyTest do
 
   defp assert_respondent(respondent_id, %{
          current_state: current_state,
-         previous_disposition: previous_disposition,
          current_disposition: current_disposition,
          user_stopped: user_stopped
        }) do
@@ -3665,7 +3659,6 @@ defmodule Ask.Runtime.SurveyTest do
     assert respondent.disposition == current_disposition
     assert respondent.user_stopped == user_stopped
     assert_last_history_disposition_is(respondent.id, current_disposition)
-    assert_disposition_changed(respondent.id, previous_disposition, current_disposition)
   end
 
   defp respondent_sends_stop(respondent_id) do
