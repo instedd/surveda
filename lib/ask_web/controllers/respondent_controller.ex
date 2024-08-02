@@ -1082,50 +1082,12 @@ defmodule AskWeb.RespondentController do
       |> where([s], s.incentives_enabled)
       |> Repo.get!(survey_id)
 
-    questionnaires = survey_respondent_questionnaires(survey)
-
-    tz_offset_in_seconds = Survey.timezone_offset_in_seconds(survey)
-    tz_offset = Survey.timezone_offset(survey)
-
-    csv_rows =
-      from(r in Respondent,
-        where:
-          r.survey_id == ^survey.id and r.disposition == :completed and
-            not is_nil(r.questionnaire_id),
-        order_by: r.id
-      )
-      |> Repo.stream()
-      |> Stream.map(fn r ->
-        questionnaire = Enum.find(questionnaires, fn q -> q.id == r.questionnaire_id end)
-
-        [
-          r.phone_number,
-          experiment_name(questionnaire, r.mode),
-          csv_datetime(r.completed_at, tz_offset_in_seconds, tz_offset)
-        ]
-      end)
-
-    header = ["Telephone number", "Questionnaire-Mode", "Completion date"]
-    rows = Stream.concat([[header], csv_rows])
-
-    filename = csv_filename(survey, "respondents_incentives")
+    # TODO: We just change this for "trigger generation" 
+    # and add another log when actually downloading?
     ActivityLog.download(project, conn, survey, "incentives") |> Repo.insert()
-    {:ok, conn} = Repo.transaction(fn -> conn |> csv_stream(rows, filename) end)
-    conn
-  end
-
-  defp survey_respondent_questionnaires(survey) do
-    from(q in Questionnaire,
-      where:
-        q.id in subquery(
-          from(r in Respondent,
-            distinct: true,
-            select: r.questionnaire_id,
-            where: r.survey_id == ^survey.id
-          )
-        )
-    )
-    |> Repo.all()
+    
+    SurveyFilesManager.generate_incentives_file(survey_id)
+    conn |> send_resp(200, "OK")
   end
 
   def interactions(conn, %{"project_id" => project_id, "survey_id" => survey_id}) do
