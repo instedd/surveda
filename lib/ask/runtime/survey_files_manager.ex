@@ -8,7 +8,7 @@
 ## in the message queue, the process will continue the loop immediately. 
 defmodule Ask.Runtime.SurveyFilesManager do
   use GenServer
-  alias Ask.{Logger, Repo, Survey, SurveyLogEntry}
+  alias Ask.{Logger, Questionnaire, Repo, Respondent, Survey, SurveyLogEntry}
   import Ecto.Query
 
   @db_chunk_limit 10_000
@@ -27,7 +27,26 @@ defmodule Ask.Runtime.SurveyFilesManager do
     {:ok, state}
   end
 
-  defp do_generate_interactions_file(survey) do
+  @impl true
+  def handle_cast({file_type, survey_id}, state) do
+    survey = Repo.get!(Survey, survey_id)
+
+    if should_generate_file(file_type, survey) do
+      do_generate_file(file_type, survey)
+    else
+      Logger.info("Ignoring generation of #{file_type} file (survey_id: #{survey_id})")
+    end
+
+    {:noreply, state, :hibernate}
+  end
+
+  @impl true
+  def handle_cast(message, state) do
+    Logger.warn("Ignoring message #{message}")
+    {:noreply, state, :hibernate}
+  end
+
+  defp do_generate_file(:interactions, survey) do
     channels = survey_log_entry_channel_names(survey)
 
     Logger.info("Starting to build interaction file (survey_id: #{survey.id})")
@@ -86,7 +105,46 @@ defmodule Ask.Runtime.SurveyFilesManager do
 
     rows = Stream.concat([[header], csv_rows])
 
-    filename = csv_filename(survey, file_prefix(:interactions))
+    write_to_file(:interactions, survey, rows)
+  end
+
+  defp do_generate_file(:incentives, survey) do
+    questionnaires = survey_respondent_questionnaires(survey)
+
+    tz_offset_in_seconds = Survey.timezone_offset_in_seconds(survey)
+    tz_offset = Survey.timezone_offset(survey)
+
+    Repo.transaction(fn ->
+      csv_rows =
+        from(r in Respondent,
+          where:
+            r.survey_id == ^survey.id and r.disposition == :completed and
+              not is_nil(r.questionnaire_id),
+          order_by: r.id
+        )
+        |> Repo.stream()
+        |> Stream.map(fn r ->
+          questionnaire = Enum.find(questionnaires, fn q -> q.id == r.questionnaire_id end)
+
+          [
+            r.phone_number,
+            experiment_name(questionnaire, r.mode),
+            csv_datetime(r.completed_at, tz_offset_in_seconds, tz_offset)
+          ]
+        end)
+
+      header = ["Telephone number", "Questionnaire-Mode", "Completion date"]
+      rows = Stream.concat([[header], csv_rows])
+
+      write_to_file(:incentives, survey, rows)
+    end)
+  end
+
+  defp do_generate_file(file_type, survey),
+    do: Logger.warn("No function for generating #{file_type} files")
+
+  defp write_to_file(file_type, survey, rows) do
+    filename = csv_filename(survey, file_prefix(file_type))
     File.mkdir_p!(@target_dir)
     file = File.open!("#{@target_dir}/#{filename}", [:write, :utf8])
     initial_datetime = Timex.now()
@@ -98,11 +156,12 @@ defmodule Ask.Runtime.SurveyFilesManager do
     seconds_to_process_file = Timex.diff(Timex.now(), initial_datetime, :seconds)
 
     Logger.info(
-      "Generation of interaction files survey (id #{survey.id}) took #{seconds_to_process_file} seconds"
+      "Generation of #{file_type} file (survey_id: #{survey.id}) took #{seconds_to_process_file} seconds"
     )
   end
 
   defp file_prefix(:interactions), do: "respondents_interactions"
+  defp file_prefix(:incentives), do: "respondents_incentives"
   defp file_prefix(_), do: ""
 
   defp should_generate_file(:interactions, survey) do
@@ -118,31 +177,16 @@ defmodule Ask.Runtime.SurveyFilesManager do
     !exists_file
   end
 
-  @impl true
-  def handle_cast({:interactions, survey_id}, state) do
-    survey = Repo.get!(Survey, survey_id)
-
-    if should_generate_file(:interactions, survey) do
-      do_generate_interactions_file(survey)
-    else
-      Logger.info("Ignoring generation of :interaction file")
-    end
-    {:noreply, state, :hibernate}
-  end
-
-  @impl true
-  def handle_cast(message, state) do
-    Logger.warn("Ignoring message #{message}")
-    {:noreply, state, :hibernate}
-  end
+  defp should_generate_file(_type, _survey), do: true
 
   defp survey_log_entry_channel_names(survey) do
     respondent_groups = Repo.preload(survey, respondent_groups: [:channels]).respondent_groups
 
-    respondent_groups 
+    respondent_groups
     |> Enum.flat_map(fn resp_group -> resp_group.channels end)
-    |> Enum.map( fn channel -> {channel.id, channel.name} end) 
-    |> MapSet.new # convert to set to remove duplicates
+    |> Enum.map(fn channel -> {channel.id, channel.name} end)
+    # convert to set to remove duplicates
+    |> MapSet.new()
     |> Enum.into(%{})
   end
 
@@ -192,9 +236,54 @@ defmodule Ask.Runtime.SurveyFilesManager do
     Ask.TimeUtil.format(dt, tz_offset_in_seconds, tz_offset)
   end
 
+  # FIXME: duplicated from respondent_controller
+  defp experiment_name(quiz, mode) do
+    "#{questionnaire_name(quiz)} - #{mode_label(mode)}"
+  end
+
+  # FIXME: duplicated from respondent_controller
+  defp mode_label(mode) do
+    case mode do
+      ["sms"] -> "SMS"
+      ["sms", "ivr"] -> "SMS with phone call fallback"
+      ["sms", "mobileweb"] -> "SMS with Mobile Web fallback"
+      ["ivr"] -> "Phone call"
+      ["ivr", "sms"] -> "Phone call with SMS fallback"
+      ["ivr", "mobileweb"] -> "Phone call with Mobile Web fallback"
+      ["mobileweb"] -> "Mobile Web"
+      ["mobileweb", "sms"] -> "Mobile Web with SMS fallback"
+      ["mobileweb", "ivr"] -> "Mobile Web with phone call fallback"
+      _ -> "Unknown mode"
+    end
+  end
+
+  # FIXME: duplicated from respondent_controller
+  defp questionnaire_name(quiz) do
+    quiz.name || "Untitled questionnaire"
+  end
+
+  defp survey_respondent_questionnaires(survey) do
+    from(q in Questionnaire,
+      where:
+        q.id in subquery(
+          from(r in Respondent,
+            distinct: true,
+            select: r.questionnaire_id,
+            where: r.survey_id == ^survey.id
+          )
+        )
+    )
+    |> Repo.all()
+  end
+
   ## Public API
   def generate_interactions_file(survey_id) do
     Logger.info("Enqueueing generation of survey (id: #{survey_id}) interaction file")
     GenServer.cast(server_ref(), {:interactions, survey_id})
+  end
+
+  def generate_incentives_file(survey_id) do
+    Logger.info("Enqueueing generation of survey (id: #{survey_id}) incentives file")
+    GenServer.cast(server_ref(), {:incentives, survey_id})
   end
 end
