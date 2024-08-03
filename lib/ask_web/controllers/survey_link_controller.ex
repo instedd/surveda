@@ -16,6 +16,7 @@ defmodule AskWeb.SurveyLinkController do
 
     {name, target} =
       case target_name do
+        # FIXME: revisit this. We should remove _format
         "results" ->
           {
             Survey.link_name(survey, :results),
