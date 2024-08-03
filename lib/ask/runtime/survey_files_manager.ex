@@ -8,6 +8,7 @@
 ## in the message queue, the process will continue the loop immediately. 
 defmodule Ask.Runtime.SurveyFilesManager do
   use GenServer
+  require Ask.RespondentStats
 
   alias Ask.{
     Logger,
@@ -15,6 +16,7 @@ defmodule Ask.Runtime.SurveyFilesManager do
     Repo,
     Respondent,
     RespondentDispositionHistory,
+    Stats,
     Survey,
     SurveyLogEntry
   }
@@ -38,11 +40,11 @@ defmodule Ask.Runtime.SurveyFilesManager do
   end
 
   @impl true
-  def handle_cast({file_type, survey_id}, state) do
+  def handle_cast({file_type, survey_id, args}, state) do
     survey = Repo.get!(Survey, survey_id)
 
     if should_generate_file(file_type, survey) do
-      do_generate_file(file_type, survey)
+      do_generate_file(file_type, survey, args)
     else
       Logger.info("Ignoring generation of #{file_type} file (survey_id: #{survey_id})")
     end
@@ -56,7 +58,7 @@ defmodule Ask.Runtime.SurveyFilesManager do
     {:noreply, state, :hibernate}
   end
 
-  defp do_generate_file(:interactions, survey) do
+  defp do_generate_file(:interactions, survey, _) do
     channels = survey_log_entry_channel_names(survey)
 
     Logger.info("Starting to build interaction file (survey_id: #{survey.id})")
@@ -118,7 +120,7 @@ defmodule Ask.Runtime.SurveyFilesManager do
     write_to_file(:interactions, survey, rows)
   end
 
-  defp do_generate_file(:incentives, survey) do
+  defp do_generate_file(:incentives, survey, _) do
     questionnaires = survey_respondent_questionnaires(survey)
 
     tz_offset_in_seconds = Survey.timezone_offset_in_seconds(survey)
@@ -150,7 +152,7 @@ defmodule Ask.Runtime.SurveyFilesManager do
     end)
   end
 
-  defp do_generate_file(:disposition_history, survey) do
+  defp do_generate_file(:disposition_history, survey, _) do
     history =
       Stream.resource(
         fn -> 0 end,
@@ -190,6 +192,171 @@ defmodule Ask.Runtime.SurveyFilesManager do
     write_to_file(:disposition_history, survey, rows)
   end
 
+  defp do_generate_file(:respondent_result, survey, filter) do
+
+    tz_offset = Survey.timezone_offset(survey)
+    
+    questionnaires = (survey |> Repo.preload(:questionnaires)).questionnaires
+    all_fields = all_questionnaires_fields(questionnaires, true)
+    has_comparisons = length(survey.comparisons) > 0
+
+    respondents = Ask.Survey.respondents_where(survey, filter)
+
+    stats =
+      survey.mode
+      |> Enum.flat_map(fn modes ->
+        modes
+        |> Enum.flat_map(fn mode ->
+          case mode do
+            "sms" -> [:total_sent_sms, :total_received_sms, :sms_attempts]
+            "mobileweb" -> [:total_sent_sms, :total_received_sms, :mobileweb_attempts]
+            "ivr" -> [:total_call_time, :ivr_attempts]
+            _ -> []
+          end
+        end)
+      end)
+      |> Enum.uniq()
+
+    tz_offset_in_seconds = Survey.timezone_offset_in_seconds(survey)
+    partial_relevant_enabled = Survey.partial_relevant_enabled?(survey, true)
+    respondents_count = Ask.RespondentStats.respondent_count(survey_id: ^survey.id)
+
+    # Now traverse each respondent and create a row for it
+    csv_rows =
+      respondents
+      |> Stream.map(fn respondent ->
+        row = [respondent.hashed_number]
+        responses = respondent.responses
+
+        row = row ++ [Respondent.show_disposition(respondent.disposition)]
+
+        date =
+          case responses do
+            [] ->
+              nil
+
+            _ ->
+              responses
+              |> Enum.map(fn r -> r.updated_at end)
+              |> Enum.max()
+          end
+
+        row =
+          if date do
+            row ++ [Ask.TimeUtil.format2(date, tz_offset_in_seconds, tz_offset)]
+          else
+            row ++ ["-"]
+          end
+
+        modes =
+          (respondent.effective_modes || [])
+          |> Enum.map(fn mode -> mode_label([mode]) end)
+          |> Enum.join(", ")
+
+        row = row ++ [modes]
+
+        row = row ++ [respondent.user_stopped]
+
+        row =
+          row ++
+            Enum.map(stats, fn stat ->
+              respondent |> respondent_stat(stat)
+            end)
+
+        row = row ++ [Respondent.show_section_order(respondent, questionnaires)]
+
+        respondent_group = respondent.respondent_group.name
+
+        row = row ++ [respondent_group]
+
+        questionnaire_id = respondent.questionnaire_id
+        questionnaire = questionnaires |> Enum.find(fn q -> q.id == questionnaire_id end)
+        mode = respondent.mode
+
+        row =
+          if has_comparisons do
+            variant =
+              if questionnaire && mode do
+                experiment_name(questionnaire, mode)
+              else
+                "-"
+              end
+
+            row ++ [variant]
+          else
+            row
+          end
+
+        row =
+          if partial_relevant_enabled do
+            respondent_with_questionnaire = %{respondent | questionnaire: questionnaire}
+
+            row ++
+              [Respondent.partial_relevant_answered_count(respondent_with_questionnaire, false)]
+          else
+            row
+          end
+
+        # We traverse all fields and see if there's a response for this respondent
+        row =
+          all_fields
+          |> Enum.reduce(row, fn field_name, acc ->
+            response =
+              responses
+              |> Enum.filter(fn response ->
+                response.field_name |> sanitize_variable_name == field_name
+              end)
+
+            case response do
+              [resp] ->
+                value = resp.value
+
+                # For the 'language' variable we convert the code to the native name
+                value =
+                  if resp.field_name == "language" do
+                    LanguageNames.for(value) || value
+                  else
+                    value
+                  end
+
+                acc ++ [value]
+
+              _ ->
+                acc ++ [""]
+            end
+          end)
+
+        row
+      end)
+
+    append_if = fn list, elems, condition -> if condition, do: list ++ elems, else: list end
+
+    # Add header to csv_rows
+    header = ["respondent_id", "disposition", "date", "modes", "user_stopped"]
+
+    header =
+      header ++
+        Enum.map(stats, fn stat ->
+          case stat do
+            :total_sent_sms -> "total_sent_sms"
+            :total_received_sms -> "total_received_sms"
+            :total_call_time -> "total_call_time"
+            :sms_attempts -> "sms_attempts"
+            :ivr_attempts -> "ivr_attempts"
+            :mobileweb_attempts -> "mobileweb_attempts"
+          end
+        end)
+
+    header = header ++ ["section_order", "sample_file"]
+    header = append_if.(header, ["variant"], has_comparisons)
+    header = append_if.(header, ["p_relevants"], partial_relevant_enabled)
+    header = header ++ all_fields
+
+    rows = Stream.concat([[header], csv_rows])
+
+    write_to_file(:respondent_result, survey, rows)
+  end
+
   defp do_generate_file(file_type, _),
     do: Logger.warn("No function for generating #{file_type} files")
 
@@ -213,6 +380,7 @@ defmodule Ask.Runtime.SurveyFilesManager do
   defp file_prefix(:interactions), do: "respondents_interactions"
   defp file_prefix(:incentives), do: "respondents_incentives"
   defp file_prefix(:disposition_history), do: "disposition_history"
+  defp file_prefix(:respondent_result), do: "respondents"
   defp file_prefix(_), do: ""
 
   defp should_generate_file(:interactions, survey) do
@@ -311,34 +479,66 @@ defmodule Ask.Runtime.SurveyFilesManager do
   defp questionnaire_name(quiz) do
     quiz.name || "Untitled questionnaire"
   end
-
+  
   defp survey_respondent_questionnaires(survey) do
     from(q in Questionnaire,
-      where:
-        q.id in subquery(
-          from(r in Respondent,
-            distinct: true,
-            select: r.questionnaire_id,
-            where: r.survey_id == ^survey.id
-          )
-        )
-    )
-    |> Repo.all()
+    where:
+    q.id in subquery(
+      from(r in Respondent,
+      distinct: true,
+      select: r.questionnaire_id,
+      where: r.survey_id == ^survey.id
+      )
+      )
+      )
+      |> Repo.all()
+    end
+    
+  # FIXME: duplicated from respondent_controller
+  defp respondent_stat(respondent, :sms_attempts), do: respondent.stats |> Stats.attempts(:sms)
+  defp respondent_stat(respondent, :ivr_attempts), do: respondent.stats |> Stats.attempts(:ivr)
+  
+  defp respondent_stat(respondent, :mobileweb_attempts),
+  do: respondent.stats |> Stats.attempts(:mobileweb)
+  
+  defp respondent_stat(respondent, key), do: apply(Stats, key, [respondent.stats])
+  
+  # FIXME: duplicated from respondent_controller
+  defp all_questionnaires_fields(questionnaires, sanitize \\ false) do
+    fields =
+    questionnaires
+    |> Enum.flat_map(&Questionnaire.variables/1)
+    |> Enum.uniq()
+    |> Enum.reject(fn s -> String.length(s) == 0 end)
+    
+    if sanitize, do: sanitize_fields(fields), else: fields
   end
+  
+  # FIXME: duplicated from respondent_controller
+  def sanitize_variable_name(s), do: s |> String.trim() |> String.replace(" ", "_")
+  
+  # FIXME: duplicated from respondent_controller
+  defp sanitize_fields(fields),
+    do: Enum.map(fields, fn field -> sanitize_variable_name(field) end)
 
   ## Public API
   def generate_interactions_file(survey_id) do
     Logger.info("Enqueueing generation of survey (id: #{survey_id}) interaction file")
-    GenServer.cast(server_ref(), {:interactions, survey_id})
+    GenServer.cast(server_ref(), {:interactions, survey_id, nil})
   end
 
   def generate_incentives_file(survey_id) do
     Logger.info("Enqueueing generation of survey (id: #{survey_id}) incentives file")
-    GenServer.cast(server_ref(), {:incentives, survey_id})
+    GenServer.cast(server_ref(), {:incentives, survey_id, nil})
   end
 
   def generate_disposition_history_file(survey_id) do
     Logger.info("Enqueueing generation of survey (id: #{survey_id}) disposition_history file")
-    GenServer.cast(server_ref(), {:disposition_history, survey_id})
+    GenServer.cast(server_ref(), {:disposition_history, survey_id, nil})
+  end
+
+  def generate_respondent_result_file(survey_id, filters) do
+    Logger.info("Enqueueing generation of survey (id: #{survey_id}) disposition_history file")
+    GenServer.cast(server_ref(), {:respondent_result, survey_id, filters})
   end
 end

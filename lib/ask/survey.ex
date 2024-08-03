@@ -18,6 +18,7 @@ defmodule Ask.Survey do
     FloipEndpoint,
     Folder,
     RespondentStats,
+    RespondentsFilter,
     ConfigHelper,
     SystemTime,
     PanelSurvey
@@ -28,6 +29,7 @@ defmodule Ask.Survey do
 
   @max_int 2_147_483_647
   @default_fallback_delay 120
+  @db_chunk_limit 10_000
 
   schema "surveys" do
     field :name, :string
@@ -835,5 +837,87 @@ defmodule Ask.Survey do
   defp only_wave_of_panel_survey?(survey) do
     survey = Repo.preload(survey, panel_survey: :waves)
     Enum.count(survey.panel_survey.waves) == 1
+  end
+
+  # FIXME: remove from survey
+  defp experiment_name(quiz, mode) do
+    "#{questionnaire_name(quiz)} - #{mode_label(mode)}"
+  end
+  
+  # FIXME: remove from survey
+  defp mode_label(mode) do
+    case mode do
+      ["sms"] -> "SMS"
+      ["sms", "ivr"] -> "SMS with phone call fallback"
+      ["sms", "mobileweb"] -> "SMS with Mobile Web fallback"
+      ["ivr"] -> "Phone call"
+      ["ivr", "sms"] -> "Phone call with SMS fallback"
+      ["ivr", "mobileweb"] -> "Phone call with Mobile Web fallback"
+      ["mobileweb"] -> "Mobile Web"
+      ["mobileweb", "sms"] -> "Mobile Web with SMS fallback"
+      ["mobileweb", "ivr"] -> "Mobile Web with phone call fallback"
+      _ -> "Unknown mode"
+    end
+  end
+  
+  # FIXME: remove from survey
+  defp questionnaire_name(quiz) do
+    quiz.name || "Untitled questionnaire"
+  end
+
+  # FIXME: remove from survey
+  def respondents_where(survey, filter) do
+    filter_where = RespondentsFilter.filter_where(filter, optimized: true)
+
+    respondents =
+      Stream.resource(
+        fn -> 0 end,
+        fn last_seen_id ->
+          results =
+            from(r1 in Respondent,
+              join: r2 in Respondent,
+              on: r1.id == r2.id,
+              where: r2.survey_id == ^survey.id and r2.id > ^last_seen_id,
+              where: ^filter_where,
+              order_by: r2.id,
+              limit: @db_chunk_limit,
+              preload: [:responses, :respondent_group],
+              select: r1
+            )
+            |> Repo.all()
+
+          case List.last(results) do
+            %{id: last_id} -> {results, last_id}
+            nil -> {:halt, last_seen_id}
+          end
+        end,
+        fn _ -> [] end
+      )
+
+    survey_has_comparisons = length(survey.comparisons) > 0
+    questionnaires = (survey |> Repo.preload(:questionnaires)).questionnaires
+
+    if survey_has_comparisons do
+      respondents
+      |> Stream.map(fn respondent ->
+        experiment_name =
+          if respondent.questionnaire_id && respondent.mode do
+            questionnaire =
+              questionnaires |> Enum.find(fn q -> q.id == respondent.questionnaire_id end)
+
+            if questionnaire do
+              experiment_name(questionnaire, respondent.mode)
+            else
+              "-"
+            end
+          else
+            "-"
+          end
+
+        %{respondent | experiment_name: experiment_name}
+      end)
+    else
+      respondents
+    end
   end
 end
