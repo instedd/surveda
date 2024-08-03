@@ -15,8 +15,6 @@ defmodule AskWeb.RespondentController do
 
   alias Ask.Runtime.SurveyFilesManager
 
-  @db_chunk_limit 10_000
-
   def index(conn, %{"project_id" => project_id, "survey_id" => survey_id} = params) do
     limit = Map.get(params, "limit", "")
     page = Map.get(params, "page", "")
@@ -724,47 +722,41 @@ defmodule AskWeb.RespondentController do
     # ?param1=value is more specific than ?q=param1:value
     filter = add_params_to_filter(filter, params)
 
-    filter_where = RespondentsFilter.filter_where(filter, optimized: true)
-
-    respondents =
-      Stream.resource(
-        fn -> 0 end,
-        fn last_seen_id ->
-          results =
-            from(r1 in Respondent,
-              join: r2 in Respondent,
-              on: r1.id == r2.id,
-              where: r2.survey_id == ^survey.id and r2.id > ^last_seen_id,
-              where: ^filter_where,
-              order_by: r2.id,
-              limit: @db_chunk_limit,
-              preload: [:responses, :respondent_group],
-              select: r1
-            )
-            |> Repo.all()
-
-          case List.last(results) do
-            %{id: last_id} -> {results, last_id}
-            nil -> {:halt, last_seen_id}
-          end
-        end,
-        fn _ -> [] end
-      )
+    # filter_where = RespondentsFilter.filter_where(filter, optimized: true)
+    respondents = Ask.Survey.respondents_where(survey, filter)
 
     partial_relevant_enabled = Survey.partial_relevant_enabled?(survey, true)
 
-    render_results(
-      conn,
-      get_format(conn),
-      project,
-      survey,
-      tz_offset,
-      questionnaires,
-      has_comparisons,
-      all_fields,
-      respondents,
-      partial_relevant_enabled
-    )
+    respondents_count = Ask.RespondentStats.respondent_count(survey_id: ^survey.id)
+
+    {:ok, conn} =
+      Repo.transaction(fn ->
+        render(conn, "index.json",
+          respondents: respondents,
+          respondents_count: respondents_count,
+          partial_relevant_enabled: partial_relevant_enabled
+        )
+      end)
+
+    conn
+  end
+
+  def trigger_results(conn, %{"project_id" => project_id, "survey_id" => survey_id} = params) do
+    project = load_project(conn, project_id)
+    survey = load_survey(project, survey_id)
+
+    # The new filters, shared by the index and the downloaded CSV file
+    filter = RespondentsFilter.parse(Map.get(params, "q", ""))
+    # The old filters are being received by its own specific url params
+    # If the same filter is received twice, the old filter is priorized over new one because
+    # ?param1=value is more specific than ?q=param1:value
+    filter = add_params_to_filter(filter, params)
+
+    SurveyFilesManager.generate_respondent_result_file(survey_id, filter)
+
+    ActivityLog.download(project, conn, survey, "survey_results") |> Repo.insert()
+
+    conn |> send_resp(200, "OK")
   end
 
   defp all_questionnaires_fields(questionnaires, sanitize \\ false) do
@@ -799,223 +791,6 @@ defmodule AskWeb.RespondentController do
     filter
   end
 
-  defp render_results(
-         conn,
-         "json",
-         _project,
-         survey,
-         _tz_offset,
-         questionnaires,
-         has_comparisons,
-         _all_fields,
-         respondents,
-         partial_relevant_enabled
-       ) do
-    respondents_count = Ask.RespondentStats.respondent_count(survey_id: ^survey.id)
-
-    respondents =
-      if has_comparisons do
-        respondents
-        |> Stream.map(fn respondent ->
-          experiment_name =
-            if respondent.questionnaire_id && respondent.mode do
-              questionnaire =
-                questionnaires |> Enum.find(fn q -> q.id == respondent.questionnaire_id end)
-
-              if questionnaire do
-                experiment_name(questionnaire, respondent.mode)
-              else
-                "-"
-              end
-            else
-              "-"
-            end
-
-          %{respondent | experiment_name: experiment_name}
-        end)
-      else
-        respondents
-      end
-
-    {:ok, conn} =
-      Repo.transaction(fn ->
-        render(conn, "index.json",
-          respondents: respondents,
-          respondents_count: respondents_count,
-          partial_relevant_enabled: partial_relevant_enabled
-        )
-      end)
-
-    conn
-  end
-
-  defp render_results(
-         conn,
-         "csv",
-         project,
-         survey,
-         tz_offset,
-         questionnaires,
-         has_comparisons,
-         all_fields,
-         respondents,
-         partial_relevant_enabled
-       ) do
-    stats =
-      survey.mode
-      |> Enum.flat_map(fn modes ->
-        modes
-        |> Enum.flat_map(fn mode ->
-          case mode do
-            "sms" -> [:total_sent_sms, :total_received_sms, :sms_attempts]
-            "mobileweb" -> [:total_sent_sms, :total_received_sms, :mobileweb_attempts]
-            "ivr" -> [:total_call_time, :ivr_attempts]
-            _ -> []
-          end
-        end)
-      end)
-      |> Enum.uniq()
-
-    tz_offset_in_seconds = Survey.timezone_offset_in_seconds(survey)
-
-    # Now traverse each respondent and create a row for it
-    csv_rows =
-      respondents
-      |> Stream.map(fn respondent ->
-        row = [respondent.hashed_number]
-        responses = respondent.responses
-
-        row = row ++ [Respondent.show_disposition(respondent.disposition)]
-
-        date =
-          case responses do
-            [] ->
-              nil
-
-            _ ->
-              responses
-              |> Enum.map(fn r -> r.updated_at end)
-              |> Enum.max()
-          end
-
-        row =
-          if date do
-            row ++ [Ask.TimeUtil.format2(date, tz_offset_in_seconds, tz_offset)]
-          else
-            row ++ ["-"]
-          end
-
-        modes =
-          (respondent.effective_modes || [])
-          |> Enum.map(fn mode -> mode_label([mode]) end)
-          |> Enum.join(", ")
-
-        row = row ++ [modes]
-
-        row = row ++ [respondent.user_stopped]
-
-        row =
-          row ++
-            Enum.map(stats, fn stat ->
-              respondent |> respondent_stat(stat)
-            end)
-
-        row = row ++ [Respondent.show_section_order(respondent, questionnaires)]
-
-        respondent_group = respondent.respondent_group.name
-
-        row = row ++ [respondent_group]
-
-        questionnaire_id = respondent.questionnaire_id
-        questionnaire = questionnaires |> Enum.find(fn q -> q.id == questionnaire_id end)
-        mode = respondent.mode
-
-        row =
-          if has_comparisons do
-            variant =
-              if questionnaire && mode do
-                experiment_name(questionnaire, mode)
-              else
-                "-"
-              end
-
-            row ++ [variant]
-          else
-            row
-          end
-
-        row =
-          if partial_relevant_enabled do
-            respondent_with_questionnaire = %{respondent | questionnaire: questionnaire}
-
-            row ++
-              [Respondent.partial_relevant_answered_count(respondent_with_questionnaire, false)]
-          else
-            row
-          end
-
-        # We traverse all fields and see if there's a response for this respondent
-        row =
-          all_fields
-          |> Enum.reduce(row, fn field_name, acc ->
-            response =
-              responses
-              |> Enum.filter(fn response ->
-                response.field_name |> sanitize_variable_name == field_name
-              end)
-
-            case response do
-              [resp] ->
-                value = resp.value
-
-                # For the 'language' variable we convert the code to the native name
-                value =
-                  if resp.field_name == "language" do
-                    LanguageNames.for(value) || value
-                  else
-                    value
-                  end
-
-                acc ++ [value]
-
-              _ ->
-                acc ++ [""]
-            end
-          end)
-
-        row
-      end)
-
-    append_if = fn list, elems, condition -> if condition, do: list ++ elems, else: list end
-
-    # Add header to csv_rows
-    header = ["respondent_id", "disposition", "date", "modes", "user_stopped"]
-
-    header =
-      header ++
-        Enum.map(stats, fn stat ->
-          case stat do
-            :total_sent_sms -> "total_sent_sms"
-            :total_received_sms -> "total_received_sms"
-            :total_call_time -> "total_call_time"
-            :sms_attempts -> "sms_attempts"
-            :ivr_attempts -> "ivr_attempts"
-            :mobileweb_attempts -> "mobileweb_attempts"
-          end
-        end)
-
-    header = header ++ ["section_order", "sample_file"]
-    header = append_if.(header, ["variant"], has_comparisons)
-    header = append_if.(header, ["p_relevants"], partial_relevant_enabled)
-    header = header ++ all_fields
-
-    rows = Stream.concat([[header], csv_rows])
-
-    filename = csv_filename(survey, "respondents")
-    ActivityLog.download(project, conn, survey, "survey_results") |> Repo.insert()
-    conn |> csv_stream(rows, filename)
-  end
-
   defp respondent_stat(respondent, :sms_attempts), do: respondent.stats |> Stats.attempts(:sms)
   defp respondent_stat(respondent, :ivr_attempts), do: respondent.stats |> Stats.attempts(:ivr)
 
@@ -1031,7 +806,7 @@ defmodule AskWeb.RespondentController do
     # TODO: We just change this for "trigger generation" 
     # and add another log when actually downloading?
     ActivityLog.download(project, conn, survey, "disposition_history") |> Repo.insert()
-    
+
     SurveyFilesManager.generate_disposition_history_file(survey_id)
     conn |> send_resp(200, "OK")
   end
@@ -1050,7 +825,7 @@ defmodule AskWeb.RespondentController do
     # TODO: We just change this for "trigger generation" 
     # and add another log when actually downloading?
     ActivityLog.download(project, conn, survey, "incentives") |> Repo.insert()
-    
+
     SurveyFilesManager.generate_incentives_file(survey_id)
     conn |> send_resp(200, "OK")
   end
@@ -1069,29 +844,6 @@ defmodule AskWeb.RespondentController do
 
   defp mask_phone_numbers(respondent) do
     %{respondent | phone_number: Respondent.mask_phone_number(respondent.phone_number)}
-  end
-
-  defp experiment_name(quiz, mode) do
-    "#{questionnaire_name(quiz)} - #{mode_label(mode)}"
-  end
-
-  defp questionnaire_name(quiz) do
-    quiz.name || "Untitled questionnaire"
-  end
-
-  defp mode_label(mode) do
-    case mode do
-      ["sms"] -> "SMS"
-      ["sms", "ivr"] -> "SMS with phone call fallback"
-      ["sms", "mobileweb"] -> "SMS with Mobile Web fallback"
-      ["ivr"] -> "Phone call"
-      ["ivr", "sms"] -> "Phone call with SMS fallback"
-      ["ivr", "mobileweb"] -> "Phone call with Mobile Web fallback"
-      ["mobileweb"] -> "Mobile Web"
-      ["mobileweb", "sms"] -> "Mobile Web with SMS fallback"
-      ["mobileweb", "ivr"] -> "Mobile Web with phone call fallback"
-      _ -> "Unknown mode"
-    end
   end
 
   defp csv_filename(survey, prefix) do
