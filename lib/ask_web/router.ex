@@ -42,14 +42,6 @@ defmodule AskWeb.Router do
     plug Coherence.Authentication.Session, db_model: Ask.User
   end
 
-  pipeline :csv_api do
-    plug :accepts, ["csv"]
-    plug :fetch_session
-    plug :fetch_flash
-
-    plug Coherence.Authentication.Session, db_model: Ask.User
-  end
-
   pipeline :mp3_api do
     plug TrailingFormatPlug
     plug :accepts, ["mp3"]
@@ -198,19 +190,18 @@ defmodule AskWeb.Router do
       resources "/projects", ProjectController, only: [] do
         resources "/surveys", SurveyController, only: [] do
           scope "/respondents" do
-            pipe_through :csv_json_api
-            get "/results", RespondentController, :results, as: :respondents_results
-          end
+            pipe_through :api
 
-          scope "/respondents" do
-            pipe_through :csv_api
+            get "/results", RespondentController, :results, as: :get_respondents_results
+            
+            post "/results", RespondentController, :trigger_results, as: :respondents_results
 
-            get "/disposition_history", RespondentController, :disposition_history,
+            post "/disposition_history", RespondentController, :disposition_history,
               as: :respondents_disposition_history
 
-            get "/incentives", RespondentController, :incentives, as: :respondents_incentives
+            post "/incentives", RespondentController, :incentives, as: :respondents_incentives
 
-            get "/interactions", RespondentController, :interactions,
+            post "/interactions", RespondentController, :interactions,
               as: :respondents_interactions
           end
         end

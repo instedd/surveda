@@ -2,6 +2,7 @@
 import React, { Component } from "react"
 import { bindActionCreators } from "redux"
 import { connect } from "react-redux"
+import * as api from "../../api"
 import * as actions from "../../actions/respondents"
 import { fieldUniqueKey, isFieldSelected } from "../../reducers/respondents"
 import * as surveyActions from "../../actions/survey"
@@ -123,22 +124,22 @@ class RespondentIndex extends Component<Props, State> {
   downloadCSV(applyUserFilter = false) {
     const { projectId, surveyId, filter } = this.props
     const q = (applyUserFilter && filter) || null
-    window.location = routes.respondentsResultsCSV(projectId, surveyId, q)
+    api.triggerRespondentsResultFile(projectId, surveyId, q)
   }
-
+  
   downloadDispositionHistoryCSV() {
     const { projectId, surveyId } = this.props
-    window.location = routes.respondentsDispositionHistoryCSV(projectId, surveyId)
+    api.triggerRespondentsDispositionHistoryCSV(projectId, surveyId)
   }
-
+  
   downloadIncentivesCSV() {
     const { projectId, surveyId } = this.props
-    window.location = routes.respondentsIncentivesCSV(projectId, surveyId)
+    api.triggerRespondentsIncentivesCSV(projectId, surveyId)
   }
-
+  
   downloadInteractionsCSV() {
     const { projectId, surveyId } = this.props
-    window.location = routes.respondentsInteractionsCSV(projectId, surveyId)
+    api.triggerRespondentsInteractionsCSV(projectId, surveyId)
   }
 
   sortBy(name) {
