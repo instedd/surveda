@@ -16,6 +16,7 @@ defmodule Ask.SurveyResults do
     Repo,
     Respondent,
     RespondentDispositionHistory,
+    RespondentsFilter,
     Stats,
     Survey,
     SurveyLogEntry
@@ -196,7 +197,7 @@ defmodule Ask.SurveyResults do
     tz_offset = Survey.timezone_offset(survey)
 
     questionnaires = (survey |> Repo.preload(:questionnaires)).questionnaires
-    all_fields = Questionnaire.all_questionnaires_fields(questionnaires, true)
+    all_fields = all_questionnaires_fields(questionnaires, true)
     has_comparisons = length(survey.comparisons) > 0
 
     respondents = survey_respondents_where(survey, filter)
@@ -302,7 +303,7 @@ defmodule Ask.SurveyResults do
             response =
               responses
               |> Enum.filter(fn response ->
-                response.field_name |> Questionnaire.sanitize_variable_name() == field_name
+                response.field_name |> sanitize_variable_name() == field_name
               end)
 
             case response do
@@ -451,29 +452,6 @@ defmodule Ask.SurveyResults do
     Ask.TimeUtil.format(dt, tz_offset_in_seconds, tz_offset)
   end
 
-  defp experiment_name(quiz, mode) do
-    "#{questionnaire_name(quiz)} - #{mode_label(mode)}"
-  end
-
-  defp mode_label(mode) do
-    case mode do
-      ["sms"] -> "SMS"
-      ["sms", "ivr"] -> "SMS with phone call fallback"
-      ["sms", "mobileweb"] -> "SMS with Mobile Web fallback"
-      ["ivr"] -> "Phone call"
-      ["ivr", "sms"] -> "Phone call with SMS fallback"
-      ["ivr", "mobileweb"] -> "Phone call with Mobile Web fallback"
-      ["mobileweb"] -> "Mobile Web"
-      ["mobileweb", "sms"] -> "Mobile Web with SMS fallback"
-      ["mobileweb", "ivr"] -> "Mobile Web with phone call fallback"
-      _ -> "Unknown mode"
-    end
-  end
-
-  defp questionnaire_name(quiz) do
-    quiz.name || "Untitled questionnaire"
-  end
-
   defp survey_respondent_questionnaires(survey) do
     from(q in Questionnaire,
       where:
@@ -496,20 +474,10 @@ defmodule Ask.SurveyResults do
 
   defp respondent_stat(respondent, key), do: apply(Stats, key, [respondent.stats])
 
-  # FIXME: duplicated from respondent_controller
-  # defp all_questionnaires_fields(questionnaires, sanitize) do
-  #   fields =
-  #   questionnaires
-  #   |> Enum.flat_map(&Questionnaire.variables/1)
-  #   |> Enum.uniq()
-  #   |> Enum.reject(fn s -> String.length(s) == 0 end)
-
-  #   if sanitize, do: sanitize_fields(fields), else: fields
-  # end
-
-  # FIXME: duplicated from respondent_controller
-  defp sanitize_fields(fields),
-    do: Enum.map(fields, fn field -> Questionnaire.sanitize_variable_name(field) end)
+  def sanitize_variable_name(variable), do: variable |>  String.trim() |> String.replace(" ", "_")
+  
+  defp sanitize_variable_names(fields),
+    do: Enum.map(fields, &sanitize_variable_name/1)
 
   defp experiment_name(quiz, mode) do
     "#{questionnaire_name(quiz)} - #{mode_label(mode)}"
@@ -609,5 +577,15 @@ defmodule Ask.SurveyResults do
     else
       respondents
     end
+  end
+
+  def all_questionnaires_fields(questionnaires, sanitize \\ false) do
+    fields =
+    questionnaires
+    |> Enum.flat_map(&Questionnaire.variables/1)
+    |> Enum.uniq()
+    |> Enum.reject(fn s -> String.length(s) == 0 end)
+    
+    if sanitize, do: sanitize_variable_names(fields), else: fields
   end
 end
