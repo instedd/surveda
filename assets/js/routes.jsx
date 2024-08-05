@@ -132,16 +132,6 @@ export const surveyRespondents = (projectId, surveyId, q) =>
 export const surveySettings = (projectId, surveyId) => `${survey(projectId, surveyId)}/settings`
 export const surveyIntegrations = (projectId, surveyId) =>
   `${survey(projectId, surveyId)}/integrations`
-export const respondentsResultsCSV = (projectId, surveyId, q) =>
-  `/api/v1${surveyRespondents(projectId, surveyId)}/results?_format=csv${
-    (q && `&q=${encodeURIComponent(q)}`) || ""
-  }`
-export const respondentsDispositionHistoryCSV = (projectId, surveyId) =>
-  `/api/v1${surveyRespondents(projectId, surveyId)}/disposition_history?_format=csv`
-export const respondentsIncentivesCSV = (projectId, surveyId) =>
-  `/api/v1${surveyRespondents(projectId, surveyId)}/incentives?_format=csv`
-export const respondentsInteractionsCSV = (projectId, surveyId) =>
-  `/api/v1${surveyRespondents(projectId, surveyId)}/interactions?_format=csv`
 export const surveyEdit = (projectId, surveyId) => `${survey(projectId, surveyId)}/edit`
 export const surveyFolderNew = (projectId, surveyId) => `${survey(projectId, surveyId)}/folders/new`
 export const questionnaireIndex = (projectId) => `${project(projectId)}/questionnaires`
