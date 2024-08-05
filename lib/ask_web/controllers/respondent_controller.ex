@@ -88,7 +88,7 @@ defmodule AskWeb.RespondentController do
   defp index_fields_for_render("response" = field_type, questionnaires) do
     order_alphabetically = &(String.downcase(&1) < String.downcase(&2))
 
-    all_questionnaires_fields(questionnaires)
+    Questionnaire.all_questionnaires_fields(questionnaires)
     |> Enum.sort(&order_alphabetically.(&1, &2))
     |> map_fields_with_type(field_type)
   end
@@ -712,7 +712,7 @@ defmodule AskWeb.RespondentController do
     filter = add_params_to_filter(filter, params)
 
     # filter_where = RespondentsFilter.filter_where(filter, optimized: true)
-    respondents = Ask.Survey.respondents_where(survey, filter)
+    respondents = SurveyFilesManager.survey_respondents_where(survey, filter)
 
     partial_relevant_enabled = Survey.partial_relevant_enabled?(survey, true)
 
@@ -746,16 +746,6 @@ defmodule AskWeb.RespondentController do
     ActivityLog.download(project, conn, survey, "survey_results") |> Repo.insert()
 
     conn |> send_resp(200, "OK")
-  end
-
-  defp all_questionnaires_fields(questionnaires, sanitize \\ false) do
-    fields =
-      questionnaires
-      |> Enum.flat_map(&Questionnaire.variables/1)
-      |> Enum.uniq()
-      |> Enum.reject(fn s -> String.length(s) == 0 end)
-
-    if sanitize, do: sanitize_fields(fields), else: fields
   end
 
   defp sanitize_fields(fields),
