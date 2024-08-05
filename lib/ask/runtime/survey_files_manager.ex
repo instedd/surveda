@@ -193,14 +193,13 @@ defmodule Ask.Runtime.SurveyFilesManager do
   end
 
   defp do_generate_file(:respondent_result, survey, filter) do
-
     tz_offset = Survey.timezone_offset(survey)
-    
+
     questionnaires = (survey |> Repo.preload(:questionnaires)).questionnaires
-    all_fields = all_questionnaires_fields(questionnaires, true)
+    all_fields = Questionnaire.all_questionnaires_fields(questionnaires, true)
     has_comparisons = length(survey.comparisons) > 0
 
-    respondents = Ask.Survey.respondents_where(survey, filter)
+    respondents = survey_respondents_where(survey, filter)
 
     stats =
       survey.mode
@@ -303,7 +302,7 @@ defmodule Ask.Runtime.SurveyFilesManager do
             response =
               responses
               |> Enum.filter(fn response ->
-                response.field_name |> Questionnaire.sanitize_variable_name == field_name
+                response.field_name |> Questionnaire.sanitize_variable_name() == field_name
               end)
 
             case response do
@@ -474,45 +473,68 @@ defmodule Ask.Runtime.SurveyFilesManager do
   defp questionnaire_name(quiz) do
     quiz.name || "Untitled questionnaire"
   end
-  
+
   defp survey_respondent_questionnaires(survey) do
     from(q in Questionnaire,
-    where:
-    q.id in subquery(
-      from(r in Respondent,
-      distinct: true,
-      select: r.questionnaire_id,
-      where: r.survey_id == ^survey.id
-      )
-      )
-      )
-      |> Repo.all()
-    end
-    
+      where:
+        q.id in subquery(
+          from(r in Respondent,
+            distinct: true,
+            select: r.questionnaire_id,
+            where: r.survey_id == ^survey.id
+          )
+        )
+    )
+    |> Repo.all()
+  end
+
   defp respondent_stat(respondent, :sms_attempts), do: respondent.stats |> Stats.attempts(:sms)
   defp respondent_stat(respondent, :ivr_attempts), do: respondent.stats |> Stats.attempts(:ivr)
-  
+
   defp respondent_stat(respondent, :mobileweb_attempts),
-  do: respondent.stats |> Stats.attempts(:mobileweb)
-  
+    do: respondent.stats |> Stats.attempts(:mobileweb)
+
   defp respondent_stat(respondent, key), do: apply(Stats, key, [respondent.stats])
-  
+
   # FIXME: duplicated from respondent_controller
-  defp all_questionnaires_fields(questionnaires, sanitize) do
-    fields =
-    questionnaires
-    |> Enum.flat_map(&Questionnaire.variables/1)
-    |> Enum.uniq()
-    |> Enum.reject(fn s -> String.length(s) == 0 end)
-    
-    if sanitize, do: sanitize_fields(fields), else: fields
-  end
-  
+  # defp all_questionnaires_fields(questionnaires, sanitize) do
+  #   fields =
+  #   questionnaires
+  #   |> Enum.flat_map(&Questionnaire.variables/1)
+  #   |> Enum.uniq()
+  #   |> Enum.reject(fn s -> String.length(s) == 0 end)
+
+  #   if sanitize, do: sanitize_fields(fields), else: fields
+  # end
+
   # FIXME: duplicated from respondent_controller
   defp sanitize_fields(fields),
     do: Enum.map(fields, fn field -> Questionnaire.sanitize_variable_name(field) end)
 
-  ## Public API
+  defp experiment_name(quiz, mode) do
+    "#{questionnaire_name(quiz)} - #{mode_label(mode)}"
+  end
+
+  defp mode_label(mode) do
+    case mode do
+      ["sms"] -> "SMS"
+      ["sms", "ivr"] -> "SMS with phone call fallback"
+      ["sms", "mobileweb"] -> "SMS with Mobile Web fallback"
+      ["ivr"] -> "Phone call"
+      ["ivr", "sms"] -> "Phone call with SMS fallback"
+      ["ivr", "mobileweb"] -> "Phone call with Mobile Web fallback"
+      ["mobileweb"] -> "Mobile Web"
+      ["mobileweb", "sms"] -> "Mobile Web with SMS fallback"
+      ["mobileweb", "ivr"] -> "Mobile Web with phone call fallback"
+      _ -> "Unknown mode"
+    end
+  end
+
+  defp questionnaire_name(quiz) do
+    quiz.name || "Untitled questionnaire"
+  end
+
+  ## Public GenServer API
   def generate_interactions_file(survey_id) do
     Logger.info("Enqueueing generation of survey (id: #{survey_id}) interaction file")
     GenServer.cast(server_ref(), {:interactions, survey_id, nil})
@@ -531,5 +553,61 @@ defmodule Ask.Runtime.SurveyFilesManager do
   def generate_respondent_result_file(survey_id, filters) do
     Logger.info("Enqueueing generation of survey (id: #{survey_id}) disposition_history file")
     GenServer.cast(server_ref(), {:respondent_result, survey_id, filters})
+  end
+
+  ## Public Module
+  def survey_respondents_where(survey, filter) do
+    filter_where = RespondentsFilter.filter_where(filter, optimized: true)
+
+    respondents =
+      Stream.resource(
+        fn -> 0 end,
+        fn last_seen_id ->
+          results =
+            from(r1 in Respondent,
+              join: r2 in Respondent,
+              on: r1.id == r2.id,
+              where: r2.survey_id == ^survey.id and r2.id > ^last_seen_id,
+              where: ^filter_where,
+              order_by: r2.id,
+              limit: @db_chunk_limit,
+              preload: [:responses, :respondent_group],
+              select: r1
+            )
+            |> Repo.all()
+
+          case List.last(results) do
+            %{id: last_id} -> {results, last_id}
+            nil -> {:halt, last_seen_id}
+          end
+        end,
+        fn _ -> [] end
+      )
+
+    survey_has_comparisons = length(survey.comparisons) > 0
+    questionnaires = (survey |> Repo.preload(:questionnaires)).questionnaires
+
+    if survey_has_comparisons do
+      respondents
+      |> Stream.map(fn respondent ->
+        experiment_name =
+          if respondent.questionnaire_id && respondent.mode do
+            questionnaire =
+              questionnaires |> Enum.find(fn q -> q.id == respondent.questionnaire_id end)
+
+            if questionnaire do
+              experiment_name(questionnaire, respondent.mode)
+            else
+              "-"
+            end
+          else
+            "-"
+          end
+
+        %{respondent | experiment_name: experiment_name}
+      end)
+    else
+      respondents
+    end
   end
 end
