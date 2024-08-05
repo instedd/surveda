@@ -18,7 +18,6 @@ defmodule Ask.Survey do
     FloipEndpoint,
     Folder,
     RespondentStats,
-    RespondentsFilter,
     ConfigHelper,
     SystemTime,
     PanelSurvey
