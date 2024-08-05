@@ -43,7 +43,7 @@ defmodule Ask do
             worker(Ask.Runtime.ChannelStatusServer, []),
             worker(Ask.Config, []),
             worker(Ask.Runtime.QuestionnaireSimulatorStore, []),
-            worker(Ask.Runtime.SurveyFilesManager, [])
+            worker(Ask.SurveyResults, [])
             | children
           ] ++ [
               # SurveyCancellerSupervisor depends on Ask.Repo, so must be started (and declared!) after it
