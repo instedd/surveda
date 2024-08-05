@@ -146,6 +146,8 @@ defmodule Ask.Questionnaire do
     nil
   end
 
+  def sanitize_variable_name(s), do: s |> String.trim() |> String.replace(" ", "_")
+
   def all_steps(%Questionnaire{steps: steps, quota_completed_steps: nil}) do
     get_steps(steps)
   end
