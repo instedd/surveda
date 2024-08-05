@@ -156,6 +156,16 @@ defmodule Ask.Questionnaire do
     get_steps(steps) ++ quota_completed_steps
   end
 
+  def all_questionnaires_fields(questionnaires, sanitize) do
+    fields =
+    questionnaires
+    |> Enum.flat_map(&Questionnaire.variables/1)
+    |> Enum.uniq()
+    |> Enum.reject(fn s -> String.length(s) == 0 end)
+    
+    if sanitize, do: sanitize_fields(fields), else: fields
+  end
+
   defp get_steps(steps) do
     result =
       steps
