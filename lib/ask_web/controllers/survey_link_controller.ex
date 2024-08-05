@@ -20,7 +20,7 @@ defmodule AskWeb.SurveyLinkController do
         "results" ->
           {
             Survey.link_name(survey, :results),
-            project_survey_respondents_results_path(conn, :results, project, survey, %{
+            project_survey_get_respondents_results_path(conn, :results, project, survey, %{
               "_format" => "csv"
             })
           }
