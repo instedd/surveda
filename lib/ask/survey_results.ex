@@ -6,7 +6,7 @@
 ## When a process is hibernated it will continue the loop once a message is in its
 ## message queue. If when returning a handle_* call there is already a message
 ## in the message queue, the process will continue the loop immediately. 
-defmodule Ask.Runtime.SurveyFilesManager do
+defmodule Ask.SurveyResults do
   use GenServer
   require Ask.RespondentStats
 
@@ -35,7 +35,7 @@ defmodule Ask.Runtime.SurveyFilesManager do
 
   @impl true
   def init(state) do
-    Logger.info("SurveyFilesManager started")
+    Logger.info("SurveyResults started")
     {:ok, state}
   end
 

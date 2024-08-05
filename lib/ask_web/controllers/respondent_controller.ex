@@ -12,7 +12,7 @@ defmodule AskWeb.RespondentController do
     RespondentsFilter
   }
 
-  alias Ask.Runtime.SurveyFilesManager
+  alias Ask.SurveyResults
 
   def index(conn, %{"project_id" => project_id, "survey_id" => survey_id} = params) do
     limit = Map.get(params, "limit", "")
@@ -712,7 +712,7 @@ defmodule AskWeb.RespondentController do
     filter = add_params_to_filter(filter, params)
 
     # filter_where = RespondentsFilter.filter_where(filter, optimized: true)
-    respondents = SurveyFilesManager.survey_respondents_where(survey, filter)
+    respondents = SurveyResults.survey_respondents_where(survey, filter)
 
     partial_relevant_enabled = Survey.partial_relevant_enabled?(survey, true)
 
@@ -741,7 +741,7 @@ defmodule AskWeb.RespondentController do
     # ?param1=value is more specific than ?q=param1:value
     filter = add_params_to_filter(filter, params)
 
-    SurveyFilesManager.generate_respondent_result_file(survey_id, filter)
+    SurveyResults.generate_respondent_result_file(survey_id, filter)
 
     ActivityLog.download(project, conn, survey, "survey_results") |> Repo.insert()
 
@@ -778,7 +778,7 @@ defmodule AskWeb.RespondentController do
     # and add another log when actually downloading?
     ActivityLog.download(project, conn, survey, "disposition_history") |> Repo.insert()
 
-    SurveyFilesManager.generate_disposition_history_file(survey_id)
+    SurveyResults.generate_disposition_history_file(survey_id)
     conn |> send_resp(200, "OK")
   end
 
@@ -797,7 +797,7 @@ defmodule AskWeb.RespondentController do
     # and add another log when actually downloading?
     ActivityLog.download(project, conn, survey, "incentives") |> Repo.insert()
 
-    SurveyFilesManager.generate_incentives_file(survey_id)
+    SurveyResults.generate_incentives_file(survey_id)
     conn |> send_resp(200, "OK")
   end
 
@@ -809,7 +809,7 @@ defmodule AskWeb.RespondentController do
     # and add another log when actually downloading?
     ActivityLog.download(project, conn, survey, "interactions") |> Repo.insert()
 
-    SurveyFilesManager.generate_interactions_file(survey_id)
+    SurveyResults.generate_interactions_file(survey_id)
     conn |> send_resp(200, "OK")
   end
 
