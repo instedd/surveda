@@ -8,7 +8,6 @@ defmodule AskWeb.RespondentController do
     Logger,
     Questionnaire,
     Respondent,
-    Stats,
     Survey,
     RespondentsFilter
   }
@@ -701,19 +700,9 @@ defmodule AskWeb.RespondentController do
     |> Enum.into(%{})
   end
 
-  def sanitize_variable_name(s), do: s |> String.trim() |> String.replace(" ", "_")
-
   def results(conn, %{"project_id" => project_id, "survey_id" => survey_id} = params) do
     project = load_project(conn, project_id)
     survey = load_survey(project, survey_id)
-
-    tz_offset = Survey.timezone_offset(survey)
-
-    questionnaires = (survey |> Repo.preload(:questionnaires)).questionnaires
-    has_comparisons = length(survey.comparisons) > 0
-
-    # We first need to get all unique field names in all questionnaires
-    all_fields = all_questionnaires_fields(questionnaires, true)
 
     # The new filters, shared by the index and the downloaded CSV file
     filter = RespondentsFilter.parse(Map.get(params, "q", ""))
@@ -770,7 +759,7 @@ defmodule AskWeb.RespondentController do
   end
 
   defp sanitize_fields(fields),
-    do: Enum.map(fields, fn field -> sanitize_variable_name(field) end)
+    do: Enum.map(fields, fn field -> Questionnaire.sanitize_variable_name(field) end)
 
   defp add_params_to_filter(filter, params) do
     filter =
@@ -790,14 +779,6 @@ defmodule AskWeb.RespondentController do
 
     filter
   end
-
-  defp respondent_stat(respondent, :sms_attempts), do: respondent.stats |> Stats.attempts(:sms)
-  defp respondent_stat(respondent, :ivr_attempts), do: respondent.stats |> Stats.attempts(:ivr)
-
-  defp respondent_stat(respondent, :mobileweb_attempts),
-    do: respondent.stats |> Stats.attempts(:mobileweb)
-
-  defp respondent_stat(respondent, key), do: apply(Stats, key, [respondent.stats])
 
   def disposition_history(conn, %{"project_id" => project_id, "survey_id" => survey_id}) do
     project = load_project(conn, project_id)
@@ -844,13 +825,6 @@ defmodule AskWeb.RespondentController do
 
   defp mask_phone_numbers(respondent) do
     %{respondent | phone_number: Respondent.mask_phone_number(respondent.phone_number)}
-  end
-
-  defp csv_filename(survey, prefix) do
-    name = survey.name || "survey_id_#{survey.id}"
-    name = Regex.replace(~r/[^a-zA-Z0-9_]/, name, "_")
-    prefix = "#{name}-#{prefix}"
-    Timex.format!(DateTime.utc_now(), "#{prefix}_%Y-%m-%d-%H-%M-%S.csv", :strftime)
   end
 
   defp load_survey(project, survey_id) do

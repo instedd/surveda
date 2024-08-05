@@ -219,7 +219,6 @@ defmodule Ask.Runtime.SurveyFilesManager do
 
     tz_offset_in_seconds = Survey.timezone_offset_in_seconds(survey)
     partial_relevant_enabled = Survey.partial_relevant_enabled?(survey, true)
-    respondents_count = Ask.RespondentStats.respondent_count(survey_id: ^survey.id)
 
     # Now traverse each respondent and create a row for it
     csv_rows =
@@ -304,7 +303,7 @@ defmodule Ask.Runtime.SurveyFilesManager do
             response =
               responses
               |> Enum.filter(fn response ->
-                response.field_name |> sanitize_variable_name == field_name
+                response.field_name |> Questionnaire.sanitize_variable_name == field_name
               end)
 
             case response do
@@ -357,7 +356,7 @@ defmodule Ask.Runtime.SurveyFilesManager do
     write_to_file(:respondent_result, survey, rows)
   end
 
-  defp do_generate_file(file_type, _),
+  defp do_generate_file(file_type, _, _),
     do: Logger.warn("No function for generating #{file_type} files")
 
   defp write_to_file(file_type, survey, rows) do
@@ -431,7 +430,6 @@ defmodule Ask.Runtime.SurveyFilesManager do
     end
   end
 
-  # FIXME: duplicated from respondent_controller
   defp csv_filename(survey, prefix) do
     prefix = survey_filename_prefix(survey, prefix)
     Timex.format!(DateTime.utc_now(), "#{prefix}_%Y-%m-%d-%H-%M-%S.csv", :strftime)
@@ -454,12 +452,10 @@ defmodule Ask.Runtime.SurveyFilesManager do
     Ask.TimeUtil.format(dt, tz_offset_in_seconds, tz_offset)
   end
 
-  # FIXME: duplicated from respondent_controller
   defp experiment_name(quiz, mode) do
     "#{questionnaire_name(quiz)} - #{mode_label(mode)}"
   end
 
-  # FIXME: duplicated from respondent_controller
   defp mode_label(mode) do
     case mode do
       ["sms"] -> "SMS"
@@ -475,7 +471,6 @@ defmodule Ask.Runtime.SurveyFilesManager do
     end
   end
 
-  # FIXME: duplicated from respondent_controller
   defp questionnaire_name(quiz) do
     quiz.name || "Untitled questionnaire"
   end
@@ -494,7 +489,6 @@ defmodule Ask.Runtime.SurveyFilesManager do
       |> Repo.all()
     end
     
-  # FIXME: duplicated from respondent_controller
   defp respondent_stat(respondent, :sms_attempts), do: respondent.stats |> Stats.attempts(:sms)
   defp respondent_stat(respondent, :ivr_attempts), do: respondent.stats |> Stats.attempts(:ivr)
   
@@ -504,7 +498,7 @@ defmodule Ask.Runtime.SurveyFilesManager do
   defp respondent_stat(respondent, key), do: apply(Stats, key, [respondent.stats])
   
   # FIXME: duplicated from respondent_controller
-  defp all_questionnaires_fields(questionnaires, sanitize \\ false) do
+  defp all_questionnaires_fields(questionnaires, sanitize) do
     fields =
     questionnaires
     |> Enum.flat_map(&Questionnaire.variables/1)
@@ -515,11 +509,8 @@ defmodule Ask.Runtime.SurveyFilesManager do
   end
   
   # FIXME: duplicated from respondent_controller
-  def sanitize_variable_name(s), do: s |> String.trim() |> String.replace(" ", "_")
-  
-  # FIXME: duplicated from respondent_controller
   defp sanitize_fields(fields),
-    do: Enum.map(fields, fn field -> sanitize_variable_name(field) end)
+    do: Enum.map(fields, fn field -> Questionnaire.sanitize_variable_name(field) end)
 
   ## Public API
   def generate_interactions_file(survey_id) do
