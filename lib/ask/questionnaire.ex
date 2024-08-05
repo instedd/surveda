@@ -146,24 +146,12 @@ defmodule Ask.Questionnaire do
     nil
   end
 
-  def sanitize_variable_name(s), do: s |> String.trim() |> String.replace(" ", "_")
-
   def all_steps(%Questionnaire{steps: steps, quota_completed_steps: nil}) do
     get_steps(steps)
   end
 
   def all_steps(%Questionnaire{steps: steps, quota_completed_steps: quota_completed_steps}) do
     get_steps(steps) ++ quota_completed_steps
-  end
-
-  def all_questionnaires_fields(questionnaires, sanitize) do
-    fields =
-    questionnaires
-    |> Enum.flat_map(&Questionnaire.variables/1)
-    |> Enum.uniq()
-    |> Enum.reject(fn s -> String.length(s) == 0 end)
-    
-    if sanitize, do: sanitize_fields(fields), else: fields
   end
 
   defp get_steps(steps) do

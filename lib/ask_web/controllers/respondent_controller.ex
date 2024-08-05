@@ -6,7 +6,6 @@ defmodule AskWeb.RespondentController do
     ActivityLog,
     CompletedRespondents,
     Logger,
-    Questionnaire,
     Respondent,
     Survey,
     RespondentsFilter
@@ -88,7 +87,7 @@ defmodule AskWeb.RespondentController do
   defp index_fields_for_render("response" = field_type, questionnaires) do
     order_alphabetically = &(String.downcase(&1) < String.downcase(&2))
 
-    Questionnaire.all_questionnaires_fields(questionnaires)
+    SurveyResults.all_questionnaires_fields(questionnaires)
     |> Enum.sort(&order_alphabetically.(&1, &2))
     |> map_fields_with_type(field_type)
   end
@@ -747,9 +746,6 @@ defmodule AskWeb.RespondentController do
 
     conn |> send_resp(200, "OK")
   end
-
-  defp sanitize_fields(fields),
-    do: Enum.map(fields, fn field -> Questionnaire.sanitize_variable_name(field) end)
 
   defp add_params_to_filter(filter, params) do
     filter =
