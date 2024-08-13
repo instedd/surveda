@@ -359,10 +359,14 @@ defmodule Ask.SurveyResults do
   defp do_generate_file(file_type, _, _),
     do: Logger.warn("No function for generating #{file_type} files")
 
-  defp write_to_file(file_type, survey, rows) do
+  def file_path(survey, file_type) do
     filename = csv_filename(survey, file_prefix(file_type))
+    "#{@target_dir}/#{filename}"
+  end
+
+  defp write_to_file(file_type, survey, rows) do
     File.mkdir_p!(@target_dir)
-    file = File.open!("#{@target_dir}/#{filename}", [:write, :utf8])
+    file = File.open!(file_path(survey, file_type), [:write, :utf8])
     initial_datetime = Timex.now()
 
     rows
@@ -382,8 +386,10 @@ defmodule Ask.SurveyResults do
   defp file_prefix(:respondent_result), do: "respondents"
   defp file_prefix(_), do: ""
 
-  defp should_generate_file(:interactions, survey) do
+  # FIXME: we probably don't need to check if we should generate the file
+  defp should_generate_file(:xxxx_interactions, survey) do
     # TODO: when do we want to skip the re-generation of the file?
+    File.mkdir_p!(@target_dir) # ensure the directory exists
     existing_files = File.ls!(@target_dir)
 
     exists_file =
