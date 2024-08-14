@@ -1,7 +1,10 @@
 defmodule Ask.SurveyResultsTest do
   use Ask.DataCase
+  use Ask.DummySteps
 
   alias Ask.{
+    RespondentsFilter,
+    Stats,
     SurveyLogEntry,
     SurveyResults,
   }
@@ -137,5 +140,137 @@ defmodule Ask.SurveyResultsTest do
     lines = File.read!(path) |> String.split("\r\n") |> Enum.reject(fn x -> String.length(x) == 0 end)
     assert length(lines) == length(expected_list)
     assert lines == expected_list
+  end
+
+  test "generates results csv" do
+    project = insert(:project)
+    questionnaire = insert(:questionnaire, name: "test", project: project, steps: @dummy_steps)
+
+    survey =
+      insert(:survey,
+        project: project,
+        cutoff: 4,
+        questionnaires: [questionnaire],
+        state: :ready,
+        schedule: completed_schedule(),
+        mode: [["sms", "ivr"], ["mobileweb"], ["sms", "mobileweb"]]
+      )
+
+    group_1 = insert(:respondent_group)
+
+    respondent_1 =
+      insert(:respondent,
+        survey: survey,
+        hashed_number: "1asd12451eds",
+        disposition: "partial",
+        effective_modes: ["sms", "ivr"],
+        respondent_group: group_1,
+        stats: %Stats{
+          total_received_sms: 4,
+          total_sent_sms: 3,
+          total_call_time_seconds: 12,
+          call_durations: %{"call-3" => 45},
+          attempts: %{sms: 1, mobileweb: 2, ivr: 3},
+          pending_call: false
+        }
+      )
+
+    insert(:response, respondent: respondent_1, field_name: "Smokes", value: "Yes")
+    insert(:response, respondent: respondent_1, field_name: "Exercises", value: "No")
+    insert(:response, respondent: respondent_1, field_name: "Perfect Number", value: "100")
+    group_2 = insert(:respondent_group)
+
+    respondent_2 =
+      insert(:respondent,
+        survey: survey,
+        hashed_number: "34y5345tjyet",
+        effective_modes: ["mobileweb"],
+        respondent_group: group_2,
+        stats: %Stats{total_sent_sms: 1},
+        user_stopped: true
+      )
+
+    insert(:response, respondent: respondent_2, field_name: "Smokes", value: "No")
+
+    assert {:noreply, _, _} = SurveyResults.handle_cast({:respondent_result, survey.id, %RespondentsFilter{}}, nil)
+
+    path = SurveyResults.file_path(survey, :respondent_result)
+    csv = File.read!(path)
+
+    [line1, line2, line3, _] = csv |> String.split("\r\n")
+
+    assert line1 ==
+              "respondent_id,disposition,date,modes,user_stopped,total_sent_sms,total_received_sms,sms_attempts,total_call_time,ivr_attempts,mobileweb_attempts,section_order,sample_file,Smokes,Exercises,Perfect_Number,Question"
+
+    [
+      line_2_hashed_number,
+      line_2_disp,
+      _,
+      line_2_modes,
+      line_2_user_stopped,
+      line_2_total_sent_sms,
+      line_2_total_received_sms,
+      line_2_sms_attempts,
+      line_2_total_call_time,
+      line_2_ivr_attempts,
+      line_2_mobileweb_attempts,
+      line_2_section_order,
+      line_2_respondent_group,
+      line_2_smoke,
+      line_2_exercises,
+      line_2_perfect_number,
+      _
+    ] = [line2] |> Stream.map(& &1) |> CSV.decode() |> Enum.to_list() |> hd
+
+    assert line_2_hashed_number == respondent_1.hashed_number
+    assert line_2_modes == "SMS, Phone call"
+    assert line_2_respondent_group == group_1.name
+    assert line_2_smoke == "Yes"
+    assert line_2_exercises == "No"
+    assert line_2_disp == "Partial"
+    assert line_2_total_sent_sms == "3"
+    assert line_2_total_received_sms == "4"
+    assert line_2_total_call_time == "0m 57s"
+    assert line_2_perfect_number == "100"
+    assert line_2_section_order == ""
+    assert line_2_sms_attempts == "1"
+    assert line_2_mobileweb_attempts == "2"
+    assert line_2_ivr_attempts == "3"
+    assert line_2_user_stopped == "false"
+
+    [
+      line_3_hashed_number,
+      line_3_disp,
+      _,
+      line_3_modes,
+      line_3_user_stopped,
+      line_3_total_sent_sms,
+      line_3_total_received_sms,
+      line_3_sms_attempts,
+      line_3_total_call_time,
+      line_3_ivr_attempts,
+      line_3_mobileweb_attempts,
+      line_3_section_order,
+      line_3_respondent_group,
+      line_3_smoke,
+      line_3_exercises,
+      _,
+      _
+    ] = [line3] |> Stream.map(& &1) |> CSV.decode() |> Enum.to_list() |> hd
+
+    assert line_3_hashed_number == respondent_2.hashed_number
+    assert line_3_modes == "Mobile Web"
+    assert line_3_respondent_group == group_2.name
+    assert line_3_smoke == "No"
+    assert line_3_exercises == ""
+    assert line_3_disp == "Registered"
+    assert line_3_total_sent_sms == "1"
+    assert line_3_total_received_sms == "0"
+    assert line_3_total_call_time == "0m 0s"
+    assert line_3_section_order == ""
+    assert line_3_sms_attempts == "0"
+    assert line_3_mobileweb_attempts == "0"
+    assert line_3_ivr_attempts == "0"
+    assert line_3_user_stopped == "true"
   end
 end
