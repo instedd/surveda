@@ -194,14 +194,14 @@ defmodule AskWeb.Router do
 
             get "/results", RespondentController, :results, as: :get_respondents_results
             
-            post "/results", RespondentController, :trigger_results, as: :respondents_results
+            post "/results", RespondentController, :generate_results, as: :respondents_results
 
-            post "/disposition_history", RespondentController, :disposition_history,
+            post "/disposition_history", RespondentController, :generate_disposition_history,
               as: :respondents_disposition_history
 
-            post "/incentives", RespondentController, :incentives, as: :respondents_incentives
+            post "/incentives", RespondentController, :generate_incentives, as: :respondents_incentives
 
-            post "/interactions", RespondentController, :interactions,
+            post "/interactions", RespondentController, :generate_interactions,
               as: :respondents_interactions
           end
         end
