@@ -9,6 +9,12 @@ defmodule AskWeb.ShortLinkController do
       ShortLink
       |> Repo.get_by(hash: hash)
 
+    unless link do
+      conn
+      |> put_status(:not_found)
+      |> send_resp(:not_found, "")
+    end
+
     conn =
       conn
       |> assign(:skip_auth, true)

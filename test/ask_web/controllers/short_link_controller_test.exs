@@ -14,6 +14,14 @@ defmodule AskWeb.ShortLinkControllerTest do
     {:ok, conn: conn, user: user}
   end
 
+  test "return 404 for an invalid link", %{
+    conn: conn
+  } do
+    conn = get(conn, short_link_path(conn, :access, "invalid-link"))
+
+    assert html_response(conn, 404)
+  end
+
   test "render surveys if the link specifies that endpoint even if there is no current user", %{
     conn: conn,
     user: user
