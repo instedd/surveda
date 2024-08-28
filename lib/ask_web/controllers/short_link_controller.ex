@@ -35,7 +35,7 @@ defmodule AskWeb.ShortLinkController do
       AskWeb.Endpoint.call(conn, [])
     else
       conn
-      |> send_resp(:not_found, "")
+      |> send_resp(:not_found, "Link not found")
     end
   end
 
