@@ -19,7 +19,7 @@ defmodule AskWeb.ShortLinkControllerTest do
   } do
     conn = get(conn, short_link_path(conn, :access, "invalid-link"))
 
-    assert response(conn, 404)
+    assert response(conn, 404) == "Link not found"
   end
 
   test "render surveys if the link specifies that endpoint even if there is no current user", %{
