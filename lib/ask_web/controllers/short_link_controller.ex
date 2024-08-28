@@ -9,6 +9,21 @@ defmodule AskWeb.ShortLinkController do
       ShortLink
       |> Repo.get_by(hash: hash)
 
+    resolve_link(conn, link)
+  end
+
+  # Copied from Plug.Adapters.Cowboy.Conn
+  defp split_path(path) do
+    segments = :binary.split(path, "/", [:global])
+    for segment <- segments, segment != "", do: segment
+  end
+
+  defp resolve_link(conn, nil) do
+    conn
+    |> send_resp(:not_found, "Link not found")
+  end
+
+  defp resolve_link(conn, link) do
     conn =
       conn
       |> assign(:skip_auth, true)
@@ -32,11 +47,5 @@ defmodule AskWeb.ShortLinkController do
     }
 
     AskWeb.Endpoint.call(conn, [])
-  end
-
-  # Copied from Plug.Adapters.Cowboy.Conn
-  defp split_path(path) do
-    segments = :binary.split(path, "/", [:global])
-    for segment <- segments, segment != "", do: segment
   end
 end
