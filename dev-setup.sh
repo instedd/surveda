@@ -16,5 +16,6 @@ docker compose run --rm webpack yarn install
 
 echo "$COLOR_LIGHT_BLUE 🧑‍🔧 Setting up database... $COLOR_REST"
 docker compose run --rm app mix ecto.setup
+docker compose run --rm -e MIX_ENV=test app mix ecto.setup
 
 echo "$COLOR_LIGHT_BLUE ✨ Everything ready! $COLOR_REST"
