@@ -44,7 +44,7 @@ config :ask, Verboice,
     app_id: "AN_APP_ID"
   ]
 
-config :ask, Ask.Mailer, adapter: Swoosh.Adapters.Test
+config :ask, Ask.Mailer, adapter: Ask.Swoosh.Adapters.Test
 
 config :ask, AskWeb.Email,
   smtp_from_address: {:system, "SMTP_FROM_ADDRESS", "Test name <test@email>"}

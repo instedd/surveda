@@ -1,6 +1,5 @@
 defmodule AskWeb.InviteControllerTest do
   import Ecto.Query
-  import Swoosh.TestAssertions
 
   use AskWeb.ConnCase
   use Ask.TestHelpers
@@ -1072,6 +1071,7 @@ defmodule AskWeb.InviteControllerTest do
   end
 
   test "send invite to new user", %{conn: conn, user: user} do
+    Process.register(self(), :mail_target)
     project = create_project_for_user(user)
     code = "ABC1234"
     level = "reader"
@@ -1087,12 +1087,15 @@ defmodule AskWeb.InviteControllerTest do
       })
     )
 
-    assert_email_sent(subject: "#{user.name} has invited you to collaborate on #{project.name}.")
-
     assert json_response(conn, 200)
+
+    email = wait_for_email()
+
+    assert email.subject == "#{user.name} has invited you to collaborate on #{project.name}."
   end
 
   test "send invite to existing user", %{conn: conn, user: user} do
+    Process.register self(), :mail_target
     project = create_project_for_user(user)
     code = "ABC1234"
     level = "reader"
@@ -1111,8 +1114,16 @@ defmodule AskWeb.InviteControllerTest do
       })
     )
 
-    assert_email_sent(subject: "#{user.name} has added you as a collaborator on #{project.name}.")
+    assert json_response(conn, 422)["errors"]["user_id"] == ["User already in project"]
 
-    assert json_response(conn, 422)
+    email = wait_for_email()
+
+    assert email.subject == "#{user.name} has added you as a collaborator on #{project.name}."
+  end
+
+  defp wait_for_email do
+    receive do
+      [:email, email] -> email
+    end
   end
 end
