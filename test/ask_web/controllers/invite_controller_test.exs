@@ -1,5 +1,6 @@
 defmodule AskWeb.InviteControllerTest do
   import Ecto.Query
+  import Swoosh.TestAssertions
 
   use AskWeb.ConnCase
   use Ask.TestHelpers
@@ -1068,5 +1069,26 @@ defmodule AskWeb.InviteControllerTest do
         invite_remove_path(conn, :remove, %{"project_id" => project.id, "email" => email})
       )
     end
+  end
+
+  test "send invite to existing user", %{conn: conn, user: user} do
+    project = create_project_for_user(user)
+    code = "ABC1234"
+    level = "reader"
+    email = "user@instedd.org"
+
+    conn = get(
+      conn,
+      send_invitation_path(conn, :send_invitation, %{
+        "code" => code,
+        "level" => level,
+        "email" => email,
+        "project_id" => project.id
+      })
+    )
+
+    assert_email_sent(subject: "#{user.name} has invited you to collaborate on #{project.name}.")
+
+    assert json_response(conn, 200)
   end
 end
