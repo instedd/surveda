@@ -1071,7 +1071,7 @@ defmodule AskWeb.InviteControllerTest do
     end
   end
 
-  test "send invite to existing user", %{conn: conn, user: user} do
+  test "send invite to new user", %{conn: conn, user: user} do
     project = create_project_for_user(user)
     code = "ABC1234"
     level = "reader"
@@ -1090,5 +1090,29 @@ defmodule AskWeb.InviteControllerTest do
     assert_email_sent(subject: "#{user.name} has invited you to collaborate on #{project.name}.")
 
     assert json_response(conn, 200)
+  end
+
+  test "send invite to existing user", %{conn: conn, user: user} do
+    project = create_project_for_user(user)
+    code = "ABC1234"
+    level = "reader"
+    email = "user@instedd.org"
+
+    user2 = insert(:user, email: email)
+    insert(:project_membership, user_id: user2.id, project_id: project.id, level: "editor")
+
+    conn = get(
+      conn,
+      send_invitation_path(conn, :send_invitation, %{
+        "code" => code,
+        "level" => level,
+        "email" => user2.email,
+        "project_id" => project.id
+      })
+    )
+
+    assert_email_sent(subject: "#{user.name} has added you as a collaborator on #{project.name}.")
+
+    assert json_response(conn, 422)
   end
 end

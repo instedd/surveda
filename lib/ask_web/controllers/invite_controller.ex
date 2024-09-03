@@ -199,13 +199,27 @@ defmodule AskWeb.InviteController do
 
     recipient_user = Repo.one(from u in Ask.User, where: u.email == ^email)
 
-    if recipient_user do
+    result = if recipient_user do
       notify_access_to_user(conn, recipient_user, current_user, email, code, project, level)
     else
       send_invitation_email(code, level, email, project, conn)
     end
 
-    render(conn, "invite.json", %{project_id: project.id, code: code, email: email, level: level})
+    case result do
+      {:ok, _} ->
+        render(conn, "invite.json", %{
+          project_id: project.id,
+          code: code,
+          email: email,
+          level: level
+        })
+
+      {:error, _, error_changeset, _} ->
+        conn
+        |> put_status(:unprocessable_entity)
+        |> put_view(AskWeb.ChangesetView)
+        |> render("error.json", changeset: error_changeset)
+    end
   end
 
   def update(_, %{"level" => "owner"}) do
@@ -287,13 +301,22 @@ defmodule AskWeb.InviteController do
     AskWeb.Email.notify(level, email, current_user, url, project)
     |> Ask.Mailer.deliver()
 
-    Ask.Repo.transaction(fn ->
-      ProjectMembership.changeset(%ProjectMembership{}, changeset) |> Repo.insert()
+    changeset =
+      ProjectMembership.changeset(%ProjectMembership{}, changeset)
 
-      if invite do
-        invite |> Repo.delete!()
-      end
-    end)
+    Multi.new()
+    |> Multi.insert(:insert_project_membership, changeset)
+    |> delete_invite(invite)
+    |> Repo.transaction()
+  end
+
+  defp delete_invite(multi, nil) do
+    multi
+  end
+
+  defp delete_invite(multi, invite) do
+    multi
+    |> Multi.delete(:delete_invite, invite)
   end
 
   defp send_invitation_email(code, level, email, project, conn) do
