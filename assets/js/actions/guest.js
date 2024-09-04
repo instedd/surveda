@@ -4,9 +4,10 @@ export const SET_CODE = "SET_CODE"
 export const GENERATE_CODE = "GENERATE_CODE"
 export const CLEAR = "CLEAR"
 
-export const changeEmail = (email) => ({
+export const changeEmail = (email, collaborators = []) => ({
   type: CHANGE_EMAIL,
   email,
+  collaborators,
 })
 
 export const changeLevel = (level) => ({

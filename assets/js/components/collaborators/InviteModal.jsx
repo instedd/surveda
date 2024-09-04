@@ -32,7 +32,7 @@ export class InviteModal extends Component {
   }
 
   emailOnChange(e) {
-    this.props.guestActions.changeEmail(e.target.value)
+    this.props.guestActions.changeEmail(e.target.value, this.props.collaborators)
   }
 
   emailOnBlur(e) {
@@ -42,7 +42,7 @@ export class InviteModal extends Component {
       return
     }
     if (newEmail != config.user) {
-      Promise.resolve(this.props.guestActions.changeEmail(newEmail)).then(() => {
+      Promise.resolve(this.props.guestActions.changeEmail(newEmail, this.props.collaborators)).then(() => {
         Promise.resolve(
           this.props.actions.getInviteByEmailAndProject(projectId, guest.data.email)
         ).then((dbGuest) => {
@@ -97,10 +97,10 @@ export class InviteModal extends Component {
       </a>
     )
 
-    const validEmail = guest.data.email && !guest.errors.email
+    const emailError = this.getEmailError(guest);
 
     const sendButton =
-      guest.data.code && validEmail ? (
+      guest.data.code && !emailError ? (
         <a
           href="#!"
           className=" modal-action modal-close waves-effect btn-medium blue"
@@ -150,9 +150,9 @@ export class InviteModal extends Component {
                       }}
                     />
                   </InputWithLabel>
-                  {!validEmail ? (
+                  {emailError ? (
                     <span className="small-text-bellow text-error">
-                      {t("Please enter a valid email")}
+                      {t(emailError)}
                     </span>
                   ) : (
                     <span />
@@ -189,6 +189,23 @@ export class InviteModal extends Component {
       </Modal>
     )
   }
+
+  getEmailError(guest) {
+    let errorCode = "invalid-email";
+    if (guest.data.email) {
+      errorCode = guest.errors.email
+    }
+
+    switch (errorCode) {
+      case null:
+        return null;
+      case "existing-email":
+        return "Email already in project";
+      case "invalid-email":
+      default:
+        return "Please enter a valid email";
+    }
+  }
 }
 
 InviteModal.propTypes = {
@@ -202,12 +219,11 @@ InviteModal.propTypes = {
   linkText: PropTypes.string,
   header: PropTypes.string.isRequired,
   modalText: PropTypes.string.isRequired,
-  confirmationText: PropTypes.string.isRequired,
-  onConfirm: PropTypes.func.isRequired,
   modalId: PropTypes.string.isRequired,
   projectId: PropTypes.number,
   style: PropTypes.object,
   userLevel: PropTypes.string,
+  collaborators: PropTypes.array,
 }
 
 const mapDispatchToProps = (dispatch) => ({
@@ -220,6 +236,7 @@ const mapStateToProps = (state) => ({
   projectId: state.project.data.id,
   userLevel: state.project.data.level,
   guest: state.guest,
+  collaborators: state.collaborators.items,
 })
 
 export default translate()(connect(mapStateToProps, mapDispatchToProps)(InviteModal))

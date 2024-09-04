@@ -1095,7 +1095,7 @@ defmodule AskWeb.InviteControllerTest do
   end
 
   test "send invite to existing user", %{conn: conn, user: user} do
-    Process.register self(), :mail_target
+    Process.register(self(), :mail_target)
     project = create_project_for_user(user)
     code = "ABC1234"
     level = "reader"
