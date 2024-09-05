@@ -214,6 +214,15 @@ defmodule AskWeb.InviteController do
           level: level
         })
 
+      {:error, _, %{errors: [project_id: {_msg, [constraint: :unique, constraint_name: "project_id"]} ] }, _} ->
+        invite = Repo.one(from i in Invite, where: i.email == ^email and i.project_id == ^project.id)
+        render(conn, "invite.json", %{
+          project_id: project.id,
+          code: invite.code,
+          email: email,
+          level: invite.level
+        })
+
       {:error, _, error_changeset, _} ->
         conn
         |> put_status(:unprocessable_entity)
