@@ -1094,7 +1094,62 @@ defmodule AskWeb.InviteControllerTest do
     assert email.subject == "#{user.name} has invited you to collaborate on #{project.name}."
   end
 
-  test "send invite to existing user", %{conn: conn, user: user} do
+  test "send invite to already invited new user", %{conn: conn, user: user} do
+    Process.register(self(), :mail_target)
+    project = create_project_for_user(user)
+    code = "ABC1234"
+    email = "user@instedd.org"
+    insert(:invite, project: project, email: email, level: "reader", code: "OLD_CODE")
+
+    conn = get(
+      conn,
+      send_invitation_path(conn, :send_invitation, %{
+        "code" => code,
+        "level" => "editor",
+        "email" => email,
+        "project_id" => project.id
+      })
+    )
+
+    assert json_response(conn, 200)
+
+    email_message = wait_for_email()
+
+    assert email_message.subject == "#{user.name} has invited you to collaborate on #{project.name}."
+    # FIXME: refute email confirm link uses old code
+    invite = Repo.one(from i in Invite, where: i.email == ^email and i.project_id == ^project.id)
+    assert invite.level == "reader" # ignores new level
+    refute invite.code == code
+    assert invite.code == "OLD_CODE"
+  end
+
+  test "send invite to existing non-collaborator", %{conn: conn, user: user} do
+    Process.register(self(), :mail_target)
+    project = create_project_for_user(user)
+    code = "ABC1234"
+    level = "reader"
+    email = "user@instedd.org"
+
+    user2 = insert(:user, email: email)
+
+    conn = get(
+      conn,
+      send_invitation_path(conn, :send_invitation, %{
+        "code" => code,
+        "level" => level,
+        "email" => user2.email,
+        "project_id" => project.id
+      })
+    )
+
+    assert json_response(conn, 200)
+
+    assert_received [:email, email]
+
+    assert email.subject == "#{user.name} has added you as a collaborator on #{project.name}."
+  end
+
+  test "send invite to existing collaborator", %{conn: conn, user: user} do
     Process.register(self(), :mail_target)
     project = create_project_for_user(user)
     code = "ABC1234"
@@ -1116,9 +1171,7 @@ defmodule AskWeb.InviteControllerTest do
 
     assert json_response(conn, 422)["errors"]["user_id"] == ["User already in project"]
 
-    email = wait_for_email()
-
-    assert email.subject == "#{user.name} has added you as a collaborator on #{project.name}."
+    refute_received [:email, _email]
   end
 
   defp wait_for_email do
