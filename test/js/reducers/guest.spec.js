@@ -105,4 +105,23 @@ describe('guest reducer', () => {
     ])
     assert(!result.errors.email)
   })
+
+  const emails = ['info@instedd.com', 'email@instedd.com', 'user@instedd.com']
+  const collaborators = emails.map((email) => ({ email }))
+
+  emails.map((email) => 
+    it(`generate an error when ${email} is a collaborator`, () => {
+      const result = playActions([
+        actions.changeEmail(email, collaborators)
+      ])
+      assert(result.errors.email)
+    })
+  )
+
+  it('does not generate an error if email is not a collaborator', () => {
+    const result = playActions([
+      actions.changeEmail('test@instedd.com', collaborators)
+    ])
+    assert(!result.errors.email)
+  })
 })
