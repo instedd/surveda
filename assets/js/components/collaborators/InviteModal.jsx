@@ -152,7 +152,7 @@ export class InviteModal extends Component {
                   </InputWithLabel>
                   {emailError ? (
                     <span className="small-text-bellow text-error">
-                      {t(emailError)}
+                      {emailError}
                     </span>
                   ) : (
                     <span />
@@ -191,6 +191,7 @@ export class InviteModal extends Component {
   }
 
   getEmailError(guest) {
+    const { t } = this.props
     let errorCode = "invalid-email"
     if (guest.data.email) {
       errorCode = guest.errors.email
@@ -200,10 +201,10 @@ export class InviteModal extends Component {
       case null:
         return null
       case "existing-email":
-        return "User is already a member"
+        return t("User is already a member")
       case "invalid-email":
       default:
-        return "Please enter a valid email"
+        return t("Please enter a valid email")
     }
   }
 }
