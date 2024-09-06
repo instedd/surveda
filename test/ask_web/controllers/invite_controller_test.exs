@@ -1089,9 +1089,9 @@ defmodule AskWeb.InviteControllerTest do
 
     assert json_response(conn, 200)
 
-    email = wait_for_email()
+    email_message = wait_for_email()
 
-    assert email.subject == "#{user.name} has invited you to collaborate on #{project.name}."
+    assert email_message.subject == "#{user.name} has invited you to collaborate on #{project.name}."
   end
 
   test "send invite to already invited new user", %{conn: conn, user: user} do
@@ -1116,11 +1116,15 @@ defmodule AskWeb.InviteControllerTest do
     email_message = wait_for_email()
 
     assert email_message.subject == "#{user.name} has invited you to collaborate on #{project.name}."
-    # FIXME: refute email confirm link uses old code
+
     invite = Repo.one(from i in Invite, where: i.email == ^email and i.project_id == ^project.id)
     assert invite.level == "reader" # ignores new level
     refute invite.code == code
     assert invite.code == "OLD_CODE"
+
+    url = AskWeb.Endpoint.url() <> "/confirm?code=#{invite.code}"
+
+    assert String.contains?(email_message.text_body, url)
   end
 
   test "send invite to existing non-collaborator", %{conn: conn, user: user} do
@@ -1130,14 +1134,14 @@ defmodule AskWeb.InviteControllerTest do
     level = "reader"
     email = "user@instedd.org"
 
-    user2 = insert(:user, email: email)
+    user_other = insert(:user, email: email)
 
     conn = get(
       conn,
       send_invitation_path(conn, :send_invitation, %{
         "code" => code,
         "level" => level,
-        "email" => user2.email,
+        "email" => user_other.email,
         "project_id" => project.id
       })
     )
@@ -1156,15 +1160,15 @@ defmodule AskWeb.InviteControllerTest do
     level = "reader"
     email = "user@instedd.org"
 
-    user2 = insert(:user, email: email)
-    insert(:project_membership, user_id: user2.id, project_id: project.id, level: "editor")
+    user_other = insert(:user, email: email)
+    insert(:project_membership, user_id: user_other.id, project_id: project.id, level: "editor")
 
     conn = get(
       conn,
       send_invitation_path(conn, :send_invitation, %{
         "code" => code,
         "level" => level,
-        "email" => user2.email,
+        "email" => user_other.email,
         "project_id" => project.id
       })
     )

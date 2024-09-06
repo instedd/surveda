@@ -134,7 +134,6 @@ class CollaboratorIndex extends Component {
           modalText={t("The access of project collaborators will be managed through roles")}
           header={t("Invite collaborators")}
           style={{ maxWidth: "800px" }}
-          collaborators={collaborators}
         />
         <div>
           <CardTable title={title}>

@@ -97,7 +97,7 @@ export class InviteModal extends Component {
       </a>
     )
 
-    const emailError = this.getEmailError(guest);
+    const emailError = this.getEmailError(guest)
 
     const sendButton =
       guest.data.code && !emailError ? (
@@ -191,19 +191,19 @@ export class InviteModal extends Component {
   }
 
   getEmailError(guest) {
-    let errorCode = "invalid-email";
+    let errorCode = "invalid-email"
     if (guest.data.email) {
       errorCode = guest.errors.email
     }
 
     switch (errorCode) {
       case null:
-        return null;
+        return null
       case "existing-email":
-        return "Email already in project";
+        return "User is already a member"
       case "invalid-email":
       default:
-        return "Please enter a valid email";
+        return "Please enter a valid email"
     }
   }
 }
@@ -223,7 +223,6 @@ InviteModal.propTypes = {
   projectId: PropTypes.number,
   style: PropTypes.object,
   userLevel: PropTypes.string,
-  collaborators: PropTypes.array,
 }
 
 const mapDispatchToProps = (dispatch) => ({

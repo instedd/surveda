@@ -307,16 +307,23 @@ defmodule AskWeb.InviteController do
 
     url = AskWeb.Endpoint.url() <> "/projects/#{project.id}"
 
-    AskWeb.Email.notify(level, email, current_user, url, project)
-    |> Ask.Mailer.deliver()
-
     changeset =
       ProjectMembership.changeset(%ProjectMembership{}, changeset)
 
-    Multi.new()
+    result = Multi.new()
     |> Multi.insert(:insert_project_membership, changeset)
     |> delete_invite(invite)
     |> Repo.transaction()
+
+    case result do
+      {:ok, _} ->
+        AskWeb.Email.notify(level, email, current_user, url, project)
+        |> Ask.Mailer.deliver()
+
+      _ -> nil
+    end
+
+    result
   end
 
   defp delete_invite(multi, nil) do
@@ -329,11 +336,7 @@ defmodule AskWeb.InviteController do
   end
 
   defp send_invitation_email(code, level, email, project, conn) do
-    url = AskWeb.Endpoint.url() <> "/confirm?code=#{code}"
     current_user = current_user(conn)
-
-    AskWeb.Email.invite(level, email, current_user, url, project)
-    |> Ask.Mailer.deliver()
 
     changeset =
       Invite.changeset(%Invite{}, %{
@@ -344,9 +347,28 @@ defmodule AskWeb.InviteController do
         "inviter_email" => current_user.email
       })
 
-    Multi.new()
+    result = Multi.new()
     |> Multi.insert(:insert_invite, changeset)
     |> Multi.insert(:insert_log, ActivityLog.create_invite(project, conn, email, level))
     |> Repo.transaction()
+
+    case result do
+      {:ok, _} ->
+        deliver_invite_mail(code, level, email, current_user, project)
+
+      {:error, _, %{errors: [project_id: {_msg, [constraint: :unique, constraint_name: "project_id"]} ] }, _} ->
+        invite = Repo.one(from i in Invite, where: i.email == ^email and i.project_id == ^project.id)
+        deliver_invite_mail(invite.code, invite.level, email, current_user, project)
+
+      {:error, _, _, _} -> nil
+    end
+
+    result
+  end
+
+  defp deliver_invite_mail(code, level, email, current_user, project) do
+    url = AskWeb.Endpoint.url() <> "/confirm?code=#{code}"
+    AskWeb.Email.invite(level, email, current_user, url, project)
+    |> Ask.Mailer.deliver()
   end
 end
