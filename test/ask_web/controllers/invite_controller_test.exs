@@ -1089,7 +1089,7 @@ defmodule AskWeb.InviteControllerTest do
 
     assert json_response(conn, 200)
 
-    email_message = wait_for_email()
+    assert_received [:email, email_message]
 
     assert email_message.subject == "#{user.name} has invited you to collaborate on #{project.name}."
   end
@@ -1113,7 +1113,7 @@ defmodule AskWeb.InviteControllerTest do
 
     assert json_response(conn, 200)
 
-    email_message = wait_for_email()
+    assert_received [:email, email_message]
 
     assert email_message.subject == "#{user.name} has invited you to collaborate on #{project.name}."
 
@@ -1176,11 +1176,5 @@ defmodule AskWeb.InviteControllerTest do
     assert json_response(conn, 422)["errors"]["user_id"] == ["User already in project"]
 
     refute_received [:email, _email]
-  end
-
-  defp wait_for_email do
-    receive do
-      [:email, email] -> email
-    end
   end
 end
