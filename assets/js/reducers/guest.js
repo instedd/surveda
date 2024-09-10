@@ -34,6 +34,16 @@ const validEmail = (email) => {
 }
 
 const changeEmail = (state, action) => {
+  const { email, collaborators } = action
+  let emailError = null
+  if (!validEmail(email)) {
+    emailError = "invalid-email"
+  } else {
+    const collaborator = collaborators.find((c) => c.email === email)
+    if (collaborator) {
+      emailError = "existing-email"
+    }
+  }
   return {
     ...state,
     data: {
@@ -42,7 +52,7 @@ const changeEmail = (state, action) => {
     },
     errors: {
       ...state.errors,
-      email: !validEmail(action.email),
+      email: emailError,
     },
   }
 }

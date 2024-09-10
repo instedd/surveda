@@ -24,16 +24,6 @@ class CollaboratorIndex extends Component {
     $("#addCollaborator").modal("open")
   }
 
-  loadCollaboratorToEdit(event, collaborator) {
-    event.preventDefault()
-    if (collaborator.invited) {
-      this.props.guestActions.changeEmail(collaborator.email)
-      this.props.guestActions.changeLevel(collaborator.role)
-      this.props.guestActions.setCode(collaborator.code)
-      $("#addCollaborator").modal("open")
-    }
-  }
-
   levelChanged(e, collaborator) {
     const { projectId, inviteActions, actions, t } = this.props
     const level = e.target.value
@@ -143,8 +133,6 @@ class CollaboratorIndex extends Component {
           modalId="addCollaborator"
           modalText={t("The access of project collaborators will be managed through roles")}
           header={t("Invite collaborators")}
-          confirmationText={t("Accept")}
-          onConfirm={(event) => event.preventDefault()}
           style={{ maxWidth: "800px" }}
         />
         <div>

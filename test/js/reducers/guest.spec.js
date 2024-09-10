@@ -11,7 +11,7 @@ describe('guest reducer', () => {
 
   it('should change email', () => {
     const email = 'user@instedd.org'
-    const result = playActions([actions.changeEmail(email)])
+    const result = playActions([actions.changeEmail(email, [])])
     expect(result.data.email).toEqual(email)
   })
 
@@ -35,7 +35,7 @@ describe('guest reducer', () => {
 
   it('should clear values', () => {
     const result = playActions([
-      actions.changeEmail('user@instedd.org'),
+      actions.changeEmail('user@instedd.org', []),
       actions.changeLevel('editor'),
       actions.clear()
     ])
@@ -54,7 +54,7 @@ describe('guest reducer', () => {
 
   it('does not generate code if level is not present', () => {
     const result = playActions([
-      actions.changeEmail('user@instedd.org'),
+      actions.changeEmail('user@instedd.org', []),
       actions.generateCode()
     ])
     expect(result.data.code).toEqual('')
@@ -62,7 +62,7 @@ describe('guest reducer', () => {
 
   it('does not generates code if email is invalid', () => {
     const result = playActions([
-      actions.changeEmail('invalid-email.com'),
+      actions.changeEmail('invalid-email.com', []),
       actions.changeLevel('editor'),
       actions.generateCode()
     ])
@@ -71,7 +71,7 @@ describe('guest reducer', () => {
 
   it('generates code if email is valid and level is present', () => {
     const result = playActions([
-      actions.changeEmail('email@instedd.org'),
+      actions.changeEmail('email@instedd.org', []),
       actions.changeLevel('editor'),
       actions.generateCode()
     ])
@@ -80,28 +80,47 @@ describe('guest reducer', () => {
 
   it('generates an error if email is invalid: two consecutive dots', () => {
     const result = playActions([
-      actions.changeEmail('invalid..email@instedd.com')
+      actions.changeEmail('invalid..email@instedd.com', [])
     ])
-    assert(result.errors.email)
+    expect(result.errors.email).toEqual("invalid-email")
   })
 
   it('generates an error if email is invalid: no @ symbol', () => {
     const result = playActions([
-      actions.changeEmail('email.com')
+      actions.changeEmail('email.com', [])
     ])
-    assert(result.errors.email)
+    expect(result.errors.email).toEqual("invalid-email")
   })
 
   it('generates an error if email is invalid: finishes with period', () => {
     const result = playActions([
-      actions.changeEmail('email@instedd.')
+      actions.changeEmail('email@instedd.', [])
     ])
-    assert(result.errors.email)
+    expect(result.errors.email).toEqual("invalid-email")
   })
 
   it('does not generate an error if email is valid', () => {
     const result = playActions([
-      actions.changeEmail('valid.email@instedd.com')
+      actions.changeEmail('valid.email@instedd.com', [])
+    ])
+    assert(!result.errors.email)
+  })
+
+  const emails = ['info@instedd.com', 'email@instedd.com', 'user@instedd.com']
+  const collaborators = emails.map((email) => ({ email }))
+
+  emails.map((email) => 
+    it(`generate an error when ${email} is a collaborator`, () => {
+      const result = playActions([
+        actions.changeEmail(email, collaborators)
+      ])
+      expect(result.errors.email).toEqual("existing-email")
+    })
+  )
+
+  it('does not generate an error if email is not a collaborator', () => {
+    const result = playActions([
+      actions.changeEmail('test@instedd.com', collaborators)
     ])
     assert(!result.errors.email)
   })

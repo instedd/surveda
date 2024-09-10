@@ -199,13 +199,36 @@ defmodule AskWeb.InviteController do
 
     recipient_user = Repo.one(from u in Ask.User, where: u.email == ^email)
 
-    if recipient_user do
+    result = if recipient_user do
       notify_access_to_user(conn, recipient_user, current_user, email, code, project, level)
     else
       send_invitation_email(code, level, email, project, conn)
     end
 
-    render(conn, "invite.json", %{project_id: project.id, code: code, email: email, level: level})
+    case result do
+      {:ok, _} ->
+        render(conn, "invite.json", %{
+          project_id: project.id,
+          code: code,
+          email: email,
+          level: level
+        })
+
+      {:error, _, %{errors: [project_id: {_msg, [constraint: :unique, constraint_name: "project_id"]} ] }, _} ->
+        invite = Repo.one(from i in Invite, where: i.email == ^email and i.project_id == ^project.id)
+        render(conn, "invite.json", %{
+          project_id: project.id,
+          code: invite.code,
+          email: email,
+          level: invite.level
+        })
+
+      {:error, _, error_changeset, _} ->
+        conn
+        |> put_status(:unprocessable_entity)
+        |> put_view(AskWeb.ChangesetView)
+        |> render("error.json", changeset: error_changeset)
+    end
   end
 
   def update(_, %{"level" => "owner"}) do
@@ -284,24 +307,36 @@ defmodule AskWeb.InviteController do
 
     url = AskWeb.Endpoint.url() <> "/projects/#{project.id}"
 
-    AskWeb.Email.notify(level, email, current_user, url, project)
-    |> Ask.Mailer.deliver()
+    changeset =
+      ProjectMembership.changeset(%ProjectMembership{}, changeset)
 
-    Ask.Repo.transaction(fn ->
-      ProjectMembership.changeset(%ProjectMembership{}, changeset) |> Repo.insert()
+    result = Multi.new()
+    |> Multi.insert(:insert_project_membership, changeset)
+    |> delete_invite(invite)
+    |> Repo.transaction()
 
-      if invite do
-        invite |> Repo.delete!()
-      end
-    end)
+    case result do
+      {:ok, _} ->
+        AskWeb.Email.notify(level, email, current_user, url, project)
+        |> Ask.Mailer.deliver()
+
+      _ -> nil
+    end
+
+    result
+  end
+
+  defp delete_invite(multi, nil) do
+    multi
+  end
+
+  defp delete_invite(multi, invite) do
+    multi
+    |> Multi.delete(:delete_invite, invite)
   end
 
   defp send_invitation_email(code, level, email, project, conn) do
-    url = AskWeb.Endpoint.url() <> "/confirm?code=#{code}"
     current_user = current_user(conn)
-
-    AskWeb.Email.invite(level, email, current_user, url, project)
-    |> Ask.Mailer.deliver()
 
     changeset =
       Invite.changeset(%Invite{}, %{
@@ -312,9 +347,28 @@ defmodule AskWeb.InviteController do
         "inviter_email" => current_user.email
       })
 
-    Multi.new()
+    result = Multi.new()
     |> Multi.insert(:insert_invite, changeset)
     |> Multi.insert(:insert_log, ActivityLog.create_invite(project, conn, email, level))
     |> Repo.transaction()
+
+    case result do
+      {:ok, _} ->
+        deliver_invite_mail(code, level, email, current_user, project)
+
+      {:error, _, %{errors: [project_id: {_msg, [constraint: :unique, constraint_name: "project_id"]} ] }, _} ->
+        invite = Repo.one(from i in Invite, where: i.email == ^email and i.project_id == ^project.id)
+        deliver_invite_mail(invite.code, invite.level, email, current_user, project)
+
+      {:error, _, _, _} -> nil
+    end
+
+    result
+  end
+
+  defp deliver_invite_mail(code, level, email, current_user, project) do
+    url = AskWeb.Endpoint.url() <> "/confirm?code=#{code}"
+    AskWeb.Email.invite(level, email, current_user, url, project)
+    |> Ask.Mailer.deliver()
   end
 end
