@@ -32,7 +32,7 @@ export class InviteModal extends Component {
   }
 
   emailOnChange(e) {
-    this.props.guestActions.changeEmail(e.target.value, this.props.collaborators)
+    this.props.guestActions.changeEmail(e.target.value)
   }
 
   emailOnBlur(e) {
@@ -42,7 +42,7 @@ export class InviteModal extends Component {
       return
     }
     if (newEmail != config.user) {
-      Promise.resolve(this.props.guestActions.changeEmail(newEmail, this.props.collaborators)).then(() => {
+      Promise.resolve(this.props.guestActions.changeEmail(newEmail)).then(() => {
         Promise.resolve(
           this.props.actions.getInviteByEmailAndProject(projectId, guest.data.email)
         ).then((dbGuest) => {

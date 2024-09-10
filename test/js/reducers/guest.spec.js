@@ -4,7 +4,6 @@ import expect from 'expect'
 import assert from 'assert'
 import reducer from '../../../assets/js/reducers/guest'
 import * as actions from '../../../assets/js/actions/guest'
-import { exec } from 'child_process'
 
 describe('guest reducer', () => {
   const initialState = reducer(undefined, {})
