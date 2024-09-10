@@ -236,7 +236,6 @@ const mapStateToProps = (state) => ({
   projectId: state.project.data.id,
   userLevel: state.project.data.level,
   guest: state.guest,
-  collaborators: state.collaborators.items,
 })
 
 export default translate()(connect(mapStateToProps, mapDispatchToProps)(InviteModal))

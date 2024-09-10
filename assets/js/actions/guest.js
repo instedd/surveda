@@ -4,7 +4,12 @@ export const SET_CODE = "SET_CODE"
 export const GENERATE_CODE = "GENERATE_CODE"
 export const CLEAR = "CLEAR"
 
-export const changeEmail = (email, collaborators = []) => ({
+export const changeEmail = (email) => (dispatch: Function, getState: () => Store) => {
+  const { items: collaborators } = getState().collaborators
+  return dispatch(validateEmail(email, collaborators))
+}
+
+export const validateEmail = (email, collaborators) => ({
   type: CHANGE_EMAIL,
   email,
   collaborators,
