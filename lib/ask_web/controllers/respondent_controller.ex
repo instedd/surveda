@@ -729,6 +729,30 @@ defmodule AskWeb.RespondentController do
     conn
   end
 
+  # FIXME: this function should return the proper file URL/path
+  defp generated_file_url(%{id: survey_id}, {:results, _filter}), do: "/?some-thingy"
+  defp generated_file_url(%{id: survey_id}, :disposition_history), do: "#dispositon_history"
+  defp generated_file_url(%{id: survey_id}, :incentives), do: "#incentives-#{survey_id}"
+  defp generated_file_url(%{id: survey_id}, :interactions), do: "#interactions-#{survey_id}"
+
+  defp file_redirection(conn, survey, file_type) do
+    file_url = generated_file_url(survey, file_type)
+
+    render(conn, "file-redirect.json",
+      file_url: file_url
+    )
+  end
+
+  def results_csv(conn, %{"project_id" => project_id, "survey_id" => survey_id} = params) do
+    project = load_project(conn, project_id)
+    survey = load_survey(project, survey_id)
+
+    filter = RespondentsFilter.parse(Map.get(params, "q", ""))
+    filter = add_params_to_filter(filter, params)
+
+    file_redirection(conn, survey, {:results, filter})
+  end
+
   def trigger_results(conn, %{"project_id" => project_id, "survey_id" => survey_id} = params) do
     project = load_project(conn, project_id)
     survey = load_survey(project, survey_id)
@@ -766,6 +790,15 @@ defmodule AskWeb.RespondentController do
     filter
   end
 
+  def generate_disposition_history(conn, %{"project_id" => project_id, "survey_id" => survey_id}) do
+    project = load_project(conn, project_id)
+    survey = load_survey(project, survey_id)
+
+    SurveyResults.generate_disposition_history_file(survey.id)
+
+    conn |> render("ok.json")
+  end
+
   def disposition_history(conn, %{"project_id" => project_id, "survey_id" => survey_id}) do
     project = load_project(conn, project_id)
     survey = load_survey(project, survey_id)
@@ -774,11 +807,28 @@ defmodule AskWeb.RespondentController do
     # and add another log when actually downloading?
     ActivityLog.download(project, conn, survey, "disposition_history") |> Repo.insert()
 
-    SurveyResults.generate_disposition_history_file(survey_id)
-    conn |> send_resp(200, "OK")
+    file_redirection(conn, survey, :disposition_history)
   end
 
   def incentives(conn, %{"project_id" => project_id, "survey_id" => survey_id}) do
+    project =
+      conn
+      |> load_project_for_owner(project_id)
+
+    survey =
+      project
+      |> assoc(:surveys)
+      |> where([s], s.incentives_enabled)
+      |> Repo.get!(survey_id)
+
+    # TODO: We just change this for "trigger generation" 
+    # and add another log when actually downloading?
+    ActivityLog.download(project, conn, survey, "incentives") |> Repo.insert()
+
+    file_redirection(conn, survey, :incentives)
+  end
+
+  def generate_incentives(conn, %{"project_id" => project_id, "survey_id" => survey_id}) do
     project =
       conn
       |> load_project_for_owner(project_id)
@@ -798,6 +848,17 @@ defmodule AskWeb.RespondentController do
   end
 
   def interactions(conn, %{"project_id" => project_id, "survey_id" => survey_id}) do
+    project = load_project_for_owner(conn, project_id)
+    survey = load_survey(project, survey_id)
+
+    # TODO: We just change this for "trigger generation" 
+    # and add another log when actually downloading?
+    ActivityLog.download(project, conn, survey, "interactions") |> Repo.insert()
+
+    file_redirection(conn, survey, :interactions)
+  end
+
+  def generate_interactions(conn, %{"project_id" => project_id, "survey_id" => survey_id}) do
     project = load_project_for_owner(conn, project_id)
     survey = load_survey(project, survey_id)
 
