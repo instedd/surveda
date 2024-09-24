@@ -121,25 +121,25 @@ class RespondentIndex extends Component<Props, State> {
     this.fetchRespondents(pageNumber - 1)
   }
 
-  downloadCSV(applyUserFilter = false) {
+  downloadResultsCSV(applyUserFilter = false) {
     const { projectId, surveyId, filter } = this.props
     const q = (applyUserFilter && filter) || null
-    api.triggerRespondentsResultFile(projectId, surveyId, q)
+    api.downloadRespondentsResultsFile(projectId, surveyId, q)
   }
   
   downloadDispositionHistoryCSV() {
     const { projectId, surveyId } = this.props
-    api.triggerRespondentsDispositionHistoryCSV(projectId, surveyId)
+    api.downloadRespondentsDispositionHistoryFile(projectId, surveyId)
   }
   
   downloadIncentivesCSV() {
     const { projectId, surveyId } = this.props
-    api.triggerRespondentsIncentivesCSV(projectId, surveyId)
+    api.downloadRespondentsIncentivesFile(projectId, surveyId)
   }
   
   downloadInteractionsCSV() {
     const { projectId, surveyId } = this.props
-    api.triggerRespondentsInteractionsCSV(projectId, surveyId)
+    api.downloadRespondentsInteractionsFile(projectId, surveyId)
   }
 
   sortBy(name) {
@@ -343,7 +343,7 @@ class RespondentIndex extends Component<Props, State> {
             { totalCount, filter }
           ),
           downloadLink: null,
-          onDownload: () => this.downloadCSV(true),
+          onDownload: () => this.downloadResultsCSV(true),
         }
         break
       case "results":
@@ -358,7 +358,7 @@ class RespondentIndex extends Component<Props, State> {
             this.refreshResultsLink,
             "resultsLink"
           ),
-          onDownload: () => this.downloadCSV(),
+          onDownload: () => this.downloadResultsCSV(),
         }
         break
       case "disposition-history":
@@ -418,7 +418,7 @@ class RespondentIndex extends Component<Props, State> {
       const downloadButton = (
         <div className="file-download">
           <Tooltip text={t("Download file")}>
-            <a className="black-text">
+            <a className="black-text" onClick={item.onDownload}>
               <i className="material-icons">get_app</i>
             </a>
           </Tooltip>
@@ -481,7 +481,7 @@ class RespondentIndex extends Component<Props, State> {
     const ownerOrAdmin = userLevel == "owner" || userLevel == "admin"
 
     return (
-      <Modal id={`downloadCSV`} confirmationText="Download CSV" card>
+      <Modal id="downloadCSV" confirmationText="Download CSV" card>
         <div className="card-title header">
           <h5>{t("Download CSV")}</h5>
           <p>{t("Choose the data you want to download")}</p>

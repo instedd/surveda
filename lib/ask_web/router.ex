@@ -193,16 +193,19 @@ defmodule AskWeb.Router do
             pipe_through :api
 
             get "/results", RespondentController, :results, as: :get_respondents_results
-            
+            get "/results_csv", RespondentController, :results_csv
             post "/results", RespondentController, :generate_results, as: :respondents_results
 
+            get "/disposition_history", RespondentController, :disposition_history, as: :respondents_disposition_history
             post "/disposition_history", RespondentController, :generate_disposition_history,
-              as: :respondents_disposition_history
+              as: :generate_disposition_history
 
-            post "/incentives", RespondentController, :generate_incentives, as: :respondents_incentives
+            get "/incentives", RespondentController, :incentives, as: :respondents_incentives
+            post "/incentives", RespondentController, :generate_incentives, as: :generate_respondents_incentives
 
+            get "/interactions", RespondentController, :interactions, as: :respondents_interactions
             post "/interactions", RespondentController, :generate_interactions,
-              as: :respondents_interactions
+              as: :generate_respondents_interactions
           end
         end
       end
