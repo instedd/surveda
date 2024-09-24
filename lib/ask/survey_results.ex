@@ -525,7 +525,7 @@ defmodule Ask.SurveyResults do
   end
 
   def generate_respondent_result_file(survey_id, filters) do
-    Logger.info("Enqueueing generation of survey (id: #{survey_id}) disposition_history file")
+    Logger.info("Enqueueing generation of survey (id: #{survey_id}) respondent_result file")
     GenServer.cast(server_ref(), {:respondent_result, survey_id, filters})
   end
 
