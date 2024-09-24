@@ -683,6 +683,34 @@ export const refreshDispositionHistoryLink = (projectId, surveyId) => {
   )
 }
 
+export const triggerRespondentsResultFile = (projectId, surveyId, q) => 
+  apiPostJSON(`projects/${projectId}/surveys/${surveyId}/respondents/results?${
+const downloadGeneratedFile = (sourceUrl) =>
+  apiFetch(sourceUrl, null, null).then((response) => {
+      response.json().then((data) => {
+        window.open(data.url)
+    })
+  }
+  )
+
+export const downloadRespondentsResultsFile = (projectId, surveyId, q) => 
+  downloadGeneratedFile(`projects/${projectId}/surveys/${surveyId}/respondents/results_csv?${
+    (q && `&q=${encodeURIComponent(q)}`) || ""
+  }`)
+export const downloadRespondentsDispositionHistoryFile = (projectId, surveyId) =>
+  downloadGeneratedFile(`projects/${projectId}/surveys/${surveyId}/respondents/disposition_history`)
+export const downloadRespondentsIncentivesFile = (projectId, surveyId) =>
+  downloadGeneratedFile(`projects/${projectId}/surveys/${surveyId}/respondents/incentives`)
+export const downloadRespondentsInteractionsFile = (projectId, surveyId) =>
+  downloadGeneratedFile(`projects/${projectId}/surveys/${surveyId}/respondents/interactions`)
+
+export const triggerRespondentsDispositionHistoryCSV = (projectId, surveyId) =>
+  apiPostJSON(`projects/${projectId}/surveys/${surveyId}/respondents/disposition_history`, null, null)
+export const triggerRespondentsIncentivesCSV = (projectId, surveyId) =>
+  apiPostJSON(`projects/${projectId}/surveys/${surveyId}/respondents/incentives`, null, null)
+export const triggerRespondentsInteractionsCSV = (projectId, surveyId) =>
+  apiPostJSON(`projects/${projectId}/surveys/${surveyId}/respondents/interactions`, null, null)
+
 export const startSimulation = (projectId, questionnaireId, mode) => {
   return apiPutOrPostJSONWithCallback(
     `projects/${projectId}/questionnaires/${questionnaireId}/simulation`,

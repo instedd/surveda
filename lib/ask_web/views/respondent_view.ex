@@ -119,6 +119,10 @@ defmodule AskWeb.RespondentView do
     %{data: %{}}
   end
 
+  def render("file-redirect.json", %{file_url: url}) do
+    %{url: url}
+  end
+
   def render("respondent.json", %{
         respondent: respondent,
         partial_relevant_enabled: partial_relevant_enabled
@@ -269,6 +273,8 @@ defmodule AskWeb.RespondentView do
       percent: percentage
     }
   end
+  
+  def render("ok.json", _), do: %{status: :ok}
 
   defp render_index_meta(%{respondents_count: respondents_count, index_fields: index_fields}),
     do: %{
