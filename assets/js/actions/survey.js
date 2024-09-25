@@ -44,6 +44,7 @@ export const REFRESH_LINK = "SURVEY_REFRESH_LINK"
 export const DELETE_LINK = "SURVEY_DELETE_LINK"
 export const RECEIVE_SURVEY_STATS = "RECEIVE_SURVEY_STATS"
 export const RECEIVE_SURVEY_RETRIES_HISTOGRAMS = "RECEIVE_SURVEY_RETRIES_HISTOGRAMS"
+export const GENERATING_FILE = "GENERATING_FILE"
 
 export const createSurvey =
   (projectId: number, folderId?: number) => (dispatch: Function, getState: () => Store) =>
@@ -366,6 +367,11 @@ export const deleteLink = (link: Link) => ({
   link,
 })
 
+export const generatingFile = (file: String) => ({
+  type: GENERATING_FILE,
+  file
+})
+
 export const createResultsLink = (projectId: number, surveyId: number) => (dispatch: Function) => {
   api.createResultsLink(projectId, surveyId).then((response) => {
     return dispatch(receiveLink(response))
@@ -448,3 +454,33 @@ export const deleteDispositionHistoryLink =
       return dispatch(deleteLink(link))
     })
   }
+
+export const generateResultsFile =
+  (projectId: number, surveyId: number, filter?: string) => (dispatch: Function) => {
+    api.generateResults(projectId, surveyId, filter).then((response) => {
+      return dispatch(generatingFile("respondent-results")) // FIXME: what should we dispatch?
+    })
+  }
+
+export const generateIncentivesFile =
+  (projectId: number, surveyId: number) => (dispatch: Function) => {
+    // TODO: better handle when incentives download are disabled (due to sample with IDs)
+    api.generateIncentives(projectId, surveyId).then((response) => {
+      return dispatch(generatingFile("incentives")) // FIXME: what should we dispatch?
+    })
+  }
+
+export const generateInteractionsFile =
+  (projectId: number, surveyId: number) => (dispatch: Function) => {
+    api.generateInteractions(projectId, surveyId).then((response) => {
+      return dispatch(generatingFile("interactions")) // FIXME: what should we dispatch?
+    })
+  }
+
+export const generateDispositionHistoryFile =
+  (projectId: number, surveyId: number) => (dispatch: Function) => {
+    api.generateDispositionHistory(projectId, surveyId).then((response) => {
+      return dispatch(generatingFile("disposition-history")) // FIXME: what should we dispatch?
+    })
+  }
+

@@ -227,6 +227,26 @@ class RespondentIndex extends Component<Props, State> {
     surveyActions.refreshDispositionHistoryLink(projectId, surveyId, link)
   }
 
+  generateResults(filter) {
+    const { projectId, surveyId, surveyActions } = this.props
+    surveyActions.generateResultsFile(projectId, surveyId, filter)
+  }
+
+  generateIncentives() {
+    const { projectId, surveyId, surveyActions } = this.props
+    surveyActions.generateIncentivesFile(projectId, surveyId)
+  }
+
+  generateInteractions() {
+    const { projectId, surveyId, surveyActions } = this.props
+    surveyActions.generateInteractionsFile(projectId, surveyId)
+  }
+
+  generateDispositionHistory() {
+    const { projectId, surveyId, surveyActions } = this.props
+    surveyActions.generateDispositionHistoryFile(projectId, surveyId)
+  }
+
   copyLink(link) {
     try {
       window.getSelection().selectAllChildren(link)
@@ -333,6 +353,7 @@ class RespondentIndex extends Component<Props, State> {
       disabled?: boolean,
       downloadLink: any,
       onDownload: Function,
+      onGenerate: Function,
     } = null
     switch (id) {
       case "filtered-results":
@@ -344,6 +365,7 @@ class RespondentIndex extends Component<Props, State> {
           ),
           downloadLink: null,
           onDownload: () => this.downloadResultsCSV(true),
+          onGenerate: () => this.generateResults(filter),
         }
         break
       case "results":
@@ -359,6 +381,7 @@ class RespondentIndex extends Component<Props, State> {
             "resultsLink"
           ),
           onDownload: () => this.downloadResultsCSV(),
+          onGenerate: () => this.generateResults(),
         }
         break
       case "disposition-history":
@@ -374,6 +397,7 @@ class RespondentIndex extends Component<Props, State> {
             "dispositionHistoryLink"
           ),
           onDownload: () => this.downloadDispositionHistoryCSV(),
+          onGenerate: () => this.generateDispositionHistory(),
         }
         break
       case "incentives":
@@ -392,6 +416,7 @@ class RespondentIndex extends Component<Props, State> {
             "incentivesLink"
           ),
           onDownload: () => this.downloadIncentivesCSV(),
+          onGenerate: () => this.generateIncentives(),
         }
         break
       case "interactions":
@@ -407,6 +432,7 @@ class RespondentIndex extends Component<Props, State> {
             "interactionsLink"
           ),
           onDownload: () => this.downloadInteractionsCSV(),
+          onGenerate: () => this.generateInteractions(),
         }
     }
 
@@ -428,7 +454,7 @@ class RespondentIndex extends Component<Props, State> {
               // FIXME: this should be calculated
             }
               <Tooltip text={t("Regenerate file")}>
-                <a className="btn-icon-grey">
+                <a className="btn-icon-grey" onClick={item.onGenerate}>
                   <i className="material-icons">refresh</i>
                 </a>
               </Tooltip>

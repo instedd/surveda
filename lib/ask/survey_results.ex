@@ -350,7 +350,7 @@ defmodule Ask.SurveyResults do
     rows = Stream.concat([[header], csv_rows])
 
     # FIXME: we should somehow include the filter here
-    write_to_file(:respondent_result, survey, rows)
+    write_to_file(:filtered_respondent_result, survey, rows)
   end
 
   def file_path(survey, file_type, target_dir \\ @target_dir) do
@@ -392,6 +392,7 @@ defmodule Ask.SurveyResults do
   defp file_prefix(:incentives), do: "respondents_incentives"
   defp file_prefix(:disposition_history), do: "disposition_history"
   defp file_prefix(:respondent_result), do: "respondents"
+  defp file_prefix(:filtered_respondent_result), do: "respondents_filtered"
 
   defp survey_log_entry_channel_names(survey) do
     respondent_groups = Repo.preload(survey, respondent_groups: [:channels]).respondent_groups
