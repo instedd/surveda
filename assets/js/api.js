@@ -691,8 +691,46 @@ export const refreshDispositionHistoryLink = (projectId, surveyId) => {
   )
 }
 
-export const triggerRespondentsResultFile = (projectId, surveyId, q) => 
-  apiPostJSON(`projects/${projectId}/surveys/${surveyId}/respondents/results?${
+export const generateResults = (projectId, surveyId, filter) => {
+  return apiPutOrPostJSONWithCallback(
+    `projects/${projectId}/surveys/${surveyId}/respondents/results`,
+    arrayOf(referenceSchema),
+    "POST",
+    { q: filter },
+    passthroughCallback
+  )
+}
+
+export const generateIncentives = (projectId, surveyId) => {
+  return apiPutOrPostJSONWithCallback(
+    `projects/${projectId}/surveys/${surveyId}/respondents/incentives`,
+    arrayOf(referenceSchema),
+    "POST",
+    {},
+    passthroughCallback
+  )
+}
+
+export const generateInteractions = (projectId, surveyId) => {
+  return apiPutOrPostJSONWithCallback(
+    `projects/${projectId}/surveys/${surveyId}/respondents/interactions`,
+    arrayOf(referenceSchema),
+    "POST",
+    {},
+    passthroughCallback
+  )
+}
+
+export const generateDispositionHistory = (projectId, surveyId) => {
+  return apiPutOrPostJSONWithCallback(
+    `projects/${projectId}/surveys/${surveyId}/respondents/disposition_history`,
+    arrayOf(referenceSchema),
+    "POST",
+    {},
+    passthroughCallback
+  )
+}
+
 const downloadGeneratedFile = (sourceUrl) =>
   apiFetch(sourceUrl, null, null).then((response) => {
       response.json().then((data) => {

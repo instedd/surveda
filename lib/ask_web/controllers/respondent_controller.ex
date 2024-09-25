@@ -753,7 +753,7 @@ defmodule AskWeb.RespondentController do
     file_redirection(conn, survey, {:results, filter})
   end
 
-  def trigger_results(conn, %{"project_id" => project_id, "survey_id" => survey_id} = params) do
+  def generate_results(conn, %{"project_id" => project_id, "survey_id" => survey_id} = params) do
     project = load_project(conn, project_id)
     survey = load_survey(project, survey_id)
 
@@ -768,7 +768,7 @@ defmodule AskWeb.RespondentController do
 
     ActivityLog.download(project, conn, survey, "survey_results") |> Repo.insert()
 
-    conn |> send_resp(200, "OK")
+    conn |> render("ok.json")
   end
 
   defp add_params_to_filter(filter, params) do
