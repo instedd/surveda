@@ -44,11 +44,7 @@ defmodule Ask.SurveyResults do
   def handle_cast({file_type, survey_id, args}, state) do
     survey = Repo.get!(Survey, survey_id)
 
-    if should_generate_file(file_type, survey) do
-      do_generate_file(file_type, survey, args)
-    else
-      Logger.info("Ignoring generation of #{file_type} file (survey_id: #{survey_id})")
-    end
+    generate_file(file_type, survey, args)
 
     {:noreply, state, :hibernate}
   end
@@ -59,7 +55,7 @@ defmodule Ask.SurveyResults do
     {:noreply, state, :hibernate}
   end
 
-  defp do_generate_file(:interactions, survey, _) do
+  defp generate_file(:interactions, survey, _) do
     channels = survey_log_entry_channel_names(survey)
 
     Logger.info("Starting to build interaction file (survey_id: #{survey.id})")
@@ -121,7 +117,7 @@ defmodule Ask.SurveyResults do
     write_to_file(:interactions, survey, rows)
   end
 
-  defp do_generate_file(:incentives, survey, _) do
+  defp generate_file(:incentives, survey, _) do
     questionnaires = survey_respondent_questionnaires(survey)
 
     tz_offset_in_seconds = Survey.timezone_offset_in_seconds(survey)
@@ -153,7 +149,7 @@ defmodule Ask.SurveyResults do
     end)
   end
 
-  defp do_generate_file(:disposition_history, survey, _) do
+  defp generate_file(:disposition_history, survey, _) do
     history =
       Stream.resource(
         fn -> 0 end,
@@ -193,7 +189,7 @@ defmodule Ask.SurveyResults do
     write_to_file(:disposition_history, survey, rows)
   end
 
-  defp do_generate_file(:respondent_result, survey, filter) do
+  defp generate_file(:respondent_result, survey, filter) do
     tz_offset = Survey.timezone_offset(survey)
 
     questionnaires = (survey |> Repo.preload(:questionnaires)).questionnaires
@@ -353,25 +349,37 @@ defmodule Ask.SurveyResults do
 
     rows = Stream.concat([[header], csv_rows])
 
+    # FIXME: we should somehow include the filter here
     write_to_file(:respondent_result, survey, rows)
   end
 
-  defp do_generate_file(file_type, _, _),
-    do: Logger.warn("No function for generating #{file_type} files")
-
-  def file_path(survey, file_type) do
-    filename = csv_filename(survey, file_prefix(file_type))
-    "#{@target_dir}/#{filename}"
+  def file_path(survey, file_type, target_dir \\ @target_dir) do
+    # FIXME: as a first iteration, generate a stable name and have a single file per type
+    # but we should probably include the date and respondent results filter in the name
+    prefix = file_prefix(file_type)
+    # name = survey.name || "survey_id_#{survey.id}"
+    # name = Regex.replace(~r/[^a-zA-Z0-9_]/, name, "_")
+    # current_time = Timex.format!(DateTime.utc_now(), "%Y-%m-%d-%H-%M-%S", :strftime)
+    # "#{target_dir}/#{name}_#{survey.state}-#{prefix}_#{current_time}.csv"
+    "#{target_dir}/survey_#{survey.id}-#{survey.state}-#{prefix}.csv"
   end
 
   defp write_to_file(file_type, survey, rows) do
     File.mkdir_p!(@target_dir)
-    file = File.open!(file_path(survey, file_type), [:write, :utf8])
+    target_file = file_path(survey, file_type, @target_dir)
+    if File.exists?(target_file), do: File.rm!(target_file)
+
+    # Poor man's mktemp. We only want to avoid having the file living at the stable
+    # path while it's still being written to avoid partial downloads
+    temporal_file = for _ <- 1..10, into: "#{target_file}.tmp.", do: <<Enum.random(?a..?z)>>
+    file = File.open!(temporal_file, [:write, :utf8])
     initial_datetime = Timex.now()
 
     rows
     |> CSV.encode()
     |> Enum.each(&IO.write(file, &1))
+
+    File.rename!(temporal_file, target_file)
 
     seconds_to_process_file = Timex.diff(Timex.now(), initial_datetime, :seconds)
 
@@ -384,24 +392,6 @@ defmodule Ask.SurveyResults do
   defp file_prefix(:incentives), do: "respondents_incentives"
   defp file_prefix(:disposition_history), do: "disposition_history"
   defp file_prefix(:respondent_result), do: "respondents"
-  defp file_prefix(_), do: ""
-
-  # FIXME: we probably don't need to check if we should generate the file
-  defp should_generate_file(:xxxx_interactions, survey) do
-    # TODO: when do we want to skip the re-generation of the file?
-    File.mkdir_p!(@target_dir) # ensure the directory exists
-    existing_files = File.ls!(@target_dir)
-
-    exists_file =
-      existing_files
-      |> Enum.any?(fn file ->
-        file |> String.starts_with?(survey_filename_prefix(survey, file_prefix(:interactions)))
-      end)
-
-    !exists_file
-  end
-
-  defp should_generate_file(_type, _survey), do: true
 
   defp survey_log_entry_channel_names(survey) do
     respondent_groups = Repo.preload(survey, respondent_groups: [:channels]).respondent_groups
@@ -434,17 +424,6 @@ defmodule Ask.SurveyResults do
       nil -> nil
       _ -> String.capitalize(disposition)
     end
-  end
-
-  defp csv_filename(survey, prefix) do
-    prefix = survey_filename_prefix(survey, prefix)
-    Timex.format!(DateTime.utc_now(), "#{prefix}_%Y-%m-%d-%H-%M-%S.csv", :strftime)
-  end
-
-  defp survey_filename_prefix(survey, prefix) do
-    name = survey.name || "survey_id_#{survey.id}"
-    name = Regex.replace(~r/[^a-zA-Z0-9_]/, name, "_")
-    "#{name}_#{survey.state}-#{prefix}"
   end
 
   defp csv_datetime(nil, _, _), do: ""
