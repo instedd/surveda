@@ -729,17 +729,11 @@ defmodule AskWeb.RespondentController do
     conn
   end
 
-  # FIXME: this function should return the proper file URL/path
-  defp generated_file_url(%{id: survey_id}, {:results, _filter}), do: "/?some-thingy"
-  defp generated_file_url(%{id: survey_id}, :disposition_history), do: "#dispositon_history"
-  defp generated_file_url(%{id: survey_id}, :incentives), do: "#incentives-#{survey_id}"
-  defp generated_file_url(%{id: survey_id}, :interactions), do: "#interactions-#{survey_id}"
-
   defp file_redirection(conn, survey, file_type) do
-    file_url = generated_file_url(survey, file_type)
+    file_url = SurveyResults.file_path(survey, file_type)
 
     render(conn, "file-redirect.json",
-      file_url: file_url
+      file_url: "/#{file_url}" # TODO: there may be better ways of avoiding relative URLs
     )
   end
 
