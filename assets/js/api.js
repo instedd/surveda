@@ -691,46 +691,6 @@ export const refreshDispositionHistoryLink = (projectId, surveyId) => {
   )
 }
 
-export const generateResults = (projectId, surveyId, filter) => {
-  return apiPutOrPostJSONWithCallback(
-    `projects/${projectId}/surveys/${surveyId}/respondents/results`,
-    arrayOf(referenceSchema),
-    "POST",
-    { q: filter },
-    passthroughCallback
-  )
-}
-
-export const generateIncentives = (projectId, surveyId) => {
-  return apiPutOrPostJSONWithCallback(
-    `projects/${projectId}/surveys/${surveyId}/respondents/incentives`,
-    arrayOf(referenceSchema),
-    "POST",
-    {},
-    passthroughCallback
-  )
-}
-
-export const generateInteractions = (projectId, surveyId) => {
-  return apiPutOrPostJSONWithCallback(
-    `projects/${projectId}/surveys/${surveyId}/respondents/interactions`,
-    arrayOf(referenceSchema),
-    "POST",
-    {},
-    passthroughCallback
-  )
-}
-
-export const generateDispositionHistory = (projectId, surveyId) => {
-  return apiPutOrPostJSONWithCallback(
-    `projects/${projectId}/surveys/${surveyId}/respondents/disposition_history`,
-    arrayOf(referenceSchema),
-    "POST",
-    {},
-    passthroughCallback
-  )
-}
-
 const downloadGeneratedFile = (sourceUrl) =>
   apiFetch(sourceUrl, null, null).then((response) => {
       response.json().then((data) => {
@@ -750,11 +710,13 @@ export const downloadRespondentsIncentivesFile = (projectId, surveyId) =>
 export const downloadRespondentsInteractionsFile = (projectId, surveyId) =>
   downloadGeneratedFile(`projects/${projectId}/surveys/${surveyId}/respondents/interactions`)
 
-export const triggerRespondentsDispositionHistoryCSV = (projectId, surveyId) =>
+export const generateResults = (projectId, surveyId, filter) =>
+  apiPostJSON(`projects/${projectId}/surveys/${surveyId}/respondents/results`, null, { q: filter })
+export const generateDispositionHistory = (projectId, surveyId) =>
   apiPostJSON(`projects/${projectId}/surveys/${surveyId}/respondents/disposition_history`, null, null)
-export const triggerRespondentsIncentivesCSV = (projectId, surveyId) =>
+export const generateIncentives = (projectId, surveyId) =>
   apiPostJSON(`projects/${projectId}/surveys/${surveyId}/respondents/incentives`, null, null)
-export const triggerRespondentsInteractionsCSV = (projectId, surveyId) =>
+export const generateInteractions = (projectId, surveyId) =>
   apiPostJSON(`projects/${projectId}/surveys/${surveyId}/respondents/interactions`, null, null)
 
 export const startSimulation = (projectId, questionnaireId, mode) => {

@@ -196,6 +196,8 @@ defmodule AskWeb.Router do
           scope "/respondents" do
             pipe_through :api
 
+            get "/files", RespondentController, :files_status, as: :files
+
             get "/results", RespondentController, :results, as: :get_respondents_results
             get "/results_csv", RespondentController, :results_csv
             post "/results", RespondentController, :generate_results, as: :respondents_results

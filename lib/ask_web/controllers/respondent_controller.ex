@@ -729,6 +729,25 @@ defmodule AskWeb.RespondentController do
     conn
   end
 
+  def files_status(conn, %{"project_id" => project_id, "survey_id" => survey_id} = params) do
+    project = load_project(conn, project_id)
+    survey = load_survey(project, survey_id)
+
+    filter = RespondentsFilter.parse(Map.get(params, "q", ""))
+    filter = add_params_to_filter(filter, params)
+
+    # FIXME: filter according to permissions
+    status = SurveyResults.files_status(survey, [
+      {:respondents_results, %RespondentsFilter{}},
+      {:respondents_results, filter},
+      :interactions,
+      :incentives,
+      :disposition_history
+    ])
+
+    render(conn, "status.json", status: status)
+  end
+
   defp file_redirection(conn, survey, file_type) do
     file_url = SurveyResults.file_path(survey, file_type)
 
@@ -744,7 +763,7 @@ defmodule AskWeb.RespondentController do
     filter = RespondentsFilter.parse(Map.get(params, "q", ""))
     filter = add_params_to_filter(filter, params)
 
-    file_redirection(conn, survey, {:results, filter})
+    file_redirection(conn, survey, {:respondents_results, filter})
   end
 
   def generate_results(conn, %{"project_id" => project_id, "survey_id" => survey_id} = params) do
@@ -758,7 +777,7 @@ defmodule AskWeb.RespondentController do
     # ?param1=value is more specific than ?q=param1:value
     filter = add_params_to_filter(filter, params)
 
-    SurveyResults.generate_respondent_result_file(survey_id, filter)
+    SurveyResults.generate_respondents_results_file(survey_id, filter)
 
     ActivityLog.download(project, conn, survey, "survey_results") |> Repo.insert()
 

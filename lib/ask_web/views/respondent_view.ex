@@ -123,6 +123,10 @@ defmodule AskWeb.RespondentView do
     %{url: url}
   end
 
+  def render("status.json", %{status: status}) do
+    status
+  end
+
   def render("respondent.json", %{
         respondent: respondent,
         partial_relevant_enabled: partial_relevant_enabled
