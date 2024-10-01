@@ -189,7 +189,7 @@ defmodule Ask.SurveyResults do
     write_to_file(:disposition_history, survey, rows)
   end
 
-  defp generate_file(:respondent_result, survey, filter) do
+  defp generate_file(:respondents_results, survey, filter) do
     tz_offset = Survey.timezone_offset(survey)
 
     questionnaires = (survey |> Repo.preload(:questionnaires)).questionnaires
@@ -349,8 +349,7 @@ defmodule Ask.SurveyResults do
 
     rows = Stream.concat([[header], csv_rows])
 
-    # FIXME: we should somehow include the filter here
-    write_to_file(:filtered_respondent_result, survey, rows)
+    write_to_file({:respondents_results, filter}, survey, rows)
   end
 
   def file_path(survey, file_type, target_dir \\ @target_dir) do
@@ -388,11 +387,56 @@ defmodule Ask.SurveyResults do
     )
   end
 
+  def files_status(survey, file_types) do
+    %{
+      survey_id: survey.id,
+      survey_state: survey.state,
+      files:
+        file_types
+        |> Enum.uniq
+        |> Enum.map(fn file_type -> file_status(survey, file_type) end)
+    }
+  end
+
+  defp file_creating?(target_path), do: Path.wildcard(target_path <> ".tmp.*") |> Enum.any?
+
+  defp created_at(_path, false), do: nil
+  defp created_at(path, true) do
+    case File.stat(path, [time: :posix]) do
+      {:ok, %{ mtime: last_mod }} -> last_mod
+      _ -> nil
+    end
+  end
+
+  defp file_type_symbol({:respondents_results, filter}) do
+    if RespondentsFilter.empty?(filter) do
+      :respondents_results
+    else
+      :respondents_filtered
+    end
+  end
+  defp file_type_symbol(type), do: type
+
+  defp file_status(survey, file_type) do
+    path = "./priv/static/" <> file_path(survey, file_type)
+    exists = File.exists?(path)
+    %{
+      file_type: file_type_symbol(file_type),
+      creating: file_creating?(path),
+      created_at: created_at(path, exists)
+    }
+  end
+
   defp file_prefix(:interactions), do: "respondents_interactions"
   defp file_prefix(:incentives), do: "respondents_incentives"
   defp file_prefix(:disposition_history), do: "disposition_history"
-  defp file_prefix(:respondent_result), do: "respondents"
-  defp file_prefix(:filtered_respondent_result), do: "respondents_filtered"
+  defp file_prefix({:respondents_results, filter}) do
+    if RespondentsFilter.empty?(filter) do
+      "respondents"
+    else
+      "respondents_filtered"
+    end
+  end
 
   defp survey_log_entry_channel_names(survey) do
     respondent_groups = Repo.preload(survey, respondent_groups: [:channels]).respondent_groups
@@ -504,9 +548,9 @@ defmodule Ask.SurveyResults do
     GenServer.cast(server_ref(), {:disposition_history, survey_id, nil})
   end
 
-  def generate_respondent_result_file(survey_id, filters) do
-    Logger.info("Enqueueing generation of survey (id: #{survey_id}) respondent_result file")
-    GenServer.cast(server_ref(), {:respondent_result, survey_id, filters})
+  def generate_respondents_results_file(survey_id, filters) do
+    Logger.info("Enqueueing generation of survey (id: #{survey_id}) respondents_results file")
+    GenServer.cast(server_ref(), {:respondents_results, survey_id, filters})
   end
 
   ## Public Module
