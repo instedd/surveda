@@ -394,7 +394,7 @@ defmodule Ask.SurveyResults do
       files:
         file_types
         |> Enum.uniq
-        |> Enum.map(fn file_type -> file_status(survey, file_type) end)
+        |> Map.new(fn file_type -> {file_type_symbol(file_type), file_status(survey, file_type)} end)
     }
   end
 
