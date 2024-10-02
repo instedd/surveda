@@ -45,6 +45,8 @@ export const DELETE_LINK = "SURVEY_DELETE_LINK"
 export const RECEIVE_SURVEY_STATS = "RECEIVE_SURVEY_STATS"
 export const RECEIVE_SURVEY_RETRIES_HISTOGRAMS = "RECEIVE_SURVEY_RETRIES_HISTOGRAMS"
 export const GENERATING_FILE = "GENERATING_FILE"
+export const FETCHING_FILES_STATUS = "FETCHING_FILES_STATUS"
+export const RECEIVE_FILES_STATUS = "RECEIVE_FILES_STATUS"
 
 export const createSurvey =
   (projectId: number, folderId?: number) => (dispatch: Function, getState: () => Store) =>
@@ -454,6 +456,26 @@ export const deleteDispositionHistoryLink =
       return dispatch(deleteLink(link))
     })
   }
+
+export const fetchingRespondentFilesStatus = (projectId: number, surveyId: number) => ({
+  type: FETCHING_FILES_STATUS,
+  projectId,
+  surveyId,
+})
+
+export const receiveRespondentsFilesStatus = (projectId: number, surveyId: number, files) => ({
+  type: RECEIVE_FILES_STATUS,
+  projectId,
+  surveyId,
+  files,
+})
+
+export const fetchRespondentsFilesStatus = (projectId: number, surveyId: number, filter?: string) => (dispatch: Function) => {
+  dispatch(fetchingRespondentFilesStatus(projectId, surveyId))
+  api.fetchRespondentsFilesStatus(projectId, surveyId, filter).then((response) => {
+    dispatch(receiveRespondentsFilesStatus(projectId, surveyId, response.files))
+  })
+}
 
 export const generateResultsFile =
   (projectId: number, surveyId: number, filter?: string) => (dispatch: Function) => {

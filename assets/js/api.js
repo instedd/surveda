@@ -719,6 +719,9 @@ export const generateIncentives = (projectId, surveyId) =>
 export const generateInteractions = (projectId, surveyId) =>
   apiPostJSON(`projects/${projectId}/surveys/${surveyId}/respondents/interactions`, null, null)
 
+export const fetchRespondentsFilesStatus = (projectId, surveyId, filter) =>
+  apiFetch(`projects/${projectId}/surveys/${surveyId}/respondents/files?q=${filter}`).then((response) => response.json())
+
 export const startSimulation = (projectId, questionnaireId, mode) => {
   return apiPutOrPostJSONWithCallback(
     `projects/${projectId}/questionnaires/${questionnaireId}/simulation`,

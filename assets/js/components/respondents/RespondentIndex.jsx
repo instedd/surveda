@@ -111,6 +111,14 @@ class RespondentIndex extends Component<Props, State> {
     )
   }
 
+  showDownloadsModal() {
+    const { projectId, surveyId, filter } = this.props
+
+    // FIXME: don't fetch if we're already fetching
+    this.props.surveyActions.fetchRespondentsFilesStatus(projectId, surveyId, filter)
+    $('#downloadCSV').modal("open")
+  }
+
   nextPage() {
     const { pageNumber } = this.props
     this.fetchRespondents(pageNumber + 1)
@@ -713,7 +721,7 @@ class RespondentIndex extends Component<Props, State> {
             __html: "<style> body { overflow-y: auto !important; color: black}</style>",
           }}
         />
-        <MainAction text="Downloads" icon="get_app" onClick={() => $('#downloadCSV').modal("open")}/>
+        <MainAction text="Downloads" icon="get_app" onClick={() => this.showDownloadsModal()} />
         {this.downloadModal()}
         {this.renderColumnPickerModal()}
         {this.respondentsFilter()}
