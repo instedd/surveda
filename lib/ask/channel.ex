@@ -96,6 +96,12 @@ defmodule Ask.Channel do
     %{channel | status: status}
   end
 
+  def update_status(channel, channel_status) do
+    channel.id
+    |> ChannelStatusServer.update_channel_status(channel_status)
+    with_status(channel)
+  end
+
   defp validate_patterns(changeset) do
     changeset
     |> validate_patterns_not_empty

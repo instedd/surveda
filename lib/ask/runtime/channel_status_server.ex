@@ -28,7 +28,7 @@ defmodule Ask.Runtime.ChannelStatusServer do
     GenServer.call(@server_ref, {:get_channel_status, channel_id})
   end
 
-  defp update_channel_status(channel_id, channel_status) do
+  def update_channel_status(channel_id, channel_status) do
     GenServer.cast(@server_ref, {:update, {channel_id, channel_status}})
   end
 
@@ -49,42 +49,7 @@ defmodule Ask.Runtime.ChannelStatusServer do
           status = ChannelBroker.check_status(c.id)
           timestamp = Timex.now()
 
-          case status do
-            {:down, messages} ->
-              case previous_status do
-                %{status: :down} ->
-                  nil
-
-                _ ->
-                  AskWeb.Email.channel_down(c.user.email, c, messages) |> Ask.Mailer.deliver()
-
-                  update_channel_status(c.id, %{
-                    status: :down,
-                    messages: messages,
-                    name: c.name,
-                    timestamp: timestamp
-                  })
-              end
-
-            {:error, code} ->
-              case previous_status do
-                %{status: :error} ->
-                  nil
-
-                _ ->
-                  AskWeb.Email.channel_error(c.user.email, c, code) |> Ask.Mailer.deliver()
-
-                  update_channel_status(c.id, %{
-                    status: :error,
-                    code: code,
-                    name: c.name,
-                    timestamp: timestamp
-                  })
-              end
-
-            status ->
-              update_channel_status(c.id, status)
-          end
+          process_channel_status_change(status, previous_status, timestamp, c)
         end)
       end)
 
@@ -104,5 +69,39 @@ defmodule Ask.Runtime.ChannelStatusServer do
 
   def log_info(message) do
     Logger.info("ChannelStatusServer: #{message}")
+  end
+
+  defp process_channel_status_change({:down, _messages}, %{status: :down}, _timestamp, _channel) do
+    nil
+  end
+
+  defp process_channel_status_change({:down, messages}, _previous_status, timestamp, channel) do
+    AskWeb.Email.channel_down(channel.user.email, channel, messages) |> Ask.Mailer.deliver()
+
+    update_channel_status(channel.id, %{
+      status: :down,
+      messages: messages,
+      name: channel.name,
+      timestamp: timestamp
+    })
+  end
+
+  defp process_channel_status_change({:error, _code}, %{status: :error}, _timestamp, _channel) do
+    nil
+  end
+
+  defp process_channel_status_change({:error, code}, _previous_status, timestamp, channel) do
+    AskWeb.Email.channel_error(channel.user.email, channel, code) |> Ask.Mailer.deliver()
+
+    update_channel_status(channel.id, %{
+      status: :error,
+      code: code,
+      name: channel.name,
+      timestamp: timestamp
+    })
+  end
+
+  defp process_channel_status_change(status, _previous_status, _timestamp, channel) do
+    update_channel_status(channel.id, status)
   end
 end
