@@ -67,6 +67,20 @@ defmodule Ask.Runtime.ChannelStatusServerTest do
     assert t2
   end
 
+  test "update channel status" do
+    {:ok, _pid} = ChannelStatusServer.start_link()
+    user = insert(:user)
+
+    channel =
+      TestChannel.create_channel(user, "test", TestChannel.settings(TestChannel.new(), 1))
+
+    assert ChannelStatusServer.get_channel_status(channel.id) == :unknown
+
+    ChannelStatusServer.update_channel_status(channel.id, %{status: :new_channel_status})
+
+    assert ChannelStatusServer.get_channel_status(channel.id) == %{status: :new_channel_status}
+  end
+
   test "sends email when a channel is down and its status was previously :unknown" do
     {:ok, pid} = ChannelStatusServer.start_link()
     Process.register(self(), :mail_target)
@@ -143,5 +157,39 @@ defmodule Ask.Runtime.ChannelStatusServerTest do
 
     ChannelStatusServer.poll(pid)
     refute_receive [:email, ^email]
+  end
+
+  test "doesn't send email when a channel is down but status was previously :paused" do
+    {:ok, pid} = ChannelStatusServer.start_link()
+    Process.register(self(), :mail_target)
+    user = insert(:user)
+    survey = insert(:survey, state: :running)
+
+    channel =
+      TestChannel.create_channel(user, "test", TestChannel.settings(TestChannel.new(), 1, :down))
+
+    setup_surveys_with_channels([survey], [channel])
+
+    ChannelStatusServer.update_channel_status(channel.id, %{status: :paused})
+
+    ChannelStatusServer.poll(pid)
+    refute_receive [:email, _]
+  end
+
+  test "doesn't send email when :error is received but status was previously :paused" do
+    {:ok, pid} = ChannelStatusServer.start_link()
+    Process.register(self(), :mail_target)
+    user = insert(:user)
+    survey = insert(:survey, state: :running)
+
+    channel =
+      TestChannel.create_channel(user, "test", TestChannel.settings(TestChannel.new(), 1, :error))
+
+    setup_surveys_with_channels([survey], [channel])
+
+    ChannelStatusServer.update_channel_status(channel.id, %{status: :paused})
+
+    ChannelStatusServer.poll(pid)
+    refute_receive [:email, _]
   end
 end

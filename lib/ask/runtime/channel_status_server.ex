@@ -71,6 +71,10 @@ defmodule Ask.Runtime.ChannelStatusServer do
     Logger.info("ChannelStatusServer: #{message}")
   end
 
+  defp process_channel_status_change({:down, _messages}, %{status: :paused}, _timestamp, _channel) do
+    nil
+  end
+
   defp process_channel_status_change({:down, _messages}, %{status: :down}, _timestamp, _channel) do
     nil
   end
@@ -84,6 +88,10 @@ defmodule Ask.Runtime.ChannelStatusServer do
       name: channel.name,
       timestamp: timestamp
     })
+  end
+
+  defp process_channel_status_change({:error, _code}, %{status: :paused}, _timestamp, _channel) do
+    nil
   end
 
   defp process_channel_status_change({:error, _code}, %{status: :error}, _timestamp, _channel) do
