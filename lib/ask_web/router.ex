@@ -171,7 +171,11 @@ defmodule AskWeb.Router do
           as: :update_archived_status
       end
 
-      resources "/channels", ChannelController, except: [:new, :edit]
+      resources "/channels", ChannelController, except: [:new, :edit] do
+        post "/pause", ChannelController, :pause, as: :pause
+        post "/unpause", ChannelController, :unpause, as: :unpause
+      end
+
       get "/audios/tts", AudioController, :tts
       resources "/audios", AudioController, only: [:create, :show]
       resources "/authorizations", OAuthClientController, only: [:index, :delete]

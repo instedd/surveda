@@ -106,4 +106,14 @@ defmodule AskWeb.ChannelController do
 
     render(conn, "show.json", channel: channel |> Repo.preload([:projects, :user]))
   end
+
+  def pause(conn, %{"id" => id}) do
+    channel_params = %{"paused" => true}
+    AskWeb.ChannelController.update(conn, %{"id" => id, "channel" => channel_params})
+  end
+
+  def unpause(conn, %{"id" => id}) do
+    channel_params = %{"paused" => false}
+    AskWeb.ChannelController.update(conn, %{"id" => id, "channel" => channel_params})
+  end
 end

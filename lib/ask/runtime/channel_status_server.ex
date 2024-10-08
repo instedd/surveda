@@ -28,7 +28,7 @@ defmodule Ask.Runtime.ChannelStatusServer do
     GenServer.call(@server_ref, {:get_channel_status, channel_id})
   end
 
-  def update_channel_status(channel_id, channel_status) do
+  defp update_channel_status(channel_id, channel_status) do
     GenServer.cast(@server_ref, {:update, {channel_id, channel_status}})
   end
 
@@ -43,14 +43,17 @@ defmodule Ask.Runtime.ChannelStatusServer do
       Survey.running_channels()
       |> Repo.preload(:user)
       |> Enum.each(fn c ->
-        previous_status = get_status_from_state(c.id, state)
 
-        spawn(fn ->
-          status = ChannelBroker.check_status(c.id)
-          timestamp = Timex.now()
+        unless c.paused do
+          previous_status = get_status_from_state(c.id, state)
 
-          process_channel_status_change(status, previous_status, timestamp, c)
-        end)
+          spawn(fn ->
+            status = ChannelBroker.check_status(c.id)
+            timestamp = Timex.now()
+
+            process_channel_status_change(status, previous_status, timestamp, c)
+          end)
+        end
       end)
 
       {:noreply, state}
@@ -71,10 +74,6 @@ defmodule Ask.Runtime.ChannelStatusServer do
     Logger.info("ChannelStatusServer: #{message}")
   end
 
-  defp process_channel_status_change({:down, _messages}, %{status: :paused}, _timestamp, _channel) do
-    nil
-  end
-
   defp process_channel_status_change({:down, _messages}, %{status: :down}, _timestamp, _channel) do
     nil
   end
@@ -88,10 +87,6 @@ defmodule Ask.Runtime.ChannelStatusServer do
       name: channel.name,
       timestamp: timestamp
     })
-  end
-
-  defp process_channel_status_change({:error, _code}, %{status: :paused}, _timestamp, _channel) do
-    nil
   end
 
   defp process_channel_status_change({:error, _code}, %{status: :error}, _timestamp, _channel) do
