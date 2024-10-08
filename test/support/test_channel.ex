@@ -74,16 +74,19 @@ defmodule Ask.TestChannel do
     |> Ask.Repo.insert!()
   end
 
-  def create_channel(user, base_url, api_channel) do
-    user
-    |> Ecto.build_assoc(:channels)
-    |> Ask.Channel.changeset(%{
+  def create_channel(user, base_url, api_channel, extra_params \\ %{}) do
+    changeset_params = %{
       name: "test",
       provider: "test",
       base_url: base_url,
       type: "ivr",
       settings: api_channel
-    })
+    }
+    changeset_params = Map.merge(changeset_params, extra_params)
+
+    user
+    |> Ecto.build_assoc(:channels)
+    |> Ask.Channel.changeset(changeset_params)
     |> Ask.Repo.insert!()
   end
 
