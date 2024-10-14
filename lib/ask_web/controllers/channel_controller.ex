@@ -2,7 +2,7 @@ defmodule AskWeb.ChannelController do
   use AskWeb, :api_controller
 
   alias Ask.{Channel, Project, Logger}
-  alias Ask.Runtime.ChannelBroker
+  alias Ask.Runtime.{ChannelBroker, ChannelStatusServer}
 
   def index(conn, %{"project_id" => project_id}) do
     channels =
@@ -109,11 +109,17 @@ defmodule AskWeb.ChannelController do
 
   def pause(conn, %{"channel_id" => id}) do
     channel_params = %{"paused" => true}
-    AskWeb.ChannelController.update(conn, %{"id" => id, "channel" => channel_params})
+    result = AskWeb.ChannelController.update(conn, %{"id" => id, "channel" => channel_params})
+    ChannelStatusServer.poll(ChannelStatusServer.server_ref())
+    ChannelStatusServer.wait(ChannelStatusServer.server_ref())
+    result
   end
 
   def unpause(conn, %{"channel_id" => id}) do
     channel_params = %{"paused" => false}
-    AskWeb.ChannelController.update(conn, %{"id" => id, "channel" => channel_params})
+    result = AskWeb.ChannelController.update(conn, %{"id" => id, "channel" => channel_params})
+    ChannelStatusServer.poll(ChannelStatusServer.server_ref())
+    ChannelStatusServer.wait(ChannelStatusServer.server_ref())
+    result
   end
 end
