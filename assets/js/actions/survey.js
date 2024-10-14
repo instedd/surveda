@@ -457,23 +457,22 @@ export const deleteDispositionHistoryLink =
     })
   }
 
-export const fetchingRespondentFilesStatus = (projectId: number, surveyId: number) => ({
+export const fetchingRespondentFilesStatus = (surveyId: number) => ({
   type: FETCHING_FILES_STATUS,
-  projectId,
   surveyId,
 })
 
-export const receiveRespondentsFilesStatus = (projectId: number, surveyId: number, files) => ({
+export const receiveRespondentsFilesStatus = (surveyId: number, surveyState: string, files: SurveyFiles) => ({
   type: RECEIVE_FILES_STATUS,
-  projectId,
   surveyId,
+  surveyState,
   files,
 })
 
 export const fetchRespondentsFilesStatus = (projectId: number, surveyId: number, filter?: string) => (dispatch: Function) => {
-  dispatch(fetchingRespondentFilesStatus(projectId, surveyId))
+  dispatch(fetchingRespondentFilesStatus(surveyId))
   api.fetchRespondentsFilesStatus(projectId, surveyId, filter).then((response) => {
-    dispatch(receiveRespondentsFilesStatus(projectId, surveyId, response.files))
+    dispatch(receiveRespondentsFilesStatus(surveyId, response.survey_state, response.files))
   })
 }
 

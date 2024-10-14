@@ -146,3 +146,17 @@ export type Response = {
 }
 
 export type Disposition = null | "completed" | "partial" | "ineligible"
+
+export type FileStatus = {
+  created_at: Date?,
+  creating: boolean,
+  file_type: string,
+}
+
+export type SurveyFiles = {
+  disposition_history: ?FileStatus,
+  incentives: ?FileStatus,
+  interactions: ?FileStatus,
+  respondents_filtered: ?FileStatus,
+  respondents_results: ?FileStatus,
+}
