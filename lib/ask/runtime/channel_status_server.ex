@@ -21,7 +21,11 @@ defmodule Ask.Runtime.ChannelStatusServer do
   end
 
   def poll(pid) do
-    send(pid, :poll)
+    send(pid, :poll_once)
+  end
+
+  def wait(pid) do
+    GenServer.call(pid, :get)
   end
 
   def get_channel_status(channel_id) do
@@ -36,29 +40,31 @@ defmodule Ask.Runtime.ChannelStatusServer do
     {:reply, get_status_from_state(channel_id, state), state}
   end
 
+  def handle_call(:get, _, state) do
+    {:reply, state, state}
+  end
+
   def handle_info(:poll, state) do
     log_info("polling")
 
     try do
-      Survey.running_channels()
-      |> Repo.preload(:user)
-      |> Enum.each(fn c ->
-
-        unless c.paused do
-          previous_status = get_status_from_state(c.id, state)
-
-          spawn(fn ->
-            status = ChannelBroker.check_status(c.id)
-            timestamp = Timex.now()
-
-            process_channel_status_change(status, previous_status, timestamp, c)
-          end)
-        end
-      end)
+      poll_channels(state)
 
       {:noreply, state}
     after
       :timer.send_after(@poll_interval, :poll)
+    end
+  end
+
+  def handle_info(:poll_once, state) do
+    log_info("poll forced")
+
+    try do
+      poll_channels(state)
+
+      {:noreply, state}
+    after
+      nil
     end
   end
 
@@ -72,6 +78,24 @@ defmodule Ask.Runtime.ChannelStatusServer do
 
   def log_info(message) do
     Logger.info("ChannelStatusServer: #{message}")
+  end
+
+  defp poll_channels(state) do
+    Survey.running_channels()
+    |> Repo.preload(:user)
+    |> Enum.each(fn c ->
+
+      unless c.paused do
+        previous_status = get_status_from_state(c.id, state)
+
+        spawn(fn ->
+          status = ChannelBroker.check_status(c.id)
+          timestamp = Timex.now()
+
+          process_channel_status_change(status, previous_status, timestamp, c)
+        end)
+      end
+    end)
   end
 
   defp process_channel_status_change({:down, _messages}, %{status: :down}, _timestamp, _channel) do
