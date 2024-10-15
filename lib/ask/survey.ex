@@ -23,7 +23,6 @@ defmodule Ask.Survey do
     PanelSurvey
   }
 
-  alias Ask.Runtime.ChannelStatusServer
   alias Ask.Ecto.Type.JSON
   alias Ecto.Multi
 
