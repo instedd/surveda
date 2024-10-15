@@ -4,6 +4,7 @@ defmodule Ask.Runtime.SurveyBroker do
   import Ecto
 
   alias Ask.{
+    Channel,
     Repo,
     Logger,
     Survey,
@@ -131,10 +132,7 @@ defmodule Ask.Runtime.SurveyBroker do
 
     channel_is_down? =
       channels
-      |> Enum.any?(fn c ->
-        status = c.id |> ChannelStatusServer.get_channel_status()
-        status != :up && status != :unknown
-      end)
+      |> Enum.any?(&(&1 |> Channel.is_paused?() || &1 |> Channel.is_down?()))
 
     poll_survey(survey, now, channel_is_down?)
   end

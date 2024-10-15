@@ -144,4 +144,34 @@ defmodule Ask.Runtime.ChannelStatusServerTest do
     ChannelStatusServer.poll(pid)
     refute_receive [:email, ^email]
   end
+
+  test "doesn't send email when a channel is down but status was previously :paused" do
+    {:ok, pid} = ChannelStatusServer.start_link()
+    Process.register(self(), :mail_target)
+    user = insert(:user)
+    survey = insert(:survey, state: :running)
+
+    channel =
+      TestChannel.create_channel(user, "test", TestChannel.settings(TestChannel.new(), 1, :down), %{paused: true})
+
+    setup_surveys_with_channels([survey], [channel])
+
+    ChannelStatusServer.poll(pid)
+    refute_receive [:email, _]
+  end
+
+  test "doesn't send email when :error is received but status was previously :paused" do
+    {:ok, pid} = ChannelStatusServer.start_link()
+    Process.register(self(), :mail_target)
+    user = insert(:user)
+    survey = insert(:survey, state: :running)
+
+    channel =
+      TestChannel.create_channel(user, "test", TestChannel.settings(TestChannel.new(), 1, :error), %{paused: true})
+
+    setup_surveys_with_channels([survey], [channel])
+
+    ChannelStatusServer.poll(pid)
+    refute_receive [:email, _]
+  end
 end
