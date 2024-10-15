@@ -525,8 +525,8 @@ defmodule Ask.Survey do
 
     down_channels =
       channels
-      |> Enum.map(&(&1.id |> ChannelStatusServer.get_channel_status()))
-      |> Enum.filter(&(&1 != :up && &1 != :unknown))
+      |> Enum.map(&(&1 |> Channel.get_status()))
+      |> Enum.filter(&(&1[:status] != "up" && &1[:status] != "unknown"))
 
     %{survey | down_channels: down_channels}
   end

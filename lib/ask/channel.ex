@@ -86,7 +86,13 @@ defmodule Ask.Channel do
   end
 
   def with_status(channel) do
-    status = unless channel.paused do
+    status = channel |> get_status()
+
+    %{channel | status: status}
+  end
+
+  def get_status(channel) do
+    unless channel.paused do
       channel.id
       |> ChannelStatusServer.get_channel_status()
       |> case do
@@ -97,8 +103,20 @@ defmodule Ask.Channel do
     else
       %{status: "paused"}
     end
+  end
 
-    %{channel | status: status}
+  def is_paused?(channel) do
+    channel.paused
+  end
+
+  def is_down?(channel) do
+    channel
+    |> get_status()
+    |> case do
+      %{status: "up"} -> false
+      %{status: "unknown"} -> false
+      _ -> true
+    end
   end
 
   defp validate_patterns(changeset) do
