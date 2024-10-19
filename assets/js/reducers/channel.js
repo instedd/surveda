@@ -25,6 +25,10 @@ export const dataReducer = (state: Channel, action: any): Channel => {
       return removePattern(state, action)
     case actions.SET_CAPACITY:
       return setCapacity(state, action)
+    case actions.PAUSE:
+      return pause(state, action)
+    case actions.UNPAUSE:
+      return unpause(state, action)
     default:
       return state
   }
@@ -170,3 +174,13 @@ const addError = (state, index, type, error) => {
     state.errorsByPath[index][type] = [error]
   }
 }
+
+// const pause = (state, action) => {
+//   return {
+//     ...state,
+//     settings: {
+//       ...state.settings,
+//       capacity: action.value,
+//     },
+//   }
+// }

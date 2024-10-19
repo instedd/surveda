@@ -2,6 +2,7 @@ import { normalize, Schema, arrayOf } from "normalizr"
 import { camelizeKeys, decamelizeKeys } from "humps"
 import "isomorphic-fetch"
 import { upload } from "./uploadManager"
+import channel from "./reducers/channel"
 
 const projectSchema = new Schema("projects")
 const folderSchema = new Schema("folders")
@@ -366,6 +367,14 @@ export const updateChannel = (channel) => {
 
 export const createChannel = (provider, baseUrl, channel) => {
   return apiPostJSON(`channels`, channelSchema, { provider, baseUrl, channel })
+}
+
+export const pauseChannel = (channel) => {
+  return apiPostJSON(`channels/${channel.id}/pause`, channelSchema)
+}
+
+export const unpauseChannel = (channel) => {
+  return apiPostJSON(`channels/${channel.id}/unpause`, channelSchema)
 }
 
 export const updateQuestionnaire = (projectId, questionnaire) => {

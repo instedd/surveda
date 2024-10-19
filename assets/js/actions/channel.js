@@ -12,6 +12,8 @@ export const FETCH = "CHANNEL_FETCH"
 export const RECEIVE = "CHANNEL_RECEIVE"
 export const SAVING = "CHANNEL_SAVING"
 export const SAVED = "CHANNEL_SAVED"
+// export const PAUSE = "CHANNEL_PAUSE"
+// export const UNPAUSE = "CHANNEL_UNPAUSE"
 
 export const updateChannel = () => (dispatch: Function, getState: () => Store) => {
   dispatch(saving())
@@ -128,4 +130,16 @@ export const changeOutputPattern =
 
 export const deletePattern = (index: number) => (dispatch: Function, getState: () => Store) => {
   dispatch(removePattern(index))
+}
+
+export const pause = (channel: Channel) => (dispatch) => {
+  return api
+    .pauseChannel(channel)
+    .then((response) => dispatch(fetchChannel(channel.id)))
+}
+
+export const unpause = (channel: Channel) => (dispatch) => {
+  return api
+    .unpauseChannel(channel)
+    .then((response) => dispatch(fetchChannel(channel.id)))
 }

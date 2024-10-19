@@ -6,6 +6,11 @@ import * as actions from "../../actions/channel"
 import * as projectsActions from "../../actions/projects"
 import * as routes from "../../routes"
 import { translate } from "react-i18next"
+import ChannelPause from "./ChannelPause"
+
+import {
+  ActionButton,
+} from "../ui"
 
 class ChannelShare extends Component {
   static propTypes = {
@@ -54,7 +59,9 @@ class ChannelShare extends Component {
     }
 
     return (
-      <div className="white">
+      <div>
+        <ChannelPause />
+        <div className="white">
         <div className="row">
           <div className="col s12 m6 push-m3">
             <h4>{t("Share this channel on different projects")}</h4>
@@ -74,6 +81,7 @@ class ChannelShare extends Component {
             </a>
           </div>
         </div>
+      </div>
       </div>
     )
   }

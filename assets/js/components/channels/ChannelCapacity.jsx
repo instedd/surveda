@@ -7,6 +7,10 @@ import * as routes from "../../routes"
 import { translate } from "react-i18next"
 import { config } from "../../config"
 
+import {
+  ActionButton,
+} from "../ui"
+
 class ChannelCapacityForm extends Component {
   static propTypes = {
     initialValue: PropTypes.number.isRequired,
@@ -109,12 +113,15 @@ class ChannelCapacity extends Component {
     }
 
     return (
+      <div>
+        <ActionButton text={t("Add channel")} onClick={(e) => null} iconName="pause" />
       <ChannelCapacityForm
         initialValue={channel.settings.capacity || parseInt(config.default_channel_capacity)}
         onConfirm={(capacity) => this.onConfirmClick(capacity)}
         onCancel={() => this.onCancelClick()}
         t={t}
       />
+      </div>
     )
   }
 }

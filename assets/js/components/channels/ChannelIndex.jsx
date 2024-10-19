@@ -6,6 +6,7 @@ import { withRouter } from "react-router"
 import * as routes from "../../routes"
 import { orderedItems } from "../../reducers/collection"
 import * as actions from "../../actions/channels"
+import * as channelActions from "../../actions/channel"
 import range from "lodash/range"
 import * as authActions from "../../actions/authorizations"
 import {
@@ -18,6 +19,7 @@ import {
   ConfirmationModal,
   PagingFooter,
   channelFriendlyName,
+  Tooltip,
 } from "../ui"
 import { Preloader } from "react-materialize"
 import { config } from "../../config"
@@ -72,6 +74,12 @@ class ChannelIndex extends Component<any> {
     } else {
       return channel.name
     }
+  }
+
+  pause(event, channel) {
+    // event.preventDefault()
+    console.log("About to pause a channel")
+    this.props.channelActions.pause(channel)
   }
 
   render() {
@@ -230,6 +238,21 @@ class ChannelIndex extends Component<any> {
       )
     }
 
+    const pauseIconForChannel = (channel) => {
+      const { statusInfo } = channel
+      console.log({statusInfo, label: "1--------"})
+      const { t } = this.props
+      return (
+        <td className="action">
+          <Tooltip text={t("Pause channel")}>
+            <a onClick={(e) => this.pause(e, channel)}>
+              <i className="material-icons">pause</i>
+            </a>
+          </Tooltip>
+        </td>
+      )
+    }
+    
     let providerUIs = []
     config.verboice.forEach((_, index) => {
       providerUIs.push(verboiceProviderUI(index, multipleVerboice))
@@ -297,7 +320,7 @@ class ChannelIndex extends Component<any> {
                 if (!channel)
                   return (
                     <tr key={-index} className="empty-row">
-                      <td colSpan="3" />
+                      <td colSpan="4" />
                     </tr>
                   )
 
@@ -311,7 +334,7 @@ class ChannelIndex extends Component<any> {
                     </td>
                     <td>{`${channel.provider}${channelFriendlyName(channel)}`}</td>
                     <td className="tdError">
-                      {status == "down" || status == "error" ? (
+                      {status == "down" || status == "error" || status == "paused" ? (
                         <span className="questionnaire-error" />
                       ) : null}
                     </td>
@@ -369,6 +392,7 @@ const mapStateToProps = (state) => {
 const mapDispatchToProps = (dispatch) => ({
   actions: bindActionCreators(actions, dispatch),
   authActions: bindActionCreators(authActions, dispatch),
+  channelActions: bindActionCreators(channelActions, dispatch),
 })
 
 export default translate()(withRouter(connect(mapStateToProps, mapDispatchToProps)(ChannelIndex)))

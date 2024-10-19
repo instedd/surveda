@@ -5,6 +5,10 @@ import { bindActionCreators } from "redux"
 import * as routes from "../../routes"
 import * as actions from "../../actions/channel"
 
+import {
+  ActionButton,
+} from "../ui"
+
 class Pattern extends Component {
   static propTypes = {
     input: PropTypes.string.isRequired,
@@ -211,6 +215,8 @@ class ChannelPatterns extends Component {
     const hasErrors = Object.keys(errorsByPath).length > 0
 
     return (
+      <div>
+        <ActionButton text={t("Add channel")} onClick={(e) => null} iconName="pause" />
       <div className="white">
         <div className="row">
           <div className="col s12 m8 push-m2">
@@ -256,6 +262,7 @@ class ChannelPatterns extends Component {
             </a>
           </div>
         </div>
+      </div>
       </div>
     )
   }
