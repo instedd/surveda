@@ -683,6 +683,37 @@ export const refreshDispositionHistoryLink = (projectId, surveyId) => {
   )
 }
 
+const downloadGeneratedFile = (sourceUrl) =>
+  apiFetch(sourceUrl, null, null).then((response) => {
+      response.json().then((data) => {
+        window.open(data.url)
+    })
+  }
+  )
+
+export const downloadRespondentsResultsFile = (projectId, surveyId, q) => 
+  downloadGeneratedFile(`projects/${projectId}/surveys/${surveyId}/respondents/results_csv?${
+    (q && `&q=${encodeURIComponent(q)}`) || ""
+  }`)
+export const downloadRespondentsDispositionHistoryFile = (projectId, surveyId) =>
+  downloadGeneratedFile(`projects/${projectId}/surveys/${surveyId}/respondents/disposition_history`)
+export const downloadRespondentsIncentivesFile = (projectId, surveyId) =>
+  downloadGeneratedFile(`projects/${projectId}/surveys/${surveyId}/respondents/incentives`)
+export const downloadRespondentsInteractionsFile = (projectId, surveyId) =>
+  downloadGeneratedFile(`projects/${projectId}/surveys/${surveyId}/respondents/interactions`)
+
+export const generateResults = (projectId, surveyId, filter) =>
+  apiPostJSON(`projects/${projectId}/surveys/${surveyId}/respondents/results`, null, { q: filter })
+export const generateDispositionHistory = (projectId, surveyId) =>
+  apiPostJSON(`projects/${projectId}/surveys/${surveyId}/respondents/disposition_history`, null, null)
+export const generateIncentives = (projectId, surveyId) =>
+  apiPostJSON(`projects/${projectId}/surveys/${surveyId}/respondents/incentives`, null, null)
+export const generateInteractions = (projectId, surveyId) =>
+  apiPostJSON(`projects/${projectId}/surveys/${surveyId}/respondents/interactions`, null, null)
+
+export const fetchRespondentsFilesStatus = (projectId, surveyId, filter) =>
+  apiFetch(`projects/${projectId}/surveys/${surveyId}/respondents/files?q=${filter}`).then((response) => response.json())
+
 export const startSimulation = (projectId, questionnaireId, mode) => {
   return apiPutOrPostJSONWithCallback(
     `projects/${projectId}/questionnaires/${questionnaireId}/simulation`,
