@@ -479,6 +479,7 @@ export const fetchRespondentsFilesStatus = (projectId: number, surveyId: number,
 export const generateResultsFile =
   (projectId: number, surveyId: number, filter?: string) => (dispatch: Function) => {
     api.generateResults(projectId, surveyId, filter).then((response) => {
+      // FIXME: periodically check for file generation to have finished
       return dispatch(generatingFile("respondent-results")) // FIXME: what should we dispatch?
     })
   }

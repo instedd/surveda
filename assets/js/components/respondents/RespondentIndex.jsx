@@ -2,6 +2,7 @@
 import React, { Component } from "react"
 import { bindActionCreators } from "redux"
 import { connect } from "react-redux"
+import TimeAgo from "react-timeago"
 import * as api from "../../api"
 import * as actions from "../../actions/respondents"
 import { fieldUniqueKey, isFieldSelected } from "../../reducers/respondents"
@@ -71,6 +72,7 @@ class RespondentIndex extends Component<Props, State> {
   refreshInteractionsLink: Function
   refreshDispositionHistoryLink: Function
   columnPickerModalId: string
+  timeFormatter: Function
 
   constructor(props) {
     super(props)
@@ -83,6 +85,7 @@ class RespondentIndex extends Component<Props, State> {
     this.refreshIncentivesLink = this.refreshIncentivesLink.bind(this)
     this.refreshInteractionsLink = this.refreshInteractionsLink.bind(this)
     this.refreshDispositionHistoryLink = this.refreshDispositionHistoryLink.bind(this)
+    this.timeFormatter = this.timeFormatter.bind(this)
     this.columnPickerModalId = uniqueId("column-picker-modal-id_")
   }
 
@@ -109,6 +112,27 @@ class RespondentIndex extends Component<Props, State> {
       sortBy,
       sortAsc
     )
+  }
+
+  timeFormatter(number, unit, suffix, date, defaultFormatter) {
+    const { t } = this.props
+
+    switch (unit) {
+      case "second":
+        return t("{{count}} seconds ago", { count: number })
+      case "minute":
+        return t("{{count}} minutes ago", { count: number })
+      case "hour":
+        return t("{{count}} hours ago", { count: number })
+      case "day":
+        return t("{{count}} days ago", { count: number })
+      case "week":
+        return t("{{count}} weeks ago", { count: number })
+      case "month":
+        return t("{{count}} months ago", { count: number })
+      case "year":
+        return t("{{count}} years ago", { count: number })
+    }
   }
 
   showDownloadsModal() {
@@ -351,7 +375,7 @@ class RespondentIndex extends Component<Props, State> {
   }
 
   downloadItem(id) {
-    const { t, totalCount, filter } = this.props
+    const { t, totalCount, filter, respondentsFiles } = this.props
     const { shownFile } = this.state
     const currentFile = shownFile == id
     let item: ?{
@@ -363,8 +387,9 @@ class RespondentIndex extends Component<Props, State> {
       onDownload: Function,
       onGenerate: Function,
     } = null
+    const fileStatus = currentFile ? respondentsFiles.files?.[id] : null
     switch (id) {
-      case "filtered-results":
+      case "respondents_filtered":
         item = {
           title: t("Filtered survey results"),
           description: t(
@@ -376,7 +401,7 @@ class RespondentIndex extends Component<Props, State> {
           onGenerate: () => this.generateResults(filter),
         }
         break
-      case "results":
+      case "respondents_results":
         item = {
           title: t("Survey results"),
           description: t(
@@ -392,7 +417,7 @@ class RespondentIndex extends Component<Props, State> {
           onGenerate: () => this.generateResults(),
         }
         break
-      case "disposition-history":
+      case "disposition_history":
         item = {
           title: t("Disposition History"),
           description: t(
@@ -449,25 +474,34 @@ class RespondentIndex extends Component<Props, State> {
     } else {
       const disabled = item.disabled
 
-      const downloadButton = (
+      const fileExists = !!fileStatus?.created_at
+
+      const downloadButtonClass = fileExists ? "black-text" : "grey-text"
+      const downloadButtonOnClick = fileExists ? item.onDownload : null
+      const createdAtLabel = fileExists ? <TimeAgo date={fileStatus.created_at * 1000} formatter={this.timeFormatter} /> : null
+
+      const fileCreating = !!fileStatus?.creating
+      const generateButtonClass = fileCreating ? "btn-icon-grey" : "black-text"
+      const generateButtonOnClick = fileCreating ? null : item.onGenerate
+      const generatingFileLabel = fileCreating ? "Generating..." : ""
+
+      // TODO: we could avoid generating the whole section for files that are not the current one
+      const downloadButton = !currentFile ? null : (
         <div className="file-download">
           <Tooltip text={t("Download file")}>
-            <a className="black-text" onClick={item.onDownload}>
+            <a className={downloadButtonClass} onClick={downloadButtonOnClick}>
               <i className="material-icons">get_app</i>
             </a>
           </Tooltip>
           <span className="">{t("Download last generated file")}</span>
           <span className="grey-text">
-            { // (15 min ago 
-              // FIXME: this should be calculated
-            }
-              <Tooltip text={t("Regenerate file")}>
-                <a className="btn-icon-grey" onClick={item.onGenerate}>
-                  <i className="material-icons">refresh</i>
-                </a>
-              </Tooltip>
-            { // )
-            }
+            { createdAtLabel }
+            { generatingFileLabel }
+            <Tooltip text={t("Regenerate file")}>
+              <a className={generateButtonClass} onClick={generateButtonOnClick}>
+                <i className="material-icons">refresh</i>
+              </a>
+            </Tooltip>
           </span>
         </div>
       )
@@ -521,9 +555,9 @@ class RespondentIndex extends Component<Props, State> {
           <p>{t("Choose the data you want to download")}</p>
         </div>
         <ul className="collection repondents-index-modal">
-          {filter ? this.downloadItem("filtered-results") : null}
-          {this.downloadItem("results")}
-          {this.downloadItem("disposition-history")}
+          {filter ? this.downloadItem("respondents_filtered") : null}
+          {this.downloadItem("respondents_results")}
+          {this.downloadItem("disposition_history")}
           {ownerOrAdmin ? this.downloadItem("incentives") : null}
           {ownerOrAdmin ? this.downloadItem("interactions") : null}
         </ul>
@@ -799,7 +833,7 @@ class RespondentIndex extends Component<Props, State> {
 }
 
 const mapStateToProps = (state, ownProps) => {
-  const { project, survey, questionnaires, respondents } = state
+  const { project, survey, questionnaires, respondents, respondentsFiles } = state
   const { page, sortBy, sortAsc, order, filter, items, fields, selectedFields } = respondents
   const { number: pageNumber, size: pageSize, totalCount } = page
   const { projectId, surveyId } = ownProps.params
@@ -814,6 +848,7 @@ const mapStateToProps = (state, ownProps) => {
     project: project.data,
     questionnaires: questionnaires.items,
     respondents: items,
+    respondentsFiles,
     order,
     userLevel: project.data ? project.data.level : "",
     pageNumber,
