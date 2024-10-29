@@ -4,6 +4,7 @@ import { translate } from "react-i18next"
 import { bindActionCreators } from "redux"
 import * as routes from "../../routes"
 import * as actions from "../../actions/channel"
+import ChannelPause from "./ChannelPause"
 
 class Pattern extends Component {
   static propTypes = {
@@ -212,6 +213,7 @@ class ChannelPatterns extends Component {
 
     return (
       <div className="white">
+        <ChannelPause />
         <div className="row">
           <div className="col s12 m8 push-m2">
             <h4>{t("Apply patterns for numbers cleanup")}</h4>

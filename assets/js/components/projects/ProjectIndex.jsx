@@ -6,7 +6,7 @@ import { createProject } from "../../api"
 import * as actions from "../../actions/projects"
 import * as projectActions from "../../actions/project"
 import {
-  AddButton,
+  ActionButton,
   EmptyPage,
   CardTable,
   SortableHeader,
@@ -110,7 +110,7 @@ class ProjectIndex extends Component {
     const { archived, t } = this.props
     return (
       <div>
-        <AddButton text={t("Add project")} onClick={(e) => this.newProject(e)} />
+        <ActionButton text={t("Add project")} onClick={(e) => this.newProject(e)} icon="add" color="green" />
         <div className="row">
           <ArchiveFilter
             archived={archived}

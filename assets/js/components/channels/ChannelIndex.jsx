@@ -9,7 +9,7 @@ import * as actions from "../../actions/channels"
 import range from "lodash/range"
 import * as authActions from "../../actions/authorizations"
 import {
-  AddButton,
+  ActionButton,
   EmptyPage,
   CardTable,
   UntitledIfEmpty,
@@ -18,6 +18,7 @@ import {
   ConfirmationModal,
   PagingFooter,
   channelFriendlyName,
+  Tooltip,
 } from "../ui"
 import { Preloader } from "react-materialize"
 import { config } from "../../config"
@@ -230,6 +231,21 @@ class ChannelIndex extends Component<any> {
       )
     }
 
+    const pauseIconForChannel = (channel) => {
+      const { statusInfo } = channel
+      console.log({statusInfo, label: "1--------"})
+      const { t } = this.props
+      return (
+        <td className="action">
+          <Tooltip text={t("Pause channel")}>
+            <a onClick={(e) => this.pause(e, channel)}>
+              <i className="material-icons">pause</i>
+            </a>
+          </Tooltip>
+        </td>
+      )
+    }
+    
     let providerUIs = []
     config.verboice.forEach((_, index) => {
       providerUIs.push(verboiceProviderUI(index, multipleVerboice))
@@ -240,7 +256,7 @@ class ChannelIndex extends Component<any> {
 
     return (
       <div>
-        <AddButton text={t("Add channel")} onClick={(e) => this.addChannel(e)} />
+        <ActionButton text={t("Add channel")} onClick={(e) => this.addChannel(e)} icon="add" color="green" />
         {providerModals}
 
         <Modal card id="add-channel">
@@ -297,7 +313,7 @@ class ChannelIndex extends Component<any> {
                 if (!channel)
                   return (
                     <tr key={-index} className="empty-row">
-                      <td colSpan="3" />
+                      <td colSpan="4" />
                     </tr>
                   )
 
@@ -311,7 +327,7 @@ class ChannelIndex extends Component<any> {
                     </td>
                     <td>{`${channel.provider}${channelFriendlyName(channel)}`}</td>
                     <td className="tdError">
-                      {status == "down" || status == "error" ? (
+                      {status == "down" || status == "error" || status == "paused" ? (
                         <span className="questionnaire-error" />
                       ) : null}
                     </td>

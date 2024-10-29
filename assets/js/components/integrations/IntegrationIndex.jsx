@@ -6,7 +6,7 @@ import * as actions from "../../actions/integrations"
 import * as surveyActions from "../../actions/survey"
 import * as projectActions from "../../actions/project"
 import values from "lodash/values"
-import { AddButton, CardTable, InputWithLabel, Modal } from "../ui"
+import { ActionButton, CardTable, InputWithLabel, Modal } from "../ui"
 import IntegrationRow from "./IntegrationRow"
 
 type Props = {
@@ -168,12 +168,14 @@ class IntegrationIndex extends Component<Props, State> {
 
     return (
       <div className="white">
-        <AddButton
+        <ActionButton
           text="Add integration"
           onClick={(e) => {
             e.preventDefault()
             $("#newIntegration").modal("open")
           }}
+          icon="add"
+          color="green"
         />
         {this.modalNewIntegration()}
         <CardTable title="Integrations" tableScroll>

@@ -129,3 +129,15 @@ export const changeOutputPattern =
 export const deletePattern = (index: number) => (dispatch: Function, getState: () => Store) => {
   dispatch(removePattern(index))
 }
+
+export const pause = (channel: Channel) => (dispatch) => {
+  return api
+    .pauseChannel(channel)
+    .then((response) => dispatch(fetchChannel(channel.id)))
+}
+
+export const unpause = (channel: Channel) => (dispatch) => {
+  return api
+    .unpauseChannel(channel)
+    .then((response) => dispatch(fetchChannel(channel.id)))
+}

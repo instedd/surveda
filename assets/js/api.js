@@ -368,6 +368,14 @@ export const createChannel = (provider, baseUrl, channel) => {
   return apiPostJSON(`channels`, channelSchema, { provider, baseUrl, channel })
 }
 
+export const pauseChannel = (channel) => {
+  return apiPostJSON(`channels/${channel.id}/pause`, channelSchema)
+}
+
+export const unpauseChannel = (channel) => {
+  return apiPostJSON(`channels/${channel.id}/unpause`, channelSchema)
+}
+
 export const updateQuestionnaire = (projectId, questionnaire) => {
   return apiPutJSON(
     `projects/${projectId}/questionnaires/${questionnaire.id}`,

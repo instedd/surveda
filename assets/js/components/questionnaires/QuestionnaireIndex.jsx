@@ -11,7 +11,7 @@ import * as questionnaireActions from "../../actions/questionnaire"
 import * as userSettingsActions from "../../actions/userSettings"
 import * as projectActions from "../../actions/project"
 import {
-  AddButton,
+  ActionButton,
   EmptyPage,
   SortableHeader,
   CardTable,
@@ -280,7 +280,7 @@ class QuestionnaireIndex extends Component<any> {
     const { archived, t, readOnly } = this.props
 
     const addButton = (
-      <AddButton text={t("Add questionnaire")} onClick={(e) => this.newQuestionnaire(e)} />
+      <ActionButton text={t("Add questionnaire")} onClick={(e) => this.newQuestionnaire(e)} icon="add" color="green" />
     )
 
     return (
