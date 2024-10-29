@@ -1,4 +1,4 @@
-import React, { PropTypes } from "react"
+import { PropTypes } from "react"
 import { bindActionCreators } from "redux"
 import { connect } from "react-redux"
 import { translate } from "react-i18next"
@@ -16,9 +16,9 @@ const ChannelPause = ({ channel, t, actions }) => {
   const pauseChannel = (channel, pause) => {
     console.log(`About to ${pause ? "pause" : "unpause"} channel ${channel.id}`)
     if (pause) {
-      actions.pause(channel)
+      actions.pause(channel.id)
     } else {
-      actions.unpause(channel)
+      actions.unpause(channel.id)
     }
   }
 

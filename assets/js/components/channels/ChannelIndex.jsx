@@ -18,7 +18,6 @@ import {
   ConfirmationModal,
   PagingFooter,
   channelFriendlyName,
-  Tooltip,
 } from "../ui"
 import { Preloader } from "react-materialize"
 import { config } from "../../config"
@@ -230,21 +229,6 @@ class ChannelIndex extends Component<any> {
         </li>
       )
     }
-
-    const pauseIconForChannel = (channel) => {
-      const { statusInfo } = channel
-      console.log({statusInfo, label: "1--------"})
-      const { t } = this.props
-      return (
-        <td className="action">
-          <Tooltip text={t("Pause channel")}>
-            <a onClick={(e) => this.pause(e, channel)}>
-              <i className="material-icons">pause</i>
-            </a>
-          </Tooltip>
-        </td>
-      )
-    }
     
     let providerUIs = []
     config.verboice.forEach((_, index) => {
@@ -327,8 +311,12 @@ class ChannelIndex extends Component<any> {
                     </td>
                     <td>{`${channel.provider}${channelFriendlyName(channel)}`}</td>
                     <td className="tdError">
-                      {status == "down" || status == "error" || status == "paused" ? (
+                      {status == "down" || status == "error" ? (
                         <span className="questionnaire-error" />
+                      ) : status == "paused" ? (
+                        <span className="channel-paused">
+                          <i className="material-icons">pause</i>
+                        </span>
                       ) : null}
                     </td>
                   </tr>

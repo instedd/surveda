@@ -130,14 +130,14 @@ export const deletePattern = (index: number) => (dispatch: Function, getState: (
   dispatch(removePattern(index))
 }
 
-export const pause = (channel: Channel) => (dispatch) => {
+export const pause = (id: number) => (dispatch: Function) => {
   return api
-    .pauseChannel(channel)
-    .then((response) => dispatch(fetchChannel(channel.id)))
+    .pauseChannel(id)
+    .then((response) => dispatch(fetchChannel(id)))
 }
 
-export const unpause = (channel: Channel) => (dispatch) => {
+export const unpause = (id: number) => (dispatch: Function) => {
   return api
-    .unpauseChannel(channel)
-    .then((response) => dispatch(fetchChannel(channel.id)))
+    .unpauseChannel(id)
+    .then((response) => dispatch(fetchChannel(id)))
 }

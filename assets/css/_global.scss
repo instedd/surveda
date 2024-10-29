@@ -833,6 +833,13 @@ i.survey-status {
   height: 12px;
 }
 
+.channel-paused {
+  display: block;
+  color: var(--reference-color12);
+  width: 12px;
+  height: 12px;
+}
+
 .wizard-content {
   > div {
     min-height: 110vh;
