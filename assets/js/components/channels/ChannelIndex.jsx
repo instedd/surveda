@@ -229,7 +229,6 @@ class ChannelIndex extends Component<any> {
         </li>
       )
     }
-    
     let providerUIs = []
     config.verboice.forEach((_, index) => {
       providerUIs.push(verboiceProviderUI(index, multipleVerboice))
@@ -297,7 +296,7 @@ class ChannelIndex extends Component<any> {
                 if (!channel)
                   return (
                     <tr key={-index} className="empty-row">
-                      <td colSpan="4" />
+                      <td colSpan="3" />
                     </tr>
                   )
 

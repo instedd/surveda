@@ -13,7 +13,7 @@ class DownChannelsStatus extends PureComponent {
   render() {
     const { channels, timestamp } = this.props
     const channelNames = map(channels, (channel) => channel.name)
-    const paused = every(channels, (channel) => channel.statusInfo && channel.statusInfo.status == "paused")
+    const paused = every(channels, (channel) => channel.statusInfo?.status == "paused")
     const text = paused ? "paused" : "down"
     return this.downChannelsDescription(channelNames, timestamp, text)
   }

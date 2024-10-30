@@ -14,7 +14,6 @@ const ChannelPause = ({ channel, t, actions }) => {
   const color = paused ? "green" : "red"
 
   const pauseChannel = (channel, pause) => {
-    console.log(`About to ${pause ? "pause" : "unpause"} channel ${channel.id}`)
     if (pause) {
       actions.pause(channel.id)
     } else {
