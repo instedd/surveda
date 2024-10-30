@@ -16,6 +16,8 @@ defmodule Ask.Channel do
     field :settings, :map
     field :patterns, Ask.Ecto.Type.JSON, default: []
     field :status, Ask.Ecto.Type.JSON, virtual: true
+    field :paused, :boolean, default: false
+
     belongs_to :user, Ask.User
     has_many :respondent_group_channels, Ask.RespondentGroupChannel, on_delete: :delete_all
     many_to_many :projects, Ask.Project, join_through: Ask.ProjectChannel, on_replace: :delete
@@ -36,7 +38,7 @@ defmodule Ask.Channel do
   """
   def changeset(struct, params \\ %{}) do
     struct
-    |> cast(params, [:name, :type, :provider, :base_url, :settings, :user_id, :patterns])
+    |> cast(params, [:name, :type, :provider, :base_url, :settings, :user_id, :patterns, :paused])
     |> validate_required([:name, :type, :provider, :settings, :user_id])
     |> validate_patterns
     |> assoc_constraint(:user)
@@ -84,16 +86,37 @@ defmodule Ask.Channel do
   end
 
   def with_status(channel) do
-    status = channel.id |> ChannelStatusServer.get_channel_status()
-
-    status =
-      case status do
-        :up -> %{status: "up"}
-        :unknown -> %{status: "unknown"}
-        down_or_error -> down_or_error
-      end
+    status = channel |> get_status()
 
     %{channel | status: status}
+  end
+
+  def get_status(%{paused: true}) do
+    %{status: "paused"}
+  end
+
+  def get_status(channel) do
+    channel.id
+    |> ChannelStatusServer.get_channel_status()
+    |> case do
+      :up -> %{status: "up"}
+      :unknown -> %{status: "unknown"}
+      down_or_error -> down_or_error
+    end
+  end
+
+  def is_paused?(channel) do
+    channel.paused
+  end
+
+  def is_down?(channel) do
+    channel
+    |> get_status()
+    |> case do
+      %{status: "up"} -> false
+      %{status: "unknown"} -> false
+      _ -> true
+    end
   end
 
   defp validate_patterns(changeset) do

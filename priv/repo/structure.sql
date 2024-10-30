@@ -105,6 +105,7 @@ CREATE TABLE `channels` (
   `updated_at` datetime NOT NULL,
   `base_url` varchar(255) DEFAULT NULL,
   `patterns` text,
+  `paused` tinyint(1) DEFAULT '0',
   PRIMARY KEY (`id`),
   UNIQUE KEY `id` (`id`),
   KEY `channels_user_id_index` (`user_id`),
@@ -1018,7 +1019,7 @@ CREATE TABLE `users` (
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2024-04-22 22:06:45
+-- Dump completed on 2024-10-07 19:43:26
 INSERT INTO `schema_migrations` (version) VALUES (20160812145257);
 INSERT INTO `schema_migrations` (version) VALUES (20160816183915);
 INSERT INTO `schema_migrations` (version) VALUES (20160830200454);
@@ -1238,3 +1239,4 @@ INSERT INTO `schema_migrations` (version) VALUES (20230405111657);
 INSERT INTO `schema_migrations` (version) VALUES (20230413101342);
 INSERT INTO `schema_migrations` (version) VALUES (20230821100203);
 INSERT INTO `schema_migrations` (version) VALUES (20240422175453);
+INSERT INTO `schema_migrations` (version) VALUES (20241007192540);

@@ -319,6 +319,7 @@ defmodule AskWeb.SurveyControllerTest do
       survey_1 = insert(:survey, project: project, state: :running)
       survey_2 = insert(:survey, project: project, state: :running)
       survey_3 = insert(:survey, project: project, state: :running)
+      survey_4 = insert(:survey, project: project, state: :running)
 
       up_channel =
         TestChannel.create_channel(user, "test", TestChannel.settings(TestChannel.new(), 1))
@@ -337,10 +338,19 @@ defmodule AskWeb.SurveyControllerTest do
           TestChannel.settings(TestChannel.new(), 3, :error)
         )
 
-      setup_surveys_with_channels([survey_1, survey_2, survey_3], [
+      paused_channel =
+        TestChannel.create_channel(
+          user,
+          "test",
+          TestChannel.settings(TestChannel.new(), 3, :error),
+          %{paused: true}
+        )
+
+      setup_surveys_with_channels([survey_1, survey_2, survey_3, survey_4], [
         up_channel,
         down_channel,
-        error_channel
+        error_channel,
+        paused_channel,
       ])
 
       ChannelStatusServer.poll(pid)
@@ -350,7 +360,7 @@ defmodule AskWeb.SurveyControllerTest do
 
       conn = get(conn, project_survey_path(conn, :index, project.id))
 
-      [survey_1, survey_2, survey_3] = json_response(conn, 200)["data"]
+      [survey_1, survey_2, survey_3, survey_4] = json_response(conn, 200)["data"]
       assert survey_1["down_channels"] == []
 
       [%{"status" => "down", "messages" => [], "timestamp" => t1, "name" => "test"}] =
@@ -363,6 +373,8 @@ defmodule AskWeb.SurveyControllerTest do
 
       assert t2
       assert code
+
+      assert [%{"status" => "paused"}] = survey_4["down_channels"]
 
       ChannelBrokerSupervisor.terminate_children()
       ChannelBrokerAgent.clear()
@@ -2774,7 +2786,7 @@ defmodule AskWeb.SurveyControllerTest do
     end
 
     test "stops respondents only for the stopped survey", %{conn: conn, user: user} do
-      start_survey_canceller_supervisor() 
+      start_survey_canceller_supervisor()
       project = create_project_for_user(user)
       questionnaire = insert(:questionnaire, name: "test", project: project)
       survey = insert(:survey, project: project, state: :running)

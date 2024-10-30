@@ -218,4 +218,40 @@ defmodule AskWeb.ChannelControllerTest do
       end
     end
   end
+
+  describe "pause" do
+    setup %{conn: conn, user: user} do
+      settings = Ask.TestChannel.settings(Ask.TestChannel.new)
+      channel = insert(:channel, user: user, type: "sms", settings: settings)
+      {:ok, conn: conn, user: user, channel: channel}
+    end
+
+    test "pause channel", %{conn: conn, user: user, channel: channel} do
+      conn =
+        post conn, channel_pause_path(conn, :pause, channel.id)
+
+      assert json_response(conn, 200)
+
+      channel =
+        user
+        |> assoc(:channels)
+        |> Repo.one!()
+
+      assert %{paused: true} = channel
+    end
+
+    test "unpause channel", %{conn: conn, user: user, channel: channel} do
+      conn =
+        post conn, channel_unpause_path(conn, :unpause, channel.id)
+
+      assert json_response(conn, 200)
+
+      channel =
+        user
+        |> assoc(:channels)
+        |> Repo.one!()
+
+      assert %{paused: false} = channel
+    end
+  end
 end

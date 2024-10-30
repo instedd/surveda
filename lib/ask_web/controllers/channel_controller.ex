@@ -2,7 +2,7 @@ defmodule AskWeb.ChannelController do
   use AskWeb, :api_controller
 
   alias Ask.{Channel, Project, Logger}
-  alias Ask.Runtime.ChannelBroker
+  alias Ask.Runtime.{ChannelBroker, ChannelStatusServer}
 
   def index(conn, %{"project_id" => project_id}) do
     channels =
@@ -105,5 +105,39 @@ defmodule AskWeb.ChannelController do
     channel = provider.create_channel(user, base_url, api_channel)
 
     render(conn, "show.json", channel: channel |> Repo.preload([:projects, :user]))
+  end
+
+  def pause(conn, %{"channel_id" => id}) do
+    pause_channel(conn, id, true)
+  end
+
+  def unpause(conn, %{"channel_id" => id}) do
+    pause_channel(conn, id, false)
+  end
+
+  defp pause_channel(conn, id, paused) do
+    channel_params = %{"paused" => paused}
+
+    Channel
+    |> Repo.get!(id)
+    |> authorize_channel(conn)
+    |> Repo.preload([:projects, :user])
+    |> Channel.changeset(channel_params)
+    |> Repo.update()
+    |> case do
+      {:ok, channel} ->
+        ChannelBroker.on_channel_settings_change(channel.id, channel.settings)
+        ChannelStatusServer.poll(ChannelStatusServer.server_ref())
+
+        render(conn, "show.json", channel: channel |> Repo.preload(:projects))
+
+      {:error, changeset} ->
+        Logger.warn("Error when pausing channel: #{id}")
+
+        conn
+        |> put_status(:unprocessable_entity)
+        |> put_view(AskWeb.ChangesetView)
+        |> render("error.json", changeset: changeset)
+    end
   end
 end
