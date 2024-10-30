@@ -91,17 +91,17 @@ defmodule Ask.Channel do
     %{channel | status: status}
   end
 
+  def get_status(%{paused: true}) do
+    %{status: "paused"}
+  end
+
   def get_status(channel) do
-    unless channel.paused do
-      channel.id
-      |> ChannelStatusServer.get_channel_status()
-      |> case do
-        :up -> %{status: "up"}
-        :unknown -> %{status: "unknown"}
-        down_or_error -> down_or_error
-      end
-    else
-      %{status: "paused"}
+    channel.id
+    |> ChannelStatusServer.get_channel_status()
+    |> case do
+      :up -> %{status: "up"}
+      :unknown -> %{status: "unknown"}
+      down_or_error -> down_or_error
     end
   end
 

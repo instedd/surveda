@@ -108,18 +108,36 @@ defmodule AskWeb.ChannelController do
   end
 
   def pause(conn, %{"channel_id" => id}) do
-    channel_params = %{"paused" => true}
-    result = AskWeb.ChannelController.update(conn, %{"id" => id, "channel" => channel_params})
-    ChannelStatusServer.poll(ChannelStatusServer.server_ref())
-    ChannelStatusServer.wait(ChannelStatusServer.server_ref())
-    result
+    pause_channel(conn, id, true)
   end
 
   def unpause(conn, %{"channel_id" => id}) do
-    channel_params = %{"paused" => false}
-    result = AskWeb.ChannelController.update(conn, %{"id" => id, "channel" => channel_params})
-    ChannelStatusServer.poll(ChannelStatusServer.server_ref())
-    ChannelStatusServer.wait(ChannelStatusServer.server_ref())
-    result
+    pause_channel(conn, id, false)
+  end
+
+  defp pause_channel(conn, id, paused) do
+    channel_params = %{"paused" => paused}
+
+    Channel
+    |> Repo.get!(id)
+    |> authorize_channel(conn)
+    |> Repo.preload([:projects, :user])
+    |> Channel.changeset(channel_params)
+    |> Repo.update()
+    |> case do
+      {:ok, channel} ->
+        ChannelBroker.on_channel_settings_change(channel.id, channel.settings)
+        ChannelStatusServer.poll(ChannelStatusServer.server_ref())
+
+        render(conn, "show.json", channel: channel |> Repo.preload(:projects))
+
+      {:error, changeset} ->
+        Logger.warn("Error when pausing channel: #{id}")
+
+        conn
+        |> put_status(:unprocessable_entity)
+        |> put_view(AskWeb.ChangesetView)
+        |> render("error.json", changeset: changeset)
+    end
   end
 end

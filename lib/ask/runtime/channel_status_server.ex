@@ -24,10 +24,6 @@ defmodule Ask.Runtime.ChannelStatusServer do
     send(pid, :poll_once)
   end
 
-  def wait(pid) do
-    GenServer.call(pid, :get)
-  end
-
   def get_channel_status(channel_id) do
     GenServer.call(@server_ref, {:get_channel_status, channel_id})
   end
@@ -38,10 +34,6 @@ defmodule Ask.Runtime.ChannelStatusServer do
 
   def handle_call({:get_channel_status, channel_id}, _from, state) do
     {:reply, get_status_from_state(channel_id, state), state}
-  end
-
-  def handle_call(:get, _, state) do
-    {:reply, state, state}
   end
 
   def handle_info(:poll, state) do
