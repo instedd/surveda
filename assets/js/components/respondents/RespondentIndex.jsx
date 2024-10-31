@@ -60,6 +60,7 @@ type Props = {
 
 type State = {
   shownFile: string,
+  filesFetchTimer: ?IntervalID,
 }
 
 class RespondentIndex extends Component<Props, State> {
@@ -76,7 +77,7 @@ class RespondentIndex extends Component<Props, State> {
 
   constructor(props) {
     super(props)
-    this.state = { shownFile: null }
+    this.state = { shownFile: null , filesFetchTimer: null }
     this.toggleResultsLink = this.toggleResultsLink.bind(this)
     this.toggleIncentivesLink = this.toggleIncentivesLink.bind(this)
     this.toggleInteractionsLink = this.toggleInteractionsLink.bind(this)
@@ -140,6 +141,12 @@ class RespondentIndex extends Component<Props, State> {
 
     // FIXME: don't fetch if we're already fetching
     this.props.surveyActions.fetchRespondentsFilesStatus(projectId, surveyId, filter)
+    if (this.state.filesFetchTimer == null) {
+      const filesFetchTimer = setInterval(() => {
+        this.props.surveyActions.fetchRespondentsFilesStatus(projectId, surveyId, filter)
+      }, 20_000);
+      this.setState({ filesFetchTimer })
+    }
     $('#downloadCSV').modal("open")
   }
 
