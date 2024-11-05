@@ -148,7 +148,7 @@ export type Response = {
 export type Disposition = null | "completed" | "partial" | "ineligible"
 
 export type FileStatus = {
-  created_at: Date?,
+  created_at: ?Date,
   creating: boolean,
   file_type: string,
 }

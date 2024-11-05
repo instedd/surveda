@@ -369,7 +369,7 @@ export const deleteLink = (link: Link) => ({
   link,
 })
 
-export const generatingFile = (file: String) => ({
+export const generatingFile = (file: string) => ({
   type: GENERATING_FILE,
   file
 })

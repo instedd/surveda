@@ -56,10 +56,11 @@ type Props = {
   q: string,
   fields: Array<Object>,
   selectedFields: Array<string>,
+  respondentsFiles: { files: SurveyFiles },
 }
 
 type State = {
-  shownFile: string,
+  shownFile: ?string,
   filesFetchTimer: ?IntervalID,
 }
 
@@ -485,7 +486,7 @@ class RespondentIndex extends Component<Props, State> {
 
       const downloadButtonClass = fileExists ? "black-text" : "grey-text"
       const downloadButtonOnClick = fileExists ? item.onDownload : null
-      const createdAtLabel = fileExists ? <TimeAgo date={fileStatus.created_at * 1000} formatter={this.timeFormatter} /> : null
+      const createdAtLabel = fileExists ? <TimeAgo date={(fileStatus?.created_at || 0) * 1000} formatter={this.timeFormatter} /> : null
 
       const fileCreating = !!fileStatus?.creating
       const generateButtonClass = fileCreating ? "btn-icon-grey" : "black-text"
