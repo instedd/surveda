@@ -383,7 +383,7 @@ defmodule Ask.SurveyResults do
     seconds_to_process_file = Timex.diff(Timex.now(), initial_datetime, :seconds)
 
     Logger.info(
-      "Generation of #{file_type} file (survey_id: #{survey.id}) took #{seconds_to_process_file} seconds"
+      "Generation of #{file_prefix(file_type)} file (survey_id: #{survey.id}) took #{seconds_to_process_file} seconds"
     )
   end
 
@@ -430,6 +430,7 @@ defmodule Ask.SurveyResults do
   defp file_prefix(:interactions), do: "respondents_interactions"
   defp file_prefix(:incentives), do: "respondents_incentives"
   defp file_prefix(:disposition_history), do: "disposition_history"
+  defp file_prefix(:respondents_results), do: "respondents"
   defp file_prefix({:respondents_results, filter}) do
     if RespondentsFilter.empty?(filter) do
       "respondents"
