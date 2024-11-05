@@ -6,6 +6,7 @@ import * as actions from "../../actions/channel"
 import * as routes from "../../routes"
 import { translate } from "react-i18next"
 import { config } from "../../config"
+import ChannelPause from "./ChannelPause"
 
 class ChannelCapacityForm extends Component {
   static propTypes = {
@@ -109,12 +110,15 @@ class ChannelCapacity extends Component {
     }
 
     return (
-      <ChannelCapacityForm
-        initialValue={channel.settings.capacity || parseInt(config.default_channel_capacity)}
-        onConfirm={(capacity) => this.onConfirmClick(capacity)}
-        onCancel={() => this.onCancelClick()}
-        t={t}
-      />
+      <div className="white">
+        <ChannelPause />
+        <ChannelCapacityForm
+          initialValue={channel.settings.capacity || parseInt(config.default_channel_capacity)}
+          onConfirm={(capacity) => this.onConfirmClick(capacity)}
+          onCancel={() => this.onCancelClick()}
+          t={t}
+        />
+      </div>
     )
   }
 }

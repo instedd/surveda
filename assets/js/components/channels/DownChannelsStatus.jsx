@@ -1,6 +1,7 @@
 import React, { PureComponent, PropTypes } from "react"
 import TimeAgo from "react-timeago"
 import { translate, Trans } from "react-i18next"
+import every from "lodash/every"
 import map from "lodash/map"
 
 class DownChannelsStatus extends PureComponent {
@@ -12,7 +13,9 @@ class DownChannelsStatus extends PureComponent {
   render() {
     const { channels, timestamp } = this.props
     const channelNames = map(channels, (channel) => channel.name)
-    return this.downChannelsDescription(channelNames, timestamp)
+    const paused = every(channels, (channel) => channel.statusInfo?.status == "paused")
+    const text = paused ? "paused" : "down"
+    return this.downChannelsDescription(channelNames, timestamp, text)
   }
 
   downChannelsFormatter(number, unit, suffix, date, defaultFormatter) {
@@ -36,21 +39,21 @@ class DownChannelsStatus extends PureComponent {
     }
   }
 
-  downChannelsDescription(channelNames, timestamp) {
+  downChannelsDescription(channelNames, timestamp, text) {
     const names = channelNames.join(", ")
     if (channelNames.length > 1) {
       return (
         <Trans>
-          Channels <em>{{ names }}</em> down{" "}
-          <TimeAgo date={timestamp} formatter={this.bindedDownChannelsFormatter} />
+          Channels <em>{{ names }}</em> {{text}}{" "}
+          {timestamp && <TimeAgo date={timestamp} formatter={this.bindedDownChannelsFormatter} />}
         </Trans>
       )
     } else {
       const name = channelNames[0]
       return (
         <Trans>
-          Channel <em>{{ name }}</em> down{" "}
-          <TimeAgo date={timestamp} formatter={this.bindedDownChannelsFormatter} />
+          Channel <em>{{ name }}</em> {{text}}{" "}
+          {timestamp && <TimeAgo date={timestamp} formatter={this.bindedDownChannelsFormatter} />}
         </Trans>
       )
     }

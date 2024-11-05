@@ -9,7 +9,7 @@ import * as actions from "../../actions/channels"
 import range from "lodash/range"
 import * as authActions from "../../actions/authorizations"
 import {
-  AddButton,
+  ActionButton,
   EmptyPage,
   CardTable,
   UntitledIfEmpty,
@@ -229,7 +229,6 @@ class ChannelIndex extends Component<any> {
         </li>
       )
     }
-
     let providerUIs = []
     config.verboice.forEach((_, index) => {
       providerUIs.push(verboiceProviderUI(index, multipleVerboice))
@@ -240,7 +239,7 @@ class ChannelIndex extends Component<any> {
 
     return (
       <div>
-        <AddButton text={t("Add channel")} onClick={(e) => this.addChannel(e)} />
+        <ActionButton text={t("Add channel")} onClick={(e) => this.addChannel(e)} icon="add" color="green" />
         {providerModals}
 
         <Modal card id="add-channel">
@@ -313,6 +312,10 @@ class ChannelIndex extends Component<any> {
                     <td className="tdError">
                       {status == "down" || status == "error" ? (
                         <span className="questionnaire-error" />
+                      ) : status == "paused" ? (
+                        <span className="channel-paused">
+                          <i className="material-icons">pause</i>
+                        </span>
                       ) : null}
                     </td>
                   </tr>

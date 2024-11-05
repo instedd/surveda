@@ -1,7 +1,7 @@
 import React, { Component, PropTypes } from "react"
 import { bindActionCreators } from "redux"
 import { connect } from "react-redux"
-import { CardTable, AddButton, Tooltip, roleDisplayName } from "../ui"
+import { CardTable, ActionButton, Tooltip, roleDisplayName } from "../ui"
 import { Input } from "react-materialize"
 import InviteModal from "../collaborators/InviteModal"
 import * as actions from "../../actions/collaborators"
@@ -106,7 +106,7 @@ class CollaboratorIndex extends Component {
     let addButton = null
     if (!readOnly) {
       addButton = (
-        <AddButton text={t("Invite collaborators")} onClick={(e) => this.inviteCollaborator(e)} />
+        <ActionButton text={t("Invite collaborators")} onClick={(e) => this.inviteCollaborator(e)} icon="add" color="green" />
       )
     }
 

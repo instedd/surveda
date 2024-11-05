@@ -1,4 +1,4 @@
-export * from "./AddButton"
+export * from "./ActionButton"
 export * from "./Archive"
 export * from "./AudioDropzone"
 export * from "./Autocomplete"
