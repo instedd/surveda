@@ -19,7 +19,6 @@ import {
   Tooltip,
   PagingFooter,
   MainAction,
-  Action,
 } from "../ui"
 import RespondentRow from "./RespondentRow"
 import * as routes from "../../routes"
@@ -755,7 +754,6 @@ class RespondentIndex extends Component<Props, State> {
     const fixedFieldsCount = this.props.fields.filter((field) => field.type == "fixed").length
 
     let colspan = responseKeys.length + fixedFieldsCount
-    const [fileId, linkId] = ["file", "link"]
 
     return (
       <div className="white">
