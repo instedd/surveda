@@ -2,6 +2,7 @@
 import React, { Component } from "react"
 import { bindActionCreators } from "redux"
 import { connect } from "react-redux"
+// $FlowFixMe - there's no react-timeago definitions in flow-typed
 import TimeAgo from "react-timeago"
 import * as api from "../../api"
 import * as actions from "../../actions/respondents"
