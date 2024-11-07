@@ -479,8 +479,7 @@ export const fetchRespondentsFilesStatus = (projectId: number, surveyId: number,
 export const generateResultsFile =
   (projectId: number, surveyId: number, filter?: string) => (dispatch: Function) => {
     api.generateResults(projectId, surveyId, filter).then((response) => {
-      // FIXME: periodically check for file generation to have finished
-      return dispatch(generatingFile("respondent-results")) // FIXME: what should we dispatch?
+      return dispatch(generatingFile("respondent-results"))
     })
   }
 
@@ -488,21 +487,21 @@ export const generateIncentivesFile =
   (projectId: number, surveyId: number) => (dispatch: Function) => {
     // TODO: better handle when incentives download are disabled (due to sample with IDs)
     api.generateIncentives(projectId, surveyId).then((response) => {
-      return dispatch(generatingFile("incentives")) // FIXME: what should we dispatch?
+      return dispatch(generatingFile("incentives"))
     })
   }
 
 export const generateInteractionsFile =
   (projectId: number, surveyId: number) => (dispatch: Function) => {
     api.generateInteractions(projectId, surveyId).then((response) => {
-      return dispatch(generatingFile("interactions")) // FIXME: what should we dispatch?
+      return dispatch(generatingFile("interactions"))
     })
   }
 
 export const generateDispositionHistoryFile =
   (projectId: number, surveyId: number) => (dispatch: Function) => {
     api.generateDispositionHistory(projectId, surveyId).then((response) => {
-      return dispatch(generatingFile("disposition-history")) // FIXME: what should we dispatch?
+      return dispatch(generatingFile("disposition-history"))
     })
   }
 
