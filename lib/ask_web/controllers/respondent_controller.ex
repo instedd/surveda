@@ -763,6 +763,8 @@ defmodule AskWeb.RespondentController do
     filter = RespondentsFilter.parse(Map.get(params, "q", ""))
     filter = add_params_to_filter(filter, params)
 
+    ActivityLog.download(project, conn, survey, "survey_results") |> Repo.insert()
+
     file_redirection(conn, survey, {:respondents_results, filter})
   end
 
@@ -779,7 +781,7 @@ defmodule AskWeb.RespondentController do
 
     SurveyResults.generate_respondents_results_file(survey_id, filter)
 
-    ActivityLog.download(project, conn, survey, "survey_results") |> Repo.insert()
+    ActivityLog.generate_file(project, conn, survey, "survey_results") |> Repo.insert()
 
     conn |> render("ok.json")
   end
@@ -809,6 +811,8 @@ defmodule AskWeb.RespondentController do
 
     SurveyResults.generate_disposition_history_file(survey.id)
 
+    ActivityLog.generate_file(project, conn, survey, "disposition_history") |> Repo.insert()
+
     conn |> render("ok.json")
   end
 
@@ -816,8 +820,6 @@ defmodule AskWeb.RespondentController do
     project = load_project(conn, project_id)
     survey = load_survey(project, survey_id)
 
-    # TODO: We just change this for "trigger generation" 
-    # and add another log when actually downloading?
     ActivityLog.download(project, conn, survey, "disposition_history") |> Repo.insert()
 
     file_redirection(conn, survey, :disposition_history)
@@ -834,8 +836,6 @@ defmodule AskWeb.RespondentController do
       |> where([s], s.incentives_enabled)
       |> Repo.get!(survey_id)
 
-    # TODO: We just change this for "trigger generation" 
-    # and add another log when actually downloading?
     ActivityLog.download(project, conn, survey, "incentives") |> Repo.insert()
 
     file_redirection(conn, survey, :incentives)
@@ -852,9 +852,7 @@ defmodule AskWeb.RespondentController do
       |> where([s], s.incentives_enabled)
       |> Repo.get!(survey_id)
 
-    # TODO: We just change this for "trigger generation" 
-    # and add another log when actually downloading?
-    ActivityLog.download(project, conn, survey, "incentives") |> Repo.insert()
+    ActivityLog.generate_file(project, conn, survey, "incentives") |> Repo.insert()
 
     SurveyResults.generate_incentives_file(survey_id)
     conn |> send_resp(200, "OK")
@@ -864,8 +862,6 @@ defmodule AskWeb.RespondentController do
     project = load_project_for_owner(conn, project_id)
     survey = load_survey(project, survey_id)
 
-    # TODO: We just change this for "trigger generation" 
-    # and add another log when actually downloading?
     ActivityLog.download(project, conn, survey, "interactions") |> Repo.insert()
 
     file_redirection(conn, survey, :interactions)
@@ -875,9 +871,7 @@ defmodule AskWeb.RespondentController do
     project = load_project_for_owner(conn, project_id)
     survey = load_survey(project, survey_id)
 
-    # TODO: We just change this for "trigger generation" 
-    # and add another log when actually downloading?
-    ActivityLog.download(project, conn, survey, "interactions") |> Repo.insert()
+    ActivityLog.generate_file(project, conn, survey, "interactions") |> Repo.insert()
 
     SurveyResults.generate_interactions_file(survey_id)
     conn |> send_resp(200, "OK")
