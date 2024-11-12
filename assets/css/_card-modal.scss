@@ -120,8 +120,13 @@
         display: flex;
         align-items: center;
         .switch {
-          display: inline-block;
-          vertical-align: middle;
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          label {
+            display: flex;
+            align-items: center;
+          }
           .lever {
             margin-left: 0;
           }
@@ -129,6 +134,8 @@
             @extend .grey-text;
             font-size: 1rem;
             margin-right: 0.5rem;
+            display: flex;
+            white-space: nowrap;
           }
         }
         .link {
@@ -144,6 +151,7 @@
             vertical-align: middle;
             width: 98%;
             overflow: hidden;
+            text-overflow: ellipsis;
             display: inline-block;
           }
           .buttons {
@@ -170,6 +178,20 @@
 
         .btn-icon-grey {
           margin-left: initial;
+        }
+
+        .file-generation {
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+        }
+
+        a {
+          display: inline-flex;
+        }
+
+        .material-icons {
+          display: inline-flex;
         }
       }
       div.link {

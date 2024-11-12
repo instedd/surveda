@@ -748,12 +748,11 @@ defmodule AskWeb.RespondentController do
     render(conn, "status.json", status: status)
   end
 
-  defp file_redirection(conn, survey, file_type) do
+  defp serve_file(conn, survey, file_type) do
     file_url = SurveyResults.file_path(survey, file_type)
 
-    render(conn, "file-redirect.json",
-      file_url: "/#{file_url}" # TODO: there may be better ways of avoiding relative URLs
-    )
+    # FIME: /priv/static is probably temporary
+    send_file(conn, 200, "./priv/static/" <> file_url)
   end
 
   def results_csv(conn, %{"project_id" => project_id, "survey_id" => survey_id} = params) do
@@ -765,7 +764,7 @@ defmodule AskWeb.RespondentController do
 
     ActivityLog.download(project, conn, survey, "survey_results") |> Repo.insert()
 
-    file_redirection(conn, survey, {:respondents_results, filter})
+    serve_file(conn, survey, {:respondents_results, filter})
   end
 
   def generate_results(conn, %{"project_id" => project_id, "survey_id" => survey_id} = params) do
@@ -822,7 +821,7 @@ defmodule AskWeb.RespondentController do
 
     ActivityLog.download(project, conn, survey, "disposition_history") |> Repo.insert()
 
-    file_redirection(conn, survey, :disposition_history)
+    serve_file(conn, survey, :disposition_history)
   end
 
   def incentives(conn, %{"project_id" => project_id, "survey_id" => survey_id}) do
@@ -838,7 +837,7 @@ defmodule AskWeb.RespondentController do
 
     ActivityLog.download(project, conn, survey, "incentives") |> Repo.insert()
 
-    file_redirection(conn, survey, :incentives)
+    serve_file(conn, survey, :incentives)
   end
 
   def generate_incentives(conn, %{"project_id" => project_id, "survey_id" => survey_id}) do
@@ -864,7 +863,7 @@ defmodule AskWeb.RespondentController do
 
     ActivityLog.download(project, conn, survey, "interactions") |> Repo.insert()
 
-    file_redirection(conn, survey, :interactions)
+    serve_file(conn, survey, :interactions)
   end
 
   def generate_interactions(conn, %{"project_id" => project_id, "survey_id" => survey_id}) do

@@ -484,25 +484,26 @@ class RespondentIndex extends Component<Props, State> {
 
       const fileExists = !!fileStatus?.created_at
 
+      const downloadButtonTooltip = fileExists ? t("Download file") : t("File not yet generated")
       const downloadButtonClass = fileExists ? "black-text" : "grey-text"
       const downloadButtonOnClick = fileExists ? item.onDownload : null
       const createdAtLabel = fileExists ? <TimeAgo date={(fileStatus?.created_at || 0) * 1000} formatter={this.timeFormatter} /> : null
 
       const fileCreating = !!fileStatus?.creating
-      const generateButtonClass = fileCreating ? "btn-icon-grey" : "black-text"
+      const generateButtonClass = fileCreating ? "grey-text" : "black-text"
       const generateButtonOnClick = fileCreating ? null : item.onGenerate
       const generatingFileLabel = fileCreating ? "Generating..." : ""
 
       // TODO: we could avoid generating the whole section for files that are not the current one
       const downloadButton = !currentFile ? null : (
         <div className="file-download">
-          <Tooltip text={t("Download file")}>
+          <Tooltip text={downloadButtonTooltip}>
             <a className={downloadButtonClass} onClick={downloadButtonOnClick}>
               <i className="material-icons">get_app</i>
             </a>
           </Tooltip>
           <span className="">{t("Download last generated file")}</span>
-          <span className="grey-text">
+          <span className="grey-text file-generation">
             { createdAtLabel }
             { generatingFileLabel }
             <Tooltip text={t("Regenerate file")}>
