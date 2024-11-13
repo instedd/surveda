@@ -11,10 +11,6 @@ defmodule AskWeb.Router do
     plug :protect_from_forgery
     plug :put_secure_browser_headers
     plug Plug.Static, at: "files/", from: "assets/static/files/"
-
-    # FIXME: this is temporary. We have to apply access control here: https://elixirforum.com/t/how-can-you-hide-certain-static-assets-behind-a-require-authenticated-user-path/53106/6
-    plug Plug.Static, at: "generated_files/", from: "priv/static/generated_files/"
-
     plug Coherence.Authentication.Session, db_model: Ask.User
   end
 

@@ -751,8 +751,8 @@ defmodule AskWeb.RespondentController do
   defp serve_file(conn, survey, file_type) do
     file_url = SurveyResults.file_path(survey, file_type)
 
-    # FIME: /priv/static is probably temporary
-    send_file(conn, 200, "./priv/static/" <> file_url)
+    conn
+      |> send_download({:file, file_url})
   end
 
   def results_csv(conn, %{"project_id" => project_id, "survey_id" => survey_id} = params) do

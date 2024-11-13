@@ -161,25 +161,27 @@ class RespondentIndex extends Component<Props, State> {
     this.fetchRespondents(pageNumber - 1)
   }
 
-  downloadResultsCSV(applyUserFilter = false) {
+  resultsFileUrl(applyUserFilter = false) {
     const { projectId, surveyId, filter } = this.props
     const q = (applyUserFilter && filter) || null
-    api.downloadRespondentsResultsFile(projectId, surveyId, q)
+    return `/api/v1/projects/${projectId}/surveys/${surveyId}/respondents/results_csv${
+      (q && `?q=${encodeURIComponent(q)}`) || ""
+    }`
   }
   
-  downloadDispositionHistoryCSV() {
+  dispositionHistoryFileUrl() {
     const { projectId, surveyId } = this.props
-    api.downloadRespondentsDispositionHistoryFile(projectId, surveyId)
+    return `/api/v1/projects/${projectId}/surveys/${surveyId}/respondents/disposition_history`
   }
   
-  downloadIncentivesCSV() {
+  incentivesFileUrl() {
     const { projectId, surveyId } = this.props
-    api.downloadRespondentsIncentivesFile(projectId, surveyId)
+    return `/api/v1/projects/${projectId}/surveys/${surveyId}/respondents/incentives`
   }
   
-  downloadInteractionsCSV() {
+  interactionsFileUrl() {
     const { projectId, surveyId } = this.props
-    api.downloadRespondentsInteractionsFile(projectId, surveyId)
+    return `/api/v1/projects/${projectId}/surveys/${surveyId}/respondents/interactions`
   }
 
   sortBy(name) {
@@ -392,7 +394,7 @@ class RespondentIndex extends Component<Props, State> {
       disabledText?: String,
       disabled?: boolean,
       downloadLink: any,
-      onDownload: Function,
+      fileUrl: string,
       onGenerate: Function,
     } = null
     const fileStatus = currentFile ? respondentsFiles.files?.[id] : null
@@ -405,7 +407,7 @@ class RespondentIndex extends Component<Props, State> {
             { totalCount, filter }
           ),
           downloadLink: null,
-          onDownload: () => this.downloadResultsCSV(true),
+          fileUrl: this.resultsFileUrl(true),
           onGenerate: () => this.generateResults(filter),
         }
         break
@@ -421,7 +423,7 @@ class RespondentIndex extends Component<Props, State> {
             this.refreshResultsLink,
             "resultsLink"
           ),
-          onDownload: () => this.downloadResultsCSV(),
+          fileUrl: this.resultsFileUrl(),
           onGenerate: () => this.generateResults(),
         }
         break
@@ -437,7 +439,7 @@ class RespondentIndex extends Component<Props, State> {
             this.refreshDispositionHistoryLink,
             "dispositionHistoryLink"
           ),
-          onDownload: () => this.downloadDispositionHistoryCSV(),
+          fileUrl: this.dispositionHistoryFileUrl(),
           onGenerate: () => this.generateDispositionHistory(),
         }
         break
@@ -456,7 +458,7 @@ class RespondentIndex extends Component<Props, State> {
             this.refreshIncentivesLink,
             "incentivesLink"
           ),
-          onDownload: () => this.downloadIncentivesCSV(),
+          fileUrl: this.incentivesFileUrl(),
           onGenerate: () => this.generateIncentives(),
         }
         break
@@ -472,7 +474,7 @@ class RespondentIndex extends Component<Props, State> {
             this.refreshInteractionsLink,
             "interactionsLink"
           ),
-          onDownload: () => this.downloadInteractionsCSV(),
+          fileUrl: this.interactionsFileUrl(),
           onGenerate: () => this.generateInteractions(),
         }
     }
@@ -486,7 +488,7 @@ class RespondentIndex extends Component<Props, State> {
 
       const downloadButtonTooltip = fileExists ? t("Download file") : t("File not yet generated")
       const downloadButtonClass = fileExists ? "black-text" : "grey-text"
-      const downloadButtonOnClick = fileExists ? item.onDownload : null
+      const downloadButtonLink = fileExists ? item.fileUrl : null
       const createdAtLabel = fileExists ? <TimeAgo date={(fileStatus?.created_at || 0) * 1000} formatter={this.timeFormatter} /> : null
 
       const fileCreating = !!fileStatus?.creating
@@ -498,7 +500,7 @@ class RespondentIndex extends Component<Props, State> {
       const downloadButton = !currentFile ? null : (
         <div className="file-download">
           <Tooltip text={downloadButtonTooltip}>
-            <a className={downloadButtonClass} onClick={downloadButtonOnClick}>
+            <a className={downloadButtonClass} href={downloadButtonLink}>
               <i className="material-icons">get_app</i>
             </a>
           </Tooltip>

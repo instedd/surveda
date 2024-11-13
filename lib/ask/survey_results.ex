@@ -364,8 +364,8 @@ defmodule Ask.SurveyResults do
   end
 
   defp write_to_file(file_type, survey, rows) do
-    File.mkdir_p!("./priv/static/" <> @target_dir)
-    target_file = "./priv/static/" <> file_path(survey, file_type, @target_dir)
+    File.mkdir_p!(@target_dir)
+    target_file = file_path(survey, file_type, @target_dir)
     if File.exists?(target_file), do: File.rm!(target_file)
 
     # Poor man's mktemp. We only want to avoid having the file living at the stable
@@ -418,7 +418,7 @@ defmodule Ask.SurveyResults do
   defp file_type_symbol(type), do: type
 
   defp file_status(survey, file_type) do
-    path = "./priv/static/" <> file_path(survey, file_type)
+    path = file_path(survey, file_type)
     exists = File.exists?(path)
     %{
       file_type: file_type_symbol(file_type),

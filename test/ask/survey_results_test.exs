@@ -23,7 +23,7 @@ defmodule Ask.SurveyResultsTest do
   test "generates empty interactions file" do
     survey = insert(:survey)
     assert {:noreply, _, _} = SurveyResults.handle_cast({:interactions, survey.id, nil}, nil)
-    path = "./priv/static/" <> SurveyResults.file_path(survey, :interactions)
+    path = SurveyResults.file_path(survey, :interactions)
     assert "ID,Respondent ID,Mode,Channel,Disposition,Action Type,Action Data,Timestamp\r\n" == File.read!(path)
   end
 
@@ -136,7 +136,7 @@ defmodule Ask.SurveyResultsTest do
         end
       ])
 
-    path = "./priv/static/" <> SurveyResults.file_path(survey, :interactions)
+    path = SurveyResults.file_path(survey, :interactions)
     lines = File.read!(path) |> String.split("\r\n") |> Enum.reject(fn x -> String.length(x) == 0 end)
     assert length(lines) == length(expected_list)
     assert lines == expected_list
@@ -194,7 +194,7 @@ defmodule Ask.SurveyResultsTest do
 
     assert {:noreply, _, _} = SurveyResults.handle_cast({:respondents_results, survey.id, %RespondentsFilter{}}, nil)
 
-    path = "./priv/static/" <> SurveyResults.file_path(survey, :respondents_results)
+    path = SurveyResults.file_path(survey, :respondents_results)
     csv = File.read!(path)
 
     [line1, line2, line3, _] = csv |> String.split("\r\n")
@@ -313,7 +313,7 @@ defmodule Ask.SurveyResultsTest do
 
     assert {:noreply, _, _} = SurveyResults.handle_cast({:respondents_results, survey.id, %RespondentsFilter{}}, nil)
 
-    path = "./priv/static/" <> SurveyResults.file_path(survey, :respondents_results)
+    path = SurveyResults.file_path(survey, :respondents_results)
     csv = File.read!(path)
 
     [line1, line2, _] = csv |> String.split("\r\n")
@@ -377,7 +377,7 @@ defmodule Ask.SurveyResultsTest do
     insert(:response, respondent: respondent_2, field_name: "Smokes", value: "No")
 
     assert {:noreply, _, _} = SurveyResults.handle_cast({:respondents_results, survey.id, %RespondentsFilter{}}, nil)
-    path = "./priv/static/" <> SurveyResults.file_path(survey, :respondents_results)
+    path = SurveyResults.file_path(survey, :respondents_results)
     csv = File.read!(path)
 
     [line1, line2, line3, _] = csv |> String.split("\r\n")
@@ -503,7 +503,7 @@ defmodule Ask.SurveyResultsTest do
     insert(:response, respondent: respondent_2, field_name: "Smokes", value: "No")
 
     assert {:noreply, _, _} = SurveyResults.handle_cast({:respondents_results, survey.id, %RespondentsFilter{}}, nil)
-    path = "./priv/static/" <> SurveyResults.file_path(survey, :respondents_results)
+    path = SurveyResults.file_path(survey, :respondents_results)
     csv = File.read!(path)
 
     [line1, line2, line3, _] = csv |> String.split("\r\n")
@@ -602,7 +602,7 @@ defmodule Ask.SurveyResultsTest do
 
     filter = %RespondentsFilter{disposition: :registered}
     assert {:noreply, _, _} = SurveyResults.handle_cast({:respondents_results, survey.id, filter}, nil)
-    path = "./priv/static/" <> SurveyResults.file_path(survey, {:respondents_results, filter})
+    path = SurveyResults.file_path(survey, {:respondents_results, filter})
     csv = File.read!(path)
 
     [line1, line2, _] = csv |> String.split("\r\n")
@@ -676,7 +676,7 @@ defmodule Ask.SurveyResultsTest do
 
     filter = %RespondentsFilter{since: Timex.shift(Timex.now(), hours: 2)}
     assert {:noreply, _, _} = SurveyResults.handle_cast({:respondents_results, survey.id, filter}, nil)
-    path = "./priv/static/" <> SurveyResults.file_path(survey, {:respondents_results, filter})
+    path = SurveyResults.file_path(survey, {:respondents_results, filter})
     csv = File.read!(path)
 
     [line1, line2, _] = csv |> String.split("\r\n")
@@ -748,7 +748,7 @@ defmodule Ask.SurveyResultsTest do
 
     filter = %RespondentsFilter{state: :completed}
     assert {:noreply, _, _} = SurveyResults.handle_cast({:respondents_results, survey.id, filter}, nil)
-    path = "./priv/static/" <> SurveyResults.file_path(survey, {:respondents_results, filter})
+    path = SurveyResults.file_path(survey, {:respondents_results, filter})
     csv = File.read!(path)
 
     [line1, line2, _] = csv |> String.split("\r\n")
@@ -849,7 +849,7 @@ defmodule Ask.SurveyResultsTest do
     insert(:response, respondent: respondent_4, field_name: "Exercises", value: "No")
 
     assert {:noreply, _, _} = SurveyResults.handle_cast({:respondents_results, survey.id, %RespondentsFilter{}}, nil)
-    path = "./priv/static/" <> SurveyResults.file_path(survey, :respondents_results)
+    path = SurveyResults.file_path(survey, :respondents_results)
     csv = File.read!(path)
 
     assert !String.contains?(group_1.name, [" ", ",", "*", ":", "?", "\\", "|", "/", "<", ">"])
@@ -1005,7 +1005,7 @@ defmodule Ask.SurveyResultsTest do
     insert(:response, respondent: respondent_2, field_name: "Smokes", value: "No")
 
     assert {:noreply, _, _} = SurveyResults.handle_cast({:respondents_results, survey.id, %RespondentsFilter{}}, nil)
-    path = "./priv/static/" <> SurveyResults.file_path(survey, :respondents_results)
+    path = SurveyResults.file_path(survey, :respondents_results)
     csv = File.read!(path)
 
     [line1, line2, line3, _] = csv |> String.split("\r\n")
@@ -1107,7 +1107,7 @@ defmodule Ask.SurveyResultsTest do
     insert(:response, respondent: respondent_1, field_name: "language", value: "es")
 
     assert {:noreply, _, _} = SurveyResults.handle_cast({:respondents_results, survey.id, %RespondentsFilter{}}, nil)
-    path = "./priv/static/" <> SurveyResults.file_path(survey, :respondents_results)
+    path = SurveyResults.file_path(survey, :respondents_results)
     csv = File.read!(path)
 
     [line1, line2, _] = csv |> String.split("\r\n")
@@ -1177,7 +1177,7 @@ defmodule Ask.SurveyResultsTest do
     )
 
     assert {:noreply, _, _} = SurveyResults.handle_cast({:disposition_history, survey.id, %RespondentsFilter{}}, nil)
-    path = "./priv/static/" <> SurveyResults.file_path(survey, :disposition_history)
+    path = SurveyResults.file_path(survey, :disposition_history)
     csv = File.read!(path)
 
     lines = csv |> String.split("\r\n") |> Enum.reject(fn x -> String.length(x) == 0 end)
@@ -1239,7 +1239,7 @@ defmodule Ask.SurveyResultsTest do
     )
 
     assert {:noreply, _, _} = SurveyResults.handle_cast({:incentives, survey.id, %RespondentsFilter{}}, nil)
-    path = "./priv/static/" <> SurveyResults.file_path(survey, :incentives)
+    path = SurveyResults.file_path(survey, :incentives)
     csv = File.read!(path)
 
     lines = csv |> String.split("\r\n") |> Enum.reject(fn x -> String.length(x) == 0 end)
