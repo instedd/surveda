@@ -62,7 +62,6 @@ defmodule AskWeb.SurveyLinkControllerTest do
       assert [] == ShortLink |> Repo.all()
     end
 
-    @tag :skip
     test "incentives link generation", %{conn: conn, user: user} do
       project = create_project_for_user(user)
       survey = insert(:survey, project: project)
@@ -110,7 +109,6 @@ defmodule AskWeb.SurveyLinkControllerTest do
       assert [] == ShortLink |> Repo.all()
     end
 
-    @tag :skip
     test "interactions link generation", %{conn: conn, user: user} do
       project = create_project_for_user(user)
       survey = insert(:survey, project: project)
@@ -158,7 +156,6 @@ defmodule AskWeb.SurveyLinkControllerTest do
       assert [] == ShortLink |> Repo.all()
     end
 
-    @tag :skip
     test "disposition_history link generation", %{conn: conn, user: user} do
       project = create_project_for_user(user)
       survey = insert(:survey, project: project)
@@ -362,7 +359,6 @@ defmodule AskWeb.SurveyLinkControllerTest do
       end
     end
 
-    @tag :skip
     test "allows editors to create some links", %{conn: conn, user: user} do
       project = create_project_for_user(user, level: "editor")
       survey = insert(:survey, project: project)
@@ -387,7 +383,6 @@ defmodule AskWeb.SurveyLinkControllerTest do
       end
     end
 
-    @tag :skip
     test "allows editors to refresh some links", %{conn: conn, user: user} do
       project = create_project_for_user(user, level: "editor")
       survey = insert(:survey, project: project)
@@ -414,7 +409,6 @@ defmodule AskWeb.SurveyLinkControllerTest do
       end
     end
 
-    @tag :skip
     test "forbids editor to delete some links", %{conn: conn, user: user} do
       project = create_project_for_user(user, level: "editor")
       survey = insert(:survey, project: project)
@@ -501,7 +495,6 @@ defmodule AskWeb.SurveyLinkControllerTest do
       })
     end
 
-    @tag :skip
     test "generates logs for incentives link", %{conn: conn, user: user} do
       project = create_project_for_user(user)
       survey = insert(:survey, project: project)
@@ -552,7 +545,6 @@ defmodule AskWeb.SurveyLinkControllerTest do
       })
     end
 
-    @tag :skip
     test "generates logs for interactions link", %{conn: conn, user: user} do
       project = create_project_for_user(user)
       survey = insert(:survey, project: project)
@@ -603,7 +595,6 @@ defmodule AskWeb.SurveyLinkControllerTest do
       })
     end
 
-    @tag :skip
     test "generates logs for disposition_history link", %{conn: conn, user: user} do
       project = create_project_for_user(user)
       survey = insert(:survey, project: project)
