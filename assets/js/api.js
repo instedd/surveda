@@ -691,6 +691,17 @@ export const refreshDispositionHistoryLink = (projectId, surveyId) => {
   )
 }
 
+export const resultsFileUrl = (projectId, surveyId, q) =>
+  `/api/v1/projects/${projectId}/surveys/${surveyId}/respondents/results_csv${
+    (q && `?q=${encodeURIComponent(q)}`) || ""
+  }`
+export const dispositionHistoryFileUrl = (projectId, surveyId) =>
+  `/api/v1/projects/${projectId}/surveys/${surveyId}/respondents/disposition_history`
+export const incentivesFileUrl = (projectId, surveyId) =>
+  `/api/v1/projects/${projectId}/surveys/${surveyId}/respondents/incentives`
+export const interactionsFileUrl = (projectId, surveyId) =>
+  `/api/v1/projects/${projectId}/surveys/${surveyId}/respondents/interactions`
+
 export const generateResults = (projectId, surveyId, filter) =>
   apiPostJSON(`projects/${projectId}/surveys/${surveyId}/respondents/results`, null, { q: filter })
 export const generateDispositionHistory = (projectId, surveyId) =>

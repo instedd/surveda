@@ -164,24 +164,22 @@ class RespondentIndex extends Component<Props, State> {
   resultsFileUrl(applyUserFilter = false) {
     const { projectId, surveyId, filter } = this.props
     const q = (applyUserFilter && filter) || null
-    return `/api/v1/projects/${projectId}/surveys/${surveyId}/respondents/results_csv${
-      (q && `?q=${encodeURIComponent(q)}`) || ""
-    }`
+    return api.resultsFileUrl(projectId, surveyId, q)
   }
-  
+
   dispositionHistoryFileUrl() {
     const { projectId, surveyId } = this.props
-    return `/api/v1/projects/${projectId}/surveys/${surveyId}/respondents/disposition_history`
+    return api.dispositionHistoryFileUrl(projectId, surveyId)
   }
-  
+
   incentivesFileUrl() {
     const { projectId, surveyId } = this.props
-    return `/api/v1/projects/${projectId}/surveys/${surveyId}/respondents/incentives`
+    return api.incentivesFileUrl(projectId, surveyId)
   }
-  
+
   interactionsFileUrl() {
     const { projectId, surveyId } = this.props
-    return `/api/v1/projects/${projectId}/surveys/${surveyId}/respondents/interactions`
+    return api.interactionsFileUrl(projectId, surveyId)
   }
 
   sortBy(name) {
