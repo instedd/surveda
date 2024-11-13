@@ -190,6 +190,8 @@ defmodule AskWeb.Router do
       get "/get_invite_by_email_and_project", InviteController, :get_by_email_and_project
       get "/settings", UserController, :settings, as: :settings
       post "/update_settings", UserController, :update_settings, as: :update_settings
+
+      get "/surveys/active_channel/:provider", SurveyController, :active, as: :active
     end
   end
 

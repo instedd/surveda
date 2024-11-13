@@ -529,6 +529,12 @@ defmodule AskWeb.SurveyController do
     end
   end
 
+  def active(conn, params = %{"provider" => provider, "base_url" => base_url}) do
+    surveys = Survey.with_active_channels(provider, base_url)
+
+    render(conn, "index.json", surveys: surveys)
+  end
+
   defp load_survey(project, survey_id) do
     project
     |> assoc(:surveys)

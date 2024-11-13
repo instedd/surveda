@@ -15,13 +15,13 @@ import {
   UntitledIfEmpty,
   SortableHeader,
   Modal,
-  ConfirmationModal,
   PagingFooter,
   channelFriendlyName,
 } from "../ui"
 import { Preloader } from "react-materialize"
 import { config } from "../../config"
 import { translate } from "react-i18next"
+import ProviderModal from "./ProviderModal"
 
 class ChannelIndex extends Component<any> {
   componentDidMount() {
@@ -124,19 +124,14 @@ class ChannelIndex extends Component<any> {
     }
 
     const providerModal = (provider, index, friendlyName, multiple) => {
-      let name = `${provider[0].toUpperCase()}${provider.slice(1)}`
-      if (multiple) name = `${name} (${friendlyName})`
-
       return (
-        <ConfirmationModal
+        <ProviderModal
           key={`${provider}-${index}`}
-          modalId={`${provider}Modal-${index}`}
-          modalText={t("Do you want to delete the channels provided by {{name}}?", { name })}
-          header={t("Turn off {{name}}", { name })}
-          confirmationText={t("Yes")}
+          provider={provider}
+          index={index}
+          friendlyName={friendlyName}
+          multiple={multiple}
           onConfirm={() => this.deleteProvider(provider, index)}
-          style={{ maxWidth: "600px" }}
-          showCancel
         />
       )
     }

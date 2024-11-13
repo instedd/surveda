@@ -530,6 +530,21 @@ defmodule Ask.Survey do
     %{survey | down_channels: down_channels}
   end
 
+  def with_active_channels(provider, base_url) do
+    query =
+      from s in Survey,
+        where: s.state == :running,
+        join: group in RespondentGroup,
+        on: s.id == group.survey_id,
+        join: rgc in RespondentGroupChannel,
+        on: group.id == rgc.respondent_group_id,
+        join: c in Channel,
+        on: rgc.channel_id == c.id and c.provider == ^provider and c.base_url == ^base_url,
+        select: s
+
+    query |> Repo.all()
+  end
+
   def stats(survey) do
     respondents_by_disposition = survey |> RespondentStats.respondents_by_disposition()
 
