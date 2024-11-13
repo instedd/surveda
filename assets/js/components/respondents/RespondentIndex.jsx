@@ -137,14 +137,18 @@ class RespondentIndex extends Component<Props, State> {
     }
   }
 
-  showDownloadsModal() {
+  fetchFilesStatus() {
     const { projectId, surveyId, filter } = this.props
 
     // FIXME: don't fetch if we're already fetching
     this.props.surveyActions.fetchRespondentsFilesStatus(projectId, surveyId, filter)
+  }
+
+  showDownloadsModal() {
+    this.fetchFilesStatus()
     if (this.state.filesFetchTimer == null) {
       const filesFetchTimer = setInterval(() => {
-        this.props.surveyActions.fetchRespondentsFilesStatus(projectId, surveyId, filter)
+        this.fetchFilesStatus()
       }, 20_000);
       this.setState({ filesFetchTimer })
     }
