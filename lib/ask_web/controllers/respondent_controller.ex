@@ -749,11 +749,19 @@ defmodule AskWeb.RespondentController do
   end
 
   defp serve_file(conn, survey, file_type) do
-    file_url = SurveyResults.file_path(survey, file_type)
+    file_path = SurveyResults.file_path(survey, file_type)
 
     conn
-      |> send_download({:file, file_url})
+      |> send_download_if_exists(file_path, File.exists?(file_path))
   end
+
+  defp send_download_if_exists(conn, file_path, true), do:
+    conn
+      |> send_download({:file, file_path})
+
+  defp send_download_if_exists(conn, _file_path, false), do:
+    conn
+      |> send_resp(404, "File not found")
 
   def results_csv(conn, %{"project_id" => project_id, "survey_id" => survey_id} = params) do
     project = load_project(conn, project_id)
