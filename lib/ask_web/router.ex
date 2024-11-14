@@ -195,7 +195,7 @@ defmodule AskWeb.Router do
             get "/files", RespondentController, :files_status, as: :files
 
             get "/results", RespondentController, :results, as: :get_respondents_results
-            get "/results_csv", RespondentController, :results_csv
+            get "/results_csv", RespondentController, :results_csv, as: :respondents_results
             post "/results", RespondentController, :generate_results, as: :respondents_results
 
             get "/disposition_history", RespondentController, :disposition_history, as: :respondents_disposition_history
