@@ -117,6 +117,31 @@ defmodule Ask.SurveyTest do
     assert running_channels == [Enum.at(channels, 1).id]
   end
 
+  test "enumerates surveys with active channel" do
+    surveys = [
+      insert(:survey, state: :ready),
+      insert(:survey, state: :running),
+      insert(:survey, state: :running),
+      insert(:survey, state: :running),
+    ]
+
+    channels = [
+      insert(:channel, provider: "sms", base_url: "test"),
+      insert(:channel, provider: "sms", base_url: "test"),
+      insert(:channel, provider: "ivr", base_url: "prod"),
+      insert(:channel, provider: "sms", base_url: "test"),
+    ]
+
+    setup_surveys_with_channels(surveys, channels)
+
+    active_surveys =
+      Survey.with_active_channel("sms", "test")
+      |> Enum.map(fn c -> c.id end)
+      |> Enum.sort()
+
+    assert active_surveys == [Enum.at(surveys, 1).id, Enum.at(surveys, 3).id]
+  end
+
   test "enumerates channels of a survey" do
     survey = insert(:survey)
     channel_1 = insert(:channel)

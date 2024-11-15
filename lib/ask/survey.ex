@@ -530,7 +530,7 @@ defmodule Ask.Survey do
     %{survey | down_channels: down_channels}
   end
 
-  def with_active_channels(provider, base_url) do
+  def with_active_channel(provider, base_url) do
     query =
       from s in Survey,
         where: s.state == :running,

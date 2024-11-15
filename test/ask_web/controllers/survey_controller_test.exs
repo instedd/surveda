@@ -3282,6 +3282,66 @@ defmodule AskWeb.SurveyControllerTest do
     end
   end
 
+  test "surveys with active channel", %{conn: conn, user: user} do
+    project = create_project_for_user(user)
+    surveys = [
+      insert(:survey, project: project, state: :not_ready),
+      insert(:survey, project: project, state: :running),
+    ]
+    channels = [
+      insert(:channel, provider: "sms", base_url: "test"),
+      insert(:channel, provider: "sms", base_url: "test"),
+    ]
+    setup_surveys_with_channels(surveys, channels)
+    survey = Survey |> Repo.get(Enum.at(surveys, 1).id)
+
+    result = get(conn, surveys_active_channel_path(conn, :active_channel, "sms", base_url: "test"))
+
+    assert json_response(result, 200)["data"] == [
+              %{
+                "cutoff" => survey.cutoff,
+                "id" => survey.id,
+                "mode" => survey.mode,
+                "name" => survey.name,
+                "description" => nil,
+                "project_id" => project.id,
+                "state" => "running",
+                "locked" => false,
+                "exit_code" => nil,
+                "exit_message" => nil,
+                "schedule" => %{
+                  "blocked_days" => [],
+                  "day_of_week" => %{
+                    "fri" => true,
+                    "mon" => true,
+                    "sat" => true,
+                    "sun" => true,
+                    "thu" => true,
+                    "tue" => true,
+                    "wed" => true
+                  },
+                  "end_time" => "23:59:59",
+                  "start_time" => "00:00:00",
+                  "start_date" => nil,
+                  "end_date" => nil,
+                  "timezone" => "Etc/UTC"
+                },
+                "next_schedule_time" => nil,
+                "started_at" => nil,
+                "ended_at" => nil,
+                "updated_at" => to_iso8601(survey.updated_at),
+                "down_channels" => [],
+                "folder_id" => nil,
+                "first_window_started_at" => nil,
+                "panel_survey_id" => nil,
+                "last_window_ends_at" => nil,
+                "is_deletable" => false,
+                "is_movable" => true,
+                "generates_panel_survey" => false
+              },
+            ]
+  end
+
   def prepare_for_state_update(user) do
     project = create_project_for_user(user)
     questionnaire = insert(:questionnaire, name: "test", project: project)
