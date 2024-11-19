@@ -22,8 +22,28 @@ import { Preloader } from "react-materialize"
 import { config } from "../../config"
 import { translate } from "react-i18next"
 import ProviderModal from "./ProviderModal"
+import * as api from "../../api"
 
-class ChannelIndex extends Component<any> {
+type State = {
+  modalLoading: boolean,
+  modalSurveys: Array<Object>,
+  modalProvider: ?string,
+  modalIndex: ?number,
+}
+
+class ChannelIndex extends Component<any, State> {
+  state : State
+
+  constructor(props) {
+    super(props)
+    this.state = {
+      modalLoading: false,
+      modalSurveys: [],
+      modalProvider: null,
+      modalIndex: null,
+    }
+  }
+
   componentDidMount() {
     this.props.actions.fetchChannels()
   }
@@ -37,6 +57,31 @@ class ChannelIndex extends Component<any> {
   toggleProvider(provider, index, checked) {
     if (checked) {
       $(`#${provider}Modal-${index}`).modal("open")
+      this.setState({
+        modalLoading: true,
+        modalSurveys: [],
+        modalProvider: provider,
+        modalIndex: index,
+      })
+      const { baseUrl } = config[provider][index]
+      api.fetchActiveSurveys(provider, baseUrl)
+      .then((response) => {
+        const surveys = response || []
+        this.setState({
+          modalLoading: false,
+          modalSurveys: surveys,
+          modalProvider: provider,
+          modalIndex: index,
+        })
+      })
+      .catch(() => {
+        this.setState({
+          modalLoading: false,
+          modalSurveys: [],
+          modalProvider: provider,
+          modalIndex: index,
+        })
+      })
     } else {
       this.props.authActions.toggleAuthorization(provider, index)
     }
@@ -88,6 +133,13 @@ class ChannelIndex extends Component<any> {
       router,
     } = this.props
 
+    const {
+      modalLoading,
+      modalSurveys,
+      modalProvider,
+      modalIndex,
+    } = this.state;
+
     if (!channels) {
       return (
         <div>
@@ -124,6 +176,8 @@ class ChannelIndex extends Component<any> {
     }
 
     const providerModal = (provider, index, friendlyName, multiple) => {
+      const loading = provider === modalProvider && index === modalIndex ? modalLoading : false
+      const surveys = provider === modalProvider && index === modalIndex ? modalSurveys : []
       return (
         <ProviderModal
           key={`${provider}-${index}`}
@@ -132,6 +186,8 @@ class ChannelIndex extends Component<any> {
           friendlyName={friendlyName}
           multiple={multiple}
           onConfirm={() => this.deleteProvider(provider, index)}
+          loading={loading}
+          surveys={surveys}
         />
       )
     }
