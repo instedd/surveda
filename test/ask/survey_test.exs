@@ -135,7 +135,7 @@ defmodule Ask.SurveyTest do
     setup_surveys_with_channels(surveys, channels)
 
     active_surveys =
-      Survey.with_active_channel("sms", "test")
+      Survey.with_active_channels("sms", "test")
       |> Enum.map(fn c -> c.id end)
       |> Enum.sort()
 

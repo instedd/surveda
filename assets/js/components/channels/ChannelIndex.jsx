@@ -29,6 +29,7 @@ type State = {
   modalSurveys: Array<Object>,
   modalProvider: ?string,
   modalIndex: ?number,
+  modalError: ?Object,
 }
 
 class ChannelIndex extends Component<any, State> {
@@ -41,6 +42,7 @@ class ChannelIndex extends Component<any, State> {
       modalSurveys: [],
       modalProvider: null,
       modalIndex: null,
+      modalError: null,
     }
   }
 
@@ -62,6 +64,7 @@ class ChannelIndex extends Component<any, State> {
         modalSurveys: [],
         modalProvider: provider,
         modalIndex: index,
+        modalError: null,
       })
       const { baseUrl } = config[provider][index]
       api.fetchActiveSurveys(provider, baseUrl)
@@ -72,14 +75,17 @@ class ChannelIndex extends Component<any, State> {
           modalSurveys: surveys,
           modalProvider: provider,
           modalIndex: index,
+          modalError: null,
         })
       })
-      .catch(() => {
+      .catch((error) => {
+        console.log(error)
         this.setState({
           modalLoading: false,
           modalSurveys: [],
           modalProvider: provider,
           modalIndex: index,
+          modalError: error,
         })
       })
     } else {
@@ -138,7 +144,8 @@ class ChannelIndex extends Component<any, State> {
       modalSurveys,
       modalProvider,
       modalIndex,
-    } = this.state;
+      modalError,
+    } = this.state
 
     if (!channels) {
       return (
@@ -178,6 +185,7 @@ class ChannelIndex extends Component<any, State> {
     const providerModal = (provider, index, friendlyName, multiple) => {
       const loading = provider === modalProvider && index === modalIndex ? modalLoading : false
       const surveys = provider === modalProvider && index === modalIndex ? modalSurveys : []
+      const error = provider === modalProvider && index === modalIndex ? modalError : null
       return (
         <ProviderModal
           key={`${provider}-${index}`}
@@ -188,6 +196,7 @@ class ChannelIndex extends Component<any, State> {
           onConfirm={() => this.deleteProvider(provider, index)}
           loading={loading}
           surveys={surveys}
+          error={error}
         />
       )
     }

@@ -191,7 +191,7 @@ defmodule AskWeb.Router do
       get "/settings", UserController, :settings, as: :settings
       post "/update_settings", UserController, :update_settings, as: :update_settings
 
-      get "/surveys/active_channel/:provider", SurveyController, :active_channel, as: :surveys_active_channel
+      get "/surveys/active_channels/:provider", SurveyController, :active_channels, as: :surveys_active_channels
     end
   end
 

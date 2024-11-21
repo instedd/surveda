@@ -3295,7 +3295,7 @@ defmodule AskWeb.SurveyControllerTest do
     setup_surveys_with_channels(surveys, channels)
     survey = Survey |> Repo.get(Enum.at(surveys, 1).id)
 
-    result = get(conn, surveys_active_channel_path(conn, :active_channel, "sms", base_url: "test"))
+    result = get(conn, surveys_active_channels_path(conn, :active_channels, "sms", base_url: "test"))
 
     assert json_response(result, 200)["data"] == [
               %{

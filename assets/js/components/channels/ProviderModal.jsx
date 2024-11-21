@@ -11,6 +11,7 @@ export const ProviderModal = ({
   onConfirm,
   loading,
   surveys,
+  error,
 }) => {
   let name = `${provider[0].toUpperCase()}${provider.slice(1)}`
   if (multiple) name = `${name} (${friendlyName})`
@@ -29,6 +30,7 @@ export const ProviderModal = ({
 
         <div className="provider-surveys">
           {loading ? <span>{t("Searching active surveys...")}</span> :
+            error ? <span className="provider-error">{t("Error searching active surveys...")}</span> :
             surveys.length == 0 ? <span>{t("No active surveys")}</span> :
               <div>
                 <span>{t("These surveys are active, using channels from this provider. Deleting the channels will interrupt the surveys.")}</span>
@@ -54,7 +56,8 @@ ProviderModal.propTypes = {
   multiple: PropTypes.bool,
   onConfirm: PropTypes.func,
   loading: PropTypes.bool,
-  surveys: PropTypes.any
+  surveys: PropTypes.any,
+  error: PropTypes.any,
 }
 
 export default translate()(ProviderModal)

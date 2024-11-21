@@ -402,7 +402,7 @@ export const newWave = (projectId, panelSurveyId) => {
 
 export const fetchActiveSurveys = (provider, baseUrl) => {
   return apiFetchJSON(
-    `surveys/active_channel/${provider}?base_url=${encodeURIComponent(baseUrl)}`,
+    `surveys/active_channels/${provider}?base_url=${encodeURIComponent(baseUrl)}`,
   )
 }
 
