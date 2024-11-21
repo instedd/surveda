@@ -31,7 +31,7 @@ export const ProviderModal = ({
           {loading ? <span>{t("Searching active surveys...")}</span> :
             surveys.length == 0 ? <span>{t("No active surveys")}</span> :
               <div>
-                <span>{t("Active surveys")}</span>
+                <span>{t("These surveys are active, using channels from this provider. Deleting the channels will interrupt the surveys.")}</span>
                 <ul>
                   {surveys.map((survey) => (
                     <li key={`survey-${survey.id}`}>
