@@ -20,7 +20,8 @@ defmodule Ask.Survey do
     RespondentStats,
     ConfigHelper,
     SystemTime,
-    PanelSurvey
+    PanelSurvey,
+    ProjectMembership
   }
 
   alias Ask.Ecto.Type.JSON
@@ -530,10 +531,16 @@ defmodule Ask.Survey do
     %{survey | down_channels: down_channels}
   end
 
-  def with_active_channels(provider, base_url) do
+  def with_active_channels(user_id, provider, base_url) do
     query =
       from s in Survey,
         where: s.state == :running,
+        join: pm in ProjectMembership,
+        on: pm.project_id == s.project_id and pm.user_id == ^user_id,
+        select: s
+
+    query =
+      from s in subquery(query),
         join: group in RespondentGroup,
         on: s.id == group.survey_id,
         join: rgc in RespondentGroupChannel,

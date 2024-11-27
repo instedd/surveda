@@ -530,7 +530,7 @@ defmodule AskWeb.SurveyController do
   end
 
   def active_channels(conn, %{"provider" => provider, "base_url" => base_url}) do
-    surveys = Survey.with_active_channels(provider, base_url)
+    surveys = Survey.with_active_channels(current_user(conn).id, provider, base_url)
 
     render(conn, "index.json", surveys: surveys)
   end
