@@ -130,7 +130,6 @@ class ChannelIndex extends Component<any, State> {
       modalSurveys,
       modalProvider,
       modalIndex,
-      modalError,
     } = this.state
 
     if (!channels) {
