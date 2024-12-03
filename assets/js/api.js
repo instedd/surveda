@@ -400,6 +400,12 @@ export const newWave = (projectId, panelSurveyId) => {
   return apiPostJSON(`projects/${projectId}/panel_surveys/${panelSurveyId}/new_wave`, surveySchema)
 }
 
+export const fetchActiveSurveys = (provider, baseUrl) => {
+  return apiFetchJSON(
+    `surveys/active_channels/${provider}?base_url=${encodeURIComponent(baseUrl)}`,
+  )
+}
+
 export const fetchTimezones = () => {
   return apiFetchJSONWithCallback(`timezones`, null, {}, (json, schema) => {
     return () => {

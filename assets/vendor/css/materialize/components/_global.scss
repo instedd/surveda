@@ -790,3 +790,14 @@ td, th{
     cursor: default !important;
   }
 }
+
+.provider-surveys {
+  ul {
+    padding-left: 1rem;
+    list-style-type: disc;
+
+    li {
+      list-style-type: disc;
+    }
+  }
+}

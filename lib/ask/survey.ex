@@ -20,7 +20,8 @@ defmodule Ask.Survey do
     RespondentStats,
     ConfigHelper,
     SystemTime,
-    PanelSurvey
+    PanelSurvey,
+    ProjectMembership
   }
 
   alias Ask.Ecto.Type.JSON
@@ -528,6 +529,23 @@ defmodule Ask.Survey do
       |> Enum.filter(&(&1[:status] != "up" && &1[:status] != "unknown"))
 
     %{survey | down_channels: down_channels}
+  end
+
+  def with_active_channels(user_id, provider, base_url) do
+    query =
+      from s in Survey,
+        where: s.state == :running,
+        join: pm in ProjectMembership,
+        on: pm.project_id == s.project_id and pm.user_id == ^user_id,
+        join: group in RespondentGroup,
+        on: s.id == group.survey_id,
+        join: rgc in RespondentGroupChannel,
+        on: group.id == rgc.respondent_group_id,
+        join: c in Channel,
+        on: rgc.channel_id == c.id and c.provider == ^provider and c.base_url == ^base_url,
+        select: s
+
+    query |> Repo.all()
   end
 
   def stats(survey) do
