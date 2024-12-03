@@ -537,10 +537,6 @@ defmodule Ask.Survey do
         where: s.state == :running,
         join: pm in ProjectMembership,
         on: pm.project_id == s.project_id and pm.user_id == ^user_id,
-        select: s
-
-    query =
-      from s in subquery(query),
         join: group in RespondentGroup,
         on: s.id == group.survey_id,
         join: rgc in RespondentGroupChannel,
