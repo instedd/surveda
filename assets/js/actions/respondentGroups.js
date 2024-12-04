@@ -103,8 +103,8 @@ const handleRespondentGroupUpload = (dispatch, promise, groupId = null) => {
           dispatch(receiveInvalids(value))
         }
       },
-      (err) => {
-        // Revert with original error
+      () => {
+        // Reject with original error
         Promise.reject(e)
       })
     }
