@@ -21,27 +21,34 @@ defmodule Ask.Runtime.RespondentGroupAction do
 
     respondents_count = phone_numbers |> length
 
-    respondent_group =
-      %RespondentGroup{
-        name: name,
-        survey_id: survey.id,
-        sample: sample,
-        respondents_count: respondents_count
-      }
-      |> Repo.insert!()
-      |> Repo.preload(:respondent_group_channels)
+    Repo.transaction(fn ->
+      respondent_group =
+        %RespondentGroup{
+          name: name,
+          survey_id: survey.id,
+          sample: sample,
+          respondents_count: respondents_count
+        }
+        |> Repo.insert!()
+        |> Repo.preload(:respondent_group_channels)
 
-    insert_respondents(phone_numbers, respondent_group)
+      insert_respondents(phone_numbers, respondent_group)
 
-    survey
-    |> Repo.preload([:questionnaires])
-    |> Repo.preload([:quota_buckets])
-    |> Repo.preload(respondent_groups: [respondent_group_channels: :channel])
-    |> Changeset.change()
-    |> Survey.update_state()
-    |> Repo.update!()
+      survey
+      |> Repo.preload([:questionnaires])
+      |> Repo.preload([:quota_buckets])
+      |> Repo.preload(respondent_groups: [respondent_group_channels: :channel])
+      |> Changeset.change()
+      |> Survey.update_state()
+      |> Repo.update!()
 
-    respondent_group
+      respondent_group
+    end)
+    |> case do
+      {:ok, respondent_group} ->
+        respondent_group
+      err -> err
+      end
   end
 
   def add_respondents(respondent_group, loaded_entries, file_name, conn) do
@@ -54,51 +61,65 @@ defmodule Ask.Runtime.RespondentGroupAction do
 
     loaded_entries = clean_entries(loaded_entries, phone_numbers)
 
-    insert_respondents(phone_numbers, respondent_group)
+    Repo.transaction(fn ->
+      insert_respondents(phone_numbers, respondent_group)
 
-    respondents_count = Enum.count(phone_numbers)
+      respondents_count = Enum.count(phone_numbers)
 
-    if Survey.launched?(survey) and respondents_count > 0 do
-      ActivityLog.add_respondents(survey.project, conn, survey, %{
-        file_name: file_name,
-        respondents_count: respondents_count
-      })
-      |> Repo.insert!()
+      if Survey.launched?(survey) and respondents_count > 0 do
+        ActivityLog.add_respondents(survey.project, conn, survey, %{
+          file_name: file_name,
+          respondents_count: respondents_count
+        })
+        |> Repo.insert!()
+      end
+
+      new_count = respondent_group.respondents_count + length(phone_numbers)
+
+      new_sample = merge_sample(respondent_group.sample, loaded_entries)
+
+      respondent_group
+      |> RespondentGroup.changeset(%{"respondents_count" => new_count, "sample" => new_sample})
+      |> Repo.update!()
+    end)
+    |> case do
+      {:ok, respondent_group} ->
+        respondent_group
+      err -> err
     end
-
-    new_count = respondent_group.respondents_count + length(phone_numbers)
-
-    new_sample = merge_sample(respondent_group.sample, loaded_entries)
-
-    respondent_group
-    |> RespondentGroup.changeset(%{"respondents_count" => new_count, "sample" => new_sample})
-    |> Repo.update!()
   end
 
   def replace_respondents(respondent_group, loaded_entries) do
     respondent_group = Repo.preload(respondent_group, :survey)
     phone_numbers = map_phone_numbers_from_loaded_entries(loaded_entries)
 
-    # First delete existing respondents from that group
-    Repo.delete_all(
-      from(r in Respondent,
-        where: r.respondent_group_id == ^respondent_group.id
+    Repo.transaction(fn ->
+      # First delete existing respondents from that group
+      Repo.delete_all(
+        from(r in Respondent,
+          where: r.respondent_group_id == ^respondent_group.id
+        )
       )
-    )
 
-    # Then create respondents from the CSV file
-    insert_respondents(phone_numbers, respondent_group)
+      # Then create respondents from the CSV file
+      insert_respondents(phone_numbers, respondent_group)
 
-    sample = take_sample(loaded_entries)
-    respondents_count = phone_numbers |> length
+      sample = take_sample(loaded_entries)
+      respondents_count = phone_numbers |> length
 
-    respondent_group
-    |> RespondentGroup.changeset(%{
-      "sample" => sample,
-      "respondents_count" => respondents_count
-    })
-    |> Repo.update!()
-    |> Repo.preload(:respondent_group_channels)
+      respondent_group
+      |> RespondentGroup.changeset(%{
+        "sample" => sample,
+        "respondents_count" => respondents_count
+      })
+      |> Repo.update!()
+      |> Repo.preload(:respondent_group_channels)
+    end)
+    |> case do
+      {:ok, respondent_group} ->
+        respondent_group
+      err -> err
+    end
   end
 
   defp clean_entries(loaded_entries, phone_numbers) do
@@ -175,7 +196,7 @@ defmodule Ask.Runtime.RespondentGroupAction do
     end)
   end
 
-  def insert_respondents(phone_numbers, respondent_group) do
+  defp insert_respondents(phone_numbers, respondent_group) do
     respondent_group = Repo.preload(respondent_group, survey: :project)
 
     map_respondent = fn phone_number ->
