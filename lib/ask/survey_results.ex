@@ -427,6 +427,12 @@ defmodule Ask.SurveyResults do
     }
   end
 
+  defp filter_hash(filter) do
+    filter
+      |> :erlang.phash2
+      |> to_string
+  end
+
   defp file_prefix(:interactions), do: "respondents_interactions"
   defp file_prefix(:incentives), do: "respondents_incentives"
   defp file_prefix(:disposition_history), do: "disposition_history"
@@ -435,7 +441,7 @@ defmodule Ask.SurveyResults do
     if RespondentsFilter.empty?(filter) do
       "respondents"
     else
-      "respondents_filtered"
+      "respondents_filtered_#{filter_hash(filter)}"
     end
   end
 

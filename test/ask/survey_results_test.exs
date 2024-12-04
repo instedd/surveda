@@ -274,6 +274,32 @@ defmodule Ask.SurveyResultsTest do
     assert line_3_user_stopped == "true"
   end
 
+  test "generates different filtered results csv per filter" do
+    survey = insert(:survey)
+
+    filter = RespondentsFilter.parse("")
+
+    assert %{files: %{respondents_results: %{created_at: nil}}} = SurveyResults.files_status(survey, [{:respondents_results, filter}])
+
+    SurveyResults.handle_cast({:respondents_results, survey.id, filter}, nil)
+    assert %{files: %{respondents_results: %{created_at: date}}} = SurveyResults.files_status(survey, [{:respondents_results, filter}])
+    assert date != nil
+
+    filter = RespondentsFilter.parse("disposition:queued")
+    assert %{files: %{respondents_filtered: %{created_at: nil}}} = SurveyResults.files_status(survey, [{:respondents_results, filter}])
+    SurveyResults.handle_cast({:respondents_results, survey.id, filter}, nil)
+    assert %{files: %{respondents_filtered: %{created_at: queued_date}}} = SurveyResults.files_status(survey, [{:respondents_results, filter}])
+    assert queued_date != nil
+
+    filter = RespondentsFilter.parse("mode:sms")
+    assert %{files: %{respondents_filtered: %{created_at: nil}}} = SurveyResults.files_status(survey, [{:respondents_results, filter}])
+    SurveyResults.handle_cast({:respondents_results, survey.id, filter}, nil)
+    assert %{files: %{respondents_filtered: %{created_at: mode_date}}} = SurveyResults.files_status(survey, [{:respondents_results, filter}])
+    assert mode_date != nil
+
+    assert %{files: %{respondents_filtered: %{created_at: ^queued_date}}} = SurveyResults.files_status(survey, [{:respondents_results, RespondentsFilter.parse("disposition:queued")}])
+  end
+
   test "download results csv with non-started last call" do
     project = insert(:project)
     questionnaire = insert(:questionnaire, name: "test", project: project, steps: @dummy_steps)
