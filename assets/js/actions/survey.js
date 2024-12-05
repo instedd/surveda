@@ -44,6 +44,9 @@ export const REFRESH_LINK = "SURVEY_REFRESH_LINK"
 export const DELETE_LINK = "SURVEY_DELETE_LINK"
 export const RECEIVE_SURVEY_STATS = "RECEIVE_SURVEY_STATS"
 export const RECEIVE_SURVEY_RETRIES_HISTOGRAMS = "RECEIVE_SURVEY_RETRIES_HISTOGRAMS"
+export const GENERATING_FILE = "GENERATING_FILE"
+export const FETCHING_FILES_STATUS = "FETCHING_FILES_STATUS"
+export const RECEIVE_FILES_STATUS = "RECEIVE_FILES_STATUS"
 
 export const createSurvey =
   (projectId: number, folderId?: number) => (dispatch: Function, getState: () => Store) =>
@@ -366,6 +369,11 @@ export const deleteLink = (link: Link) => ({
   link,
 })
 
+export const generatingFile = (file: string) => ({
+  type: GENERATING_FILE,
+  file
+})
+
 export const createResultsLink = (projectId: number, surveyId: number) => (dispatch: Function) => {
   api.createResultsLink(projectId, surveyId).then((response) => {
     return dispatch(receiveLink(response))
@@ -448,3 +456,51 @@ export const deleteDispositionHistoryLink =
       return dispatch(deleteLink(link))
     })
   }
+
+export const fetchingRespondentFilesStatus = (surveyId: number) => ({
+  type: FETCHING_FILES_STATUS,
+  surveyId,
+})
+
+export const receiveRespondentsFilesStatus = (surveyId: number, surveyState: string, files: SurveyFiles) => ({
+  type: RECEIVE_FILES_STATUS,
+  surveyId,
+  surveyState,
+  files,
+})
+
+export const fetchRespondentsFilesStatus = (projectId: number, surveyId: number, filter?: string) => (dispatch: Function) => {
+  dispatch(fetchingRespondentFilesStatus(surveyId))
+  api.fetchRespondentsFilesStatus(projectId, surveyId, filter).then((response) => {
+    dispatch(receiveRespondentsFilesStatus(surveyId, response.survey_state, response.files))
+  })
+}
+
+export const generateResultsFile =
+  (projectId: number, surveyId: number, filter?: string) => (dispatch: Function) => {
+    api.generateResults(projectId, surveyId, filter).then((response) => {
+      return dispatch(generatingFile("respondent-results"))
+    })
+  }
+
+export const generateIncentivesFile =
+  (projectId: number, surveyId: number) => (dispatch: Function) => {
+    api.generateIncentives(projectId, surveyId).then((response) => {
+      return dispatch(generatingFile("incentives"))
+    })
+  }
+
+export const generateInteractionsFile =
+  (projectId: number, surveyId: number) => (dispatch: Function) => {
+    api.generateInteractions(projectId, surveyId).then((response) => {
+      return dispatch(generatingFile("interactions"))
+    })
+  }
+
+export const generateDispositionHistoryFile =
+  (projectId: number, surveyId: number) => (dispatch: Function) => {
+    api.generateDispositionHistory(projectId, surveyId).then((response) => {
+      return dispatch(generatingFile("disposition-history"))
+    })
+  }
+

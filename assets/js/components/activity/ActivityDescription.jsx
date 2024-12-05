@@ -115,6 +115,11 @@ class ActivityDescription extends Component {
               surveyName: surveyName,
               reportType: reportType,
             })
+          case "generate_file":
+            return t("Generated <i>{{surveyName}}</i> {{reportType}} file", {
+              surveyName: surveyName,
+              reportType: reportType,
+            })
           case "enable_public_link":
             return t("Enabled <i>{{surveyName}}</i> {{reportType}} link", {
               surveyName: surveyName,
