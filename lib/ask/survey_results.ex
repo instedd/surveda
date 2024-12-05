@@ -353,14 +353,8 @@ defmodule Ask.SurveyResults do
   end
 
   def file_path(survey, file_type, target_dir \\ @target_dir) do
-    # FIXME: as a first iteration, generate a stable name and have a single file per type
-    # but we should probably include the date and respondent results filter in the name
-    prefix = file_prefix(file_type)
-    # name = survey.name || "survey_id_#{survey.id}"
-    # name = Regex.replace(~r/[^a-zA-Z0-9_]/, name, "_")
-    # current_time = Timex.format!(DateTime.utc_now(), "%Y-%m-%d-%H-%M-%S", :strftime)
-    # "#{target_dir}/#{name}_#{survey.state}-#{prefix}_#{current_time}.csv"
-    "#{target_dir}/survey_#{survey.id}-#{survey.state}-#{prefix}.csv"
+    suffix = file_suffix(file_type)
+    "#{target_dir}/survey_#{survey.id}-#{survey.state}-#{suffix}.csv"
   end
 
   defp write_to_file(file_type, survey, rows) do
@@ -370,20 +364,20 @@ defmodule Ask.SurveyResults do
 
     # Poor man's mktemp. We only want to avoid having the file living at the stable
     # path while it's still being written to avoid partial downloads
-    temporal_file = for _ <- 1..10, into: "#{target_file}.tmp.", do: <<Enum.random(?a..?z)>>
-    file = File.open!(temporal_file, [:write, :utf8])
+    temporal_file_name = for _ <- 1..10, into: "#{target_file}.tmp.", do: <<Enum.random(?a..?z)>>
+    temporal_file = File.open!(temporal_file_name, [:write, :utf8])
     initial_datetime = Timex.now()
 
     rows
     |> CSV.encode()
-    |> Enum.each(&IO.write(file, &1))
+    |> Enum.each(&IO.write(temporal_file, &1))
 
-    File.rename!(temporal_file, target_file)
+    File.rename!(temporal_file_name, target_file)
 
     seconds_to_process_file = Timex.diff(Timex.now(), initial_datetime, :seconds)
 
     Logger.info(
-      "Generation of #{file_prefix(file_type)} file (survey_id: #{survey.id}) took #{seconds_to_process_file} seconds"
+      "Generation of #{file_suffix(file_type)} file (survey_id: #{survey.id}) took #{seconds_to_process_file} seconds"
     )
   end
 
@@ -433,14 +427,17 @@ defmodule Ask.SurveyResults do
       |> to_string
   end
 
-  defp file_prefix(:interactions), do: "respondents_interactions"
-  defp file_prefix(:incentives), do: "respondents_incentives"
-  defp file_prefix(:disposition_history), do: "disposition_history"
-  defp file_prefix(:respondents_results), do: "respondents"
-  defp file_prefix({:respondents_results, filter}) do
+  defp file_suffix(:interactions), do: "respondents_interactions"
+  defp file_suffix(:incentives), do: "respondents_incentives"
+  defp file_suffix(:disposition_history), do: "disposition_history"
+  defp file_suffix(:respondents_results), do: "respondents"
+  defp file_suffix({:respondents_results, filter}) do
     if RespondentsFilter.empty?(filter) do
       "respondents"
     else
+      # Hashing the filter object avoids dealing with the order of the params in the filter
+      # (ie, "disposition:queued mode:sms" vs "mode:sms disposition:queued"), and avoids `:`
+      # and ` ` characters in the file name
       "respondents_filtered_#{filter_hash(filter)}"
     end
   end

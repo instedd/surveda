@@ -485,7 +485,6 @@ export const generateResultsFile =
 
 export const generateIncentivesFile =
   (projectId: number, surveyId: number) => (dispatch: Function) => {
-    // TODO: better handle when incentives download are disabled (due to sample with IDs)
     api.generateIncentives(projectId, surveyId).then((response) => {
       return dispatch(generatingFile("incentives"))
     })
