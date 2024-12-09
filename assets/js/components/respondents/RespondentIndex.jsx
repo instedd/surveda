@@ -102,6 +102,14 @@ class RespondentIndex extends Component<Props, State> {
     }
   }
 
+  componentWillUnmount() {
+    const timer = this.state.filesFetchTimer
+    if (timer) {
+      clearInterval(timer)
+      this.setState({filesFetchTimer: null})
+    }
+  }
+
   fetchRespondents(pageNumber = 1, overrideFilter = null) {
     const { projectId, surveyId, pageSize, filter, sortBy, sortAsc } = this.props
     const _filter = overrideFilter == null ? filter : overrideFilter
