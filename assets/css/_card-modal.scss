@@ -74,49 +74,11 @@
       li.collection-item {
         border: none;
       }
-      li.collection-item.download {
-        min-height: 6rem;
-      }
-      a.download {
-        @extend .grey-text;
-        position: relative;
-        > div {
-          padding-left: 70px;
-          max-width: 85%;
-          &:first-child {
-            background-color: #999999;
-            text-align: center;
-            border-radius: 50%;
-            height: 45px;
-            width: 45px;
-            padding-left: 0;
-            max-width: initial;
-            position: absolute;
-            top: 4px;
-            left: 5px;
-            i.material-icons {
-              @extend .white-text;
-              font-size: 1.5rem;
-              line-height: 45px;
-            }
-          }
-          p {
-            font-size: 1.1rem;
-            margin: 0.2rem 0;
-          }
-        }
-        &:after {
-          content: "";
-          display: table;
-          clear: both;
-          zoom: 1;
-        }
-        .button {
-          background-color: color("grey", "darken-1");
-        }
-        .button[disabled] {
-          border: 1px rgba(0, 0, 0, 0.1) solid;
-          background-color: transparent;
+      li.collection-item .file-section {
+        padding-left: 70px;
+        p {
+          font-size: 1.1rem;
+          margin: 0.2rem 0;
         }
         .title {
           @extend .black-text;
@@ -132,12 +94,39 @@
           width: fit-content;
         }
       }
+      a.download {
+        display: block;
+        text-align: center;
+        height: 45px;
+        width: 45px;
+        padding-left: 0;
+        max-width: initial;
+        i.material-icons {
+          @extend .black-text;
+          font-size: 1.5rem;
+        }
+        position: absolute;
+        top: 4px;
+        left: 5px;
+        &:after {
+          content: "";
+          display: table;
+          clear: both;
+          zoom: 1;
+        }
+      }
       .access-link {
         padding: 0.5rem 0;
-        max-width: 85%;
+        display: flex;
+        align-items: center;
         .switch {
-          display: inline-block;
-          vertical-align: middle;
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          label {
+            display: flex;
+            align-items: center;
+          }
           .lever {
             margin-left: 0;
           }
@@ -145,6 +134,8 @@
             @extend .grey-text;
             font-size: 1rem;
             margin-right: 0.5rem;
+            display: flex;
+            white-space: nowrap;
           }
         }
         .link {
@@ -160,6 +151,7 @@
             vertical-align: middle;
             width: 98%;
             overflow: hidden;
+            text-overflow: ellipsis;
             display: inline-block;
           }
           .buttons {
@@ -177,6 +169,30 @@
           .btn-icon-grey {
             display: inline;
           }
+        }
+      }
+      .file-download {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+
+        .btn-icon-grey {
+          margin-left: initial;
+        }
+
+        .file-generation {
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+        }
+
+        a {
+          display: inline-flex;
+          cursor: pointer;
+        }
+
+        .material-icons {
+          display: inline-flex;
         }
       }
       div.link {
