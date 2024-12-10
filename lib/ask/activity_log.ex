@@ -46,6 +46,7 @@ defmodule Ask.ActivityLog do
       "request_cancel",
       "completed_cancel",
       "download",
+      "generate_file",
       "enable_public_link",
       "regenerate_public_link",
       "disable_public_link",
@@ -189,6 +190,13 @@ defmodule Ask.ActivityLog do
 
   def download(project, conn, survey, report_type) do
     create("download", project, conn, survey, %{
+      survey_name: survey.name,
+      report_type: report_type
+    })
+  end
+
+  def generate_file(project, conn, survey, report_type) do
+    create("generate_file", project, conn, survey, %{
       survey_name: survey.name,
       report_type: report_type
     })

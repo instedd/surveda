@@ -16,6 +16,7 @@ import respondentGroups from "./respondentGroups"
 import respondents from "./respondents"
 import respondentsCount from "./respondentsCount"
 import respondentsStats from "./respondentsStats"
+import respondentsFiles from "./respondentsFiles"
 import survey from "./survey"
 import surveys from "./surveys"
 import timezones from "./timezones"
@@ -47,6 +48,7 @@ export default combineReducers({
   respondentGroups,
   respondents,
   respondentsCount,
+  respondentsFiles,
   respondentsStats,
   routing,
   survey,

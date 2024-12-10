@@ -42,14 +42,6 @@ defmodule AskWeb.Router do
     plug Coherence.Authentication.Session, db_model: Ask.User
   end
 
-  pipeline :csv_api do
-    plug :accepts, ["csv"]
-    plug :fetch_session
-    plug :fetch_flash
-
-    plug Coherence.Authentication.Session, db_model: Ask.User
-  end
-
   pipeline :mp3_api do
     plug TrailingFormatPlug
     plug :accepts, ["mp3"]
@@ -200,20 +192,24 @@ defmodule AskWeb.Router do
       resources "/projects", ProjectController, only: [] do
         resources "/surveys", SurveyController, only: [] do
           scope "/respondents" do
-            pipe_through :csv_json_api
-            get "/results", RespondentController, :results, as: :respondents_results
-          end
+            pipe_through :api
 
-          scope "/respondents" do
-            pipe_through :csv_api
+            get "/files", RespondentController, :files_status, as: :files
 
-            get "/disposition_history", RespondentController, :disposition_history,
-              as: :respondents_disposition_history
+            get "/results", RespondentController, :results, as: :get_respondents_results
+            get "/results_csv", RespondentController, :results_csv, as: :respondents_results
+            post "/results", RespondentController, :generate_results, as: :respondents_results
+
+            get "/disposition_history", RespondentController, :disposition_history, as: :respondents_disposition_history
+            post "/disposition_history", RespondentController, :generate_disposition_history,
+              as: :generate_disposition_history
 
             get "/incentives", RespondentController, :incentives, as: :respondents_incentives
+            post "/incentives", RespondentController, :generate_incentives, as: :generate_respondents_incentives
 
-            get "/interactions", RespondentController, :interactions,
-              as: :respondents_interactions
+            get "/interactions", RespondentController, :interactions, as: :respondents_interactions
+            post "/interactions", RespondentController, :generate_interactions,
+              as: :generate_respondents_interactions
           end
         end
       end

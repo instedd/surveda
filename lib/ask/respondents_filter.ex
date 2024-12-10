@@ -29,6 +29,9 @@ defmodule Ask.RespondentsFilter do
 
   def date_format_string(), do: @date_format_string
 
+  def empty?(%__MODULE__{disposition: nil, since: nil, state: nil, mode: nil}), do: true
+  def empty?(%__MODULE__{}), do: false
+
   @doc """
   By putting since directly (without parsing it) we're trying to cover the case where Surveda is
   being used by external services like SurvedaOnaConnector

@@ -2,6 +2,9 @@
 import React, { Component } from "react"
 import { bindActionCreators } from "redux"
 import { connect } from "react-redux"
+// $FlowFixMe - there's no react-timeago definitions in flow-typed
+import TimeAgo from "react-timeago"
+import * as api from "../../api"
 import * as actions from "../../actions/respondents"
 import { fieldUniqueKey, isFieldSelected } from "../../reducers/respondents"
 import * as surveyActions from "../../actions/survey"
@@ -16,7 +19,6 @@ import {
   Tooltip,
   PagingFooter,
   MainAction,
-  Action,
 } from "../ui"
 import RespondentRow from "./RespondentRow"
 import * as routes from "../../routes"
@@ -54,10 +56,12 @@ type Props = {
   q: string,
   fields: Array<Object>,
   selectedFields: Array<string>,
+  respondentsFiles: { files: SurveyFiles },
 }
 
 type State = {
-  csvType: string,
+  shownFile: ?string,
+  filesFetchTimer: ?IntervalID,
 }
 
 class RespondentIndex extends Component<Props, State> {
@@ -70,10 +74,11 @@ class RespondentIndex extends Component<Props, State> {
   refreshInteractionsLink: Function
   refreshDispositionHistoryLink: Function
   columnPickerModalId: string
+  timeFormatter: Function
 
   constructor(props) {
     super(props)
-    this.state = { csvType: "" }
+    this.state = { shownFile: null , filesFetchTimer: null }
     this.toggleResultsLink = this.toggleResultsLink.bind(this)
     this.toggleIncentivesLink = this.toggleIncentivesLink.bind(this)
     this.toggleInteractionsLink = this.toggleInteractionsLink.bind(this)
@@ -82,6 +87,7 @@ class RespondentIndex extends Component<Props, State> {
     this.refreshIncentivesLink = this.refreshIncentivesLink.bind(this)
     this.refreshInteractionsLink = this.refreshInteractionsLink.bind(this)
     this.refreshDispositionHistoryLink = this.refreshDispositionHistoryLink.bind(this)
+    this.timeFormatter = this.timeFormatter.bind(this)
     this.columnPickerModalId = uniqueId("column-picker-modal-id_")
   }
 
@@ -93,6 +99,14 @@ class RespondentIndex extends Component<Props, State> {
       surveyActions.fetchSurvey(projectId, surveyId)
       questionnairesActions.fetchQuestionnaires(projectId)
       this.fetchRespondents(1, q)
+    }
+  }
+
+  componentWillUnmount() {
+    const timer = this.state.filesFetchTimer
+    if (timer) {
+      clearInterval(timer)
+      this.setState({filesFetchTimer: null})
     }
   }
 
@@ -110,6 +124,45 @@ class RespondentIndex extends Component<Props, State> {
     )
   }
 
+  timeFormatter(number, unit, suffix, date, defaultFormatter) {
+    const { t } = this.props
+
+    switch (unit) {
+      case "second":
+        return t("{{count}} seconds ago", { count: number })
+      case "minute":
+        return t("{{count}} minutes ago", { count: number })
+      case "hour":
+        return t("{{count}} hours ago", { count: number })
+      case "day":
+        return t("{{count}} days ago", { count: number })
+      case "week":
+        return t("{{count}} weeks ago", { count: number })
+      case "month":
+        return t("{{count}} months ago", { count: number })
+      case "year":
+        return t("{{count}} years ago", { count: number })
+    }
+  }
+
+  fetchFilesStatus() {
+    const { projectId, surveyId, filter } = this.props
+
+    // FIXME: don't fetch if we're already fetching
+    this.props.surveyActions.fetchRespondentsFilesStatus(projectId, surveyId, filter)
+  }
+
+  showDownloadsModal() {
+    this.fetchFilesStatus()
+    if (this.state.filesFetchTimer == null) {
+      const filesFetchTimer = setInterval(() => {
+        this.fetchFilesStatus()
+      }, 20_000);
+      this.setState({ filesFetchTimer })
+    }
+    $('#downloadCSV').modal("open")
+  }
+
   nextPage() {
     const { pageNumber } = this.props
     this.fetchRespondents(pageNumber + 1)
@@ -120,25 +173,25 @@ class RespondentIndex extends Component<Props, State> {
     this.fetchRespondents(pageNumber - 1)
   }
 
-  downloadCSV(applyUserFilter = false) {
+  resultsFileUrl(applyUserFilter = false) {
     const { projectId, surveyId, filter } = this.props
     const q = (applyUserFilter && filter) || null
-    window.location = routes.respondentsResultsCSV(projectId, surveyId, q)
+    return api.resultsFileUrl(projectId, surveyId, q)
   }
 
-  downloadDispositionHistoryCSV() {
+  dispositionHistoryFileUrl() {
     const { projectId, surveyId } = this.props
-    window.location = routes.respondentsDispositionHistoryCSV(projectId, surveyId)
+    return api.dispositionHistoryFileUrl(projectId, surveyId)
   }
 
-  downloadIncentivesCSV() {
+  incentivesFileUrl() {
     const { projectId, surveyId } = this.props
-    window.location = routes.respondentsIncentivesCSV(projectId, surveyId)
+    return api.incentivesFileUrl(projectId, surveyId)
   }
 
-  downloadInteractionsCSV() {
+  interactionsFileUrl() {
     const { projectId, surveyId } = this.props
-    window.location = routes.respondentsInteractionsCSV(projectId, surveyId)
+    return api.interactionsFileUrl(projectId, surveyId)
   }
 
   sortBy(name) {
@@ -226,6 +279,26 @@ class RespondentIndex extends Component<Props, State> {
     surveyActions.refreshDispositionHistoryLink(projectId, surveyId, link)
   }
 
+  generateResults(filter) {
+    const { projectId, surveyId, surveyActions } = this.props
+    surveyActions.generateResultsFile(projectId, surveyId, filter)
+  }
+
+  generateIncentives() {
+    const { projectId, surveyId, surveyActions } = this.props
+    surveyActions.generateIncentivesFile(projectId, surveyId)
+  }
+
+  generateInteractions() {
+    const { projectId, surveyId, surveyActions } = this.props
+    surveyActions.generateInteractionsFile(projectId, surveyId)
+  }
+
+  generateDispositionHistory() {
+    const { projectId, surveyId, surveyActions } = this.props
+    surveyActions.generateDispositionHistoryFile(projectId, surveyId)
+  }
+
   copyLink(link) {
     try {
       window.getSelection().selectAllChildren(link)
@@ -248,7 +321,7 @@ class RespondentIndex extends Component<Props, State> {
             <label>
               <input type="checkbox" checked={link != null} onChange={() => onChange(link)} />
               <span className="lever" />
-              <span className="label">{t("Public link:")}</span>
+              <span className="label">{t("Public link")}{link == null ? "" : ":"}</span>
             </label>
           </div>
         ) : (
@@ -259,7 +332,7 @@ class RespondentIndex extends Component<Props, State> {
             <span ref={name}>{link.url}</span>
             <div className="buttons">
               {!project.readOnly ? (
-                <Tooltip text="Refresh">
+                <Tooltip text="Regenerate link">
                   <a className="btn-icon-grey" onClick={refresh}>
                     <i className="material-icons">refresh</i>
                   </a>
@@ -316,18 +389,27 @@ class RespondentIndex extends Component<Props, State> {
     return numericFields.some((field) => field == filterField)
   }
 
-  downloadItem(id, itemType) {
-    const { t, totalCount, filter } = this.props
+  toggleFile(fileId, event) {
+    event.preventDefault()
+    this.setState({ shownFile: this.state.shownFile == fileId ? null : fileId })
+  }
+
+  downloadItem(id) {
+    const { t, totalCount, filter, respondentsFiles } = this.props
+    const { shownFile } = this.state
+    const currentFile = shownFile == id
     let item: ?{
       title: String,
       description: String,
       disabledText?: String,
       disabled?: boolean,
       downloadLink: any,
-      onDownload: Function,
+      fileUrl: string,
+      onGenerate: Function,
     } = null
+    const fileStatus = currentFile ? respondentsFiles.files?.[id] : null
     switch (id) {
-      case "filtered-results":
+      case "respondents_filtered":
         item = {
           title: t("Filtered survey results"),
           description: t(
@@ -335,10 +417,11 @@ class RespondentIndex extends Component<Props, State> {
             { totalCount, filter }
           ),
           downloadLink: null,
-          onDownload: () => this.downloadCSV(true),
+          fileUrl: this.resultsFileUrl(true),
+          onGenerate: () => this.generateResults(filter),
         }
         break
-      case "results":
+      case "respondents_results":
         item = {
           title: t("Survey results"),
           description: t(
@@ -350,10 +433,11 @@ class RespondentIndex extends Component<Props, State> {
             this.refreshResultsLink,
             "resultsLink"
           ),
-          onDownload: () => this.downloadCSV(),
+          fileUrl: this.resultsFileUrl(),
+          onGenerate: () => this.generateResults(),
         }
         break
-      case "disposition-history":
+      case "disposition_history":
         item = {
           title: t("Disposition History"),
           description: t(
@@ -365,7 +449,8 @@ class RespondentIndex extends Component<Props, State> {
             this.refreshDispositionHistoryLink,
             "dispositionHistoryLink"
           ),
-          onDownload: () => this.downloadDispositionHistoryCSV(),
+          fileUrl: this.dispositionHistoryFileUrl(),
+          onGenerate: () => this.generateDispositionHistory(),
         }
         break
       case "incentives":
@@ -383,7 +468,8 @@ class RespondentIndex extends Component<Props, State> {
             this.refreshIncentivesLink,
             "incentivesLink"
           ),
-          onDownload: () => this.downloadIncentivesCSV(),
+          fileUrl: this.incentivesFileUrl(),
+          onGenerate: () => this.generateIncentives(),
         }
         break
       case "interactions":
@@ -398,7 +484,8 @@ class RespondentIndex extends Component<Props, State> {
             this.refreshInteractionsLink,
             "interactionsLink"
           ),
-          onDownload: () => this.downloadInteractionsCSV(),
+          fileUrl: this.interactionsFileUrl(),
+          onGenerate: () => this.generateInteractions(),
         }
     }
 
@@ -406,41 +493,62 @@ class RespondentIndex extends Component<Props, State> {
       return null
     } else {
       const disabled = item.disabled
-      const titleDescription = (
-        <div>
-          <p disabled={disabled} className="title">
-            <b>{item.title}</b>
-          </p>
-          <p>{item.description}</p>
-          {disabled ? <p className="disabled-clarification">{item.disabledText}</p> : null}
+
+      const fileExists = !!fileStatus?.created_at
+
+      const downloadButtonTooltip = fileExists ? t("Download file") : t("File not yet generated")
+      const downloadButtonClass = fileExists ? "black-text" : "grey-text"
+      const downloadButtonLink = fileExists ? item.fileUrl : null
+      const createdAtLabel = fileExists ? <TimeAgo date={(fileStatus?.created_at || 0) * 1000} formatter={this.timeFormatter} /> : null
+
+      const fileCreating = !!fileStatus?.creating
+      const generateButtonClass = fileCreating ? "grey-text" : "black-text"
+      const generateButtonOnClick = fileCreating ? null : item.onGenerate
+      const generatingFileLabel = fileCreating ? "Generating..." : ""
+
+      // TODO: we could avoid generating the whole section for files that are not the current one
+      const downloadButton = !currentFile ? null : (
+        <div className="file-download">
+          <Tooltip text={downloadButtonTooltip}>
+            <a className={downloadButtonClass} href={downloadButtonLink}>
+              <i className="material-icons">get_app</i>
+            </a>
+          </Tooltip>
+          <span className="">{t("Download last generated file")}</span>
+          <span className="grey-text file-generation">
+            { createdAtLabel }
+            { generatingFileLabel }
+            <Tooltip text={t("Regenerate file")}>
+              <a className={generateButtonClass} onClick={generateButtonOnClick}>
+                <i className="material-icons">refresh</i>
+              </a>
+            </Tooltip>
+          </span>
         </div>
       )
 
       return (
         <li disabled={disabled} className="collection-item">
-          {itemType == "file" ? (
-            <a
-              href="#"
-              className="download"
-              onClick={(e) => {
-                if (disabled) return
-                e.preventDefault()
-                item && item.onDownload()
-              }}
-            >
-              <div disabled={disabled} className="button">
-                {disabled ? (
-                  <div disabled={disabled} className="file-download-off-icon" />
-                ) : (
-                  <i className="material-icons">get_app</i>
-                )}
+          <div style={{position: 'relative'}}>
+          <a href="#!" className="download" onClick={(e) => this.toggleFile(id, e)}>
+            <div disabled={disabled} className="button">
+              <i className="material-icons">{currentFile ? "expand_more" : "chevron_right"}</i>
+            </div>
+          </a>
+          <div className="file-section">
+            <p disabled={disabled} className="title">
+              <b>{item.title}</b>
+            </p>
+            <p>{item.description}</p>
+            {disabled ? <p className="disabled-clarification">{item.disabledText}</p> : null}
+            { currentFile ?
+              <div className="download-section">
+                { item.downloadLink }
+                { downloadButton }
               </div>
-              {titleDescription}
-            </a>
-          ) : (
-            <div className="link">{titleDescription}</div>
-          )}
-          {itemType == "link" ? item.downloadLink : null}
+              : ""
+            }
+          </div></div>
         </li>
       )
     }
@@ -457,29 +565,22 @@ class RespondentIndex extends Component<Props, State> {
     return <RespondentsFilter defaultValue={q} onChange={(value) => this.onFilterChange(value)} />
   }
 
-  downloadModal({ itemType }) {
+  downloadModal() {
     const { userLevel, t, filter } = this.props
     const ownerOrAdmin = userLevel == "owner" || userLevel == "admin"
-    const [title, description] =
-      itemType == "file"
-        ? [t("Download CSV"), t("Choose the data you want to download")]
-        : [
-            t("Public links"),
-            t("Choose the data you want to be able to access through a public link"),
-          ]
 
     return (
-      <Modal id={`downloadCSV-${itemType}`} confirmationText="Download CSV" card>
+      <Modal id="downloadCSV" confirmationText="Download CSV" card>
         <div className="card-title header">
-          <h5>{title}</h5>
-          <p>{description}</p>
+          <h5>{t("Download CSV")}</h5>
+          <p>{t("Choose the data you want to download")}</p>
         </div>
         <ul className="collection repondents-index-modal">
-          {itemType == "file" && filter ? this.downloadItem("filtered-results", itemType) : null}
-          {this.downloadItem("results", itemType)}
-          {this.downloadItem("disposition-history", itemType)}
-          {ownerOrAdmin ? this.downloadItem("incentives", itemType) : null}
-          {ownerOrAdmin ? this.downloadItem("interactions", itemType) : null}
+          {filter ? this.downloadItem("respondents_filtered") : null}
+          {this.downloadItem("respondents_results")}
+          {this.downloadItem("disposition_history")}
+          {ownerOrAdmin ? this.downloadItem("incentives") : null}
+          {ownerOrAdmin ? this.downloadItem("interactions") : null}
         </ul>
       </Modal>
     )
@@ -666,7 +767,6 @@ class RespondentIndex extends Component<Props, State> {
     const fixedFieldsCount = this.props.fields.filter((field) => field.type == "fixed").length
 
     let colspan = responseKeys.length + fixedFieldsCount
-    const [fileId, linkId] = ["file", "link"]
 
     return (
       <div className="white">
@@ -675,20 +775,8 @@ class RespondentIndex extends Component<Props, State> {
             __html: "<style> body { overflow-y: auto !important; color: black}</style>",
           }}
         />
-        <MainAction text="Downloads" icon="get_app">
-          <Action
-            text="Download CSVs"
-            icon="insert_drive_file"
-            onClick={() => $(`#downloadCSV-${fileId}`).modal("open")}
-          />
-          <Action
-            text="Public links"
-            icon="link"
-            onClick={() => $(`#downloadCSV-${linkId}`).modal("open")}
-          />
-        </MainAction>
-        {this.downloadModal({ itemType: fileId })}
-        {this.downloadModal({ itemType: linkId })}
+        <MainAction text="Downloads" icon="get_app" onClick={() => this.showDownloadsModal()} />
+        {this.downloadModal()}
         {this.renderColumnPickerModal()}
         {this.respondentsFilter()}
         <CardTable
@@ -765,7 +853,7 @@ class RespondentIndex extends Component<Props, State> {
 }
 
 const mapStateToProps = (state, ownProps) => {
-  const { project, survey, questionnaires, respondents } = state
+  const { project, survey, questionnaires, respondents, respondentsFiles } = state
   const { page, sortBy, sortAsc, order, filter, items, fields, selectedFields } = respondents
   const { number: pageNumber, size: pageSize, totalCount } = page
   const { projectId, surveyId } = ownProps.params
@@ -780,6 +868,7 @@ const mapStateToProps = (state, ownProps) => {
     project: project.data,
     questionnaires: questionnaires.items,
     respondents: items,
+    respondentsFiles,
     order,
     userLevel: project.data ? project.data.level : "",
     pageNumber,
