@@ -50,7 +50,7 @@ i {
   @extend .grey-text;
   font-size: 17px;
   display: inline-block;
-  margin-left: 10px;
+  margin-left: 10px; // TODO: the spacing should always be placed in the container, not in the content
   cursor: pointer;
   span {
     vertical-align: middle;

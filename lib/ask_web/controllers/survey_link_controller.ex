@@ -19,9 +19,7 @@ defmodule AskWeb.SurveyLinkController do
         "results" ->
           {
             Survey.link_name(survey, :results),
-            project_survey_respondents_results_path(conn, :results, project, survey, %{
-              "_format" => "csv"
-            })
+            project_survey_respondents_results_path(conn, :results_csv, project, survey)
           }
 
         "incentives" ->
@@ -29,9 +27,7 @@ defmodule AskWeb.SurveyLinkController do
 
           {
             Survey.link_name(survey, :incentives),
-            project_survey_respondents_incentives_path(conn, :incentives, project, survey, %{
-              "_format" => "csv"
-            })
+            project_survey_respondents_incentives_path(conn, :incentives, project, survey)
           }
 
         "interactions" ->
@@ -39,9 +35,7 @@ defmodule AskWeb.SurveyLinkController do
 
           {
             Survey.link_name(survey, :interactions),
-            project_survey_respondents_interactions_path(conn, :interactions, project, survey, %{
-              "_format" => "csv"
-            })
+            project_survey_respondents_interactions_path(conn, :interactions, project, survey)
           }
 
         "disposition_history" ->
@@ -51,8 +45,7 @@ defmodule AskWeb.SurveyLinkController do
               conn,
               :disposition_history,
               project,
-              survey,
-              %{"_format" => "csv"}
+              survey
             )
           }
 

@@ -32,7 +32,7 @@ defmodule AskWeb.SurveyLinkControllerTest do
              }
 
       assert link.target ==
-               "/api/v1/projects/#{project.id}/surveys/#{survey.id}/respondents/results?_format=csv"
+               "/api/v1/projects/#{project.id}/surveys/#{survey.id}/respondents/results_csv"
 
       response = get(conn, project_survey_links_path(conn, :create, project, survey, "results"))
 
@@ -87,7 +87,7 @@ defmodule AskWeb.SurveyLinkControllerTest do
       assert ShortLink |> Repo.all() |> length == 1
 
       assert link.target ==
-               "/api/v1/projects/#{project.id}/surveys/#{survey.id}/respondents/incentives?_format=csv"
+               "/api/v1/projects/#{project.id}/surveys/#{survey.id}/respondents/incentives"
 
       response =
         put(conn, project_survey_links_path(conn, :refresh, project, survey, "incentives"))
@@ -134,7 +134,7 @@ defmodule AskWeb.SurveyLinkControllerTest do
       assert ShortLink |> Repo.all() |> length == 1
 
       assert link.target ==
-               "/api/v1/projects/#{project.id}/surveys/#{survey.id}/respondents/interactions?_format=csv"
+               "/api/v1/projects/#{project.id}/surveys/#{survey.id}/respondents/interactions"
 
       response =
         put(conn, project_survey_links_path(conn, :refresh, project, survey, "interactions"))
@@ -174,7 +174,7 @@ defmodule AskWeb.SurveyLinkControllerTest do
              }
 
       assert link.target ==
-               "/api/v1/projects/#{project.id}/surveys/#{survey.id}/respondents/disposition_history?_format=csv"
+               "/api/v1/projects/#{project.id}/surveys/#{survey.id}/respondents/disposition_history"
 
       response =
         get(
