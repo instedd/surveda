@@ -20,7 +20,7 @@ There probably are implicit requirements and assumptions throughout the doc, and
 - [ ] Configure Docker logs limits
 - [ ] Create a new environment in Rancher
 - [ ] Add the instance as a Host in the new Environment
-- [ ] Add a Janitor stack
+- [ ] Add the Janitor & Memory Limiter stacks
 - [ ] Create NFS file system
 - [ ] Attach NFS to Rancher
 - [ ] Set up DB backups to S3
@@ -93,8 +93,8 @@ There probably are implicit requirements and assumptions throughout the doc, and
 1. **Add the instance as a Host in the new Environment**
   In your Rancher Environment, go to Infrastructure -> Hosts, Add Host. Copy the `sudo docker ...` command from step 5 & run it on the instance. Go to Hosts and you should see it in a few moments.
 
-1. **Add a Janitor stack**
-  Go to Rancher, add a new stack from Catalog. Search for Janitor, pick the latest template version. Leave every parameter as is, launch.
+1. **Add the Janitor & Memory Limiter stacks**
+  Go to Rancher, add a new stack from Catalog. Search for Janitor, pick the latest template version. Leave every parameter as is, launch. Repeat, but search for the Memory Limiter catalog.
 
 1. **Create NFS file system**
   Go to EC2, create a new Security Group `surveda-xx-nfs` on the `surveda-xx-vpc` with a single incoming rule allowing NFS (TCP 2049) from the `surveda-xx-host` security group Source.
