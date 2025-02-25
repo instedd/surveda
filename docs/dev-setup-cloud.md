@@ -3,7 +3,7 @@
 This guide describes the steps needed to have a development environment that will use InSTEDD staging servers for
 
 * Guisso as single-sign-on: https://login-stg.instedd.org
-* Verboise for making phone calls: https://verboice-stg.instedd.org
+* Verboice for making phone calls: https://verboice-stg.instedd.org
 * Nuntium for sending and receiving https://nuntium-stg.instedd.org
 
 1. Install [dockerdev](https://github.com/waj/dockerdev)
