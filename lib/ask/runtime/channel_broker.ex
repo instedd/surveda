@@ -468,13 +468,20 @@ defmodule Ask.Runtime.ChannelBroker do
     state.runtime_channel
     |> Ask.Runtime.Channel.setup(respondent, token, nil, nil)
 
-    {:ok, %{nuntium_token: nuntium_token}} =
+    result =
       state.runtime_channel
       |> Ask.Runtime.Channel.ask(respondent, token, reply, state.channel_id)
 
-    channel_state = %{"nuntium_token" => nuntium_token}
-    debug("put_channel_state", respondent_id: respondent.id, channel_state: channel_state)
-    State.put_channel_state(state, respondent.id, channel_state)
+    case result do
+      {:ok, %{nuntium_token: nuntium_token}} ->
+        channel_state = %{"nuntium_token" => nuntium_token}
+        debug("put_channel_state", respondent_id: respondent.id, channel_state: channel_state)
+        State.put_channel_state(state, respondent.id, channel_state)
+
+      _ ->
+        debug("channel_ask no nuntium_token", result: result)
+        state
+    end
   end
 
   # Don't schedule automatic GC runs in tests.
