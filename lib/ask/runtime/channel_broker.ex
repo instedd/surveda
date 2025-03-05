@@ -36,8 +36,8 @@ defmodule Ask.Runtime.ChannelBroker do
     call(channel_id, {:has_delivery_confirmation?})
   end
 
-  def ask(channel_id, channel_type, respondent, token, reply) do
-    cast(channel_id, {:ask, channel_type, respondent, token, reply})
+  def ask(channel_id, channel_type, respondent, token, reply, not_before \\ nil, not_after \\ nil) do
+    cast(channel_id, {:ask, channel_type, respondent, token, reply, not_before, not_after})
   end
 
   def has_queued_message?(channel_id, respondent_id) do
@@ -145,16 +145,18 @@ defmodule Ask.Runtime.ChannelBroker do
   end
 
   @impl true
-  def handle_cast({:ask, "sms", respondent, token, reply}, state) do
+  def handle_cast({:ask, "sms", respondent, token, reply, not_before, not_after}, state) do
     debug("handle_cast[ask]",
       channel_type: "sms",
       channel_id: state.channel_id,
       respondent_id: respondent.id,
       token: token,
-      reply: reply
+      reply: reply,
+      not_before: not_before,
+      not_after: not_after
     )
 
-    contact = {respondent, token, reply}
+    contact = {respondent, token, reply, not_before, not_after}
     refreshed_state = refresh_runtime_channel(state)
     size = messages_count(refreshed_state, respondent, reply)
 
@@ -415,11 +417,11 @@ defmodule Ask.Runtime.ChannelBroker do
       |> refresh_runtime_channel()
       |> State.activate_next_in_queue()
 
-    case unqueued_item do
+      case unqueued_item do
       {respondent_id, token, not_before, not_after} ->
         Respondent.with_lock(respondent_id, fn respondent ->
           cond do
-            expired_call?(not_after) ->
+            expired_contact_attempt?(not_after) ->
               new_state = State.deactivate_contact(new_state, respondent.id)
               Ask.Runtime.Survey.contact_attempt_expired(respondent)
               new_state
@@ -428,14 +430,28 @@ defmodule Ask.Runtime.ChannelBroker do
               ivr_call(new_state, respondent, token, not_before, not_after)
           end
         end)
-      {respondent_id, token, reply} ->
+      {respondent_id, token, reply, not_before, not_after} ->
         Respondent.with_lock(respondent_id, fn respondent ->
-          channel_ask(new_state, respondent, token, reply)
+          cond do
+            expired_contact_attempt?(not_after) ->
+              new_state = State.deactivate_contact(new_state, respondent.id)
+              Ask.Runtime.Survey.contact_attempt_expired(respondent)
+              new_state
+
+            # Note: we no longer need to carry not_before/not_after since
+            # ensuring schedules are respected is Surveda's responsibility
+            # for SMS mode (see expired_contact_attempt a couple of lines above)
+            true ->
+              channel_ask(new_state, respondent, token, reply)
+          end
         end)
     end
   end
 
-  defp expired_call?(not_after) do
+  defp expired_contact_attempt?(nil) do
+    false
+  end
+  defp expired_contact_attempt?(not_after) do
     DateTime.compare(not_after, Ask.SystemTime.time().now) != :gt
   end
 
