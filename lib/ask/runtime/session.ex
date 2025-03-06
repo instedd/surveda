@@ -254,7 +254,7 @@ defmodule Ask.Runtime.Session do
     log_prompts(reply, channel, session.flow.mode, respondent)
 
     {not_before, not_after} = acceptable_contact_time_window(schedule)
-    
+
     ChannelBroker.ask(channel.id, channel.type, session.respondent, token, reply, not_before, not_after)
 
     # TODO: what happens with this when contact attempt falls outside acceptable window
