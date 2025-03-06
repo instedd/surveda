@@ -430,7 +430,7 @@ defmodule Ask.Runtime.ChannelBroker do
               ivr_call(new_state, respondent, token, not_before, not_after)
           end
         end)
-      {respondent_id, token, reply, not_before, not_after} ->
+      {respondent_id, token, reply, _not_before, not_after} ->
         Respondent.with_lock(respondent_id, fn respondent ->
           cond do
             expired_contact_attempt?(not_after) ->
