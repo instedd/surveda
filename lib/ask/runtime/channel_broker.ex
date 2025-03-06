@@ -412,40 +412,35 @@ defmodule Ask.Runtime.ChannelBroker do
   # Activates the next queued contact. There must be at least one contact in
   # queue. It doesn't verify if the channel capacity has been reached!
   defp activate_next_queued_contact(state) do
-    {new_state, unqueued_item} =
+    {new_broker_state, unqueued_item} =
       state
       |> refresh_runtime_channel()
       |> State.activate_next_in_queue()
 
-      case unqueued_item do
+    case unqueued_item do
       {respondent_id, token, not_before, not_after} ->
-        Respondent.with_lock(respondent_id, fn respondent ->
-          cond do
-            expired_contact_attempt?(not_after) ->
-              new_state = State.deactivate_contact(new_state, respondent.id)
-              Ask.Runtime.Survey.contact_attempt_expired(respondent)
-              new_state
-
-            true ->
-              ivr_call(new_state, respondent, token, not_before, not_after)
-          end
+        contact_or_mark_as_expired(respondent_id, not_after, new_broker_state, fn (respondent) -> 
+          ivr_call(new_broker_state, respondent, token, not_before, not_after)
         end)
       {respondent_id, token, reply, _not_before, not_after} ->
-        Respondent.with_lock(respondent_id, fn respondent ->
-          cond do
-            expired_contact_attempt?(not_after) ->
-              new_state = State.deactivate_contact(new_state, respondent.id)
-              Ask.Runtime.Survey.contact_attempt_expired(respondent)
-              new_state
-
-            # Note: we no longer need to carry not_before/not_after since
-            # ensuring schedules are respected is Surveda's responsibility
-            # for SMS mode (see expired_contact_attempt a couple of lines above)
-            true ->
-              channel_ask(new_state, respondent, token, reply)
-          end
+        contact_or_mark_as_expired(respondent_id, not_after, new_broker_state, fn (respondent) ->
+          channel_ask(new_broker_state, respondent, token, reply)
         end)
-    end
+      end
+  end
+
+  defp contact_or_mark_as_expired(respondent_id, not_after, new_broker_state, do_contact) do
+    Respondent.with_lock(respondent_id, fn respondent ->
+      cond do
+        expired_contact_attempt?(not_after) ->
+          new_state = State.deactivate_contact(new_broker_state, respondent.id)
+          Ask.Runtime.Survey.contact_attempt_expired(respondent)
+          new_state
+
+        true ->
+          do_contact.(respondent)
+      end
+    end)
   end
 
   defp expired_contact_attempt?(nil) do
