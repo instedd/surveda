@@ -50,6 +50,7 @@ defmodule Ask.Factory do
 
   def survey_factory do
     project = build(:project)
+
     %Ask.Survey{
       project: project,
       schedule: Ask.Schedule.always(project),
