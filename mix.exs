@@ -7,7 +7,7 @@ defmodule Ask.Mixfile do
       build_path: "/_build",
       deps_path: "/deps",
       version: "0.31.0",
-      elixir: "~> 1.10",
+      elixir: "~> 1.11",
       elixirc_paths: elixirc_paths(Mix.env()),
       compilers: [:phoenix, :gettext] ++ Mix.compilers(),
       consolidate_protocols: Mix.env() != :test,
@@ -60,7 +60,7 @@ defmodule Ask.Mixfile do
       # {:plug_crypto, "~> 1.1.1"}, # held until Phoenix 1.5
       {:plug_cowboy, "~> 2.0"},
       {:phoenix_ecto, "~> 4.0"},
-      {:ecto_sql, "~> 3.9"},
+      {:ecto_sql, "~> 3.11.1"},
       {:myxql, ">= 0.6.2"},
       {:phoenix_pubsub, "~> 1.0"},
       {:phoenix_html, "~> 2.10"},
