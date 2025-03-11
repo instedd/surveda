@@ -93,9 +93,9 @@ defmodule Ask.Runtime.SurveyCanceller do
   end
 
   @impl true
-  def handle_info(message, survey_id) do
-    Logger.info("Canceller handling #{message} (id: #{survey_id})")
-    {:noreply, survey_id}
+  def handle_info(message, state) do
+    Logger.info("Canceller handling #{inspect(message)} (state (survey_id?): #{inspect(state)})")
+    {:noreply, state}
   end
 
   def surveys_cancelling() do
