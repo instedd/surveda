@@ -862,7 +862,7 @@ defmodule AskWeb.RespondentController do
     ActivityLog.generate_file(project, conn, survey, "incentives") |> Repo.insert()
 
     SurveyResults.generate_incentives_file(survey_id)
-    conn |> send_resp(200, "OK")
+    conn |> render("ok.json")
   end
 
   def interactions(conn, %{"project_id" => project_id, "survey_id" => survey_id}) do
@@ -881,7 +881,7 @@ defmodule AskWeb.RespondentController do
     ActivityLog.generate_file(project, conn, survey, "interactions") |> Repo.insert()
 
     SurveyResults.generate_interactions_file(survey_id)
-    conn |> send_resp(200, "OK")
+    conn |> render("ok.json")
   end
 
   defp mask_phone_numbers(respondent) do
