@@ -517,6 +517,10 @@ defmodule Ask.Runtime.ChannelBroker do
     end
   end
 
+  if Mix.env() == :test do
+    defp update_respondent_timeout(%{session: nil} = respondent), do: respondent
+  end
+
   defp update_respondent_timeout(respondent) do
     timeout_minutes = respondent.session |> Session.load() |> Session.current_timeout()
     timeout_at = Respondent.next_actual_timeout(respondent, timeout_minutes, SystemTime.time().now)
