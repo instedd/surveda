@@ -1,9 +1,9 @@
 # NOTE: channels without channel_id (used in some unit tests) share a single process (channel_id: 0)
 defmodule Ask.Runtime.ChannelBroker do
-  alias Ask.Runtime.{ChannelBrokerSupervisor, SurveyLogger}
+  alias Ask.Runtime.{ChannelBrokerSupervisor, Session, SurveyLogger}
   alias Ask.Runtime.ChannelBrokerAgent, as: Agent
   alias Ask.Runtime.ChannelBrokerState, as: State
-  alias Ask.{Channel, Logger, Respondent, Repo, Stats}
+  alias Ask.{Channel, Logger, Respondent, Repo, Stats, SystemTime}
   import Ecto.Query
   use GenServer
 
@@ -458,7 +458,7 @@ defmodule Ask.Runtime.ChannelBroker do
   end
 
   defp log_contact(status, respondent) do
-    session = respondent.session |> Ask.Runtime.Session.load()
+    session = respondent.session |> Session.load()
     SurveyLogger.log(
       respondent.survey_id,
       session.flow.mode,
@@ -477,6 +477,8 @@ defmodule Ask.Runtime.ChannelBroker do
     response =
       state.runtime_channel
       |> Ask.Runtime.Channel.setup(respondent, token, not_before, not_after)
+
+    update_respondent_timeout(respondent)
 
     case response do
       {:ok, %{verboice_call_id: verboice_call_id}} ->
@@ -501,6 +503,8 @@ defmodule Ask.Runtime.ChannelBroker do
       state.runtime_channel
       |> Ask.Runtime.Channel.ask(respondent, token, reply, state.channel_id)
 
+    update_respondent_timeout(respondent)
+
     case result do
       {:ok, %{nuntium_token: nuntium_token}} ->
         channel_state = %{"nuntium_token" => nuntium_token}
@@ -511,6 +515,12 @@ defmodule Ask.Runtime.ChannelBroker do
         debug("channel_ask no nuntium_token", result: result)
         state
     end
+  end
+
+  defp update_respondent_timeout(respondent) do
+    timeout_minutes = respondent.session |> Session.load() |> Session.current_timeout()
+    timeout_at = Respondent.next_actual_timeout(respondent, timeout_minutes, SystemTime.time().now)
+    Respondent.update(respondent, %{timeout_at: timeout_at}, true)
   end
 
   # Don't schedule automatic GC runs in tests.
