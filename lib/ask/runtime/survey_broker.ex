@@ -224,6 +224,8 @@ defmodule Ask.Runtime.SurveyBroker do
   end
 
   def recontact_queued_respondents(respondent_ids) do
+    # TODO: it looks like this method is not used anymore since 46391a1430dbeb5b67498769080bc5a32f9cd135
+
     # We're recontacting respondants that were queued
     # in channel broker after it fails
     Repo.all(

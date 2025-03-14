@@ -109,6 +109,9 @@ defmodule Ask.Runtime.Session do
     end
   end
 
+  # TODO: none of the three timeout/2 definitions use the second parameter
+  # I assume it's only there to differentiate it from "the first" timeout/1 definition.
+  # We should rename the timeout/2 function and remove the second parameter altogether?
   def timeout(%{current_mode: %{retries: []}, fallback_mode: nil} = session, _) do
     session = %{session | respondent: RetriesHistogram.remove_respondent(session.respondent)}
     terminate(session)
