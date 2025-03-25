@@ -385,9 +385,13 @@ defmodule Ask.Runtime.Session do
            flow: flow,
            respondent: respondent,
            token: token,
-           current_mode: %SMSMode{channel: channel}
+           current_mode: %SMSMode{channel: channel},
+           schedule: schedule
          } = session
        ) do
+
+    {not_before, not_after} = acceptable_contact_time_window(schedule)
+
     case flow
          |> Flow.step(
            session.current_mode |> SessionMode.visitor(),
@@ -398,7 +402,7 @@ defmodule Ask.Runtime.Session do
         if Reply.prompts(reply) != [] do
           log_prompts(reply, channel, flow.mode, respondent, true)
 
-          ChannelBroker.ask(channel.id, channel.type, respondent, token, reply)
+          ChannelBroker.ask(channel.id, channel.type, respondent, token, reply, not_before, not_after)
 
           respondent = Respondent.update_stats(respondent.id, reply)
           {:end, reply, respondent}
@@ -419,7 +423,7 @@ defmodule Ask.Runtime.Session do
 
         log_prompts(reply, channel, flow.mode, respondent)
 
-        ChannelBroker.ask(channel.id, channel.type, respondent, token, reply)
+        ChannelBroker.ask(channel.id, channel.type, respondent, token, reply, not_before, not_after)
 
         respondent = Respondent.update_stats(respondent.id, reply)
         {:ok, %{session | flow: flow, respondent: respondent}, reply, current_timeout(session)}
