@@ -274,7 +274,6 @@ defmodule Ask.Runtime.ChannelBrokerTest do
           Enum.at(respondents, 4)
         ]
 
-        # All respondents should be in broker queue, but only the first one contacted
         assert Enum.map(expected_active_respondents, fn r -> r.id end) == active_respondent_ids(state)
 
         assert_sent_smss(expected_active_respondents, test_channel)
