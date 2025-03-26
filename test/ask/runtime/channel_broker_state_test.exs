@@ -68,10 +68,13 @@ defmodule Ask.Runtime.ChannelBrokerStateTest do
       now = DateTime.utc_now()
       mock_time(now)
 
-      State.new(0, "sms", %{})
-      |> State.queue_contact({%{id: 2, disposition: :queued}, "secret", [], nil, nil}, 5)
+      five_seconds_ago = DateTime.add(now, -5, :second)
+      in_one_minute = DateTime.add(now, 60, :second)
 
-      assert [%{respondent_id: 2, size: 5, queued_at: now, reply: [], not_before: nil, not_after: nil}] = Queue.queued_contacts(0)
+      State.new(0, "sms", %{})
+      |> State.queue_contact({%{id: 2, disposition: :queued}, "secret", [], five_seconds_ago, in_one_minute}, 5)
+
+      assert [%{respondent_id: 2, size: 5, queued_at: now, reply: [], not_before: five_seconds_ago, not_after: in_one_minute}] = Queue.queued_contacts(0)
       assert [] = Queue.active_contacts(0)
     end
 
