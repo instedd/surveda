@@ -245,7 +245,7 @@ defmodule Ask.Runtime.Session do
     end
   end
 
-  def contact_respondent(%{current_mode: %SMSMode{}} = session) do
+  def contact_respondent(%{schedule: schedule, current_mode: %SMSMode{}} = session) do
     token = Ecto.UUID.generate()
 
     respondent = session.respondent
@@ -253,8 +253,11 @@ defmodule Ask.Runtime.Session do
     channel = session.current_mode.channel
     log_prompts(reply, channel, session.flow.mode, respondent)
 
-    ChannelBroker.ask(channel.id, channel.type, session.respondent, token, reply)
+    {not_before, not_after} = acceptable_contact_time_window(schedule)
 
+    ChannelBroker.ask(channel.id, channel.type, session.respondent, token, reply, not_before, not_after)
+
+    # TODO: what happens with this when contact attempt falls outside acceptable window
     respondent = Respondent.update_stats(respondent.id, reply)
     %{session | token: token, respondent: respondent}
   end
@@ -262,13 +265,7 @@ defmodule Ask.Runtime.Session do
   def contact_respondent(%{schedule: schedule, current_mode: %IVRMode{}} = session) do
     token = Ecto.UUID.generate()
 
-    next_available_date_time =
-      schedule
-      |> Schedule.next_available_date_time()
-
-    today_end_time =
-      schedule
-      |> Schedule.at_end_time(next_available_date_time)
+    {not_before, not_after} = acceptable_contact_time_window(schedule)
 
     channel = session.current_mode.channel
 
@@ -277,8 +274,8 @@ defmodule Ask.Runtime.Session do
       channel.type,
       session.respondent,
       token,
-      next_available_date_time,
-      today_end_time
+      not_before,
+      not_after
     )
 
     %{session | token: token}
@@ -388,9 +385,13 @@ defmodule Ask.Runtime.Session do
            flow: flow,
            respondent: respondent,
            token: token,
-           current_mode: %SMSMode{channel: channel}
+           current_mode: %SMSMode{channel: channel},
+           schedule: schedule
          } = session
        ) do
+
+    {not_before, not_after} = acceptable_contact_time_window(schedule)
+
     case flow
          |> Flow.step(
            session.current_mode |> SessionMode.visitor(),
@@ -401,7 +402,7 @@ defmodule Ask.Runtime.Session do
         if Reply.prompts(reply) != [] do
           log_prompts(reply, channel, flow.mode, respondent, true)
 
-          ChannelBroker.ask(channel.id, channel.type, respondent, token, reply)
+          ChannelBroker.ask(channel.id, channel.type, respondent, token, reply, not_before, not_after)
 
           respondent = Respondent.update_stats(respondent.id, reply)
           {:end, reply, respondent}
@@ -422,7 +423,7 @@ defmodule Ask.Runtime.Session do
 
         log_prompts(reply, channel, flow.mode, respondent)
 
-        ChannelBroker.ask(channel.id, channel.type, respondent, token, reply)
+        ChannelBroker.ask(channel.id, channel.type, respondent, token, reply, not_before, not_after)
 
         respondent = Respondent.update_stats(respondent.id, reply)
         {:ok, %{session | flow: flow, respondent: respondent}, reply, current_timeout(session)}
@@ -472,21 +473,16 @@ defmodule Ask.Runtime.Session do
            schedule: schedule
          } = session
        ) do
-    next_available_date_time =
-      schedule
-      |> Schedule.next_available_date_time()
 
-    today_end_time =
-      schedule
-      |> Schedule.at_end_time(next_available_date_time)
+    {not_before, not_after} = acceptable_contact_time_window(schedule)
 
     ChannelBroker.setup(
       channel.id,
       channel.type,
       respondent,
       token,
-      next_available_date_time,
-      today_end_time
+      not_before,
+      not_after
     )
 
     {:ok, %{session | respondent: respondent}, %Reply{}, current_timeout(session)}
@@ -1042,5 +1038,17 @@ defmodule Ask.Runtime.Session do
     from = DateTime.utc_now()
     until = Schedule.next_available_date_time(session.schedule)
     Interval.new(from: from, until: until) |> Interval.duration(:minutes)
+  end
+
+  defp acceptable_contact_time_window(schedule) do
+    not_before =
+      schedule
+      |> Schedule.next_available_date_time()
+
+    not_after =
+      schedule
+      |> Schedule.at_end_time(not_before)
+
+    {not_before, not_after}
   end
 end

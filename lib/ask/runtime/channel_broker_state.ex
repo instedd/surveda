@@ -94,7 +94,7 @@ defmodule Ask.Runtime.ChannelBrokerState do
   end
 
   # Adds an SMS contact to the queue with given priority (`:high`, `:normal`).
-  def queue_contact(state, {respondent, token, reply}, size, priority) do
+  def queue_contact(state, {respondent, token, reply, not_before, not_after}, size, priority) do
     Queue.upsert!(%{
       channel_id: state.channel_id,
       respondent_id: respondent.id,
@@ -102,8 +102,8 @@ defmodule Ask.Runtime.ChannelBrokerState do
       priority: priority,
       size: size,
       token: token,
-      not_before: nil,
-      not_after: nil,
+      not_before: not_before,
+      not_after: not_after,
       reply: reply
     })
 
@@ -173,7 +173,7 @@ defmodule Ask.Runtime.ChannelBrokerState do
   end
 
   defp to_item("sms", contact) do
-    {contact.respondent_id, contact.token, contact.reply}
+    {contact.respondent_id, contact.token, contact.reply, contact.not_before, contact.not_after}
   end
 
   # Increments the number of contacts for the respondent. Activates the contact

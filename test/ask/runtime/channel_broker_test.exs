@@ -241,6 +241,49 @@ defmodule Ask.Runtime.ChannelBrokerTest do
   end
 
   describe "Nuntium" do
+    defp activate_respondent(state, "sms", respondent, not_before, not_after) do
+      {_, state, _} =
+        ChannelBroker.handle_cast(
+          {:ask, "sms", respondent, "token", "foo", not_before, not_after},
+          state
+        )
+
+      state
+    end
+
+    test "Respect schedules for SMS" do
+      %{state: state, respondents: respondents, test_channel: test_channel} = build_survey("sms")
+
+      now = SystemTime.time().now
+      not_before = DateTime.add(now, 5, :second)
+      not_after = DateTime.add(now, 60, :second)
+      expired = DateTime.add(now, -5, :second)
+
+      with_mock Ask.Runtime.Survey, [contact_attempt_expired: fn _ -> :ok end] do
+        state =
+          state
+          |> activate_respondent("sms", Enum.at(respondents, 0), now, not_after)
+          |> activate_respondent("sms", Enum.at(respondents, 1), not_before, expired)
+          |> activate_respondent("sms", Enum.at(respondents, 2), not_before, expired)
+          |> activate_respondent("sms", Enum.at(respondents, 3), not_before, not_after)
+          |> activate_respondent("sms", Enum.at(respondents, 4), not_before, not_after)
+
+        expected_active_respondents = [
+          Enum.at(respondents, 0),
+          Enum.at(respondents, 3),
+          Enum.at(respondents, 4)
+        ]
+
+        assert Enum.map(expected_active_respondents, fn r -> r.id end) == active_respondent_ids(state)
+
+        assert_sent_smss(expected_active_respondents, test_channel)
+        assert_not_sent_smss([
+          Enum.at(respondents, 1),
+          Enum.at(respondents, 2),
+        ], test_channel)
+      end
+    end
+
     test "Every SMS is sent when capacity isn't set", %{} do
       channel_capacity = nil
       [test_channel, respondents, _channel] = initialize_survey("sms", channel_capacity)
@@ -466,6 +509,12 @@ defmodule Ask.Runtime.ChannelBrokerTest do
     refute_received [:ask, ^test_channel, _respondent, _token, _reply, _channel_id]
   end
 
+  defp assert_not_sent_smss(respondents, test_channel) do
+    Enum.each(respondents, fn %{id: id} ->
+      refute_received [:ask, ^test_channel, %{id: ^id}, _token, _reply, _channel_id]
+    end)
+  end
+
   defp assert_some_sent_smss(amount, respondents, test_channel) do
     respondent_ids = Enum.map(respondents, & &1.id)
 
@@ -511,7 +560,7 @@ defmodule Ask.Runtime.ChannelBrokerTest do
       config: Config.channel_broker_config()
     }
 
-    %{state: state, respondents: respondents, channel: channel}
+    %{state: state, respondents: respondents, channel: channel, test_channel: test_channel}
   end
 
   defp start_survey(channel_type) do
@@ -547,7 +596,9 @@ defmodule Ask.Runtime.ChannelBrokerTest do
   end
 
   defp respondent_to_contact("sms", respondent) do
-    {respondent, "secret", []}
+    not_before = SystemTime.time().now |> DateTime.add(-3600, :second)
+    not_after = SystemTime.time().now |> DateTime.add(3600, :second)
+    {respondent, "secret", [], not_before, not_after}
   end
 
   defp channel_state("ivr", respondent) do
