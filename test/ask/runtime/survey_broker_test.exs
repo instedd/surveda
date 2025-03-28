@@ -109,11 +109,10 @@ defmodule Ask.Runtime.SurveyBrokerTest do
         create_running_survey_with_channel_and_respondent(
           @dummy_steps,
           "sms",
-          Schedule.business_day(),
-          "3h"
+          Schedule.business_day()
         )
 
-      survey |> Survey.changeset(%{sms_retry_configuration: "2h"}) |> Repo.update()
+      survey |> Survey.changeset(%{sms_retry_configuration: "3h"}) |> Repo.update()
 
       {:ok, edge_time, _} = DateTime.from_iso8601("2019-12-06T17:00:00Z")
       mock_time(edge_time)
@@ -164,7 +163,7 @@ defmodule Ask.Runtime.SurveyBrokerTest do
       ]
 
       # Assert first retry
-      {:ok, expected_timeout_at, _} = DateTime.from_iso8601("2019-12-09T11:00:00Z")
+      {:ok, expected_timeout_at, _} = DateTime.from_iso8601("2019-12-09T12:00:00Z")
 
       # respondent = Repo.get!(Respondent, respondent.id)
       Respondent.with_lock(respondent.id, fn respondent ->
@@ -1502,7 +1501,8 @@ defmodule Ask.Runtime.SurveyBrokerTest do
 
   describe "change the respondent state" do
     test "changes the respondent state from pending to running if neccessary" do
-      [survey, _, _, respondent, _] = create_running_survey_with_channel_and_respondent()
+      [survey, _, _, respondent, _] = create_running_survey_with_channel_and_respondent_with_options(mode: "sms")
+      survey |> Survey.changeset(%{sms_retry_configuration: "10m"}) |> Repo.update()
 
       SurveyBroker.handle_info(:poll, nil)
 
