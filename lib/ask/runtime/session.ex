@@ -42,6 +42,7 @@ defmodule Ask.Runtime.Session do
     :flow,
     :respondent,
     :token,
+    :current_delay,
     :fallback_delay,
     :count_partial_results,
     :schedule
@@ -69,12 +70,14 @@ defmodule Ask.Runtime.Session do
       ) do
     flow = Flow.start(questionnaire, mode)
 
+    session_fallback_delay = fallback_delay || Survey.default_fallback_delay()
     session = %Session{
       current_mode: SessionModeProvider.new(mode, channel, retries),
       fallback_mode: SessionModeProvider.new(fallback_mode, fallback_channel, fallback_retries),
       flow: flow,
       respondent: update_section_order(respondent, flow.section_order, persist),
-      fallback_delay: fallback_delay || Survey.default_fallback_delay(),
+      current_delay: List.first(retries) || session_fallback_delay,
+      fallback_delay: session_fallback_delay,
       count_partial_results: count_partial_results,
       schedule: schedule
     }
@@ -218,13 +221,15 @@ defmodule Ask.Runtime.Session do
     Respondent.update(respondent, %{section_order: section_order}, persist)
   end
 
-  def current_timeout(%Session{current_mode: %{retries: []}, fallback_delay: fallback_delay}) do
-    fallback_delay
-  end
+  def current_timeout(%{current_delay: current_delay}), do: current_delay
 
-  def current_timeout(%Session{current_mode: %{retries: [next_retry | _]}}) do
-    next_retry
-  end
+  # def current_timeout(%Session{current_mode: %{retries: []}, fallback_delay: fallback_delay}) do
+  #   fallback_delay
+  # end
+
+  # def current_timeout(%Session{current_mode: %{retries: [next_retry | _]}}) do
+  #   next_retry
+  # end
 
   def log_disposition_changed(
         respondent,
@@ -338,6 +343,7 @@ defmodule Ask.Runtime.Session do
       flow: session.flow |> Flow.dump(),
       respondent_id: session.respondent.id,
       token: session.token,
+      current_delay: session.current_delay,
       fallback_delay: session.fallback_delay,
       count_partial_results: session.count_partial_results,
       schedule: session.schedule |> Schedule.dump!()
@@ -351,6 +357,7 @@ defmodule Ask.Runtime.Session do
       flow: Flow.load(state["flow"]),
       respondent: Repo.get(Ask.Respondent, state["respondent_id"]),
       token: state["token"],
+      current_delay: state["current_delay"],
       fallback_delay: state["fallback_delay"],
       count_partial_results: state["count_partial_results"],
       schedule: state["schedule"] |> Schedule.load!()
@@ -760,12 +767,12 @@ defmodule Ask.Runtime.Session do
     result
   end
 
-  defp consume_retry(%{current_mode: %{retries: [_ | retries]}} = session) do
-    %{session | current_mode: %{session.current_mode | retries: retries}}
+  defp consume_retry(%{current_mode: %{retries: [current_delay | retries]}} = session) do
+    %{session | current_mode: %{session.current_mode | retries: retries, current_delay: current_delay}}
   end
 
-  defp consume_retry(%{current_mode: %{retries: []}} = session) do
-    session
+  defp consume_retry(%{current_mode: %{retries: [], fallback_delay: fallback_delay}} = session) do
+    %{session | current_delay: fallback_delay }
   end
 
   defp add_session_mode_attempt!(%Session{} = session),
