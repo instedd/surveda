@@ -768,7 +768,7 @@ defmodule Ask.Runtime.Session do
   end
 
   defp consume_retry(%{current_mode: %{retries: [current_delay | retries]}} = session) do
-    %{session | current_mode: %{session.current_mode | retries: retries, current_delay: current_delay}}
+    %{session | current_mode: %{session.current_mode | retries: retries}, current_delay: current_delay}
   end
 
   defp consume_retry(%{current_mode: %{retries: [], fallback_delay: fallback_delay}} = session) do
