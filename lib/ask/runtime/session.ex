@@ -76,12 +76,10 @@ defmodule Ask.Runtime.Session do
       fallback_mode: SessionModeProvider.new(fallback_mode, fallback_channel, fallback_retries),
       flow: flow,
       respondent: update_section_order(respondent, flow.section_order, persist),
-      current_delay: List.first(retries) || session_fallback_delay,
       fallback_delay: session_fallback_delay,
       count_partial_results: count_partial_results,
       schedule: schedule
     }
-
     run_flow(session, persist)
   end
 
@@ -221,15 +219,15 @@ defmodule Ask.Runtime.Session do
     Respondent.update(respondent, %{section_order: section_order}, persist)
   end
 
-  def current_timeout(%{current_delay: current_delay}), do: current_delay
+  # def current_timeout(%{current_delay: current_delay}), do: current_delay
 
-  # def current_timeout(%Session{current_mode: %{retries: []}, fallback_delay: fallback_delay}) do
-  #   fallback_delay
-  # end
+  def current_timeout(%Session{current_mode: %{retries: []}, fallback_delay: fallback_delay}) do
+    fallback_delay
+  end
 
-  # def current_timeout(%Session{current_mode: %{retries: [next_retry | _]}}) do
-  #   next_retry
-  # end
+  def current_timeout(%Session{current_mode: %{retries: [next_retry | _]}}) do
+    next_retry
+  end
 
   def log_disposition_changed(
         respondent,
@@ -611,6 +609,14 @@ defmodule Ask.Runtime.Session do
       |> add_mode_attempt.()
 
     mode_start(session)
+    |> update_current_delay
+  end
+
+  defp update_current_delay({:ok, session, reply, timeout}) do
+   {:ok, %{session | current_delay: timeout}, reply, timeout}
+  end
+  defp update_current_delay({:end, _, _} = flow_result) do
+    flow_result
   end
 
   defp apply_patterns_if_match(patterns, respondent, persist) do
@@ -771,7 +777,7 @@ defmodule Ask.Runtime.Session do
     %{session | current_mode: %{session.current_mode | retries: retries}, current_delay: current_delay}
   end
 
-  defp consume_retry(%{current_mode: %{retries: [], fallback_delay: fallback_delay}} = session) do
+  defp consume_retry(%{current_mode: %{retries: []}, fallback_delay: fallback_delay} = session) do
     %{session | current_delay: fallback_delay }
   end
 
@@ -841,7 +847,7 @@ defmodule Ask.Runtime.Session do
           persist
         )
 
-        {:ok, %{session | flow: flow}, reply, current_timeout(session)}
+        {:ok, %{session | flow: flow}, reply, session.current_delay}
     end
   end
 
@@ -851,7 +857,7 @@ defmodule Ask.Runtime.Session do
         {:failed, session.respondent}
 
       _ ->
-        {:hangup, %{session | flow: flow}, reply, current_timeout(session), session.respondent}
+        {:hangup, %{session | flow: flow}, reply, session.current_delay, session.respondent}
     end
   end
 

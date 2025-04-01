@@ -522,8 +522,8 @@ defmodule Ask.Runtime.ChannelBroker do
   end
 
   defp update_respondent_timeout(respondent) do
-    timeout_minutes = respondent.session |> Session.load() |> Session.current_timeout()
-    timeout_at = Respondent.next_actual_timeout(respondent, timeout_minutes, SystemTime.time().now)
+    session = respondent.session |> Session.load()
+    timeout_at = Respondent.next_actual_timeout(respondent, session.current_delay, SystemTime.time().now)
     Respondent.update(respondent, %{timeout_at: timeout_at}, true)
   end
 
