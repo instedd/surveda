@@ -123,11 +123,9 @@ defmodule Ask.Runtime.Session do
   end
 
   def timeout(%Session{} = session, _) do
-    best_timeout_option = best_timeout_option(session)
     session = retry(session)
 
-    # The new session will timeout as defined by hd(retries)
-    {:ok, session, %Reply{}, best_timeout_option || current_timeout(session)}
+    {:ok, session, %Reply{}, session.current_delay}
   end
 
   @doc """
@@ -219,13 +217,11 @@ defmodule Ask.Runtime.Session do
     Respondent.update(respondent, %{section_order: section_order}, persist)
   end
 
-  # def current_timeout(%{current_delay: current_delay}), do: current_delay
-
-  def current_timeout(%Session{current_mode: %{retries: []}, fallback_delay: fallback_delay}) do
+  defp current_timeout(%Session{current_mode: %{retries: []}, fallback_delay: fallback_delay}) do
     fallback_delay
   end
 
-  def current_timeout(%Session{current_mode: %{retries: [next_retry | _]}}) do
+  defp current_timeout(%Session{current_mode: %{retries: [next_retry | _]}}) do
     next_retry
   end
 
@@ -728,12 +724,6 @@ defmodule Ask.Runtime.Session do
     %{session | token: nil}
   end
 
-  defp best_timeout_option(%{current_mode: %{retries: retries}, fallback_mode: nil})
-       when length(retries) == 1,
-       do: hd(retries)
-
-  defp best_timeout_option(_), do: nil
-
   defp terminate(%{current_mode: %SMSMode{}, respondent: respondent}) do
     {:failed, respondent}
   end
@@ -773,12 +763,19 @@ defmodule Ask.Runtime.Session do
     result
   end
 
-  defp consume_retry(%{current_mode: %{retries: [current_delay | retries]}} = session) do
-    %{session | current_mode: %{session.current_mode | retries: retries}, current_delay: current_delay}
+  defp consume_retry(%{current_mode: %{retries: [retry]}, fallback_mode: nil} = session) do
+    %{session | current_mode: %{session.current_mode | retries: []}, current_delay: retry}
   end
 
-  defp consume_retry(%{current_mode: %{retries: []}, fallback_delay: fallback_delay} = session) do
-    %{session | current_delay: fallback_delay }
+  defp consume_retry(%{current_mode: %{retries: [_ | retries]}} = session) do
+    session = %{session | current_mode: %{session.current_mode | retries: retries}}
+    current_delay = current_timeout(session)
+    %{session | current_delay: current_delay}
+  end
+
+  defp consume_retry(%{current_mode: %{retries: []}} = session) do
+    current_delay = current_timeout(session)
+    %{session | current_delay: current_delay}
   end
 
   defp add_session_mode_attempt!(%Session{} = session),

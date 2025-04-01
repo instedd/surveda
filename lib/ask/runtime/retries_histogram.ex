@@ -41,7 +41,7 @@ defmodule Ask.Runtime.RetriesHistogram do
       %Session{} = session = Session.load(respondent.session)
 
       session =
-        reallocate_respondent(session, respondent, false, Session.current_timeout(session))
+        reallocate_respondent(session, respondent, false, session.current_delay)
 
       session.respondent
     end
@@ -56,7 +56,7 @@ defmodule Ask.Runtime.RetriesHistogram do
   def retry(session) do
     callback = fn ->
       %Session{respondent: %Respondent{} = respondent} = session
-      reallocate_respondent(session, respondent, ivr?(session), Session.current_timeout(session))
+      reallocate_respondent(session, respondent, ivr?(session), session.current_delay)
     end
 
     run_safe(%{
@@ -146,7 +146,7 @@ defmodule Ask.Runtime.RetriesHistogram do
        ) do
     # sms -> transition to active RetryStat
     if respondent.retry_stat_id,
-      do: reallocate_respondent(session, respondent, false, Session.current_timeout(session))
+      do: reallocate_respondent(session, respondent, false, session.current_delay)
   end
 
   defp do_next_step(_respondent, _session, {:reply, _reply, _}) do
