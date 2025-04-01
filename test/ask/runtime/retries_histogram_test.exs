@@ -225,12 +225,13 @@ defmodule Ask.Runtime.RetriesHistogramTest do
     end
   end
 
-  describe "SMS -> 2h -> SMS -> 3h with dummy steps" do
+  describe "SMS -> 2h -> SMS -> 2h with dummy steps" do
     setup context do
       config =
         TestConfiguration.base_config()
         |> TestConfiguration.with_survey_retries_config(%{
           sms_retry_configuration: "2h",
+          # shouldn't get used due to no fallback_mode
           fallback_delay: "3h"
         })
         |> TestConfiguration.with_retries([2])
@@ -632,7 +633,7 @@ defmodule Ask.Runtime.RetriesHistogramTest do
       initialize_survey(mode, config.survey_retry_config, config.questionnaire_steps)
 
     %{histogram_flow: expected_histogram_flow, histogram_hour: histogram_hour} =
-      configure_retries_and_fallback(mode, config.retries, config.fallback_delay)
+      configure_retries_and_fallback(mode, config.retries)
 
     expected_histogram = fn actives -> %{actives: actives, flow: expected_histogram_flow} end
     assert_histogram = fn histogram, message -> assert_histogram(survey, histogram, message) end
@@ -681,16 +682,18 @@ defmodule Ask.Runtime.RetriesHistogramTest do
         "CallSid" => "call-sid"
       })
 
-  defp configure_retries_and_fallback(type, retries_hours, fallback_delay_hours)
+  defp configure_retries_and_fallback(type, retries_hours)
        when type in ["sms", "mobileweb"] do
+    last_retry_delay = List.last(retries_hours)
+
     flow =
       base_flow(type, retries_hours)
-      |> append_last_contacting_slot("end", fallback_delay_hours)
+      |> append_last_contacting_slot("end", last_retry_delay)
 
     %{histogram_flow: flow, histogram_hour: fn config -> histogram_hour(flow, config) end}
   end
 
-  defp configure_retries_and_fallback("ivr" = type, retries_hours, _fallback_delay_hours) do
+  defp configure_retries_and_fallback("ivr" = type, retries_hours) do
     flow = base_flow(type, retries_hours)
     %{histogram_flow: flow, histogram_hour: fn config -> histogram_hour(flow, config) end}
   end

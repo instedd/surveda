@@ -156,8 +156,9 @@ defmodule Ask.TestHelpers do
       defp broker_poll(), do: SurveyBroker.handle_info(:poll, nil)
 
       defp respondent_reply(respondent_id, reply_message, mode) do
-        respondent = Repo.get!(Respondent, respondent_id)
-        Ask.Runtime.Survey.sync_step(respondent, Flow.Message.reply(reply_message), mode)
+        Respondent.with_lock(respondent_id, fn respondent ->
+          Ask.Runtime.Survey.sync_step(respondent, Flow.Message.reply(reply_message), mode)
+        end)
       end
 
       defp get_respondents_by_state(survey) do

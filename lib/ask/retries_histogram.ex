@@ -228,9 +228,12 @@ defmodule Ask.RetriesHistogram do
 
   defp end_flow(survey, flow) do
     fallback_delay = survey |> Survey.fallback_delay() |> minutes_to_hours()
-    [%{type: type}] = Enum.take(flow, -1)
+    [%{type: type, delay: last_delay}] = Enum.take(flow, -1)
 
-    end_flow_delay(type, fallback_delay)
+    # if last SMS delay is 0h, there was no retry - we default to the fallback_delay
+    # See Session.current_timeout/2 for reference
+    delay = if last_delay == 0, do: fallback_delay, else: last_delay
+    end_flow_delay(type, delay)
   end
 
   defp end_flow_delay("ivr", _), do: []
