@@ -640,7 +640,7 @@ defmodule Ask.Runtime.Session do
   defp log_prompts(reply, channel, mode, respondent, force \\ false, persist \\ true) do
     if persist do
       if force ||
-           !ChannelBroker.has_delivery_confirmation?(channel.id) do
+           !ChannelBroker.has_delivery_confirmation?(channel) do
         disposition = Reply.disposition(reply) || respondent.disposition
 
         Enum.each(Reply.steps(reply), fn step ->

@@ -69,171 +69,173 @@ defmodule Ask.Runtime.SurveyTest do
       survey = Repo.get(Ask.Survey, survey.id)
       assert survey.state == :running
 
-      respondent = Repo.get(Respondent, respondent.id)
-      assert respondent.state == :active
+      Respondent.with_lock(respondent.id, fn respondent ->
+        assert respondent.state == :active
 
-      Survey.delivery_confirm(respondent, "Do you smoke?")
+        Survey.delivery_confirm(respondent, "Do you smoke?")
 
-      reply = Survey.sync_step(respondent, Flow.Message.reply("Yes"), nil)
+        reply = Survey.sync_step(respondent, Flow.Message.reply("Yes"), nil)
 
-      assert {:reply,
-              ReplyHelper.simple("Do you exercise", "Do you exercise? Reply 1 for YES, 2 for NO"),
-              _} = reply
+        assert {:reply,
+                ReplyHelper.simple(
+                  "Do you exercise",
+                  "Do you exercise? Reply 1 for YES, 2 for NO"
+                ), _} = reply
 
-      %Respondent{timeout_at: first_timeout} = respondent = Repo.get(Respondent, respondent.id)
+        %Respondent{timeout_at: first_timeout} = respondent = Repo.get(Respondent, respondent.id)
 
-      assert 1 ==
-               %{survey_id: survey.id}
-               |> RetryStat.stats()
-               |> RetryStat.count(%{
-                 attempt: 1,
-                 retry_time: RetryStat.retry_time(first_timeout),
-                 ivr_active: false,
-                 mode: sequence_mode
-               })
+        assert 1 ==
+                 %{survey_id: survey.id}
+                 |> RetryStat.stats()
+                 |> RetryStat.count(%{
+                   attempt: 1,
+                   retry_time: RetryStat.retry_time(first_timeout),
+                   ivr_active: false,
+                   mode: sequence_mode
+                 })
 
-      Survey.delivery_confirm(respondent, "Do you exercise")
+        Survey.delivery_confirm(respondent, "Do you exercise")
 
-      hours_passed = 3
-      time_passes(hours: hours_passed)
+        hours_passed = 3
+        time_passes(hours: hours_passed)
 
-      reply = Survey.sync_step(respondent, Flow.Message.reply("Yes"), nil)
+        reply = Survey.sync_step(respondent, Flow.Message.reply("Yes"), nil)
 
-      assert {:reply,
-              ReplyHelper.simple(
-                "Which is the second perfect number?",
-                "Which is the second perfect number??"
-              ), _} = reply
+        assert {:reply,
+                ReplyHelper.simple(
+                  "Which is the second perfect number?",
+                  "Which is the second perfect number??"
+                ), _} = reply
 
-      # Every sent SMS resets the timeout
-      %Respondent{timeout_at: hours_after_timeout} =
+        # Every sent SMS resets the timeout
+        %Respondent{timeout_at: hours_after_timeout} =
+          respondent = Repo.get(Respondent, respondent.id)
+
+        assert Timex.diff(hours_after_timeout, first_timeout, :hours) == hours_passed
+        stats = %{survey_id: survey.id} |> RetryStat.stats()
+
+        assert 0 ==
+                 stats
+                 |> RetryStat.count(%{
+                   attempt: 1,
+                   retry_time: RetryStat.retry_time(first_timeout),
+                   ivr_active: false,
+                   mode: sequence_mode
+                 })
+
+        assert 1 ==
+                 stats
+                 |> RetryStat.count(%{
+                   attempt: 1,
+                   retry_time: RetryStat.retry_time(hours_after_timeout),
+                   ivr_active: false,
+                   mode: sequence_mode
+                 })
+
+        Survey.delivery_confirm(respondent, "Which is the second perfect number?")
+
+        reply = Survey.sync_step(respondent, Flow.Message.reply("99"))
+
+        assert {:reply,
+                ReplyHelper.simple(
+                  "What's the number of this question?",
+                  "What's the number of this question??"
+                ), _} = reply
+
         respondent = Repo.get(Respondent, respondent.id)
+        Survey.delivery_confirm(respondent, "What's the number of this question?")
 
-      assert Timex.diff(hours_after_timeout, first_timeout, :hours) == hours_passed
-      stats = %{survey_id: survey.id} |> RetryStat.stats()
+        reply = Survey.sync_step(respondent, Flow.Message.reply("11"))
 
-      assert 0 ==
-               stats
-               |> RetryStat.count(%{
-                 attempt: 1,
-                 retry_time: RetryStat.retry_time(first_timeout),
-                 ivr_active: false,
-                 mode: sequence_mode
-               })
+        assert {:end,
+                {:reply, ReplyHelper.simple("Thank you", "Thanks for completing this survey")},
+                _} = reply
 
-      assert 1 ==
-               stats
-               |> RetryStat.count(%{
-                 attempt: 1,
-                 retry_time: RetryStat.retry_time(hours_after_timeout),
-                 ivr_active: false,
-                 mode: sequence_mode
-               })
+        interval =
+          Interval.new(
+            from: Timex.shift(SystemTime.time().now, seconds: -5),
+            until: Timex.shift(SystemTime.time().now, seconds: 5),
+            step: [seconds: 1]
+          )
 
-      Survey.delivery_confirm(respondent, "Which is the second perfect number?")
+        respondent = Repo.get(Respondent, respondent.id)
+        assert respondent.state == :completed
+        assert respondent.session == nil
+        assert respondent.completed_at in interval
 
-      reply = Survey.sync_step(respondent, Flow.Message.reply("99"))
+        entries = (respondent |> Repo.preload(:survey_log_entries)).survey_log_entries
 
-      assert {:reply,
-              ReplyHelper.simple(
-                "What's the number of this question?",
-                "What's the number of this question??"
-              ), _} = reply
+        [
+          do_you_smoke,
+          do_you_exercise,
+          second_perfect_number,
+          question_number,
+          thank_you
+        ] = entries |> Enum.filter(fn e -> e.action_type == "prompt" end)
 
-      respondent = Repo.get(Respondent, respondent.id)
-      Survey.delivery_confirm(respondent, "What's the number of this question?")
+        [
+          do_smoke,
+          do_exercise,
+          ninety_nine,
+          eleven
+        ] = entries |> Enum.filter(fn e -> e.action_type == "response" end)
 
-      reply = Survey.sync_step(respondent, Flow.Message.reply("11"))
+        [
+          disposition_changed_to_contacted,
+          disposition_changed_to_started,
+          disposition_changed_to_completed
+        ] = entries |> Enum.filter(fn e -> e.action_type == "disposition changed" end)
 
-      assert {:end,
-              {:reply, ReplyHelper.simple("Thank you", "Thanks for completing this survey")},
-              _} = reply
+        assert do_you_smoke.survey_id == survey.id
+        assert do_you_smoke.action_data == "Do you smoke?"
+        assert do_you_smoke.disposition == "queued"
 
-      interval =
-        Interval.new(
-          from: Timex.shift(SystemTime.time().now, seconds: -5),
-          until: Timex.shift(SystemTime.time().now, seconds: 5),
-          step: [seconds: 1]
-        )
+        assert disposition_changed_to_contacted.survey_id == survey.id
+        assert disposition_changed_to_contacted.action_data == "Contacted"
+        assert disposition_changed_to_contacted.disposition == "queued"
 
-      respondent = Repo.get(Respondent, respondent.id)
-      assert respondent.state == :completed
-      assert respondent.session == nil
-      assert respondent.completed_at in interval
+        assert do_smoke.survey_id == survey.id
+        assert do_smoke.action_data == "Yes"
+        assert do_smoke.disposition == "contacted"
+
+        assert disposition_changed_to_started.survey_id == survey.id
+        assert disposition_changed_to_started.action_data == "Started"
+        assert disposition_changed_to_started.disposition == "contacted"
+
+        assert do_you_exercise.survey_id == survey.id
+        assert do_you_exercise.action_data == "Do you exercise"
+        assert do_you_exercise.disposition == "started"
+
+        assert do_exercise.survey_id == survey.id
+        assert do_exercise.action_data == "Yes"
+        assert do_exercise.disposition == "started"
+
+        assert second_perfect_number.survey_id == survey.id
+        assert second_perfect_number.action_data == "Which is the second perfect number?"
+        assert second_perfect_number.disposition == "started"
+
+        assert ninety_nine.survey_id == survey.id
+        assert ninety_nine.action_data == "99"
+        assert ninety_nine.disposition == "started"
+
+        assert question_number.survey_id == survey.id
+        assert question_number.action_data == "What's the number of this question?"
+        assert question_number.disposition == "started"
+
+        assert eleven.survey_id == survey.id
+        assert eleven.action_data == "11"
+        assert eleven.disposition == "started"
+
+        assert thank_you.survey_id == survey.id
+        assert thank_you.action_data == "Thank you"
+        assert thank_you.disposition == "started"
+
+        assert disposition_changed_to_completed.survey_id == survey.id
+        assert disposition_changed_to_completed.action_data == "Completed"
+        assert disposition_changed_to_completed.disposition == "started"
+      end)
 
       :ok = logger |> GenServer.stop()
-
-      entries = (respondent |> Repo.preload(:survey_log_entries)).survey_log_entries
-
-      [
-        do_you_smoke,
-        do_you_exercise,
-        second_perfect_number,
-        question_number,
-        thank_you
-      ] = entries |> Enum.filter(fn e -> e.action_type == "prompt" end)
-
-      [
-        do_smoke,
-        do_exercise,
-        ninety_nine,
-        eleven
-      ] = entries |> Enum.filter(fn e -> e.action_type == "response" end)
-
-      [
-        disposition_changed_to_contacted,
-        disposition_changed_to_started,
-        disposition_changed_to_completed
-      ] = entries |> Enum.filter(fn e -> e.action_type == "disposition changed" end)
-
-      assert do_you_smoke.survey_id == survey.id
-      assert do_you_smoke.action_data == "Do you smoke?"
-      assert do_you_smoke.disposition == "queued"
-
-      assert disposition_changed_to_contacted.survey_id == survey.id
-      assert disposition_changed_to_contacted.action_data == "Contacted"
-      assert disposition_changed_to_contacted.disposition == "queued"
-
-      assert do_smoke.survey_id == survey.id
-      assert do_smoke.action_data == "Yes"
-      assert do_smoke.disposition == "contacted"
-
-      assert disposition_changed_to_started.survey_id == survey.id
-      assert disposition_changed_to_started.action_data == "Started"
-      assert disposition_changed_to_started.disposition == "contacted"
-
-      assert do_you_exercise.survey_id == survey.id
-      assert do_you_exercise.action_data == "Do you exercise"
-      assert do_you_exercise.disposition == "started"
-
-      assert do_exercise.survey_id == survey.id
-      assert do_exercise.action_data == "Yes"
-      assert do_exercise.disposition == "started"
-
-      assert second_perfect_number.survey_id == survey.id
-      assert second_perfect_number.action_data == "Which is the second perfect number?"
-      assert second_perfect_number.disposition == "started"
-
-      assert ninety_nine.survey_id == survey.id
-      assert ninety_nine.action_data == "99"
-      assert ninety_nine.disposition == "started"
-
-      assert question_number.survey_id == survey.id
-      assert question_number.action_data == "What's the number of this question?"
-      assert question_number.disposition == "started"
-
-      assert eleven.survey_id == survey.id
-      assert eleven.action_data == "11"
-      assert eleven.disposition == "started"
-
-      assert thank_you.survey_id == survey.id
-      assert thank_you.action_data == "Thank you"
-      assert thank_you.disposition == "started"
-
-      assert disposition_changed_to_completed.survey_id == survey.id
-      assert disposition_changed_to_completed.action_data == "Completed"
-      assert disposition_changed_to_completed.disposition == "started"
-
       :ok = broker |> GenServer.stop()
     end
 
@@ -248,149 +250,149 @@ defmodule Ask.Runtime.SurveyTest do
       survey = Repo.get(Ask.Survey, survey.id)
       assert survey.state == :running
 
-      respondent = Repo.get(Respondent, respondent.id)
-      assert respondent.state == :active
+      Respondent.with_lock(respondent.id, fn respondent ->
+        assert respondent.state == :active
+        reply = Survey.sync_step(respondent, Flow.Message.answer())
 
-      reply = Survey.sync_step(respondent, Flow.Message.answer())
+        assert {:reply,
+                ReplyHelper.ivr("Do you smoke?", "Do you smoke? Press 8 for YES, 9 for NO"),
+                _} = reply
 
-      assert {:reply, ReplyHelper.ivr("Do you smoke?", "Do you smoke? Press 8 for YES, 9 for NO"),
-              _} = reply
+        respondent = Repo.get(Respondent, respondent.id)
+        reply = Survey.sync_step(respondent, Flow.Message.reply("9"))
 
-      respondent = Repo.get(Respondent, respondent.id)
-      reply = Survey.sync_step(respondent, Flow.Message.reply("9"))
+        assert {:reply,
+                ReplyHelper.ivr("Do you exercise", "Do you exercise? Press 1 for YES, 2 for NO"),
+                _} = reply
 
-      assert {:reply,
-              ReplyHelper.ivr("Do you exercise", "Do you exercise? Press 1 for YES, 2 for NO"),
-              _} = reply
+        respondent = Repo.get(Respondent, respondent.id)
+        reply = Survey.sync_step(respondent, Flow.Message.reply("1"))
 
-      respondent = Repo.get(Respondent, respondent.id)
-      reply = Survey.sync_step(respondent, Flow.Message.reply("1"))
+        assert {:reply,
+                ReplyHelper.ivr(
+                  "Which is the second perfect number?",
+                  "Which is the second perfect number"
+                ), _} = reply
 
-      assert {:reply,
-              ReplyHelper.ivr(
-                "Which is the second perfect number?",
-                "Which is the second perfect number"
-              ), _} = reply
+        respondent = Repo.get(Respondent, respondent.id)
+        reply = Survey.sync_step(respondent, Flow.Message.reply("99"))
 
-      respondent = Repo.get(Respondent, respondent.id)
-      reply = Survey.sync_step(respondent, Flow.Message.reply("99"))
+        assert {:reply,
+                ReplyHelper.ivr(
+                  "What's the number of this question?",
+                  "What's the number of this question"
+                ), _} = reply
 
-      assert {:reply,
-              ReplyHelper.ivr(
-                "What's the number of this question?",
-                "What's the number of this question"
-              ), _} = reply
+        respondent = Repo.get(Respondent, respondent.id)
+        reply = Survey.sync_step(respondent, Flow.Message.reply("11"))
 
-      respondent = Repo.get(Respondent, respondent.id)
-      reply = Survey.sync_step(respondent, Flow.Message.reply("11"))
+        assert {:end,
+                {:reply, ReplyHelper.ivr("Thank you", "Thanks for completing this survey (ivr)")},
+                _} = reply
 
-      assert {:end,
-              {:reply, ReplyHelper.ivr("Thank you", "Thanks for completing this survey (ivr)")},
-              _} = reply
+        now = Timex.now()
 
-      now = Timex.now()
+        interval =
+          Interval.new(
+            from: Timex.shift(now, seconds: -5),
+            until: Timex.shift(now, seconds: 5),
+            step: [seconds: 1]
+          )
 
-      interval =
-        Interval.new(
-          from: Timex.shift(now, seconds: -5),
-          until: Timex.shift(now, seconds: 5),
-          step: [seconds: 1]
-        )
+        respondent = Repo.get(Respondent, respondent.id)
+        assert respondent.state == :completed
+        assert respondent.session == nil
+        assert respondent.completed_at in interval
 
-      respondent = Repo.get(Respondent, respondent.id)
-      assert respondent.state == :completed
-      assert respondent.session == nil
-      assert respondent.completed_at in interval
+        assert [
+                 enqueueing,
+                 answer,
+                 disposition_changed_to_contacted,
+                 do_you_smoke,
+                 do_smoke,
+                 disposition_changed_to_started,
+                 do_you_exercise,
+                 do_exercise,
+                 second_perfect_number,
+                 ninety_nine,
+                 question_number,
+                 eleven,
+                 thank_you,
+                 disposition_changed_to_completed
+               ] = (respondent |> Repo.preload(:survey_log_entries)).survey_log_entries
+
+        assert enqueueing.survey_id == survey.id
+        assert enqueueing.action_data == "Enqueueing call"
+        assert enqueueing.action_type == "contact"
+        assert enqueueing.disposition == "queued"
+
+        assert answer.survey_id == survey.id
+        assert answer.action_data == "Answer"
+        assert answer.action_type == "contact"
+        assert answer.disposition == "queued"
+
+        assert disposition_changed_to_contacted.survey_id == survey.id
+        assert disposition_changed_to_contacted.action_data == "Contacted"
+        assert disposition_changed_to_contacted.action_type == "disposition changed"
+        assert disposition_changed_to_contacted.disposition == "queued"
+
+        assert do_you_smoke.survey_id == survey.id
+        assert do_you_smoke.action_data == "Do you smoke?"
+        assert do_you_smoke.action_type == "prompt"
+        assert do_you_smoke.disposition == "contacted"
+
+        assert do_smoke.survey_id == survey.id
+        assert do_smoke.action_data == "9"
+        assert do_smoke.action_type == "response"
+        assert do_smoke.disposition == "contacted"
+
+        assert disposition_changed_to_started.survey_id == survey.id
+        assert disposition_changed_to_started.action_data == "Started"
+        assert disposition_changed_to_started.action_type == "disposition changed"
+        assert disposition_changed_to_started.disposition == "contacted"
+
+        assert do_you_exercise.survey_id == survey.id
+        assert do_you_exercise.action_data == "Do you exercise"
+        assert do_you_exercise.action_type == "prompt"
+        assert do_you_exercise.disposition == "started"
+
+        assert do_exercise.survey_id == survey.id
+        assert do_exercise.action_data == "1"
+        assert do_exercise.action_type == "response"
+        assert do_exercise.disposition == "started"
+
+        assert second_perfect_number.survey_id == survey.id
+        assert second_perfect_number.action_data == "Which is the second perfect number?"
+        assert second_perfect_number.action_type == "prompt"
+        assert second_perfect_number.disposition == "started"
+
+        assert ninety_nine.survey_id == survey.id
+        assert ninety_nine.action_data == "99"
+        assert ninety_nine.action_type == "response"
+        assert ninety_nine.disposition == "started"
+
+        assert question_number.survey_id == survey.id
+        assert question_number.action_data == "What's the number of this question?"
+        assert question_number.action_type == "prompt"
+        assert question_number.disposition == "started"
+
+        assert eleven.survey_id == survey.id
+        assert eleven.action_data == "11"
+        assert eleven.action_type == "response"
+        assert eleven.disposition == "started"
+
+        assert thank_you.survey_id == survey.id
+        assert thank_you.action_data == "Thank you"
+        assert thank_you.action_type == "prompt"
+        assert thank_you.disposition == "started"
+
+        assert disposition_changed_to_completed.survey_id == survey.id
+        assert disposition_changed_to_completed.action_data == "Completed"
+        assert disposition_changed_to_completed.action_type == "disposition changed"
+        assert disposition_changed_to_completed.disposition == "started"
+      end)
 
       :ok = logger |> GenServer.stop()
-
-      assert [
-               enqueueing,
-               answer,
-               disposition_changed_to_contacted,
-               do_you_smoke,
-               do_smoke,
-               disposition_changed_to_started,
-               do_you_exercise,
-               do_exercise,
-               second_perfect_number,
-               ninety_nine,
-               question_number,
-               eleven,
-               thank_you,
-               disposition_changed_to_completed
-             ] = (respondent |> Repo.preload(:survey_log_entries)).survey_log_entries
-
-      assert enqueueing.survey_id == survey.id
-      assert enqueueing.action_data == "Enqueueing call"
-      assert enqueueing.action_type == "contact"
-      assert enqueueing.disposition == "queued"
-
-      assert answer.survey_id == survey.id
-      assert answer.action_data == "Answer"
-      assert answer.action_type == "contact"
-      assert answer.disposition == "queued"
-
-      assert disposition_changed_to_contacted.survey_id == survey.id
-      assert disposition_changed_to_contacted.action_data == "Contacted"
-      assert disposition_changed_to_contacted.action_type == "disposition changed"
-      assert disposition_changed_to_contacted.disposition == "queued"
-
-      assert do_you_smoke.survey_id == survey.id
-      assert do_you_smoke.action_data == "Do you smoke?"
-      assert do_you_smoke.action_type == "prompt"
-      assert do_you_smoke.disposition == "contacted"
-
-      assert do_smoke.survey_id == survey.id
-      assert do_smoke.action_data == "9"
-      assert do_smoke.action_type == "response"
-      assert do_smoke.disposition == "contacted"
-
-      assert disposition_changed_to_started.survey_id == survey.id
-      assert disposition_changed_to_started.action_data == "Started"
-      assert disposition_changed_to_started.action_type == "disposition changed"
-      assert disposition_changed_to_started.disposition == "contacted"
-
-      assert do_you_exercise.survey_id == survey.id
-      assert do_you_exercise.action_data == "Do you exercise"
-      assert do_you_exercise.action_type == "prompt"
-      assert do_you_exercise.disposition == "started"
-
-      assert do_exercise.survey_id == survey.id
-      assert do_exercise.action_data == "1"
-      assert do_exercise.action_type == "response"
-      assert do_exercise.disposition == "started"
-
-      assert second_perfect_number.survey_id == survey.id
-      assert second_perfect_number.action_data == "Which is the second perfect number?"
-      assert second_perfect_number.action_type == "prompt"
-      assert second_perfect_number.disposition == "started"
-
-      assert ninety_nine.survey_id == survey.id
-      assert ninety_nine.action_data == "99"
-      assert ninety_nine.action_type == "response"
-      assert ninety_nine.disposition == "started"
-
-      assert question_number.survey_id == survey.id
-      assert question_number.action_data == "What's the number of this question?"
-      assert question_number.action_type == "prompt"
-      assert question_number.disposition == "started"
-
-      assert eleven.survey_id == survey.id
-      assert eleven.action_data == "11"
-      assert eleven.action_type == "response"
-      assert eleven.disposition == "started"
-
-      assert thank_you.survey_id == survey.id
-      assert thank_you.action_data == "Thank you"
-      assert thank_you.action_type == "prompt"
-      assert thank_you.disposition == "started"
-
-      assert disposition_changed_to_completed.survey_id == survey.id
-      assert disposition_changed_to_completed.action_data == "Completed"
-      assert disposition_changed_to_completed.action_type == "disposition changed"
-      assert disposition_changed_to_completed.disposition == "started"
-
       :ok = broker |> GenServer.stop()
     end
 
@@ -402,101 +404,102 @@ defmodule Ask.Runtime.SurveyTest do
       {:ok, logger} = SurveyLogger.start_link()
       SurveyBroker.poll()
 
-      assert_receive [
-        :ask,
-        ^test_channel,
-        %Respondent{sanitized_phone_number: ^phone_number},
-        _,
-        ReplyHelper.simple("Contact", message),
-        _channel_id
-      ]
+      Respondent.with_lock(respondent.id, fn respondent ->
+        assert_receive [
+          :ask,
+          ^test_channel,
+          %Respondent{sanitized_phone_number: ^phone_number},
+          _,
+          ReplyHelper.simple("Contact", message),
+          _channel_id
+        ]
 
-      assert message ==
-               "Please enter #{
-                 Routes.mobile_survey_url(AskWeb.Endpoint, :index, respondent.id,
-                   token: Respondent.token(respondent.id)
-                 )
-               }"
+        assert message ==
+                 "Please enter #{
+                   Routes.mobile_survey_url(AskWeb.Endpoint, :index, respondent.id,
+                     token: Respondent.token(respondent.id)
+                   )
+                 }"
 
-      survey = Repo.get(Ask.Survey, survey.id)
-      assert survey.state == :running
+        survey = Repo.get(Ask.Survey, survey.id)
+        assert survey.state == :running
 
-      respondent = Repo.get(Respondent, respondent.id)
-      assert respondent.state == :active
+        respondent = Repo.get(Respondent, respondent.id)
+        assert respondent.state == :active
 
-      reply = Survey.sync_step(respondent, Flow.Message.answer())
+        reply = Survey.sync_step(respondent, Flow.Message.answer())
 
-      assert {:reply, ReplyHelper.simple("Let there be rock", "Welcome to the survey!"), _} =
-               reply
+        assert {:reply, ReplyHelper.simple("Let there be rock", "Welcome to the survey!"), _} =
+                 reply
 
-      reply = Survey.sync_step(respondent, Flow.Message.answer())
+        reply = Survey.sync_step(respondent, Flow.Message.answer())
 
-      assert {:reply, ReplyHelper.simple("Let there be rock", "Welcome to the survey!"), _} =
-               reply
+        assert {:reply, ReplyHelper.simple("Let there be rock", "Welcome to the survey!"), _} =
+                 reply
 
-      reply = Survey.sync_step(respondent, Flow.Message.answer())
+        reply = Survey.sync_step(respondent, Flow.Message.answer())
 
-      assert {:reply, ReplyHelper.simple("Let there be rock", "Welcome to the survey!"), _} =
-               reply
+        assert {:reply, ReplyHelper.simple("Let there be rock", "Welcome to the survey!"), _} =
+                 reply
 
-      respondent = Repo.get(Respondent, respondent.id)
-      reply = Survey.sync_step(respondent, Flow.Message.reply(""))
-      assert {:reply, ReplyHelper.simple("Do you smoke?", "Do you smoke?"), _} = reply
+        respondent = Repo.get(Respondent, respondent.id)
+        reply = Survey.sync_step(respondent, Flow.Message.reply(""))
+        assert {:reply, ReplyHelper.simple("Do you smoke?", "Do you smoke?"), _} = reply
 
-      respondent = Repo.get(Respondent, respondent.id)
-      reply = Survey.sync_step(respondent, Flow.Message.reply("Yes"))
-      assert {:reply, ReplyHelper.simple("Do you exercise", "Do you exercise?"), _} = reply
+        respondent = Repo.get(Respondent, respondent.id)
+        reply = Survey.sync_step(respondent, Flow.Message.reply("Yes"))
+        assert {:reply, ReplyHelper.simple("Do you exercise", "Do you exercise?"), _} = reply
 
-      respondent = Repo.get(Respondent, respondent.id)
-      reply = Survey.sync_step(respondent, Flow.Message.reply("Yes"))
+        respondent = Repo.get(Respondent, respondent.id)
+        reply = Survey.sync_step(respondent, Flow.Message.reply("Yes"))
 
-      assert {:reply,
-              ReplyHelper.simple(
-                "Which is the second perfect number?",
-                "Which is the second perfect number??"
-              ), _} = reply
+        assert {:reply,
+                ReplyHelper.simple(
+                  "Which is the second perfect number?",
+                  "Which is the second perfect number??"
+                ), _} = reply
 
-      respondent = Repo.get(Respondent, respondent.id)
-      reply = Survey.sync_step(respondent, Flow.Message.reply("99"))
+        respondent = Repo.get(Respondent, respondent.id)
+        reply = Survey.sync_step(respondent, Flow.Message.reply("99"))
 
-      assert {:reply,
-              ReplyHelper.simple(
-                "What's the number of this question?",
-                "What's the number of this question??"
-              ), _} = reply
+        assert {:reply,
+                ReplyHelper.simple(
+                  "What's the number of this question?",
+                  "What's the number of this question??"
+                ), _} = reply
 
-      respondent = Repo.get(Respondent, respondent.id)
-      reply = Survey.sync_step(respondent, Flow.Message.reply("11"))
+        respondent = Repo.get(Respondent, respondent.id)
+        reply = Survey.sync_step(respondent, Flow.Message.reply("11"))
 
-      assert {:end,
-              {:reply,
-               ReplyHelper.simple("Thank you", "Thanks for completing this survey (mobileweb)")},
-              _} = reply
+        assert {:end,
+                {:reply,
+                 ReplyHelper.simple("Thank you", "Thanks for completing this survey (mobileweb)")},
+                _} = reply
 
-      now = Timex.now()
+        now = Timex.now()
 
-      interval =
-        Interval.new(
-          from: Timex.shift(now, seconds: -5),
-          until: Timex.shift(now, seconds: 5),
-          step: [seconds: 1]
-        )
+        interval =
+          Interval.new(
+            from: Timex.shift(now, seconds: -5),
+            until: Timex.shift(now, seconds: 5),
+            step: [seconds: 1]
+          )
 
-      respondent = Repo.get(Respondent, respondent.id)
-      assert respondent.state == :completed
-      assert respondent.session == nil
-      assert respondent.completed_at in interval
+        respondent = Repo.get(Respondent, respondent.id)
+        assert respondent.state == :completed
+        assert respondent.session == nil
+        assert respondent.completed_at in interval
+
+        last_entry =
+          (respondent |> Repo.preload(:survey_log_entries)).survey_log_entries |> Enum.at(-1)
+
+        assert last_entry.survey_id == survey.id
+        assert last_entry.action_data == "Completed"
+        assert last_entry.action_type == "disposition changed"
+        assert last_entry.disposition == "interim partial"
+      end)
 
       :ok = logger |> GenServer.stop()
-
-      last_entry =
-        (respondent |> Repo.preload(:survey_log_entries)).survey_log_entries |> Enum.at(-1)
-
-      assert last_entry.survey_id == survey.id
-      assert last_entry.action_data == "Completed"
-      assert last_entry.action_type == "disposition changed"
-      assert last_entry.disposition == "interim partial"
-
       :ok = broker |> GenServer.stop()
     end
 
@@ -2061,6 +2064,7 @@ defmodule Ask.Runtime.SurveyTest do
     end
   end
 
+  # --------------_____ACA EMPIEZA ANI
   test "adds a single disposition-changed survey-log-entry when respondent finishes and disposition was already completed" do
     [survey, _group, _test_channel, respondent, _phone_number] =
       create_running_survey_with_channel_and_respondent(

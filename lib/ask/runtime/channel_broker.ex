@@ -32,9 +32,9 @@ defmodule Ask.Runtime.ChannelBroker do
     cast(channel_id, {:setup, channel_type, respondent, token, not_before, not_after})
   end
 
-  def has_delivery_confirmation?(channel_id) do
-    call(channel_id, {:has_delivery_confirmation?})
-  end
+  # FIXME: refactor this has_delivery_confirmation? that's defined multiple times - and used only once
+  def has_delivery_confirmation?(%{type: "ivr"}), do: false
+  def has_delivery_confirmation?(%{type: "sms"}), do: true
 
   def ask(channel_id, channel_type, respondent, token, reply, not_before \\ nil, not_after \\ nil) do
     cast(channel_id, {:ask, channel_type, respondent, token, reply, not_before, not_after})
