@@ -642,6 +642,17 @@ defmodule AskWeb.MobileSurveyControllerTest do
     Ask.Config.start_link()
     SurveyBroker.poll()
 
+    respondent_phone = respondent.sanitized_phone_number
+    channel_id = channel.id
+    assert_receive [
+      :ask,
+      ^test_channel,
+      %Respondent{sanitized_phone_number: ^respondent_phone},
+      _,
+      _,
+      ^channel_id
+    ]
+
     Survey |> Repo.get(survey.id) |> Repo.delete()
 
     conn =
