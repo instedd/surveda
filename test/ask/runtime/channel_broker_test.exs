@@ -19,6 +19,8 @@ defmodule Ask.Runtime.ChannelBrokerTest do
       ChannelBrokerAgent.clear()
     end)
 
+    Application.stop(:ask)
+    :ok = Application.start(:ask)
     {:ok, _} = ChannelStatusServer.start_link()
     {:ok, conn: conn}
   end

@@ -33,6 +33,8 @@ defmodule Ask.Runtime.SurveyBrokerTest do
       ChannelBrokerAgent.clear()
     end)
 
+    Application.stop(:ask)
+    :ok = Application.start(:ask)
     {:ok, channel_status_server} = ChannelStatusServer.start_link()
     {:ok, channel_status_server: channel_status_server}
   end
@@ -1722,6 +1724,14 @@ defmodule Ask.Runtime.SurveyBrokerTest do
 
     {:ok, broker} = SurveyBroker.start_link()
     SurveyBroker.poll()
+
+    # wait for the ChannelBroker to contact the respondent
+    assert_receive [
+      :setup,
+      _,
+      _,
+      _channel_id
+    ]
 
     Respondent.with_lock(respondent.id, fn respondent ->
       assert respondent.disposition == :queued

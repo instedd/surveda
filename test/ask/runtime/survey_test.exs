@@ -37,6 +37,8 @@ defmodule Ask.Runtime.SurveyTest do
       ChannelBrokerAgent.clear()
     end)
 
+    Application.stop(:ask)
+    :ok = Application.start(:ask)
     {:ok, _} = ChannelStatusServer.start_link()
     :ok
   end
@@ -240,12 +242,20 @@ defmodule Ask.Runtime.SurveyTest do
     end
 
     test "via ivr" do
-      [survey, _group, _test_channel, respondent, _phone_number] =
+      [survey, _group, test_channel, respondent, phone_number] =
         create_running_survey_with_channel_and_respondent(@dummy_steps, "ivr")
 
       {:ok, logger} = SurveyLogger.start_link()
       {:ok, broker} = SurveyBroker.start_link()
       SurveyBroker.poll()
+
+      # wait for the ChannelBroker to contact the respondent
+      assert_receive [
+        :setup,
+        ^test_channel,
+        %Respondent{sanitized_phone_number: ^phone_number},
+        _channel_id
+      ]
 
       survey = Repo.get(Ask.Survey, survey.id)
       assert survey.state == :running
@@ -1303,7 +1313,7 @@ defmodule Ask.Runtime.SurveyTest do
     end
 
     test "with error msg and quota completed msg via ivr" do
-      [survey, _group, _test_channel, respondent, _phone_number] =
+      [survey, _group, test_channel, respondent, phone_number] =
         create_running_survey_with_channel_and_respondent(@dummy_steps, "ivr")
 
       quotas = %{
@@ -1359,6 +1369,14 @@ defmodule Ask.Runtime.SurveyTest do
       {:ok, logger} = SurveyLogger.start_link()
       {:ok, broker} = SurveyBroker.start_link()
       SurveyBroker.poll()
+
+      # wait for the ChannelBroker to contact the respondent
+      assert_receive [
+        :setup,
+        ^test_channel,
+        %Respondent{sanitized_phone_number: ^phone_number},
+        _channel_id
+      ]
 
       survey = Repo.get(Ask.Survey, survey.id)
       assert survey.state == :running
