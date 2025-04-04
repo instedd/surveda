@@ -42,7 +42,7 @@ defmodule Ask.RetriesHistogramTest do
              %{type: mode, delay: 1, label: "1h"},
              %{type: mode, delay: 2, label: "2h"},
              %{type: mode, delay: 3, label: "3h"},
-             %{type: "end", delay: 5, label: "5h"}
+             %{type: "end", delay: 3, label: "3h"}
            ]
   end
 
@@ -99,7 +99,7 @@ defmodule Ask.RetriesHistogramTest do
              %{type: "sms", delay: 5, label: "5h"},
              %{type: "sms", delay: 6, label: "6h"},
              %{type: "sms", delay: 7, label: "7h"},
-             %{type: "end", delay: 4, label: "4h"}
+             %{type: "end", delay: 7, label: "7h"}
            ]
   end
 
@@ -130,7 +130,7 @@ defmodule Ask.RetriesHistogramTest do
              %{type: "sms", delay: 1, label: "1h"},
              %{type: "sms", delay: 2, label: "2h"},
              %{type: "sms", delay: 3, label: "3h"},
-             %{type: "end", delay: 4, label: "4h"}
+             %{type: "end", delay: 3, label: "3h"}
            ]
   end
 
@@ -310,11 +310,13 @@ defmodule Ask.RetriesHistogramTest do
 
     {:ok} = RetryStat.subtract(initial_stat_id)
 
+    assert histogram_actives(survey) == []
+
     {:ok, %{id: last_stat_id}} =
       RetryStat.add(%{
         attempt: 2,
         mode: [mode],
-        retry_time: retry_time(SystemTime.time().now, 3),
+        retry_time: retry_time(SystemTime.time().now, 2),
         ivr_active: false,
         survey_id: survey.id
       })
@@ -328,10 +330,7 @@ defmodule Ask.RetriesHistogramTest do
     assert histogram_actives(survey) == [%{hour: 4, respondents: 1}]
 
     time_passes(hours: 1)
-    assert histogram_actives(survey) == [%{hour: 5, respondents: 1}]
-
-    time_passes(hours: 1)
-    assert histogram_actives(survey) == [%{hour: 5, respondents: 1}]
+    assert histogram_actives(survey) == [%{hour: 4, respondents: 1}]
 
     {:ok} = RetryStat.subtract(last_stat_id)
 

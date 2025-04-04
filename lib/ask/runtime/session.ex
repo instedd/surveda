@@ -3,6 +3,7 @@ defmodule Ask.Runtime.Session do
   import Ecto
 
   alias Ask.{
+    Channel,
     Repo,
     QuotaBucket,
     Respondent,
@@ -42,6 +43,7 @@ defmodule Ask.Runtime.Session do
     :flow,
     :respondent,
     :token,
+    :current_delay,
     :fallback_delay,
     :count_partial_results,
     :schedule
@@ -69,16 +71,16 @@ defmodule Ask.Runtime.Session do
       ) do
     flow = Flow.start(questionnaire, mode)
 
+    session_fallback_delay = fallback_delay || Survey.default_fallback_delay()
     session = %Session{
       current_mode: SessionModeProvider.new(mode, channel, retries),
       fallback_mode: SessionModeProvider.new(fallback_mode, fallback_channel, fallback_retries),
       flow: flow,
       respondent: update_section_order(respondent, flow.section_order, persist),
-      fallback_delay: fallback_delay || Survey.default_fallback_delay(),
+      fallback_delay: session_fallback_delay,
       count_partial_results: count_partial_results,
       schedule: schedule
     }
-
     run_flow(session, persist)
   end
 
@@ -105,25 +107,23 @@ defmodule Ask.Runtime.Session do
         {:ok, session, %Reply{}, base_timeout(session) + current_timeout(session)}
 
       true ->
-        timeout(session, nil)
+        do_timeout(session)
     end
   end
 
-  def timeout(%{current_mode: %{retries: []}, fallback_mode: nil} = session, _) do
+  defp do_timeout(%{current_mode: %{retries: []}, fallback_mode: nil} = session) do
     session = %{session | respondent: RetriesHistogram.remove_respondent(session.respondent)}
     terminate(session)
   end
 
-  def timeout(%{current_mode: %{retries: []}} = session, _) do
+  defp do_timeout(%{current_mode: %{retries: []}} = session) do
     switch_to_fallback_mode(session)
   end
 
-  def timeout(%Session{} = session, _) do
-    best_timeout_option = best_timeout_option(session)
+  defp do_timeout(%Session{} = session) do
     session = retry(session)
 
-    # The new session will timeout as defined by hd(retries)
-    {:ok, session, %Reply{}, best_timeout_option || current_timeout(session)}
+    {:ok, session, %Reply{}, session.current_delay}
   end
 
   @doc """
@@ -215,11 +215,11 @@ defmodule Ask.Runtime.Session do
     Respondent.update(respondent, %{section_order: section_order}, persist)
   end
 
-  def current_timeout(%Session{current_mode: %{retries: []}, fallback_delay: fallback_delay}) do
+  defp current_timeout(%Session{current_mode: %{retries: []}, fallback_delay: fallback_delay}) do
     fallback_delay
   end
 
-  def current_timeout(%Session{current_mode: %{retries: [next_retry | _]}}) do
+  defp current_timeout(%Session{current_mode: %{retries: [next_retry | _]}}) do
     next_retry
   end
 
@@ -335,6 +335,7 @@ defmodule Ask.Runtime.Session do
       flow: session.flow |> Flow.dump(),
       respondent_id: session.respondent.id,
       token: session.token,
+      current_delay: session.current_delay,
       fallback_delay: session.fallback_delay,
       count_partial_results: session.count_partial_results,
       schedule: session.schedule |> Schedule.dump!()
@@ -348,6 +349,7 @@ defmodule Ask.Runtime.Session do
       flow: Flow.load(state["flow"]),
       respondent: Repo.get(Ask.Respondent, state["respondent_id"]),
       token: state["token"],
+      current_delay: state["current_delay"],
       fallback_delay: state["fallback_delay"],
       count_partial_results: state["count_partial_results"],
       schedule: state["schedule"] |> Schedule.load!()
@@ -601,6 +603,14 @@ defmodule Ask.Runtime.Session do
       |> add_mode_attempt.()
 
     mode_start(session)
+    |> update_current_delay
+  end
+
+  defp update_current_delay({:ok, session, reply, timeout}) do
+   {:ok, %{session | current_delay: timeout}, reply, timeout}
+  end
+  defp update_current_delay({:end, _, _} = flow_result) do
+    flow_result
   end
 
   defp apply_patterns_if_match(patterns, respondent, persist) do
@@ -628,7 +638,7 @@ defmodule Ask.Runtime.Session do
   defp log_prompts(reply, channel, mode, respondent, force \\ false, persist \\ true) do
     if persist do
       if force ||
-           !ChannelBroker.has_delivery_confirmation?(channel.id) do
+           !Channel.has_delivery_confirmation?(channel) do
         disposition = Reply.disposition(reply) || respondent.disposition
 
         Enum.each(Reply.steps(reply), fn step ->
@@ -712,12 +722,6 @@ defmodule Ask.Runtime.Session do
     %{session | token: nil}
   end
 
-  defp best_timeout_option(%{current_mode: %{retries: retries}, fallback_mode: nil})
-       when length(retries) == 1,
-       do: hd(retries)
-
-  defp best_timeout_option(_), do: nil
-
   defp terminate(%{current_mode: %SMSMode{}, respondent: respondent}) do
     {:failed, respondent}
   end
@@ -757,12 +761,19 @@ defmodule Ask.Runtime.Session do
     result
   end
 
+  defp consume_retry(%{current_mode: %{retries: [retry]}, fallback_mode: nil} = session) do
+    %{session | current_mode: %{session.current_mode | retries: []}, current_delay: retry}
+  end
+
   defp consume_retry(%{current_mode: %{retries: [_ | retries]}} = session) do
-    %{session | current_mode: %{session.current_mode | retries: retries}}
+    session = %{session | current_mode: %{session.current_mode | retries: retries}}
+    current_delay = current_timeout(session)
+    %{session | current_delay: current_delay}
   end
 
   defp consume_retry(%{current_mode: %{retries: []}} = session) do
-    session
+    current_delay = current_timeout(session)
+    %{session | current_delay: current_delay}
   end
 
   defp add_session_mode_attempt!(%Session{} = session),
@@ -831,7 +842,7 @@ defmodule Ask.Runtime.Session do
           persist
         )
 
-        {:ok, %{session | flow: flow}, reply, current_timeout(session)}
+        {:ok, %{session | flow: flow}, reply, session.current_delay}
     end
   end
 
@@ -841,7 +852,7 @@ defmodule Ask.Runtime.Session do
         {:failed, session.respondent}
 
       _ ->
-        {:hangup, %{session | flow: flow}, reply, current_timeout(session), session.respondent}
+        {:hangup, %{session | flow: flow}, reply, session.current_delay, session.respondent}
     end
   end
 

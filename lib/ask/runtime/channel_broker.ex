@@ -1,9 +1,9 @@
 # NOTE: channels without channel_id (used in some unit tests) share a single process (channel_id: 0)
 defmodule Ask.Runtime.ChannelBroker do
-  alias Ask.Runtime.{ChannelBrokerSupervisor, SurveyLogger}
+  alias Ask.Runtime.{ChannelBrokerSupervisor, Session, SurveyLogger}
   alias Ask.Runtime.ChannelBrokerAgent, as: Agent
   alias Ask.Runtime.ChannelBrokerState, as: State
-  alias Ask.{Channel, Logger, Respondent, Repo, Stats}
+  alias Ask.{Channel, Logger, Respondent, Repo, Stats, SystemTime}
   import Ecto.Query
   use GenServer
 
@@ -30,10 +30,6 @@ defmodule Ask.Runtime.ChannelBroker do
 
   def setup(channel_id, channel_type, respondent, token, not_before, not_after) do
     cast(channel_id, {:setup, channel_type, respondent, token, not_before, not_after})
-  end
-
-  def has_delivery_confirmation?(channel_id) do
-    call(channel_id, {:has_delivery_confirmation?})
   end
 
   def ask(channel_id, channel_type, respondent, token, reply, not_before \\ nil, not_after \\ nil) do
@@ -286,14 +282,6 @@ defmodule Ask.Runtime.ChannelBroker do
     {:reply, reply, new_state, State.process_timeout(new_state)}
   end
 
-  @impl true
-  def handle_call({:has_delivery_confirmation?}, _from, state) do
-    debug("handle_call[has_delivery_confirmation?]", channel_id: state.channel_id)
-    new_state = refresh_runtime_channel(state)
-    reply = Ask.Runtime.Channel.has_delivery_confirmation?(new_state.runtime_channel)
-    {:reply, reply, new_state, State.process_timeout(new_state)}
-  end
-
   if Mix.env() == :test do
     @impl true
     def handle_call({:has_queued_message?, respondent_id}, _from, state) do
@@ -458,7 +446,7 @@ defmodule Ask.Runtime.ChannelBroker do
   end
 
   defp log_contact(status, respondent) do
-    session = respondent.session |> Ask.Runtime.Session.load()
+    session = respondent.session |> Session.load()
     SurveyLogger.log(
       respondent.survey_id,
       session.flow.mode,
@@ -477,6 +465,8 @@ defmodule Ask.Runtime.ChannelBroker do
     response =
       state.runtime_channel
       |> Ask.Runtime.Channel.setup(respondent, token, not_before, not_after)
+
+    update_respondent_timeout(respondent)
 
     case response do
       {:ok, %{verboice_call_id: verboice_call_id}} ->
@@ -501,6 +491,8 @@ defmodule Ask.Runtime.ChannelBroker do
       state.runtime_channel
       |> Ask.Runtime.Channel.ask(respondent, token, reply, state.channel_id)
 
+    update_respondent_timeout(respondent)
+
     case result do
       {:ok, %{nuntium_token: nuntium_token}} ->
         channel_state = %{"nuntium_token" => nuntium_token}
@@ -511,6 +503,16 @@ defmodule Ask.Runtime.ChannelBroker do
         debug("channel_ask no nuntium_token", result: result)
         state
     end
+  end
+
+  if Mix.env() == :test do
+    defp update_respondent_timeout(%{session: nil} = respondent), do: respondent
+  end
+
+  defp update_respondent_timeout(respondent) do
+    session = respondent.session |> Session.load()
+    timeout_at = Respondent.next_actual_timeout(respondent, session.current_delay, SystemTime.time().now)
+    Respondent.update(respondent, %{timeout_at: timeout_at}, true)
   end
 
   # Don't schedule automatic GC runs in tests.

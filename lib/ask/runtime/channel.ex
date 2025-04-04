@@ -3,10 +3,6 @@ defprotocol Ask.Runtime.Channel do
 
   @type t :: map()
 
-  # Returns whether the channel sends delivery confirmations callbacks or not.
-  @spec has_delivery_confirmation?(t()) :: boolean
-  def has_delivery_confirmation?(channel)
-
   # Configure the channel to start communicating with Surveda. For example setup
   # the callback URL on the remote service.
   @spec prepare(t()) :: any()

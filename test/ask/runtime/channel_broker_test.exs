@@ -19,6 +19,8 @@ defmodule Ask.Runtime.ChannelBrokerTest do
       ChannelBrokerAgent.clear()
     end)
 
+    Application.stop(:ask)
+    :ok = Application.start(:ask)
     {:ok, _} = ChannelStatusServer.start_link()
     {:ok, conn: conn}
   end
@@ -35,6 +37,23 @@ defmodule Ask.Runtime.ChannelBrokerTest do
 
       assert_made_calls(respondents, test_channel)
     end
+
+    @tag :time_mock
+    test "timeout_at gets updated after calling the respondent", %{} do
+      channel_capacity = nil
+      [test_channel, [respondent | _] = respondents, _channel] = initialize_survey("ivr", channel_capacity)
+
+      poll_time = ~U[2019-12-23 09:00:00Z]
+      mock_time(poll_time)
+      broker_poll()
+
+      assert_made_calls(respondents, test_channel)
+      Respondent.with_lock(respondent.id, fn respondent ->
+        %{timeout_at: timeout_at, session: %{"current_delay" => current_delay}} = respondent
+        assert DateTime.compare(timeout_at, Timex.shift(poll_time, minutes: current_delay)) == :eq
+      end)
+    end
+
 
     test "Calls aren't made while the channel capacity is full", %{conn: conn} do
       # Arrange
@@ -291,6 +310,22 @@ defmodule Ask.Runtime.ChannelBrokerTest do
       broker_poll()
 
       assert_sent_smss(respondents, test_channel)
+    end
+
+    @tag :time_mock
+    test "timeout_at gets updated after sending an SMS", %{} do
+      channel_capacity = nil
+      [test_channel, [respondent | _] = respondents, _channel] = initialize_survey("sms", channel_capacity)
+
+      poll_time = ~U[2019-12-23 09:00:00Z]
+      mock_time(poll_time)
+      broker_poll()
+
+      assert_sent_smss(respondents, test_channel)
+      Respondent.with_lock(respondent.id, fn respondent ->
+        %{timeout_at: timeout_at, session: %{"current_delay" => current_delay}} = respondent
+        assert DateTime.compare(timeout_at, Timex.shift(poll_time, minutes: current_delay)) == :eq
+      end)
     end
 
     test "SMS aren't sent while the channel capacity is full", %{conn: conn} do

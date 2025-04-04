@@ -52,7 +52,6 @@ defmodule Ask.TestHelpers do
         steps = Keyword.get(options, :steps, @dummy_steps)
         mode = Keyword.get(options, :mode, "sms")
         schedule = Keyword.get(options, :schedule, Ask.Schedule.always())
-        fallback_delay = Keyword.get(options, :fallback_delay, "10m")
         user = Keyword.get(options, :user, nil)
         simulation = Keyword.get(options, :simulation, false)
         respondents_quantity = Keyword.get(options, :respondents_quantity, 1)
@@ -84,7 +83,6 @@ defmodule Ask.TestHelpers do
           state: :running,
           questionnaires: [quiz],
           mode: [[mode]],
-          fallback_delay: fallback_delay,
           simulation: simulation
         }
 
@@ -125,14 +123,12 @@ defmodule Ask.TestHelpers do
       defp create_running_survey_with_channel_and_respondent(
              steps \\ @dummy_steps,
              mode \\ "sms",
-             schedule \\ Ask.Schedule.always(),
-             fallback_delay \\ "10m"
+             schedule \\ Ask.Schedule.always()
            ) do
         create_running_survey_with_channel_and_respondent_with_options(
           steps: steps,
           mode: mode,
-          schedule: schedule,
-          fallback_delay: fallback_delay
+          schedule: schedule
         )
       end
 
@@ -160,8 +156,9 @@ defmodule Ask.TestHelpers do
       defp broker_poll(), do: SurveyBroker.handle_info(:poll, nil)
 
       defp respondent_reply(respondent_id, reply_message, mode) do
-        respondent = Repo.get!(Respondent, respondent_id)
-        Ask.Runtime.Survey.sync_step(respondent, Flow.Message.reply(reply_message), mode)
+        Respondent.with_lock(respondent_id, fn respondent ->
+          Ask.Runtime.Survey.sync_step(respondent, Flow.Message.reply(reply_message), mode)
+        end)
       end
 
       defp get_respondents_by_state(survey) do

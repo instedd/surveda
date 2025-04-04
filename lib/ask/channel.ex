@@ -119,6 +119,10 @@ defmodule Ask.Channel do
     end
   end
 
+  # Returns whether the channel sends delivery confirmations callbacks or not.
+  def has_delivery_confirmation?(%{type: "ivr"}), do: false
+  def has_delivery_confirmation?(%{type: "sms"}), do: true
+
   defp validate_patterns(changeset) do
     changeset
     |> validate_patterns_not_empty

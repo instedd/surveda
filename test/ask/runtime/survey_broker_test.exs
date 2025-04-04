@@ -33,6 +33,8 @@ defmodule Ask.Runtime.SurveyBrokerTest do
       ChannelBrokerAgent.clear()
     end)
 
+    Application.stop(:ask)
+    :ok = Application.start(:ask)
     {:ok, channel_status_server} = ChannelStatusServer.start_link()
     {:ok, channel_status_server: channel_status_server}
   end
@@ -64,11 +66,13 @@ defmodule Ask.Runtime.SurveyBrokerTest do
       ]
 
       # Set for immediate timeout
-      respondent = Repo.get!(Respondent, respondent.id)
-      assert respondent.stats.attempts["sms"] == 1
+      # respondent = Repo.get!(Respondent, respondent.id)
+      Respondent.with_lock(respondent.id, fn respondent ->
+        assert respondent.stats.attempts["sms"] == 1
 
-      Respondent.changeset(respondent, %{timeout_at: Timex.now() |> Timex.shift(minutes: -1)})
-      |> Repo.update()
+        Respondent.changeset(respondent, %{timeout_at: Timex.now() |> Timex.shift(minutes: -1)})
+        |> Repo.update()
+      end)
 
       # Second poll, retry the question
       SurveyBroker.handle_info(:poll, nil)
@@ -84,16 +88,18 @@ defmodule Ask.Runtime.SurveyBrokerTest do
       ]
 
       # Set for immediate timeout
-      respondent = Repo.get!(Respondent, respondent.id)
-
-      Respondent.changeset(respondent, %{timeout_at: Timex.now() |> Timex.shift(minutes: -1)})
-      |> Repo.update()
+      # respondent = Repo.get!(Respondent, respondent.id)
+      Respondent.with_lock(respondent.id, fn respondent ->
+        Respondent.changeset(respondent, %{timeout_at: Timex.now() |> Timex.shift(minutes: -1)})
+        |> Repo.update()
+      end)
 
       # Third poll, this time it should fail
       SurveyBroker.handle_info(:poll, nil)
 
-      respondent = Repo.get(Respondent, respondent.id)
-      assert respondent.state == :failed
+      Respondent.with_lock(respondent.id, fn respondent ->
+        assert respondent.state == :failed
+      end)
 
       survey = Repo.get(Survey, survey.id)
       assert survey.state == :terminated
@@ -105,11 +111,10 @@ defmodule Ask.Runtime.SurveyBrokerTest do
         create_running_survey_with_channel_and_respondent(
           @dummy_steps,
           "sms",
-          Schedule.business_day(),
-          "3h"
+          Schedule.business_day()
         )
 
-      survey |> Survey.changeset(%{sms_retry_configuration: "2h"}) |> Repo.update()
+      survey |> Survey.changeset(%{sms_retry_configuration: "3h"}) |> Repo.update()
 
       {:ok, edge_time, _} = DateTime.from_iso8601("2019-12-06T17:00:00Z")
       mock_time(edge_time)
@@ -136,9 +141,11 @@ defmodule Ask.Runtime.SurveyBrokerTest do
       # Assert activation
       {:ok, expected_timeout_at, _} = DateTime.from_iso8601("2019-12-09T09:00:00Z")
 
-      respondent = Repo.get!(Respondent, respondent.id)
-      assert DateTime.compare(respondent.timeout_at, expected_timeout_at) == :eq
-      assert respondent.stats.attempts["sms"] == 1
+      # respondent = Repo.get!(Respondent, respondent.id)
+      Respondent.with_lock(respondent.id, fn respondent ->
+        assert DateTime.compare(respondent.timeout_at, expected_timeout_at) == :eq
+        assert respondent.stats.attempts["sms"] == 1
+      end)
 
       # Set for immediate timeout
       {:ok, timeout_time, _} = DateTime.from_iso8601("2019-12-09T09:00:00Z")
@@ -158,11 +165,13 @@ defmodule Ask.Runtime.SurveyBrokerTest do
       ]
 
       # Assert first retry
-      {:ok, expected_timeout_at, _} = DateTime.from_iso8601("2019-12-09T11:00:00Z")
+      {:ok, expected_timeout_at, _} = DateTime.from_iso8601("2019-12-09T12:00:00Z")
 
-      respondent = Repo.get!(Respondent, respondent.id)
-      assert DateTime.compare(respondent.timeout_at, expected_timeout_at) == :eq
-      assert respondent.stats.attempts["sms"] == 2
+      # respondent = Repo.get!(Respondent, respondent.id)
+      Respondent.with_lock(respondent.id, fn respondent ->
+        assert DateTime.compare(respondent.timeout_at, expected_timeout_at) == :eq
+        assert respondent.stats.attempts["sms"] == 2
+      end)
 
       # Set for immediate timeout
       {:ok, timeout_time, _} = DateTime.from_iso8601("2019-12-09T12:00:00Z")
@@ -172,10 +181,12 @@ defmodule Ask.Runtime.SurveyBrokerTest do
       SurveyBroker.handle_info(:poll, nil)
 
       # Assert is failed
-      respondent = Repo.get(Respondent, respondent.id)
-      assert respondent.state == :failed
-      assert respondent.stats.attempts["sms"] == 2
-      refute respondent.timeout_at
+      Respondent.with_lock(respondent.id, fn respondent ->
+        assert respondent.state == :failed
+        assert respondent.stats.attempts["sms"] == 2
+        refute respondent.timeout_at
+      end)
+
       survey = Repo.get(Survey, survey.id)
       assert survey.state == :terminated
     end
@@ -209,13 +220,15 @@ defmodule Ask.Runtime.SurveyBrokerTest do
       survey = Repo.get(Survey, survey.id)
       assert survey.state == :running
 
-      respondent = Repo.get!(Respondent, respondent.id)
-      assert respondent.stats.attempts["mobileweb"] == 1
-      assert respondent.state == :active
+      Respondent.with_lock(respondent.id, fn respondent ->
+        # respondent = Repo.get!(Respondent, respondent.id)
+        assert respondent.stats.attempts["mobileweb"] == 1
+        assert respondent.state == :active
 
-      # Set for immediate timeout
-      timeout_at = Timex.now() |> Timex.shift(hours: -1)
-      Respondent.changeset(respondent, %{timeout_at: timeout_at}) |> Repo.update()
+        # Set for immediate timeout
+        timeout_at = Timex.now() |> Timex.shift(hours: -1)
+        Respondent.changeset(respondent, %{timeout_at: timeout_at}) |> Repo.update()
+      end)
 
       # Second poll, retry the question
       SurveyBroker.poll()
@@ -237,19 +250,21 @@ defmodule Ask.Runtime.SurveyBrokerTest do
                  )
                }"
 
-      respondent = Repo.get!(Respondent, respondent.id)
+      Respondent.with_lock(respondent.id, fn respondent ->
+        # respondent = Repo.get!(Respondent, respondent.id)
 
-      # Set for immediate timeout
-      timeout_at = Timex.now() |> Timex.shift(hours: -1)
-      Respondent.changeset(respondent, %{timeout_at: timeout_at}) |> Repo.update()
+        # Set for immediate timeout
+        timeout_at = Timex.now() |> Timex.shift(hours: -1)
+        Respondent.changeset(respondent, %{timeout_at: timeout_at}) |> Repo.update()
+      end)
 
       # Third poll, this time it should fail
       SurveyBroker.poll()
 
-      respondent = Repo.get(Respondent, respondent.id)
-
-      assert respondent.state == :failed
-      refute respondent.timeout_at
+      Respondent.with_lock(respondent.id, fn respondent ->
+        assert respondent.state == :failed
+        refute respondent.timeout_at
+      end)
 
       survey = Repo.get(Survey, survey.id)
       assert survey.state == :terminated
@@ -275,10 +290,10 @@ defmodule Ask.Runtime.SurveyBrokerTest do
       ]
 
       # Set for immediate timeout
-      respondent = Repo.get(Respondent, respondent.id)
-
-      Respondent.changeset(respondent, %{timeout_at: Timex.now() |> Timex.shift(minutes: -1)})
-      |> Repo.update()
+      Respondent.with_lock(respondent.id, fn respondent ->
+        Respondent.changeset(respondent, %{timeout_at: Timex.now() |> Timex.shift(minutes: -1)})
+        |> Repo.update()
+      end)
 
       # Second poll, retry the question
       SurveyBroker.handle_info(:poll, nil)
@@ -291,16 +306,17 @@ defmodule Ask.Runtime.SurveyBrokerTest do
       ]
 
       # Set for immediate timeout
-      respondent = Repo.get(Respondent, respondent.id)
-
-      Respondent.changeset(respondent, %{timeout_at: Timex.now() |> Timex.shift(minutes: -1)})
-      |> Repo.update()
+      Respondent.with_lock(respondent.id, fn respondent ->
+        Respondent.changeset(respondent, %{timeout_at: Timex.now() |> Timex.shift(minutes: -1)})
+        |> Repo.update()
+      end)
 
       # Third poll, this time it should fail
       SurveyBroker.handle_info(:poll, nil)
 
-      respondent = Repo.get(Respondent, respondent.id)
-      assert respondent.state == :failed
+      Respondent.with_lock(respondent.id, fn respondent ->
+        assert respondent.state == :failed
+      end)
 
       survey = Repo.get(Survey, survey.id)
       assert Survey.completed?(survey)
@@ -414,11 +430,11 @@ defmodule Ask.Runtime.SurveyBrokerTest do
         _channel_id
       ]
 
-      respondent = Repo.get(Respondent, respondent.id)
-
-      # Set for immediate timeout
-      timeout_at = Timex.now() |> Timex.shift(hours: -1)
-      Respondent.changeset(respondent, %{timeout_at: timeout_at}) |> Repo.update()
+      Respondent.with_lock(respondent.id, fn respondent ->
+        # Set for immediate timeout
+        timeout_at = Timex.now() |> Timex.shift(hours: -1)
+        Respondent.changeset(respondent, %{timeout_at: timeout_at}) |> Repo.update()
+      end)
 
       # Second poll, retry the question
       SurveyBroker.handle_info(:poll, nil)
@@ -434,11 +450,11 @@ defmodule Ask.Runtime.SurveyBrokerTest do
         _channel_id
       ]
 
-      respondent = Repo.get(Respondent, respondent.id)
-
-      # Set for immediate timeout
-      timeout_at = Timex.now() |> Timex.shift(hours: -1)
-      Respondent.changeset(respondent, %{timeout_at: timeout_at}) |> Repo.update()
+      Respondent.with_lock(respondent.id, fn respondent ->
+        # Set for immediate timeout
+        timeout_at = Timex.now() |> Timex.shift(hours: -1)
+        Respondent.changeset(respondent, %{timeout_at: timeout_at}) |> Repo.update()
+      end)
 
       # Third poll, retry the question
       SurveyBroker.handle_info(:poll, nil)
@@ -453,11 +469,11 @@ defmodule Ask.Runtime.SurveyBrokerTest do
         _channel_id
       ]
 
-      respondent = Repo.get(Respondent, respondent.id)
-
-      # Set for immediate timeout
-      timeout_at = Timex.now() |> Timex.shift(hours: -1)
-      Respondent.changeset(respondent, %{timeout_at: timeout_at}) |> Repo.update()
+      Respondent.with_lock(respondent.id, fn respondent ->
+        # Set for immediate timeout
+        timeout_at = Timex.now() |> Timex.shift(hours: -1)
+        Respondent.changeset(respondent, %{timeout_at: timeout_at}) |> Repo.update()
+      end)
 
       # Fourth poll, this time fallback to IVR channel
       SurveyBroker.handle_info(:poll, nil)
@@ -524,10 +540,10 @@ defmodule Ask.Runtime.SurveyBrokerTest do
       ]
 
       # Set for immediate timeout
-      respondent = Repo.get(Respondent, respondent.id)
-
-      Respondent.changeset(respondent, %{timeout_at: Timex.now() |> Timex.shift(minutes: -1)})
-      |> Repo.update()
+      Respondent.with_lock(respondent.id, fn respondent ->
+        Respondent.changeset(respondent, %{timeout_at: Timex.now() |> Timex.shift(minutes: -1)})
+        |> Repo.update()
+      end)
 
       # Second poll, retry the question
       SurveyBroker.handle_info(:poll, nil)
@@ -540,10 +556,10 @@ defmodule Ask.Runtime.SurveyBrokerTest do
       ]
 
       # Set for immediate timeout
-      respondent = Repo.get(Respondent, respondent.id)
-
-      Respondent.changeset(respondent, %{timeout_at: Timex.now() |> Timex.shift(minutes: -1)})
-      |> Repo.update()
+      Respondent.with_lock(respondent.id, fn respondent ->
+        Respondent.changeset(respondent, %{timeout_at: Timex.now() |> Timex.shift(minutes: -1)})
+        |> Repo.update()
+      end)
 
       # Third poll, this time fallback to SMS channel
       SurveyBroker.handle_info(:poll, nil)
@@ -556,10 +572,10 @@ defmodule Ask.Runtime.SurveyBrokerTest do
       ]
 
       # Set for immediate timeout
-      respondent = Repo.get(Respondent, respondent.id)
-
-      Respondent.changeset(respondent, %{timeout_at: Timex.now() |> Timex.shift(minutes: -1)})
-      |> Repo.update()
+      Respondent.with_lock(respondent.id, fn respondent ->
+        Respondent.changeset(respondent, %{timeout_at: Timex.now() |> Timex.shift(minutes: -1)})
+        |> Repo.update()
+      end)
 
       # Fourth poll, this time fallback to SMS channel
       SurveyBroker.handle_info(:poll, nil)
@@ -595,11 +611,16 @@ defmodule Ask.Runtime.SurveyBrokerTest do
       assert_respondents_by_state(survey, 1, 20)
 
       r = Repo.all(from r in Respondent, where: r.state == :active) |> hd
-      Repo.update(r |> change |> Respondent.changeset(%{state: :completed}))
+
+      Respondent.with_lock(r.id, fn respondent ->
+        Repo.update(respondent |> change |> Respondent.changeset(%{state: :completed}))
+      end)
 
       Repo.all(from r in Respondent, where: r.state == :active)
       |> Enum.map(fn respondent ->
-        Repo.update(respondent |> change |> Respondent.changeset(%{state: :failed}))
+        Respondent.with_lock(respondent.id, fn respondent ->
+          Repo.update(respondent |> change |> Respondent.changeset(%{state: :failed}))
+        end)
       end)
 
       SurveyBroker.handle_info(:poll, nil)
@@ -626,7 +647,9 @@ defmodule Ask.Runtime.SurveyBrokerTest do
 
       Repo.all(from r in Respondent, where: r.state == :active, limit: 5)
       |> Enum.map(fn respondent ->
-        Repo.update(respondent |> change |> Respondent.changeset(%{state: :completed}))
+        Respondent.with_lock(respondent.id, fn respondent ->
+          Repo.update(respondent |> change |> Respondent.changeset(%{state: :completed}))
+        end)
       end)
 
       SurveyBroker.handle_info(:poll, nil)
@@ -635,7 +658,9 @@ defmodule Ask.Runtime.SurveyBrokerTest do
 
       Repo.all(from r in Respondent, where: r.state == :active)
       |> Enum.map(fn respondent ->
-        Repo.update(respondent |> change |> Respondent.changeset(%{state: :completed}))
+        Respondent.with_lock(respondent.id, fn respondent ->
+          Repo.update(respondent |> change |> Respondent.changeset(%{state: :completed}))
+        end)
       end)
 
       SurveyBroker.handle_info(:poll, nil)
@@ -720,7 +745,9 @@ defmodule Ask.Runtime.SurveyBrokerTest do
 
       Repo.all(from r in Respondent, where: r.state == :active)
       |> Enum.map(fn respondent ->
-        Repo.update(respondent |> change |> Respondent.changeset(%{state: :completed}))
+        Respondent.with_lock(respondent.id, fn respondent ->
+          Repo.update(respondent |> change |> Respondent.changeset(%{state: :completed}))
+        end)
       end)
 
       SurveyBroker.handle_info(:poll, nil)
@@ -799,7 +826,9 @@ defmodule Ask.Runtime.SurveyBrokerTest do
 
       Repo.all(from r in Respondent, where: r.state == :active)
       |> Enum.map(fn respondent ->
-        Repo.update(respondent |> change |> Respondent.changeset(%{state: :failed}))
+        Respondent.with_lock(respondent.id, fn respondent ->
+          Repo.update(respondent |> change |> Respondent.changeset(%{state: :failed}))
+        end)
       end)
 
       SurveyBroker.handle_info(:poll, nil)
@@ -816,8 +845,9 @@ defmodule Ask.Runtime.SurveyBrokerTest do
 
       assert_respondents_by_state(survey, 1, 0)
 
-      respondent = Repo.get(Respondent, respondent.id)
-      Repo.update(respondent |> change |> Respondent.changeset(%{state: :failed}))
+      Respondent.with_lock(respondent.id, fn respondent ->
+        Repo.update(respondent |> change |> Respondent.changeset(%{state: :failed}))
+      end)
 
       SurveyBroker.handle_info(:poll, nil)
 
@@ -1203,22 +1233,24 @@ defmodule Ask.Runtime.SurveyBrokerTest do
 
       survey = Repo.get(Survey, survey.id)
       assert survey.state == :running
-      respondent = Repo.get(Respondent, respondent.id)
-      assert respondent.state == :active
-      assert respondent.disposition == :queued
 
-      now = Timex.now()
+      Respondent.with_lock(respondent.id, fn respondent ->
+        assert respondent.state == :active
+        assert respondent.disposition == :queued
 
-      # After one hour it should be marked as failed
-      Respondent.changeset(respondent, %{timeout_at: now |> Timex.shift(minutes: -1)})
-      |> Repo.update()
+        now = Timex.now()
+
+        # After one hour it should be marked as failed
+        Respondent.changeset(respondent, %{timeout_at: now |> Timex.shift(minutes: -1)})
+        |> Repo.update()
+      end)
 
       SurveyBroker.handle_info(:poll, nil)
 
-      respondent = Repo.get(Respondent, respondent.id)
-      assert respondent.state == :failed
-      assert respondent.disposition == :failed
-
+      Respondent.with_lock(respondent.id, fn respondent ->
+        assert respondent.state == :failed
+        assert respondent.disposition == :failed
+      end)
     end
 
     test "contacted respondents are marked as unresponsive" do
@@ -1242,26 +1274,31 @@ defmodule Ask.Runtime.SurveyBrokerTest do
 
       survey = Repo.get(Ask.Survey, survey.id)
       assert survey.state == :running
-      respondent = Repo.get(Respondent, respondent.id)
-      assert respondent.state == :active
-      assert respondent.disposition == :queued
 
+      Respondent.with_lock(respondent.id, fn respondent ->
+        assert respondent.state == :active
+        assert respondent.disposition == :queued
+      end)
+
+      respondent = Repo.get(Respondent, respondent.id)
       Ask.Runtime.Survey.delivery_confirm(respondent, "Do you smoke?")
 
-      respondent = Repo.get(Respondent, respondent.id)
-      assert respondent.disposition == :contacted
+      Respondent.with_lock(respondent.id, fn respondent ->
+        assert respondent.disposition == :contacted
 
-      now = Timex.now()
+        now = Timex.now()
 
-      # After one hour it should be marked as failed
-      Respondent.changeset(respondent, %{timeout_at: now |> Timex.shift(minutes: -1)})
-      |> Repo.update()
+        # After one hour it should be marked as failed
+        Respondent.changeset(respondent, %{timeout_at: now |> Timex.shift(minutes: -1)})
+        |> Repo.update()
+      end)
 
       SurveyBroker.handle_info(:poll, nil)
 
-      respondent = Repo.get(Respondent, respondent.id)
-      assert respondent.state == :failed
-      assert respondent.disposition == :unresponsive
+      Respondent.with_lock(respondent.id, fn respondent ->
+        assert respondent.state == :failed
+        assert respondent.disposition == :unresponsive
+      end)
     end
 
     test "started respondents are marked as breakoff" do
@@ -1285,36 +1322,45 @@ defmodule Ask.Runtime.SurveyBrokerTest do
 
       survey = Repo.get(Ask.Survey, survey.id)
       assert survey.state == :running
-      respondent = Repo.get(Respondent, respondent.id)
-      assert respondent.state == :active
-      assert respondent.disposition == :queued
 
+      Respondent.with_lock(respondent.id, fn respondent ->
+        assert respondent.state == :active
+        assert respondent.disposition == :queued
+      end)
+
+      respondent = Repo.get(Respondent, respondent.id)
       Ask.Runtime.Survey.delivery_confirm(respondent, "Do you smoke?")
 
-      respondent = Repo.get(Respondent, respondent.id)
-      assert respondent.state == :active
-      assert respondent.disposition == :contacted
+      Respondent.with_lock(respondent.id, fn respondent ->
+        assert respondent.state == :active
+        assert respondent.disposition == :contacted
+      end)
 
       respondent = Repo.get(Respondent, respondent.id)
       Ask.Runtime.Survey.sync_step(respondent, Flow.Message.reply("yes"))
 
-      respondent = Repo.get(Respondent, respondent.id)
-      assert respondent.state == :active
-      assert respondent.disposition == :started
+      Respondent.with_lock(respondent.id, fn respondent ->
+        assert respondent.state == :active
+        assert respondent.disposition == :started
+      end)
 
+      respondent = Repo.get(Respondent, respondent.id)
       Ask.Runtime.Survey.delivery_confirm(respondent, "Do you exercise?")
 
       now = Timex.now()
 
       # After one hour it should be marked as failed
-      Respondent.changeset(respondent, %{timeout_at: now |> Timex.shift(minutes: -1)})
-      |> Repo.update()
+      Respondent.with_lock(respondent.id, fn respondent ->
+        Respondent.changeset(respondent, %{timeout_at: now |> Timex.shift(minutes: -1)})
+        |> Repo.update()
+      end)
 
       SurveyBroker.handle_info(:poll, nil)
 
-      respondent = Repo.get(Respondent, respondent.id)
-      assert respondent.state == :failed
-      assert respondent.disposition == :breakoff
+      Respondent.with_lock(respondent.id, fn respondent ->
+        assert respondent.state == :failed
+        assert respondent.disposition == :breakoff
+      end)
     end
 
     test "interim partial respondents are kept as partial (SMS)" do
@@ -1325,36 +1371,44 @@ defmodule Ask.Runtime.SurveyBrokerTest do
       {:ok, _} = SurveyLogger.start_link()
       SurveyBroker.poll()
 
-      respondent = Repo.get(Respondent, respondent.id)
-      assert respondent.state == :active
-      assert respondent.disposition == :queued
+      Respondent.with_lock(respondent.id, fn respondent ->
+        assert respondent.state == :active
+        assert respondent.disposition == :queued
+      end)
 
+      respondent = Repo.get(Respondent, respondent.id)
       Ask.Runtime.Survey.delivery_confirm(respondent, "Do you smoke?")
 
-      respondent = Repo.get(Respondent, respondent.id)
-      assert respondent.state == :active
-      assert respondent.disposition == :contacted
+      Respondent.with_lock(respondent.id, fn respondent ->
+        assert respondent.state == :active
+        assert respondent.disposition == :contacted
+      end)
 
       respondent = Repo.get(Respondent, respondent.id)
       Ask.Runtime.Survey.sync_step(respondent, Flow.Message.reply("Yes"))
 
-      respondent = Repo.get(Respondent, respondent.id)
-      assert respondent.state == :active
-      assert respondent.disposition == :"interim partial"
+      Respondent.with_lock(respondent.id, fn respondent ->
+        assert respondent.state == :active
+        assert respondent.disposition == :"interim partial"
+      end)
 
+      respondent = Repo.get(Respondent, respondent.id)
       Ask.Runtime.Survey.delivery_confirm(respondent, "Do you exercise?")
 
-      now = Timex.now()
+      Respondent.with_lock(respondent.id, fn respondent ->
+        now = Timex.now()
 
-      # After one hour it should be marked as failed
-      Respondent.changeset(respondent, %{timeout_at: now |> Timex.shift(minutes: -1)})
-      |> Repo.update()
+        # After one hour it should be marked as failed
+        Respondent.changeset(respondent, %{timeout_at: now |> Timex.shift(minutes: -1)})
+        |> Repo.update()
+      end)
 
       SurveyBroker.handle_info(:poll, nil)
 
-      respondent = Repo.get(Respondent, respondent.id)
-      assert respondent.state == :failed
-      assert respondent.disposition == :partial
+      Respondent.with_lock(respondent.id, fn respondent ->
+        assert respondent.state == :failed
+        assert respondent.disposition == :partial
+      end)
     end
   end
 
@@ -1364,8 +1418,9 @@ defmodule Ask.Runtime.SurveyBrokerTest do
 
       SurveyBroker.handle_info(:poll, nil)
 
-      respondent = Repo.get(Respondent, respondent.id)
-      assert respondent.disposition == :completed
+      Respondent.with_lock(respondent.id, fn respondent ->
+        assert respondent.disposition == :completed
+      end)
     end
 
     test "set the respondent as complete (disposition) if disposition is interim partial" do
@@ -1373,8 +1428,9 @@ defmodule Ask.Runtime.SurveyBrokerTest do
 
       SurveyBroker.handle_info(:poll, nil)
 
-      respondent = Repo.get(Respondent, respondent.id)
-      assert respondent.disposition == :completed
+      Respondent.with_lock(respondent.id, fn respondent ->
+        assert respondent.disposition == :completed
+      end)
     end
 
     test "set the respondent from registered to queued" do
@@ -1384,8 +1440,10 @@ defmodule Ask.Runtime.SurveyBrokerTest do
 
       survey = Repo.get(Ask.Survey, survey.id)
       assert survey.state == :running
-      updated_respondent = Repo.get(Respondent, respondent.id)
-      assert updated_respondent.disposition == :queued
+
+      Respondent.with_lock(respondent.id, fn updated_respondent ->
+        assert updated_respondent.disposition == :queued
+      end)
     end
 
     test "don't set the respondent as completed (disposition) if disposition is ineligible" do
@@ -1394,8 +1452,9 @@ defmodule Ask.Runtime.SurveyBrokerTest do
 
       SurveyBroker.handle_info(:poll, nil)
 
-      respondent = Repo.get(Respondent, respondent.id)
-      assert respondent.disposition == :ineligible
+      Respondent.with_lock(respondent.id, fn respondent ->
+        assert respondent.disposition == :ineligible
+      end)
     end
 
     test "don't set the respondent as completed (disposition) if disposition is refused" do
@@ -1403,8 +1462,9 @@ defmodule Ask.Runtime.SurveyBrokerTest do
 
       SurveyBroker.handle_info(:poll, nil)
 
-      respondent = Repo.get(Respondent, respondent.id)
-      assert respondent.disposition == :refused
+      Respondent.with_lock(respondent.id, fn respondent ->
+        assert respondent.disposition == :refused
+      end)
     end
 
     test "don't set the respondent as partial (disposition) if disposition is ineligible" do
@@ -1413,8 +1473,9 @@ defmodule Ask.Runtime.SurveyBrokerTest do
 
       SurveyBroker.handle_info(:poll, nil)
 
-      respondent = Repo.get(Respondent, respondent.id)
-      assert respondent.disposition == :ineligible
+      Respondent.with_lock(respondent.id, fn respondent ->
+        assert respondent.disposition == :ineligible
+      end)
     end
 
     test "don't set the respondent as partial (disposition) if disposition is refused" do
@@ -1423,8 +1484,9 @@ defmodule Ask.Runtime.SurveyBrokerTest do
 
       SurveyBroker.handle_info(:poll, nil)
 
-      respondent = Repo.get(Respondent, respondent.id)
-      assert respondent.disposition == :refused
+      Respondent.with_lock(respondent.id, fn respondent ->
+        assert respondent.disposition == :refused
+      end)
     end
 
     test "don't set the respondent as ineligible (disposition) if disposition is completed" do
@@ -1433,32 +1495,36 @@ defmodule Ask.Runtime.SurveyBrokerTest do
 
       SurveyBroker.handle_info(:poll, nil)
 
-      respondent = Repo.get(Respondent, respondent.id)
-      assert respondent.disposition == :completed
+      Respondent.with_lock(respondent.id, fn respondent ->
+        assert respondent.disposition == :completed
+      end)
     end
   end
 
   describe "change the respondent state" do
     test "changes the respondent state from pending to running if neccessary" do
-      [survey, _, _, respondent, _] = create_running_survey_with_channel_and_respondent()
+      [survey, _, _, respondent, _] = create_running_survey_with_channel_and_respondent_with_options(mode: "sms")
+      survey |> Survey.changeset(%{sms_retry_configuration: "10m"}) |> Repo.update()
 
       SurveyBroker.handle_info(:poll, nil)
 
       survey = Repo.get(Ask.Survey, survey.id)
       assert survey.state == :running
-      updated_respondent = Repo.get(Respondent, respondent.id)
-      assert updated_respondent.state == :active
 
-      now = Timex.now()
+      Respondent.with_lock(respondent.id, fn updated_respondent ->
+        assert updated_respondent.state == :active
 
-      interval =
-        Interval.new(
-          from: Timex.shift(now, minutes: 9),
-          until: Timex.shift(now, minutes: 11),
-          step: [seconds: 1]
-        )
+        now = Timex.now()
 
-      assert updated_respondent.timeout_at in interval
+        interval =
+          Interval.new(
+            from: Timex.shift(now, minutes: 9),
+            until: Timex.shift(now, minutes: 11),
+            step: [seconds: 1]
+          )
+
+        assert updated_respondent.timeout_at in interval
+      end)
     end
 
     test "set the respondent as completed when the questionnaire is empty" do
@@ -1466,8 +1532,9 @@ defmodule Ask.Runtime.SurveyBrokerTest do
 
       SurveyBroker.handle_info(:poll, nil)
 
-      respondent = Repo.get(Respondent, respondent.id)
-      assert respondent.state == :completed
+      Respondent.with_lock(respondent.id, fn respondent ->
+        assert respondent.state == :completed
+      end)
     end
   end
 
@@ -1554,7 +1621,9 @@ defmodule Ask.Runtime.SurveyBrokerTest do
 
     Repo.all(from r in Respondent, where: r.state == :active, limit: 5)
     |> Enum.map(fn respondent ->
-      Repo.update(respondent |> change |> Respondent.changeset(%{state: :completed}))
+      Respondent.with_lock(respondent.id, fn respondent ->
+        Repo.update(respondent |> change |> Respondent.changeset(%{state: :completed}))
+      end)
     end)
 
     SurveyBroker.handle_info(:poll, nil)
@@ -1575,7 +1644,10 @@ defmodule Ask.Runtime.SurveyBrokerTest do
     assert_respondents_by_state(survey, 1, 20)
 
     r = Repo.all(from r in Respondent, where: r.state == :active) |> hd
-    Repo.update(r |> change |> Respondent.changeset(%{state: :completed}))
+
+    Respondent.with_lock(r.id, fn r ->
+      Repo.update(r |> change |> Respondent.changeset(%{state: :completed}))
+    end)
 
     SurveyBroker.handle_info(:poll, nil)
 
@@ -1599,7 +1671,9 @@ defmodule Ask.Runtime.SurveyBrokerTest do
       Repo.all(from r in Respondent, where: r.state == :active)
       |> Enum.at(0)
 
-    Repo.update(active_respondent |> change |> Respondent.changeset(%{state: :failed}))
+    Respondent.with_lock(active_respondent.id, fn active_respondent ->
+      Repo.update(active_respondent |> change |> Respondent.changeset(%{state: :failed}))
+    end)
 
     assert_respondents_by_state(survey, 9, 11)
 
@@ -1651,18 +1725,28 @@ defmodule Ask.Runtime.SurveyBrokerTest do
     {:ok, broker} = SurveyBroker.start_link()
     SurveyBroker.poll()
 
-    respondent = Repo.get(Respondent, respondent.id)
-    assert respondent.disposition == :queued
+    # wait for the ChannelBroker to contact the respondent
+    assert_receive [
+      :setup,
+      _,
+      _,
+      _channel_id
+    ]
 
-    # Set for immediate timeout
-    Respondent.changeset(respondent, %{timeout_at: Timex.now() |> Timex.shift(minutes: -1)})
-    |> Repo.update()
+    Respondent.with_lock(respondent.id, fn respondent ->
+      assert respondent.disposition == :queued
+
+      # Set for immediate timeout
+      Respondent.changeset(respondent, %{timeout_at: Timex.now() |> Timex.shift(minutes: -1)})
+      |> Repo.update()
+    end)
 
     SurveyBroker.handle_info(:poll, nil)
 
-    respondent = Repo.get(Respondent, respondent.id)
-    assert respondent.state == :failed
-    assert respondent.disposition == :failed
+    Respondent.with_lock(respondent.id, fn respondent ->
+      assert respondent.state == :failed
+      assert respondent.disposition == :failed
+    end)
 
     :ok = broker |> GenServer.stop()
   end
@@ -1690,9 +1774,10 @@ defmodule Ask.Runtime.SurveyBrokerTest do
 
     SurveyBroker.handle_info(:poll, nil)
 
-    respondent = Repo.get(Respondent, respondent.id)
-    assert respondent.mode == mode
-    assert respondent.questionnaire_id == questionnaire.id
+    Respondent.with_lock(respondent.id, fn respondent ->
+      assert respondent.mode == mode
+      assert respondent.questionnaire_id == questionnaire.id
+    end)
   end
 
   test "set the respondent questionnaire and mode with comparisons" do
@@ -1738,10 +1823,11 @@ defmodule Ask.Runtime.SurveyBrokerTest do
 
     SurveyBroker.handle_info(:poll, nil)
 
-    respondent = Repo.get(Respondent, respondent.id)
-    assert respondent.mode == ["ivr"]
-    assert respondent.questionnaire_id == quiz1.id
-    assert respondent.stats.attempts["ivr"] == 1
+    Respondent.with_lock(respondent.id, fn respondent ->
+      assert respondent.mode == ["ivr"]
+      assert respondent.questionnaire_id == quiz1.id
+      assert respondent.stats.attempts["ivr"] == 1
+    end)
   end
 
   test "doesn't break with nil as comparison ratio" do
@@ -1787,15 +1873,18 @@ defmodule Ask.Runtime.SurveyBrokerTest do
 
     SurveyBroker.handle_info(:poll, nil)
 
-    respondent = Repo.get(Respondent, respondent.id)
-    assert respondent.mode == ["ivr"]
-    assert respondent.questionnaire_id == quiz1.id
+    Respondent.with_lock(respondent.id, fn respondent ->
+      assert respondent.mode == ["ivr"]
+      assert respondent.questionnaire_id == quiz1.id
+    end)
   end
 
   defp mark_n_active_respondents_as(new_state, n) do
     Repo.all(from r in Respondent, where: r.state == :active, limit: ^n)
     |> Enum.map(fn respondent ->
-      Repo.update(respondent |> change |> Respondent.changeset(%{state: new_state}))
+      Respondent.with_lock(respondent.id, fn respondent ->
+        Repo.update(respondent |> change |> Respondent.changeset(%{state: new_state}))
+      end)
     end)
   end
 
@@ -1857,8 +1946,10 @@ defmodule Ask.Runtime.SurveyBrokerTest do
   end
 
   defp refute_respondent_state(respondent_id, state) do
-    respondent = Repo.get!(Respondent, respondent_id)
-    refute respondent.state == state
+    # respondent = Repo.get!(Respondent, respondent_id)
+    Respondent.with_lock(respondent_id, fn respondent ->
+      refute respondent.state == state
+    end)
   end
 
   def wait_all_cancellations(%{id: survey_id}) do
