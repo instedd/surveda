@@ -123,8 +123,6 @@ defimpl Ask.Runtime.Channel, for: Ask.TestChannel do
 
   def messages_count(_, _, _, _, _), do: 1
 
-  def has_delivery_confirmation?(%{delivery: delivery}), do: delivery
-
   def has_queued_message?(%{has_queued_message: has_queued_message}, _), do: has_queued_message
 
   def message_expired?(%{message_expired: message_expired}, _), do: message_expired

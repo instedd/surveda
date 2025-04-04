@@ -479,7 +479,6 @@ defmodule Ask.Runtime.VerboiceChannel do
   def check_status(_), do: :up
 
   defimpl Ask.Runtime.Channel, for: Ask.Runtime.VerboiceChannel do
-    def has_delivery_confirmation?(_), do: false
     def ask(_, _, _, _, _), do: throw(:not_implemented)
     def prepare(_), do: :ok
     def messages_count(_, _, _, _, _), do: 1

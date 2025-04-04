@@ -32,10 +32,6 @@ defmodule Ask.Runtime.ChannelBroker do
     cast(channel_id, {:setup, channel_type, respondent, token, not_before, not_after})
   end
 
-  # FIXME: refactor this has_delivery_confirmation? that's defined multiple times - and used only once
-  def has_delivery_confirmation?(%{type: "ivr"}), do: false
-  def has_delivery_confirmation?(%{type: "sms"}), do: true
-
   def ask(channel_id, channel_type, respondent, token, reply, not_before \\ nil, not_after \\ nil) do
     cast(channel_id, {:ask, channel_type, respondent, token, reply, not_before, not_after})
   end
@@ -283,14 +279,6 @@ defmodule Ask.Runtime.ChannelBroker do
     info("handle_call[prepare]", channel_id: state.channel_id)
     new_state = refresh_runtime_channel(state)
     reply = Ask.Runtime.Channel.prepare(new_state.runtime_channel)
-    {:reply, reply, new_state, State.process_timeout(new_state)}
-  end
-
-  @impl true
-  def handle_call({:has_delivery_confirmation?}, _from, state) do
-    debug("handle_call[has_delivery_confirmation?]", channel_id: state.channel_id)
-    new_state = refresh_runtime_channel(state)
-    reply = Ask.Runtime.Channel.has_delivery_confirmation?(new_state.runtime_channel)
     {:reply, reply, new_state, State.process_timeout(new_state)}
   end
 
