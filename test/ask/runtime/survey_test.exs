@@ -885,7 +885,7 @@ defmodule Ask.Runtime.SurveyTest do
     end
 
     test "via ivr with an empty thank you message" do
-      [survey, _group, _test_channel, respondent, _phone_number] =
+      [survey, _group, test_channel, respondent, phone_number] =
         create_running_survey_with_channel_and_respondent(@dummy_steps, "ivr")
 
       hd((survey |> Ask.Repo.preload(:questionnaires)).questionnaires)
@@ -916,6 +916,14 @@ defmodule Ask.Runtime.SurveyTest do
       {:ok, logger} = SurveyLogger.start_link()
       {:ok, broker} = SurveyBroker.start_link()
       SurveyBroker.poll()
+
+      # wait for the ChannelBroker to contact the respondent
+      assert_receive [
+        :setup,
+        ^test_channel,
+        %Respondent{sanitized_phone_number: ^phone_number},
+        _channel_id
+      ]
 
       survey = Repo.get(Ask.Survey, survey.id)
       assert survey.state == :running
@@ -2270,11 +2278,19 @@ defmodule Ask.Runtime.SurveyTest do
   end
 
   test "changes the respondent disposition from queued to contacted on answer (IVR)" do
-    [_survey, _group, _test_channel, respondent, _phone_number] =
+    [_survey, _group, test_channel, respondent, phone_number] =
       create_running_survey_with_channel_and_respondent(@dummy_steps, "ivr")
 
     {:ok, broker} = SurveyBroker.start_link()
     SurveyBroker.poll()
+
+    # wait for the ChannelBroker to contact the respondent
+    assert_receive [
+      :setup,
+      ^test_channel,
+      %Respondent{sanitized_phone_number: ^phone_number},
+      _channel_id
+    ]
 
     Respondent.with_lock(respondent.id, fn respondent ->
       assert respondent.disposition == :queued
@@ -2759,6 +2775,14 @@ defmodule Ask.Runtime.SurveyTest do
     {:ok, broker} = SurveyBroker.start_link()
     SurveyBroker.poll()
 
+    # wait for the ChannelBroker to contact the respondent
+    assert_receive [
+      :setup,
+      _,
+      _,
+      _channel_id
+    ]
+
     Respondent.with_lock(respondent.id, fn respondent ->
       Survey.sync_step(respondent, Flow.Message.answer())
 
@@ -2812,6 +2836,14 @@ defmodule Ask.Runtime.SurveyTest do
     {:ok, broker} = SurveyBroker.start_link()
     SurveyBroker.poll()
 
+    # wait for the ChannelBroker to contact the respondent
+    assert_receive [
+      :setup,
+      _,
+      _,
+      _channel_id
+    ]
+
     Respondent.with_lock(respondent.id, fn respondent ->
       Survey.sync_step(respondent, Flow.Message.answer())
 
@@ -2858,6 +2890,14 @@ defmodule Ask.Runtime.SurveyTest do
     {:ok, broker} = SurveyBroker.start_link()
     {:ok, logger} = SurveyLogger.start_link()
     SurveyBroker.poll()
+
+    # wait for the ChannelBroker to contact the respondent
+    assert_receive [
+      :setup,
+      _,
+      _,
+      _channel_id
+    ]
 
     Respondent.with_lock(respondent.id, fn respondent ->
       assert respondent.state == :active
@@ -2916,6 +2956,14 @@ defmodule Ask.Runtime.SurveyTest do
     {:ok, logger} = SurveyLogger.start_link()
     SurveyBroker.poll()
 
+    # wait for the ChannelBroker to contact the respondent
+    assert_receive [
+      :setup,
+      _,
+      _,
+      _channel_id
+    ]
+
     Respondent.with_lock(respondent.id, fn respondent ->
       assert respondent.state == :active
       assert respondent.disposition == :queued
@@ -2972,6 +3020,14 @@ defmodule Ask.Runtime.SurveyTest do
     {:ok, broker} = SurveyBroker.start_link()
     SurveyBroker.poll()
 
+    # wait for the ChannelBroker to contact the respondent
+    assert_receive [
+      :setup,
+      _,
+      _,
+      _channel_id
+    ]
+
     Respondent.with_lock(respondent.id, fn respondent ->
       assert respondent.state == :active
       assert respondent.disposition == :queued
@@ -3019,6 +3075,14 @@ defmodule Ask.Runtime.SurveyTest do
     {:ok, broker} = SurveyBroker.start_link()
     {:ok, logger} = SurveyLogger.start_link()
     SurveyBroker.poll()
+
+    # wait for the ChannelBroker to contact the respondent
+    assert_receive [
+      :setup,
+      _,
+      _,
+      _channel_id
+    ]
 
     Respondent.with_lock(respondent.id, fn respondent ->
       assert respondent.state == :active
@@ -3108,6 +3172,14 @@ defmodule Ask.Runtime.SurveyTest do
 
     {:ok, broker} = SurveyBroker.start_link()
     SurveyBroker.poll()
+
+    # wait for the ChannelBroker to contact the respondent
+    assert_receive [
+      :setup,
+      _,
+      _,
+      _channel_id
+    ]
 
     Respondent.with_lock(respondent.id, fn respondent ->
       reply = Survey.sync_step(respondent, Flow.Message.answer())
@@ -3304,6 +3376,15 @@ defmodule Ask.Runtime.SurveyTest do
 
     {:ok, broker} = SurveyBroker.start_link()
     SurveyBroker.poll()
+
+    # wait for the ChannelBroker to contact the respondent
+    assert_receive [
+      :setup,
+      _,
+      _,
+      _channel_id
+    ]
+
     survey = Repo.get(Ask.Survey, survey.id)
     assert survey.state == :running
 
@@ -3355,6 +3436,14 @@ defmodule Ask.Runtime.SurveyTest do
 
     {:ok, broker} = SurveyBroker.start_link()
     SurveyBroker.poll()
+
+    # wait for the ChannelBroker to contact the respondent
+    assert_receive [
+      :setup,
+      _,
+      _,
+      _channel_id
+    ]
 
     survey = Repo.get(Ask.Survey, survey.id)
     assert survey.state == :running
@@ -3656,6 +3745,15 @@ defmodule Ask.Runtime.SurveyTest do
     {:ok, logger} = SurveyLogger.start_link()
     {:ok, broker} = SurveyBroker.start_link()
     SurveyBroker.poll()
+
+    assert_receive [
+      :ask,
+      _,
+      %Respondent{sanitized_phone_number: ^canonical_phone_number},
+      _,
+      _,
+      _channel_id
+    ]
 
     Respondent.with_lock(respondent.id, fn respondent ->
       Survey.delivery_confirm(respondent, "Do you smoke?")
