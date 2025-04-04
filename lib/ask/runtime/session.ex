@@ -107,23 +107,20 @@ defmodule Ask.Runtime.Session do
         {:ok, session, %Reply{}, base_timeout(session) + current_timeout(session)}
 
       true ->
-        timeout(session, nil)
+        do_timeout(session)
     end
   end
 
-  # TODO: none of the three timeout/2 definitions use the second parameter
-  # I assume it's only there to differentiate it from "the first" timeout/1 definition.
-  # We should rename the timeout/2 function and remove the second parameter altogether?
-  def timeout(%{current_mode: %{retries: []}, fallback_mode: nil} = session, _) do
+  defp do_timeout(%{current_mode: %{retries: []}, fallback_mode: nil} = session) do
     session = %{session | respondent: RetriesHistogram.remove_respondent(session.respondent)}
     terminate(session)
   end
 
-  def timeout(%{current_mode: %{retries: []}} = session, _) do
+  defp do_timeout(%{current_mode: %{retries: []}} = session) do
     switch_to_fallback_mode(session)
   end
 
-  def timeout(%Session{} = session, _) do
+  defp do_timeout(%Session{} = session) do
     session = retry(session)
 
     {:ok, session, %Reply{}, session.current_delay}
