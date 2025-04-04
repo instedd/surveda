@@ -32,6 +32,8 @@ defmodule Ask.Runtime.VerboiceChannelTest do
       ChannelBrokerAgent.clear()
     end)
 
+    Application.stop(:ask)
+    :ok = Application.start(:ask)
     GenServer.start_link(SurveyStub, [], name: SurveyStub.server_ref())
     {:ok, _} = ChannelStatusServer.start_link()
     Ask.Config.start_link()
@@ -442,6 +444,14 @@ defmodule Ask.Runtime.VerboiceChannelTest do
       {:ok, broker} = SurveyBroker.start_link()
       SurveyBroker.poll()
 
+      # wait for the ChannelBroker to contact the respondent
+      assert_receive [
+        :setup,
+        ^test_channel,
+        _respondent,
+        _channel_id
+      ]
+
       survey = Repo.get(Survey, survey.id)
       assert survey.state == :running
 
@@ -516,6 +526,14 @@ defmodule Ask.Runtime.VerboiceChannelTest do
       {:ok, broker} = SurveyBroker.start_link()
       SurveyBroker.poll()
 
+      # wait for the ChannelBroker to contact the respondent
+      assert_receive [
+        :setup,
+        ^test_channel,
+        _respondent,
+        _channel_id
+      ]
+
       survey = Repo.get(Survey, survey.id)
       assert survey.state == :running
 
@@ -566,6 +584,14 @@ defmodule Ask.Runtime.VerboiceChannelTest do
       {:ok, logger} = SurveyLogger.start_link()
       {:ok, broker} = SurveyBroker.start_link()
       SurveyBroker.poll()
+
+      # wait for the ChannelBroker to contact the respondent
+      assert_receive [
+        :setup,
+        ^test_channel,
+        _respondent,
+        _channel_id
+      ]
 
       survey = Repo.get(Survey, survey.id)
       assert survey.state == :running
@@ -618,6 +644,14 @@ defmodule Ask.Runtime.VerboiceChannelTest do
       {:ok, broker} = SurveyBroker.start_link()
       SurveyBroker.poll()
 
+      # wait for the ChannelBroker to contact the respondent
+      assert_receive [
+        :setup,
+        ^test_channel,
+        _respondent,
+        _channel_id
+      ]
+
       survey = Repo.get(Survey, survey.id)
       assert survey.state == :running
 
@@ -667,6 +701,14 @@ defmodule Ask.Runtime.VerboiceChannelTest do
       {:ok, logger} = SurveyLogger.start_link()
       {:ok, broker} = SurveyBroker.start_link()
       SurveyBroker.poll()
+
+      # wait for the ChannelBroker to contact the respondent
+      assert_receive [
+        :setup,
+        ^test_channel,
+        _respondent,
+        _channel_id
+      ]
 
       survey = Repo.get(Survey, survey.id)
       assert survey.state == :running
@@ -719,6 +761,14 @@ defmodule Ask.Runtime.VerboiceChannelTest do
       {:ok, logger} = SurveyLogger.start_link()
       {:ok, broker} = SurveyBroker.start_link()
       SurveyBroker.poll()
+
+      # wait for the ChannelBroker to contact the respondent
+      assert_receive [
+        :setup,
+        ^test_channel,
+        _respondent,
+        _channel_id
+      ]
 
       survey = Repo.get(Survey, survey.id)
       assert survey.state == :running
@@ -876,6 +926,14 @@ defmodule Ask.Runtime.VerboiceChannelTest do
       {:ok, logger} = SurveyLogger.start_link()
       {:ok, broker} = SurveyBroker.start_link()
       SurveyBroker.poll()
+
+      # wait for the ChannelBroker to contact the respondent
+      assert_receive [
+        :setup,
+        ^test_channel,
+        _respondent,
+        _channel_id
+      ]
 
       respondent = Repo.get(Respondent, respondent.id)
       assert respondent.state == :active
