@@ -164,6 +164,7 @@ defmodule Ask.Runtime.SurveyTest do
       :ok = logger |> GenServer.stop()
 
       entries = (respondent |> Repo.preload(:survey_log_entries)).survey_log_entries
+
       [
         do_you_smoke,
         do_you_exercise,
@@ -171,16 +172,18 @@ defmodule Ask.Runtime.SurveyTest do
         question_number,
         thank_you
       ] = entries |> Enum.filter(fn e -> e.action_type == "prompt" end)
+
       [
         do_smoke,
         do_exercise,
         ninety_nine,
         eleven
       ] = entries |> Enum.filter(fn e -> e.action_type == "response" end)
+
       [
         disposition_changed_to_contacted,
         disposition_changed_to_started,
-        disposition_changed_to_completed,
+        disposition_changed_to_completed
       ] = entries |> Enum.filter(fn e -> e.action_type == "disposition changed" end)
 
       assert do_you_smoke.survey_id == survey.id
@@ -598,22 +601,25 @@ defmodule Ask.Runtime.SurveyTest do
       :ok = logger |> GenServer.stop()
 
       entries = (respondent |> Repo.preload(:survey_log_entries)).survey_log_entries
+
       [
         do_you_smoke,
         do_you_exercise,
         second_perfect_number,
         question_number
       ] = entries |> Enum.filter(fn e -> e.action_type == "prompt" end)
+
       [
         do_smoke,
         do_exercise,
         ninety_nine,
         eleven
       ] = entries |> Enum.filter(fn e -> e.action_type == "response" end)
+
       [
         disposition_changed_to_contacted,
         disposition_changed_to_started,
-        disposition_changed_to_completed,
+        disposition_changed_to_completed
       ] = entries |> Enum.filter(fn e -> e.action_type == "disposition changed" end)
 
       assert do_you_smoke.survey_id == survey.id
@@ -783,16 +789,18 @@ defmodule Ask.Runtime.SurveyTest do
         question_number,
         bye
       ] = entries |> Enum.filter(fn e -> e.action_type == "prompt" end)
+
       [
         do_smoke,
         do_exercise,
         ninety_nine,
         eleven
       ] = entries |> Enum.filter(fn e -> e.action_type == "response" end)
+
       [
         disposition_changed_to_contacted,
         disposition_changed_to_started,
-        disposition_changed_to_completed,
+        disposition_changed_to_completed
       ] = entries |> Enum.filter(fn e -> e.action_type == "disposition changed" end)
 
       assert do_you_smoke.survey_id == survey.id
@@ -1195,18 +1203,20 @@ defmodule Ask.Runtime.SurveyTest do
         wrong_answer,
         do_you_smoke_again,
         satisfaction,
-        completed,
+        completed
       ] = entries |> Enum.filter(fn e -> e.action_type == "prompt" end)
+
       [
         foo,
         dont_smoke,
-        dissatisfied,
-      ]= entries |> Enum.filter(fn e -> e.action_type == "response" end)
+        dissatisfied
+      ] = entries |> Enum.filter(fn e -> e.action_type == "response" end)
+
       [
         disposition_changed_to_contacted,
         disposition_changed_to_started,
-        disposition_changed_to_rejected,
-      ]= entries |> Enum.filter(fn e -> e.action_type == "disposition changed" end)
+        disposition_changed_to_rejected
+      ] = entries |> Enum.filter(fn e -> e.action_type == "disposition changed" end)
 
       assert do_you_smoke.survey_id == survey.id
       assert do_you_smoke.action_data == "Do you smoke?"
@@ -2072,15 +2082,17 @@ defmodule Ask.Runtime.SurveyTest do
 
     enqueueing_contact = entries |> Enum.find(fn e -> e.action_type == "contact" end)
     do_exercise = entries |> Enum.find(fn e -> e.action_type == "response" end)
+
     [
       do_you_exercise,
       thank_you
-    ] = entries|> Enum.filter(fn e -> e.action_type == "prompt" end)
-    [ 
+    ] = entries |> Enum.filter(fn e -> e.action_type == "prompt" end)
+
+    [
       disposition_changed_to_contacted,
       disposition_changed_to_started,
-      disposition_changed_to_completed,
-    ]  = entries|> Enum.filter(fn e -> e.action_type == "disposition changed" end)
+      disposition_changed_to_completed
+    ] = entries |> Enum.filter(fn e -> e.action_type == "disposition changed" end)
 
     assert do_you_exercise.survey_id == survey.id
     assert do_you_exercise.action_data == "Do you exercise?"
@@ -2336,9 +2348,11 @@ defmodule Ask.Runtime.SurveyTest do
 
     :ok = logger |> GenServer.stop()
 
-    entries = 
-      (respondent |> Repo.preload(:survey_log_entries)).survey_log_entries
-    disposition_changed_to_interim_partial = entries |> Enum.find(fn e -> e.action_type == "disposition changed" end)
+    entries = (respondent |> Repo.preload(:survey_log_entries)).survey_log_entries
+
+    disposition_changed_to_interim_partial =
+      entries |> Enum.find(fn e -> e.action_type == "disposition changed" end)
+
     do_you_exercise = entries |> Enum.find(fn e -> e.action_type == "prompt" end)
 
     assert disposition_changed_to_interim_partial.survey_id == survey.id
@@ -2435,14 +2449,15 @@ defmodule Ask.Runtime.SurveyTest do
 
     :ok = logger |> GenServer.stop()
 
-    entries = 
-      (respondent |> Repo.preload(:survey_log_entries)).survey_log_entries
-    
+    entries = (respondent |> Repo.preload(:survey_log_entries)).survey_log_entries
+
     do_exercise = entries |> Enum.find(fn e -> e.action_type == "response" end)
+
     [
-      disposition_changed_to_started, 
+      disposition_changed_to_started,
       disposition_changed_to_refused
     ] = entries |> Enum.filter(fn e -> e.action_type == "disposition changed" end)
+
     [
       bye,
       thank_you
@@ -3403,12 +3418,18 @@ defmodule Ask.Runtime.SurveyTest do
 
     :ok = logger |> GenServer.stop()
 
-    entries =
-      (respondent |> Repo.preload(:survey_log_entries)).survey_log_entries
+    entries = (respondent |> Repo.preload(:survey_log_entries)).survey_log_entries
 
-    enqueueing = entries |> Enum.find(fn e -> e.action_data == "Enqueueing call" && e.action_type == "contact" end)
-    channel_failed = entries |> Enum.find(fn e -> e.action_data == "The channel failed" && e.action_type == "contact" end)
-    disposition_changed_to_failed = entries |> Enum.find(fn e -> e.action_type == "disposition changed" end)
+    enqueueing =
+      entries
+      |> Enum.find(fn e -> e.action_data == "Enqueueing call" && e.action_type == "contact" end)
+
+    channel_failed =
+      entries
+      |> Enum.find(fn e -> e.action_data == "The channel failed" && e.action_type == "contact" end)
+
+    disposition_changed_to_failed =
+      entries |> Enum.find(fn e -> e.action_type == "disposition changed" end)
 
     assert enqueueing.survey_id == survey.id
     assert enqueueing.disposition == "queued"
@@ -3477,21 +3498,23 @@ defmodule Ask.Runtime.SurveyTest do
 
     :ok = logger |> GenServer.stop()
 
-    entries = 
-             (Repo.get(Respondent, respondent.id)
-              |> Repo.preload(:survey_log_entries)).survey_log_entries
+    entries =
+      (Repo.get(Respondent, respondent.id)
+       |> Repo.preload(:survey_log_entries)).survey_log_entries
 
     do_you_smoke = entries |> Enum.find(fn e -> e.action_type == "prompt" end)
+
     [
       disposition_changed_to_contacted,
       disposition_changed_to_started,
       disposition_changed_to_breakoff
     ] = entries |> Enum.filter(fn e -> e.action_type == "disposition changed" end)
+
     [
       response1,
       response2,
       response3
-    ]  = entries |> Enum.filter(fn e -> e.action_type == "response" end)
+    ] = entries |> Enum.filter(fn e -> e.action_type == "response" end)
 
     assert do_you_smoke.survey_id == survey.id
     assert do_you_smoke.action_data == "Do you smoke?"
