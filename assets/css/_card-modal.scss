@@ -186,6 +186,22 @@
           gap: 0.5rem;
         }
 
+        .spinning {
+          animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+          0% {
+            transform: rotate(0deg);
+          }
+          60% {
+            transform: rotate(360deg);
+          }
+          100% {
+            transform: rotate(360deg);
+          }
+        }
+
         a {
           display: inline-flex;
           cursor: pointer;
