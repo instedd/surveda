@@ -627,7 +627,7 @@ class RespondentIndex extends Component<Props, State> {
         <ul className="collection repondents-index-modal">
           {filter ? this.downloadItem("respondents_filtered") : null}
           {this.downloadItem("respondents_results")}
-          {this.downloadItem("unused_sample")}
+          { /* this.downloadItem("unused_sample") // FIXME: only show if survey finished */ }
           {this.downloadItem("disposition_history")}
           {ownerOrAdmin ? this.downloadItem("incentives") : null}
           {ownerOrAdmin ? this.downloadItem("interactions") : null}

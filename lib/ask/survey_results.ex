@@ -150,6 +150,7 @@ defmodule Ask.SurveyResults do
   end
 
   defp generate_file(:unused_sample, survey, _) do
+    # FIXME: only generate if survey is finished
     Repo.transaction(fn ->
       csv_rows =
         from(r in Respondent,
