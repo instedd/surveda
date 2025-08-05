@@ -149,6 +149,24 @@ defmodule Ask.SurveyResults do
     end)
   end
 
+  defp generate_file(:unused_sample, survey, _) do
+    Repo.transaction(fn ->
+      csv_rows =
+        from(r in Respondent,
+          where:
+            r.survey_id == ^survey.id and r.disposition == :registered,
+          order_by: r.phone_number
+        )
+        |> Repo.stream()
+        |> Stream.map(fn r ->
+          [r.phone_number,r.disposition,r.state]
+        end)
+      header = ["Telephone number", "Disposition", "State"]
+      rows = Stream.concat([[header], csv_rows])
+      write_to_file(:unused_sample, survey, rows)
+    end)
+  end
+
   defp generate_file(:disposition_history, survey, _) do
     history =
       Stream.resource(
@@ -429,6 +447,7 @@ defmodule Ask.SurveyResults do
 
   defp file_suffix(:interactions), do: "respondents_interactions"
   defp file_suffix(:incentives), do: "respondents_incentives"
+  defp file_suffix(:unused_sample), do: "unused_sample"
   defp file_suffix(:disposition_history), do: "disposition_history"
   defp file_suffix(:respondents_results), do: "respondents"
   defp file_suffix({:respondents_results, filter}) do
@@ -545,6 +564,11 @@ defmodule Ask.SurveyResults do
   def generate_incentives_file(survey_id) do
     Logger.info("Enqueueing generation of survey (id: #{survey_id}) incentives file")
     GenServer.cast(server_ref(), {:incentives, survey_id, nil})
+  end
+
+  def generate_unused_sample_file(survey_id) do
+    Logger.info("Enqueueing generation of survey (id: #{survey_id}) unused_sample file")
+    GenServer.cast(server_ref(), {:unused_sample, survey_id, nil})
   end
 
   def generate_disposition_history_file(survey_id) do

@@ -200,6 +200,9 @@ defmodule AskWeb.Router do
             get "/results_csv", RespondentController, :results_csv, as: :respondents_results
             post "/results", RespondentController, :generate_results, as: :respondents_results
 
+            get "/unused_sample", RespondentController, :unused_sample, as: :respondents_unused_sample
+            post "/unused_sample", RespondentController, :generate_unused_sample
+
             get "/disposition_history", RespondentController, :disposition_history, as: :respondents_disposition_history
             post "/disposition_history", RespondentController, :generate_disposition_history,
               as: :generate_disposition_history

@@ -740,6 +740,7 @@ defmodule AskWeb.RespondentController do
     status = SurveyResults.files_status(survey, [
       {:respondents_results, %RespondentsFilter{}},
       {:respondents_results, filter},
+      :unused_sample,
       :interactions,
       :incentives,
       :disposition_history
@@ -810,6 +811,26 @@ defmodule AskWeb.RespondentController do
         else: filter
 
     filter
+  end
+
+  def generate_unused_sample(conn, %{"project_id" => project_id, "survey_id" => survey_id}) do
+    project = load_project(conn, project_id)
+    survey = load_survey(project, survey_id)
+
+    SurveyResults.generate_unused_sample_file(survey.id)
+
+    ActivityLog.generate_file(project, conn, survey, "unused_sample") |> Repo.insert()
+
+    conn |> render("ok.json")
+  end
+
+  def unused_sample(conn, %{"project_id" => project_id, "survey_id" => survey_id}) do
+    project = load_project(conn, project_id)
+    survey = load_survey(project, survey_id)
+
+    ActivityLog.download(project, conn, survey, "unused_sample") |> Repo.insert()
+
+    serve_file(conn, survey, :unused_sample)
   end
 
   def generate_disposition_history(conn, %{"project_id" => project_id, "survey_id" => survey_id}) do
