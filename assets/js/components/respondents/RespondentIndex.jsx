@@ -68,10 +68,12 @@ class RespondentIndex extends Component<Props, State> {
   toggleResultsLink: Function
   toggleIncentivesLink: Function
   toggleInteractionsLink: Function
+  toggleUnusedSampleLink: Function
   toggleDispositionHistoryLink: Function
   refreshResultsLink: Function
   refreshIncentivesLink: Function
   refreshInteractionsLink: Function
+  refreshUnusedSampleLink: Function
   refreshDispositionHistoryLink: Function
   columnPickerModalId: string
   timeFormatter: Function
@@ -82,10 +84,12 @@ class RespondentIndex extends Component<Props, State> {
     this.toggleResultsLink = this.toggleResultsLink.bind(this)
     this.toggleIncentivesLink = this.toggleIncentivesLink.bind(this)
     this.toggleInteractionsLink = this.toggleInteractionsLink.bind(this)
+    this.toggleUnusedSampleLink = this.toggleUnusedSampleLink.bind(this)
     this.toggleDispositionHistoryLink = this.toggleDispositionHistoryLink.bind(this)
     this.refreshResultsLink = this.refreshResultsLink.bind(this)
     this.refreshIncentivesLink = this.refreshIncentivesLink.bind(this)
     this.refreshInteractionsLink = this.refreshInteractionsLink.bind(this)
+    this.refreshUnusedSampleLink = this.refreshUnusedSampleLink.bind(this)
     this.refreshDispositionHistoryLink = this.refreshDispositionHistoryLink.bind(this)
     this.timeFormatter = this.timeFormatter.bind(this)
     this.columnPickerModalId = uniqueId("column-picker-modal-id_")
@@ -179,6 +183,11 @@ class RespondentIndex extends Component<Props, State> {
     return api.resultsFileUrl(projectId, surveyId, q)
   }
 
+  unusedSampleFileUrl() {
+    const { projectId, surveyId } = this.props
+    return api.unusedSampleFileUrl(projectId, surveyId)
+  }
+
   dispositionHistoryFileUrl() {
     const { projectId, surveyId } = this.props
     return api.dispositionHistoryFileUrl(projectId, surveyId)
@@ -218,6 +227,11 @@ class RespondentIndex extends Component<Props, State> {
     return find(survey.links, (link) => link.name == `survey/${survey.id}/interactions`)
   }
 
+  unusedSampleAccessLink() {
+    const { survey } = this.props
+    return find(survey.links, (link) => link.name == 'survey/${survey.id}/unused_sample')
+  }
+
   dispositionHistoryAccessLink() {
     const { survey } = this.props
     return find(survey.links, (link) => link.name == `survey/${survey.id}/disposition_history`)
@@ -250,6 +264,15 @@ class RespondentIndex extends Component<Props, State> {
     }
   }
 
+  toggleUnusedSampleLink(link) {
+    const { projectId, surveyId, surveyActions } = this.props
+    if (link) {
+      surveyActions.deleteUnusedSampleLink(projectId, surveyId, link)
+    } else {
+      surveyActions.createUnusedSampleLink(projectId, surveyId, link)
+    }
+  }
+
   toggleDispositionHistoryLink(link) {
     const { projectId, surveyId, surveyActions } = this.props
     if (link) {
@@ -274,6 +297,11 @@ class RespondentIndex extends Component<Props, State> {
     surveyActions.refreshInteractionsLink(projectId, surveyId, link)
   }
 
+  refreshUnusedSampleLink(link) {
+    const { projectId, surveyId, surveyActions } = this.props
+    surveyActions.refreshUnusedSampleLink(projectId, surveyId, link)
+  }
+
   refreshDispositionHistoryLink(link) {
     const { projectId, surveyId, surveyActions } = this.props
     surveyActions.refreshDispositionHistoryLink(projectId, surveyId, link)
@@ -292,6 +320,11 @@ class RespondentIndex extends Component<Props, State> {
   generateInteractions() {
     const { projectId, surveyId, surveyActions } = this.props
     surveyActions.generateInteractionsFile(projectId, surveyId)
+  }
+
+  generateUnusedSample() {
+    const { projectId, surveyId, surveyActions } = this.props
+    surveyActions.generateUnusedSampleFile(projectId, surveyId)
   }
 
   generateDispositionHistory() {
@@ -437,6 +470,22 @@ class RespondentIndex extends Component<Props, State> {
           onGenerate: () => this.generateResults(),
         }
         break
+      case "unused_sample":
+        item = {
+          title: t("Unused sample"),
+          description: t(
+            "One line for each respondent that has not been tried to contact, to be reused in new surveys"
+          ),
+          downloadLink: this.downloadLink(
+            this.unusedSampleAccessLink(),
+            this.toggleUnusedSampleLink,
+            this.refreshUnusedSampleLink,
+            "unusedSampleLink"
+          ),
+          fileUrl: this.unusedSampleFileUrl(),
+          onGenerate: () => this.generateUnusedSample(),
+        }
+        break
       case "disposition_history":
         item = {
           title: t("Disposition History"),
@@ -578,6 +627,7 @@ class RespondentIndex extends Component<Props, State> {
         <ul className="collection repondents-index-modal">
           {filter ? this.downloadItem("respondents_filtered") : null}
           {this.downloadItem("respondents_results")}
+          {this.downloadItem("unused_sample")}
           {this.downloadItem("disposition_history")}
           {ownerOrAdmin ? this.downloadItem("incentives") : null}
           {ownerOrAdmin ? this.downloadItem("interactions") : null}

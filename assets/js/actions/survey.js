@@ -394,6 +394,13 @@ export const createInteractionsLink =
     })
   }
 
+export const createUnusedSampleLink =
+  (projectId: number, surveyId: number) => (dispatch: Function) => {
+    api.createUnusedSampleLink(projectId, surveyId).then((response) => {
+      return dispatch(receiveLink(response))
+    })
+  }
+
 export const createDispositionHistoryLink =
   (projectId: number, surveyId: number) => (dispatch: Function) => {
     api.createDispositionHistoryLink(projectId, surveyId).then((response) => {
@@ -422,6 +429,13 @@ export const refreshInteractionsLink =
     })
   }
 
+export const refreshUnusedSampleLink =
+  (projectId: number, surveyId: number, link: Link) => (dispatch: Function) => {
+    api.refreshUnusedSampleLink(projectId, surveyId).then((response) => {
+      return dispatch(refreshLink(response))
+    })
+  }
+
 export const refreshDispositionHistoryLink =
   (projectId: number, surveyId: number, link: Link) => (dispatch: Function) => {
     api.refreshDispositionHistoryLink(projectId, surveyId).then((response) => {
@@ -446,6 +460,13 @@ export const deleteIncentivesLink =
 export const deleteInteractionsLink =
   (projectId: number, surveyId: number, link: Link) => (dispatch: Function) => {
     api.deleteInteractionsLink(projectId, surveyId).then((response) => {
+      return dispatch(deleteLink(link))
+    })
+  }
+
+export const deleteUnusedSampleLink =
+  (projectId: number, surveyId: number, link: Link) => (dispatch: Function) => {
+    api.deleteUnusedSampleLink(projectId, surveyId).then((response) => {
       return dispatch(deleteLink(link))
     })
   }
@@ -494,6 +515,13 @@ export const generateInteractionsFile =
   (projectId: number, surveyId: number) => (dispatch: Function) => {
     api.generateInteractions(projectId, surveyId).then((response) => {
       return dispatch(generatingFile("interactions"))
+    })
+  }
+
+export const generateUnusedSampleFile =
+  (projectId: number, surveyId: number) => (dispatch: Function) => {
+    api.generateUnusedSample(projectId, surveyId).then((response) => {
+      return dispatch(generatingFile("unused-sample"))
     })
   }
 

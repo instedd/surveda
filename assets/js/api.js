@@ -648,6 +648,15 @@ export const createInteractionsLink = (projectId, surveyId) => {
   )
 }
 
+export const createUnusedSampleLink = (projectId, surveyId) => {
+  return apiFetchJSONWithCallback(
+    `projects/${projectId}/surveys/${surveyId}/links/unused_sample`,
+    arrayOf(referenceSchema),
+    {},
+    passthroughCallback
+  )
+}
+
 export const createDispositionHistoryLink = (projectId, surveyId) => {
   return apiFetchJSONWithCallback(
     `projects/${projectId}/surveys/${surveyId}/links/disposition_history`,
@@ -687,6 +696,16 @@ export const refreshInteractionsLink = (projectId, surveyId) => {
   )
 }
 
+export const refreshUnusedSampleLink = (projectId, surveyId) => {
+  return apiPutOrPostJSONWithCallback(
+    `projects/${projectId}/surveys/${surveyId}/links/unused_sample`,
+    arrayOf(referenceSchema),
+    "PUT",
+    {},
+    passthroughCallback
+  )
+}
+
 export const refreshDispositionHistoryLink = (projectId, surveyId) => {
   return apiPutOrPostJSONWithCallback(
     `projects/${projectId}/surveys/${surveyId}/links/disposition_history`,
@@ -701,6 +720,8 @@ export const resultsFileUrl = (projectId, surveyId, q) =>
   `/api/v1/projects/${projectId}/surveys/${surveyId}/respondents/results_csv${
     (q && `?q=${encodeURIComponent(q)}`) || ""
   }`
+export const unusedSampleFileUrl = (projectId, surveyId) =>
+  `/api/v1/projects/${projectId}/surveys/${surveyId}/respondents/unused_sample`
 export const dispositionHistoryFileUrl = (projectId, surveyId) =>
   `/api/v1/projects/${projectId}/surveys/${surveyId}/respondents/disposition_history`
 export const incentivesFileUrl = (projectId, surveyId) =>
@@ -710,6 +731,8 @@ export const interactionsFileUrl = (projectId, surveyId) =>
 
 export const generateResults = (projectId, surveyId, filter) =>
   apiPostJSON(`projects/${projectId}/surveys/${surveyId}/respondents/results`, null, { q: filter })
+export const generateUnusedSample = (projectId, surveyId) =>
+  apiPostJSON(`projects/${projectId}/surveys/${surveyId}/respondents/unused_sample`, null, null)
 export const generateDispositionHistory = (projectId, surveyId) =>
   apiPostJSON(`projects/${projectId}/surveys/${surveyId}/respondents/disposition_history`, null, null)
 export const generateIncentives = (projectId, surveyId) =>
@@ -764,6 +787,10 @@ export const deleteIncentivesLink = (projectId, surveyId) => {
 
 export const deleteInteractionsLink = (projectId, surveyId) => {
   return apiDelete(`projects/${projectId}/surveys/${surveyId}/links/interactions`)
+}
+
+export const deleteUnusedSampleLink = (projectId, surveyId) => {
+  return apiDelete(`projects/${projectId}/surveys/${surveyId}/links/unused_sample`)
 }
 
 export const deleteDispositionHistoryLink = (projectId, surveyId) => {
