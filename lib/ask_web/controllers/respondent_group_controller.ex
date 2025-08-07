@@ -3,7 +3,7 @@ defmodule AskWeb.RespondentGroupController do
   alias Ask.{Project, Survey, Respondent, RespondentGroup, Logger}
   alias Ask.Runtime.RespondentGroupAction
 
-  plug :find_and_check_survey_state when action in [:create, :update, :delete, :replace]
+  plug :find_and_check_survey_state when action in [:create, :import_unused, :update, :delete, :replace]
 
   def index(conn, %{"project_id" => project_id, "survey_id" => survey_id}) do
     project =
@@ -40,6 +40,40 @@ defmodule AskWeb.RespondentGroupController do
 
         {:error, invalid_entries} ->
           render_invalid(conn, file.filename, invalid_entries)
+      end
+    else
+      Logger.warn("Error when creating respondent group for survey: #{inspect(survey)}")
+      render_unprocessable_entity(conn)
+    end
+  end
+
+  def import_unused(conn, %{"source_survey_id" => source_survey_id}) do
+    project = conn.assigns.loaded_project
+    survey = conn.assigns.loaded_survey
+
+    source_survey =
+      project
+      |> assoc(:surveys)
+      |> Repo.get!(source_survey_id)
+
+    # FIXME: check the source survey is already finished
+
+    entries = unused_respondents_from_survey(source_survey)
+
+    if entries do
+      sample_name = "__imported_from_survey_#{source_survey.id}.csv"
+      case RespondentGroupAction.load_entries(entries, survey) do
+        {:ok, loaded_entries} ->
+          survey |> RespondentGroupAction.disable_incentives_if_disabled_in_source!(source_survey)
+          respondent_group = RespondentGroupAction.create(sample_name, loaded_entries, survey)
+          project |> Project.touch!()
+
+          conn
+          |> put_status(:created)
+          |> render("show.json", respondent_group: respondent_group)
+
+        {:error, invalid_entries} ->
+          render_invalid(conn, sample_name, invalid_entries)
       end
     else
       Logger.warn("Error when creating respondent group for survey: #{inspect(survey)}")
@@ -171,6 +205,15 @@ defmodule AskWeb.RespondentGroupController do
       |> csv_rows
       |> Enum.to_list()
     end
+  end
+
+  def unused_respondents_from_survey(survey) do
+    from(r in Respondent,
+      where:
+        r.survey_id == ^survey.id and r.disposition == :registered
+    )
+    |> Repo.all()
+    |> Enum.map(fn r -> r.phone_number end)
   end
 
   defp csv_rows(csv_string) do
