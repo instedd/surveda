@@ -109,8 +109,8 @@ defmodule AskWeb.Router do
             only: [:index, :create, :update, :delete] do
             post "/add", RespondentGroupController, :add, as: :add
             post "/replace", RespondentGroupController, :replace, as: :replace
-            post "/import_unused", RespondentGroupController, :import_unused, as: :import_unused
           end
+          post "/respondent_groups/import_unused", RespondentGroupController, :import_unused, as: :import_unused
 
           get "/respondents/stats", RespondentController, :stats, as: :respondents_stats
           get "/simulation/initial_state/:mode", SurveySimulationController, :initial_state
