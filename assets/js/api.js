@@ -237,7 +237,7 @@ export const uploadRespondentGroup = (projectId, surveyId, files) => {
 }
 
 export const importUnusedSampleFromSurvey = (projectId, surveyId, sourceSurveyId) => {
-  return apiPostJSON(`projects/${projectId}/surveys/${surveyId}/respondent_groups/import_unused`, { sourceSurveyId })
+  return apiPostJSON(`projects/${projectId}/surveys/${surveyId}/respondent_groups/import_unused`, respondentGroupSchema, { sourceSurveyId })
 }
 
 export const addMoreRespondentsToGroup = (projectId, surveyId, groupId, file) => {
