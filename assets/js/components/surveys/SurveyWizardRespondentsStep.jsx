@@ -32,6 +32,11 @@ class SurveyWizardRespondentsStep extends Component {
     if (files.length > 0) actions.uploadRespondentGroup(survey.projectId, survey.id, files)
   }
 
+  importUnusedSample() {
+    const { survey, actions } = this.props
+    actions.importUnusedSampleFromSurvey(survey.projectId, survey.id, 1) // FIXME: actually pick the source survey ID
+  }
+
   addMoreRespondents(groupId, file) {
     const { survey, actions } = this.props
     actions.addMoreRespondentsToGroup(survey.projectId, survey.id, groupId, file)
@@ -341,6 +346,14 @@ class SurveyWizardRespondentsStep extends Component {
     const mode = survey.mode || []
     const allModes = uniq(flatten(mode))
 
+    let importUnusedSampleButton = <div className="row">
+      <div className="col s12">
+        <a key="y" href="#" onClick={() => this.importUnusedSample()} className="btn-flat btn-flat-link">
+          {t("Import uncontacted respondents from other survey")}
+        </a>
+      </div>
+    </div>
+
     let respondentsDropzone = null
     if (!readOnly && !surveyStarted) {
       respondentsDropzone = (
@@ -386,6 +399,7 @@ class SurveyWizardRespondentsStep extends Component {
           showCancel
         />
         {invalidRespondentsCard || respondentsDropzone}
+        {importUnusedSampleButton}
       </RespondentsContainer>
     )
   }

@@ -12,6 +12,7 @@ export const CLEAR_INVALID_RESPONDENTS_FOR_GROUP =
 export const CLEAR_INVALIDS = "RESPONDENT_GROUP_CLEAR_INVALIDS"
 export const SELECT_CHANNELS = "RESPONDENT_GROUP_SELECT_CHANNELS"
 export const UPLOAD_RESPONDENT_GROUP = "RESPONDENT_GROUP_UPLOAD"
+export const IMPORT_RESPONDENTS = "RESPONDENT_GROUP_IMPORT"
 export const UPLOAD_EXISTING_RESPONDENT_GROUP_ID = "RESPONDENT_GROUP_UPLOAD_EXISTING"
 export const DONE_UPLOAD_EXISTING_RESPONDENT_GROUP_ID = "RESPONDENT_GROUP_DONE_UPLOAD_EXISTING"
 
@@ -60,6 +61,11 @@ export const clearInvalidsRespondentsForGroup = () => ({
 export const uploadRespondentGroup = (projectId, surveyId, files) => (dispatch, getState) => {
   dispatch(uploadingRespondentGroup())
   handleRespondentGroupUpload(dispatch, api.uploadRespondentGroup(projectId, surveyId, files))
+}
+
+export const importUnusedSampleFromSurvey = (projectId, surveyId, sourceSurveyId) => (dispatch, getState) => {
+  dispatch(importingUnusedSample(sourceSurveyId))
+  handleRespondentGroupUpload(dispatch, api.importUnusedSampleFromSurvey(projectId, surveyId, sourceSurveyId))
 }
 
 export const addMoreRespondentsToGroup =
@@ -113,6 +119,11 @@ const handleRespondentGroupUpload = (dispatch, promise, groupId = null) => {
 
 export const uploadingRespondentGroup = () => ({
   type: UPLOAD_RESPONDENT_GROUP,
+})
+
+export const importingUnusedSample = (sourceSurveyId) => ({
+  type: IMPORT_RESPONDENTS,
+  sourceSurveyId
 })
 
 export const uploadingExistingRespondentGroup = (id) => ({

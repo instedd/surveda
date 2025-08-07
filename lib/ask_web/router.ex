@@ -109,6 +109,7 @@ defmodule AskWeb.Router do
             only: [:index, :create, :update, :delete] do
             post "/add", RespondentGroupController, :add, as: :add
             post "/replace", RespondentGroupController, :replace, as: :replace
+            post "/import_unused", RespondentGroupController, :import_unused, as: :import_unused
           end
 
           get "/respondents/stats", RespondentController, :stats, as: :respondents_stats

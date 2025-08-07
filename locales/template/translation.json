@@ -194,6 +194,7 @@
   "Generated <i>{{surveyName}}</i> {{reportType}} file": "",
   "Ignored Values": "",
   "Import questionnaire": "",
+  "Import uncontacted respondents from other survey": "",
   "Incentive download was disabled because respondent ids were uploaded": "",
   "Incentives file": "",
   "Indicate percentages of all sampled cases that will be allocated to each experimental condition": "",
