@@ -18,7 +18,7 @@ export const CardTable = ({
           tableScroll: tableScroll,
         })}
       >
-        <div className="card-table-title">{title}</div>
+        { title ? <div className="card-table-title">{title}</div> : null }
         <div className="card-table">
           <table className={classNames(className, { highlight: highlight })} style={style}>
             {children}
@@ -31,7 +31,7 @@ export const CardTable = ({
 )
 
 CardTable.propTypes = {
-  title: PropTypes.node.isRequired,
+  title: PropTypes.node,
   highlight: PropTypes.bool,
   tableScroll: PropTypes.bool,
   children: PropTypes.node,

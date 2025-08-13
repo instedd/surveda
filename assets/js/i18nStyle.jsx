@@ -17,6 +17,9 @@ class I18nStyle extends Component<Props> {
 .dropfile .drop-text.csv.uploading:before {
   content: '${t("Uploading...")}';
 }
+.dropfile .drop-text.csv.uploading.importing:before {
+  content: '${t("Importing...")}';
+}
 .dropfile .drop-text.audio:before {
   content: '${t("Drop your MP3, WAV, M4A, ACC or MP4 file here, or click to browse")}';
 }
