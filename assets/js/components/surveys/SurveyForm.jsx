@@ -24,6 +24,7 @@ class SurveyForm extends Component {
     t: PropTypes.func,
     dispatch: PropTypes.func,
     projectId: PropTypes.any.isRequired,
+    projectSurveys: PropTypes.object,
     survey: PropTypes.object.isRequired,
     surveyId: PropTypes.any.isRequired,
     router: PropTypes.object.isRequired,
@@ -31,6 +32,7 @@ class SurveyForm extends Component {
     questionnaire: PropTypes.object,
     respondentGroups: PropTypes.object,
     respondentGroupsUploading: PropTypes.bool,
+    respondentGroupsImporting: PropTypes.bool,
     respondentGroupsUploadingExisting: PropTypes.object,
     invalidRespondents: PropTypes.object,
     invalidGroup: PropTypes.bool,
@@ -89,10 +91,12 @@ class SurveyForm extends Component {
     const {
       survey,
       projectId,
+      projectSurveys,
       questionnaires,
       channels,
       respondentGroups,
       respondentGroupsUploading,
+      respondentGroupsImporting,
       respondentGroupsUploadingExisting,
       invalidRespondents,
       invalidGroup,
@@ -308,9 +312,11 @@ class SurveyForm extends Component {
             <SurveyWizardRespondentsStep
               projectId={projectId}
               survey={survey}
+              projectSurveys={projectSurveys}
               channels={channels}
               respondentGroups={respondentGroups}
               respondentGroupsUploading={respondentGroupsUploading}
+              respondentGroupsImporting={respondentGroupsImporting}
               respondentGroupsUploadingExisting={respondentGroupsUploadingExisting}
               invalidRespondents={invalidRespondents}
               invalidGroup={invalidGroup}

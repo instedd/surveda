@@ -4,8 +4,10 @@ import { connect } from "react-redux"
 import { Preloader } from "react-materialize"
 import { ConfirmationModal, Card } from "../ui"
 import * as actions from "../../actions/respondentGroups"
+import * as surveysActions from "../../actions/surveys"
 import uniq from "lodash/uniq"
 import flatten from "lodash/flatten"
+import ImportSampleModal from "./ImportSampleModal"
 import { RespondentsList } from "./RespondentsList"
 import { RespondentsDropzone } from "./RespondentsDropzone"
 import { RespondentsContainer } from "./RespondentsContainer"
@@ -16,8 +18,10 @@ class SurveyWizardRespondentsStep extends Component {
   static propTypes = {
     t: PropTypes.func,
     survey: PropTypes.object,
+    projectSurveys: PropTypes.object,
     respondentGroups: PropTypes.object.isRequired,
     respondentGroupsUploading: PropTypes.bool,
+    respondentGroupsImporting: PropTypes.bool,
     respondentGroupsUploadingExisting: PropTypes.object,
     invalidRespondents: PropTypes.object,
     invalidGroup: PropTypes.bool,
@@ -30,6 +34,18 @@ class SurveyWizardRespondentsStep extends Component {
   handleSubmit(files) {
     const { survey, actions } = this.props
     if (files.length > 0) actions.uploadRespondentGroup(survey.projectId, survey.id, files)
+  }
+
+  showImportUnusedSampleModal(e) {
+    e.preventDefault()
+    let { projectId, surveysActions} = this.props
+    surveysActions.fetchSurveys(projectId)
+    $('#importUnusedSampleModal').modal("open")
+  }
+
+  importUnusedSample(sourceSurveyId) {
+    const { survey, actions } = this.props
+    actions.importUnusedSampleFromSurvey(survey.projectId, survey.id, sourceSurveyId)
   }
 
   addMoreRespondents(groupId, file) {
@@ -324,9 +340,11 @@ class SurveyWizardRespondentsStep extends Component {
   render() {
     let {
       survey,
+      projectSurveys,
       channels,
       respondentGroups,
       respondentGroupsUploading,
+      respondentGroupsImporting,
       respondentGroupsUploadingExisting,
       invalidRespondents,
       readOnly,
@@ -341,12 +359,27 @@ class SurveyWizardRespondentsStep extends Component {
     const mode = survey.mode || []
     const allModes = uniq(flatten(mode))
 
+    let importUnusedSampleButton = <div className="row">
+      <div className="col s12">
+        <a key="y" href="#" onClick={this.showImportUnusedSampleModal.bind(this)} className="btn-flat btn-flat-link">
+          {t("Import unused respondents")}
+        </a>
+      </div>
+    </div>
+
+    let importUnusedSampleModal = <ImportSampleModal
+      projectSurveys={projectSurveys}
+      onConfirm={this.importUnusedSample.bind(this)}
+      modalId="importUnusedSampleModal"
+    />
+
     let respondentsDropzone = null
     if (!readOnly && !surveyStarted) {
       respondentsDropzone = (
         <RespondentsDropzone
           survey={survey}
           uploading={respondentGroupsUploading}
+          importing={respondentGroupsImporting}
           onDrop={(file) => this.handleSubmit(file)}
           onDropRejected={() => $("#invalidTypeFile").modal("open")}
         />
@@ -386,6 +419,8 @@ class SurveyWizardRespondentsStep extends Component {
           showCancel
         />
         {invalidRespondentsCard || respondentsDropzone}
+        {importUnusedSampleButton}
+        {importUnusedSampleModal}
       </RespondentsContainer>
     )
   }
@@ -393,6 +428,7 @@ class SurveyWizardRespondentsStep extends Component {
 
 const mapDispatchToProps = (dispatch) => ({
   actions: bindActionCreators(actions, dispatch),
+  surveysActions: bindActionCreators(surveysActions, dispatch)
 })
 
 export default translate()(connect(null, mapDispatchToProps)(SurveyWizardRespondentsStep))
