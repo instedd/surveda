@@ -1,19 +1,21 @@
 import * as actions from "../actions/survey"
 
+const markAsCreating = (files, creatingFile) => ({
+  ...files,
+  [creatingFile]: {
+    ...files[creatingFile],
+    file_type: creatingFile,
+    creating: true,
+    created_at: null,
+  }
+})
+
 export default (state = {}, action) => {
   switch (action.type) {
     case actions.GENERATING_FILE:
       return {
         ...state,
-        files: {
-          ...(state.files || {}),
-          [action.file]: {
-            ...(state.files || {})[action.file],
-            file_type: action.file,
-            creating: true,
-            created_at: null
-          }
-        }
+        files: markAsCreating(state.files || {}, action.file),
       }
     case actions.FETCHING_FILES_STATUS:
       if (action.surveyId != state.surveyId) {
