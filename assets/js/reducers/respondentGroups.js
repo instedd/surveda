@@ -3,6 +3,7 @@ import * as actions from "../actions/respondentGroups"
 const initialState = {
   fetching: false,
   uploading: false,
+  importing: false,
   uploadingExisting: {},
   items: null,
   surveyId: null,
@@ -16,6 +17,8 @@ export default (state = initialState, action) => {
       return fetchRespondentGroups(state, action)
     case actions.UPLOAD_RESPONDENT_GROUP:
       return uploadRespondentGroup(state, action)
+    case actions.IMPORT_RESPONDENTS:
+      return importRespondentGroup(state, action)
     case actions.UPLOAD_EXISTING_RESPONDENT_GROUP_ID:
       return uploadExistingRespondentGroup(state, action)
     case actions.DONE_UPLOAD_EXISTING_RESPONDENT_GROUP_ID:
@@ -59,6 +62,14 @@ const uploadRespondentGroup = (state, action) => {
   }
 }
 
+const importRespondentGroup = (state, action) => {
+  return {
+    ...state,
+    uploading: true,
+    importing: true,
+  }
+}
+
 const uploadExistingRespondentGroup = (state, action) => {
   return {
     ...state,
@@ -89,6 +100,7 @@ const receiveRespondentGroups = (state, action) => {
     ...state,
     fetching: false,
     uploading: false,
+    importing: false,
     items: respondentGroups,
     invalidRespondents: null,
   }
@@ -100,6 +112,7 @@ const receiveRespondentGroup = (state, action) => {
     ...state,
     fetching: false,
     uploading: false,
+    importing: false,
     items: {
       ...state.items,
       [group.id]: group,
@@ -128,6 +141,7 @@ const clearInvalids = (state, action) => {
     ...state,
     invalidRespondents: null,
     uploading: false,
+    importing: false,
   }
 }
 

@@ -2,9 +2,10 @@ import React, { PropTypes } from "react"
 import Dropzone from "react-dropzone"
 import { Preloader } from "react-materialize"
 
-export const RespondentsDropzone = ({ survey, uploading, onDrop, onDropRejected }) => {
+export const RespondentsDropzone = ({ survey, uploading, importing, onDrop, onDropRejected }) => {
   let className = "drop-text csv"
   if (uploading) className += " uploading"
+  if (importing) className += " importing"
 
   let icon = null
   if (uploading) {
@@ -53,6 +54,7 @@ export const dropzoneProps = () => {
 RespondentsDropzone.propTypes = {
   survey: PropTypes.object,
   uploading: PropTypes.bool,
+  importing: PropTypes.bool,
   onDrop: PropTypes.func.isRequired,
   onDropRejected: PropTypes.func.isRequired,
 }
