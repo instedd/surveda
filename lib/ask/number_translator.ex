@@ -4,7 +4,7 @@ defmodule Ask.NumberTranslator.Macros do
     |> Enum.map(fn filename ->
       filename = filename |> Path.basename(".json")
 
-      data = Poison.decode!(File.read!("#{__DIR__}/numbers/#{filename}.json"))
+      data = Jason.decode!(File.read!("#{__DIR__}/numbers/#{filename}.json"))
       data = {:%{}, [], data |> Enum.to_list()}
 
       quote do
