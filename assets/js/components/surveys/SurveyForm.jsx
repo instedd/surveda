@@ -24,7 +24,7 @@ class SurveyForm extends Component {
     t: PropTypes.func,
     dispatch: PropTypes.func,
     projectId: PropTypes.any.isRequired,
-    projectSurveys: PropTypes.object,
+    unusedSample: PropTypes.array,
     survey: PropTypes.object.isRequired,
     surveyId: PropTypes.any.isRequired,
     router: PropTypes.object.isRequired,
@@ -91,7 +91,7 @@ class SurveyForm extends Component {
     const {
       survey,
       projectId,
-      projectSurveys,
+      unusedSample,
       questionnaires,
       channels,
       respondentGroups,
@@ -312,7 +312,7 @@ class SurveyForm extends Component {
             <SurveyWizardRespondentsStep
               projectId={projectId}
               survey={survey}
-              projectSurveys={projectSurveys}
+              unusedSample={unusedSample}
               channels={channels}
               respondentGroups={respondentGroups}
               respondentGroupsUploading={respondentGroupsUploading}

@@ -18,7 +18,7 @@ class SurveyWizardRespondentsStep extends Component {
   static propTypes = {
     t: PropTypes.func,
     survey: PropTypes.object,
-    projectSurveys: PropTypes.object,
+    unusedSample: PropTypes.array,
     respondentGroups: PropTypes.object.isRequired,
     respondentGroupsUploading: PropTypes.bool,
     respondentGroupsImporting: PropTypes.bool,
@@ -39,7 +39,7 @@ class SurveyWizardRespondentsStep extends Component {
   showImportUnusedSampleModal(e) {
     e.preventDefault()
     let { projectId, surveysActions} = this.props
-    surveysActions.fetchSurveys(projectId)
+    surveysActions.fetchUnusedSample(projectId)
     $('#importUnusedSampleModal').modal("open")
   }
 
@@ -340,7 +340,7 @@ class SurveyWizardRespondentsStep extends Component {
   render() {
     let {
       survey,
-      projectSurveys,
+      unusedSample,
       channels,
       respondentGroups,
       respondentGroupsUploading,
@@ -368,7 +368,7 @@ class SurveyWizardRespondentsStep extends Component {
     </div>
 
     let importUnusedSampleModal = <ImportSampleModal
-      projectSurveys={projectSurveys}
+      unusedSample={unusedSample}
       onConfirm={this.importUnusedSample.bind(this)}
       modalId="importUnusedSampleModal"
     />

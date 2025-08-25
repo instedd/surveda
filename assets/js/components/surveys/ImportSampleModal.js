@@ -1,12 +1,13 @@
 import React, { Component, PropTypes } from "react"
 import { CardTable, Modal } from "../ui"
 import { translate } from "react-i18next"
+import { FormattedDate } from "react-intl"
 import values from "lodash/values"
 
 class ImportSampleModal extends Component {
   static propTypes = {
     t: PropTypes.func,
-    projectSurveys: PropTypes.object,
+    unusedSample: PropTypes.array,
     onConfirm: PropTypes.func.isRequired,
     modalId: PropTypes.string.isRequired,
     style: PropTypes.object,
@@ -27,9 +28,28 @@ class ImportSampleModal extends Component {
   }
 
   render() {
-    const { projectSurveys, modalId, style, t } = this.props
+    const { unusedSample, modalId, style, t } = this.props
 
-    let surveys = values(projectSurveys || {}).filter((survey) => survey.state == "terminated")
+    let surveys = values(unusedSample || {})
+
+    let loadingDiv = <div>Loading...</div> // FIXME: to be improved
+
+    let surveysTable = <tbody>
+      {surveys.map((survey) => {
+        let name = survey.name ? `${survey.name} (#${survey.survey_id})` : <em>Untitled Survey #{survey.survey_id}</em>
+        return <tr key={survey.survey_id} onClick={() => this.onSubmit(survey.survey_id)}>
+        <td>{name}</td>
+        <td>{survey.respondents}</td>
+        <td>
+          <FormattedDate
+            value={Date.parse(survey.ended_at)}
+            day="numeric"
+            month="short"
+            year="numeric"
+            />
+        </td>
+      </tr>})}
+    </tbody>
 
     return (
       <div>
@@ -47,19 +67,11 @@ class ImportSampleModal extends Component {
               <thead>
                 <tr>
                   <th>{t("Name")}</th>
-                  { /* <th>{t("Unused respondents")}</th> FIXME: should be this th instead of survey id */ }
-                  <th>{t("Survey ID")}</th>
+                  <th>{t("Unused respondents")}</th>
+                  <th>{t("Ended at")}</th>
                 </tr>
               </thead>
-              <tbody>
-                {surveys.map((survey) => {
-                  let name = survey.name ? `${survey.name} (#${survey.id})` : <em>Untitled Survey #{survey.id}</em>
-                  let unusedSampleCount = survey.id // FIXME: should be the respondents count
-                  return <tr key={survey.id} onClick={() => this.onSubmit(survey.id)}>
-                  <td>{name}</td>
-                  <td>{unusedSampleCount}</td>
-                </tr>})}
-              </tbody>
+              { unusedSample ? surveysTable : loadingDiv }
             </CardTable>
           </div>
           <div className="card-action">

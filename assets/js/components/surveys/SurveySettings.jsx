@@ -14,7 +14,7 @@ class SurveySettings extends Component {
     t: PropTypes.func,
     dispatch: PropTypes.func,
     projectId: PropTypes.any.isRequired,
-    projectSurveys: PropTypes.object,
+    unusedSample: PropTypes.array,
     surveyId: PropTypes.any.isRequired,
     router: PropTypes.object.isRequired,
     survey: PropTypes.object.isRequired,
@@ -46,7 +46,7 @@ class SurveySettings extends Component {
       survey,
       projectId,
       project,
-      projectSurveys,
+      unusedSample,
       questionnaires,
       dispatch,
       channels,
@@ -82,7 +82,7 @@ class SurveySettings extends Component {
           invalidRespondents={invalidRespondents}
           invalidGroup={invalidGroup}
           projectId={projectId}
-          projectSurveys={projectSurveys}
+          unusedSample={unusedSample}
           questionnaires={questionnaires}
           channels={channels}
           dispatch={dispatch}
@@ -97,7 +97,7 @@ class SurveySettings extends Component {
 const mapStateToProps = (state, ownProps) => ({
   projectId: ownProps.params.projectId,
   project: state.project.data,
-  projectSurveys: state.surveys.items,
+  unusedSample: state.unusedSample,
   surveyId: ownProps.params.surveyId,
   channels: state.channels.items,
   questionnaires: (state.survey.data || {}).questionnaires || state.questionnaires.items || {},

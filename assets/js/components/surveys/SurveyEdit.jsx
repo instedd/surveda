@@ -15,7 +15,7 @@ class SurveyEdit extends Component {
     t: PropTypes.func,
     dispatch: PropTypes.func,
     projectId: PropTypes.any.isRequired,
-    projectSurveys: PropTypes.object,
+    unusedSample: PropTypes.array,
     surveyId: PropTypes.any.isRequired,
     router: PropTypes.object.isRequired,
     survey: PropTypes.object.isRequired,
@@ -57,7 +57,7 @@ class SurveyEdit extends Component {
       survey,
       projectId,
       project,
-      projectSurveys,
+      unusedSample,
       questionnaires,
       dispatch,
       channels,
@@ -99,7 +99,7 @@ class SurveyEdit extends Component {
           invalidRespondents={invalidRespondents}
           invalidGroup={invalidGroup}
           projectId={projectId}
-          projectSurveys={projectSurveys}
+          unusedSample={unusedSample}
           questionnaires={activeQuestionnaires}
           channels={channels}
           dispatch={dispatch}
@@ -114,7 +114,7 @@ class SurveyEdit extends Component {
 const mapStateToProps = (state, ownProps) => ({
   projectId: ownProps.params.projectId,
   project: state.project.data,
-  projectSurveys: state.surveys.items,
+  unusedSample: state.unusedSample,
   surveyId: ownProps.params.surveyId,
   channels: state.channels.items,
   questionnaires: state.questionnaires.items || {},

@@ -15,9 +15,6 @@ export default (state = initialState, action) => {
 }
 
 const receiveUnusedSampleSurveys = (state: Array, action: any) => (
-  {
-    ...state,
-    surveys: action.surveys,
-  }
+  action.surveys
 )
 
