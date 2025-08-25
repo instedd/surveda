@@ -129,6 +129,8 @@ defmodule AskWeb.Router do
           end
         end
 
+        get "/unused_sample", SurveyController, :list_unused
+
         post "/surveys/simulate_questionanire", SurveySimulationController, :simulate
 
         resources "/questionnaires", QuestionnaireController, except: [:new, :edit] do
