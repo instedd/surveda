@@ -2,6 +2,8 @@
 import * as api from "../api"
 
 export const RECEIVE = "RECEIVE_SURVEYS"
+export const RECEIVE_UNUSED_SAMPLE_SURVEYS = "RECEIVE_UNUSED_SAMPLE_SURVEYS"
+export const FETCHING_UNUSED_SAMPLE_SURVEYS = "FETCHING_UNUSED_SAMPLE_SURVEYS"
 export const FETCH = "FETCH_SURVEYS"
 export const NEXT_PAGE = "SURVEYS_NEXT_PAGE"
 export const PREVIOUS_PAGE = "SURVEYS_PREVIOUS_PAGE"
@@ -30,6 +32,22 @@ export const fetchSurveys =
       .then((response) => dispatch(receiveSurveys(projectId, response.entities.surveys || {})))
       .then(() => getState().surveys.items)
   }
+
+export const fetchUnusedSample = (projectId: number) => (dispatch: Function, getState: () => Store): Promise => {
+  dispatch(fetchingUnusedSampleSurveys())
+  return api.fetchUnusedSampleSurveys(projectId).then((surveys) => {
+    dispatch(receiveUnusedSampleSurveys(surveys))
+  })
+}
+
+export const fetchingUnusedSampleSurveys = () => ({
+  type: FETCHING_UNUSED_SAMPLE_SURVEYS
+})
+
+export const receiveUnusedSampleSurveys = (surveys: Array) => ({
+  type: RECEIVE_UNUSED_SAMPLE_SURVEYS,
+  surveys
+})
 
 export const startFetchingSurveys = (projectId: number) => ({
   type: FETCH,

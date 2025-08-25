@@ -236,6 +236,10 @@ export const uploadRespondentGroup = (projectId, surveyId, files) => {
   )
 }
 
+export const fetchUnusedSampleSurveys = (projectId) => {
+  return apiFetchJSON(`projects/${projectId}/unused_sample`, null)
+}
+
 export const importUnusedSampleFromSurvey = (projectId, surveyId, sourceSurveyId) => {
   return apiPostJSON(`projects/${projectId}/surveys/${surveyId}/respondent_groups/import_unused`, respondentGroupSchema, { sourceSurveyId })
 }
