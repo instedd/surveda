@@ -22,7 +22,8 @@ class ImportSampleModal extends Component {
     }
   }
 
-  onSubmit(selectedSurveyId) {
+  onSubmit(event, selectedSurveyId) {
+    event.preventDefault()
     let { onConfirm, modalId } = this.props
     $(`#${modalId}`).modal("close")
     onConfirm(selectedSurveyId)
@@ -41,20 +42,23 @@ class ImportSampleModal extends Component {
 
     let surveysTable = <CardTable>
       <colgroup>
-        <col width="70%" />
+        <col width="40%" />
+        <col width="20%" />
         <col width="30%" />
+        <col width="10%" />
       </colgroup>
       <thead>
         <tr>
           <th>{t("Name")}</th>
           <th>{t("Unused respondents")}</th>
           <th>{t("Ended at")}</th>
+          <th />
         </tr>
       </thead>
       <tbody>
         {surveys.map((survey) => {
           let name = survey.name ? `${survey.name} (#${survey.survey_id})` : <em>Untitled Survey #{survey.survey_id}</em>
-          return <tr key={survey.survey_id} onClick={() => this.onSubmit(survey.survey_id)}>
+          return <tr key={survey.survey_id}>
           <td>{name}</td>
           <td>{survey.respondents}</td>
           <td>
@@ -64,6 +68,11 @@ class ImportSampleModal extends Component {
               month="short"
               year="numeric"
               />
+          </td>
+          <td>
+            <a href="#" onClick={(e) => this.onSubmit(e, survey.survey_id)} className="blue-text btn-flat">
+              {t("Import")}
+            </a>
           </td>
         </tr>})}
       </tbody>
