@@ -29,6 +29,9 @@ class I18nStyle extends Component<Props> {
 .dropfile.rejectedfile .drop-text:before {
   content: '${t("Invalid file type")}';
 }
+.import-sample-loading:after {
+  content: '${t("Listing unused respondents...")}';
+}
 .audio-section .drop-uploading:before {
   content: '${t("Uploading...")}';
 }
