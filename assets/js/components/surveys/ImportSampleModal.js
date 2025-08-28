@@ -58,6 +58,13 @@ class ImportSampleModal extends Component {
       <tbody>
         {surveys.map((survey) => {
           let name = survey.name ? `${survey.name} (#${survey.survey_id})` : <em>Untitled Survey #{survey.survey_id}</em>
+          const canBeImported = survey.respondents > 0
+          const importButton = canBeImported ? 
+            (<a href="#" onClick={(e) => this.onSubmit(e, survey.survey_id)} className="blue-text btn-flat">
+              {t("Import")}
+            </a>) : (<a href="#" onClick={(e) => e.preventDefault()} className="btn-flat disabled">
+              {t("Import")}
+            </a>)
           return <tr key={survey.survey_id}>
           <td>{name}</td>
           <td>{survey.respondents}</td>
@@ -69,11 +76,7 @@ class ImportSampleModal extends Component {
               year="numeric"
               />
           </td>
-          <td>
-            <a href="#" onClick={(e) => this.onSubmit(e, survey.survey_id)} className="blue-text btn-flat">
-              {t("Import")}
-            </a>
-          </td>
+          <td>{importButton}</td>
         </tr>})}
       </tbody>
     </CardTable>
