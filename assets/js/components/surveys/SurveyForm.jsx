@@ -36,6 +36,7 @@ class SurveyForm extends Component {
     respondentGroupsUploadingExisting: PropTypes.object,
     invalidRespondents: PropTypes.object,
     invalidGroup: PropTypes.bool,
+    invalidImport: PropTypes.object,
     channels: PropTypes.object,
     errors: PropTypes.object,
     readOnly: PropTypes.bool.isRequired,
@@ -100,6 +101,7 @@ class SurveyForm extends Component {
       respondentGroupsUploadingExisting,
       invalidRespondents,
       invalidGroup,
+      invalidImport,
       errors,
       questionnaire,
       readOnly,
@@ -320,6 +322,7 @@ class SurveyForm extends Component {
               respondentGroupsUploadingExisting={respondentGroupsUploadingExisting}
               invalidRespondents={invalidRespondents}
               invalidGroup={invalidGroup}
+              invalidImport={invalidImport}
               readOnly={readOnly}
               surveyStarted={surveyStarted}
             />

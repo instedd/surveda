@@ -13,6 +13,8 @@ export const CLEAR_INVALIDS = "RESPONDENT_GROUP_CLEAR_INVALIDS"
 export const SELECT_CHANNELS = "RESPONDENT_GROUP_SELECT_CHANNELS"
 export const UPLOAD_RESPONDENT_GROUP = "RESPONDENT_GROUP_UPLOAD"
 export const IMPORT_RESPONDENTS = "RESPONDENT_GROUP_IMPORT"
+export const INVALID_IMPORT = "RESPONDENT_GROUP_INVALID_IMPORT"
+export const CLEAR_INVALID_IMPORT = "RESPONDENT_GROUP_CLEAR_INVALID_IMPORT"
 export const UPLOAD_EXISTING_RESPONDENT_GROUP_ID = "RESPONDENT_GROUP_UPLOAD_EXISTING"
 export const DONE_UPLOAD_EXISTING_RESPONDENT_GROUP_ID = "RESPONDENT_GROUP_DONE_UPLOAD_EXISTING"
 
@@ -37,6 +39,15 @@ export const receiveRespondentGroups = (surveyId, respondentGroups) => ({
 export const receiveRespondentGroup = (respondentGroup) => ({
   type: RECEIVE_RESPONDENT_GROUP,
   respondentGroup,
+})
+
+export const importInvalids = (importError) => ({
+  type: INVALID_IMPORT,
+  importError
+})
+
+export const clearInvalidImport = () => ({
+  type: CLEAR_INVALID_IMPORT,
 })
 
 export const receiveInvalids = (invalidRespondents) => ({
@@ -65,7 +76,14 @@ export const uploadRespondentGroup = (projectId, surveyId, files) => (dispatch, 
 
 export const importUnusedSampleFromSurvey = (projectId, surveyId, sourceSurveyId) => (dispatch, getState) => {
   dispatch(importingUnusedSample(sourceSurveyId))
-  handleRespondentGroupUpload(dispatch, api.importUnusedSampleFromSurvey(projectId, surveyId, sourceSurveyId))
+  api.importUnusedSampleFromSurvey(projectId, surveyId, sourceSurveyId).then((response) => {
+    const group = response.entities.respondentGroups[response.result]
+    dispatch(receiveRespondentGroup(group))
+  }, (e) => {
+    e.json().then((error) => {
+      dispatch(importInvalids(error))
+    })
+  })
 }
 
 export const addMoreRespondentsToGroup =

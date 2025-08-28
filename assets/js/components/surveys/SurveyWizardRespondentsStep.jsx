@@ -25,6 +25,7 @@ class SurveyWizardRespondentsStep extends Component {
     respondentGroupsUploadingExisting: PropTypes.object,
     invalidRespondents: PropTypes.object,
     invalidGroup: PropTypes.bool,
+    invalidImport: PropTypes.object,
     channels: PropTypes.object,
     actions: PropTypes.object.isRequired,
     readOnly: PropTypes.bool.isRequired,
@@ -62,6 +63,12 @@ class SurveyWizardRespondentsStep extends Component {
     e.preventDefault()
 
     this.props.actions.clearInvalids()
+  }
+
+  clearInvalidImport(e) {
+    e.preventDefault()
+
+    this.props.actions.clearInvalidImport()
   }
 
   invalidEntriesText(invalidEntries, invalidEntryType) {
@@ -146,6 +153,41 @@ class SurveyWizardRespondentsStep extends Component {
         </div>
       </Card>
     )
+  }
+
+  importErrorMessage(errorCode, sourceSurveyId, data) {
+    const { t } = this.props
+    switch(errorCode) {
+      case "NO_SAMPLE":
+        return t("Survey #{{sourceSurveyId}} has no unused respondents to import", { sourceSurveyId })
+      case "NOT_TERMINATED":
+        const surveyState = data.survey_state
+        return t("Survey #{{sourceSurveyId}} hasn't terminated - its state is {{surveyState}}", { sourceSurveyId, surveyState })
+      case "INVALID_ENTRIES":
+        return this.invalidEntriesText(data.invalid_entries, "invalid-phone-number")
+      default:
+        return t("Error importing respondents from survey #{{sourceSurveyId}}", { sourceSurveyId })
+    }
+  }
+
+  importErrorContent(importError) {
+    const { surveyStarted, t } = this.props
+    if(!importError || surveyStarted) {
+      return null
+    }
+
+    const { errorCode, sourceSurveyId, data } = importError
+    const errorMessage = this.importErrorMessage(errorCode, sourceSurveyId, data)
+    return <Card>
+      <div className="card-content card-error">
+        {errorMessage}
+      </div>
+      <div className="card-action right-align">
+        <a className="blue-text" href="#" onClick={(e) => this.clearInvalidImport(e)}>
+          {t("Understood")}
+        </a>
+      </div>
+    </Card>
   }
 
   channelChange(e, group, mode, allChannels) {
@@ -347,11 +389,14 @@ class SurveyWizardRespondentsStep extends Component {
       respondentGroupsImporting,
       respondentGroupsUploadingExisting,
       invalidRespondents,
+      invalidImport,
       readOnly,
       surveyStarted,
       t,
     } = this.props
+    let uploading = respondentGroupsUploading || respondentGroupsImporting
     let invalidRespondentsCard = this.invalidRespondentsContent(invalidRespondents)
+    let importErrorCard = this.importErrorContent(invalidImport)
     if (!survey || !channels) {
       return <div>{t("Loading...")}</div>
     }
@@ -359,7 +404,7 @@ class SurveyWizardRespondentsStep extends Component {
     const mode = survey.mode || []
     const allModes = uniq(flatten(mode))
 
-    let importUnusedSampleButton = <div className="row">
+    let importUnusedSampleButton = uploading ? null : <div className="row">
       <div className="col s12">
         <a key="y" href="#" onClick={this.showImportUnusedSampleModal.bind(this)} className="btn-flat btn-flat-link">
           {t("Import unused respondents")}
@@ -419,7 +464,7 @@ class SurveyWizardRespondentsStep extends Component {
           showCancel
         />
         {invalidRespondentsCard || respondentsDropzone}
-        {importUnusedSampleButton}
+        {importErrorCard || importUnusedSampleButton}
         {importUnusedSampleModal}
       </RespondentsContainer>
     )

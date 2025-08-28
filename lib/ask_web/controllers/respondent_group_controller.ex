@@ -57,12 +57,11 @@ defmodule AskWeb.RespondentGroupController do
       |> Repo.get!(source_survey_id)
 
     if !Survey.terminated?(source_survey) do
-      Logger.warn("Can't import sample from survey ##{source_survey.id} - state is #{source_survey.state} instead of terminated")
-      render_unprocessable_entity(conn)
+      render_invalid_import(conn, source_survey.id, "NOT_TERMINATED", %{survey_state: source_survey.state})
     else
       entries = unused_respondents_from_survey(source_survey)
 
-      if entries do
+      if !Enum.empty?(entries) do
         sample_name = "__imported_from_survey_#{source_survey.id}.csv"
         case RespondentGroupAction.load_entries(entries, survey) do
           {:ok, loaded_entries} ->
@@ -75,11 +74,13 @@ defmodule AskWeb.RespondentGroupController do
             |> render("show.json", respondent_group: respondent_group)
 
           {:error, invalid_entries} ->
-            render_invalid(conn, sample_name, invalid_entries)
+            # I don't see how numbers that were valid in a terminated survey would now be invalid when
+            # importing them into another survey, but we'll handle that just in case - and `loaded_entries`
+            # requires that, anyways
+            render_invalid_import(conn, source_survey.id, "INVALID_ENTRIES", %{invalid_entries: invalid_entries})
         end
       else
-        Logger.warn("Error when creating respondent group for survey: #{inspect(survey)}")
-        render_unprocessable_entity(conn)
+        render_invalid_import(conn, source_survey.id, "NO_SAMPLE")
       end
     end
   end
@@ -213,10 +214,10 @@ defmodule AskWeb.RespondentGroupController do
   def unused_respondents_from_survey(survey) do
     from(r in Respondent,
       where:
-        r.survey_id == ^survey.id and r.disposition == :registered
+        r.survey_id == ^survey.id and r.disposition == :registered,
+      select: r.phone_number
     )
     |> Repo.all()
-    |> Enum.map(fn r -> r.phone_number end)
   end
 
   defp csv_rows(csv_string) do
@@ -243,6 +244,16 @@ defmodule AskWeb.RespondentGroupController do
     conn
     |> put_status(:unprocessable_entity)
     |> render("invalid_entries.json", %{invalid_entries: invalid_entries, filename: filename})
+  end
+
+  defp render_invalid_import(conn, source_survey_id, error_code, data \\ %{}) do
+    conn
+    |> put_status(:unprocessable_entity)
+    |> render("invalid_import.json", %{
+      source_survey_id: source_survey_id,
+      error_code: error_code,
+      data: data
+    })
   end
 
   def delete(conn, %{"id" => id}) do

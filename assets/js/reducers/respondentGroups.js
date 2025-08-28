@@ -9,6 +9,7 @@ const initialState = {
   surveyId: null,
   invalidRespondents: null,
   invalidRespondentsForGroup: null,
+  invalidImport: null,
 }
 
 export default (state = initialState, action) => {
@@ -29,6 +30,10 @@ export default (state = initialState, action) => {
       return receiveRespondentGroup(state, action)
     case actions.REMOVE_RESPONDENT_GROUP:
       return removeRespondentGroup(state, action)
+    case actions.INVALID_IMPORT:
+      return invalidImport(state, action)
+    case actions.CLEAR_INVALID_IMPORT:
+      return clearInvalidImport(state, action)
     case actions.INVALID_RESPONDENTS:
       return receiveInvalids(state, action)
     case actions.CLEAR_INVALIDS:
@@ -67,6 +72,24 @@ const importRespondentGroup = (state, action) => {
     ...state,
     uploading: true,
     importing: true,
+  }
+}
+
+const invalidImport = (state, action) => {
+  return {
+    ...state,
+    uploading: false,
+    importing: false,
+    invalidImport: action.importError
+  }
+}
+
+const clearInvalidImport = (state, action) => {
+  return {
+    ...state,
+    invalidImport: null,
+    uploading: false,
+    importing: false,
   }
 }
 

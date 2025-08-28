@@ -28,6 +28,7 @@ class SurveyEdit extends Component {
     respondentGroupsUploadingExisting: PropTypes.object,
     invalidRespondents: PropTypes.object,
     invalidGroup: PropTypes.bool,
+    invalidImport: PropTypes.object,
   }
 
   componentWillMount() {
@@ -67,6 +68,7 @@ class SurveyEdit extends Component {
       respondentGroupsUploadingExisting,
       invalidRespondents,
       invalidGroup,
+      invalidImport,
       t,
     } = this.props
     const activeQuestionnaires = Object.keys(questionnaires)
@@ -98,6 +100,7 @@ class SurveyEdit extends Component {
           respondentGroupsUploadingExisting={respondentGroupsUploadingExisting}
           invalidRespondents={invalidRespondents}
           invalidGroup={invalidGroup}
+          invalidImport={invalidImport}
           projectId={projectId}
           unusedSample={unusedSample}
           questionnaires={activeQuestionnaires}
@@ -124,6 +127,7 @@ const mapStateToProps = (state, ownProps) => ({
   respondentGroupsUploadingExisting: state.respondentGroups.uploadingExisting,
   invalidRespondents: state.respondentGroups.invalidRespondents,
   invalidGroup: state.respondentGroups.invalidRespondentsForGroup,
+  invalidImport: state.respondentGroups.invalidImport,
   survey: state.survey.data || {},
 })
 
