@@ -59,10 +59,6 @@ defmodule AskWeb.SurveyController do
     render(conn, "index.json", surveys: surveys)
   end
 
-  # select s.id, count(1)
-  # from surveys s left join respondents r on r.survey_id = s.id
-  # where s.state = 'terminated' and r.disposition = 'registered' and s.project_id = 38
-  # group by s.id;
   def list_unused(conn, %{"project_id" => project_id}) do
     project = load_project(conn, project_id)
 
