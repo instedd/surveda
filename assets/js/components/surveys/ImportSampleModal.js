@@ -14,14 +14,6 @@ class ImportSampleModal extends Component {
     style: PropTypes.object,
   }
 
-  constructor(props) {
-    super(props)
-    this.state = {
-      buckets: {},
-      steps: {},
-    }
-  }
-
   onSubmit(event, selectedSurveyId) {
     event.preventDefault()
     let { onConfirm, modalId } = this.props
