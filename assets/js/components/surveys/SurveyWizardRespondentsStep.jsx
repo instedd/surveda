@@ -28,6 +28,7 @@ class SurveyWizardRespondentsStep extends Component {
     invalidImport: PropTypes.object,
     channels: PropTypes.object,
     actions: PropTypes.object.isRequired,
+    surveysActions: PropTypes.object.isRequired,
     readOnly: PropTypes.bool.isRequired,
     surveyStarted: PropTypes.bool.isRequired,
   }
@@ -39,8 +40,8 @@ class SurveyWizardRespondentsStep extends Component {
 
   showImportUnusedSampleModal(e) {
     e.preventDefault()
-    let { projectId, surveysActions} = this.props
-    surveysActions.fetchUnusedSample(projectId)
+    let { survey, surveysActions } = this.props
+    surveysActions.fetchUnusedSample(survey.projectId)
     $('#importUnusedSampleModal').modal("open")
   }
 
@@ -406,7 +407,7 @@ class SurveyWizardRespondentsStep extends Component {
 
     let importUnusedSampleButton = (uploading || readOnly || surveyStarted) ? null : <div className="row">
       <div className="col s12">
-        <a key="y" href="#" onClick={this.showImportUnusedSampleModal.bind(this)} className="btn-flat btn-flat-link">
+        <a key="y" href="#" onClick={(e) => this.showImportUnusedSampleModal(e)} className="btn-flat btn-flat-link">
           {t("Import unused respondents")}
         </a>
       </div>
@@ -414,7 +415,7 @@ class SurveyWizardRespondentsStep extends Component {
 
     let importUnusedSampleModal = <ImportSampleModal
       unusedSample={unusedSample}
-      onConfirm={this.importUnusedSample.bind(this)}
+      onConfirm={(e) => this.importUnusedSample(e)}
       modalId="importUnusedSampleModal"
     />
 
