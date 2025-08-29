@@ -502,7 +502,7 @@ class RespondentIndex extends Component<Props, State> {
       const createdAtLabel = fileExists ? <TimeAgo date={(fileStatus?.created_at || 0) * 1000} formatter={this.timeFormatter} /> : null
 
       const fileCreating = !!fileStatus?.creating
-      const generateButtonClass = fileCreating ? "grey-text" : "black-text"
+      const generateButtonClass = fileCreating ? "grey-text spinning" : "black-text"
       const generateButtonOnClick = fileCreating ? null : item.onGenerate
       const generatingFileLabel = fileCreating ? "Generating..." : ""
 
