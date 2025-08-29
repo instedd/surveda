@@ -33,7 +33,7 @@ export const fetchSurveys =
       .then(() => getState().surveys.items)
   }
 
-export const fetchUnusedSample = (projectId: number) => (dispatch: Function, getState: () => Store): Promise => {
+export const fetchUnusedSample = (projectId: number) => (dispatch: Function, getState: () => Store) => {
   dispatch(fetchingUnusedSampleSurveys())
   return api.fetchUnusedSampleSurveys(projectId).then((surveys) => {
     dispatch(receiveUnusedSampleSurveys(surveys))
@@ -44,7 +44,7 @@ export const fetchingUnusedSampleSurveys = () => ({
   type: FETCHING_UNUSED_SAMPLE_SURVEYS
 })
 
-export const receiveUnusedSampleSurveys = (surveys: Array) => ({
+export const receiveUnusedSampleSurveys = (surveys: [UnusedSampleSurvey]) => ({
   type: RECEIVE_UNUSED_SAMPLE_SURVEYS,
   surveys
 })

@@ -3,7 +3,7 @@ import * as actions from "../actions/surveys"
 
 const initialState = null
 
-export default (state = initialState, action) => {
+export default (state : ?[UnusedSampleSurvey] = initialState, action) => {
   switch (action.type) {
     case actions.FETCHING_UNUSED_SAMPLE_SURVEYS:
       return initialState
@@ -14,7 +14,7 @@ export default (state = initialState, action) => {
   }
 }
 
-const receiveUnusedSampleSurveys = (state: Array, action: any) => (
+const receiveUnusedSampleSurveys = (state: ?[UnusedSampleSurvey], action: any) => (
   action.surveys
 )
 
