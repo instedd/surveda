@@ -404,7 +404,7 @@ class SurveyWizardRespondentsStep extends Component {
     const mode = survey.mode || []
     const allModes = uniq(flatten(mode))
 
-    let importUnusedSampleButton = uploading ? null : <div className="row">
+    let importUnusedSampleButton = (uploading || readOnly || surveyStarted) ? null : <div className="row">
       <div className="col s12">
         <a key="y" href="#" onClick={this.showImportUnusedSampleModal.bind(this)} className="btn-flat btn-flat-link">
           {t("Import unused respondents")}
