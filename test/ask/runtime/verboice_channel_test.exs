@@ -824,6 +824,7 @@ defmodule Ask.Runtime.VerboiceChannelTest do
         )
 
       {:ok, logger} = SurveyLogger.start_link()
+      :erlang.trace(logger, true, [:receive])
       SurveyBroker.handle_info(:poll, nil, Timex.now())
 
       survey = Repo.get(Survey, survey.id)
@@ -850,6 +851,12 @@ defmodule Ask.Runtime.VerboiceChannelTest do
                |> RetryStat.count(%{attempt: 1, ivr_active: true, mode: mode}),
              "respondent should remain active when contact expired"
 
+      assert_receive {
+        :trace,
+        ^logger,
+        :receive,
+        {:"$gen_cast", {:log, _, "ivr", _, _, _, :queued, :contact, "Enqueueing call", _}}
+      }
       :ok = logger |> GenServer.stop()
 
       assert [enqueueing] = (respondent |> Repo.preload(:survey_log_entries)).survey_log_entries
