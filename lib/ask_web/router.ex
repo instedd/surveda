@@ -110,6 +110,7 @@ defmodule AskWeb.Router do
             post "/add", RespondentGroupController, :add, as: :add
             post "/replace", RespondentGroupController, :replace, as: :replace
           end
+          post "/respondent_groups/import_unused", RespondentGroupController, :import_unused, as: :import_unused
 
           get "/respondents/stats", RespondentController, :stats, as: :respondents_stats
           get "/simulation/initial_state/:mode", SurveySimulationController, :initial_state
@@ -127,6 +128,8 @@ defmodule AskWeb.Router do
               as: :package_responses
           end
         end
+
+        get "/unused_sample", SurveyController, :list_unused
 
         post "/surveys/simulate_questionanire", SurveySimulationController, :simulate
 

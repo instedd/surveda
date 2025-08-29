@@ -9,6 +9,10 @@ defmodule AskWeb.SurveyView do
     %{data: render_many(surveys, AskWeb.SurveyView, "survey.json")}
   end
 
+  def render("unused_sample.json", %{surveys: surveys}) do
+    %{data: surveys}
+  end
+
   def render("show.json", %{survey: survey}) do
     %{data: render_one(survey, AskWeb.SurveyView, "survey_detail.json")}
   end

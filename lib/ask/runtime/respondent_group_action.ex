@@ -271,6 +271,11 @@ defmodule Ask.Runtime.RespondentGroupAction do
          |> Repo.update!()
   end
 
+  def disable_incentives_if_disabled_in_source!(survey, %{incentives_enabled: false}), do:
+    Survey.changeset(survey, %{incentives_enabled: false})
+    |> Repo.update!()
+  def disable_incentives_if_disabled_in_source!(survey, _), do: survey
+
   defp validate_entries(entries) do
     if length(entries) == 0 do
       {:error, []}

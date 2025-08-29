@@ -3,11 +3,13 @@ import * as actions from "../actions/respondentGroups"
 const initialState = {
   fetching: false,
   uploading: false,
+  importing: false,
   uploadingExisting: {},
   items: null,
   surveyId: null,
   invalidRespondents: null,
   invalidRespondentsForGroup: null,
+  invalidImport: null,
 }
 
 export default (state = initialState, action) => {
@@ -16,6 +18,8 @@ export default (state = initialState, action) => {
       return fetchRespondentGroups(state, action)
     case actions.UPLOAD_RESPONDENT_GROUP:
       return uploadRespondentGroup(state, action)
+    case actions.IMPORT_RESPONDENTS:
+      return importRespondentGroup(state, action)
     case actions.UPLOAD_EXISTING_RESPONDENT_GROUP_ID:
       return uploadExistingRespondentGroup(state, action)
     case actions.DONE_UPLOAD_EXISTING_RESPONDENT_GROUP_ID:
@@ -26,6 +30,10 @@ export default (state = initialState, action) => {
       return receiveRespondentGroup(state, action)
     case actions.REMOVE_RESPONDENT_GROUP:
       return removeRespondentGroup(state, action)
+    case actions.INVALID_IMPORT:
+      return invalidImport(state, action)
+    case actions.CLEAR_INVALID_IMPORT:
+      return clearInvalidImport(state, action)
     case actions.INVALID_RESPONDENTS:
       return receiveInvalids(state, action)
     case actions.CLEAR_INVALIDS:
@@ -59,6 +67,32 @@ const uploadRespondentGroup = (state, action) => {
   }
 }
 
+const importRespondentGroup = (state, action) => {
+  return {
+    ...state,
+    uploading: true,
+    importing: true,
+  }
+}
+
+const invalidImport = (state, action) => {
+  return {
+    ...state,
+    uploading: false,
+    importing: false,
+    invalidImport: action.importError
+  }
+}
+
+const clearInvalidImport = (state, action) => {
+  return {
+    ...state,
+    invalidImport: null,
+    uploading: false,
+    importing: false,
+  }
+}
+
 const uploadExistingRespondentGroup = (state, action) => {
   return {
     ...state,
@@ -89,6 +123,7 @@ const receiveRespondentGroups = (state, action) => {
     ...state,
     fetching: false,
     uploading: false,
+    importing: false,
     items: respondentGroups,
     invalidRespondents: null,
   }
@@ -100,6 +135,7 @@ const receiveRespondentGroup = (state, action) => {
     ...state,
     fetching: false,
     uploading: false,
+    importing: false,
     items: {
       ...state.items,
       [group.id]: group,
@@ -128,6 +164,7 @@ const clearInvalids = (state, action) => {
     ...state,
     invalidRespondents: null,
     uploading: false,
+    importing: false,
   }
 }
 

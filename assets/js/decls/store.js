@@ -108,3 +108,10 @@ export type ChannelList = ListStore<Channel>
 export type ProjectList = ListStore<Project> & {
   filter: ?ArchiveFilter,
 }
+
+export type UnusedSampleSurvey = {
+  survey_id: number,
+  respondents: number,
+  name: string,
+  ended_at: string,
+}

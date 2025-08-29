@@ -30,6 +30,7 @@ import surveyStats from "./surveyStats"
 import surveyRetriesHistograms from "./surveyRetriesHistograms"
 import panelSurveys from "./panelSurveys"
 import panelSurvey from "./panelSurvey"
+import unusedSample from "./unusedSample"
 
 export default combineReducers({
   activities,
@@ -63,4 +64,5 @@ export default combineReducers({
   surveyRetriesHistograms,
   panelSurveys,
   panelSurvey,
+  unusedSample,
 })

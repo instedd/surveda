@@ -4,8 +4,10 @@ import { connect } from "react-redux"
 import { Preloader } from "react-materialize"
 import { ConfirmationModal, Card } from "../ui"
 import * as actions from "../../actions/respondentGroups"
+import * as surveysActions from "../../actions/surveys"
 import uniq from "lodash/uniq"
 import flatten from "lodash/flatten"
+import ImportSampleModal from "./ImportSampleModal"
 import { RespondentsList } from "./RespondentsList"
 import { RespondentsDropzone } from "./RespondentsDropzone"
 import { RespondentsContainer } from "./RespondentsContainer"
@@ -16,13 +18,17 @@ class SurveyWizardRespondentsStep extends Component {
   static propTypes = {
     t: PropTypes.func,
     survey: PropTypes.object,
+    unusedSample: PropTypes.array,
     respondentGroups: PropTypes.object.isRequired,
     respondentGroupsUploading: PropTypes.bool,
+    respondentGroupsImporting: PropTypes.bool,
     respondentGroupsUploadingExisting: PropTypes.object,
     invalidRespondents: PropTypes.object,
     invalidGroup: PropTypes.bool,
+    invalidImport: PropTypes.object,
     channels: PropTypes.object,
     actions: PropTypes.object.isRequired,
+    surveysActions: PropTypes.object.isRequired,
     readOnly: PropTypes.bool.isRequired,
     surveyStarted: PropTypes.bool.isRequired,
   }
@@ -30,6 +36,18 @@ class SurveyWizardRespondentsStep extends Component {
   handleSubmit(files) {
     const { survey, actions } = this.props
     if (files.length > 0) actions.uploadRespondentGroup(survey.projectId, survey.id, files)
+  }
+
+  showImportUnusedSampleModal(e) {
+    e.preventDefault()
+    let { survey, surveysActions } = this.props
+    surveysActions.fetchUnusedSample(survey.projectId)
+    $('#importUnusedSampleModal').modal("open")
+  }
+
+  importUnusedSample(sourceSurveyId) {
+    const { survey, actions } = this.props
+    actions.importUnusedSampleFromSurvey(survey.projectId, survey.id, sourceSurveyId)
   }
 
   addMoreRespondents(groupId, file) {
@@ -46,6 +64,12 @@ class SurveyWizardRespondentsStep extends Component {
     e.preventDefault()
 
     this.props.actions.clearInvalids()
+  }
+
+  clearInvalidImport(e) {
+    e.preventDefault()
+
+    this.props.actions.clearInvalidImport()
   }
 
   invalidEntriesText(invalidEntries, invalidEntryType) {
@@ -130,6 +154,41 @@ class SurveyWizardRespondentsStep extends Component {
         </div>
       </Card>
     )
+  }
+
+  importErrorMessage(errorCode, sourceSurveyId, data) {
+    const { t } = this.props
+    switch(errorCode) {
+      case "NO_SAMPLE":
+        return t("Survey #{{sourceSurveyId}} has no unused respondents to import", { sourceSurveyId })
+      case "NOT_TERMINATED":
+        const surveyState = data.survey_state
+        return t("Survey #{{sourceSurveyId}} hasn't terminated - its state is {{surveyState}}", { sourceSurveyId, surveyState })
+      case "INVALID_ENTRIES":
+        return this.invalidEntriesText(data.invalid_entries, "invalid-phone-number")
+      default:
+        return t("Error importing respondents from survey #{{sourceSurveyId}}", { sourceSurveyId })
+    }
+  }
+
+  importErrorContent(importError) {
+    const { surveyStarted, t } = this.props
+    if(!importError || surveyStarted) {
+      return null
+    }
+
+    const { errorCode, sourceSurveyId, data } = importError
+    const errorMessage = this.importErrorMessage(errorCode, sourceSurveyId, data)
+    return <Card>
+      <div className="card-content card-error">
+        {errorMessage}
+      </div>
+      <div className="card-action right-align">
+        <a className="blue-text" href="#" onClick={(e) => this.clearInvalidImport(e)}>
+          {t("Understood")}
+        </a>
+      </div>
+    </Card>
   }
 
   channelChange(e, group, mode, allChannels) {
@@ -324,16 +383,21 @@ class SurveyWizardRespondentsStep extends Component {
   render() {
     let {
       survey,
+      unusedSample,
       channels,
       respondentGroups,
       respondentGroupsUploading,
+      respondentGroupsImporting,
       respondentGroupsUploadingExisting,
       invalidRespondents,
+      invalidImport,
       readOnly,
       surveyStarted,
       t,
     } = this.props
+    let uploading = respondentGroupsUploading || respondentGroupsImporting
     let invalidRespondentsCard = this.invalidRespondentsContent(invalidRespondents)
+    let importErrorCard = this.importErrorContent(invalidImport)
     if (!survey || !channels) {
       return <div>{t("Loading...")}</div>
     }
@@ -341,12 +405,27 @@ class SurveyWizardRespondentsStep extends Component {
     const mode = survey.mode || []
     const allModes = uniq(flatten(mode))
 
+    let importUnusedSampleButton = (uploading || readOnly || surveyStarted) ? null : <div className="row">
+      <div className="col s12">
+        <a key="y" href="#" onClick={(e) => this.showImportUnusedSampleModal(e)} className="btn-flat btn-flat-link">
+          {t("Import unused respondents")}
+        </a>
+      </div>
+    </div>
+
+    let importUnusedSampleModal = <ImportSampleModal
+      unusedSample={unusedSample}
+      onConfirm={(e) => this.importUnusedSample(e)}
+      modalId="importUnusedSampleModal"
+    />
+
     let respondentsDropzone = null
     if (!readOnly && !surveyStarted) {
       respondentsDropzone = (
         <RespondentsDropzone
           survey={survey}
           uploading={respondentGroupsUploading}
+          importing={respondentGroupsImporting}
           onDrop={(file) => this.handleSubmit(file)}
           onDropRejected={() => $("#invalidTypeFile").modal("open")}
         />
@@ -386,6 +465,8 @@ class SurveyWizardRespondentsStep extends Component {
           showCancel
         />
         {invalidRespondentsCard || respondentsDropzone}
+        {importErrorCard || importUnusedSampleButton}
+        {importUnusedSampleModal}
       </RespondentsContainer>
     )
   }
@@ -393,6 +474,7 @@ class SurveyWizardRespondentsStep extends Component {
 
 const mapDispatchToProps = (dispatch) => ({
   actions: bindActionCreators(actions, dispatch),
+  surveysActions: bindActionCreators(surveysActions, dispatch)
 })
 
 export default translate()(connect(null, mapDispatchToProps)(SurveyWizardRespondentsStep))
