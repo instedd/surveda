@@ -68,6 +68,8 @@ defmodule AskWeb.SurveyController do
           left_join: r in Respondent,
           on: r.survey_id == s.id,
           where: s.project_id == ^project.id and s.state == :terminated,
+          # we could mix a `count` with a `where` clause filtering for respondent disposition
+          # instead of doing the sum+if, but that wouldn't return surveys with 0 respondents available
           select: %{survey_id: s.id, name: s.name, ended_at: s.ended_at, respondents: sum(fragment("if(?, ?, ?)", r.disposition == :registered, 1, 0))},
           group_by: [s.id]
       ) |> Enum.map(fn s -> %{
