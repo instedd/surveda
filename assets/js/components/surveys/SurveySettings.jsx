@@ -14,6 +14,7 @@ class SurveySettings extends Component {
     t: PropTypes.func,
     dispatch: PropTypes.func,
     projectId: PropTypes.any.isRequired,
+    unusedSample: PropTypes.array,
     surveyId: PropTypes.any.isRequired,
     router: PropTypes.object.isRequired,
     survey: PropTypes.object.isRequired,
@@ -22,9 +23,11 @@ class SurveySettings extends Component {
     project: PropTypes.object,
     respondentGroups: PropTypes.object,
     respondentGroupsUploading: PropTypes.bool,
+    respondentGroupsImporting: PropTypes.bool,
     respondentGroupsUploadingExisting: PropTypes.object,
     invalidRespondents: PropTypes.object,
     invalidGroup: PropTypes.bool,
+    invalidImport: PropTypes.object,
   }
 
   componentWillMount() {
@@ -44,14 +47,17 @@ class SurveySettings extends Component {
       survey,
       projectId,
       project,
+      unusedSample,
       questionnaires,
       dispatch,
       channels,
       respondentGroups,
       respondentGroupsUploading,
+      respondentGroupsImporting,
       respondentGroupsUploadingExisting,
       invalidRespondents,
       invalidGroup,
+      invalidImport,
       t,
     } = this.props
 
@@ -73,10 +79,13 @@ class SurveySettings extends Component {
           survey={survey}
           respondentGroups={respondentGroups}
           respondentGroupsUploading={respondentGroupsUploading}
+          respondentGroupsImporting={respondentGroupsImporting}
           respondentGroupsUploadingExisting={respondentGroupsUploadingExisting}
           invalidRespondents={invalidRespondents}
           invalidGroup={invalidGroup}
+          invalidImport={invalidImport}
           projectId={projectId}
+          unusedSample={unusedSample}
           questionnaires={questionnaires}
           channels={channels}
           dispatch={dispatch}
@@ -91,14 +100,17 @@ class SurveySettings extends Component {
 const mapStateToProps = (state, ownProps) => ({
   projectId: ownProps.params.projectId,
   project: state.project.data,
+  unusedSample: state.unusedSample,
   surveyId: ownProps.params.surveyId,
   channels: state.channels.items,
   questionnaires: (state.survey.data || {}).questionnaires || state.questionnaires.items || {},
   respondentGroups: state.respondentGroups.items || {},
   respondentGroupsUploading: state.respondentGroups.uploading,
+  respondentGroupsImporting: state.respondentGroups.importing,
   respondentGroupsUploadingExisting: state.respondentGroups.uploadingExisting,
   invalidRespondents: state.respondentGroups.invalidRespondents,
   invalidGroup: state.respondentGroups.invalidRespondentsForGroup,
+  invalidImport: state.respondentGroups.invalidImport,
   survey: state.survey.data || {},
 })
 

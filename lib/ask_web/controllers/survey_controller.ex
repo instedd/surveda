@@ -5,6 +5,7 @@ defmodule AskWeb.SurveyController do
     Project,
     Folder,
     Survey,
+    Respondent,
     Logger,
     ActivityLog,
     QuotaBucket,
@@ -56,6 +57,30 @@ defmodule AskWeb.SurveyController do
       |> Enum.map(&(&1 |> Survey.with_down_channels()))
 
     render(conn, "index.json", surveys: surveys)
+  end
+
+  def list_unused(conn, %{"project_id" => project_id}) do
+    project = load_project(conn, project_id)
+
+    surveys =
+      Repo.all(
+        from s in Survey,
+          left_join: r in Respondent,
+          on: r.survey_id == s.id,
+          where: s.project_id == ^project.id and s.state == :terminated,
+          # we could mix a `count` with a `where` clause filtering for respondent disposition
+          # instead of doing the sum+if, but that wouldn't return surveys with 0 respondents available
+          select: %{survey_id: s.id, name: s.name, ended_at: s.ended_at, respondents: sum(fragment("if(?, ?, ?)", r.disposition == :registered, 1, 0))},
+          group_by: [s.id]
+      ) |> Enum.map(fn s -> %{
+          survey_id: s.survey_id,
+          name: s.name,
+          ended_at: s.ended_at,
+          respondents: s.respondents |> Decimal.to_integer
+        } end)
+        |> Enum.sort_by(fn s -> - s.respondents end)
+
+    render(conn, "unused_sample.json", surveys: surveys)
   end
 
   def create(conn, params = %{"project_id" => project_id}) do

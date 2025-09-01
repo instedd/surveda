@@ -56,4 +56,12 @@ defmodule AskWeb.RespondentGroupView do
       filename: filename
     }
   end
+
+  def render("invalid_import.json", %{source_survey_id: source_survey_id, error_code: error_code, data: data}) do
+    %{
+      sourceSurveyId: source_survey_id,
+      errorCode: error_code,
+      data: data
+    }
+  end
 end

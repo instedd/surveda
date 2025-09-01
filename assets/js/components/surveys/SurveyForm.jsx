@@ -24,6 +24,7 @@ class SurveyForm extends Component {
     t: PropTypes.func,
     dispatch: PropTypes.func,
     projectId: PropTypes.any.isRequired,
+    unusedSample: PropTypes.array,
     survey: PropTypes.object.isRequired,
     surveyId: PropTypes.any.isRequired,
     router: PropTypes.object.isRequired,
@@ -31,9 +32,11 @@ class SurveyForm extends Component {
     questionnaire: PropTypes.object,
     respondentGroups: PropTypes.object,
     respondentGroupsUploading: PropTypes.bool,
+    respondentGroupsImporting: PropTypes.bool,
     respondentGroupsUploadingExisting: PropTypes.object,
     invalidRespondents: PropTypes.object,
     invalidGroup: PropTypes.bool,
+    invalidImport: PropTypes.object,
     channels: PropTypes.object,
     errors: PropTypes.object,
     readOnly: PropTypes.bool.isRequired,
@@ -89,13 +92,16 @@ class SurveyForm extends Component {
     const {
       survey,
       projectId,
+      unusedSample,
       questionnaires,
       channels,
       respondentGroups,
       respondentGroupsUploading,
+      respondentGroupsImporting,
       respondentGroupsUploadingExisting,
       invalidRespondents,
       invalidGroup,
+      invalidImport,
       errors,
       questionnaire,
       readOnly,
@@ -308,12 +314,15 @@ class SurveyForm extends Component {
             <SurveyWizardRespondentsStep
               projectId={projectId}
               survey={survey}
+              unusedSample={unusedSample}
               channels={channels}
               respondentGroups={respondentGroups}
               respondentGroupsUploading={respondentGroupsUploading}
+              respondentGroupsImporting={respondentGroupsImporting}
               respondentGroupsUploadingExisting={respondentGroupsUploadingExisting}
               invalidRespondents={invalidRespondents}
               invalidGroup={invalidGroup}
+              invalidImport={invalidImport}
               readOnly={readOnly}
               surveyStarted={surveyStarted}
             />
