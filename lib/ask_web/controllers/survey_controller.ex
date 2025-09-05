@@ -66,19 +66,12 @@ defmodule AskWeb.SurveyController do
       Repo.all(
         from s in Survey,
           left_join: r in Respondent,
-          on: r.survey_id == s.id,
+          on: r.survey_id == s.id and r.disposition == :registered,
           where: s.project_id == ^project.id and s.state == :terminated,
-          # we could mix a `count` with a `where` clause filtering for respondent disposition
-          # instead of doing the sum+if, but that wouldn't return surveys with 0 respondents available
-          select: %{survey_id: s.id, name: s.name, ended_at: s.ended_at, respondents: sum(fragment("if(?, ?, ?)", r.disposition == :registered, 1, 0))},
-          group_by: [s.id]
-      ) |> Enum.map(fn s -> %{
-          survey_id: s.survey_id,
-          name: s.name,
-          ended_at: s.ended_at,
-          respondents: s.respondents |> Decimal.to_integer
-        } end)
-        |> Enum.sort_by(fn s -> - s.respondents end)
+          select: %{survey_id: s.id, name: s.name, ended_at: s.ended_at, respondents: count(r.id)},
+          group_by: [s.id],
+          order_by: [desc: count(r.id)]
+      )
 
     render(conn, "unused_sample.json", surveys: surveys)
   end
