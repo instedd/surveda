@@ -1427,7 +1427,7 @@ defmodule AskWeb.RespondentControllerTest do
           },
           %{
             "condition" => [
-              %{"store" => "Smokes", "value" => "yes"},
+              %{"store" => "Smokes", "value" => "Yes"},
               %{"store" => "Exercises", "value" => "No"}
             ],
             "quota" => nil,
@@ -1458,6 +1458,10 @@ defmodule AskWeb.RespondentControllerTest do
 
       qb2 =
         from(q in QuotaBucket, where: q.condition == ^%{"Exercises" => "Yes", "Smokes" => "No"})
+        |> Repo.one()
+
+      qb3 =
+        from(q in QuotaBucket, where: q.condition == ^%{"Exercises" => "No", "Smokes" => "Yes"})
         |> Repo.one()
 
       qb4 =
@@ -1503,7 +1507,9 @@ defmodule AskWeb.RespondentControllerTest do
       assert json_response(conn, 200) == %{
                "data" => %{
                  "reference" => [
+                   %{"name" => "Smokes: No - Exercises: No", "id" => qb1.id},
                    %{"name" => "Smokes: No - Exercises: Yes", "id" => qb2.id},
+                   %{"name" => "Smokes: Yes - Exercises: No", "id" => qb3.id},
                    %{"name" => "Smokes: Yes - Exercises: Yes", "id" => qb4.id}
                  ],
                  "completion_percentage" => 30.0,
@@ -1516,7 +1522,9 @@ defmodule AskWeb.RespondentControllerTest do
                    ]
                  },
                  "cumulative_percentages" => %{
+                   to_string(qb1.id) => [%{"date" => "2016-01-01", "percent" => 100.0}],
                    to_string(qb2.id) => [%{"date" => "2016-01-01", "percent" => 0.0}],
+                   to_string(qb3.id) => [%{"date" => "2016-01-01", "percent" => 100.0}],
                    to_string(qb4.id) => [%{"date" => "2016-01-01", "percent" => 40.0}]
                  },
                  "id" => survey.id,
@@ -1534,13 +1542,13 @@ defmodule AskWeb.RespondentControllerTest do
                      "percent" => 20.0
                    },
                    "responsive" => %{
-                     "count" => 2,
+                     "count" => 3,
                      "detail" => %{
                        "breakoff" => %{"by_reference" => %{}, "count" => 0, "percent" => 0.0},
                        "completed" => %{
-                         "by_reference" => %{"#{qb4.id}" => 2},
-                         "count" => 2,
-                         "percent" => 40.0
+                         "by_reference" => %{"#{qb4.id}" => 2, "#{qb1.id}" => 1},
+                         "count" => 3,
+                         "percent" => 60.0
                        },
                        "ineligible" => %{"by_reference" => %{}, "count" => 0, "percent" => 0.0},
                        "partial" => %{"by_reference" => %{}, "count" => 0, "percent" => 0.0},
@@ -1553,7 +1561,7 @@ defmodule AskWeb.RespondentControllerTest do
                          "percent" => 0.0
                        }
                      },
-                     "percent" => 40.0
+                     "percent" => 60.0
                    },
                    "uncontacted" => %{
                      "count" => 1,
