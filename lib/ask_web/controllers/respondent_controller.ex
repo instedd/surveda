@@ -209,18 +209,14 @@ defmodule AskWeb.RespondentController do
   defp stats(conn, survey, _) do
     buckets = (survey |> Repo.preload(:quota_buckets)).quota_buckets
 
-    empty_bucket_ids =
-      buckets |> Enum.filter(fn bucket -> bucket.quota in [0, nil] end) |> Enum.map(& &1.id)
-
-    buckets = buckets |> Enum.reject(fn bucket -> bucket.quota in [0, nil] end)
     respondent_count = Ask.RespondentStats.respondent_count(survey_id: ^survey.id)
 
     stats(
       conn,
       survey,
       respondent_count,
-      respondents_by_bucket_and_disposition(survey, empty_bucket_ids),
-      respondents_by_quota_bucket_and_completed_at(survey, empty_bucket_ids),
+      respondents_by_bucket_and_disposition(survey),
+      respondents_by_quota_bucket_and_completed_at(survey),
       buckets,
       buckets,
       "quotas_stats.json"
@@ -276,7 +272,7 @@ defmodule AskWeb.RespondentController do
       cumulative_percentages:
         cumulative_percentages(references, grouped_respondents, survey, target, buckets),
       percentages: percentages(survey),
-      completion_percentage: completed_or_partial / target * 100,
+      completion_percentage: percentage_or_100(completed_or_partial, target),
       total_respondents: total_respondents,
       target: target,
       attempted_respondents: attempted_respondents
@@ -424,9 +420,13 @@ defmodule AskWeb.RespondentController do
     |> Enum.into(%{})
   end
 
+  defp percentage_or_100(_dividend, nil), do: 100.0
+  defp percentage_or_100(_dividend, 0), do: 100.0
+  defp percentage_or_100(dividend, divisor), do: dividend / divisor * 100
+
   defp percent_provider(_group_id, [], target, []) do
     fn count ->
-      count / target * 100
+      percentage_or_100(count, target)
     end
   end
 
@@ -434,7 +434,7 @@ defmodule AskWeb.RespondentController do
     bucket = buckets |> Enum.find(fn bucket -> bucket.id == group_id end)
 
     fn count ->
-      count / bucket.quota * 100
+      percentage_or_100(count, bucket.quota)
     end
   end
 
@@ -448,7 +448,7 @@ defmodule AskWeb.RespondentController do
       end)
 
     fn count ->
-      count / (comparison["ratio"] * target / 100) * 100
+      percentage_or_100(count, comparison["ratio"] * target / 100)
     end
   end
 
@@ -622,10 +622,9 @@ defmodule AskWeb.RespondentController do
     Ask.RespondentStats.respondent_count(survey_id: ^survey.id, by: [:state, :disposition, :mode])
   end
 
-  defp respondents_by_bucket_and_disposition(survey, bucket_ids) do
+  defp respondents_by_bucket_and_disposition(survey) do
     Ask.RespondentStats.respondent_count(
       survey_id: ^survey.id,
-      quota_bucket_id: not_in_list(^bucket_ids),
       by: [:state, :disposition, :quota_bucket_id]
     )
   end
@@ -667,10 +666,10 @@ defmodule AskWeb.RespondentController do
     end)
   end
 
-  defp respondents_by_quota_bucket_and_completed_at(survey, bucket_ids) do
+  defp respondents_by_quota_bucket_and_completed_at(survey) do
     Repo.all(
       from r in CompletedRespondents,
-        where: r.survey_id == ^survey.id and r.quota_bucket_id not in ^bucket_ids,
+        where: r.survey_id == ^survey.id,
         group_by: [r.quota_bucket_id, r.date],
         order_by: r.date,
         select: {r.quota_bucket_id, r.date, fragment("CAST(? AS UNSIGNED)", sum(r.count))}
