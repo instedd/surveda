@@ -479,7 +479,7 @@ export const fetchRespondentsFilesStatus = (projectId: number, surveyId: number,
 export const generateResultsFile =
   (projectId: number, surveyId: number, filter?: string) => (dispatch: Function) => {
     api.generateResults(projectId, surveyId, filter).then((response) => {
-      return dispatch(generatingFile("respondent-results"))
+      return dispatch(generatingFile(filter ? "respondents_filtered" : "respondents_results"))
     })
   }
 
@@ -500,7 +500,7 @@ export const generateInteractionsFile =
 export const generateDispositionHistoryFile =
   (projectId: number, surveyId: number) => (dispatch: Function) => {
     api.generateDispositionHistory(projectId, surveyId).then((response) => {
-      return dispatch(generatingFile("disposition-history"))
+      return dispatch(generatingFile("disposition_history"))
     })
   }
 
