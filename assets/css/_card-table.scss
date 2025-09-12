@@ -39,8 +39,8 @@
             }
           }
           &:first-child,
-          &:nth-last-child(2),
-          &:nth-last-child(3) {
+          &:nth-last-child(1),
+          &:nth-last-child(2) {
             @extend .grey-text;
           }
         }
