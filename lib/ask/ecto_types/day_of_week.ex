@@ -1,6 +1,7 @@
 defmodule Ask.DayOfWeek do
   alias __MODULE__
 
+  @derive Jason.Encoder
   defstruct [:sun, :mon, :tue, :wed, :thu, :fri, :sat]
 
   def cast(%DayOfWeek{} = day_of_week) do

@@ -11,6 +11,7 @@ defmodule Ask.Schedule do
   alias __MODULE__
   alias Ask.{DayOfWeek, ScheduleError, SystemTime}
 
+  @derive Jason.Encoder
   defstruct [
     :day_of_week,
     :start_time,
@@ -96,7 +97,7 @@ defmodule Ask.Schedule do
 
   defp cast_blocked_days(_), do: []
 
-  def load(string) when is_binary(string), do: cast(Poison.decode!(string))
+  def load(string) when is_binary(string), do: cast(Jason.decode!(string))
   def load(nil), do: {:ok, always()}
   def load(_), do: :error
 
@@ -110,7 +111,7 @@ defmodule Ask.Schedule do
   def dump(%Schedule{day_of_week: day_of_week} = schedule) do
     {:ok, day_of_week} = DayOfWeek.dump(day_of_week)
     schedule = %{schedule | day_of_week: day_of_week, blocked_days: schedule.blocked_days || []}
-    Poison.encode(schedule)
+    Jason.encode(schedule)
   end
 
   def dump(_), do: :error

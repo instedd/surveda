@@ -2,6 +2,7 @@ defmodule Ask.Stats do
   use Ecto.Type
   alias __MODULE__
 
+  @derive Jason.Encoder
   defstruct total_received_sms: 0,
             total_sent_sms: 0,
             total_call_time: nil,
@@ -52,10 +53,10 @@ defmodule Ask.Stats do
   def cast(nil), do: {:ok, %Stats{}}
   def cast(_), do: :error
 
-  def load(string) when is_binary(string), do: cast(Poison.decode!(string))
+  def load(string) when is_binary(string), do: cast(Jason.decode!(string))
   def load(_), do: :error
 
-  def dump(%Stats{} = stats), do: Poison.encode(stats)
+  def dump(%Stats{} = stats), do: Jason.encode(stats)
   def dump(_), do: :error
 
   def total_received_sms(%Stats{total_received_sms: count}), do: count
