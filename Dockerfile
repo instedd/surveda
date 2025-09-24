@@ -13,22 +13,36 @@ RUN apt-get -q update && \
 RUN mix local.hex --force
 RUN mix local.rebar --force
 
-FROM dev AS release
-
 ENV MIX_ENV=prod
 
 ADD mix.exs mix.lock /app/
 ADD config /app/config
 WORKDIR /app
 
-RUN mix deps.get --only prod
+RUN mix deps.get
 RUN mix deps.compile
 
 ADD . /app
 RUN mix compile
 RUN mix phx.digest
 
+FROM node:10 as js
+
+COPY --from=dev /deps /deps
+ADD . /app
+WORKDIR /app
+
+RUN yarn install --no-progress
+RUN yarn deploy
+
+FROM dev AS release
+
+COPY --from=js /app/assets /app/
+
+ENV MIX_ENV=prod
 ENV PORT=80
+
+WORKDIR /app
 EXPOSE 80
 
 CMD elixir --sname server -S mix phx.server
