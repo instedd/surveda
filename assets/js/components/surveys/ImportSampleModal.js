@@ -82,7 +82,12 @@ class ImportSampleModal extends Component {
               <p>{t("You can import the respondents that haven't been contacted in finished surveys of the project")}</p>
             </div>
           </div>
-          { unusedSample ? surveysTable : loadingDiv }
+          { unusedSample ? (
+            <div style={{ maxHeight: "50vh", overflowY: "auto" }}>
+              {surveysTable}
+            </div>
+          ) : loadingDiv }
+          
           <div className="card-action">
             <a href="#!" className="modal-action modal-close grey-text btn-link">
               {t("Cancel")}
