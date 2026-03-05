@@ -7,6 +7,7 @@ You can setup your local environment following different approaches.
 If you don't need to connect to Verboice nor Nuntium, you can move forward with this setup.
 
 1. You need to use [dockerdev](https://github.com/waj/dockerdev) to access the web app at `app.surveda.lvh.me` and ngrok at `ngrok.surveda.lvh.me`.  Just follow the project's readme.  **WARNING:** You should install `dockerdev` _before_ creating your stack's network in Docker. If you have already run `./dev-setup.sh`, you may want to run `docker compose down -v` to **delete every container, data and other artifacts** from the project and start from scratch _after_ running `dockerdev`.
+Make sure you use the right `dockerdev` image `docker pull --platform linux/arm64 manastech/dockerdev`
 2. Clone this repository.
 3. In the project's root, execute `./dev-setup.sh`.
 4. Start the app with `docker compose up`.

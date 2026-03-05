@@ -7,14 +7,14 @@ This guide describes the steps needed to have a development environment that wil
 * Nuntium for sending and receiving https://nuntium-stg.instedd.org
 
 1. Install [dockerdev](https://github.com/waj/dockerdev)
-2. Checkout the project
+2. Checkout the project. Suggested `dockerdev` image `linux/arm64 manastech/dockerdev`
 3. Execute `$ ./dev-setup.sh`
 4. `$ docker compose up ngrok`
     * NOTE: if `ngrok` container is restarted the assigned tunnel URL will change and it will need to be updated in config and in Guisso.
 5. Go to `http://ngrok.surveda.lvh.me/` and grab the tunnel URL: like `https://ef6e48ea.ngrok.io`.
 6. Setup [Guisso](https://login-stg.instedd.org) with:
     * Any hostname, no need to be `app.surveda.lvh.me`
-    * Redirect urls `http://app.surveda.lvh.me/session/oauth_callback`, `http://app.surveda.lvh.me/oauth_client/callback` (one per line)
+    * Redirect urls `https://your-id.ngrok-free.dev/session/oauth_callback`, `https://your-id.ngrok-free.dev/oauth_client/callback` (one per line) 
     * No need to be trusted
     * Keep the identifier `MY_SURVEDA_GUISSO_CLIENT_ID` and secret `MY_SURVEDA_GUISSO_CLIENT_SECRET`.
 
@@ -34,7 +34,7 @@ config :alto_guisso,
   client_secret: my_surveda_guisso_client_secret
 
 config :ask, AskWeb.Endpoint,
-  url: [host: "app.surveda.lvh.me"]
+  url: [host: "your-id.ngrok-free.dev", scheme: "https", port: 443] 
 
 config :ask, Verboice,
   base_url: "https://verboice-stg.instedd.org/",
