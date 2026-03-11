@@ -6,7 +6,7 @@ This guide describes the steps needed to have a development environment that wil
 * Verboice for making phone calls: https://verboice-stg.instedd.org
 * Nuntium for sending and receiving https://nuntium-stg.instedd.org
 
-1. Install [dockerdev](https://github.com/waj/dockerdev)
+1. Install [dockerdev](https://github.com/manastech/dockerdev)
 2. Checkout the project
 3. Execute `$ ./dev-setup.sh`
 4. `$ docker compose up ngrok`
