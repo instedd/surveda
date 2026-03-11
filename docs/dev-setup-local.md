@@ -10,9 +10,9 @@ They can be used from a [cloud installation](dev-setup-cloud.md) or locally as w
 
 ## Setup
 
-### Install [dockerdev](https://github.com/waj/dockerdev)
+### Install [dockerdev](https://github.com/manastech/dockerdev)
 
-This isn't necessary, but installing [dockerdev](https://github.com/waj/dockerdev)
+This isn't necessary, but installing [dockerdev](https://github.com/manastech/dockerdev)
 will greatly improve your experience, by using the [`*.lvh.me`](https://nickjanetakis.com/blog/ngrok-lvhme-nipio-a-trilogy-for-local-development-and-testing#lvh-me) domain to access
 services and for services to talk between themselves.
 
