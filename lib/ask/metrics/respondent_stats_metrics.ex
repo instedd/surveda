@@ -67,7 +67,7 @@ defmodule Ask.RespondentStatsMetrics do
   end
 
   defp parse_mode(key, value) when key == :mode and value != "" do
-    {key, Poison.decode!(value) |> Enum.join(",")}
+    {key, Jason.decode!(value) |> Enum.join(",")}
   end
 
   defp parse_mode(key, value), do: {key, value}

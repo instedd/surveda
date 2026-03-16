@@ -16,14 +16,14 @@ defmodule Ask.Ecto.Type.Steps do
   end
 
   def load(string) when is_binary(string) do
-    case Poison.decode(string) do
+    case Jason.decode(string) do
       {:ok, steps} -> {:ok, transform(steps)}
       any -> any
     end
   end
 
   def dump(json) do
-    Poison.encode(json)
+    Jason.encode(json)
   end
 
   defp transform(steps) when is_nil(steps), do: nil

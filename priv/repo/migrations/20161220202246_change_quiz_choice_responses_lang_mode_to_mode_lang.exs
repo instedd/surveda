@@ -32,9 +32,9 @@ defmodule Ask.Repo.Migrations.ChangeQuizChoiceResponsesLangModeToModeLang do
 
   def update(steps, update_function) do
     steps
-    |> Poison.decode!()
+    |> Jason.decode!()
     |> Enum.map(update_function)
-    |> Poison.encode!()
+    |> Jason.encode!()
   end
 
   def upgrade_step(step) do

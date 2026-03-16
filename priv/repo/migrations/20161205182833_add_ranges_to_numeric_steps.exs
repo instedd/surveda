@@ -24,9 +24,9 @@ defmodule Ask.Repo.Migrations.AddRangesToNumericSteps do
 
   def upgrade(steps) do
     steps
-    |> Poison.decode!()
+    |> Jason.decode!()
     |> Enum.map(&upgrade_step/1)
-    |> Poison.encode!()
+    |> Jason.encode!()
   end
 
   def upgrade_step(step) do

@@ -10,7 +10,7 @@ defmodule AskWeb.LayoutViewTest do
     rendered_config =
       assign(build_conn(), :current_user, %{name: "John Doe", email: "john@doe.com", id: 3})
       |> AskWeb.LayoutView.config()
-      |> Poison.Parser.parse!()
+      |> Jason.decode!()
 
     assert rendered_config[json_root] != nil
 

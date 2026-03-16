@@ -87,7 +87,7 @@ defmodule Ask.Runtime.QuestionnaireExport do
         manifest: manifest,
         audio_entries: audio_entries
       }) do
-    {:ok, json} = Poison.encode(manifest)
+    {:ok, json} = Jason.encode(manifest)
 
     json_entry =
       Stream.map([json], fn json ->

@@ -54,6 +54,7 @@ defmodule Ask.Runtime.Reply do
 end
 
 defmodule Ask.Runtime.ReplyStep do
+  @derive Jason.Encoder
   defstruct prompts: [],
             id: nil,
             title: nil,

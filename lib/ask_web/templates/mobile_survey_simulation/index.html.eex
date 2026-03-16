@@ -1,5 +1,5 @@
 <body>
-  <div id="root" role="main" data-config="<%= Poison.encode!(%{introMessage: @mobile_web_intro_message, colorStyle: @color_style}) %>"></div>
+  <div id="root" role="main" data-config="<%= Jason.encode!(%{introMessage: @mobile_web_intro_message, colorStyle: @color_style}) %>"></div>
   <script>
     window.mixEnv = "<%= Mix.env %>"
     window.respondentId = "<%= @respondent_id %>"

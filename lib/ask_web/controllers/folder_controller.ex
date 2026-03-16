@@ -51,7 +51,7 @@ defmodule AskWeb.FolderController do
       from(s in Survey,
         left_join: ps in PanelSurvey,
         on: s.panel_survey_id == ps.id,
-        where: (ps.folder_id == ^folder_id or s.folder_id == ^folder_id),
+        where: ps.folder_id == ^folder_id or s.folder_id == ^folder_id,
         where: s.state == ^:running,
         select: count(s.id)
       )

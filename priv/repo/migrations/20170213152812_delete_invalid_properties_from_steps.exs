@@ -19,7 +19,7 @@ defmodule Ask.Repo.Migrations.DeleteInvalidPropertiesFromSteps do
   def up do
     json_schema =
       File.read!("#{Application.app_dir(:ask)}/priv/schema.json")
-      |> Poison.decode!()
+      |> Jason.decode!()
       |> Schema.resolve()
 
     Questionnaire

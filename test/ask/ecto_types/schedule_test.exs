@@ -34,8 +34,10 @@ defmodule Ask.ScheduleTest do
 
   describe "dump:" do
     test "should dump weekdays" do
-      assert {:ok,
-              "{\"timezone\":\"Etc/UTC\",\"start_time\":\"09:00:00\",\"start_date\":null,\"end_time\":\"18:00:00\",\"end_date\":null,\"day_of_week\":[\"mon\",\"tue\",\"wed\",\"thu\",\"fri\"],\"blocked_days\":[]}"} ==
+      assert {
+               :ok,
+               "{\"blocked_days\":[],\"day_of_week\":[\"mon\",\"tue\",\"wed\",\"thu\",\"fri\"],\"end_date\":null,\"end_time\":\"18:00:00\",\"start_date\":null,\"start_time\":\"09:00:00\",\"timezone\":\"Etc/UTC\"}"
+             } ==
                Schedule.dump(%Schedule{
                  day_of_week: %DayOfWeek{mon: true, tue: true, wed: true, thu: true, fri: true},
                  start_time: ~T[09:00:00],
@@ -45,20 +47,26 @@ defmodule Ask.ScheduleTest do
     end
 
     test "should dump default" do
-      assert {:ok,
-              "{\"timezone\":\"Etc/UTC\",\"start_time\":\"09:00:00\",\"start_date\":null,\"end_time\":\"18:00:00\",\"end_date\":null,\"day_of_week\":[],\"blocked_days\":[]}"} ==
+      assert {
+               :ok,
+               "{\"blocked_days\":[],\"day_of_week\":[],\"end_date\":null,\"end_time\":\"18:00:00\",\"start_date\":null,\"start_time\":\"09:00:00\",\"timezone\":\"Etc/UTC\"}"
+             } ==
                Schedule.dump(Schedule.default())
     end
 
     test "should dump always" do
-      assert {:ok,
-              "{\"timezone\":\"Etc/UTC\",\"start_time\":\"00:00:00\",\"start_date\":null,\"end_time\":\"23:59:59\",\"end_date\":null,\"day_of_week\":[\"sun\",\"mon\",\"tue\",\"wed\",\"thu\",\"fri\",\"sat\"],\"blocked_days\":[]}"} ==
+      assert {
+               :ok,
+               "{\"blocked_days\":[],\"day_of_week\":[\"sun\",\"mon\",\"tue\",\"wed\",\"thu\",\"fri\",\"sat\"],\"end_date\":null,\"end_time\":\"23:59:59\",\"start_date\":null,\"start_time\":\"00:00:00\",\"timezone\":\"Etc/UTC\"}"
+             } ==
                Schedule.dump(Schedule.always())
     end
 
     test "should dump blocked_days" do
-      assert {:ok,
-              "{\"timezone\":\"Etc/UTC\",\"start_time\":\"09:00:00\",\"start_date\":null,\"end_time\":\"18:00:00\",\"end_date\":null,\"day_of_week\":[\"mon\",\"tue\",\"wed\",\"thu\",\"fri\"],\"blocked_days\":[\"2016-01-01\",\"2017-02-03\"]}"} ==
+      assert {
+               :ok,
+               "{\"blocked_days\":[\"2016-01-01\",\"2017-02-03\"],\"day_of_week\":[\"mon\",\"tue\",\"wed\",\"thu\",\"fri\"],\"end_date\":null,\"end_time\":\"18:00:00\",\"start_date\":null,\"start_time\":\"09:00:00\",\"timezone\":\"Etc/UTC\"}"
+             } ==
                Schedule.dump(%Schedule{
                  day_of_week: %DayOfWeek{mon: true, tue: true, wed: true, thu: true, fri: true},
                  start_time: ~T[09:00:00],

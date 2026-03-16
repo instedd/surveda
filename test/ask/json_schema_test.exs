@@ -17,14 +17,14 @@ defmodule Ask.StepsValidatorTest do
 
   defp valid_thing(json_thing, thing_type) do
     json_thing
-    |> Poison.decode!()
+    |> Jason.decode!()
     |> JsonSchema.validate(thing_type)
     |> assert_ok
   end
 
   defp invalid_thing(json_thing, thing_type, case_desc) do
     json_thing
-    |> Poison.decode!()
+    |> Jason.decode!()
     |> JsonSchema.validate(thing_type)
     |> assert_invalid(case_desc, json_thing)
   end

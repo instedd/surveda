@@ -203,7 +203,7 @@ defmodule Ask.FloipPusherTest do
     # Verify that the receiving mock gets the first 1000 responses
     Bypass.expect(server, fn conn ->
       {:ok, responses, _} = Plug.Conn.read_body(conn)
-      {:ok, responses} = Poison.decode(responses)
+      {:ok, responses} = Jason.decode(responses)
 
       assert length(responses["data"]["attributes"]["responses"]) == 1000
       Plug.Conn.resp(conn, 200, "")

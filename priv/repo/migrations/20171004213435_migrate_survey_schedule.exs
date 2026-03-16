@@ -208,14 +208,14 @@ defmodule Ask.Repo.Migrations.MigrateSurveySchedule do
     def cast(nil), do: {:ok, %Schedule{}}
     def cast(_), do: :error
 
-    def load(string) when is_binary(string), do: cast(Poison.decode!(string))
+    def load(string) when is_binary(string), do: cast(Jason.decode!(string))
     def load(nil), do: {:ok, %Schedule{}}
     def load(_), do: :error
 
     def dump(%Schedule{day_of_week: day_of_week} = schedule) do
       {:ok, day_of_week} = NewDayOfWeek.dump(day_of_week)
       schedule = %{schedule | day_of_week: day_of_week, blocked_days: schedule.blocked_days || []}
-      Poison.encode(schedule)
+      Jason.encode(schedule)
     end
 
     def dump(_), do: :error

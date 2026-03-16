@@ -34,8 +34,8 @@ defmodule Ask.Runtime.SessionTest do
 
     session =
       %{session | schedule: nil}
-      |> Poison.encode!()
-      |> Poison.decode!()
+      |> Jason.encode!()
+      |> Jason.decode!()
       |> Session.load()
 
     assert session.schedule == Schedule.always()

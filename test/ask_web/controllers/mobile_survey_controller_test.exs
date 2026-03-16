@@ -78,7 +78,7 @@ defmodule AskWeb.MobileSurveyControllerTest do
 
       assert String.contains?(
                response,
-               "<div id=\"root\" role=\"main\" data-config=\"{&quot;introMessage&quot;:&quot;My HTML escaped &amp; intro message&quot;,&quot;colorStyle&quot;:{&quot;secondary_color&quot;:&quot;#ae1&quot;,&quot;primary_color&quot;:&quot;#e21&quot;}}\"></div>\n"
+               "<div id=\"root\" role=\"main\" data-config=\"{&quot;colorStyle&quot;:{&quot;primary_color&quot;:&quot;#e21&quot;,&quot;secondary_color&quot;:&quot;#ae1&quot;},&quot;introMessage&quot;:&quot;My HTML escaped &amp; intro message&quot;}\"></div>\n"
              )
     end
   end
