@@ -232,12 +232,17 @@ defmodule Ask.Runtime.Survey do
     session = respondent.session
 
     if session do
-      response =
+      {:ok, session, timeout} =
         session
         |> Session.load()
         |> Session.contact_attempt_expired()
 
-      {:ok, session, timeout} = response
+      # `Session.contact_attempt_expired/1` re-contacts the respondent and, via
+      # `update_stats/3`, persists the sent-SMS stat as a side effect — bumping the
+      # row's lock_version. Use that up-to-date struct (threaded through the
+      # session) for the final update; the one captured above is now stale and
+      # would fail the optimistic lock (Ecto.StaleEntryError).
+      respondent = session.respondent
 
       timeout_at =
         Respondent.next_actual_timeout(respondent, timeout, SystemTime.time().now, persist)
