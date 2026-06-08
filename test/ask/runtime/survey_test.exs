@@ -4002,4 +4002,53 @@ defmodule Ask.Runtime.SurveyTest do
   end
 
   defp take_last(records), do: records |> Enum.take(-1) |> hd
+
+  describe "contact_attempt_expired/2" do
+    # Regression: contact_attempt_expired/2 re-contacts the respondent, which
+    # persists the sent-SMS stat via update_stats/3 (bumping the row's
+    # lock_version), and must then run the final no_disposition update against
+    # that fresh struct. Reusing the struct captured at the top of the function
+    # raised Ecto.StaleEntryError and crashed the ChannelBroker GenServer.
+    @tag :time_mock
+    test "re-contacts and advances the respondent without a stale-struct crash" do
+      set_actual_time()
+
+      [_survey, _group, test_channel, respondent, phone_number] =
+        create_running_survey_with_channel_and_respondent()
+
+      {:ok, _broker} = SurveyBroker.start_link()
+      SurveyBroker.poll()
+
+      assert_receive [
+        :ask,
+        ^test_channel,
+        %Respondent{sanitized_phone_number: ^phone_number},
+        _token,
+        _reply,
+        _channel_id
+      ]
+
+      respondent = Repo.get(Respondent, respondent.id)
+      assert respondent.state == :active
+      assert respondent.session != nil
+
+      lock_version_before = respondent.lock_version
+      sent_sms_before = respondent.stats.total_sent_sms
+      token_before = respondent.session["token"]
+
+      # The contact-attempt window elapsed before the broker reached the
+      # respondent. This call used to raise Ecto.StaleEntryError.
+      assert :ok = Survey.contact_attempt_expired(respondent)
+
+      updated = Repo.get(Respondent, respondent.id)
+
+      # update_stats/3 persisted the re-sent SMS ...
+      assert updated.stats.total_sent_sms == sent_sms_before + 1
+      # ... and the final no_disposition update committed on the fresh struct:
+      # a new session token was stored and the lock_version advanced (once for
+      # update_stats/3 and once for the no_disposition update).
+      assert updated.session["token"] != token_before
+      assert updated.lock_version >= lock_version_before + 2
+    end
+  end
 end
